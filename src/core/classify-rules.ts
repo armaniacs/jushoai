@@ -105,7 +105,9 @@ export function refineClassifications(items: Item[]): Item[] {
     out.flatMap((it, i) => (it.cls.category === c ? [i] : []));
   const retag = (idx: number[], cats: Category[]) =>
     idx.forEach((i, n) => {
-      out[i].cls.category = cats[n];
+      const target = out[i];
+      const cat = cats[n];
+      if (target && cat) target.cls.category = cat;
     });
 
   const tel = indices('tel');

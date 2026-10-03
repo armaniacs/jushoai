@@ -131,6 +131,6 @@ describe('refineClassifications', () => {
   it('does not mutate the input', () => {
     const input = [item('tel', 'a'), item('tel', 'b'), item('tel', 'c')];
     refineClassifications(input);
-    expect(input[0].cls.category).toBe('tel');
+    expect(input[0]!.cls.category).toBe('tel');
   });
 });
