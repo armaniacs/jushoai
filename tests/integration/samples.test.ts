@@ -1,0 +1,60 @@
+import { describe, it, expect } from 'vitest';
+import { classifyAll } from '../../src/analyze';
+import { buildPlan } from '../../src/core/planner';
+import type { Address, Profile } from '../../src/core/types';
+import { scanFields } from '../../src/dom/scan-fields';
+import single from '../../samples/single-field-form.html?raw';
+import split from '../../samples/split-form.html?raw';
+import table from '../../samples/table-form.html?raw';
+
+const SAMPLES: Record<string, string> = {
+  'table-form.html': table,
+  'split-form.html': split,
+  'single-field-form.html': single,
+};
+
+const profile: Profile = {
+  lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+  email: 'yamada@example.com', tel: '09012345678',
+};
+const address: Address = {
+  id: 'a', label: 'home', zip: '1000001', prefecture: '東京都', city: '千代田区',
+  street: '千代田1-1', building: '千代田ビル101',
+};
+
+async function planFor(file: string): Promise<Record<string, string>> {
+  const html = SAMPLES[file]!;
+  document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+  const fields = scanFields(document.body);
+  const items = await classifyAll(fields.map((f) => f.meta), null);
+  const plan = buildPlan(items, { profile, address });
+  const keyOf = new Map(fields.map((f) => [f.meta.id, f.meta.name || f.meta.htmlId]));
+  const out: Record<string, string> = {};
+  for (const p of plan) if (p.status === 'ok') out[keyOf.get(p.fieldId)!] = p.value;
+  return out;
+}
+
+describe('sample forms end to end', () => {
+  it('table-form', async () => {
+    expect(await planFor('table-form.html')).toEqual({
+      n1: '山田', n2: '太郎', k1: 'ヤマダ', k2: 'タロウ', z1: '100', z2: '0001',
+      p: '13', a1: '千代田区千代田1-1', a2: '千代田ビル101',
+      t1: '090', t2: '1234', t3: '5678', m: 'yamada@example.com',
+    });
+  });
+
+  it('split-form', async () => {
+    expect(await planFor('split-form.html')).toEqual({
+      lastName: '山田', firstName: '太郎', lk: 'ヤマダ', fk: 'ﾀﾛｳ', zip: '100-0001',
+      pref: '13', address1: '千代田区千代田1-1', address2: '千代田ビル101',
+      tel: '09012345678', em: 'yamada@example.com',
+    });
+  });
+
+  it('single-field-form', async () => {
+    expect(await planFor('single-field-form.html')).toEqual({
+      fullname: '山田　太郎', furigana: 'ヤマダ　タロウ',
+      addr: '東京都千代田区千代田1-1 千代田ビル101', phone: '09012345678',
+    });
+  });
+});
