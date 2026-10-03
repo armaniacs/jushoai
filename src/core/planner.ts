@@ -68,7 +68,7 @@ function valueFor(
 }
 
 // A select resting on its first option is treated as untouched: many forms default to 北海道.
-const isUntouchedSelect = (m: FieldMeta) =>
+export const isUntouchedSelect = (m: Pick<FieldMeta, 'value' | 'options'>) =>
   m.value === '' || m.options[0]?.value === m.value;
 
 export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {

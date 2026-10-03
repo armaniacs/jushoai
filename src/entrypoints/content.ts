@@ -1,8 +1,8 @@
 import { classifyAll } from '../analyze';
 import { buildPlan, type PlanItem } from '../core/planner';
-import { detectForms } from '../dom/detect-forms';
+import { applyPlan } from '../dom/apply-plan';
+import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
-import { scanFields } from '../dom/scan-fields';
 import { checkAiStatus, getLanguageModel, startDownload } from '../llm/availability';
 import { PromptApiClassifier } from '../llm/classifier';
 import { isReady, loadData } from '../storage';
@@ -29,7 +29,7 @@ export default defineContentScript({
       if (lm && status === 'downloadable') void startDownload(lm);
       const classifier = lm && status === 'available' ? new PromptApiClassifier(lm) : null;
 
-      const fields = scanFields(container);
+      const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const items = await classifyAll(fields.map((f) => f.meta), classifier);
 
@@ -59,9 +59,7 @@ export default defineContentScript({
           preview.setRows(replan());
         },
         onApply: () => {
-          for (const p of plan) {
-            if (p.status === 'ok') fillField(byId.get(p.fieldId)!.el, p.value);
-          }
+          applyPlan(plan, byId, fillField);
           preview.close();
           openPreview = null;
         },
