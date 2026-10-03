@@ -57,12 +57,12 @@ export class IdbKeyStore implements KeyStore {
       if (existing) return existing;
       const created = await generateKey();
       try {
-        // Use add() instead of put() so that concurrent contexts racing to create the key
-        // only one succeeds; ConstraintError indicates a key already exists.
+        // Use add() instead of put() so that only one concurrent context succeeds;
+        // others receive ConstraintError, indicating a key already exists.
         await this.request(db, 'readwrite', (s) => s.add(created, 'kek'));
         return created;
       } catch (err) {
-        // On ConstraintError (key already exists), fetch the stored key instead.
+        // On ConstraintError, fetch and return the stored key instead of the locally generated one.
         if (err instanceof Error && (err.name === 'ConstraintError' || err.message.includes('ConstraintError'))) {
           const stored = await this.request<CryptoKey | undefined>(db, 'readonly', (s) => s.get('kek'));
           if (stored) return stored;
