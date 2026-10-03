@@ -38,8 +38,18 @@ function nearbyOf(el: Control): string {
   return legend ? textWithoutControls(legend).slice(0, 60) : '';
 }
 
-const isHidden = (el: Control) =>
-  !!el.closest('[hidden]') || (typeof el.checkVisibility === 'function' && !el.checkVisibility());
+// jsdom has no checkVisibility and reports empty rects for everything, so the rect test is
+// gated on the same capability check to stay inert there.
+function isHidden(el: Control): boolean {
+  if (el.closest('[hidden]')) return true;
+  if (typeof el.checkVisibility !== 'function') return false;
+  if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return true;
+  const r = el.getBoundingClientRect();
+  return r.width === 0 && r.height === 0;
+}
+
+export const containerOf = (el: Control, doc: Document): Element =>
+  el.form ?? el.closest('form') ?? doc.body;
 
 export function scanFields(root: ParentNode): ScannedField[] {
   const out: ScannedField[] = [];

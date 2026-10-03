@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { detectForms } from '../../src/dom/detect-forms';
+import { detectForms, scanContainer } from '../../src/dom/detect-forms';
 
 beforeEach(() => {
   document.body.innerHTML = '';
@@ -37,5 +37,25 @@ describe('detectForms', () => {
       <form><input name="last_name"><input name="first_name"><input name="email" type="email"></form>
       <form><input name="zip"><input name="prefecture"><input name="address1"></form>`;
     expect(detectForms(document)).toHaveLength(2);
+  });
+});
+
+describe('scanContainer', () => {
+  it('limits a body-level scan to loose fields and excludes separate forms', () => {
+    document.body.innerHTML = `
+      <input name="last_name"><input name="first_name"><input name="email" type="email">
+      <form id="search"><input name="q"><input name="login"><input name="pw" type="text"></form>`;
+    const body = detectForms(document).find((f) => f.container === document.body)!;
+    const scanned = scanContainer(document.body, document);
+    expect(scanned.map((f) => f.meta.name)).toEqual(['last_name', 'first_name', 'email']);
+    expect(scanned).toHaveLength(body.fields.length);
+  });
+
+  it('uses the form attribute owner as the container', () => {
+    document.body.innerHTML = `
+      <form id="f"></form><input name="a" form="f"><input name="b">`;
+    const f = document.getElementById('f')!;
+    expect(scanContainer(f, document)).toHaveLength(0);
+    expect(scanContainer(document.body, document).map((x) => x.meta.name)).toEqual(['b']);
   });
 });

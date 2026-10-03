@@ -1,5 +1,5 @@
 import { ACCEPT_THRESHOLD, classifyField } from '../core/classify-rules';
-import { scanFields, type ScannedField } from './scan-fields';
+import { containerOf, scanFields, type ScannedField } from './scan-fields';
 
 export interface FormCandidate {
   container: Element;
@@ -9,10 +9,14 @@ export interface FormCandidate {
 const MIN_CONTROLS = 3;
 const MIN_CLASSIFIED = 2;
 
+export function scanContainer(container: Element, doc: Document): ScannedField[] {
+  return scanFields(container).filter((f) => containerOf(f.el, doc) === container);
+}
+
 export function detectForms(doc: Document): FormCandidate[] {
   const groups = new Map<Element, ScannedField[]>();
   for (const field of scanFields(doc)) {
-    const container = field.el.closest('form') ?? doc.body;
+    const container = containerOf(field.el, doc);
     const list = groups.get(container) ?? [];
     list.push(field);
     groups.set(container, list);

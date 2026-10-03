@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { scanFields } from '../../src/dom/scan-fields';
 
 const metas = () => scanFields(document.body).map((f) => f.meta);
@@ -58,5 +58,32 @@ describe('scanFields', () => {
     const fields = scanFields(document.body);
     expect(new Set(fields.map((f) => f.meta.id)).size).toBe(2);
     expect(fields[0]!.el.getAttribute('name')).toBe('a');
+  });
+});
+
+describe('scanFields: layout visibility', () => {
+  const proto = HTMLElement.prototype as unknown as Record<string, unknown>;
+  const rectOf = (w: number, h: number) =>
+    ({ width: w, height: h, top: 0, left: 0, right: w, bottom: h, x: 0, y: 0 }) as DOMRect;
+
+  afterEach(() => {
+    delete proto.checkVisibility;
+    vi.restoreAllMocks();
+  });
+
+  it('asks for opacity and visibility checks', () => {
+    proto.checkVisibility = function (o?: { opacityProperty?: boolean; visibilityProperty?: boolean }) {
+      return !!o?.opacityProperty && !!o?.visibilityProperty;
+    };
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rectOf(10, 10));
+    document.body.innerHTML = '<input name="a">';
+    expect(metas()).toHaveLength(1);
+  });
+
+  it('skips fields with an empty box when layout is available', () => {
+    proto.checkVisibility = () => true;
+    vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rectOf(0, 0));
+    document.body.innerHTML = '<input name="a">';
+    expect(metas()).toHaveLength(0);
   });
 });
