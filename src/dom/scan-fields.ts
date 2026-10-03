@@ -1,0 +1,77 @@
+import type { FieldMeta } from '../core/types';
+
+export type Control = HTMLInputElement | HTMLSelectElement;
+
+export interface ScannedField {
+  meta: FieldMeta;
+  el: Control;
+}
+
+const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search']);
+const clean = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
+
+// Option text of a select wrapped by its label would otherwise flood the label.
+function textWithoutControls(node: Element): string {
+  const clone = node.cloneNode(true) as Element;
+  clone.querySelectorAll('select, input, textarea, script, style').forEach((n) => n.remove());
+  return clean(clone.textContent);
+}
+
+function labelOf(el: Control): string {
+  const parts = Array.from(el.labels ?? []).map(textWithoutControls);
+  const aria = el.getAttribute('aria-label');
+  if (aria) parts.push(aria);
+  for (const id of (el.getAttribute('aria-labelledby') ?? '').split(/\s+/).filter(Boolean)) {
+    const node = el.ownerDocument.getElementById(id);
+    if (node) parts.push(textWithoutControls(node));
+  }
+  return clean(parts.join(' '));
+}
+
+function nearbyOf(el: Control): string {
+  const th = el.closest('tr')?.querySelector('th');
+  if (th) return textWithoutControls(th).slice(0, 60);
+  let sib = el.closest('dd')?.previousElementSibling ?? null;
+  while (sib && sib.tagName !== 'DT') sib = sib.previousElementSibling;
+  if (sib) return textWithoutControls(sib).slice(0, 60);
+  const legend = el.closest('fieldset')?.querySelector('legend');
+  return legend ? textWithoutControls(legend).slice(0, 60) : '';
+}
+
+const isHidden = (el: Control) =>
+  !!el.closest('[hidden]') || (typeof el.checkVisibility === 'function' && !el.checkVisibility());
+
+export function scanFields(root: ParentNode): ScannedField[] {
+  const out: ScannedField[] = [];
+  let n = 0;
+  for (const el of Array.from(root.querySelectorAll<Control>('input, select'))) {
+    const isSelect = el.tagName === 'SELECT';
+    if (!isSelect && !TEXT_TYPES.has((el as HTMLInputElement).type)) continue;
+    if (isHidden(el)) continue;
+    const input = isSelect ? null : (el as HTMLInputElement);
+    const select = isSelect ? (el as HTMLSelectElement) : null;
+    out.push({
+      el,
+      meta: {
+        id: `jai-${n++}`,
+        tag: isSelect ? 'select' : 'input',
+        type: isSelect ? 'select' : input!.type,
+        name: el.name,
+        htmlId: el.id,
+        autocomplete: el.getAttribute('autocomplete') ?? '',
+        label: labelOf(el),
+        placeholder: input?.placeholder ?? '',
+        nearby: nearbyOf(el),
+        maxLength: input && input.maxLength > 0 ? input.maxLength : null,
+        pattern: input?.pattern ?? '',
+        options: select
+          ? Array.from(select.options).map((o) => ({ value: o.value, text: clean(o.text) }))
+          : [],
+        readOnly: input?.readOnly ?? false,
+        disabled: el.disabled,
+        value: el.value,
+      },
+    });
+  }
+  return out;
+}
