@@ -5,6 +5,8 @@ import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { isReady, loadData } from '../storage';
+import { detectBrowser } from '../llm/browser-support';
+import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
 
@@ -15,6 +17,8 @@ export default defineContentScript({
     const mounted = new Map<Element, ButtonHandle>();
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
+    let openGuide: GuideHandle | null = null;
+    const browser = detectBrowser(navigator.userAgent);
 
     async function guardedRun(container: Element, button: ButtonHandle) {
       if (running.has(container)) return;
@@ -94,7 +98,16 @@ export default defineContentScript({
       }
       for (const form of forms) {
         if (mounted.has(form.container)) continue;
-        const handle = mountButton(form.fields[0]!.el, () => void guardedRun(form.container, handle));
+        const handle = mountButton(
+          form.fields[0]!.el,
+          () => void guardedRun(form.container, handle),
+          (status) => {
+            openGuide?.close();
+            openGuide = showAiGuide(buildGuide(status, browser), () => {
+              openGuide = null;
+            });
+          },
+        );
         mounted.set(form.container, handle);
         void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }

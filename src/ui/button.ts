@@ -17,33 +17,45 @@ const STATUS_LABEL: Record<AiStatus, string> = {
 };
 
 const CSS = `
-  button { all: initial; display: inline-flex; gap: 8px; align-items: center; cursor: pointer;
+  .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
     font: 600 13px/1 system-ui, sans-serif; color: #fff; background: #2457d6;
     padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
-  button:hover { background: #1c46b3; }
+  .wrap:hover { background: #1c46b3; }
+  button { all: initial; cursor: pointer; font: inherit; color: inherit; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     background: rgba(255,255,255,.22); }
   .badge[data-status="error"] { background: #b3261e; }
-  .badge[data-status="unavailable"] { background: rgba(0,0,0,.3); }
+  .badge[data-status="unavailable"], .badge[data-status="unsupported"] { background: rgba(0,0,0,.3); }
 `;
 
-export function mountButton(anchor: Element, onClick: () => void): ButtonHandle {
+export function mountButton(
+  anchor: Element,
+  onClick: () => void,
+  onBadgeClick: (status: AiStatus) => void = () => {},
+): ButtonHandle {
   const { host, root } = createShadowHost();
   const style = document.createElement('style');
   style.textContent = CSS;
+  const wrap = document.createElement('div');
+  wrap.className = 'wrap';
   const button = document.createElement('button');
   button.type = 'button';
-  const label = document.createElement('span');
-  label.textContent = 'JushoAI で入力';
-  const badge = document.createElement('span');
+  button.textContent = 'JushoAI で入力';
+  const badge = document.createElement('button');
+  badge.type = 'button';
   badge.className = 'badge';
-  button.append(label, badge);
+  wrap.append(button, badge);
   button.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     onClick();
   });
-  root.append(style, button);
+  badge.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onBadgeClick(lastStatus);
+  });
+  root.append(style, wrap);
   document.body.append(host);
 
   let lastStatus: AiStatus = 'unavailable';
