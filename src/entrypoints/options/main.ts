@@ -4,6 +4,7 @@ import {
 } from '../../core/profile';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
+import { mountAiSection } from './ai-section';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
   { key: 'lastName', label: '姓', placeholder: '山田' },
@@ -153,3 +154,5 @@ void loadData().then((data) => {
   }
   render();
 });
+
+mountAiSection(document.getElementById('ai-app')!);
