@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { getAiStatusViaBackground, requestDownloadViaBackground, BackgroundClassifier } from '../../src/llm/background-gateway';
+import { getAiStatusViaBackground, requestDownloadViaBackground, testAiViaBackground, BackgroundClassifier } from '../../src/llm/background-gateway';
 import { makeMeta } from '../helpers';
 
 const send = vi.fn();
@@ -8,16 +8,17 @@ afterEach(() => send.mockReset());
 
 describe('getAiStatusViaBackground', () => {
   it('returns the status, and unavailable on malformed or failed replies', async () => {
-    send.mockResolvedValueOnce({ status: 'available' });
-    expect(await getAiStatusViaBackground()).toBe('available');
-    send.mockResolvedValueOnce({ status: 'unsupported' });
-    expect(await getAiStatusViaBackground()).toBe('unsupported');
-    send.mockResolvedValueOnce({ status: 'weird' });
-    expect(await getAiStatusViaBackground()).toBe('unavailable');
+    const unknown = { status: 'unavailable', provider: 'none' };
+    send.mockResolvedValueOnce({ status: 'available', provider: 'built-in' });
+    expect(await getAiStatusViaBackground()).toEqual({ status: 'available', provider: 'built-in' });
+    send.mockResolvedValueOnce({ status: 'unsupported', provider: 'built-in' });
+    expect(await getAiStatusViaBackground()).toEqual({ status: 'unsupported', provider: 'built-in' });
+    send.mockResolvedValueOnce({ status: 'weird', provider: 'built-in' });
+    expect(await getAiStatusViaBackground()).toEqual(unknown);
     send.mockResolvedValueOnce(undefined);
-    expect(await getAiStatusViaBackground()).toBe('unavailable');
+    expect(await getAiStatusViaBackground()).toEqual(unknown);
     send.mockRejectedValueOnce(new Error('x'));
-    expect(await getAiStatusViaBackground()).toBe('unavailable');
+    expect(await getAiStatusViaBackground()).toEqual(unknown);
   });
 });
 
@@ -73,7 +74,7 @@ describe('timeouts', () => {
     send.mockImplementationOnce(never);
     const p = getAiStatusViaBackground(50);
     await vi.advanceTimersByTimeAsync(50);
-    expect(await p).toBe('unavailable');
+    expect(await p).toEqual({ status: 'unavailable', provider: 'none' });
   });
 
   it('skips only the hung classify chunk', async () => {
@@ -97,8 +98,37 @@ describe('timeouts', () => {
 
   it('clears the timer after a normal reply', async () => {
     vi.useFakeTimers();
-    send.mockResolvedValueOnce({ status: 'available' });
+    send.mockResolvedValueOnce({ status: 'available', provider: 'built-in' });
     await getAiStatusViaBackground(5000);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('getAiStatusViaBackground (status info)', () => {
+  it('returns status and provider from a valid reply', async () => {
+    send.mockResolvedValueOnce({ status: 'available', provider: 'openai' });
+    expect(await getAiStatusViaBackground()).toEqual({ status: 'available', provider: 'openai' });
+  });
+
+  it('falls back to unavailable for malformed replies, errors and timeouts', async () => {
+    send.mockResolvedValueOnce({ status: 'bogus' });
+    expect(await getAiStatusViaBackground()).toEqual({ status: 'unavailable', provider: 'none' });
+    send.mockRejectedValueOnce(new Error('x'));
+    expect(await getAiStatusViaBackground()).toEqual({ status: 'unavailable', provider: 'none' });
+    send.mockImplementationOnce(() => new Promise(() => {}));
+    expect(await getAiStatusViaBackground(10)).toEqual({ status: 'unavailable', provider: 'none' });
+  });
+});
+
+describe('testAiViaBackground', () => {
+  it('returns a parsed result and null for malformed or failed replies', async () => {
+    send.mockResolvedValueOnce({ ok: true, category: 'fullName' });
+    expect(await testAiViaBackground()).toEqual({ ok: true, category: 'fullName' });
+    send.mockResolvedValueOnce({ nope: 1 });
+    expect(await testAiViaBackground()).toBeNull();
+    send.mockRejectedValueOnce(new Error('x'));
+    expect(await testAiViaBackground()).toBeNull();
+    send.mockImplementationOnce(() => new Promise(() => {}));
+    expect(await testAiViaBackground(10)).toBeNull();
   });
 });

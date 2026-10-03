@@ -1,10 +1,12 @@
+import type { AiStatusInfo } from '../ai/types';
 import { getFlagGuidance, type BrowserKind } from '../llm/browser-support';
-import type { AiStatus } from '../llm/availability';
 import { createShadowHost } from './host';
+import { PROVIDER_LABEL } from './status-label';
 
 export interface Guide {
   title: string;
   lines: string[];
+  openSettings?: boolean;
 }
 
 const RULE_LINE = 'ルールによる入力は AI なしでも使えます。';
@@ -24,8 +26,9 @@ function flagLines(browser: BrowserKind): string[] {
   ];
 }
 
-export function buildGuide(status: AiStatus, browser: BrowserKind): Guide {
-  switch (status) {
+export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
+  const providerName = PROVIDER_LABEL[info.provider];
+  switch (info.status) {
     case 'unsupported':
       return {
         title: 'このブラウザでは内蔵 AI を使えません',
@@ -57,8 +60,46 @@ export function buildGuide(status: AiStatus, browser: BrowserKind): Guide {
         title: 'AI モデルを準備中です',
         lines: ['モデルをダウンロードしています。完了後に AI 判定が使われます。', RULE_LINE],
       };
+    case 'disabled':
+      return {
+        title: 'AI 判定はオフです',
+        lines: [
+          'ルールで判定できない欄だけ AI で補助できます。設定ページで AI プロバイダを選んでください。',
+          RULE_LINE,
+        ],
+        openSettings: true,
+      };
+    case 'not-configured':
+      return {
+        title: 'AI の設定が未完了です',
+        lines: [`${providerName} の設定（ベース URL・モデル名・API キー）を設定ページで確認してください。`, RULE_LINE],
+        openSettings: true,
+      };
+    case 'permission-missing':
+      return {
+        title: 'AI への通信が許可されていません',
+        lines: [
+          `${providerName} への通信が許可されていません。設定ページで保存し直し、ブラウザの確認で許可してください。`,
+          RULE_LINE,
+        ],
+        openSettings: true,
+      };
+    case 'auth-error':
+      return {
+        title: 'AI の認証に失敗しました',
+        lines: [`${providerName} が認証を拒否しました。設定ページで API キーを確認してください。`, RULE_LINE],
+        openSettings: true,
+      };
     case 'available':
-      return { title: 'AI 判定を利用できます', lines: ['AI の準備ができています。', RULE_LINE] };
+      return info.provider === 'openai' || info.provider === 'gemini'
+        ? {
+            title: 'AI 判定を利用できます',
+            lines: [
+              `ルールで判定できない欄の分類に ${providerName} を使います。送るのは欄のメタデータ（name・label など）だけで、入力する値は送りません。`,
+              RULE_LINE,
+            ],
+          }
+        : { title: 'AI 判定を利用できます', lines: ['AI の準備ができています。', RULE_LINE] };
   }
 }
 
@@ -72,12 +113,17 @@ const CSS = `
     border: 1px solid #c8ccd4; border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
   h2 { margin: 0 0 8px; font-size: 14px; }
   p { margin: 0 0 8px; word-break: break-all; user-select: text; }
-  .actions { display: flex; justify-content: flex-end; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; }
   button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid #c8ccd4;
     background: #f4f5f8; cursor: pointer; }
+  button.primary { background: #2457d6; border-color: #2457d6; color: #fff; }
 `;
 
-export function showAiGuide(guide: Guide, onClose: () => void = () => {}): GuideHandle {
+export function showAiGuide(
+  guide: Guide,
+  onClose: () => void = () => {},
+  onOpenSettings: () => void = () => {},
+): GuideHandle {
   const { host, root } = createShadowHost();
   host.style.position = 'fixed';
   host.style.top = '16px';
@@ -100,6 +146,17 @@ export function showAiGuide(guide: Guide, onClose: () => void = () => {}): Guide
   closeButton.textContent = '閉じる';
   const actions = document.createElement('div');
   actions.className = 'actions';
+  if (guide.openSettings) {
+    const settingsButton = document.createElement('button');
+    settingsButton.type = 'button';
+    settingsButton.className = 'primary';
+    settingsButton.textContent = 'AI 設定を開く';
+    settingsButton.addEventListener('click', () => {
+      onOpenSettings();
+      close();
+    });
+    actions.append(settingsButton);
+  }
   actions.append(closeButton);
   panel.append(actions);
 

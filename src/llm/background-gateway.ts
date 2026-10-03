@@ -1,11 +1,14 @@
 import type { Category, FieldMeta } from '../core/types';
-import { isAiStatus, MAX_CLASSIFY_CHUNK, parseClassifyResponse } from '../messages';
-import type { AiStatus } from './availability';
+import type { AiStatusInfo } from '../ai/types';
+import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, type TestResponse } from '../messages';
 import type { FieldClassifier } from './classifier';
 
 export const STATUS_TIMEOUT_MS = 5_000;
 export const CLASSIFY_TIMEOUT_MS = 20_000;
 export const DOWNLOAD_TIMEOUT_MS = 120_000;
+export const TEST_TIMEOUT_MS = 30_000;
+
+const UNKNOWN_STATUS: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
 // A stalled Service Worker reply must not leave the caller pending forever.
 function sendWithTimeout(msg: unknown, ms: number): Promise<unknown> {
@@ -18,13 +21,19 @@ function sendWithTimeout(msg: unknown, ms: number): Promise<unknown> {
   });
 }
 
-export async function getAiStatusViaBackground(timeoutMs = STATUS_TIMEOUT_MS): Promise<AiStatus> {
+export async function getAiStatusViaBackground(timeoutMs = STATUS_TIMEOUT_MS): Promise<AiStatusInfo> {
   try {
-    const res = await sendWithTimeout({ type: 'ai-status' }, timeoutMs);
-    const status = (res as { status?: unknown } | null | undefined)?.status;
-    return isAiStatus(status) ? status : 'unavailable';
+    return parseStatusResponse(await sendWithTimeout({ type: 'ai-status' }, timeoutMs)) ?? UNKNOWN_STATUS;
   } catch {
-    return 'unavailable';
+    return UNKNOWN_STATUS;
+  }
+}
+
+export async function testAiViaBackground(timeoutMs = TEST_TIMEOUT_MS): Promise<TestResponse | null> {
+  try {
+    return parseTestResponse(await sendWithTimeout({ type: 'ai-test' }, timeoutMs));
+  } catch {
+    return null;
   }
 }
 

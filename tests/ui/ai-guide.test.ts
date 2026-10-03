@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { buildGuide, showAiGuide } from '../../src/ui/ai-guide';
-import type { AiStatus } from '../../src/llm/availability';
+import type { AiState, AiStatusInfo } from '../../src/ai/types';
 
 const RULE = 'ルールによる入力は AI なしでも使えます';
-const all = (s: AiStatus, b: 'chrome' | 'edge' | 'unknown') => buildGuide(s, b).lines.join('\n');
+const all = (s: AiState, b: 'chrome' | 'edge' | 'unknown') => buildGuide({ status: s, provider: 'built-in' }, b).lines.join('\n');
 
 describe('buildGuide', () => {
   it('always mentions that rule-based filling works', () => {
@@ -86,5 +86,40 @@ describe('showAiGuide', () => {
     expect(onClose).toHaveBeenCalledTimes(2);
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     expect(onClose).toHaveBeenCalledTimes(2);
+  });
+});
+
+const gi = (status: AiStatusInfo['status'], provider: AiStatusInfo['provider']): AiStatusInfo => ({ status, provider });
+
+describe('buildGuide: cloud providers', () => {
+  it('points to the settings page when AI is off or not configured', () => {
+    for (const status of ['disabled', 'not-configured', 'permission-missing', 'auth-error'] as const) {
+      const g = buildGuide(gi(status, 'openai'), 'chrome');
+      expect(g.openSettings).toBe(true);
+      expect(g.lines.join('\n')).toContain('ルールによる入力は AI なしでも使えます');
+    }
+  });
+
+  it('explains what is sent when a cloud provider is available', () => {
+    const g = buildGuide(gi('available', 'gemini'), 'chrome');
+    expect(g.title).toBe('AI 判定を利用できます');
+    expect(g.lines.join('\n')).toContain('Gemini');
+    expect(g.lines.join('\n')).toContain('入力する値は送りません');
+    expect(g.openSettings).toBeFalsy();
+  });
+
+  it('keeps the browser flag guidance for built-in problems', () => {
+    expect(buildGuide(gi('unsupported', 'built-in'), 'edge').lines.join('\n')).toContain('edge://flags');
+  });
+});
+
+describe('showAiGuide: settings shortcut', () => {
+  afterEach(() => { document.body.innerHTML = ''; });
+
+  it('renders the panel with a settings guide and can be closed', () => {
+    const handle = showAiGuide({ title: 't', lines: ['l'], openSettings: true }, () => {}, vi.fn());
+    expect(document.querySelector('[data-jushoai]')).not.toBeNull();
+    handle.close();
+    expect(document.querySelector('[data-jushoai]')).toBeNull();
   });
 });

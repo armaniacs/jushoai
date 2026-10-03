@@ -25,7 +25,7 @@ describe('mountButton', () => {
   it('shows an error as text and then restores the AI status', () => {
     vi.useFakeTimers();
     const { handle, badge } = mount();
-    handle.setStatus('available');
+    handle.setStatus({ status: 'available', provider: 'built-in' });
     handle.showError('<b>x</b>');
     expect(badge().textContent).toBe('<b>x</b>');
     expect(badge().children).toHaveLength(0);
@@ -37,10 +37,10 @@ describe('mountButton', () => {
     const { handle, badge, onClick, onBadgeClick } = mount();
     expect(badge().tagName).toBe('BUTTON');
     expect(badge().closest('button:not(.badge)')).toBeNull();
-    handle.setStatus('unsupported');
+    handle.setStatus({ status: 'unsupported', provider: 'built-in' });
     expect(badge().textContent).toBe('AI 無効');
     (badge() as HTMLButtonElement).click();
-    expect(onBadgeClick).toHaveBeenCalledWith('unsupported');
+    expect(onBadgeClick).toHaveBeenCalledWith({ status: 'unsupported', provider: 'built-in' });
     expect(onClick).not.toHaveBeenCalled();
   });
 
@@ -48,8 +48,8 @@ describe('mountButton', () => {
     const { handle, badge, onBadgeClick } = mount();
     (badge() as HTMLButtonElement).click();
     expect(onBadgeClick).not.toHaveBeenCalled();
-    handle.setStatus('downloadable');
+    handle.setStatus({ status: 'downloadable', provider: 'built-in' });
     (badge() as HTMLButtonElement).click();
-    expect(onBadgeClick).toHaveBeenCalledWith('downloadable');
+    expect(onBadgeClick).toHaveBeenCalledWith({ status: 'downloadable', provider: 'built-in' });
   });
 });

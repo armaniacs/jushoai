@@ -40,14 +40,14 @@ export default defineContentScript({
         return;
       }
 
-      const status = await getAiStatusViaBackground();
-      button.setStatus(status);
-      if (status === 'downloadable') {
+      const info = await getAiStatusViaBackground();
+      button.setStatus(info);
+      if (info.provider === 'built-in' && info.status === 'downloadable') {
         void requestDownloadViaBackground()
           .then(() => getAiStatusViaBackground())
           .then((s) => button.setStatus(s));
       }
-      const classifier = status === 'available' ? new BackgroundClassifier() : null;
+      const classifier = info.status === 'available' ? new BackgroundClassifier() : null;
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
@@ -105,11 +105,15 @@ export default defineContentScript({
         const handle = mountButton(
           form.fields[0]!.el,
           () => void guardedRun(form.container, handle),
-          (status) => {
+          (info) => {
             openGuide?.close();
-            openGuide = showAiGuide(buildGuide(status, browser), () => {
-              openGuide = null;
-            });
+            openGuide = showAiGuide(
+              buildGuide(info, browser),
+              () => {
+                openGuide = null;
+              },
+              () => void chrome.runtime.sendMessage({ type: 'open-options' }),
+            );
           },
         );
         mounted.set(form.container, handle);
