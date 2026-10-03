@@ -42,7 +42,11 @@ export default defineContentScript({
 
       const status = await getAiStatusViaBackground();
       button.setStatus(status);
-      if (status === 'downloadable') void requestDownloadViaBackground();
+      if (status === 'downloadable') {
+        void requestDownloadViaBackground()
+          .then(() => getAiStatusViaBackground())
+          .then((s) => button.setStatus(s));
+      }
       const classifier = status === 'available' ? new BackgroundClassifier() : null;
 
       const fields = scanContainer(container, document);

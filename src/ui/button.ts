@@ -53,16 +53,18 @@ export function mountButton(
   badge.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
-    onBadgeClick(lastStatus);
+    if (statusKnown) onBadgeClick(lastStatus);
   });
   root.append(style, wrap);
   document.body.append(host);
 
   let lastStatus: AiStatus = 'unavailable';
+  let statusKnown = false;
   let errorTimer: number | undefined;
   const handle: ButtonHandle = {
     setStatus(status) {
       lastStatus = status;
+      statusKnown = true;
       window.clearTimeout(errorTimer);
       badge.textContent = STATUS_LABEL[status];
       badge.dataset.status = status;
@@ -83,6 +85,7 @@ export function mountButton(
     },
   };
   handle.setStatus('unavailable');
+  statusKnown = false;
   handle.reposition();
   return handle;
 }

@@ -7,15 +7,17 @@ vi.stubGlobal('chrome', { runtime: { sendMessage: send } });
 afterEach(() => send.mockReset());
 
 describe('getAiStatusViaBackground', () => {
-  it('returns the status, and unsupported on malformed or failed replies', async () => {
+  it('returns the status, and unavailable on malformed or failed replies', async () => {
     send.mockResolvedValueOnce({ status: 'available' });
     expect(await getAiStatusViaBackground()).toBe('available');
+    send.mockResolvedValueOnce({ status: 'unsupported' });
+    expect(await getAiStatusViaBackground()).toBe('unsupported');
     send.mockResolvedValueOnce({ status: 'weird' });
-    expect(await getAiStatusViaBackground()).toBe('unsupported');
+    expect(await getAiStatusViaBackground()).toBe('unavailable');
     send.mockResolvedValueOnce(undefined);
-    expect(await getAiStatusViaBackground()).toBe('unsupported');
+    expect(await getAiStatusViaBackground()).toBe('unavailable');
     send.mockRejectedValueOnce(new Error('x'));
-    expect(await getAiStatusViaBackground()).toBe('unsupported');
+    expect(await getAiStatusViaBackground()).toBe('unavailable');
   });
 });
 
@@ -59,5 +61,44 @@ describe('BackgroundClassifier', () => {
   it('returns an empty map for no fields without messaging', async () => {
     expect((await new BackgroundClassifier().classify([])).size).toBe(0);
     expect(send).not.toHaveBeenCalled();
+  });
+});
+
+describe('timeouts', () => {
+  afterEach(() => vi.useRealTimers());
+  const never = () => new Promise(() => {});
+
+  it('falls back to unavailable when the status reply hangs', async () => {
+    vi.useFakeTimers();
+    send.mockImplementationOnce(never);
+    const p = getAiStatusViaBackground(50);
+    await vi.advanceTimersByTimeAsync(50);
+    expect(await p).toBe('unavailable');
+  });
+
+  it('skips only the hung classify chunk', async () => {
+    vi.useFakeTimers();
+    send
+      .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
+      .mockImplementationOnce(never);
+    const metas = Array.from({ length: 30 }, (_, i) => makeMeta({ id: `f${i}` }));
+    const p = new BackgroundClassifier(50).classify(metas);
+    await vi.advanceTimersByTimeAsync(50);
+    expect([...(await p)]).toEqual([['f0', 'tel']]);
+  });
+
+  it('download resolves false on timeout', async () => {
+    vi.useFakeTimers();
+    send.mockImplementationOnce(never);
+    const p = requestDownloadViaBackground(50);
+    await vi.advanceTimersByTimeAsync(50);
+    expect(await p).toBe(false);
+  });
+
+  it('clears the timer after a normal reply', async () => {
+    vi.useFakeTimers();
+    send.mockResolvedValueOnce({ status: 'available' });
+    await getAiStatusViaBackground(5000);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

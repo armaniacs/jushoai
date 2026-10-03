@@ -43,4 +43,13 @@ describe('mountButton', () => {
     expect(onBadgeClick).toHaveBeenCalledWith('unsupported');
     expect(onClick).not.toHaveBeenCalled();
   });
+
+  it('ignores badge clicks until a status has been set', () => {
+    const { handle, badge, onBadgeClick } = mount();
+    (badge() as HTMLButtonElement).click();
+    expect(onBadgeClick).not.toHaveBeenCalled();
+    handle.setStatus('downloadable');
+    (badge() as HTMLButtonElement).click();
+    expect(onBadgeClick).toHaveBeenCalledWith('downloadable');
+  });
 });

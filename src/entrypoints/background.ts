@@ -9,7 +9,7 @@ export default defineBackground(() => {
       void chrome.runtime.openOptionsPage();
       return false;
     }
-    void handleMessage(msg, { lm: getLanguageModel() }).then(sendResponse);
+    void handleMessage(msg, { lm: getLanguageModel() }).then(sendResponse, () => sendResponse(undefined));
     return true;
   });
 });
