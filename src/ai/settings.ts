@@ -21,13 +21,23 @@ export function normalizeAiSettings(raw: unknown): AiSettings {
   };
 }
 
+export function normalizeHost(hostname: string): string {
+  return hostname.toLowerCase().replace(/\.$/, '');
+}
+
 export function isLoopbackHost(hostname: string): boolean {
-  return hostname === 'localhost' || /^127(\.\d{1,3}){3}$/.test(hostname);
+  const h = normalizeHost(hostname);
+  if (h.endsWith('.localhost')) return false;
+  if (h === 'localhost') return true;
+  return /^127(\.\d{1,3}){3}$/.test(h);
 }
 
 // String checks only: a hostname that merely resolves to a private address cannot be caught here.
+// Note: Only domain names are supported. IPv6 literals are rejected in validateBaseUrl.
+// DNS name resolution itself is out of scope (e.g., nip.io-style bypasses are not caught here).
 function isPrivateHost(hostname: string): boolean {
-  const h = hostname.toLowerCase();
+  const h = normalizeHost(hostname);
+  if (h.endsWith('.localhost')) return true;
   if (/\.(local|internal|lan|localdomain)$/.test(h) || h === 'home.arpa' || h.endsWith('.home.arpa')) return true;
   const m = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/.exec(h);
   if (m) {
@@ -35,12 +45,12 @@ function isPrivateHost(hostname: string): boolean {
     const b = Number(m[2]);
     return (
       a === 0 || a === 10 || (a === 100 && b >= 64 && b <= 127) || (a === 169 && b === 254) ||
-      (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168)
+      (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 192 && b === 0) ||
+      (a === 198 && b >= 18 && b <= 19) || a >= 224
     );
   }
   if (h.startsWith('[')) {
-    const inner = h.slice(1, -1);
-    return inner === '::' || inner.startsWith('::ffff:') || /^f[cd]/.test(inner) || /^fe[89ab]/.test(inner);
+    return true;
   }
   return false;
 }
@@ -56,13 +66,19 @@ export function validateBaseUrl(input: string): UrlCheck {
   }
   if (url.username || url.password) return { ok: false, reason: 'URL に認証情報を含めないでください' };
   if (url.search || url.hash) return { ok: false, reason: 'クエリやフラグメントは指定できません' };
+
+  const hostname = url.hostname;
+  if (hostname.startsWith('[')) {
+    return { ok: false, reason: 'IPv6 アドレスは指定できません（内部ネットワークのアドレスを含むため）' };
+  }
+
   if (url.protocol === 'http:') {
-    return isLoopbackHost(url.hostname)
+    return isLoopbackHost(hostname)
       ? { ok: true, url }
       : { ok: false, reason: 'http は localhost / 127.0.0.1 のみ使えます。https の URL を指定してください' };
   }
   if (url.protocol !== 'https:') return { ok: false, reason: 'https の URL を指定してください' };
-  if (!isLoopbackHost(url.hostname) && isPrivateHost(url.hostname)) {
+  if (!isLoopbackHost(hostname) && isPrivateHost(hostname)) {
     return { ok: false, reason: '内部ネットワークのアドレスは指定できません' };
   }
   return { ok: true, url };
@@ -71,7 +87,7 @@ export function validateBaseUrl(input: string): UrlCheck {
 // Host permission patterns ignore ports, so the pattern is protocol + hostname only.
 export function originPattern(baseUrl: string): string | null {
   const check = validateBaseUrl(baseUrl);
-  return check.ok ? `${check.url.protocol}//${check.url.hostname}/*` : null;
+  return check.ok ? `${check.url.protocol}//${normalizeHost(check.url.hostname)}/*` : null;
 }
 
 export function validateAiSettings(s: AiSettings, hasKey: KeyPresence): string[] {

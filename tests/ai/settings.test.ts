@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  isLoopbackHost, normalizeAiSettings, originPattern, validateAiSettings, validateBaseUrl,
+  isLoopbackHost, normalizeAiSettings, originPattern, validateAiSettings, validateBaseUrl, normalizeHost,
 } from '../../src/ai/settings';
 import { DEFAULT_AI_SETTINGS, type AiSettings } from '../../src/ai/types';
 
@@ -124,5 +124,99 @@ describe('validateAiSettings', () => {
       'API バージョンは v1beta のように指定してください',
       'API キーを入力してください',
     ]);
+  });
+});
+
+describe('normalizeHost', () => {
+  it('lowercases and strips one trailing dot', () => {
+    expect(normalizeHost('LOCALHOST')).toBe('localhost');
+    expect(normalizeHost('LOCALHOST.')).toBe('localhost');
+    expect(normalizeHost('localhost.')).toBe('localhost');
+    expect(normalizeHost('API.OpenAI.COM.')).toBe('api.openai.com');
+    expect(normalizeHost('localhost..')).toBe('localhost.');
+  });
+});
+
+describe('isLoopbackHost - security bypass fixes', () => {
+  it('recognizes localhost with trailing dot as loopback', () => {
+    expect(isLoopbackHost('localhost.')).toBe(true);
+    expect(isLoopbackHost('LOCALHOST.')).toBe(true);
+  });
+
+  it('rejects *.localhost subdomains', () => {
+    expect(isLoopbackHost('foo.localhost')).toBe(false);
+    expect(isLoopbackHost('api.localhost')).toBe(false);
+    expect(isLoopbackHost('127.localhost')).toBe(false);
+  });
+
+  it('recognizes 127.x.x.x as loopback with normalization', () => {
+    expect(isLoopbackHost('127.0.0.1.')).toBe(true);
+    expect(isLoopbackHost('127.1.2.3.')).toBe(true);
+  });
+});
+
+describe('validateBaseUrl - security bypass fixes', () => {
+  it('rejects trailing-dot domain bypass for .local/.internal', () => {
+    const r1 = validateBaseUrl('https://metadata.google.internal./v1');
+    expect(r1.ok).toBe(false);
+    if (!r1.ok) expect(r1.reason).toContain('内部ネットワーク');
+    const r2 = validateBaseUrl('https://printer.local./v1');
+    expect(r2.ok).toBe(false);
+  });
+
+  it('rejects *.localhost subdomains consistently', () => {
+    expect(validateBaseUrl('https://localhost./v1').ok).toBe(true);
+    expect(validateBaseUrl('https://foo.localhost/v1').ok).toBe(false);
+    expect(validateBaseUrl('http://foo.localhost/v1').ok).toBe(false);
+  });
+
+  it('rejects all bracketed IPv6 literals', () => {
+    const ipv6Cases = [
+      'https://[::1]/v1',
+      'https://[::]/v1',
+      'https://[fec0::1]/v1',
+      'https://[64:ff9b::a00:1]/v1',
+      'https://[::127.0.0.1]/v1',
+      'https://[::7f00:1]/v1',
+    ];
+    ipv6Cases.forEach(url => {
+      const r = validateBaseUrl(url);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.reason).toContain('内部ネットワーク');
+    });
+  });
+
+  it('rejects special-use IPv4 ranges', () => {
+    const specialRanges = [
+      'https://192.0.0.1/v1',
+      'https://192.0.0.254/v1',
+      'https://198.18.0.1/v1',
+      'https://198.19.255.254/v1',
+      'https://224.0.0.1/v1',
+      'https://240.0.0.1/v1',
+      'https://255.255.255.255/v1',
+    ];
+    specialRanges.forEach(url => {
+      const r = validateBaseUrl(url);
+      expect(r.ok).toBe(false);
+      if (!r.ok) expect(r.reason).toContain('内部ネットワーク');
+    });
+  });
+
+  it('accepts regression cases', () => {
+    expect(validateBaseUrl('https://API.OPENAI.COM/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://api.openai.com:8443/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://api.openai.com/v1/').ok).toBe(true);
+    expect(validateBaseUrl('https://xn--wgv71a.jp/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://172.32.0.1/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://100.128.0.1/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://2130706433/v1').ok).toBe(true);
+    expect(validateBaseUrl('https://0xc0a80001/v1').ok).toBe(false);
+    expect(validateBaseUrl('http://127.1/v1').ok).toBe(true);
+  });
+
+  it('normalizes hostnames in originPattern', () => {
+    expect(originPattern('https://localhost./v1')).toBe('https://localhost/*');
+    expect(originPattern('http://127.0.0.1:1234/v1')).toBe('http://127.0.0.1/*');
   });
 });
