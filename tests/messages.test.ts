@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRequest, parseClassifyResponse, MAX_CLASSIFY_FIELDS } from '../src/messages';
+import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS } from '../src/messages';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 'n', ...extra });
 
@@ -54,5 +54,37 @@ describe('parseClassifyResponse', () => {
     for (const r of [{ ok: false }, undefined, null, 'x', { ok: true }, { ok: true, entries: 'x' }]) {
       expect(parseClassifyResponse(r)).toBeNull();
     }
+  });
+});
+
+describe('ai-test request', () => {
+  it('accepts exactly { type: "ai-test" }', () => {
+    expect(parseRequest({ type: 'ai-test' })).toEqual({ type: 'ai-test' });
+    expect(parseRequest({ type: 'ai-test', extra: 1 })).toBeNull();
+  });
+});
+
+describe('parseStatusResponse', () => {
+  it('accepts a known status and provider', () => {
+    expect(parseStatusResponse({ status: 'available', provider: 'openai' })).toEqual({ status: 'available', provider: 'openai' });
+    expect(parseStatusResponse({ status: 'auth-error', provider: 'gemini' })).toEqual({ status: 'auth-error', provider: 'gemini' });
+  });
+
+  it.each([null, {}, { status: 'available' }, { status: 'x', provider: 'openai' }, { status: 'available', provider: 'evil' }])(
+    'rejects %j',
+    (v) => {
+      expect(parseStatusResponse(v)).toBeNull();
+    },
+  );
+});
+
+describe('parseTestResponse', () => {
+  it('accepts a category result and known failure reasons', () => {
+    expect(parseTestResponse({ ok: true, category: 'lastName' })).toEqual({ ok: true, category: 'lastName' });
+    expect(parseTestResponse({ ok: false, reason: 'auth' })).toEqual({ ok: false, reason: 'auth' });
+  });
+
+  it.each([null, { ok: true, category: 'nonsense' }, { ok: false, reason: 'boom' }, { ok: false }])('rejects %j', (v) => {
+    expect(parseTestResponse(v)).toBeNull();
   });
 });
