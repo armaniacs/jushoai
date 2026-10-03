@@ -5,7 +5,7 @@ export interface FieldClassifier {
   classify(fields: FieldMeta[]): Promise<Map<string, Category>>;
 }
 
-const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄を分類するアシスタントです。
+export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄を分類するアシスタントです。
 各入力欄のメタデータを見て、次のカテゴリから1つだけ選んでください。
 - lastName: 姓 / firstName: 名 / fullName: 姓名を1欄に入力
 - lastNameKana: 姓のフリガナ / firstNameKana: 名のフリガナ / fullNameKana: 姓名のフリガナを1欄に入力
