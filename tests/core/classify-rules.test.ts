@@ -120,6 +120,22 @@ describe('refineClassifications', () => {
       .toEqual(['lastNameKana', 'firstNameKana']);
   });
 
+  it('keeps fullName fields with different labels unsplit', () => {
+    const a = { ...item('fullName', 'a'), meta: makeMeta({ id: 'a', label: '注文者氏名' }) };
+    const b = { ...item('fullName', 'b'), meta: makeMeta({ id: 'b', label: 'お届け先氏名' }) };
+    expect(cats(refineClassifications([a, b]))).toEqual(['fullName', 'fullName']);
+  });
+
+  it('drops ambiguous groups of more than two identical fullName fields', () => {
+    const four = ['a', 'b', 'c', 'd'].map((id) => item('fullName', id));
+    expect(refineClassifications([...four, item('email', 'e')]).map((i) => i.meta.id)).toEqual(['e']);
+  });
+
+  it('splits two fullName fields sharing the same nearby heading', () => {
+    const mk = (id: string) => ({ ...item('fullName', id), meta: makeMeta({ id, nearby: 'お名前' }) });
+    expect(cats(refineClassifications([mk('a'), mk('b')]))).toEqual(['lastName', 'firstName']);
+  });
+
   it('narrows addressFull using sibling fields', () => {
     expect(cats(refineClassifications([item('prefecture', 'p'), item('addressFull', 'a')])))
       .toEqual(['prefecture', 'addressNoPref']);
@@ -132,5 +148,76 @@ describe('refineClassifications', () => {
     const input = [item('tel', 'a'), item('tel', 'b'), item('tel', 'c')];
     refineClassifications(input);
     expect(input[0]!.cls.category).toBe('tel');
+  });
+});
+
+describe('classifyField: name boundaries', () => {
+  it('does not read fullname as last name', () => {
+    expect(cat({ name: 'fullname' })).toBe('fullName');
+    expect(cat({ name: 'lname' })).toBe('lastName');
+    expect(cat({ name: 'l_name' })).toBe('lastName');
+    expect(cat({ name: 'fname' })).toBe('firstName');
+    expect(cat({ name: 'billing_fname' })).toBe('firstName');
+  });
+
+  it('does not read ethnicity as city', () => {
+    expect(cat({ name: 'ethnicity' })).toBeNull();
+    expect(cat({ name: 'city' })).toBe('city');
+  });
+});
+
+describe('classifyField: Japanese labels', () => {
+  const positives: [Parameters<typeof makeMeta>[0], string][] = [
+    [{ label: 'お名前' }, 'fullName'],
+    [{ label: '氏名' }, 'fullName'],
+    [{ label: '姓' }, 'lastName'],
+    [{ label: '名' }, 'firstName'],
+    [{ label: '名 *' }, 'firstName'],
+    [{ label: '（名）' }, 'firstName'],
+    [{ label: 'セイ' }, 'lastNameKana'],
+    [{ label: 'メイ' }, 'firstNameKana'],
+    [{ label: 'フリガナ' }, 'fullNameKana'],
+    [{ label: 'ふりがな' }, 'fullNameKana'],
+    [{ label: '郵便番号' }, 'zip'],
+    [{ label: '〒' }, 'zip'],
+    [{ label: '都道府県' }, 'prefecture'],
+    [{ label: '市区町村' }, 'city'],
+    [{ label: '番地' }, 'street'],
+    [{ label: '建物名' }, 'building'],
+    [{ label: 'マンション名' }, 'building'],
+    [{ label: '電話番号' }, 'tel'],
+    [{ label: '携帯電話' }, 'tel'],
+    [{ label: 'メールアドレス' }, 'email'],
+    [{ label: 'ご住所' }, 'addressFull'],
+  ];
+  it.each(positives)('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  const negatives: Parameters<typeof makeMeta>[0][] = [
+    { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
+    { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
+    { label: 'ご担当者名' }, { label: '会社名' }, { label: '部署名' }, { label: '備考' },
+    { label: 'お問い合わせ内容' }, { label: 'パスワード' }, { label: '生年月日' },
+    { label: '性別' }, { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
+    { label: 'カード名義' },
+  ];
+  it.each(negatives)('leaves %j unclassified', (p) => {
+    expect(cat(p)).toBeNull();
+  });
+});
+
+describe('classifyField: kana source', () => {
+  const four = [
+    makeMeta({ id: 'a', placeholder: '山田', nearby: 'お名前・フリガナ' }),
+    makeMeta({ id: 'b', placeholder: '太郎', nearby: 'お名前・フリガナ' }),
+    makeMeta({ id: 'c', placeholder: 'ヤマダ', nearby: 'お名前・フリガナ' }),
+    makeMeta({ id: 'd', placeholder: 'タロウ', nearby: 'お名前・フリガナ' }),
+  ];
+  it('does not let a shared legend turn kanji fields into kana', () => {
+    const items = four.map((meta) => ({ meta, cls: classifyField(meta)! }));
+    expect(refineClassifications(items).map((i) => i.cls.category)).toEqual([
+      'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
+    ]);
   });
 });

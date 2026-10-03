@@ -23,15 +23,18 @@ const AUTOCOMPLETE: Record<string, Category> = {
 };
 
 const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|学校|店舗/;
+// Applied only to the person-name step so e.g. a user_email field stays an email.
+const NAME_EXCLUDE =
+  /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|(^|[^a-z])cc([^a-z]|$)/;
 const KANA = /kana|furigana|yomi|フリガナ|ふりがな|フリカナ|カナ|ひらがな|読み|セイ|メイ|せい|めい/;
-const LAST = /last.?name|family.?name|surname|lname|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
-const FIRST = /first.?name|given.?name|fname|(^|[^a-z])mei([^a-z]|$)|(?<!氏)名(?![前字])|メイ|めい/;
+const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
+const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［\[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
 const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
 
 const norm = (s: string) => s.normalize('NFKC').toLowerCase();
 const stripExample = (s: string) => s.replace(/^例[)）:：]?/, '').trim();
 
-function classifyText(raw: string, kana: boolean): Category | null {
+function classifyText(raw: string, kana: boolean, bareKana: boolean): Category | null {
   const t = norm(raw);
   if (!t.trim() || EXCLUDE.test(t)) return null;
   if (/e-?mail|メール/.test(t)) return 'email';
@@ -42,13 +45,14 @@ function classifyText(raw: string, kana: boolean): Category | null {
     return 'building';
   }
   if (/(市区町村|市町村).*(番地|丁目)/.test(t)) return 'addressNoPref';
-  if (/city|municipal|市区町村|市町村|市区郡/.test(t)) return 'city';
+  if (/(^|[^a-z])city|municipal|市区町村|市町村|市区郡/.test(t)) return 'city';
   if (/street|番地|丁目|町名/.test(t)) return 'street';
+  if (NAME_EXCLUDE.test(t)) return null;
   const last = LAST.test(t);
   const first = FIRST.test(t);
   if (last && !first) return kana ? 'lastNameKana' : 'lastName';
   if (first && !last) return kana ? 'firstNameKana' : 'firstName';
-  if (last || first || FULL_NAME.test(t) || kana) return kana ? 'fullNameKana' : 'fullName';
+  if (last || first || FULL_NAME.test(t) || (kana && (bareKana || KANA.test(t)))) return kana ? 'fullNameKana' : 'fullName';
   if (/address|住所|addr/.test(t)) return 'addressFull';
   return null;
 }
@@ -83,16 +87,19 @@ export function classifyField(m: FieldMeta): Classification | null {
 
   const ph = stripExample(norm(m.placeholder));
   const placeholderIsKana = ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
-  const kana =
-    placeholderIsKana || KANA.test(norm([m.name, m.htmlId, m.label, m.placeholder, m.nearby].join(' ')));
+  // A kanji or latin placeholder (山田) means the field wants a plain name even if a shared heading says フリガナ.
+  const placeholderIsPlain = ph !== '' && /[一-龠a-z]/.test(ph);
+  const kanaFor = (text: string) => placeholderIsKana || (!placeholderIsPlain && KANA.test(norm(text)));
 
-  const sources: [string, number][] = [
-    [`${m.name} ${m.htmlId}`, 0.8],
-    [`${m.label} ${m.placeholder}`, 0.7],
-    [m.nearby, 0.65],
+  // Only the label/placeholder source may infer kana from the placeholder alone; name/id and
+  // heading text need their own kana signal.
+  const sources: [string, number, boolean][] = [
+    [`${m.name} ${m.htmlId}`, 0.8, false],
+    [`${m.label} ${m.placeholder}`, 0.7, true],
+    [m.nearby, 0.65, false],
   ];
-  for (const [text, confidence] of sources) {
-    const category = classifyText(text, kana);
+  for (const [text, confidence, bare] of sources) {
+    const category = classifyText(text, kanaFor(text), bare);
     if (category) return make(category, confidence);
   }
   if (m.type === 'tel') return make('tel', 0.5);
@@ -114,10 +121,23 @@ export function refineClassifications(items: Item[]): Item[] {
   if (tel.length === 3) retag(tel, ['tel1', 'tel2', 'tel3']);
   const zip = indices('zip');
   if (zip.length === 2) retag(zip, ['zip1', 'zip2']);
-  const name = indices('fullName');
-  if (name.length === 2) retag(name, ['lastName', 'firstName']);
-  const nameKana = indices('fullNameKana');
-  if (nameKana.length === 2) retag(nameKana, ['lastNameKana', 'firstNameKana']);
+  const dropped = new Set<number>();
+  // Fields only split into a last/first pair when they share label and heading; otherwise
+  // they may belong to different people (e.g. orderer vs. recipient).
+  const splitGroups = (cat: Category, pair: [Category, Category]) => {
+    const groups = new Map<string, number[]>();
+    for (const i of indices(cat)) {
+      const meta = out[i]!.meta;
+      const key = `${meta.label}\u0000${meta.nearby}`;
+      groups.set(key, [...(groups.get(key) ?? []), i]);
+    }
+    for (const idx of groups.values()) {
+      if (idx.length === 2) retag(idx, pair);
+      else if (idx.length > 2) idx.forEach((i) => dropped.add(i));
+    }
+  };
+  splitGroups('fullName', ['lastName', 'firstName']);
+  splitGroups('fullNameKana', ['lastNameKana', 'firstNameKana']);
 
   const hasCity = out.some((it) => it.cls.category === 'city');
   const hasPref = out.some((it) => it.cls.category === 'prefecture');
@@ -126,5 +146,5 @@ export function refineClassifications(items: Item[]): Item[] {
     if (hasCity) it.cls.category = 'street';
     else if (hasPref) it.cls.category = 'addressNoPref';
   }
-  return out;
+  return out.filter((_, i) => !dropped.has(i));
 }
