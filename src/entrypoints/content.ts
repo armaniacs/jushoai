@@ -14,7 +14,21 @@ export default defineContentScript({
   runAt: 'document_idle',
   main() {
     const mounted = new Map<Element, ButtonHandle>();
+    const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
+
+    async function guardedRun(container: Element, button: ButtonHandle) {
+      if (running.has(container)) return;
+      running.add(container);
+      try {
+        await run(container, button);
+      } catch {
+        // Typically "Extension context invalidated" after the extension was updated.
+        button.showError('エラー: ページを再読み込み');
+      } finally {
+        running.delete(container);
+      }
+    }
 
     async function run(container: Element, button: ButtonHandle) {
       const data = await loadData();
@@ -82,7 +96,7 @@ export default defineContentScript({
       }
       for (const form of forms) {
         if (mounted.has(form.container)) continue;
-        const handle = mountButton(form.fields[0]!.el, () => void run(form.container, handle));
+        const handle = mountButton(form.fields[0]!.el, () => void guardedRun(form.container, handle));
         mounted.set(form.container, handle);
         void checkAiStatus().then((s) => handle.setStatus(s));
       }

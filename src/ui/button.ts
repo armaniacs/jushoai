@@ -3,6 +3,7 @@ import { createShadowHost } from './host';
 
 export interface ButtonHandle {
   setStatus(status: AiStatus): void;
+  showError(text: string): void;
   reposition(): void;
   destroy(): void;
 }
@@ -21,6 +22,7 @@ const CSS = `
   button:hover { background: #1c46b3; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     background: rgba(255,255,255,.22); }
+  .badge[data-status="error"] { background: #b3261e; }
   .badge[data-status="unavailable"] { background: rgba(0,0,0,.3); }
 `;
 
@@ -43,10 +45,20 @@ export function mountButton(anchor: Element, onClick: () => void): ButtonHandle 
   root.append(style, button);
   document.body.append(host);
 
+  let lastStatus: AiStatus = 'unavailable';
+  let errorTimer: number | undefined;
   const handle: ButtonHandle = {
     setStatus(status) {
+      lastStatus = status;
+      window.clearTimeout(errorTimer);
       badge.textContent = STATUS_LABEL[status];
       badge.dataset.status = status;
+    },
+    showError(text) {
+      window.clearTimeout(errorTimer);
+      badge.textContent = text;
+      badge.dataset.status = 'error';
+      errorTimer = window.setTimeout(() => handle.setStatus(lastStatus), 4000);
     },
     reposition() {
       const r = anchor.getBoundingClientRect();
