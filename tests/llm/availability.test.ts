@@ -1,12 +1,24 @@
 import { describe, it, expect, vi } from 'vitest';
-import { checkAiStatus, startDownload, type LanguageModelStatic } from '../../src/llm/availability';
+import { checkAiStatus, startDownload, LM_OPTIONS, type LanguageModelStatic } from '../../src/llm/availability';
 
 const fake = (availability: () => Promise<string>, create = vi.fn()): LanguageModelStatic =>
   ({ availability, create }) as unknown as LanguageModelStatic;
 
 describe('checkAiStatus', () => {
-  it('is unavailable without the API', async () => {
-    expect(await checkAiStatus(null)).toBe('unavailable');
+  it('is unsupported without the API', async () => {
+    expect(await checkAiStatus(null)).toBe('unsupported');
+  });
+
+  it('uses identical ja output options for availability and create', async () => {
+    const availability = vi.fn().mockResolvedValue('available');
+    const create = vi.fn().mockResolvedValue({ destroy: vi.fn() });
+    const lm = fake(availability, create);
+    await checkAiStatus(lm);
+    await startDownload(lm);
+    const expected = { expectedOutputs: [{ type: 'text', languages: ['ja'] }] };
+    expect(LM_OPTIONS).toEqual(expected);
+    expect(availability).toHaveBeenCalledWith(expected);
+    expect(create).toHaveBeenCalledWith(expected);
   });
 
   it('passes through the four states', async () => {

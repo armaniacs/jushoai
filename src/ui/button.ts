@@ -13,6 +13,7 @@ const STATUS_LABEL: Record<AiStatus, string> = {
   downloadable: 'AI 未準備',
   downloading: 'AI 準備中',
   unavailable: 'AI 無効',
+  unsupported: 'AI 無効',
 };
 
 const CSS = `

@@ -1,4 +1,4 @@
-export type AiStatus = 'available' | 'downloadable' | 'downloading' | 'unavailable';
+export type AiStatus = 'available' | 'downloadable' | 'downloading' | 'unavailable' | 'unsupported';
 
 export interface LanguageModelSession {
   prompt(input: string, options?: { responseConstraint?: unknown; signal?: AbortSignal }): Promise<string>;
@@ -10,8 +10,8 @@ export interface LanguageModelStatic {
   create(options?: unknown): Promise<LanguageModelSession>;
 }
 
+// availability() and create() must receive identical language specs, otherwise their results diverge.
 export const LM_OPTIONS = {
-  expectedInputs: [{ type: 'text', languages: ['ja'] }],
   expectedOutputs: [{ type: 'text', languages: ['ja'] }],
 };
 
@@ -20,7 +20,7 @@ export function getLanguageModel(): LanguageModelStatic | null {
 }
 
 export async function checkAiStatus(lm: LanguageModelStatic | null = getLanguageModel()): Promise<AiStatus> {
-  if (!lm) return 'unavailable';
+  if (!lm) return 'unsupported';
   try {
     return await lm.availability(LM_OPTIONS);
   } catch {
