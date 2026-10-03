@@ -3,8 +3,7 @@ import { buildPlan, type PlanItem } from '../core/planner';
 import { applyPlan } from '../dom/apply-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
-import { checkAiStatus, getLanguageModel, startDownload } from '../llm/availability';
-import { PromptApiClassifier } from '../llm/classifier';
+import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { isReady, loadData } from '../storage';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
@@ -37,11 +36,10 @@ export default defineContentScript({
         return;
       }
 
-      const lm = getLanguageModel();
-      const status = await checkAiStatus(lm);
+      const status = await getAiStatusViaBackground();
       button.setStatus(status);
-      if (lm && status === 'downloadable') void startDownload(lm);
-      const classifier = lm && status === 'available' ? new PromptApiClassifier(lm) : null;
+      if (status === 'downloadable') void requestDownloadViaBackground();
+      const classifier = status === 'available' ? new BackgroundClassifier() : null;
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
@@ -98,7 +96,7 @@ export default defineContentScript({
         if (mounted.has(form.container)) continue;
         const handle = mountButton(form.fields[0]!.el, () => void guardedRun(form.container, handle));
         mounted.set(form.container, handle);
-        void checkAiStatus().then((s) => handle.setStatus(s));
+        void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }
     }
 

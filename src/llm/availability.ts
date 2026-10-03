@@ -28,12 +28,14 @@ export async function checkAiStatus(lm: LanguageModelStatic | null = getLanguage
   }
 }
 
-// Model download needs a user gesture, so callers invoke this from the button click.
-export async function startDownload(lm: LanguageModelStatic): Promise<void> {
+// Unverified in a real browser: create() may need a user gesture, which a Service Worker lacks.
+// Returns whether the attempt was accepted so callers can report honestly.
+export async function startDownload(lm: LanguageModelStatic): Promise<boolean> {
   try {
     const session = await lm.create(LM_OPTIONS);
     session.destroy();
+    return true;
   } catch {
-    // The status badge keeps reflecting the real state on the next check.
+    return false;
   }
 }

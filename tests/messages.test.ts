@@ -1,0 +1,58 @@
+import { describe, it, expect } from 'vitest';
+import { parseRequest, parseClassifyResponse, MAX_CLASSIFY_FIELDS } from '../src/messages';
+
+const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 'n', ...extra });
+
+describe('parseRequest', () => {
+  it('accepts the three exact shapes', () => {
+    expect(parseRequest({ type: 'ai-status' })).toEqual({ type: 'ai-status' });
+    expect(parseRequest({ type: 'ai-download' })).toEqual({ type: 'ai-download' });
+    const r = parseRequest({ type: 'ai-classify', fields: [field('a', { label: 'L', maxLength: 5 })] });
+    expect(r?.type).toBe('ai-classify');
+  });
+
+  it('rejects unknown, extra-keyed or non-object messages', () => {
+    for (const m of [null, undefined, 'x', 1, [], {}, { type: 'open-options' }, { type: 'ai-status', x: 1 },
+      { type: 'ai-classify' }, { type: 'ai-classify', fields: 'x' }, { type: 'ai-classify', fields: [], x: 1 }]) {
+      expect(parseRequest(m)).toBeNull();
+    }
+  });
+
+  it('rejects more than the maximum number of fields', () => {
+    const fields = Array.from({ length: MAX_CLASSIFY_FIELDS + 1 }, (_, i) => field(`f${i}`));
+    expect(parseRequest({ type: 'ai-classify', fields })).toBeNull();
+  });
+
+  it('sanitizes fields to the metadata allow-list and drops bad ones', () => {
+    const r = parseRequest({
+      type: 'ai-classify',
+      fields: [
+        field('a', { value: 'SECRET', label: 123, placeholder: 'p'.repeat(500), maxLength: 'x', type: 'text' }),
+        { name: 'no id' },
+        field('x'.repeat(500)),
+        null,
+      ],
+    });
+    expect(r?.type).toBe('ai-classify');
+    if (r?.type !== 'ai-classify') return;
+    expect(r.fields).toHaveLength(1);
+    const f = r.fields[0]!;
+    expect(f.id).toBe('a');
+    expect(f.value).toBe('');
+    expect(f.label).toBe('');
+    expect(f.placeholder.length).toBeLessThanOrEqual(200);
+    expect(f.maxLength).toBeNull();
+  });
+});
+
+describe('parseClassifyResponse', () => {
+  it('converts valid entries to a Map and ignores malformed ones', () => {
+    const m = parseClassifyResponse({ ok: true, entries: [['a', 'email'], ['b', 'bogus'], ['c'], [1, 'tel'], 'x'] });
+    expect([...m!]).toEqual([['a', 'email']]);
+  });
+  it('returns null for failures and malformed responses', () => {
+    for (const r of [{ ok: false }, undefined, null, 'x', { ok: true }, { ok: true, entries: 'x' }]) {
+      expect(parseClassifyResponse(r)).toBeNull();
+    }
+  });
+});

@@ -36,12 +36,12 @@ describe('startDownload', () => {
   it('creates a session and destroys it, swallowing failures', async () => {
     const destroy = vi.fn();
     const create = vi.fn().mockResolvedValue({ destroy });
-    await startDownload(fake(async () => 'downloadable', create));
+    expect(await startDownload(fake(async () => 'downloadable', create))).toBe(true);
     expect(create).toHaveBeenCalledOnce();
     expect(destroy).toHaveBeenCalledOnce();
 
     await expect(
       startDownload(fake(async () => 'downloadable', vi.fn().mockRejectedValue(new Error('no')))),
-    ).resolves.toBeUndefined();
+    ).resolves.toBe(false);
   });
 });
