@@ -6,7 +6,7 @@ export interface KeyReentryInput {
   removing: boolean;
 }
 
-function originOf(url: string): string | null {
+export function originOf(url: string): string | null {
   try {
     return new URL(url).origin;
   } catch {
@@ -21,4 +21,14 @@ export function needsKeyReentry(input: KeyReentryInput): boolean {
   const next = originOf(input.newBaseUrl);
   if (saved === null || next === null) return false;
   return saved !== next;
+}
+
+export interface OpenAiValues {
+  baseUrl: string;
+  model: string;
+}
+
+// Saving under another provider must not alter the persisted OpenAI endpoint, or its stored key would follow it.
+export function resolveOpenAiToSave(provider: string, edited: OpenAiValues, saved: OpenAiValues): OpenAiValues {
+  return provider === 'openai' ? edited : saved;
 }

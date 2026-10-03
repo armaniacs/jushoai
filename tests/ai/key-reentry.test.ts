@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { needsKeyReentry } from '../../src/ai/key-reentry';
+import { needsKeyReentry, resolveOpenAiToSave } from '../../src/ai/key-reentry';
 
 const base = {
   savedBaseUrl: 'https://api.openai.com/v1',
@@ -37,5 +37,16 @@ describe('needsKeyReentry', () => {
   });
   it('trailing slash and case-only differences do not need re-entry', () => {
     expect(needsKeyReentry({ ...base, newBaseUrl: 'HTTPS://API.OPENAI.COM/v1/' })).toBe(false);
+  });
+});
+
+describe('resolveOpenAiToSave', () => {
+  const edited = { baseUrl: 'https://b.example/v1', model: 'edited' };
+  const saved = { baseUrl: 'https://a.example/v1', model: 'saved' };
+  it('uses the edited values for the openai provider', () => {
+    expect(resolveOpenAiToSave('openai', edited, saved)).toEqual(edited);
+  });
+  it.each(['none', 'gemini', 'built-in'] as const)('uses the saved values for %s', (p) => {
+    expect(resolveOpenAiToSave(p, edited, saved)).toEqual(saved);
   });
 });

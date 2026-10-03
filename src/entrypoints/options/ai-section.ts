@@ -1,5 +1,5 @@
 import { originPatternsFor, requestHostPermission } from '../../ai/permissions';
-import { needsKeyReentry } from '../../ai/key-reentry';
+import { needsKeyReentry, resolveOpenAiToSave } from '../../ai/key-reentry';
 import { IdbKeyStore } from '../../ai/secret-store';
 import { normalizeAiSettings, validateAiSettings } from '../../ai/settings';
 import { loadPublicAiSettings, saveAiSettings, type KeyUpdate } from '../../ai/settings-store';
@@ -43,7 +43,8 @@ export function mountAiSection(root: HTMLElement): void {
   let hasKey: KeyPresence = { openai: false, gemini: false };
   const keyInput = { openai: '', gemini: '' };
   const removeKey = { openai: false, gemini: false };
-  let savedOpenAiBaseUrl = '';
+  let savedOpenAi = { baseUrl: '', model: '' };
+  let testing = false;
   let notice: HTMLElement | null = null;
   const keyStore = new IdbKeyStore();
 
@@ -153,6 +154,7 @@ export function mountAiSection(root: HTMLElement): void {
     save.addEventListener('click', () => void onSave());
     const test = el('button', '接続テスト（保存済みの設定で実行）');
     test.type = 'button';
+    test.disabled = testing;
     test.addEventListener('click', () => void onTest());
     const actions = el('div');
     actions.className = 'row';
@@ -173,11 +175,14 @@ export function mountAiSection(root: HTMLElement): void {
       openai: !removeKey.openai && (hasKey.openai || keyInput.openai !== ''),
       gemini: !removeKey.gemini && (hasKey.gemini || keyInput.gemini !== ''),
     };
-    const normalized = normalizeAiSettings(settings);
+    const normalized = normalizeAiSettings({
+      ...settings,
+      openai: resolveOpenAiToSave(settings.provider, settings.openai, savedOpenAi),
+    });
     if (
       normalized.provider === 'openai' &&
       needsKeyReentry({
-        savedBaseUrl: savedOpenAiBaseUrl,
+        savedBaseUrl: savedOpenAi.baseUrl,
         newBaseUrl: normalized.openai.baseUrl,
         hadKey: hasKey.openai,
         typedKey: keyInput.openai,
@@ -195,10 +200,16 @@ export function mountAiSection(root: HTMLElement): void {
     // The permission prompt needs the click's user gesture, so it must be the first await.
     const origins = originPatternsFor(normalized);
     const granted = origins.length === 0 ? true : await requestHostPermission(origins);
-    await saveAiSettings(normalized, update, keyStore);
+    try {
+      await saveAiSettings(normalized, update, keyStore);
+    } catch {
+      setNotice('保存に失敗しました。もう一度お試しください。', 'errors');
+      return;
+    }
     settings = normalized;
-    savedOpenAiBaseUrl = normalized.openai.baseUrl;
-    hasKey = effective;
+    savedOpenAi = { ...normalized.openai };
+    // The store drops a kept key when the origin changed, so presence is re-read instead of assumed.
+    hasKey = (await loadPublicAiSettings()).hasKey;
     keyInput.openai = '';
     keyInput.gemini = '';
     removeKey.openai = false;
@@ -210,16 +221,26 @@ export function mountAiSection(root: HTMLElement): void {
   }
 
   async function onTest() {
+    if (testing) return;
+    testing = true;
     setNotice('接続テスト中…', 'saved');
-    const result = await testAiViaBackground();
-    if (!result) setNotice('バックグラウンドが応答しませんでした。', 'errors');
-    else if (result.ok) setNotice(`接続できました（判定: ${result.category}）。`, 'saved');
-    else setNotice(FAILURE_TEXT[result.reason], 'errors');
+    try {
+      const result = await testAiViaBackground();
+      testing = false;
+      if (!result) setNotice('バックグラウンドが応答しませんでした。', 'errors');
+      else if (result.ok) setNotice(`接続できました（判定: ${result.category}）。`, 'saved');
+      else setNotice(FAILURE_TEXT[result.reason], 'errors');
+    } finally {
+      if (testing) {
+        testing = false;
+        render();
+      }
+    }
   }
 
   void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
     settings = loaded;
-    savedOpenAiBaseUrl = loaded.openai.baseUrl;
+    savedOpenAi = { ...loaded.openai };
     hasKey = keys;
     render();
   });

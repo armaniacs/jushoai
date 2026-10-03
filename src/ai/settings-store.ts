@@ -1,6 +1,7 @@
 import {
   decryptSecret, encryptSecret, isEnvelope, type Envelope, type KeyStore,
 } from './secret-store';
+import { originOf } from './key-reentry';
 import { normalizeAiSettings } from './settings';
 import type { AiSettings, PublicAiSettings } from './types';
 
@@ -49,13 +50,19 @@ export async function loadAiSecrets(ks: KeyStore): Promise<Partial<Record<Keyed,
 
 export async function saveAiSettings(settings: AiSettings, update: KeyUpdate, ks: KeyStore): Promise<void> {
   const normalized = normalizeAiSettings(settings);
-  const { keys } = await readStored();
+  const { keys, settings: stored } = await readStored();
   const next = { ...keys };
   for (const p of KEYED) {
     const u = update[p];
     if (u === undefined) continue;
     if (u === '') delete next[p];
     else next[p] = await encryptSecret(u, ks);
+  }
+  // A kept OpenAI key must never follow the endpoint to another origin.
+  if (update.openai === undefined && next.openai) {
+    const before = originOf(stored.openai.baseUrl);
+    const after = originOf(normalized.openai.baseUrl);
+    if (before === null || after === null || before !== after) delete next.openai;
   }
   await chrome.storage.local.set({
     [AI_SETTINGS_KEY]: {

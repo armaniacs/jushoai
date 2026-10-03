@@ -65,4 +65,54 @@ describe('ai settings store', () => {
     await saveAiSettings(settings, { openai: 'sk-secret-1' }, new MemoryKeyStore());
     expect(await loadAiSecrets(new MemoryKeyStore())).toEqual({});
   });
+
+  describe('openai key across origins', () => {
+    const withUrl = (baseUrl: string, provider: AiSettings['provider'] = 'openai'): AiSettings => ({
+      ...settings, provider, openai: { ...settings.openai, baseUrl },
+    });
+
+    it('keeps the key when only path, trailing slash or case change', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1' }, ks);
+      await saveAiSettings(withUrl('HTTPS://API.OPENAI.COM/v2/'), {}, ks);
+      expect((await loadPublicAiSettings()).hasKey.openai).toBe(true);
+      expect((await loadAiSecrets(ks)).openai).toBe('sk-1');
+    });
+
+    it('drops the key when the origin changes without a key update', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1' }, ks);
+      await saveAiSettings(withUrl('https://other.example/v1'), {}, ks);
+      expect((await loadPublicAiSettings()).hasKey.openai).toBe(false);
+      expect((await loadAiSecrets(ks)).openai).toBeUndefined();
+    });
+
+    it('stores a new key supplied with an origin change', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1' }, ks);
+      await saveAiSettings(withUrl('https://other.example/v1'), { openai: 'sk-2' }, ks);
+      expect((await loadAiSecrets(ks)).openai).toBe('sk-2');
+    });
+
+    it('keeps the key when only the provider changes', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1' }, ks);
+      await saveAiSettings(withUrl(settings.openai.baseUrl, 'none'), {}, ks);
+      expect((await loadAiSecrets(ks)).openai).toBe('sk-1');
+    });
+
+    it('drops the key when the stored URL is empty or unparsable', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(withUrl(''), { openai: 'sk-1' }, ks);
+      await saveAiSettings(settings, {}, ks);
+      expect((await loadPublicAiSettings()).hasKey.openai).toBe(false);
+    });
+
+    it('never drops the gemini key', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1', gemini: 'gk' }, ks);
+      await saveAiSettings(withUrl('https://other.example/v1'), {}, ks);
+      expect((await loadAiSecrets(ks)).gemini).toBe('gk');
+    });
+  });
 });
