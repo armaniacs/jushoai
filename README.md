@@ -4,11 +4,16 @@
 
 ## 開発
 
-    npm install
-    npm run dev        # 開発ビルド（Chrome が起動する）
-    npm run build      # .output/chrome-mv3 に出力
-    npm test           # Vitest
-    npm run typecheck
+    make install       # 依存の取得
+    make dev           # 開発ビルド（Chrome が起動する）
+    make build         # dist/chrome-mv3 に出力
+    make test          # Vitest
+    make typecheck     # tsc --noEmit
+    make check         # typecheck + test + build
+    make zip           # dist に配布用 zip を作る
+    make clean         # 生成物を削除
+
+`make help` で一覧を表示する。
 
 ## 使い方
 

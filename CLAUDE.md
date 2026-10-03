@@ -12,11 +12,14 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 スタックは WXT + TypeScript + Vitest（jsdom）。
 
+`make help` で一覧を表示する。`make check` が typecheck + test + build を通しで実行する。
+
 ```bash
-npm run dev                                   # 開発ビルド
-npm run build                                 # .output/chrome-mv3 に出力
-npm run typecheck                             # tsc --noEmit
-npm test                                      # 全テスト
+make install                                  # 依存の取得
+make dev                                      # 開発ビルド
+make build                                    # dist/chrome-mv3 に出力
+make typecheck                                # tsc --noEmit
+make test                                     # 全テスト
 npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```
