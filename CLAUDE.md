@@ -34,7 +34,7 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - **注入は必ずプレビュー経由。** ボタン押下 → 分類 → `planner.buildPlan` → プレビュー承認 → `fillField` の順。入力済み欄は上書きせず、`maxlength` 超過は切り詰めず警告して注入しない。
 - **値注入はネイティブ setter 経由。** `fillField` は prototype の `value` setter を呼んでから `input` / `change` / `blur` を発火する。React/Vue の値トラッカーを迂回するための実装で、`el.value = ...` に置き換えない。
 - **UI は Shadow DOM（closed）。** ページ由来の文字列（label など）は必ず `textContent` で入れ、`innerHTML` を使わない。
-- **Prompt API の呼び出し場所は未確定。** グローバルは `LanguageModel`。Content Script から呼べるかは実装着手時に確認し、呼べなければ background 側へ移す。影響範囲は `src/llm/` と Content Script の分類器の組み立てに限る。
+- **Prompt API は Service Worker（`src/entrypoints/background.ts`）から呼ぶ。** Content Script は runtime メッセージ（`src/llm/background-gateway.ts`、`src/messages.ts`）経由で状態確認・分類・ダウンロードを依頼する。Chrome（Gemini Nano）と Edge（Phi-mini）は同じ `LanguageModel` API 形状。Phi-mini は文脈が小さいため 1 リクエスト 20 欄までに分割する。
 
 ## テスト方針
 
