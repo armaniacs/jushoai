@@ -1,0 +1,35 @@
+import { describe, it, expect, vi } from 'vitest';
+import { checkAiStatus, startDownload, type LanguageModelStatic } from '../../src/llm/availability';
+
+const fake = (availability: () => Promise<string>, create = vi.fn()): LanguageModelStatic =>
+  ({ availability, create }) as unknown as LanguageModelStatic;
+
+describe('checkAiStatus', () => {
+  it('is unavailable without the API', async () => {
+    expect(await checkAiStatus(null)).toBe('unavailable');
+  });
+
+  it('passes through the four states', async () => {
+    for (const s of ['available', 'downloadable', 'downloading', 'unavailable']) {
+      expect(await checkAiStatus(fake(async () => s))).toBe(s);
+    }
+  });
+
+  it('treats errors as unavailable', async () => {
+    expect(await checkAiStatus(fake(async () => { throw new Error('x'); }))).toBe('unavailable');
+  });
+});
+
+describe('startDownload', () => {
+  it('creates a session and destroys it, swallowing failures', async () => {
+    const destroy = vi.fn();
+    const create = vi.fn().mockResolvedValue({ destroy });
+    await startDownload(fake(async () => 'downloadable', create));
+    expect(create).toHaveBeenCalledOnce();
+    expect(destroy).toHaveBeenCalledOnce();
+
+    await expect(
+      startDownload(fake(async () => 'downloadable', vi.fn().mockRejectedValue(new Error('no')))),
+    ).resolves.toBeUndefined();
+  });
+});
