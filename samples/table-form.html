@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>table form</title>
+<form onsubmit="return false">
+  <table>
+    <tr><th>お名前</th><td><input name="n1" placeholder="山田"> <input name="n2" placeholder="太郎"></td></tr>
+    <tr><th>フリガナ</th><td><input name="k1" placeholder="ヤマダ"> <input name="k2" placeholder="タロウ"></td></tr>
+    <tr><th>郵便番号</th><td><input name="z1" maxlength="3" size="3"> - <input name="z2" maxlength="4" size="4"></td></tr>
+    <tr><th>都道府県</th><td>
+      <select name="p"><option value="">選択してください</option>
+        <option value="1">北海道</option><option value="13">東京都</option><option value="27">大阪府</option></select>
+    </td></tr>
+    <tr><th>市区町村・番地</th><td><input name="a1"></td></tr>
+    <tr><th>建物名</th><td><input name="a2"></td></tr>
+    <tr><th>電話番号</th><td>
+      <input name="t1" maxlength="4" size="4"> - <input name="t2" maxlength="4" size="4"> - <input name="t3" maxlength="4" size="4">
+    </td></tr>
+    <tr><th>メール</th><td><input type="email" name="m"></td></tr>
+  </table>
+</form>
+</html>
