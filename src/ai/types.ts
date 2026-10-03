@@ -1,6 +1,8 @@
 import type { AiStatus } from '../llm/availability';
 
 export type ProviderKind = 'none' | 'built-in' | 'openai' | 'gemini';
+export type CloudStatus = 'disabled' | 'not-configured' | 'permission-missing' | 'auth-error';
+export type AiState = AiStatus | CloudStatus;
 
 export interface OpenAiSettings {
   baseUrl: string;
@@ -28,7 +30,7 @@ export interface PublicAiSettings extends AiSettings {
 }
 
 export interface AiStatusInfo {
-  status: AiStatus;
+  status: AiState;
   provider: ProviderKind;
 }
 
