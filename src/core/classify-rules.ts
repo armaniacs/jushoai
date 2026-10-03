@@ -89,7 +89,10 @@ export function classifyField(m: FieldMeta): Classification | null {
   const placeholderIsKana = ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
   // A kanji or latin placeholder (山田) means the field wants a plain name even if a shared heading says フリガナ.
   const placeholderIsPlain = ph !== '' && /[一-龠a-z]/.test(ph);
-  const kanaFor = (text: string) => placeholderIsKana || (!placeholderIsPlain && KANA.test(norm(text)));
+  const own = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
+  // The heading counts only when it is the source that produced the category.
+  const kanaFor = (heading: string) =>
+    placeholderIsKana || (!placeholderIsPlain && KANA.test(`${own} ${norm(heading)}`));
 
   // Only the label/placeholder source may infer kana from the placeholder alone; name/id and
   // heading text need their own kana signal.
@@ -99,7 +102,7 @@ export function classifyField(m: FieldMeta): Classification | null {
     [m.nearby, 0.65, false],
   ];
   for (const [text, confidence, bare] of sources) {
-    const category = classifyText(text, kanaFor(text), bare);
+    const category = classifyText(text, kanaFor(text === m.nearby ? m.nearby : ''), bare);
     if (category) return make(category, confidence);
   }
   if (m.type === 'tel') return make('tel', 0.5);

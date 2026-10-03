@@ -221,3 +221,18 @@ describe('classifyField: kana source', () => {
     ]);
   });
 });
+
+describe('classifyField: kana label with generic name', () => {
+  const cases: [Parameters<typeof makeMeta>[0], string][] = [
+    [{ name: 'name', label: 'フリガナ' }, 'fullNameKana'],
+    [{ name: 'name1', label: 'フリガナ' }, 'fullNameKana'],
+    [{ name: 'sei', label: 'セイ' }, 'lastNameKana'],
+    [{ name: 'last_name', label: 'セイ' }, 'lastNameKana'],
+    [{ name: 'last_name', label: '姓（フリガナ）' }, 'lastNameKana'],
+    [{ name: 'lastname', label: '姓（カナ）' }, 'lastNameKana'],
+    [{ name: 'name', nearby: 'お名前（フリガナ）', label: 'セイ' }, 'fullNameKana'],
+  ];
+  it.each(cases)('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+});
