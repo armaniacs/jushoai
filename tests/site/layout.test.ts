@@ -55,6 +55,18 @@ describe('renderPage', () => {
     expect(page({ hasCode: true })).toContain('<script src="/assets/copy.js" defer></script>');
   });
 
+  it('escapes chrome strings and the base in attributes', () => {
+    const html = page({
+      base: '/a"b/',
+      chrome: { ...chrome, nav: { ...chrome.nav, home: '<b>h</b>' }, footer: { ...chrome.footer, tagline: '<i>t</i>' } },
+    });
+    expect(html).toContain('&lt;b&gt;h&lt;/b&gt;');
+    expect(html).toContain('&lt;i&gt;t&lt;/i&gt;');
+    expect(html).not.toContain('<b>h');
+    expect(html).toContain('href="/a&quot;b/assets/site.css"');
+    expect(html).not.toContain('/a"b/');
+  });
+
   it('gives the logo an empty alt because the brand name is next to it', () => {
     expect(page()).toMatch(/<img src="\/assets\/logo\.png" alt="" width="28" height="28">/);
   });

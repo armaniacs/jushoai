@@ -34,6 +34,13 @@ describe('renderMarkdown: code blocks', () => {
   });
 });
 
+describe('renderMarkdown: copy button label', () => {
+  it('escapes the done label attribute', () => {
+    const r = renderMarkdown('```\nx\n```', { base: '/', copyLabel: 'c', copiedLabel: 'a"<b' });
+    expect(r.html).toContain('data-done="a&quot;&lt;b"');
+  });
+});
+
 describe('renderMarkdown: links', () => {
   it('prefixes absolute site paths with the base and collects raw hrefs', () => {
     const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd' });

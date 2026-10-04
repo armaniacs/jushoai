@@ -36,8 +36,8 @@ export interface PageInput {
 
 export function renderPage(p: PageInput): string {
   const other: Lang = p.lang === 'ja' ? 'en' : 'ja';
-  const u = (lang: Lang, path: string) => pageUrl(p.base, lang, path);
-  const asset = (name: string) => `${p.base}assets/${name}`;
+  const u = (lang: Lang, path: string) => escapeHtml(pageUrl(p.base, lang, path));
+  const asset = (name: string) => escapeHtml(`${p.base}assets/${name}`);
   const { nav, footer } = p.chrome;
   return `<!doctype html>
 <html lang="${p.lang}">
@@ -58,7 +58,7 @@ export function renderPage(p: PageInput): string {
 <a class="skip" href="#main">${escapeHtml(nav.skip)}</a>
 <header class="nav">
 <a class="logo" href="${u(p.lang, '')}"><span class="logo-tile"><img src="${asset('logo.png')}" alt="" width="28" height="28"></span><span>JushoAI</span></a>
-<nav aria-label="Primary">
+<nav>
 <a href="${u(p.lang, '')}">${escapeHtml(nav.home)}</a>
 <a href="${u(p.lang, 'guides/')}">${escapeHtml(nav.guides)}</a>
 <a href="${u(p.lang, '')}#install">${escapeHtml(nav.install)}</a>
