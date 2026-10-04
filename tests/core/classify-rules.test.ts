@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, detectKanaKind, refineClassifications,
+  ACCEPT_THRESHOLD, classifyField, detectKanaKind, isConfident, refineClassifications,
 } from '../../src/core/classify-rules';
 import type { Category, Classification } from '../../src/core/types';
 import { makeMeta } from '../helpers';
@@ -34,6 +34,24 @@ describe('classifyField: signals', () => {
     expect(cat({ label: '備考' })).toBeNull();
     expect(cat({ label: '会社名' })).toBeNull();
     expect(cat({ name: 'hotel' })).toBeNull();
+  });
+});
+
+describe('isConfident', () => {
+  const cls = (confidence: number): Classification =>
+    ({ category: 'fullName', confidence, source: 'rule' });
+
+  it('accepts a classification at or above the threshold', () => {
+    expect(isConfident(cls(0.7))).toBe(true);
+    expect(isConfident(cls(ACCEPT_THRESHOLD))).toBe(true);
+  });
+
+  it('rejects a classification below the threshold', () => {
+    expect(isConfident(cls(0.5))).toBe(false);
+  });
+
+  it('rejects null', () => {
+    expect(isConfident(null)).toBe(false);
   });
 });
 

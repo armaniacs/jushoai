@@ -2,6 +2,11 @@ import type { Category, Classification, FieldMeta, KanaKind } from './types';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
+// Single source of truth for "rule-based classification is trustworthy enough to adopt";
+// analyze.ts (LLM fallback) and detect-forms.ts (anchor selection) must not drift on this.
+export const isConfident = (cls: Classification | null): cls is Classification =>
+  cls !== null && cls.confidence >= ACCEPT_THRESHOLD;
+
 export interface Item {
   meta: FieldMeta;
   cls: Classification;

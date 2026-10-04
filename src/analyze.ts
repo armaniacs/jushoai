@@ -1,5 +1,5 @@
 import {
-  ACCEPT_THRESHOLD, classifyField, detectKanaKind, refineClassifications, type Item,
+  classifyField, detectKanaKind, isConfident, refineClassifications, type Item,
 } from './core/classify-rules';
 import type { Category, FieldMeta } from './core/types';
 import type { FieldClassifier } from './llm/classifier';
@@ -10,7 +10,7 @@ export async function classifyAll(
 ): Promise<Item[]> {
   const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
   const pending = ruled
-    .filter((r) => !r.cls || r.cls.confidence < ACCEPT_THRESHOLD)
+    .filter((r) => !isConfident(r.cls))
     .map((r) => r.meta);
 
   let fromLlm = new Map<string, Category>();
@@ -24,7 +24,7 @@ export async function classifyAll(
 
   const items: Item[] = [];
   for (const { meta, cls } of ruled) {
-    if (cls && cls.confidence >= ACCEPT_THRESHOLD) {
+    if (isConfident(cls)) {
       items.push({ meta, cls });
       continue;
     }
