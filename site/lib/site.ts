@@ -16,6 +16,7 @@ export const COPY_LABEL: Record<Lang, { copy: string; done: string }> = {
 export function normalizeBase(raw: string | undefined): string {
   let b = (raw ?? '/').trim() || '/';
   if (!b.startsWith('/')) b = `/${b}`;
+  b = b.replace(/^\/+/, '/');
   if (!b.endsWith('/')) b += '/';
   return b;
 }
@@ -34,6 +35,7 @@ export function diffShape(ja: unknown, en: unknown, path = ''): string[] {
     for (let i = 0; i < Math.min(ja.length, en.length); i++) out.push(...diffShape(ja[i], en[i], `${path}[${i}]`));
     return out;
   }
+  if (ja === null || en === null) return ja === en ? [] : [`${path}: type`];
   if (isObject(ja) && isObject(en)) {
     const keys = new Set([...Object.keys(ja), ...Object.keys(en)]);
     return [...keys].flatMap((k) => {
@@ -68,7 +70,13 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
   const guides: Guide[] = [];
 
   for (const lang of LANGS) {
-    const files = new Set(await readdir(join(contentDir, lang)));
+    let files: Set<string>;
+    try {
+      files = new Set(await readdir(join(contentDir, lang)));
+    } catch {
+      problems.push(`${lang}: content directory missing (${join(contentDir, lang)})`);
+      continue;
+    }
     for (const file of files) {
       if (!GUIDE_SLUGS.some((s) => `${s}.md` === file)) problems.push(`${lang}/${file}: unexpected file`);
     }
@@ -88,6 +96,15 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
         lang, slug, title: data.title ?? '', description: data.description ?? '',
         order: Number.isFinite(order) ? order : 0, html: r.html, headings: r.headings, links: r.links,
       });
+    }
+  }
+
+  for (const lang of LANGS) {
+    const seen = new Map<number, string>();
+    for (const g of guides.filter((x) => x.lang === lang)) {
+      const prev = seen.get(g.order);
+      if (prev) problems.push(`${lang}: duplicate order ${g.order} (${prev}, ${g.slug})`);
+      else seen.set(g.order, g.slug);
     }
   }
 

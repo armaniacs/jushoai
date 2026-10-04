@@ -5,32 +5,22 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { buildSite } from '../../site/lib/build-site.ts';
 import { checkSite } from '../../site/lib/check-site.ts';
-import { GUIDE_SLUGS } from '../../site/lib/site.ts';
+import { SITE_DIR, writeFixtureContent } from './helpers.ts';
 
 let tmp: string;
 let out: string;
 
-const fixture = async (lang: 'ja' | 'en') => {
-  await mkdir(join(tmp, 'content', lang), { recursive: true });
-  for (const [i, slug] of GUIDE_SLUGS.entries()) {
-    await writeFile(
-      join(tmp, 'content', lang, `${slug}.md`),
-      `---\ntitle: ${slug}\ndescription: d\norder: ${i + 1}\n---\n# ${slug}\n\n## A\n\n[x](/guides/privacy/) [y](#a)\n\n## B\n\ntext\n`,
-    );
-  }
-};
-
 beforeEach(async () => {
   tmp = await mkdtemp(join(tmpdir(), 'site-check-'));
   out = join(tmp, 'out');
-  await fixture('ja');
-  await fixture('en');
+  await writeFixtureContent(join(tmp, 'content'), 'ja');
+  await writeFixtureContent(join(tmp, 'content'), 'en');
 });
 afterEach(async () => {
   await rm(tmp, { recursive: true, force: true });
 });
 
-const build = (base = '/') => buildSite({ siteDir: 'site', contentDir: join(tmp, 'content'), outDir: out, base });
+const build = (base = '/') => buildSite({ siteDir: SITE_DIR, contentDir: join(tmp, 'content'), outDir: out, base });
 
 describe('checkSite', () => {
   it('finds no problems in a clean build (root and sub-path bases)', async () => {
@@ -68,5 +58,32 @@ describe('checkSite', () => {
     const file = join(out, 'index.html');
     await writeFile(file, (await readFile(file, 'utf8')).replace('</main>', '<a href="https://example.com/x">x</a><a href="mailto:a@b.c">m</a></main>'));
     expect(await checkSite(out, '/')).toEqual([]);
+  });
+
+  describe('cross-page links', () => {
+    const inject = async (page: string, href: string) => {
+      const file = join(out, page, 'index.html');
+      await writeFile(file, (await readFile(file, 'utf8')).replace('</main>', `<a href="${href}">x</a></main>`));
+    };
+
+    it('accepts a fragment that exists in the target page', async () => {
+      await build('/JushoAI/');
+      await inject('guides/privacy', '/JushoAI/en/guides/privacy/#a');
+      expect(await checkSite(out, '/JushoAI/')).toEqual([]);
+    });
+
+    it('reports a fragment that is missing in the target page', async () => {
+      await build();
+      await inject('guides/privacy', '/guides/how-it-works/#nope');
+      expect((await checkSite(out, '/')).map((p) => p.message)).toEqual([
+        expect.stringMatching(/missing anchor target in guides\/how-it-works\/index\.html: #nope/),
+      ]);
+    });
+
+    it('percent-decodes the path and the fragment', async () => {
+      await build();
+      await inject('guides/privacy', '/guides/%70rivacy/#%61');
+      expect(await checkSite(out, '/')).toEqual([]);
+    });
   });
 });

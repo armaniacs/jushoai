@@ -1,5 +1,5 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { renderGuidesIndex } from './guides-index.ts';
 import { renderLanding, type Strings } from './landing.ts';
 import { renderPage } from './layout.ts';
@@ -32,9 +32,28 @@ async function writePage(outDir: string, dir: string, html: string): Promise<str
   return file;
 }
 
+const isInside = (child: string, parent: string) => {
+  const rel = relative(parent, child);
+  return rel === '' || (rel !== '..' && !rel.startsWith(`..${sep}`) && resolve(parent, rel) === child);
+};
+
+// outDir is wiped before every build, so it must never overlap the sources.
+function assertSafeOutDir(outDir: string, siteDir: string, contentDir: string): void {
+  if (outDir.trim() === '') throw new Error('unsafe output directory: empty path');
+  const out = resolve(outDir);
+  if (out === dirname(out)) throw new Error(`unsafe output directory: filesystem root (${out})`);
+  for (const src of [resolve(siteDir), resolve(contentDir)]) {
+    if (isInside(out, src) || isInside(src, out)) {
+      throw new Error(`unsafe output directory: ${out} overlaps ${src}`);
+    }
+  }
+}
+
 export async function buildSite(o: BuildOptions): Promise<string[]> {
+  const contentDir = o.contentDir ?? join(o.siteDir, 'content');
+  assertSafeOutDir(o.outDir, o.siteDir, contentDir);
   const strings = await loadStrings(join(o.siteDir, 'i18n'));
-  const guides = await loadGuides(o.contentDir ?? join(o.siteDir, 'content'), o.base);
+  const guides = await loadGuides(contentDir, o.base);
 
   await rm(o.outDir, { recursive: true, force: true });
   await mkdir(o.outDir, { recursive: true });

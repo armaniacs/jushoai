@@ -44,15 +44,15 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel }: Re
   const tokens = md.parse(src, env);
   const headings: Heading[] = [];
   const links: string[] = [];
-  const used = new Map<string, number>();
+  const used = new Set<string>();
 
   tokens.forEach((token, i) => {
     if (token.type === 'heading_open') {
       const text = tokens[i + 1]?.content ?? '';
       const slug = slugify(text);
-      const n = used.get(slug) ?? 0;
-      used.set(slug, n + 1);
-      const id = n === 0 ? slug : `${slug}-${n + 1}`;
+      let id = slug;
+      for (let n = 2; used.has(id); n++) id = `${slug}-${n}`;
+      used.add(id);
       token.attrSet('id', id);
       headings.push({ level: Number(token.tag.slice(1)), text, id });
     }
@@ -60,8 +60,8 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel }: Re
       for (const child of token.children ?? []) {
         if (child.type !== 'link_open') continue;
         const href = String(child.attrGet('href') ?? '');
-        links.push(href);
-        if (/^https?:\/\//.test(href)) {
+        if (href !== '') links.push(href);
+        if (/^(?:https?:)?\/\//.test(href)) {
           child.attrSet('target', '_blank');
           child.attrSet('rel', 'noopener noreferrer');
         } else if (href.startsWith('/')) {

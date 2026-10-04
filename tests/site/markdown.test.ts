@@ -64,3 +64,32 @@ describe('renderMarkdown: raw HTML', () => {
     expect(r.html).toContain('&lt;script&gt;');
   });
 });
+
+describe('renderMarkdown: edge cases', () => {
+  it('treats protocol-relative hrefs as external, without base rewriting', () => {
+    const r = renderMarkdown('[a](//example.com/x)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd' });
+    expect(r.html).toContain('href="//example.com/x" target="_blank" rel="noopener noreferrer"');
+  });
+
+  it('keeps heading ids unique when a suffixed slug collides', () => {
+    const r = renderMarkdown('## B\n## B\n## B 2\n## B', opts);
+    const ids = r.headings.map((h) => h.id);
+    expect(new Set(ids).size).toBe(4);
+    expect(r.html).toContain(`id="${ids[3]}"`);
+  });
+
+  it('numbers three duplicate headings', () => {
+    const r = renderMarkdown('## B\n## B\n## B', opts);
+    expect(r.headings.map((h) => h.id)).toEqual(['b', 'b-2', 'b-3']);
+  });
+
+  it('does not collect empty hrefs', () => {
+    expect(renderMarkdown('[x]()', opts).links).toEqual([]);
+  });
+
+  it('renders a javascript: link as plain text', () => {
+    const r = renderMarkdown('[x](javascript:alert(1))', opts);
+    expect(r.html).not.toContain('<a');
+    expect(r.html).toContain('[x](javascript:alert(1))');
+  });
+});

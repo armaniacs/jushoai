@@ -1,23 +1,13 @@
 // @vitest-environment node
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { buildSite } from '../../site/lib/build-site.ts';
 import { GUIDE_SLUGS } from '../../site/lib/site.ts';
+import { SITE_DIR, writeFixtureContent } from './helpers.ts';
 
 let tmp: string;
-
-export async function writeFixtureContent(dir: string, lang: 'ja' | 'en', slugs: readonly string[] = GUIDE_SLUGS) {
-  await mkdir(join(dir, lang), { recursive: true });
-  let order = 1;
-  for (const slug of slugs) {
-    await writeFile(
-      join(dir, lang, `${slug}.md`),
-      `---\ntitle: ${slug} ${lang}\ndescription: description ${slug}\norder: ${order++}\n---\n# ${slug} ${lang}\n\n## A\n\n\`\`\`bash\nmake build\n\`\`\`\n\n## B\n\n[home](/)\n`,
-    );
-  }
-}
 
 beforeEach(async () => {
   tmp = await mkdtemp(join(tmpdir(), 'site-build-'));
@@ -29,7 +19,7 @@ afterEach(async () => {
 });
 
 const run = (base = '/') =>
-  buildSite({ siteDir: 'site', contentDir: join(tmp, 'content'), outDir: join(tmp, 'out'), base });
+  buildSite({ siteDir: SITE_DIR, contentDir: join(tmp, 'content'), outDir: join(tmp, 'out'), base });
 const exists = (p: string) => stat(join(tmp, 'out', p)).then(() => true, () => false);
 
 describe('buildSite', () => {
@@ -79,5 +69,38 @@ describe('buildSite', () => {
   it('fails when guide content is incomplete', async () => {
     await rm(join(tmp, 'content', 'en', 'privacy.md'));
     await expect(run()).rejects.toThrow(/en\/privacy\.md.*missing/);
+  });
+
+  describe('unsafe output directories', () => {
+    // Runs against a throwaway copy so a regression cannot delete the real site sources.
+    let siteCopy: string;
+    beforeEach(async () => {
+      siteCopy = join(tmp, 'site');
+      await cp(SITE_DIR, siteCopy, { recursive: true });
+    });
+    const attempt = (outDir: string, siteDir = siteCopy) =>
+      buildSite({ siteDir, contentDir: join(tmp, 'content'), outDir, base: '/' });
+    const stillThere = (p: string) => stat(p).then(() => true, () => false);
+
+    it.each([
+      ['the site directory', () => siteCopy],
+      ['the parent of the site directory', () => tmp],
+      ['a directory inside the site directory', () => join(siteCopy, 'assets', 'out')],
+    ])('refuses %s without deleting anything', async (_name, outDir) => {
+      await expect(attempt(outDir())).rejects.toThrow(/output directory/);
+      expect(await stillThere(join(siteCopy, 'assets', 'site.css'))).toBe(true);
+      expect(await stillThere(join(tmp, 'content', 'ja', 'privacy.md'))).toBe(true);
+    });
+
+    it('refuses the content directory and a directory inside it', async () => {
+      await expect(attempt(join(tmp, 'content'))).rejects.toThrow(/output directory/);
+      await expect(attempt(join(tmp, 'content', 'ja'))).rejects.toThrow(/output directory/);
+      expect(await stillThere(join(tmp, 'content', 'ja', 'privacy.md'))).toBe(true);
+    });
+
+    // A nonexistent siteDir makes a missing guard fail on ENOENT before any rm can run.
+    it.each([['an empty path', ''], ['the filesystem root', '/']])('refuses %s', async (_name, outDir) => {
+      await expect(attempt(outDir, join(tmp, 'no-such-site'))).rejects.toThrow(/output directory/);
+    });
   });
 });

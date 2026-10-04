@@ -16,10 +16,21 @@ async function htmlFiles(dir: string): Promise<string[]> {
   return out;
 }
 
+const decode = (s: string) => {
+  try {
+    return decodeURIComponent(s);
+  } catch {
+    return s;
+  }
+};
+
+const pageIds = (html: string) => new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+
 const exists = (p: string) => stat(p).then((s) => s.isFile(), () => false);
 
 export async function checkSite(outDir: string, base: string): Promise<Problem[]> {
   const problems: Problem[] = [];
+  const idCache = new Map<string, Set<string | undefined>>();
   for (const file of await htmlFiles(outDir)) {
     const rel = relative(outDir, file);
     const html = await readFile(file, 'utf8');
@@ -34,7 +45,7 @@ export async function checkSite(outDir: string, base: string): Promise<Problem[]
       if (!/\balt="/.test(img)) add(`img without alt: ${img}`);
     }
 
-    const ids = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map((m) => m[1]));
+    const ids = pageIds(html);
     for (const m of html.matchAll(/\s(?:href|src)="([^"]*)"/g)) {
       const href = (m[1] ?? '').replace(/&amp;/g, '&');
       if (/^(https?:|mailto:|tel:|data:)/.test(href) || href === '') continue;
@@ -46,9 +57,21 @@ export async function checkSite(outDir: string, base: string): Promise<Problem[]
         add(`link outside the base path: ${href}`);
         continue;
       }
-      const path = href.slice(base.length).split(/[?#]/)[0] ?? '';
+      const rest = href.slice(base.length);
+      const path = decode(rest.split(/[?#]/)[0] ?? '');
       const target = path === '' || path.endsWith('/') ? join(outDir, path, 'index.html') : join(outDir, path);
-      if (!(await exists(target))) add(`broken link: ${href}`);
+      if (!(await exists(target))) {
+        add(`broken link: ${href}`);
+        continue;
+      }
+      const hashAt = rest.indexOf('#');
+      if (hashAt === -1 || !target.endsWith('.html')) continue;
+      const fragment = decode(rest.slice(hashAt + 1));
+      if (fragment === '') continue;
+      if (!idCache.has(target)) idCache.set(target, pageIds(await readFile(target, 'utf8')));
+      if (!idCache.get(target)!.has(fragment)) {
+        add(`missing anchor target in ${relative(outDir, target)}: #${fragment}`);
+      }
     }
   }
   return problems;

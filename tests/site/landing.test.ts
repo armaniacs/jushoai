@@ -1,11 +1,13 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
 import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+import { SITE_DIR } from './helpers.ts';
 import { renderGuidesIndex } from '../../site/lib/guides-index.ts';
 import { renderLanding, type Strings } from '../../site/lib/landing.ts';
 import { GUIDE_SLUGS, type Guide, type Lang } from '../../site/lib/site.ts';
 
-const load = async (lang: Lang) => JSON.parse(await readFile(`site/i18n/${lang}.json`, 'utf8')) as Strings;
+const load = async (lang: Lang) => JSON.parse(await readFile(join(SITE_DIR, 'i18n', `${lang}.json`), 'utf8')) as Strings;
 
 describe('renderLanding', () => {
   it.each(['ja', 'en'] as const)('renders every section once for %s', async (lang) => {
