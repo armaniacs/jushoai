@@ -58,7 +58,7 @@ Content Script ──ai-classify(メタデータのみ)──▶ background (Ser
 
 | プロバイダ | 状態 |
 |---|---|
-| none | 「AI: 使わない」 |
+| none | 「AI: オフ」 |
 | built-in | 既存の AiStatus（利用可能 / 未準備 / 準備中 / 無効） |
 | openai / gemini | 未設定（キーまたはモデルなし）/ 権限が未許可 / 認証エラー / 利用可能 |
 
