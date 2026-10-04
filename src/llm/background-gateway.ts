@@ -1,6 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, type TestResponse } from '../messages';
+import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type TestResponse } from '../messages';
 import type { FieldClassifier } from './classifier';
 
 export const STATUS_TIMEOUT_MS = 5_000;
@@ -47,17 +47,6 @@ export async function requestDownloadViaBackground(timeoutMs = DOWNLOAD_TIMEOUT_
   }
 }
 
-const toWire = (f: FieldMeta) => ({
-  id: f.id,
-  type: f.type,
-  name: f.name,
-  htmlId: f.htmlId,
-  label: f.label,
-  placeholder: f.placeholder,
-  nearby: f.nearby,
-  maxLength: f.maxLength,
-});
-
 export class BackgroundClassifier implements FieldClassifier {
   constructor(private readonly timeoutMs = CLASSIFY_TIMEOUT_MS) {}
 
@@ -65,7 +54,7 @@ export class BackgroundClassifier implements FieldClassifier {
     const out = new Map<string, Category>();
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
-      const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWire);
+      const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
       try {
         const res = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
         const parsed = parseClassifyResponse(res);

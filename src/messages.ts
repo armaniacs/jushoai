@@ -32,29 +32,41 @@ const isRecord = (v: unknown): v is Record<string, unknown> =>
 
 const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, MAX_TEXT_LENGTH) : '');
 
+// The metadata allow-list sent to the classifier; the single source shared by the sender
+// (background-gateway), the receiver (sanitizeField) and the prompt builder (buildPrompt).
+export const META_WIRE_KEYS = ['id', 'type', 'name', 'htmlId', 'label', 'placeholder', 'nearby', 'maxLength'] as const;
+export type MetaWire = Pick<FieldMeta, (typeof META_WIRE_KEYS)[number]>;
+
+export function toWireMeta(f: FieldMeta): MetaWire {
+  return {
+    id: f.id,
+    type: f.type,
+    name: f.name,
+    htmlId: f.htmlId,
+    label: f.label,
+    placeholder: f.placeholder,
+    nearby: f.nearby,
+    maxLength: f.maxLength,
+  };
+}
+
 // Rebuilds a FieldMeta from the metadata allow-list only; page-controlled values never pass through.
 function sanitizeField(v: unknown): FieldMeta | null {
   if (!isRecord(v)) return null;
   const id = v.id;
   if (typeof id !== 'string' || id === '' || id.length > MAX_ID_LENGTH) return null;
   const maxLength = typeof v.maxLength === 'number' && Number.isFinite(v.maxLength) ? v.maxLength : null;
-  return {
+  const wire: MetaWire = {
     id,
-    tag: 'input',
     type: text(v.type),
     name: text(v.name),
     htmlId: text(v.htmlId),
-    autocomplete: '',
     label: text(v.label),
     placeholder: text(v.placeholder),
     nearby: text(v.nearby),
     maxLength,
-    pattern: '',
-    options: [],
-    readOnly: false,
-    disabled: false,
-    value: '',
   };
+  return { ...wire, tag: 'input', autocomplete: '', pattern: '', options: [], readOnly: false, disabled: false, value: '' };
 }
 
 export function parseRequest(msg: unknown): AiRequest | null {

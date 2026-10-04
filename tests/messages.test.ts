@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS } from '../src/messages';
+import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS } from '../src/messages';
+import { makeMeta } from './helpers';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 'n', ...extra });
 
@@ -47,6 +48,27 @@ describe('parseRequest', () => {
     expect(f.label).toBe('');
     expect(f.placeholder.length).toBeLessThanOrEqual(200);
     expect(f.maxLength).toBeNull();
+  });
+
+  it('keeps sender and receiver on the same wire shape', () => {
+    expect(Object.keys(toWireMeta(makeMeta())).sort()).toEqual([...META_WIRE_KEYS].sort());
+  });
+
+  it('passes allow-listed values and drops page-controlled ones', () => {
+    const meta = makeMeta({
+      id: 'a', value: 'SECRET', autocomplete: 'name', pattern: 'x',
+      options: [{ value: 'o', text: 'o' }], readOnly: true, disabled: true,
+    });
+    const r = parseRequest({ type: 'ai-classify', fields: [meta] });
+    if (r?.type !== 'ai-classify') return;
+    const received = r.fields[0]!;
+    expect(toWireMeta(received)).toEqual(toWireMeta(meta));
+    expect(received.value).toBe('');
+    expect(received.autocomplete).toBe('');
+    expect(received.pattern).toBe('');
+    expect(received.options).toEqual([]);
+    expect(received.readOnly).toBe(false);
+    expect(received.disabled).toBe(false);
   });
 });
 

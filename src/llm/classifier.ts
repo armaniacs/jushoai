@@ -1,4 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
+import { toWireMeta, type MetaWire } from '../messages';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
 
 export interface FieldClassifier {
@@ -19,17 +20,21 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 
 const clip = (s: string) => s.slice(0, 80);
 
+// Prompt rows carry only the metadata allow-list (MetaWire), with strings clipped for prompt size.
+const toPromptRow = (f: FieldMeta): MetaWire => {
+  const w = toWireMeta(f);
+  return {
+    ...w,
+    name: clip(w.name),
+    htmlId: clip(w.htmlId),
+    label: clip(w.label),
+    placeholder: clip(w.placeholder),
+    nearby: clip(w.nearby),
+  };
+};
+
 export function buildPrompt(fields: FieldMeta[]): string {
-  const rows = fields.map((f) => ({
-    id: f.id,
-    name: clip(f.name),
-    htmlId: clip(f.htmlId),
-    label: clip(f.label),
-    placeholder: clip(f.placeholder),
-    nearby: clip(f.nearby),
-    type: f.type,
-    maxLength: f.maxLength,
-  }));
+  const rows = fields.map(toPromptRow);
   return `次の入力欄を分類し、{"入力欄id": "カテゴリ"} のJSONで返してください。\n${JSON.stringify(rows)}`;
 }
 
