@@ -51,7 +51,7 @@ Yes. The rules identify the fields. AI is used only to classify fields the rules
 
 ### What is sent?
 
-Only when you configure a provider other than the built-in AI, the extension sends metadata for fields the rules cannot identify: the internal field ID, `name`, `htmlId`, the label, the placeholder, the nearby heading, `type` and `maxLength`. It never sends your profile values. Labels and headings are text from the page, so they can contain personal information that the page shows. Data is sent only when you click `JushoAI で入力`. For details, see [Privacy and what is sent](/en/guides/privacy/).
+Only when you configure an AI provider other than the built-in browser AI, the extension sends metadata for fields the rules cannot identify: the internal field ID, `name`, `htmlId`, the label, the placeholder, the nearby heading, `type` and `maxLength`. It never sends your profile values. Labels and headings are text from the page, so they can contain personal information that the page shows. Data is sent only when you click `JushoAI で入力`. For details, see [Privacy and what is sent](/en/guides/privacy/).
 
 ### I am worried about wrong input.
 

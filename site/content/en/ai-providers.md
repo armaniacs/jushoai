@@ -33,7 +33,7 @@ If you change the origin of the base URL (scheme, host or port), the saved API k
 
 For `localhost`, no API key is needed.
 
-Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_ORIGINS` allows them. Allow this value in `OLLAMA_ORIGINS`.
+Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_ORIGINS` allows them. Add the following value to `OLLAMA_ORIGINS`.
 
 ```text
 chrome-extension://<extension ID>
