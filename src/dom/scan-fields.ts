@@ -11,10 +11,21 @@ const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search']);
 const clean = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
 
 // Option text of a select wrapped by its label would otherwise flood the label.
+// Walks text nodes instead of cloning the subtree to keep the per-field cost off the
+// allocation-heavy cloneNode + querySelectorAll + remove path.
 function textWithoutControls(node: Element): string {
-  const clone = node.cloneNode(true) as Element;
-  clone.querySelectorAll('select, input, textarea, script, style').forEach((n) => n.remove());
-  return clean(clone.textContent);
+  const walker = node.ownerDocument.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+    acceptNode(textNode) {
+      const parent = textNode.parentElement;
+      if (!parent || parent.closest('select, input, textarea, script, style')) {
+        return NodeFilter.FILTER_REJECT;
+      }
+      return NodeFilter.FILTER_ACCEPT;
+    },
+  });
+  let text = '';
+  while (walker.nextNode()) text += walker.currentNode.nodeValue ?? '';
+  return clean(text);
 }
 
 function labelOf(el: Control): string {

@@ -25,13 +25,17 @@ type Selection =
   | { ok: true; classifier: FieldClassifier }
   | { ok: false; reason: 'not-configured' | 'permission' | 'auth' | 'unavailable' };
 
-async function statusOf(deps: HandlerDeps, s: PublicAiSettings): Promise<AiStatusInfo> {
+async function statusOf(
+  deps: HandlerDeps,
+  s: PublicAiSettings,
+  secrets?: { openai?: string; gemini?: string },
+): Promise<AiStatusInfo> {
   if (s.provider === 'built-in') return { status: await checkAiStatus(deps.lm), provider: 'built-in' };
   let hasKey = s.hasKey;
   // An envelope that no longer decrypts is the same as no key.
   if ((s.provider === 'openai' || s.provider === 'gemini') && hasKey[s.provider]) {
-    const secrets = await deps.loadSecrets();
-    if (secrets[s.provider] === undefined) hasKey = { ...hasKey, [s.provider]: false };
+    const sec = secrets ?? (await deps.loadSecrets());
+    if (sec[s.provider] === undefined) hasKey = { ...hasKey, [s.provider]: false };
   }
   return {
     status: computeCloudStatus({
@@ -49,7 +53,8 @@ async function selectClassifier(
   s: PublicAiSettings,
   opts: { ignoreAuthFailure?: boolean } = {},
 ): Promise<Selection> {
-  const { status } = await statusOf(deps, s);
+  const secrets = await deps.loadSecrets();
+  const { status } = await statusOf(deps, s, secrets);
   if (status === 'disabled' || status === 'not-configured') return { ok: false, reason: 'not-configured' };
   if (status === 'permission-missing') return { ok: false, reason: 'permission' };
   if (status === 'auth-error' && !opts.ignoreAuthFailure) return { ok: false, reason: 'auth' };
@@ -59,7 +64,6 @@ async function selectClassifier(
     return { ok: true, classifier: new PromptApiClassifier(deps.lm) };
   }
 
-  const secrets = await deps.loadSecrets();
   const present = { openai: secrets.openai !== undefined, gemini: secrets.gemini !== undefined };
   // The stored key can be unreadable even though an envelope exists; treat that as not configured.
   if (validateAiSettings(s, present).length > 0) return { ok: false, reason: 'not-configured' };

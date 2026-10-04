@@ -97,7 +97,16 @@ export default defineContentScript({
       openPreview = preview;
     }
 
+    let lastScan = '';
     function sync() {
+      // childList changes on heavy pages fire this at ~2Hz; skip the full rescan when the
+      // control set and mounted anchors are unchanged.
+      const sig = Array.from(document.querySelectorAll('input, select'), (el) => {
+        const input = el as HTMLInputElement;
+        return `${el.tagName}:${input.type}:${input.name}:${el.id}`;
+      }).join('|');
+      if (sig === lastScan && [...mounted.values()].every((m) => m.anchor.isConnected)) return;
+      lastScan = sig;
       const forms = detectForms(document);
       const plan = planMounts(new Map([...mounted].map(([c, m]) => [c, m.anchor])), forms);
       for (const container of plan.destroy) {
