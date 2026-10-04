@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## プロジェクト概要
 
-日本式フォーム（姓名・フリガナ・分割された住所）を補完する Chrome 拡張機能（Manifest V3）。フィールド分類はルール主体で、判定できない欄だけ Chrome 内蔵 AI（Prompt API / Gemini Nano）で補助する。個人情報は外部に送信しない。
+日本式フォーム（姓名・フリガナ・分割された住所）を補完する Chrome 拡張機能（Manifest V3）。フィールド分類はルール主体で、判定できない欄だけ AI で補助する（プロバイダはユーザーが選べる）。プロファイルの値は外部に送信しない（AI を使う設定にした場合のみ、欄のメタデータが選択したプロバイダに送られる）。
 
 設計の一次情報は `docs/superpowers/specs/2026-10-03-jushoai-design.md`、実装手順は `docs/superpowers/plans/2026-10-03-jushoai.md`。コードを書く前に両方を読むこと。
 
@@ -35,6 +35,7 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - **値注入はネイティブ setter 経由。** `fillField` は prototype の `value` setter を呼んでから `input` / `change` / `blur` を発火する。React/Vue の値トラッカーを迂回するための実装で、`el.value = ...` に置き換えない。
 - **UI は Shadow DOM（closed）。** ページ由来の文字列（label など）は必ず `textContent` で入れ、`innerHTML` を使わない。
 - **Prompt API は Service Worker（`src/entrypoints/background.ts`）から呼ぶ。** Content Script は runtime メッセージ（`src/llm/background-gateway.ts`、`src/messages.ts`）経由で状態確認・分類・ダウンロードを依頼する。Chrome（Gemini Nano）と Edge（Phi-mini）は同じ `LanguageModel` API 形状。Phi-mini は文脈が小さいため 1 リクエスト 20 欄までに分割する。
+- **AI プロバイダは設定で 1 つ選ぶ。** `none`（初期値）/ `built-in` / `openai` / `gemini`。background の `handleMessage`（`src/llm/handle-message.ts`）が設定に応じて `FieldClassifier` を選び、クラウドは `src/ai/http-classifiers.ts` が `fetch` する。API キーは `src/ai/secret-store.ts` の AES-GCM エンベロープで保存し、background だけが復号する（Content Script と設定ページには「保存済みか」だけ渡す）。通信先の host 権限は `optional_host_permissions` で、設定ページの保存時に要求する。ベース URL は `src/ai/settings.ts` の `validateBaseUrl` で検証する（https のみ、http は localhost / 127.0.0.1 のみ、内部アドレス拒否）。
 
 ## テスト方針
 

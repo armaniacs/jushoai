@@ -89,10 +89,10 @@ Content Script ──ai-classify(メタデータのみ)──▶ background (Ser
 
 - ベース URL は検証する
   - `https` のみ許可する
-  - `http` はループバック（`localhost`、`127.0.0.1`、`[::1]`）だけ許可する
+  - `http` はループバック（`localhost` と `127.x.x.x`。IPv6 のループバックは許可しない）だけ許可する
   - それ以外の内部ネットワークアドレスは拒否する（SSRF 対策）
   - リダイレクトは辿らない
-- 権限は `optional_host_permissions`（`https://*/*` と、ループバックの `http`）に宣言し、設定ページの「保存」で、そのプロバイダのオリジンだけを `chrome.permissions.request` で要求する。許可が無い間は「権限が未許可」状態にする
+- 権限は `optional_host_permissions`（`https://*/*`、`http://localhost/*`、`http://127.0.0.1/*`）に宣言し、設定ページの「保存」で、そのプロバイダのオリジンだけを `chrome.permissions.request` で要求する。許可が無い間は「権限が未許可」状態にする
 - リクエストにはメタデータの許可リストだけを載せる
 
 ## 設定ページ
