@@ -4,6 +4,7 @@ import {
 } from '../../core/profile';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
+import { labeled, textInput } from './dom';
 import { mountAiSection } from './ai-section';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
@@ -25,23 +26,6 @@ const ADDRESS_FIELDS: { key: Exclude<keyof Address, 'id' | 'prefecture'>; label:
 
 const app = document.getElementById('app')!;
 let state: StoredData;
-
-function labeled(text: string, control: HTMLElement): HTMLLabelElement {
-  const l = document.createElement('label');
-  const s = document.createElement('span');
-  s.textContent = text;
-  l.append(s, control);
-  return l;
-}
-
-function textInput(value: string, placeholder: string, onInput: (v: string) => void, type = 'text') {
-  const input = document.createElement('input');
-  input.type = type;
-  input.value = value;
-  input.placeholder = placeholder;
-  input.addEventListener('input', () => onInput(input.value));
-  return input;
-}
 
 function prefectureSelect(value: string, onChange: (v: string) => void) {
   const select = document.createElement('select');

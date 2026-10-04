@@ -8,6 +8,7 @@ import {
 } from '../../ai/types';
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
+import { el, labeled, textInput } from './dom';
 
 const PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
   { value: 'none', label: '使わない（ルールのみ）' },
@@ -27,18 +28,6 @@ const FAILURE_TEXT: Record<TestFailure, string> = {
 
 const KEYED = ['openai', 'gemini'] as const;
 
-function el<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] {
-  const node = document.createElement(tag);
-  if (text !== undefined) node.textContent = text;
-  return node;
-}
-
-function labeled(text: string, control: HTMLElement): HTMLLabelElement {
-  const label = el('label');
-  label.append(el('span', text), control);
-  return label;
-}
-
 export function mountAiSection(root: HTMLElement): void {
   let settings: AiSettings;
   let hasKey: KeyPresence = { openai: false, gemini: false };
@@ -54,16 +43,6 @@ export function mountAiSection(root: HTMLElement): void {
     notice.className = kind === 'saved' ? 'saved' : 'errors-text';
     render();
   };
-
-  function textInput(value: string, placeholder: string, onInput: (v: string) => void, type = 'text') {
-    const input = el('input');
-    input.type = type;
-    input.value = value;
-    input.placeholder = placeholder;
-    input.autocomplete = 'off';
-    input.addEventListener('input', () => onInput(input.value));
-    return input;
-  }
 
   function keyField(provider: (typeof KEYED)[number]) {
     const input = textInput(
