@@ -3,3 +3,4 @@ dist
 .wxt
 *.log
 .vitest
+site-dist
