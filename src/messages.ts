@@ -1,15 +1,13 @@
 import { CATEGORIES, type Category, type FieldMeta } from './core/types';
-import type { AiState, AiStatusInfo } from './ai/types';
-import type { AiStatus } from './llm/availability';
+import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
+import { AI_STATUSES, type AiStatus } from './llm/availability';
 
 export const MAX_CLASSIFY_FIELDS = 30;
 export const MAX_CLASSIFY_CHUNK = 20;
 const MAX_ID_LENGTH = 100;
 const MAX_TEXT_LENGTH = 200;
 
-const AI_STATUSES: readonly string[] = ['available', 'downloadable', 'downloading', 'unavailable', 'unsupported'];
-const AI_STATES: readonly string[] = [...AI_STATUSES, 'disabled', 'not-configured', 'permission-missing', 'auth-error'];
-const PROVIDER_KINDS: readonly string[] = ['none', 'built-in', 'openai', 'gemini'];
+const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
 const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response'] as const;
 
 export type TestFailure = (typeof TEST_FAILURES)[number];
@@ -19,11 +17,13 @@ export type AiRequest =
   | { type: 'ai-status' }
   | { type: 'ai-classify'; fields: FieldMeta[] }
   | { type: 'ai-download' }
-  | { type: 'ai-test' };
+  | { type: 'ai-test' }
+  | { type: 'open-options' };
 
 export type ClassifyResponse = { ok: true; entries: [string, Category][] } | { ok: false };
 
-export const isAiStatus = (v: unknown): v is AiStatus => typeof v === 'string' && AI_STATUSES.includes(v);
+export const isAiStatus = (v: unknown): v is AiStatus =>
+  typeof v === 'string' && (AI_STATUSES as readonly string[]).includes(v);
 
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
 
@@ -63,6 +63,7 @@ export function parseRequest(msg: unknown): AiRequest | null {
   if (msg.type === 'ai-status' && keys.length === 1) return { type: 'ai-status' };
   if (msg.type === 'ai-download' && keys.length === 1) return { type: 'ai-download' };
   if (msg.type === 'ai-test' && keys.length === 1) return { type: 'ai-test' };
+  if (msg.type === 'open-options' && keys.length === 1) return { type: 'open-options' };
   if (msg.type === 'ai-classify' && keys.length === 2 && Array.isArray(msg.fields)) {
     if (msg.fields.length > MAX_CLASSIFY_FIELDS) return null;
     const fields = msg.fields.map(sanitizeField).filter((f): f is FieldMeta => f !== null);
@@ -86,7 +87,7 @@ export function parseClassifyResponse(res: unknown): Map<string, Category> | nul
 export function parseStatusResponse(res: unknown): AiStatusInfo | null {
   if (!isRecord(res) || !isAiState(res.status)) return null;
   const provider = res.provider;
-  if (typeof provider !== 'string' || !PROVIDER_KINDS.includes(provider)) return null;
+  if (typeof provider !== 'string' || !(PROVIDER_KINDS as readonly string[]).includes(provider)) return null;
   return { status: res.status, provider: provider as AiStatusInfo['provider'] };
 }
 

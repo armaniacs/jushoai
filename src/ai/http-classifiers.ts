@@ -2,7 +2,7 @@ import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import {
   buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT, type FieldClassifier,
 } from '../llm/classifier';
-import type { GeminiSettings, OpenAiSettings } from './types';
+import { GEMINI_BASE_URL, type GeminiSettings, type OpenAiSettings } from './types';
 
 export const HTTP_TIMEOUT_MS = 20_000;
 
@@ -92,7 +92,7 @@ export function buildGeminiRequest(cfg: GeminiSettings, apiKey: string, fields: 
     },
   };
   return {
-    url: `https://generativelanguage.googleapis.com/${cfg.apiVersion}/models/${encodeURIComponent(cfg.model)}:generateContent`,
+    url: `${GEMINI_BASE_URL}/${cfg.apiVersion}/models/${encodeURIComponent(cfg.model)}:generateContent`,
     init: baseInit({ 'x-goog-api-key': apiKey }, body),
   };
 }

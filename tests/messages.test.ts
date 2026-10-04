@@ -12,10 +12,15 @@ describe('parseRequest', () => {
   });
 
   it('rejects unknown, extra-keyed or non-object messages', () => {
-    for (const m of [null, undefined, 'x', 1, [], {}, { type: 'open-options' }, { type: 'ai-status', x: 1 },
+    for (const m of [null, undefined, 'x', 1, [], {}, { type: 'ai-status', x: 1 },
       { type: 'ai-classify' }, { type: 'ai-classify', fields: 'x' }, { type: 'ai-classify', fields: [], x: 1 }]) {
       expect(parseRequest(m)).toBeNull();
     }
+  });
+
+  it('accepts open-options with a single key and rejects extra keys', () => {
+    expect(parseRequest({ type: 'open-options' })).toEqual({ type: 'open-options' });
+    expect(parseRequest({ type: 'open-options', extra: 1 })).toBeNull();
   });
 
   it('rejects more than the maximum number of fields', () => {

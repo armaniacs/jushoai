@@ -1,4 +1,5 @@
-export type AiStatus = 'available' | 'downloadable' | 'downloading' | 'unavailable' | 'unsupported';
+export const AI_STATUSES = ['available', 'downloadable', 'downloading', 'unavailable', 'unsupported'] as const;
+export type AiStatus = (typeof AI_STATUSES)[number];
 
 export interface LanguageModelSession {
   prompt(input: string, options?: { responseConstraint?: unknown; signal?: AbortSignal }): Promise<string>;

@@ -1,7 +1,9 @@
 import type { AiStatus } from '../llm/availability';
 
-export type ProviderKind = 'none' | 'built-in' | 'openai' | 'gemini';
-export type CloudStatus = 'disabled' | 'not-configured' | 'permission-missing' | 'auth-error';
+export const PROVIDER_KINDS = ['none', 'built-in', 'openai', 'gemini'] as const;
+export type ProviderKind = (typeof PROVIDER_KINDS)[number];
+export const CLOUD_STATUSES = ['disabled', 'not-configured', 'permission-missing', 'auth-error'] as const;
+export type CloudStatus = (typeof CLOUD_STATUSES)[number];
 export type AiState = AiStatus | CloudStatus;
 
 export interface OpenAiSettings {
@@ -48,4 +50,5 @@ export const OPENAI_PRESETS = [
   { id: 'lm-studio', label: 'LM Studio', baseUrl: 'http://127.0.0.1:1234/v1' },
 ] as const;
 
-export const GEMINI_ORIGIN = 'https://generativelanguage.googleapis.com/*';
+export const GEMINI_BASE_URL = 'https://generativelanguage.googleapis.com';
+export const GEMINI_ORIGIN = `${GEMINI_BASE_URL}/*`;

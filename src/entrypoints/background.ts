@@ -4,6 +4,7 @@ import { AI_SETTINGS_KEY, loadAiSecrets, loadPublicAiSettings } from '../ai/sett
 import type { ProviderKind } from '../ai/types';
 import { getLanguageModel } from '../llm/availability';
 import { handleMessage } from '../llm/handle-message';
+import { parseRequest } from '../messages';
 
 export default defineBackground(() => {
   const keyStore = new IdbKeyStore();
@@ -21,7 +22,7 @@ export default defineBackground(() => {
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     // Only this extension's own content scripts and pages may reach the providers.
     if (sender.id !== chrome.runtime.id) return false;
-    if ((msg as { type?: unknown } | null)?.type === 'open-options') {
+    if (parseRequest(msg)?.type === 'open-options') {
       void chrome.runtime.openOptionsPage();
       return false;
     }
