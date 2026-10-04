@@ -4,7 +4,7 @@ import {
 } from '../llm/classifier';
 import type { GeminiSettings, OpenAiSettings } from './types';
 
-export const HTTP_TIMEOUT_MS = 25_000;
+export const HTTP_TIMEOUT_MS = 20_000;
 
 export class HttpAuthError extends Error {
   constructor() {

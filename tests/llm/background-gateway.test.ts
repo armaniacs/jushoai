@@ -76,10 +76,11 @@ describe('BackgroundClassifier', () => {
     expect(out.size).toBe(60);
   });
 
-  it('keeps the gateway timeout above the HTTP timeout', () => {
-    expect(CLASSIFY_TIMEOUT_MS).toBe(30_000);
+  it('keeps the gateway timeout above two HTTP attempts', () => {
+    expect(CLASSIFY_TIMEOUT_MS).toBeGreaterThan(2 * HTTP_TIMEOUT_MS);
+    expect(CLASSIFY_TIMEOUT_MS).toBe(45_000);
     expect(CLASSIFY_TIMEOUT_MS).toBeGreaterThan(HTTP_TIMEOUT_MS);
-    expect(HTTP_TIMEOUT_MS).toBe(25_000);
+    expect(HTTP_TIMEOUT_MS).toBe(20_000);
   });
 
   it('does not send field values', async () => {

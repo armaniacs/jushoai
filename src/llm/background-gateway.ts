@@ -4,7 +4,7 @@ import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLAS
 import type { FieldClassifier } from './classifier';
 
 export const STATUS_TIMEOUT_MS = 5_000;
-export const CLASSIFY_TIMEOUT_MS = 30_000
+export const CLASSIFY_TIMEOUT_MS = 45_000;
 export const MAX_CLASSIFY_TOTAL = 60;
 export const DOWNLOAD_TIMEOUT_MS = 120_000;
 export const TEST_TIMEOUT_MS = 30_000;
