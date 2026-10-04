@@ -21,7 +21,7 @@
       { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number and prefecture-to-building address fields in the shape each field expects." },
       { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
       { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
-      { "title": "Designed to keep personal data local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
+      { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
     ]
   },
   "mock": {
@@ -65,7 +65,7 @@
   "privacy": {
     "title": "Privacy",
     "items": [
-      { "title": "Only field metadata is sent", "body": "If you configure an AI provider, the name, label, placeholder, nearby heading, type and maxlength of fields are sent to it. Your profile values and values already in fields are not." },
+      { "title": "Only field metadata is sent", "body": "If you configure an AI provider, the name, label, placeholder, nearby heading, type and maxlength of fields are sent to it. Your profile values and values already in fields are not. Labels and headings are text shown on the page, so personal information visible on the page can be part of what is sent." },
       { "title": "Network only on click", "body": "Merely opening a page never contacts an AI provider." },
       { "title": "API keys are stored encrypted", "body": "Leaked storage alone cannot decrypt them. The extension's own code can still read them." }
     ],
