@@ -59,3 +59,16 @@ describe('scanContainer', () => {
     expect(scanContainer(document.body, document).map((x) => x.meta.name)).toEqual(['b']);
   });
 });
+
+describe('detectForms anchor', () => {
+  it('anchors on the first classified field, not a leading unclassified control', () => {
+    document.body.innerHTML = `
+<form id="f">
+<select name="qty"><option>1</option></select>
+<input name="last_name"><input name="first_name"><input name="email" type="email">
+</form>`;
+    const [form] = detectForms(document);
+    expect(form!.fields[0]!.el.getAttribute('name')).toBe('qty');
+    expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
+});

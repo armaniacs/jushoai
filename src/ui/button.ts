@@ -1,5 +1,6 @@
 import type { AiStatusInfo } from '../ai/types';
 import { createShadowHost } from './host';
+import { computeButtonPosition } from './position';
 import { badgeLabel } from './status-label';
 
 export interface ButtonHandle {
@@ -73,9 +74,16 @@ export function mountButton(
       errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
     },
     reposition() {
-      const r = anchor.getBoundingClientRect();
-      host.style.top = `${Math.max(0, r.top + window.scrollY - 36)}px`;
-      host.style.left = `${r.left + window.scrollX}px`;
+      const hostRect = host.getBoundingClientRect();
+      const clientWidth = document.documentElement.clientWidth;
+      const pos = computeButtonPosition({
+        anchor: anchor.getBoundingClientRect(),
+        size: { width: hostRect.width || 220, height: hostRect.height || 32 },
+        viewport: { width: clientWidth > 0 ? Math.min(window.innerWidth, clientWidth) : window.innerWidth },
+        scroll: { x: window.scrollX, y: window.scrollY },
+      });
+      host.style.top = `${pos.top}px`;
+      host.style.left = `${pos.left}px`;
     },
     destroy() {
       host.remove();

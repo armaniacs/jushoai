@@ -104,7 +104,7 @@ export default defineContentScript({
       for (const form of forms) {
         if (mounted.has(form.container)) continue;
         const handle = mountButton(
-          form.fields[0]!.el,
+          form.anchor.el,
           () => void guardedRun(form.container, handle),
           (info) => {
             openGuide?.close();
@@ -120,6 +120,7 @@ export default defineContentScript({
         mounted.set(form.container, handle);
         void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }
+      mounted.forEach((h) => h.reposition());
     }
 
     let timer: number | undefined;
@@ -129,6 +130,8 @@ export default defineContentScript({
     };
     schedule();
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-    window.addEventListener('resize', () => mounted.forEach((h) => h.reposition()));
+    const repositionAll = () => mounted.forEach((h) => h.reposition());
+    window.addEventListener('resize', repositionAll);
+    window.addEventListener('load', repositionAll);
   },
 });

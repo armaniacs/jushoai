@@ -52,4 +52,26 @@ describe('mountButton', () => {
     (badge() as HTMLButtonElement).click();
     expect(onBadgeClick).toHaveBeenCalledWith({ status: 'downloadable', provider: 'built-in' });
   });
+
+  describe('placement', () => {
+    function rect(top: number, left: number, right: number, bottom: number) {
+      return { top, left, right, bottom, width: right - left, height: bottom - top, x: left, y: top, toJSON() {} } as DOMRect;
+    }
+
+    it('positions the host right of the anchor and recomputes on reposition()', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(0);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      let current = rect(100, 50, 250, 124);
+      anchor.getBoundingClientRect = () => current;
+      const handle = mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+      expect(host.style.top).toBe(`${100 + (24 - 32) / 2}px`);
+      current = rect(300, 50, 250, 324);
+      handle.reposition();
+      expect(host.style.top).toBe(`${300 + (24 - 32) / 2}px`);
+    });
+  });
 });

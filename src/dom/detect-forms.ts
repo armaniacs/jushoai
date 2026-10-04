@@ -4,6 +4,7 @@ import { containerOf, scanFields, type ScannedField } from './scan-fields';
 export interface FormCandidate {
   container: Element;
   fields: ScannedField[];
+  anchor: ScannedField;
 }
 
 const MIN_CONTROLS = 3;
@@ -29,7 +30,7 @@ export function detectForms(doc: Document): FormCandidate[] {
       return c !== null && c.confidence >= ACCEPT_THRESHOLD;
     });
     if (fields.length >= MIN_CONTROLS && classified.length >= MIN_CLASSIFIED) {
-      forms.push({ container, fields });
+      forms.push({ container, fields, anchor: classified[0]! });
     }
   }
   return forms;

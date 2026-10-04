@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { classifyAll } from '../../src/analyze';
 import { buildPlan } from '../../src/core/planner';
 import type { Address, Profile } from '../../src/core/types';
+import { detectForms } from '../../src/dom/detect-forms';
 import { scanFields } from '../../src/dom/scan-fields';
 import single from '../../samples/single-field-form.html?raw';
 import split from '../../samples/split-form.html?raw';
@@ -56,5 +57,12 @@ describe('sample forms end to end', () => {
       fullname: '山田　太郎', furigana: 'ヤマダ　タロウ',
       addr: '東京都千代田区千代田1-1 千代田ビル101', phone: '09012345678',
     });
+  });
+
+  it('anchors the table-form button on the last name field', () => {
+    document.body.innerHTML = new DOMParser().parseFromString(table, 'text/html').body.innerHTML;
+    const forms = detectForms(document);
+    expect(forms).toHaveLength(1);
+    expect(forms[0]!.anchor.el.getAttribute('name')).toBe('n1');
   });
 });
