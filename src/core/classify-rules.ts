@@ -62,14 +62,32 @@ function classifyText(raw: string, kana: boolean, bareKana: boolean): Category |
   return null;
 }
 
+// Decodes the literal \uXXXX escapes an HTML pattern attribute holds as text; only
+// the regex engine interprets them, so kana-range checks on the raw string see none.
+const decodePattern = (p: string) =>
+  p.replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)));
+
+// True when the field asks for kana rather than kanji: a kana-only placeholder,
+// kana vocabulary in name/id/label/legend, or a kana-only pattern. A kanji or
+// latin placeholder means the field wants a plain name, whatever the heading says.
+export function wantsKana(m: FieldMeta): boolean {
+  const ph = stripExample(norm(m.placeholder));
+  if (ph !== '' && /[一-龠a-z]/.test(ph)) return false;
+  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
+  if (KANA.test(norm([m.name, m.htmlId, m.label, m.nearby].join(' ')))) return true;
+  const pat = decodePattern(m.pattern);
+  return /[ぁ-ゖァ-ヶ]/.test(pat) || /[ｦ-ﾟ]/.test(pat);
+}
+
 export function detectKanaKind(m: FieldMeta): KanaKind {
   const ph = stripExample(m.placeholder);
   if (/^[ｦ-ﾟ\s]+$/.test(ph)) return 'halfKatakana';
   if (/^[ぁ-ゖー\s　]+$/.test(ph)) return 'hiragana';
   if (/^[ァ-ヶー\s　]+$/.test(ph)) return 'katakana';
-  if (/[ｦ-ﾟ]/.test(m.pattern)) return 'halfKatakana';
-  if (/ぁ|ぃ|ん/.test(m.pattern)) return 'hiragana';
-  if (/ァ|ア|ン/.test(m.pattern)) return 'katakana';
+  const pat = decodePattern(m.pattern);
+  if (/[ｦ-ﾟ]/.test(pat)) return 'halfKatakana';
+  if (/ぁ|ぃ|ん/.test(pat)) return 'hiragana';
+  if (/ァ|ア|ン/.test(pat)) return 'katakana';
   const text = [m.label, m.nearby, m.placeholder].join(' ');
   if (/半角カナ|半角カタカナ|ﾊﾝｶｸ/.test(text)) return 'halfKatakana';
   if (/カタカナ/.test(text)) return 'katakana';

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, detectKanaKind, isConfident, refineClassifications,
+  ACCEPT_THRESHOLD, classifyField, detectKanaKind, isConfident, refineClassifications, wantsKana,
 } from '../../src/core/classify-rules';
 import type { Category, Classification } from '../../src/core/types';
 import { makeMeta } from '../helpers';
@@ -105,6 +105,11 @@ describe('detectKanaKind', () => {
     expect(detectKanaKind(makeMeta({ label: 'フリガナ（半角カナ）' }))).toBe('halfKatakana');
     expect(detectKanaKind(makeMeta({ label: 'フリガナ' }))).toBe('katakana');
     expect(detectKanaKind(makeMeta({ pattern: '[ぁ-ん]+' }))).toBe('hiragana');
+  });
+
+  it('reads kana ranges from a pattern written with \\uXXXX escapes', () => {
+    expect(detectKanaKind(makeMeta({ pattern: '^[\\u2015\\u3000\\u3041-\\u3093\\u309B-\\u309E\\u30FC]+$' }))).toBe('hiragana');
+    expect(detectKanaKind(makeMeta({ pattern: '^[\\u2015\\u3000\\u30A1-\\u30F6\\u30FB-\\u30FE]+$' }))).toBe('katakana');
   });
 
   it('attaches kanaKind only to kana categories', () => {
@@ -266,5 +271,32 @@ describe('classifyField: kana label with generic name', () => {
   ];
   it.each(cases)('classifies %j as %s', (p, expected) => {
     expect(cat(p)).toBe(expected);
+  });
+});
+
+describe('wantsKana', () => {
+  it('accepts a kana-only placeholder', () => {
+    expect(wantsKana(makeMeta({ placeholder: '例：みらい' }))).toBe(true);
+    expect(wantsKana(makeMeta({ placeholder: 'セイ' }))).toBe(true);
+  });
+
+  it('rejects a kanji or latin placeholder even under a furigana legend', () => {
+    expect(wantsKana(makeMeta({ placeholder: '例：未来', nearby: 'ふりがな' }))).toBe(false);
+    expect(wantsKana(makeMeta({ placeholder: 'John', label: 'フリガナ' }))).toBe(false);
+  });
+
+  it('reads kana words from name, id, label, or legend', () => {
+    expect(wantsKana(makeMeta({ nearby: 'ふりがな' }))).toBe(true);
+    expect(wantsKana(makeMeta({ label: 'お名前（カタカナ）' }))).toBe(true);
+    expect(wantsKana(makeMeta({ htmlId: 'furigana_sei' }))).toBe(true);
+    expect(wantsKana(makeMeta({ name: 'field_1_sei', htmlId: 'field_1_sei' }))).toBe(false);
+  });
+
+  it('detects kana ranges in a pattern written with \\uXXXX escapes', () => {
+    expect(wantsKana(makeMeta({ pattern: '^[\\u3041-\\u3093]+$' }))).toBe(true);
+    expect(wantsKana(makeMeta({ pattern: '^[\\u30A1-\\u30F6]+$' }))).toBe(true);
+    expect(wantsKana(makeMeta({ pattern: '^[ぁ-ん]+$' }))).toBe(true);
+    expect(wantsKana(makeMeta({ pattern: '^\\d{4}$' }))).toBe(false);
+    expect(wantsKana(makeMeta())).toBe(false);
   });
 });
