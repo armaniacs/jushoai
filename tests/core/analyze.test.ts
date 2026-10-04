@@ -102,10 +102,18 @@ describe('kana overlay', () => {
     expect(items[0]!.cls.category).toBe('email');
   });
 
-  it('splits a kana full-name pair after conversion', async () => {
+  it('does not flip plain-name fields in a shared kana-word legend when a sibling claims kana', async () => {
     const items = await classifyAll([
-      makeMeta({ id: 'a', name: 'name', label: 'フリガナ' }),
-      makeMeta({ id: 'b', name: 'name', label: 'フリガナ' }),
+      makeMeta({ id: 'a', name: 'sei', label: '名前の姓', nearby: 'お名前（フリガナ）' }),
+      makeMeta({ id: 'b', name: 'c_sei', placeholder: 'ヤマダ', nearby: 'お名前（フリガナ）' }),
+    ], null);
+    expect(items.map((i) => i.cls.category)).toEqual(['lastName', 'lastNameKana']);
+  });
+
+  it('splits a kana full-name pair after the overlay', async () => {
+    const items = await classifyAll([
+      makeMeta({ id: 'a', autocomplete: 'name', label: 'フリガナ' }),
+      makeMeta({ id: 'b', autocomplete: 'name', label: 'フリガナ' }),
     ], null);
     expect(items.map((i) => i.cls.category)).toEqual(['lastNameKana', 'firstNameKana']);
   });

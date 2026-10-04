@@ -79,6 +79,16 @@ export function wantsKana(m: FieldMeta): boolean {
   return /[ぁ-ゖァ-ヶ]/.test(pat) || /[ｦ-ﾟ]/.test(pat);
 }
 
+// True when the field itself claims kana through placeholder, name/id/label, or pattern —
+// evidence that belongs to this field, unlike a legend shared with sibling rows.
+export function wantsKanaOwnMeta(m: FieldMeta): boolean {
+  const ph = stripExample(norm(m.placeholder));
+  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
+  if (KANA.test(norm([m.name, m.htmlId, m.label].join(' ')))) return true;
+  const pat = decodePattern(m.pattern);
+  return /[ぁ-ゖァ-ヶ]/.test(pat) || /[ｦ-ﾟ]/.test(pat);
+}
+
 export function detectKanaKind(m: FieldMeta): KanaKind {
   const ph = stripExample(m.placeholder);
   if (/^[ｦ-ﾟ\s]+$/.test(ph)) return 'halfKatakana';

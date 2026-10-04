@@ -48,7 +48,8 @@ describe('showPreview', () => {
     const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
     const { root } = open({ rows: [row('ok')], onReanalyze });
     button(root, 'LLM で再分析')!.click();
-    // The handler now runs on a microtask instead of synchronously in the click.
+    // The handler runs on a microtask, so the click itself does not finish the analysis;
+    // the test must wait for the restore.
     await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     expect(button(root, '分析中…')!.disabled).toBe(true);
     expect(button(root, '入力する')!.disabled).toBe(true);
