@@ -20,6 +20,8 @@ make dev                                      # 開発ビルド
 make build                                    # dist/chrome-mv3 に出力
 make typecheck                                # tsc --noEmit
 make test                                     # 全テスト
+make site                                     # ドキュメントサイトを site-dist に生成して検査
+make site-serve                               # site-dist を 127.0.0.1:4173 で配信
 npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```
@@ -37,6 +39,7 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - **Prompt API は Service Worker（`src/entrypoints/background.ts`）から呼ぶ。** Content Script は runtime メッセージ（`src/llm/background-gateway.ts`、`src/messages.ts`）経由で状態確認・分類・ダウンロードを依頼する。Chrome（Gemini Nano）と Edge（Phi-mini）は同じ `LanguageModel` API 形状。Phi-mini は文脈が小さいため 1 リクエスト 20 欄までに分割する。
 - **AI プロバイダは設定で 1 つ選ぶ。** `none`（初期値）/ `built-in` / `openai` / `gemini`。background の `handleMessage`（`src/llm/handle-message.ts`）が設定に応じて `FieldClassifier` を選び、クラウドは `src/ai/http-classifiers.ts` が `fetch` する。API キーは `src/ai/secret-store.ts` の AES-GCM エンベロープで保存し、background だけが復号する（Content Script と設定ページには「保存済みか」だけ渡す）。通信先の host 権限は `optional_host_permissions` で、設定ページの保存時に要求する。ベース URL は `src/ai/settings.ts` の `validateBaseUrl` で検証する（https のみ、http は localhost / 127.0.0.1 のみ、内部アドレス拒否）。
 - **OpenAI 互換は 400/422 で互換リクエストに 1 回だけ再試行する。** temperature なし・`json_object` の形式で、成功したプロバイダは background の `compat` に記録して次回から最初から使う。401/403 を返したプロバイダは `authFailed` に記録する。どちらもメモリ上にあり、設定が変わると消える。
+- **ドキュメントサイトは `site/` の自作ビルド。** `site/lib/` の純粋関数（front matter、Markdown 変換、日英の対応検査、レイアウト、ランディング、ビルド、検査）を `node site/build.ts` が実行する（Node の組み込みの型除去を使うため、消去可能な構文だけを使い、相対 import に `.ts` を付ける）。日英のキーと H2 の数が違うとビルドが失敗する。ガイドの事実は README と設計書、コードにあるものだけを使う。型検査は `site/tsconfig.json` で別に行い、ルートの `tsconfig.json` からは外している。
 
 ## テスト方針
 

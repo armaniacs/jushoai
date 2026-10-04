@@ -1,0 +1,98 @@
+{
+  "meta": {
+    "title": "JushoAI — Fill Japanese forms into the right fields",
+    "description": "A Chromium browser extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
+  },
+  "chrome": {
+    "nav": { "home": "Home", "guides": "Guides", "install": "Install", "langName": "日本語", "skip": "Skip to content" },
+    "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "source": "Source" }
+  },
+  "hero": {
+    "eyebrow": "Extension for Chromium-based browsers (tested on Edge)",
+    "titleBefore": "Names, furigana and addresses on Japanese forms, ",
+    "titleEmphasis": "in the right fields and the right format",
+    "tagline": "Forms split into family name, given name, furigana and prefecture-to-street fields get filled in one click. You review everything in a preview first.",
+    "ctaInstall": "How to install",
+    "ctaGuide": "Read the guides"
+  },
+  "features": {
+    "title": "Built for what makes Japanese forms hard",
+    "items": [
+      { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number and prefecture-to-building address fields in the shape each field expects." },
+      { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
+      { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
+      { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
+    ]
+  },
+  "mock": {
+    "uiNote": "The extension's interface is in Japanese.",
+    "captionButton": "A \"JushoAI で入力\" (fill with JushoAI) button appears next to the form. The badge shows the AI status.",
+    "captionPreview": "Review fields and values before filling. Fields classified by the AI carry an \"AI判定\" (AI) mark.",
+    "captionGuide": "Click the badge to open a guide that explains the status and what to do.",
+    "captionForm": "Split fields receive values in the shape each field expects.",
+    "before": "Before",
+    "after": "After"
+  },
+  "steps": {
+    "title": "Four steps",
+    "items": [
+      { "title": "Register", "body": "In the settings page, register your name, furigana, email, phone number and addresses. You can register several addresses." },
+      { "title": "Press the button", "body": "Press \"JushoAI で入力\" that appears near the form." },
+      { "title": "Review the preview", "body": "Check the list of fields and values. If you registered several addresses, pick one here." },
+      { "title": "Fill", "body": "Press 入力する (fill) and only the fields you reviewed are filled." }
+    ]
+  },
+  "fields": {
+    "title": "Supported fields",
+    "items": [
+      { "title": "Names", "body": "Works with separate family and given name fields or a single field. For a single field it reads the field's example text to decide whether to put a space between them." },
+      { "title": "Furigana", "body": "Supports full-width katakana, hiragana and half-width katakana, converting to match the field's example text or description." },
+      { "title": "Addresses", "body": "Supports addresses split across fields such as prefecture, city, street and building. Prefecture dropdowns are matched even when the notation differs, such as 東京 versus 東京都." },
+      { "title": "Phone and postal code", "body": "Handles hyphenated and plain numbers, in a single field or split fields, judged from the field's example text and maximum length." },
+      { "title": "Safe filling", "body": "Fields that already have a value are not overwritten, and values longer than the maximum length are not entered but flagged." }
+    ]
+  },
+  "providers": {
+    "title": "AI, only when you want it",
+    "lead": "The default is \"off\". Choose a provider in the settings page only if you want AI to help with fields the rules cannot decide.",
+    "items": [
+      { "name": "OpenAI-compatible API", "body": "Presets for OpenAI, Groq, Mistral, Ollama and LM Studio. Enter the base URL, model name and API key." },
+      { "name": "Google Gemini", "body": "Enter the model name and API key." },
+      { "name": "Built-in browser AI", "body": "Chrome (Gemini Nano) or Edge (Phi-mini). Needs a flag and a restart, and nothing leaves your device." }
+    ]
+  },
+  "privacy": {
+    "title": "Privacy",
+    "items": [
+      { "title": "Only field metadata is sent", "body": "If you configure an AI provider, the name, label, placeholder, nearby heading, type and maxlength of fields are sent to it. Your profile values and values already in fields are not. Labels and headings are text shown on the page, so personal information visible on the page can be part of what is sent." },
+      { "title": "Network only on click", "body": "Merely opening a page never contacts an AI provider." },
+      { "title": "API keys are stored encrypted", "body": "Leaked storage alone cannot decrypt them. The extension's own code can still read them." }
+    ],
+    "link": "Read the privacy details"
+  },
+  "install": {
+    "title": "Install",
+    "steps": [
+      "It is not on the stores, so build it from source.",
+      "Open chrome://extensions (Chrome) or edge://extensions (Edge) and turn on Developer mode.",
+      "Choose \"Load unpacked\" and select the built dist/chrome-mv3 folder (the label may differ by browser).",
+      "In the extension's settings page, register your profile and addresses."
+    ],
+    "code": "make install\nmake build",
+    "more": "See the \"Getting started\" guide for details."
+  },
+  "faq": {
+    "title": "FAQ",
+    "items": [
+      { "q": "Does it work without AI?", "a": "Yes. Fields are classified by rules, and AI only helps with ambiguous ones. AI is off by default." },
+      { "q": "What gets sent outside?", "a": "Nothing, unless you configure AI. If you do, only field metadata is sent; your profile values and the values already in fields are not." },
+      { "q": "I'm worried about wrong entries.", "a": "You review everything in a preview before filling, and fields that already have a value are not overwritten." },
+      { "q": "Does it work on every form?", "a": "It handles common inputs (text, email, tel, and prefecture dropdowns). Fields it cannot classify are left alone." },
+      { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." }
+    ]
+  },
+  "guides": {
+    "title": "Guides",
+    "lead": "From installation to AI providers and privacy."
+  }
+}
