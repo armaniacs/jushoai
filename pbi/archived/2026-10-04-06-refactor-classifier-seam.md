@@ -36,14 +36,14 @@ Scenario: core は純粋性を保つ
 
 ## 受け入れ基準
 
-- [ ] `FieldClassifier` インターフェースが `src/core/classifier.ts`（仮称・型のみのファイル）に移動する
-- [ ] 3 つの adapter（`src/llm/classifier.ts`・`src/ai/http-classifiers.ts`・`src/llm/background-gateway.ts`）と `src/llm/handle-message.ts` が core から interface を import する
-- [ ] `src/analyze.ts` が `src/core/analyze.ts` に移動し、core 内の import のみで動く
-- [ ] `src/entrypoints/content.ts` の import が更新される
-- [ ] `tests/analyze.test.ts` が `tests/core/analyze.test.ts` に移動し green
-- [ ] `tests/integration/samples.test.ts` の import が更新される
-- [ ] 既存テストが期待値無修正で green（挙動不変の証拠）
-- [ ] `npx tsc --noEmit` green
+- [x] `FieldClassifier` インターフェースが `src/core/classifier.ts`（仮称・型のみのファイル）に移動する
+- [x] 3 つの adapter（`src/llm/classifier.ts`・`src/ai/http-classifiers.ts`・`src/llm/background-gateway.ts`）と `src/llm/handle-message.ts` が core から interface を import する
+- [x] `src/analyze.ts` が `src/core/analyze.ts` に移動し、core 内の import のみで動く
+- [x] `src/entrypoints/content.ts` の import が更新される
+- [x] `tests/analyze.test.ts` が `tests/core/analyze.test.ts` に移動し green
+- [x] `tests/integration/samples.test.ts` の import が更新される
+- [x] 既存テストが期待値無修正で green（挙動不変の証拠）
+- [x] `npx tsc --noEmit` green
 
 ## テスト戦略
 
@@ -80,7 +80,7 @@ Scenario: core は純粋性を保つ
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] 既存テストが期待値無修正で green（挙動不変の証拠）
-- [ ] `npx tsc --noEmit` green
-- [ ] コミット済み（refactor: FieldClassifier seam を core に移動）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] 既存テストが期待値無修正で green（挙動不変の証拠）
+- [x] `npx tsc --noEmit` green
+- [x] コミット済み（refactor: FieldClassifier seam を core に移動）
