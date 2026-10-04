@@ -144,7 +144,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     reanalyze!.addEventListener('click', () => {
       if (busy) return;
       setReanalyzing(true);
-      void Promise.resolve(onReanalyze())
+      // Defer the call into the chain so a synchronously throwing handler
+      // becomes a rejection instead of escaping the listener uncaught.
+      void Promise.resolve()
+        .then(onReanalyze)
         .catch((e) => console.error('JushoAI: reanalysis failed', e))
         .finally(() => setReanalyzing(false));
     });

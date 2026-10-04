@@ -48,7 +48,8 @@ describe('showPreview', () => {
     const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
     const { root } = open({ rows: [row('ok')], onReanalyze });
     button(root, 'LLM で再分析')!.click();
-    expect(onReanalyze).toHaveBeenCalledOnce();
+    // The handler now runs on a microtask instead of synchronously in the click.
+    await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     expect(button(root, '分析中…')!.disabled).toBe(true);
     expect(button(root, '入力する')!.disabled).toBe(true);
     expect(button(root, 'キャンセル')!.disabled).toBe(true);
@@ -64,5 +65,14 @@ describe('showPreview', () => {
     button(root, 'LLM で再分析')!.click();
     await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
     expect(button(root, '入力する')!.disabled).toBe(false);
+  });
+
+  it('re-enables the panel after a synchronously throwing reanalysis', async () => {
+    const onReanalyze = vi.fn(() => { throw new Error('sync'); });
+    const { root } = open({ rows: [row('ok')], onReanalyze });
+    button(root, 'LLM で再分析')!.click();
+    await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
+    expect(button(root, '入力する')!.disabled).toBe(false);
+    expect(button(root, 'キャンセル')!.disabled).toBe(false);
   });
 });
