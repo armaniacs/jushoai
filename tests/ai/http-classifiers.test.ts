@@ -192,7 +192,7 @@ describe('OpenAI-compatible compatibility retry', () => {
 
 describe('request allow-list', () => {
   const rich = [makeMeta({
-    id: 'a', label: '姓', options: ['OPT-SECRET'], autocomplete: 'AC-SECRET', pattern: 'PAT-SECRET', value: 'VAL-SECRET',
+    id: 'a', label: '姓', options: [{ value: 'OPT-SECRET', text: 'OPT-SECRET' }], autocomplete: 'AC-SECRET', pattern: 'PAT-SECRET', value: 'VAL-SECRET',
   })];
 
   it.each([
