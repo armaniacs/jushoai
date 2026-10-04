@@ -100,6 +100,28 @@ describe('buildGuide: cloud providers', () => {
     }
   });
 
+  it('names what is missing per provider and mentions key re-entry', () => {
+    const t = (p: AiStatusInfo['provider']) => buildGuide(gi('not-configured', p), 'chrome');
+    expect(t('openai').title).toBe('AI の設定が未完了です');
+    expect(t('openai').lines[0]).toBe('OpenAI 互換 の設定（ベース URL とモデル名（localhost 以外は API キー））を設定ページで確認してください。');
+    expect(t('gemini').lines[0]).toContain('（モデル名と API キー）');
+    expect(t('built-in').lines[0]).toBe('ブラウザ内蔵 の設定を設定ページで確認してください。');
+    for (const p of ['openai', 'gemini', 'built-in'] as const) {
+      expect(t(p).lines).toContain('API キーを保存済みなのにこの表示になる場合は、キーを入力し直してください。');
+    }
+  });
+
+  it('has exact texts for permission-missing and auth-error', () => {
+    const perm = buildGuide(gi('permission-missing', 'gemini'), 'chrome');
+    expect(perm.title).toBe('AI への通信が許可されていません');
+    expect(perm.lines[0]).toContain('設定ページで保存し直し、ブラウザの確認で許可してください');
+    const auth = buildGuide(gi('auth-error', 'openai'), 'chrome');
+    expect(auth.title).toBe('AI の認証に失敗しました');
+    expect(auth.lines).toContain(
+      'Ollama などローカルのサーバーの場合は、API キーではなく OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
+    );
+  });
+
   it('explains what is sent when a cloud provider is available', () => {
     const g = buildGuide(gi('available', 'gemini'), 'chrome');
     expect(g.title).toBe('AI 判定を利用できます');

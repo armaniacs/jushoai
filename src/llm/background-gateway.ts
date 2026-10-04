@@ -4,7 +4,8 @@ import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLAS
 import type { FieldClassifier } from './classifier';
 
 export const STATUS_TIMEOUT_MS = 5_000;
-export const CLASSIFY_TIMEOUT_MS = 20_000;
+export const CLASSIFY_TIMEOUT_MS = 30_000
+export const MAX_CLASSIFY_TOTAL = 60;
 export const DOWNLOAD_TIMEOUT_MS = 120_000;
 export const TEST_TIMEOUT_MS = 30_000;
 
@@ -62,14 +63,17 @@ export class BackgroundClassifier implements FieldClassifier {
 
   async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
     const out = new Map<string, Category>();
-    for (let i = 0; i < fields.length; i += MAX_CLASSIFY_CHUNK) {
-      const chunk = fields.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWire);
+    const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
+    for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
+      const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWire);
       try {
         const res = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
         const parsed = parseClassifyResponse(res);
-        if (parsed) for (const [id, c] of parsed) out.set(id, c);
+        // A failing provider (401, 429, timeout) would fail every later chunk too.
+        if (!parsed) break;
+        for (const [id, c] of parsed) out.set(id, c);
       } catch {
-        // A failed chunk must not discard results from the others.
+        break;
       }
     }
     return out;

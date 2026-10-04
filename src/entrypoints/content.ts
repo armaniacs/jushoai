@@ -52,6 +52,7 @@ export default defineContentScript({
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const items = await classifyAll(fields.map((f) => f.meta), classifier);
+      void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       let addressId = data.addresses[0]!.id;
       let plan: PlanItem[] = [];

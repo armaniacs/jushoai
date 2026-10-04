@@ -69,12 +69,23 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
         ],
         openSettings: true,
       };
-    case 'not-configured':
+    case 'not-configured': {
+      const missing =
+        info.provider === 'openai'
+          ? '設定（ベース URL とモデル名（localhost 以外は API キー））'
+          : info.provider === 'gemini'
+            ? '設定（モデル名と API キー）'
+            : '設定';
       return {
         title: 'AI の設定が未完了です',
-        lines: [`${providerName} の設定（ベース URL・モデル名・API キー）を設定ページで確認してください。`, RULE_LINE],
+        lines: [
+          `${providerName} の${missing}を設定ページで確認してください。`,
+          'API キーを保存済みなのにこの表示になる場合は、キーを入力し直してください。',
+          RULE_LINE,
+        ],
         openSettings: true,
       };
+    }
     case 'permission-missing':
       return {
         title: 'AI への通信が許可されていません',
@@ -87,7 +98,11 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
     case 'auth-error':
       return {
         title: 'AI の認証に失敗しました',
-        lines: [`${providerName} が認証を拒否しました。設定ページで API キーを確認してください。`, RULE_LINE],
+        lines: [
+          `${providerName} が認証を拒否しました。設定ページで API キーを確認してください。`,
+          'Ollama などローカルのサーバーの場合は、API キーではなく OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
+          RULE_LINE,
+        ],
         openSettings: true,
       };
     case 'available':
