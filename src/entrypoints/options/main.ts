@@ -4,14 +4,14 @@ import {
 } from '../../core/profile';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
-import { labeled, textInput } from './dom';
+import { labeled, textInput, kanaHiraganaHint } from './dom';
 import { mountAiSection } from './ai-section';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
   { key: 'lastName', label: '姓', placeholder: '山田' },
   { key: 'firstName', label: '名', placeholder: '太郎' },
-  { key: 'lastNameKana', label: 'セイ（全角カナ）', placeholder: 'ヤマダ' },
-  { key: 'firstNameKana', label: 'メイ（全角カナ）', placeholder: 'タロウ' },
+  { key: 'lastNameKana', label: 'セイ（フリガナ・ふりがな入力可）', placeholder: 'ヤマダ' },
+  { key: 'firstNameKana', label: 'メイ（フリガナ・ふりがな入力可）', placeholder: 'タロウ' },
   { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email' },
   { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel' },
 ];
@@ -62,9 +62,19 @@ function render(notice?: HTMLElement) {
   profileLegend.textContent = 'プロファイル';
   profileSet.append(profileLegend);
   for (const f of PROFILE_FIELDS) {
-    profileSet.append(
-      labeled(f.label, textInput(state.profile[f.key], f.placeholder, (v) => { state.profile[f.key] = v; }, f.type)),
-    );
+    const isKana = f.key === 'lastNameKana' || f.key === 'firstNameKana';
+    const hint = isKana ? document.createElement('p') : null;
+    if (hint) hint.className = 'kana-preview';
+    const syncHint = (v: string) => {
+      if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
+    };
+    const input = textInput(state.profile[f.key], f.placeholder, (v) => {
+      state.profile[f.key] = v;
+      syncHint(v);
+    }, f.type);
+    syncHint(state.profile[f.key]);
+    profileSet.append(labeled(f.label, input));
+    if (hint) profileSet.append(hint);
   }
 
   const addressHeading = document.createElement('h2');
