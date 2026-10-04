@@ -52,7 +52,8 @@ export default defineContentScript({
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
-      const items = await classifyAll(fields.map((f) => f.meta), classifier);
+      const metas = fields.map((f) => f.meta);
+      let items = await classifyAll(metas, classifier);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       let addressId = data.addresses[0]!.id;
@@ -71,6 +72,12 @@ export default defineContentScript({
         });
       };
 
+      async function reanalyze() {
+        if (!classifier) return;
+        items = await classifyAll(metas, classifier, { force: true });
+        preview.setRows(replan());
+      }
+
       // Preview and guide occupy the same fixed corner; opening one must close the other.
       openPreview?.close();
       openPreview = null;
@@ -80,6 +87,7 @@ export default defineContentScript({
         rows: replan(),
         addresses: data.addresses,
         selectedAddressId: addressId,
+        onReanalyze: classifier ? reanalyze : undefined,
         onAddressChange: (id) => {
           addressId = id;
           preview.setRows(replan());

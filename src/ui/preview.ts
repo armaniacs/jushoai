@@ -16,10 +16,12 @@ export interface PreviewOptions {
   onAddressChange(id: string): void;
   onApply(): void;
   onCancel(): void;
+  onReanalyze?(): void | Promise<void>;
 }
 
 export interface PreviewHandle {
   setRows(rows: PreviewRow[]): void;
+  setReanalyzing(busy: boolean): void;
   close(): void;
 }
 
@@ -42,6 +44,7 @@ const CSS = `
   .ai { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; color: #fff;
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
+  .actions .reanalyze { margin-right: auto; }
   button:disabled { opacity: .5; cursor: default; }
 `;
 
@@ -81,9 +84,25 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const cancel = document.createElement('button');
   cancel.type = 'button';
   cancel.textContent = 'キャンセル';
+  const onReanalyze = opts.onReanalyze;
+  const reanalyze = onReanalyze
+    ? Object.assign(document.createElement('button'), {
+        type: 'button', className: 'reanalyze', textContent: 'LLM で再分析',
+      })
+    : null;
+  let hasOk = false;
+  let busy = false;
+  const syncButtons = () => {
+    if (reanalyze) {
+      reanalyze.disabled = busy;
+      reanalyze.textContent = busy ? '分析中…' : 'LLM で再分析';
+    }
+    cancel.disabled = busy;
+    apply.disabled = busy || !hasOk;
+  };
   const actions = document.createElement('div');
   actions.className = 'actions';
-  actions.append(cancel, apply);
+  actions.append(...(reanalyze ? [reanalyze, cancel, apply] : [cancel, apply]));
   panel.append(list, empty, actions);
 
   const setRows = (rows: PreviewRow[]) => {
@@ -113,8 +132,26 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       }),
     );
     empty.hidden = rows.length > 0;
-    apply.disabled = !rows.some((r) => r.status === 'ok');
+    hasOk = rows.some((r) => r.status === 'ok');
+    syncButtons();
   };
+
+  const setReanalyzing = (v: boolean) => {
+    busy = v;
+    syncButtons();
+  };
+  if (onReanalyze) {
+    reanalyze!.addEventListener('click', () => {
+      if (busy) return;
+      setReanalyzing(true);
+      // Defer the call into the chain so a synchronously throwing handler
+      // becomes a rejection instead of escaping the listener uncaught.
+      void Promise.resolve()
+        .then(onReanalyze)
+        .catch((e) => console.error('JushoAI: reanalysis failed', e))
+        .finally(() => setReanalyzing(false));
+    });
+  }
 
   const close = () => {
     detachEscape();
@@ -127,5 +164,5 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   setRows(opts.rows);
   root.append(style, panel);
   document.body.append(host);
-  return { setRows, close };
+  return { setRows, setReanalyzing, close };
 }

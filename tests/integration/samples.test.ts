@@ -4,6 +4,8 @@ import { buildPlan } from '../../src/core/planner';
 import type { Address, Profile } from '../../src/core/types';
 import { detectForms } from '../../src/dom/detect-forms';
 import { scanFields } from '../../src/dom/scan-fields';
+import furigana from '../../samples/furigana-fieldset-form.html?raw';
+import katakana from '../../samples/katakana-fieldset-form.html?raw';
 import single from '../../samples/single-field-form.html?raw';
 import split from '../../samples/split-form.html?raw';
 import table from '../../samples/table-form.html?raw';
@@ -12,6 +14,8 @@ const SAMPLES: Record<string, string> = {
   'table-form.html': table,
   'split-form.html': split,
   'single-field-form.html': single,
+  'furigana-fieldset-form.html': furigana,
+  'katakana-fieldset-form.html': katakana,
 };
 
 const profile: Profile = {
@@ -56,6 +60,20 @@ describe('sample forms end to end', () => {
     expect(await planFor('single-field-form.html')).toEqual({
       fullname: '山田　太郎', furigana: 'ヤマダ　タロウ',
       addr: '東京都千代田区千代田1-1 千代田ビル101', phone: '09012345678',
+    });
+  });
+
+  it('furigana-fieldset-form', async () => {
+    expect(await planFor('furigana-fieldset-form.html')).toEqual({
+      field_1_sei: '山田', field_1_mei: '太郎',
+      field_2_sei: 'やまだ', field_2_mei: 'たろう',
+    });
+  });
+
+  it('katakana-fieldset-form', async () => {
+    expect(await planFor('katakana-fieldset-form.html')).toEqual({
+      field_1_sei: '山田', field_1_mei: '太郎',
+      field_2_sei: 'ヤマダ', field_2_mei: 'タロウ',
     });
   });
 
