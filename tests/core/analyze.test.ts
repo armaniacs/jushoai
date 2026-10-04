@@ -63,3 +63,59 @@ describe('classifyAll', () => {
     expect(items.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3']);
   });
 });
+
+describe('kana overlay', () => {
+  it('converts an autocomplete name hit when the field wants kana', async () => {
+    const items = await classifyAll([makeMeta({
+      id: 'a', name: 'field_4371037_sei', autocomplete: 'family-name',
+      label: '名前の姓', placeholder: '例：みらい', nearby: 'ふりがな',
+    })], null);
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', kanaKind: 'hiragana', confidence: 0.95 });
+  });
+
+  it('converts a katakana field with a セイ placeholder', async () => {
+    const items = await classifyAll([makeMeta({
+      id: 'a', name: 'field_4695585_sei', autocomplete: 'family-name',
+      label: '名前の姓', placeholder: 'セイ', nearby: 'お名前（カタカナ）',
+    })], null);
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', kanaKind: 'katakana' });
+  });
+
+  it('keeps the kanji category when the placeholder is kanji', async () => {
+    const items = await classifyAll([makeMeta({
+      id: 'a', name: 'field_4371018_sei', autocomplete: 'family-name',
+      label: '名前の姓', placeholder: '例：未来', nearby: 'お名前',
+    })], null);
+    expect(items[0]!.cls.category).toBe('lastName');
+    expect(items[0]!.cls.kanaKind).toBeUndefined();
+  });
+
+  it('converts legend-only kana fields the name route reads as kanji', async () => {
+    const items = await classifyAll([makeMeta({
+      id: 'a', name: 'f_1', label: '名前の姓', nearby: 'ふりがな',
+    })], null);
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', kanaKind: 'hiragana' });
+  });
+
+  it('never touches non-name categories', async () => {
+    const items = await classifyAll([makeMeta({ id: 'a', type: 'email', label: 'フリガナ連絡先' })], null);
+    expect(items[0]!.cls.category).toBe('email');
+  });
+
+  it('splits a kana full-name pair after conversion', async () => {
+    const items = await classifyAll([
+      makeMeta({ id: 'a', name: 'name', label: 'フリガナ' }),
+      makeMeta({ id: 'b', name: 'name', label: 'フリガナ' }),
+    ], null);
+    expect(items.map((i) => i.cls.category)).toEqual(['lastNameKana', 'firstNameKana']);
+  });
+
+  it('applies to LLM answers too', async () => {
+    const { classifier } = llm({ a: 'lastName' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', name: 'xyz', pattern: '[ぁ-ん]+' })],
+      classifier,
+    );
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', source: 'llm', kanaKind: 'hiragana' });
+  });
+});

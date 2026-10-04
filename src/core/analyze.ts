@@ -1,8 +1,26 @@
 import {
-  classifyField, detectKanaKind, isConfident, refineClassifications, type Item,
+  classifyField, detectKanaKind, isConfident, refineClassifications, wantsKana, type Item,
 } from './classify-rules';
 import type { Category, FieldMeta } from './types';
 import type { FieldClassifier } from './classifier';
+
+const KANA_CATEGORY: Partial<Record<Category, Category>> = {
+  lastName: 'lastNameKana',
+  firstName: 'firstNameKana',
+  fullName: 'fullNameKana',
+};
+
+// The kana decision cannot ride any single classification route: autocomplete reports
+// family-name for both the kanji and the furigana pair, so it is applied once here,
+// after rules and the LLM, before refinement groups the pairs.
+function applyKanaOverlay(items: Item[]): void {
+  for (const item of items) {
+    const target = KANA_CATEGORY[item.cls.category];
+    if (!target || !wantsKana(item.meta)) continue;
+    item.cls.category = target;
+    item.cls.kanaKind = detectKanaKind(item.meta);
+  }
+}
 
 export async function classifyAll(
   metas: FieldMeta[],
@@ -41,5 +59,6 @@ export async function classifyAll(
       });
     }
   }
+  applyKanaOverlay(items);
   return refineClassifications(items);
 }

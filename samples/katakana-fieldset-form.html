@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>katakana fieldset form</title>
+<form onsubmit="return false">
+  <fieldset data-fieldset-label="お名前" class="form-fieldset form-fieldset-name required">
+    <legend>お名前</legend>
+    <label for="field_1_sei" class="visually-hidden">名前の姓</label>
+    <input id="field_1_sei" name="field_1_sei" type="text" placeholder="姓" autocomplete="family-name">
+    <label for="field_1_mei" class="visually-hidden">名前の名</label>
+    <input id="field_1_mei" name="field_1_mei" type="text" placeholder="名" autocomplete="given-name">
+  </fieldset>
+  <fieldset data-fieldset-label="お名前（カタカナ）" class="form-fieldset form-fieldset-name required">
+    <legend>お名前（カタカナ）</legend>
+    <label for="field_2_sei" class="visually-hidden">名前の姓</label>
+    <input id="field_2_sei" name="field_2_sei" type="text" placeholder="セイ" autocomplete="family-name"
+      pattern="^[\u2015\u3000\u30A1-\u30F6\u30FB-\u30FE]+$">
+    <label for="field_2_mei" class="visually-hidden">名前の名</label>
+    <input id="field_2_mei" name="field_2_mei" type="text" placeholder="メイ" autocomplete="given-name"
+      pattern="^[\u2015\u3000\u30A1-\u30F6\u30FB-\u30FE]+$">
+  </fieldset>
+</form>
+</html>
