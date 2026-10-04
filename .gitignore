@@ -5,3 +5,9 @@ dist
 .vitest
 site-dist/
 .DS_Store
+
+.kilo/
+.supoerpowers/
+.claude/
+.agents
+.env
