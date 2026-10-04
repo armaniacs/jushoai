@@ -39,14 +39,14 @@ Scenario: 許可リスト外の値は現行どおり通らない
 
 ## 受け入れ基準
 
-- [ ] 許可リスト（8 項目）が `src/messages.ts` に 1 箇所で定義される（`META_WIRE_KEYS` 仮称 + `MetaWire` 型 + `toWireMeta`）
-- [ ] `src/llm/background-gateway.ts` の `toWire` が `toWireMeta` に置き換わる
-- [ ] `src/messages.ts` の `sanitizeField` が `MetaWire` 型を構築し、鍵リストの型リンクが生まれる（項目追加時に sanitizeField がコンパイルエラーになる）
-- [ ] `src/llm/classifier.ts` の `buildPrompt` が `MetaWire` を消費し、80 文字 clip は prompt 専用に残る
-- [ ] `sanitizeField` の 200 文字クランプ・`tag: 'input'` 強制は不変（受信側検証の維持）
-- [ ] プロファイル値・欄の現在値（`value`）・`autocomplete`・`pattern`・`options` が wire に含まれないことをテストで pin
-- [ ] 既存 `tests/messages.test.ts`・`tests/llm/classifier.test.ts`・`tests/llm/background-gateway.test.ts` が green
-- [ ] `npx tsc --noEmit` green
+- [x] 許可リスト（8 項目）が `src/messages.ts` に 1 箇所で定義される（`META_WIRE_KEYS` 仮称 + `MetaWire` 型 + `toWireMeta`）
+- [x] `src/llm/background-gateway.ts` の `toWire` が `toWireMeta` に置き換わる
+- [x] `src/messages.ts` の `sanitizeField` が `MetaWire` 型を構築し、鍵リストの型リンクが生まれる（項目追加時に sanitizeField がコンパイルエラーになる）
+- [x] `src/llm/classifier.ts` の `buildPrompt` が `MetaWire` を消費し、80 文字 clip は prompt 専用に残る
+- [x] `sanitizeField` の 200 文字クランプ・`tag: 'input'` 強制は不変（受信側検証の維持）
+- [x] プロファイル値・欄の現在値（`value`）・`autocomplete`・`pattern`・`options` が wire に含まれないことをテストで pin
+- [x] 既存 `tests/messages.test.ts`・`tests/llm/classifier.test.ts`・`tests/llm/background-gateway.test.ts` が green
+- [x] `npx tsc --noEmit` green
 
 ## テスト戦略
 
@@ -87,7 +87,7 @@ Scenario: 許可リスト外の値は現行どおり通らない
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] parity テストが green（許可リストの自動検証）
-- [ ] 既存テストが無修正で green（挙動不変の証拠）
-- [ ] コミット済み（refactor: 欄メタデータの wire 形状を messages.ts に一元化）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] parity テストが green（許可リストの自動検証）
+- [x] 既存テストが無修正で green（挙動不変の証拠）
+- [x] コミット済み（refactor: 欄メタデータの wire 形状を messages.ts に一元化）
