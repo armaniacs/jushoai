@@ -71,7 +71,11 @@ export default defineContentScript({
         });
       };
 
+      // Preview and guide occupy the same fixed corner; opening one must close the other.
       openPreview?.close();
+      openPreview = null;
+      openGuide?.close();
+      openGuide = null;
       const preview = showPreview({
         rows: replan(),
         addresses: data.addresses,
@@ -105,6 +109,8 @@ export default defineContentScript({
           form.anchor.el,
           () => void guardedRun(form.container, handle),
           (info) => {
+            openPreview?.close();
+            openPreview = null;
             openGuide?.close();
             openGuide = showAiGuide(
               buildGuide(info, browser),
