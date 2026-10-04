@@ -1,4 +1,5 @@
 import type { Category, Classification, FieldMeta, KanaKind } from './types';
+import { stripExample } from './formatters';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -37,7 +38,6 @@ const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)
 const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
 
 const norm = (s: string) => s.normalize('NFKC').toLowerCase();
-const stripExample = (s: string) => s.replace(/^例[)）:：]?/, '').trim();
 
 function classifyText(raw: string, kana: boolean, bareKana: boolean): Category | null {
   const t = norm(raw);
@@ -125,14 +125,11 @@ export function refineClassifications(items: Item[]): Item[] {
       if (target && cat) target.cls.category = cat;
     });
 
-  const tel = indices('tel');
-  if (tel.length === 3) retag(tel, ['tel1', 'tel2', 'tel3']);
-  const zip = indices('zip');
-  if (zip.length === 2) retag(zip, ['zip1', 'zip2']);
   const dropped = new Set<number>();
-  // Fields only split into a last/first pair when they share label and heading; otherwise
-  // they may belong to different people (e.g. orderer vs. recipient).
-  const splitGroups = (cat: Category, pair: [Category, Category]) => {
+  // Fields only split when they share label and heading; otherwise they may belong to
+  // different people or address blocks (e.g. orderer vs. recipient). Oversized ambiguous
+  // groups are dropped instead of being filled with fragments of one value.
+  const splitGroups = (cat: Category, cats: Category[]) => {
     const groups = new Map<string, number[]>();
     for (const i of indices(cat)) {
       const meta = out[i]!.meta;
@@ -140,10 +137,12 @@ export function refineClassifications(items: Item[]): Item[] {
       groups.set(key, [...(groups.get(key) ?? []), i]);
     }
     for (const idx of groups.values()) {
-      if (idx.length === 2) retag(idx, pair);
-      else if (idx.length > 2) idx.forEach((i) => dropped.add(i));
+      if (idx.length === cats.length) retag(idx, cats);
+      else if (idx.length > cats.length) idx.forEach((i) => dropped.add(i));
     }
   };
+  splitGroups('tel', ['tel1', 'tel2', 'tel3']);
+  splitGroups('zip', ['zip1', 'zip2']);
   splitGroups('fullName', ['lastName', 'firstName']);
   splitGroups('fullNameKana', ['lastNameKana', 'firstNameKana']);
 

@@ -144,6 +144,20 @@ describe('refineClassifications', () => {
     expect(cats(refineClassifications([a, b]))).toEqual(['fullName', 'fullName']);
   });
 
+  it('keeps zip fields with different labels unsplit', () => {
+    const a = { ...item('zip', 'a'), meta: makeMeta({ id: 'a', label: '注文者郵便番号' }) };
+    const b = { ...item('zip', 'b'), meta: makeMeta({ id: 'b', label: 'お届け先郵便番号' }) };
+    expect(cats(refineClassifications([a, b]))).toEqual(['zip', 'zip']);
+  });
+
+  it('keeps tel fields with different labels unsplit', () => {
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: ['自宅電話', '携帯電話', '勤務先電話'][i] }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
   it('drops ambiguous groups of more than two identical fullName fields', () => {
     const four = ['a', 'b', 'c', 'd'].map((id) => item('fullName', id));
     expect(refineClassifications([...four, item('email', 'e')]).map((i) => i.meta.id)).toEqual(['e']);

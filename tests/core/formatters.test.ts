@@ -49,6 +49,11 @@ describe('tel / zip', () => {
     expect(splitTel('0120123456')).toEqual(['0120', '123', '456']);
   });
 
+  it('splits 10-digit numbers with 4-digit area codes as 4-2-4', () => {
+    expect(splitTel('0134321234')).toEqual(['0134', '32', '1234']);
+    expect(splitTel('0166231234')).toEqual(['0166', '23', '1234']);
+  });
+
   it('splits zip', () => {
     expect(splitZip('1000001')).toEqual(['100', '0001']);
   });
