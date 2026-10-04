@@ -47,6 +47,11 @@ describe('validateBaseUrl', () => {
     'http://localhost:11434/v1',
     'http://127.0.0.1:1234/v1',
     'https://localhost:8443/v1',
+    'https://api.example.com:8443/v1',
+    'https://bücher.example/v1',
+    'https://172.32.0.1/v1',
+    'https://100.128.0.1/v1',
+    'http://localhost/v1',
   ])('accepts %s', (url) => {
     expect(validateBaseUrl(url).ok).toBe(true);
   });
@@ -70,6 +75,13 @@ describe('validateBaseUrl', () => {
     ['https://user:pass@api.openai.com/v1', '認証情報'],
     ['https://api.openai.com/v1?key=1', 'クエリ'],
     ['https://api.openai.com/v1#x', 'クエリ'],
+    ['https://api.openai.com/v1?', 'クエリ'],
+    ['https://api.openai.com/v1#', 'クエリ'],
+    ['https://svc.internal../v1', 'URL の形式'],
+    ['https://a..example.com/v1', 'URL の形式'],
+    ['https://.example.com/v1', 'URL の形式'],
+    ['https://intranet/v1', '内部ネットワーク'],
+    ['https://myserver/v1', 'ドメイン名'],
   ])('rejects %s', (url, fragment) => {
     const r = validateBaseUrl(url);
     expect(r.ok).toBe(false);
@@ -133,7 +145,8 @@ describe('normalizeHost', () => {
     expect(normalizeHost('LOCALHOST.')).toBe('localhost');
     expect(normalizeHost('localhost.')).toBe('localhost');
     expect(normalizeHost('API.OpenAI.COM.')).toBe('api.openai.com');
-    expect(normalizeHost('localhost..')).toBe('localhost.');
+    expect(normalizeHost('localhost..')).toBe('localhost');
+    expect(normalizeHost('svc.internal...')).toBe('svc.internal');
   });
 });
 

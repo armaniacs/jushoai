@@ -22,7 +22,7 @@ export function normalizeAiSettings(raw: unknown): AiSettings {
 }
 
 export function normalizeHost(hostname: string): string {
-  return hostname.toLowerCase().replace(/\.$/, '');
+  return hostname.toLowerCase().replace(/\.+$/, '');
 }
 
 export function isLoopbackHost(hostname: string): boolean {
@@ -32,9 +32,7 @@ export function isLoopbackHost(hostname: string): boolean {
   return /^127(\.\d{1,3}){3}$/.test(h);
 }
 
-// String checks only: a hostname that merely resolves to a private address cannot be caught here.
-// Note: Only domain names are supported. IPv6 literals are rejected in validateBaseUrl.
-// DNS name resolution itself is out of scope (e.g., nip.io-style bypasses are not caught here).
+// String checks cannot catch DNS names that resolve to private addresses (e.g. nip.io) or DNS rebinding.
 function isPrivateHost(hostname: string): boolean {
   const h = normalizeHost(hostname);
   if (h.endsWith('.localhost')) return true;
@@ -49,9 +47,6 @@ function isPrivateHost(hostname: string): boolean {
       (a === 198 && b >= 18 && b <= 19) || a >= 224
     );
   }
-  if (h.startsWith('[')) {
-    return true;
-  }
   return false;
 }
 
@@ -65,11 +60,15 @@ export function validateBaseUrl(input: string): UrlCheck {
     return { ok: false, reason: 'URL の形式が正しくありません' };
   }
   if (url.username || url.password) return { ok: false, reason: 'URL に認証情報を含めないでください' };
-  if (url.search || url.hash) return { ok: false, reason: 'クエリやフラグメントは指定できません' };
+  if (url.search || url.hash || /[?#]/.test(input)) return { ok: false, reason: 'クエリやフラグメントは指定できません' };
 
   const hostname = url.hostname;
   if (hostname.startsWith('[')) {
     return { ok: false, reason: 'IPv6 アドレスは指定できません（内部ネットワークのアドレスを含むため）' };
+  }
+
+  if (hostname.replace(/\.$/, '').split('.').some((label) => label === '')) {
+    return { ok: false, reason: 'URL の形式が正しくありません' };
   }
 
   if (url.protocol === 'http:') {
@@ -80,6 +79,9 @@ export function validateBaseUrl(input: string): UrlCheck {
   if (url.protocol !== 'https:') return { ok: false, reason: 'https の URL を指定してください' };
   if (!isLoopbackHost(hostname) && isPrivateHost(hostname)) {
     return { ok: false, reason: '内部ネットワークのアドレスは指定できません' };
+  }
+  if (!isLoopbackHost(hostname) && !normalizeHost(hostname).includes('.')) {
+    return { ok: false, reason: 'ホスト名にはドメイン名を指定してください（内部ネットワークのホスト名は使えません）' };
   }
   return { ok: true, url };
 }
