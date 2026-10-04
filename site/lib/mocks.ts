@@ -42,5 +42,5 @@ export function mockForm(filled: boolean, caption: string): string {
   const cell = (f: (typeof FORM_FIELDS)[number]) =>
     `<label>${e(f.label)}<span class="field ${filled ? 'filled' : 'empty'}">${e(filled ? f.value : f.placeholder)}</span></label>`;
   const [a, b, c, d, ...rest] = FORM_FIELDS;
-  return `<div class="mock" role="img" aria-label="${e(caption)}"><h4>${e('お申し込み')}</h4><div class="mock-split">${cell(a!)}${cell(b!)}</div><div class="mock-split">${cell(c!)}${cell(d!)}</div>${rest.map(cell).join('')}</div>`;
+  return `<div class="mock" role="img" aria-label="${e(`${caption} (お申し込みフォーム)`)}"><h4>${e('お申し込み')}</h4><div class="mock-split">${cell(a!)}${cell(b!)}</div><div class="mock-split">${cell(c!)}${cell(d!)}</div>${rest.map(cell).join('')}</div>`;
 }

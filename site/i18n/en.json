@@ -8,7 +8,7 @@
     "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "source": "Source" }
   },
   "hero": {
-    "eyebrow": "Extension for Chrome and Edge",
+    "eyebrow": "Extension for Chromium-based browsers (tested on Edge)",
     "titleBefore": "Names, furigana and addresses on Japanese forms, ",
     "titleEmphasis": "in the right fields and the right format",
     "tagline": "Forms split into family name, given name, furigana and prefecture-to-street fields get filled in one click. You review everything in a preview first.",
@@ -25,7 +25,6 @@
     ]
   },
   "mock": {
-    "title": "The button, the preview and the AI status",
     "uiNote": "The extension's interface is in Japanese.",
     "captionButton": "A \"JushoAI で入力\" (fill with JushoAI) button appears next to the form. The badge shows the AI status.",
     "captionPreview": "Review fields and values before filling. Fields classified by the AI carry an \"AI判定\" (AI) mark.",
@@ -40,7 +39,7 @@
       { "title": "Register", "body": "In the settings page, register your name, furigana, email, phone number and addresses. You can register several addresses." },
       { "title": "Press the button", "body": "Press \"JushoAI で入力\" that appears near the form." },
       { "title": "Review the preview", "body": "Check the list of fields and values. If you registered several addresses, pick one here." },
-      { "title": "Fill", "body": "Press the fill button and only the fields you reviewed are filled." }
+      { "title": "Fill", "body": "Press 入力する (fill) and only the fields you reviewed are filled." }
     ]
   },
   "fields": {
@@ -48,7 +47,7 @@
     "items": [
       { "title": "Names", "body": "Works with separate family and given name fields or a single field. For a single field it reads the field's example text to decide whether to put a space between them." },
       { "title": "Furigana", "body": "Supports full-width katakana, hiragana and half-width katakana, converting to match the field's example text or description." },
-      { "title": "Addresses", "body": "Supports addresses split into two to four fields (prefecture, city, street, building). Prefecture dropdowns are matched even when the notation differs, such as 東京 versus 東京都." },
+      { "title": "Addresses", "body": "Supports addresses split across fields such as prefecture, city, street and building. Prefecture dropdowns are matched even when the notation differs, such as 東京 versus 東京都." },
       { "title": "Phone and postal code", "body": "Handles hyphenated and plain numbers, in a single field or split fields, judged from the field's example text and maximum length." },
       { "title": "Safe filling", "body": "Fields that already have a value are not overwritten, and values longer than the maximum length are not entered but flagged." }
     ]
@@ -76,7 +75,7 @@
     "steps": [
       "It is not on the stores, so build it from source.",
       "Open chrome://extensions (Chrome) or edge://extensions (Edge) and turn on Developer mode.",
-      "Choose \"Load unpacked\" and select the built dist/chrome-mv3 folder.",
+      "Choose \"Load unpacked\" and select the built dist/chrome-mv3 folder (the label may differ by browser).",
       "In the extension's settings page, register your profile and addresses."
     ],
     "code": "make install\nmake build",

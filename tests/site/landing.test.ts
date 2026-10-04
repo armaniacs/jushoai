@@ -45,9 +45,34 @@ describe('renderLanding', () => {
   });
 
   it('escapes strings from the dictionary', async () => {
-    const s = await load('ja');
-    s.hero.tagline = '<script>x</script>';
-    expect(renderLanding({ lang: 'ja', base: '/', s })).not.toContain('<script>x</script>');
+    const mutators: ((s: Strings) => void)[] = [
+      (s) => { s.hero.tagline = '<b>x</b>'; },
+      (s) => { s.features.items[0]!.body = '<b>x</b>'; },
+      (s) => { s.faq.items[0]!.a = '<b>x</b>'; },
+      (s) => { s.install.steps[0] = '<b>x</b>'; },
+      (s) => { s.providers.items[0]!.body = '<b>x</b>'; },
+      (s) => { s.privacy.items[0]!.body = '<b>x</b>'; },
+    ];
+    for (const mutate of mutators) {
+      const s = await load('ja');
+      mutate(s);
+      const html = renderLanding({ lang: 'ja', base: '/', s });
+      expect(html).toContain('&lt;b&gt;x&lt;/b&gt;');
+      expect(html).not.toContain('<b>x</b>');
+    }
+  });
+
+  it('links the English page to the English guides and privacy page', async () => {
+    const en = renderLanding({ lang: 'en', base: '/', s: await load('en') });
+    expect(en).toContain('href="/en/guides/privacy/"');
+    expect(en).toContain('href="/en/guides/"');
+  });
+
+  it.each(['ja', 'en'] as const)('has each section id exactly once for %s', async (lang) => {
+    const html = renderLanding({ lang, base: '/', s: await load(lang) });
+    for (const id of ['features', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
+      expect(html.split(`id="${id}"`).length - 1).toBe(1);
+    }
   });
 });
 

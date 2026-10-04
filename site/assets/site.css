@@ -139,3 +139,4 @@ footer p { margin: .25rem 0; }
   .mock li { grid-template-columns: 90px 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+.ui-note { margin-top: .75rem; }

@@ -8,7 +8,7 @@ export const LANGS: readonly Lang[] = ['ja', 'en'];
 export const GUIDE_SLUGS = ['getting-started', 'ai-providers', 'privacy', 'how-it-works', 'troubleshooting'] as const;
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 
-const COPY_LABEL: Record<Lang, { copy: string; done: string }> = {
+export const COPY_LABEL: Record<Lang, { copy: string; done: string }> = {
   ja: { copy: 'コピー', done: 'コピーしました' },
   en: { copy: 'Copy', done: 'Copied' },
 };

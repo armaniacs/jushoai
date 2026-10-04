@@ -1,7 +1,7 @@
 import { escapeHtml } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
-import { pageUrl, type Lang } from './site.ts';
+import { COPY_LABEL, pageUrl, type Lang } from './site.ts';
 
 interface Titled { title: string; body: string }
 
@@ -11,7 +11,7 @@ export interface Strings {
   hero: { eyebrow: string; titleBefore: string; titleEmphasis: string; tagline: string; ctaInstall: string; ctaGuide: string };
   features: { title: string; items: Titled[] };
   mock: {
-    title: string; uiNote: string; captionButton: string; captionPreview: string; captionGuide: string;
+    uiNote: string; captionButton: string; captionPreview: string; captionGuide: string;
     captionForm: string; before: string; after: string;
   };
   steps: { title: string; items: Titled[] };
@@ -30,7 +30,7 @@ export function renderLanding(p: { lang: Lang; base: string; s: Strings }): stri
   const u = (path: string) => pageUrl(p.base, p.lang, path);
   const cards = (items: Titled[]) =>
     `<div class="grid">${items.map((i) => `<div class="card"><h3>${e(i.title)}</h3><p>${e(i.body)}</p></div>`).join('')}</div>`;
-  const copyLabel = p.lang === 'ja' ? { copy: 'コピー', done: 'コピーしました' } : { copy: 'Copy', done: 'Copied' };
+  const copyLabel = COPY_LABEL[p.lang];
 
   return `<section class="hero"><div class="wrap">
 <span class="eyebrow">${e(s.hero.eyebrow)}</span>
