@@ -1,6 +1,6 @@
 import type { PlanStatus } from '../core/planner';
 import type { Address } from '../core/types';
-import { createShadowHost } from './host';
+import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
 
 export interface PreviewRow {
   label: string;
@@ -31,10 +31,6 @@ const STATUS_NOTE: Record<PlanStatus, string> = {
 };
 
 const CSS = `
-  .panel { all: initial; display: block; box-sizing: border-box; width: 360px; max-height: 80vh;
-    overflow: auto; font: 13px/1.5 system-ui, sans-serif; color: #1a1a1a; background: #fff;
-    border: 1px solid #c8ccd4; border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
-  h2 { margin: 0 0 8px; font-size: 14px; }
   select { width: 100%; margin-bottom: 8px; padding: 4px; font: inherit; }
   ul { list-style: none; margin: 0 0 12px; padding: 0; }
   li { display: grid; grid-template-columns: 110px 1fr; gap: 2px 8px; padding: 6px 0;
@@ -46,21 +42,14 @@ const CSS = `
   .ai { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; color: #fff;
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
-  .actions { display: flex; justify-content: flex-end; gap: 8px; }
-  button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid #c8ccd4;
-    background: #f4f5f8; cursor: pointer; }
-  button.primary { background: #2457d6; border-color: #2457d6; color: #fff; }
   button:disabled { opacity: .5; cursor: default; }
 `;
 
 export function showPreview(opts: PreviewOptions): PreviewHandle {
-  const { host, root } = createShadowHost();
-  host.style.position = 'fixed';
-  host.style.top = '16px';
-  host.style.right = '16px';
+  const { host, root } = createOverlayHost();
 
   const style = document.createElement('style');
-  style.textContent = CSS;
+  style.textContent = OVERLAY_CSS + CSS;
   const panel = document.createElement('div');
   panel.className = 'panel';
 
@@ -128,13 +117,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   };
 
   const close = () => {
-    document.removeEventListener('keydown', onKey, true);
+    detachEscape();
     host.remove();
   };
-  const onKey = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') opts.onCancel();
-  };
-  document.addEventListener('keydown', onKey, true);
+  const detachEscape = attachEscapeClose(() => opts.onCancel());
   apply.addEventListener('click', () => opts.onApply());
   cancel.addEventListener('click', () => opts.onCancel());
 
