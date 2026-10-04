@@ -119,3 +119,43 @@ describe('kana overlay', () => {
     expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', source: 'llm', kanaKind: 'hiragana' });
   });
 });
+
+describe('classifyAll: force', () => {
+  it('sends confident fields to the LLM and adopts the answers', async () => {
+    const { classifier, classify } = llm({ a: 'firstName' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', autocomplete: 'family-name' })],
+      classifier,
+      { force: true },
+    );
+    expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['a']);
+    expect(items[0]!.cls).toMatchObject({ category: 'firstName', source: 'llm' });
+  });
+
+  it('keeps rule results for fields the LLM does not answer', async () => {
+    const { classifier, classify } = llm({});
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', autocomplete: 'family-name' }), makeMeta({ id: 'b', name: 'xyz' })],
+      classifier,
+      { force: true },
+    );
+    expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['a', 'b']);
+    expect(items.map((i) => i.cls.category)).toEqual(['lastName']);
+  });
+
+  it('falls back to weak rule hits when the LLM throws', async () => {
+    const classifier: FieldClassifier = { classify: async () => { throw new Error('x'); } };
+    const items = await classifyAll([makeMeta({ id: 'a', type: 'tel' })], classifier, { force: true });
+    expect(items.map((i) => i.cls.category)).toEqual(['tel']);
+  });
+
+  it('keeps applying the kana overlay to LLM answers', async () => {
+    const { classifier } = llm({ a: 'lastName' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', name: 'field_1', autocomplete: 'family-name', placeholder: 'みらい' })],
+      classifier,
+      { force: true },
+    );
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', source: 'llm', kanaKind: 'hiragana' });
+  });
+});
