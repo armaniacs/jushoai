@@ -11,6 +11,8 @@
     make typecheck     # tsc --noEmit
     make check         # typecheck + test + build
     make zip           # dist に配布用 zip を作る
+    make site          # ドキュメントサイトを site-dist に生成して検査する
+    make site-serve    # site-dist を http://127.0.0.1:4173 で確認する
     make clean         # 生成物を削除
 
 `make help` で一覧を表示する。
@@ -64,3 +66,8 @@ Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension
 - `src/llm/` Prompt API のラッパー、background のメッセージハンドラ、Content Script からのゲートウェイ
 - `src/ui/` ボタンとプレビュー（Shadow DOM）
 - `samples/` 手動確認用のフォーム
+- `site/` ドキュメントサイト（Markdown と文言から静的 HTML を生成する。公開は GitHub Pages）
+
+## ドキュメントサイト
+
+`site/` に日本語と英語のサイトのソースがある。ガイドは `site/content/{ja,en}/*.md`、ランディングの文言は `site/i18n/{ja,en}.json`。日英で見出しの数や文言のキーが違うとビルドが失敗する。`make site` で `site-dist/` に生成して検査し、`make site-serve` で確認する。公開は `.github/workflows/pages.yml`（main への push で GitHub Pages にデプロイ）。リポジトリ側で Pages の Source を GitHub Actions にする必要がある。
