@@ -31,7 +31,17 @@ describe('parseLlmOutput', () => {
     expect([...m]).toEqual([['a', 'lastName']]);
   });
 
+  it.each([
+    ['fence with tag', '```json\n{"a":"lastName"}\n```'],
+    ['fence without tag', '```\n{"a":"lastName"}\n```'],
+    ['prose around', 'Here you go: {"a":"lastName"} hope it helps'],
+    ['braces in string', 'x {"a":"lastName","note":"{not} } json"} y'],
+  ])('extracts JSON from %s', (_n, raw) => {
+    expect([...parseLlmOutput(raw, fields)]).toEqual([['a', 'lastName']]);
+  });
+
   it('returns an empty map for invalid JSON', () => {
+    expect(parseLlmOutput('{ broken } text {', fields).size).toBe(0);
     expect(parseLlmOutput('not json', fields).size).toBe(0);
     expect(parseLlmOutput('null', fields).size).toBe(0);
   });

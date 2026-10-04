@@ -74,6 +74,10 @@ describe('extractGeminiText', () => {
     expect(extractGeminiText({ candidates: [{ content: { parts: [{ text: '{"a":"email"}' }] } }] })).toBe('{"a":"email"}');
   });
 
+  it('joins the text of all parts', () => {
+    expect(extractGeminiText({ candidates: [{ content: { parts: [{ text: '{"a":' }, { text: '"email"}' }] } }] })).toBe('{"a":"email"}');
+  });
+
   it.each([null, {}, { candidates: [] }, { candidates: [{ content: { parts: [] } }] }])('returns null for %j', (v) => {
     expect(extractGeminiText(v)).toBeNull();
   });

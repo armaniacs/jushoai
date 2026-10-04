@@ -44,14 +44,26 @@ export function buildSchema(fields: FieldMeta[]) {
   };
 }
 
+function parseJsonLoosely(raw: string): unknown {
+  const attempts = [raw];
+  const unfenced = raw.trim().replace(/^```[a-zA-Z]*\s*/, '').replace(/\s*```$/, '');
+  attempts.push(unfenced);
+  const first = raw.indexOf('{');
+  const last = raw.lastIndexOf('}');
+  if (first !== -1 && last > first) attempts.push(raw.slice(first, last + 1));
+  for (const text of attempts) {
+    try {
+      return JSON.parse(text);
+    } catch {
+      // try the next candidate
+    }
+  }
+  return null;
+}
+
 export function parseLlmOutput(raw: string, fields: FieldMeta[]): Map<string, Category> {
   const out = new Map<string, Category>();
-  let data: unknown;
-  try {
-    data = JSON.parse(raw);
-  } catch {
-    return out;
-  }
+  const data = parseJsonLoosely(raw);
   if (typeof data !== 'object' || data === null) return out;
   const valid = new Set<string>(CATEGORIES);
   for (const f of fields) {

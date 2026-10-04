@@ -97,9 +97,11 @@ export function buildGeminiRequest(cfg: GeminiSettings, apiKey: string, fields: 
 }
 
 export function extractGeminiText(json: unknown): string | null {
-  const text = (json as { candidates?: { content?: { parts?: { text?: unknown }[] } }[] } | null)
-    ?.candidates?.[0]?.content?.parts?.[0]?.text;
-  return typeof text === 'string' ? text : null;
+  const parts = (json as { candidates?: { content?: { parts?: { text?: unknown }[] } }[] } | null)
+    ?.candidates?.[0]?.content?.parts;
+  if (!Array.isArray(parts)) return null;
+  const texts = parts.map((p) => p?.text).filter((t): t is string => typeof t === 'string');
+  return texts.length > 0 ? texts.join('') : null;
 }
 
 export class HttpClassifier implements FieldClassifier {
