@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderMarkdown, slugify } from '../../site/lib/markdown.ts';
 
-const opts = { base: '/', copyLabel: 'コピー' };
+const opts = { base: '/', copyLabel: 'コピー', copiedLabel: 'コピーしました' };
 
 describe('slugify', () => {
   it('keeps letters and digits including Japanese, joins words with hyphens', () => {
@@ -27,16 +27,16 @@ describe('renderMarkdown: headings', () => {
 
 describe('renderMarkdown: code blocks', () => {
   it('wraps fences with a copy button and escapes content', () => {
-    const r = renderMarkdown('```bash\nmake <build> && echo "x"\n```', { base: '/', copyLabel: 'Copy' });
+    const r = renderMarkdown('```bash\nmake <build> && echo "x"\n```', { base: '/', copyLabel: 'Copy', copiedLabel: 'Copied' });
     expect(r.html).toContain('<div class="code">');
-    expect(r.html).toContain('<button class="copy" type="button" data-copy>Copy</button>');
+    expect(r.html).toContain('<button class="copy" type="button" data-copy data-done="Copied">Copy</button>');
     expect(r.html).toContain('make &lt;build&gt; &amp;&amp; echo &quot;x&quot;');
   });
 });
 
 describe('renderMarkdown: links', () => {
   it('prefixes absolute site paths with the base and collects raw hrefs', () => {
-    const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c' });
+    const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd' });
     expect(r.html).toContain('href="/JushoAI/guides/privacy/"');
     expect(r.html).toContain('href="#x"');
     expect(r.html).toContain('href="mailto:a@b.c"');
