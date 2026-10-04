@@ -82,6 +82,7 @@ describe('parseTestResponse', () => {
   it('accepts a category result and known failure reasons', () => {
     expect(parseTestResponse({ ok: true, category: 'lastName' })).toEqual({ ok: true, category: 'lastName' });
     expect(parseTestResponse({ ok: false, reason: 'auth' })).toEqual({ ok: false, reason: 'auth' });
+    expect(parseTestResponse({ ok: false, reason: 'rejected' })).toEqual({ ok: false, reason: 'rejected' });
   });
 
   it.each([null, { ok: true, category: 'nonsense' }, { ok: false, reason: 'boom' }, { ok: false }])('rejects %j', (v) => {

@@ -10,7 +10,7 @@ const MAX_TEXT_LENGTH = 200;
 const AI_STATUSES: readonly string[] = ['available', 'downloadable', 'downloading', 'unavailable', 'unsupported'];
 const AI_STATES: readonly string[] = [...AI_STATUSES, 'disabled', 'not-configured', 'permission-missing', 'auth-error'];
 const PROVIDER_KINDS: readonly string[] = ['none', 'built-in', 'openai', 'gemini'];
-const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'bad-response'] as const;
+const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response'] as const;
 
 export type TestFailure = (typeof TEST_FAILURES)[number];
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };

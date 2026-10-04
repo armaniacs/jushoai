@@ -47,18 +47,19 @@ export function buildOpenAiRequest(
   cfg: OpenAiSettings,
   apiKey: string | undefined,
   fields: FieldMeta[],
+  compat = false,
 ): HttpRequest {
+  // Compat mode drops what reasoning models (temperature) and older servers (json_schema) reject.
   const body = {
     model: cfg.model,
-    temperature: 0,
+    ...(compat ? {} : { temperature: 0 }),
     messages: [
       { role: 'system', content: SYSTEM_PROMPT },
       { role: 'user', content: buildPrompt(fields) },
     ],
-    response_format: {
-      type: 'json_schema',
-      json_schema: { name: 'field_categories', strict: true, schema: buildSchema(fields) },
-    },
+    response_format: compat
+      ? { type: 'json_object' }
+      : { type: 'json_schema', json_schema: { name: 'field_categories', strict: true, schema: buildSchema(fields) } },
   };
   return {
     url: `${cfg.baseUrl}/chat/completions`,
@@ -104,44 +105,61 @@ export function extractGeminiText(json: unknown): string | null {
   return texts.length > 0 ? texts.join('') : null;
 }
 
+export interface RetryOptions {
+  compat: boolean;
+  onCompat?: () => void;
+}
+
+const isRejection = (status: number) => status === 400 || status === 422;
+
 export class HttpClassifier implements FieldClassifier {
   constructor(
-    private readonly build: (fields: FieldMeta[]) => HttpRequest,
+    private readonly build: (fields: FieldMeta[], compat: boolean) => HttpRequest,
     private readonly extract: (json: unknown) => string | null,
     private readonly deps: HttpDeps,
+    private readonly retry?: RetryOptions,
   ) {}
 
-  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
-    if (fields.length === 0) return new Map();
-    const { url, init } = this.build(fields);
+  private async send({ url, init }: HttpRequest): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.deps.timeoutMs ?? HTTP_TIMEOUT_MS);
     try {
-      let res: Response;
-      try {
-        res = await this.deps.fetch(url, { ...init, signal: controller.signal });
-      } catch {
-        throw new HttpRequestError(null, 'request failed');
-      }
-      if (res.status === 401 || res.status === 403) throw new HttpAuthError();
-      if (!res.ok) throw new HttpRequestError(res.status, `http ${res.status}`);
-      let json: unknown;
-      try {
-        json = await res.json();
-      } catch {
-        throw new HttpRequestError(res.status, 'invalid response body');
-      }
-      const text = this.extract(json);
-      if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
-      return parseLlmOutput(text, fields);
+      return await this.deps.fetch(url, { ...init, signal: controller.signal });
+    } catch {
+      throw new HttpRequestError(null, 'request failed');
     } finally {
       clearTimeout(timer);
     }
   }
+
+  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
+    if (fields.length === 0) return new Map();
+    const compat = this.retry?.compat ?? false;
+    let res = await this.send(this.build(fields, compat));
+    if (this.retry && !compat && isRejection(res.status)) {
+      res = await this.send(this.build(fields, true));
+      if (res.ok) this.retry.onCompat?.();
+    }
+    if (res.status === 401 || res.status === 403) throw new HttpAuthError();
+    if (!res.ok) throw new HttpRequestError(res.status, `http ${res.status}`);
+    let json: unknown;
+    try {
+      json = await res.json();
+    } catch {
+      throw new HttpRequestError(res.status, 'invalid response body');
+    }
+    const text = this.extract(json);
+    if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
+    return parseLlmOutput(text, fields);
+  }
 }
 
-export const createOpenAiClassifier = (cfg: OpenAiSettings, apiKey: string | undefined, deps: HttpDeps) =>
-  new HttpClassifier((f) => buildOpenAiRequest(cfg, apiKey, f), extractOpenAiText, deps);
+export const createOpenAiClassifier = (
+  cfg: OpenAiSettings,
+  apiKey: string | undefined,
+  deps: HttpDeps,
+  retry: RetryOptions = { compat: false },
+) => new HttpClassifier((f, compat) => buildOpenAiRequest(cfg, apiKey, f, compat), extractOpenAiText, deps, retry);
 
 export const createGeminiClassifier = (cfg: GeminiSettings, apiKey: string, deps: HttpDeps) =>
   new HttpClassifier((f) => buildGeminiRequest(cfg, apiKey, f), extractGeminiText, deps);

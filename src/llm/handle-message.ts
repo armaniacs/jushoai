@@ -1,4 +1,4 @@
-import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError } from '../ai/http-classifiers';
+import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError } from '../ai/http-classifiers';
 import { originPatternsFor } from '../ai/permissions';
 import { validateAiSettings } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
@@ -16,6 +16,8 @@ export interface HandlerDeps {
   fetch: typeof fetch;
   // Providers that answered 401/403; owned by the background and cleared when settings change.
   authFailed: Set<ProviderKind>;
+  // Providers that need the OpenAI-compatible fallback request; same lifetime as authFailed.
+  compat: Set<ProviderKind>;
 }
 
 type Selection =
@@ -24,10 +26,16 @@ type Selection =
 
 async function statusOf(deps: HandlerDeps, s: PublicAiSettings): Promise<AiStatusInfo> {
   if (s.provider === 'built-in') return { status: await checkAiStatus(deps.lm), provider: 'built-in' };
+  let hasKey = s.hasKey;
+  // An envelope that no longer decrypts is the same as no key.
+  if ((s.provider === 'openai' || s.provider === 'gemini') && hasKey[s.provider]) {
+    const secrets = await deps.loadSecrets();
+    if (secrets[s.provider] === undefined) hasKey = { ...hasKey, [s.provider]: false };
+  }
   return {
     status: computeCloudStatus({
       settings: s,
-      hasKey: s.hasKey,
+      hasKey,
       permitted: await deps.hasPermission(originPatternsFor(s)),
       authFailed: deps.authFailed.has(s.provider),
     }),
@@ -55,7 +63,10 @@ async function selectClassifier(
   // The stored key can be unreadable even though an envelope exists; treat that as not configured.
   if (validateAiSettings(s, present).length > 0) return { ok: false, reason: 'not-configured' };
   if (s.provider === 'openai') {
-    return { ok: true, classifier: createOpenAiClassifier(s.openai, secrets.openai, { fetch: deps.fetch }) };
+    return { ok: true, classifier: createOpenAiClassifier(s.openai, secrets.openai, { fetch: deps.fetch }, {
+        compat: deps.compat.has('openai'),
+        onCompat: () => deps.compat.add('openai'),
+      }) };
   }
   if (s.provider === 'gemini' && secrets.gemini) {
     return { ok: true, classifier: createGeminiClassifier(s.gemini, secrets.gemini, { fetch: deps.fetch }) };
@@ -81,6 +92,9 @@ async function runTest(deps: HandlerDeps, s: PublicAiSettings): Promise<TestResp
     if (e instanceof HttpAuthError) {
       deps.authFailed.add(s.provider);
       return { ok: false, reason: 'auth' };
+    }
+    if (e instanceof HttpRequestError && (e.status === 400 || e.status === 422)) {
+      return { ok: false, reason: 'rejected' };
     }
     return { ok: false, reason: 'network' };
   }

@@ -136,3 +136,80 @@ describe('HttpClassifier', () => {
     await expect(c.classify(fields)).rejects.toBeInstanceOf(HttpRequestError);
   });
 });
+
+describe('OpenAI-compatible compatibility retry', () => {
+  const okBody = () => jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] });
+  const bodyOf = (fetch: ReturnType<typeof vi.fn>, n: number) =>
+    JSON.parse((fetch.mock.calls[n]![1] as RequestInit).body as string);
+
+  it.each([400, 422])('retries once without temperature and with json_object after %i', async (status) => {
+    const fetch = vi.fn().mockResolvedValueOnce(jsonResponse(status, {})).mockResolvedValueOnce(okBody());
+    const onCompat = vi.fn();
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false, onCompat });
+    expect([...(await c.classify(fields))]).toEqual([['a', 'lastName']]);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    const first = bodyOf(fetch, 0);
+    const second = bodyOf(fetch, 1);
+    expect(first.temperature).toBe(0);
+    expect(first.response_format.type).toBe('json_schema');
+    expect('temperature' in second).toBe(false);
+    expect(second.response_format).toEqual({ type: 'json_object' });
+    expect(onCompat).toHaveBeenCalledOnce();
+  });
+
+  it('throws HttpRequestError when the retry is rejected too, with at most two calls', async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(400, {}));
+    const onCompat = vi.fn();
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false, onCompat });
+    const err = await c.classify(fields).catch((e) => e);
+    expect(err).toBeInstanceOf(HttpRequestError);
+    expect(err.status).toBe(400);
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(onCompat).not.toHaveBeenCalled();
+  });
+
+  it.each([401, 403, 429, 500])('does not retry %i', async (status) => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(status, {}));
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false });
+    await expect(c.classify(fields)).rejects.toBeDefined();
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it('skips the first attempt in compat mode and does not retry', async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(400, {}));
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: true });
+    await expect(c.classify(fields)).rejects.toBeInstanceOf(HttpRequestError);
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(bodyOf(fetch, 0).response_format).toEqual({ type: 'json_object' });
+  });
+
+  it('does not retry Gemini', async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(400, {}));
+    await expect(createGeminiClassifier(gemini, 'k', { fetch }).classify(fields)).rejects.toBeInstanceOf(HttpRequestError);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+});
+
+describe('request allow-list', () => {
+  const rich = [makeMeta({
+    id: 'a', label: '姓', options: ['OPT-SECRET'], autocomplete: 'AC-SECRET', pattern: 'PAT-SECRET', value: 'VAL-SECRET',
+  })];
+
+  it.each([
+    ['openai', () => buildOpenAiRequest(openai, 'sk-KEY', rich)],
+    ['gemini', () => buildGeminiRequest(gemini, 'g-KEY', rich)],
+  ])('%s request carries no options, autocomplete, pattern or value', (_n, build) => {
+    const { url, init } = build();
+    const all = JSON.stringify({ url, headers: init.headers, body: init.body });
+    for (const secret of ['OPT-SECRET', 'AC-SECRET', 'PAT-SECRET', 'VAL-SECRET']) expect(all).not.toContain(secret);
+  });
+
+  it('keeps the API key out of the URL and body', () => {
+    const o = buildOpenAiRequest(openai, 'sk-KEY', rich);
+    expect(o.url).not.toContain('sk-KEY');
+    expect(o.init.body as string).not.toContain('sk-KEY');
+    const g = buildGeminiRequest(gemini, 'g-KEY', rich);
+    expect(g.url).not.toContain('g-KEY');
+    expect(g.init.body as string).not.toContain('g-KEY');
+  });
+});

@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from '../../src/ai/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
+import { parseTestResponse } from '../../src/messages';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -18,11 +19,13 @@ interface Opts {
   fetch?: ReturnType<typeof vi.fn>;
   lm?: LanguageModelStatic | null;
   authFailed?: Set<ProviderKind>;
+  compat?: Set<ProviderKind>;
 }
 
 function makeDeps(o: Opts = {}) {
   const fetchMock = o.fetch ?? vi.fn();
   const authFailed = o.authFailed ?? new Set<ProviderKind>();
+  const compat = o.compat ?? new Set<ProviderKind>();
   const settings = { ...DEFAULT_AI_SETTINGS, ...o.settings, hasKey: o.hasKey ?? { openai: false, gemini: false } };
   const deps: HandlerDeps = {
     lm: o.lm ?? null,
@@ -31,8 +34,9 @@ function makeDeps(o: Opts = {}) {
     hasPermission: async () => o.permitted ?? true,
     fetch: fetchMock as unknown as typeof fetch,
     authFailed,
+    compat,
   };
-  return { deps, fetchMock, authFailed };
+  return { deps, fetchMock, authFailed, compat };
 }
 
 const openai: Partial<AiSettings> = {
@@ -223,5 +227,87 @@ describe('handleMessage: built-in behaviors', () => {
     const lm = { availability: async () => 'downloadable', create: async () => { throw new Error('no gesture'); } } as unknown as LanguageModelStatic;
     const bad = makeDeps({ settings: { provider: 'built-in' }, lm });
     expect(await handleMessage({ type: 'ai-download' }, bad.deps)).toEqual({ started: false });
+  });
+});
+
+describe('handleMessage: decrypted-key accuracy', () => {
+  const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+
+  it('reports not-configured and never fetches when the stored key cannot be decrypted', async () => {
+    const { deps, fetchMock } = makeDeps({ settings: openai, hasKey: { openai: true, gemini: false }, secrets: {} });
+    expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'not-configured', provider: 'openai' });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('does not decrypt when no key is stored', async () => {
+    const { deps } = makeDeps({ settings: openai });
+    const loadSecrets = vi.fn(async () => ({}));
+    await handleMessage({ type: 'ai-status' }, { ...deps, loadSecrets });
+    expect(loadSecrets).not.toHaveBeenCalled();
+  });
+
+  it('reports available when the key decrypts', async () => {
+    const { deps } = makeDeps({ settings: openai, ...configured });
+    expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'available', provider: 'openai' });
+  });
+
+  it('keeps a keyless loopback endpoint available and sends no Authorization header', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps } = makeDeps({
+      settings: { provider: 'openai', openai: { baseUrl: 'http://localhost:11434/v1', model: 'm' } },
+      fetch: fetchMock,
+    });
+    expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'available', provider: 'openai' });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: true, entries: [['a', 'lastName']] });
+    expect((fetchMock.mock.calls[0]![1] as RequestInit).headers).not.toHaveProperty('Authorization');
+  });
+});
+
+describe('handleMessage: compatibility retry', () => {
+  const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+
+  it('remembers the compatibility mode per provider and skips the doomed first attempt', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(statusJson(400))
+      .mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps, compat } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: true, entries: [['a', 'lastName']] });
+    expect(compat.has('openai')).toBe(true);
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    await handleMessage(msg, deps);
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const body = JSON.parse((fetchMock.mock.calls[2]![1] as RequestInit).body as string);
+    expect(body.response_format).toEqual({ type: 'json_object' });
+  });
+
+  it('uses compat mode from the injected set', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps } = makeDeps({ settings: openai, ...configured, fetch: fetchMock, compat: new Set<ProviderKind>(['openai']) });
+    await handleMessage(msg, deps);
+    expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it('maps a rejected connection test to "rejected" and keeps network errors as "network"', async () => {
+    const rej = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(400)) });
+    const res = await handleMessage({ type: 'ai-test' }, rej.deps);
+    expect(res).toEqual({ ok: false, reason: 'rejected' });
+    expect(parseTestResponse(res)).toEqual({ ok: false, reason: 'rejected' });
+    const net = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockRejectedValue(new TypeError('x')) });
+    expect(await handleMessage({ type: 'ai-test' }, net.deps)).toEqual({ ok: false, reason: 'network' });
+  });
+});
+
+describe('handleMessage: ai-test auth bookkeeping', () => {
+  it('adds the provider to authFailed on 401 and never echoes the key', async () => {
+    const { deps, authFailed } = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(401)) });
+    const res = await handleMessage({ type: 'ai-test' }, deps);
+    expect(authFailed.has('openai')).toBe(true);
+    expect(JSON.stringify(res)).not.toContain('sk-test');
+  });
+
+  it('never echoes the key for a failing provider', async () => {
+    const { deps } = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockRejectedValue(new TypeError('sk-test')) });
+    expect(JSON.stringify(await handleMessage({ type: 'ai-test' }, deps))).not.toContain('sk-test');
   });
 });

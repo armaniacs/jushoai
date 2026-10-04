@@ -8,10 +8,14 @@ import { handleMessage } from '../llm/handle-message';
 export default defineBackground(() => {
   const keyStore = new IdbKeyStore();
   const authFailed = new Set<ProviderKind>();
+  const compat = new Set<ProviderKind>();
 
-  // Changing the settings (a new key, another provider) gives a failed provider a fresh start.
+  // Changing the settings (a new key, another provider) gives a failed or compat-mode provider a fresh start.
   chrome.storage.onChanged.addListener((changes, area) => {
-    if (area === 'local' && AI_SETTINGS_KEY in changes) authFailed.clear();
+    if (area === 'local' && AI_SETTINGS_KEY in changes) {
+      authFailed.clear();
+      compat.clear();
+    }
   });
 
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
@@ -28,6 +32,7 @@ export default defineBackground(() => {
       hasPermission: (origins) => hasHostPermission(origins),
       fetch: globalThis.fetch.bind(globalThis),
       authFailed,
+      compat,
     }).then(sendResponse, () => sendResponse(undefined));
     return true;
   });

@@ -108,11 +108,34 @@ describe('ai settings store', () => {
       expect((await loadPublicAiSettings()).hasKey.openai).toBe(false);
     });
 
+    it('drops the kept key when the new base URL is unparsable', async () => {
+      const ks = new MemoryKeyStore();
+      await saveAiSettings(settings, { openai: 'sk-1' }, ks);
+      await saveAiSettings(withUrl('not a url'), {}, ks);
+      expect((await loadPublicAiSettings()).hasKey.openai).toBe(false);
+    });
+
     it('never drops the gemini key', async () => {
       const ks = new MemoryKeyStore();
       await saveAiSettings(settings, { openai: 'sk-1', gemini: 'gk' }, ks);
       await saveAiSettings(withUrl('https://other.example/v1'), {}, ks);
       expect((await loadAiSecrets(ks)).gemini).toBe('gk');
     });
+  });
+
+  it('normalizes a malformed stored record to defaults without throwing', async () => {
+    const bad: unknown[] = [
+      { provider: 5, openai: 'x', gemini: [] },
+      { provider: 'openai', openai: { baseUrl: 7, model: {}, apiKey: 'plain' }, gemini: { apiKey: { v: 1 } } },
+      'junk',
+      null,
+    ];
+    for (const raw of bad) {
+      store[AI_SETTINGS_KEY] = raw;
+      const pub = await loadPublicAiSettings();
+      expect(pub.hasKey).toEqual({ openai: false, gemini: false });
+      expect(pub.openai).toEqual({ baseUrl: '', model: '' });
+      expect(await loadAiSecrets(new MemoryKeyStore())).toEqual({});
+    }
   });
 });
