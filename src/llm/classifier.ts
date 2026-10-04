@@ -1,10 +1,7 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import { toWireMeta, type MetaWire } from '../messages';
+import type { FieldClassifier } from '../core/classifier';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
-
-export interface FieldClassifier {
-  classify(fields: FieldMeta[]): Promise<Map<string, Category>>;
-}
 
 export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄を分類するアシスタントです。
 各入力欄のメタデータを見て、次のカテゴリから1つだけ選んでください。

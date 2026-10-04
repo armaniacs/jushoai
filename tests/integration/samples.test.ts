@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { classifyAll } from '../../src/analyze';
+import { classifyAll } from '../../src/core/analyze';
 import { buildPlan } from '../../src/core/planner';
 import type { Address, Profile } from '../../src/core/types';
 import { detectForms } from '../../src/dom/detect-forms';

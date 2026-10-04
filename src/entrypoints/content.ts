@@ -1,4 +1,4 @@
-import { classifyAll } from '../analyze';
+import { classifyAll } from '../core/analyze';
 import { buildPlan, type PlanItem } from '../core/planner';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';

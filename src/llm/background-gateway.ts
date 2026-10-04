@@ -1,7 +1,7 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
 import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type TestResponse } from '../messages';
-import type { FieldClassifier } from './classifier';
+import type { FieldClassifier } from '../core/classifier';
 
 export const STATUS_TIMEOUT_MS = 5_000;
 export const CLASSIFY_TIMEOUT_MS = 45_000;

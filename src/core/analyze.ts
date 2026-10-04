@@ -1,8 +1,8 @@
 import {
   classifyField, detectKanaKind, isConfident, refineClassifications, type Item,
-} from './core/classify-rules';
-import type { Category, FieldMeta } from './core/types';
-import type { FieldClassifier } from './llm/classifier';
+} from './classify-rules';
+import type { Category, FieldMeta } from './types';
+import type { FieldClassifier } from './classifier';
 
 export async function classifyAll(
   metas: FieldMeta[],

@@ -4,9 +4,10 @@ import { validateAiSettings } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import type { AiStatusInfo, ProviderKind, PublicAiSettings } from '../ai/types';
 import type { FieldMeta } from '../core/types';
+import type { FieldClassifier } from '../core/classifier';
 import { parseRequest, type TestResponse } from '../messages';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
-import { PromptApiClassifier, type FieldClassifier } from './classifier';
+import { PromptApiClassifier } from './classifier';
 
 export interface HandlerDeps {
   lm: LanguageModelStatic | null;

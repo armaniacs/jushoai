@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
-import { classifyAll } from '../src/analyze';
-import type { Category, FieldMeta } from '../src/core/types';
-import type { FieldClassifier } from '../src/llm/classifier';
-import { makeMeta } from './helpers';
+import { classifyAll } from '../../src/core/analyze';
+import type { Category, FieldMeta } from '../../src/core/types';
+import type { FieldClassifier } from '../../src/core/classifier';
+import { makeMeta } from '../helpers';
 
 const llm = (answers: Record<string, Category>) => {
   const classify = vi.fn(async (_fields: FieldMeta[]) => new Map(Object.entries(answers)));

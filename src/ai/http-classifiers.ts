@@ -1,7 +1,6 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import {
-  buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT, type FieldClassifier,
-} from '../llm/classifier';
+import type { FieldClassifier } from '../core/classifier';
+import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/classifier';
 import { GEMINI_BASE_URL, type GeminiSettings, type OpenAiSettings } from './types';
 
 export const HTTP_TIMEOUT_MS = 20_000;
