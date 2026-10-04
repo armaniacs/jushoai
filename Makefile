@@ -29,3 +29,9 @@ zip: ## Package the extension into dist/*.zip
 
 clean: ## Remove build output and generated WXT files
 	rm -rf dist .wxt .vitest site-dist
+
+site: ## Build and check the documentation site into site-dist (SITE_BASE sets the base path)
+	npm run site
+
+site-serve: site ## Serve site-dist at http://127.0.0.1:4173
+	node site/serve.ts

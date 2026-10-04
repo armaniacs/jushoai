@@ -1,0 +1,78 @@
+import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
+import { renderGuidesIndex } from './guides-index.ts';
+import { renderLanding, type Strings } from './landing.ts';
+import { renderPage } from './layout.ts';
+import { diffShape, findEmptyStrings, LANGS, loadGuides, pagePath, type Lang } from './site.ts';
+
+export interface BuildOptions {
+  siteDir: string;
+  contentDir?: string;
+  outDir: string;
+  base: string;
+}
+
+export async function loadStrings(i18nDir: string): Promise<Record<Lang, Strings>> {
+  const read = async (lang: Lang) => JSON.parse(await readFile(join(i18nDir, `${lang}.json`), 'utf8')) as Strings;
+  const ja = await read('ja');
+  const en = await read('en');
+  const problems = [
+    ...diffShape(ja, en),
+    ...findEmptyStrings(ja).map((p) => `ja ${p}: empty`),
+    ...findEmptyStrings(en).map((p) => `en ${p}: empty`),
+  ];
+  if (problems.length > 0) throw new Error(`i18n problems:\n${problems.join('\n')}`);
+  return { ja, en };
+}
+
+async function writePage(outDir: string, dir: string, html: string): Promise<string> {
+  const file = join(outDir, dir, 'index.html');
+  await mkdir(dirname(file), { recursive: true });
+  await writeFile(file, html);
+  return file;
+}
+
+export async function buildSite(o: BuildOptions): Promise<string[]> {
+  const strings = await loadStrings(join(o.siteDir, 'i18n'));
+  const guides = await loadGuides(o.contentDir ?? join(o.siteDir, 'content'), o.base);
+
+  await rm(o.outDir, { recursive: true, force: true });
+  await mkdir(o.outDir, { recursive: true });
+  await cp(join(o.siteDir, 'assets'), join(o.outDir, 'assets'), { recursive: true });
+  // GitHub Pages would otherwise run Jekyll over the output.
+  await writeFile(join(o.outDir, '.nojekyll'), '');
+
+  const written: string[] = [];
+  for (const lang of LANGS) {
+    const s = strings[lang];
+    const common = { lang, base: o.base, chrome: s.chrome };
+    written.push(
+      await writePage(o.outDir, pagePath(lang, ''), renderPage({
+        ...common, path: '', title: s.meta.title, description: s.meta.description,
+        body: renderLanding({ lang, base: o.base, s }), hasCode: true,
+      })),
+      await writePage(o.outDir, pagePath(lang, 'guides/'), renderPage({
+        ...common, path: 'guides/', title: `${s.guides.title} — JushoAI`, description: s.guides.lead,
+        body: renderGuidesIndex({ lang, base: o.base, s, guides }),
+      })),
+    );
+    for (const g of guides.filter((x) => x.lang === lang)) {
+      written.push(
+        await writePage(o.outDir, pagePath(lang, `guides/${g.slug}/`), renderPage({
+          ...common, path: `guides/${g.slug}/`, title: `${g.title} — JushoAI`, description: g.description,
+          body: `<article class="prose">\n${g.html}</article>`, hasCode: g.html.includes('data-copy'),
+        })),
+      );
+    }
+  }
+
+  const ja = strings.ja;
+  await writeFile(
+    join(o.outDir, '404.html'),
+    renderPage({
+      lang: 'ja', base: o.base, path: '', chrome: ja.chrome, title: '404 — JushoAI', description: 'ページが見つかりません',
+      body: `<div class="prose"><h1>404</h1><p>ページが見つかりません。</p><p><a href="${o.base}">ホームへ戻る</a></p></div>`,
+    }),
+  );
+  return written;
+}
