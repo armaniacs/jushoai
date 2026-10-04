@@ -42,11 +42,11 @@ Scenario: 同種のパネルの切替は現行どおり
 
 ## 受け入れ基準
 
-- [ ] バッジ押下のハンドラで `openPreview?.close()` と `openPreview = null` を行う
-- [ ] プレビュー表示（`run()`）の前に `openGuide?.close()` と `openGuide = null` を行う
-- [ ] 同種パネル間の切替（複数フォームのバッジ → ガイド、複数ボタン → プレビュー）は現行どおり
-- [ ] プロファイル値・API キー・`validateBaseUrl` に触れない（プライバシー保証の維持）
-- [ ] `npx tsc --noEmit` と既存テストが green
+- [x] バッジ押下のハンドラで `openPreview?.close()` と `openPreview = null` を行う
+- [x] プレビュー表示（`run()`）の前に `openGuide?.close()` と `openGuide = null` を行う
+- [x] 同種パネル間の切替（複数フォームのバッジ → ガイド、複数ボタン → プレビュー）は現行どおり
+- [x] プロファイル値・API キー・`validateBaseUrl` に触れない（プライバシー保証の維持）
+- [x] `npx tsc --noEmit` と既存テストが green
 
 ## テスト戦略
 
@@ -78,8 +78,8 @@ Scenario: 同種のパネルの切替は現行どおり
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] `npx tsc --noEmit` green
-- [ ] `npx vitest run tests/ui` green（回帰なし）
-- [ ] 挙動変更のため、samples/ での手動確認手順を本 PBI に記載済み（プレビューを開いた状態でバッジ → ガイドのみ表示、逆も同様）
-- [ ] コミット済み（fix: プレビューと AI ガイドの相互排他）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] `npx tsc --noEmit` green
+- [x] `npx vitest run tests/ui` green（回帰なし）
+- [x] 挙動変更のため、samples/ での手動確認手順を本 PBI に記載済み（プレビューを開いた状態でバッジ → ガイドのみ表示、逆も同様）
+- [x] コミット済み（fix: プレビューと AI ガイドの相互排他）

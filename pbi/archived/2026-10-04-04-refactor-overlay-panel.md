@@ -38,11 +38,11 @@ Scenario: AI ガイドの表示と閉じる挙動は変わらない
 
 ## 受け入れ基準
 
-- [ ] panel CSS・fixed 配置・Escape close・primary ボタン样式が `ui/` の 1 箇所に集約される
-- [ ] `showPreview` / `showAiGuide` のシグネチャと外部挙動は不変
-- [ ] ページ由来の文字列は `textContent` のみで `innerHTML` を使わない（設計保証の維持）
-- [ ] 既存の `tests/ui/*` が無修正で green（挙動不変の証拠）
-- [ ] `npx tsc --noEmit` green
+- [x] panel CSS・fixed 配置・Escape close・primary ボタン样式が `ui/` の 1 箇所に集約される
+- [x] `showPreview` / `showAiGuide` のシグネチャと外部挙動は不変
+- [x] ページ由来の文字列は `textContent` のみで `innerHTML` を使わない（設計保証の維持）
+- [x] 既存の `tests/ui/*` が無修正で green（挙動不変の証拠）
+- [x] `npx tsc --noEmit` green
 
 ## テスト戦略
 
@@ -75,7 +75,7 @@ Scenario: AI ガイドの表示と閉じる挙動は変わらない
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] 共通ヘルパの単体テストが green
-- [ ] 既存 `tests/ui/*` が無修正で green（挙動不変の証拠）
-- [ ] コミット済み（refactor: オーバーレイパネルの共通部分を ui/overlay に抽出）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] 共通ヘルパの単体テストが green
+- [x] 既存 `tests/ui/*` が無修正で green（挙動不変の証拠）
+- [x] コミット済み（refactor: オーバーレイパネルの共通部分を ui/overlay に抽出）

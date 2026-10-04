@@ -41,11 +41,11 @@ Scenario: 閾値未満のルール分類は採用されない
 
 ## 受け入れ基準
 
-- [ ] `isConfident`（仮称）が `core/classify-rules.ts` に `ACCEPT_THRESHOLD` の隣に置かれる
-- [ ] `src/analyze.ts` と `src/dom/detect-forms.ts` がその述語を使い、閾値比較の散在が消える
-- [ ] 既存の `tests/analyze.test.ts`・`tests/dom/detect-forms.test.ts`・`tests/core/classify-rules.test.ts` が無修正で green（挙動不変の証拠）
-- [ ] `core/` の純粋性が保たれる（DOM・LLM import の持ち込みなし）
-- [ ] `npx tsc --noEmit` green
+- [x] `isConfident`（仮称）が `core/classify-rules.ts` に `ACCEPT_THRESHOLD` の隣に置かれる
+- [x] `src/analyze.ts` と `src/dom/detect-forms.ts` がその述語を使い、閾値比較の散在が消える
+- [x] 既存の `tests/analyze.test.ts`・`tests/dom/detect-forms.test.ts`・`tests/core/classify-rules.test.ts` が無修正で green（挙動不変の証拠）
+- [x] `core/` の純粋性が保たれる（DOM・LLM import の持ち込みなし）
+- [x] `npx tsc --noEmit` green
 
 ## テスト戦略
 
@@ -77,7 +77,7 @@ Scenario: 閾値未満のルール分類は採用されない
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] `isConfident` の単体テストが green
-- [ ] 既存テストが無修正で green（挙動不変の証拠）
-- [ ] コミット済み（refactor: 分類信頼度判定を isConfident に集約）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] `isConfident` の単体テストが green
+- [x] 既存テストが無修正で green（挙動不変の証拠）
+- [x] コミット済み（refactor: 分類信頼度判定を isConfident に集約）

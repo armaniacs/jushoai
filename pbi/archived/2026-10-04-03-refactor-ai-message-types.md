@@ -41,14 +41,14 @@ Scenario: open-options が message seam を通る
 
 ## 受け入れ基準
 
-- [ ] `AiStatus` が `src/llm/availability.ts` の `AI_STATUSES as const` から派生する
-- [ ] `CloudStatus` と `ProviderKind` が `src/ai/types.ts` の const 配列から派生する
-- [ ] `src/messages.ts` の `AI_STATES` が `[...AI_STATUSES, ...CLOUD_STATUSES]` で合成され、手動列挙が消える
-- [ ] `open-options` が `src/messages.ts` の `AiRequest` union に加わり、`src/entrypoints/background.ts` が `parseRequest` 経由で判定する
-- [ ] `GEMINI_BASE_URL` が `src/ai/types.ts` に 1 箇所で定義され、`GEMINI_ORIGIN` と `src/ai/http-classifiers.ts` の URL 構築が参照する
-- [ ] import の向きが ai → llm のまま保たれ、循環 import が生じない
-- [ ] 既存テストが無修正で green（`tests/messages.test.ts` への open-options ケース追加のみ可）
-- [ ] `npx tsc --noEmit` green
+- [x] `AiStatus` が `src/llm/availability.ts` の `AI_STATUSES as const` から派生する
+- [x] `CloudStatus` と `ProviderKind` が `src/ai/types.ts` の const 配列から派生する
+- [x] `src/messages.ts` の `AI_STATES` が `[...AI_STATUSES, ...CLOUD_STATUSES]` で合成され、手動列挙が消える
+- [x] `open-options` が `src/messages.ts` の `AiRequest` union に加わり、`src/entrypoints/background.ts` が `parseRequest` 経由で判定する
+- [x] `GEMINI_BASE_URL` が `src/ai/types.ts` に 1 箇所で定義され、`GEMINI_ORIGIN` と `src/ai/http-classifiers.ts` の URL 構築が参照する
+- [x] import の向きが ai → llm のまま保たれ、循環 import が生じない
+- [x] 既存テストが無修正で green（`tests/messages.test.ts` への open-options ケース追加のみ可）
+- [x] `npx tsc --noEmit` green
 
 ## テスト戦略
 
@@ -85,7 +85,7 @@ Scenario: open-options が message seam を通る
 
 ## Definition of Done
 
-- [ ] 上記受け入れ基準をすべて満たす
-- [ ] open-options の parse テストが green
-- [ ] 既存テストが無修正で green（挙動不変の証拠）
-- [ ] コミット済み（refactor: AI 状態とメッセージ語彙を const 源に一元化）
+- [x] 上記受け入れ基準をすべて満たす
+- [x] open-options の parse テストが green
+- [x] 既存テストが無修正で green（挙動不変の証拠）
+- [x] コミット済み（refactor: AI 状態とメッセージ語彙を const 源に一元化）
