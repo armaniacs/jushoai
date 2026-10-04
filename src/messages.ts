@@ -1,6 +1,6 @@
 import { CATEGORIES, type Category, type FieldMeta } from './core/types';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
-import { AI_STATUSES, type AiStatus } from './llm/availability';
+import { AI_STATUSES } from './llm/availability';
 
 export const MAX_CLASSIFY_FIELDS = 30;
 export const MAX_CLASSIFY_CHUNK = 20;
@@ -19,11 +19,6 @@ export type AiRequest =
   | { type: 'ai-download' }
   | { type: 'ai-test' }
   | { type: 'open-options' };
-
-export type ClassifyResponse = { ok: true; entries: [string, Category][] } | { ok: false };
-
-export const isAiStatus = (v: unknown): v is AiStatus =>
-  typeof v === 'string' && (AI_STATUSES as readonly string[]).includes(v);
 
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
 

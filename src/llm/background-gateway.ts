@@ -3,11 +3,11 @@ import type { AiStatusInfo } from '../ai/types';
 import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type TestResponse } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 
-export const STATUS_TIMEOUT_MS = 5_000;
+const STATUS_TIMEOUT_MS = 5_000;
 export const CLASSIFY_TIMEOUT_MS = 45_000;
 export const MAX_CLASSIFY_TOTAL = 60;
-export const DOWNLOAD_TIMEOUT_MS = 120_000;
-export const TEST_TIMEOUT_MS = 30_000;
+const DOWNLOAD_TIMEOUT_MS = 120_000;
+const TEST_TIMEOUT_MS = 30_000;
 
 const UNKNOWN_STATUS: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 

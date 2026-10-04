@@ -1,6 +1,6 @@
-import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from './types';
-
-const PROVIDERS: readonly ProviderKind[] = ['none', 'built-in', 'openai', 'gemini'];
+import {
+  DEFAULT_AI_SETTINGS, PROVIDER_KINDS, type AiSettings, type KeyPresence, type ProviderKind,
+} from './types';
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
@@ -10,7 +10,9 @@ export function normalizeAiSettings(raw: unknown): AiSettings {
   const r = isRecord(raw) ? raw : {};
   const openai = isRecord(r.openai) ? r.openai : {};
   const gemini = isRecord(r.gemini) ? r.gemini : {};
-  const provider = PROVIDERS.includes(r.provider as ProviderKind) ? (r.provider as ProviderKind) : 'none';
+  const provider = (PROVIDER_KINDS as readonly string[]).includes(r.provider as ProviderKind)
+    ? (r.provider as ProviderKind)
+    : 'none';
   return {
     provider,
     openai: { baseUrl: str(openai.baseUrl).replace(/\/+$/, ''), model: str(openai.model) },
