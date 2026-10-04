@@ -1,6 +1,7 @@
 import { classifyAll } from '../analyze';
 import { buildPlan, type PlanItem } from '../core/planner';
 import { applyPlan } from '../dom/apply-plan';
+import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
@@ -14,7 +15,7 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   main() {
-    const mounted = new Map<Element, ButtonHandle>();
+    const mounted = new Map<Element, { handle: ButtonHandle; anchor: Element }>();
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
@@ -94,15 +95,12 @@ export default defineContentScript({
 
     function sync() {
       const forms = detectForms(document);
-      const live = new Set(forms.map((f) => f.container));
-      for (const [container, handle] of mounted) {
-        if (!live.has(container) || !container.isConnected) {
-          handle.destroy();
-          mounted.delete(container);
-        }
+      const plan = planMounts(new Map([...mounted].map(([c, m]) => [c, m.anchor])), forms);
+      for (const container of plan.destroy) {
+        mounted.get(container)?.handle.destroy();
+        mounted.delete(container);
       }
-      for (const form of forms) {
-        if (mounted.has(form.container)) continue;
+      for (const form of plan.mount) {
         const handle = mountButton(
           form.anchor.el,
           () => void guardedRun(form.container, handle),
@@ -117,10 +115,10 @@ export default defineContentScript({
             );
           },
         );
-        mounted.set(form.container, handle);
+        mounted.set(form.container, { handle, anchor: form.anchor.el });
         void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }
-      mounted.forEach((h) => h.reposition());
+      mounted.forEach((m) => m.handle.reposition());
     }
 
     let timer: number | undefined;
@@ -130,7 +128,7 @@ export default defineContentScript({
     };
     schedule();
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-    const repositionAll = () => mounted.forEach((h) => h.reposition());
+    const repositionAll = () => mounted.forEach((m) => m.handle.reposition());
     window.addEventListener('resize', repositionAll);
     window.addEventListener('load', repositionAll);
   },

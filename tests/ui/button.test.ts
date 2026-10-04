@@ -73,5 +73,20 @@ describe('mountButton', () => {
       handle.reposition();
       expect(host.style.top).toBe(`${300 + (24 - 32) / 2}px`);
     });
+  
+    it('repositions when the status changes the host size', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(500);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(0);
+      let width = 200;
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => rect(0, 0, width, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      anchor.getBoundingClientRect = () => rect(100, 50, 250, 124);
+      const handle = mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+      width = 300;
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      expect(host.style.left).toBe('50px');
+    });
   });
 });

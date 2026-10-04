@@ -17,11 +17,13 @@ export function computeButtonPosition(i: PositionInput): { top: number; left: nu
   if (a.right + GAP + s.width <= v.width - MARGIN) {
     return {
       left: a.right + GAP + sc.x,
-      top: a.top + (a.bottom - a.top - s.height) / 2 + sc.y,
+      top: Math.max(0, a.top + (a.bottom - a.top - s.height) / 2 + sc.y),
     };
   }
 
   const maxLeft = v.width - s.width - MARGIN;
   const left = maxLeft < MARGIN ? MARGIN : Math.min(Math.max(a.left, MARGIN), maxLeft);
-  return { top: Math.max(0, a.top - s.height - GAP + sc.y), left: left + sc.x };
+  const above = a.top - s.height - GAP + sc.y;
+  // Clamping to 0 would cover the anchor, so go below it instead.
+  return { top: above >= 0 ? above : a.bottom + GAP + sc.y, left: left + sc.x };
 }

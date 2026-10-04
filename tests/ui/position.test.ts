@@ -33,11 +33,25 @@ describe('computeButtonPosition', () => {
     expect(left.left).toBe(8);
   });
 
-  it('never returns a negative top', () => {
+  it('moves below the anchor instead of a negative top', () => {
     const r = computeButtonPosition({
       anchor: { top: 10, left: 50, right: 390, bottom: 30 }, size, viewport: { width: 400 }, scroll: { x: 0, y: 0 },
     });
-    expect(r.top).toBe(0);
+    expect(r.top).toBe(30 + 8);
+  });
+
+  it('clamps the right placement top to zero', () => {
+    const r = computeButtonPosition({
+      anchor: { top: 0, left: 50, right: 250, bottom: 10 }, size, viewport: { width: 1000 }, scroll: { x: 0, y: 0 },
+    });
+    expect(r).toEqual({ left: 258, top: 0 });
+  });
+
+  it('places below the anchor when above would overlap it', () => {
+    const r = computeButtonPosition({
+      anchor: { top: 20, left: 50, right: 390, bottom: 44 }, size, viewport: { width: 400 }, scroll: { x: 0, y: 0 },
+    });
+    expect(r.top).toBe(44 + 8);
   });
 
   it('uses the margin when the button is wider than the viewport', () => {

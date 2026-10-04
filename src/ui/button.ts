@@ -66,12 +66,14 @@ export function mountButton(
       window.clearTimeout(errorTimer);
       badge.textContent = badgeLabel(info);
       badge.dataset.status = info.status;
+      handle.reposition();
     },
     showError(text) {
       window.clearTimeout(errorTimer);
       badge.textContent = text;
       badge.dataset.status = 'error';
       errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
+      handle.reposition();
     },
     reposition() {
       const hostRect = host.getBoundingClientRect();
