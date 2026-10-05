@@ -326,6 +326,30 @@ describe('classifyField: age decade', () => {
   });
 });
 
+describe('classifyField: overseas address', () => {
+  it.each([
+    [{ label: '②Country　 ※半角英数で入力', name: 'country' }, 'country'],
+    [{ label: 'Country' }, 'country'],
+    [{ label: '③Address-1（Building or Apartment number）（最大文字数：80） ※半角英数で入力', name: 'address_1' }, 'address1'],
+    [{ label: '④Address-2（Street number, Street name）', name: 'address_2' }, 'address2'],
+    [{ label: '⑤Address-3（City）', name: 'address_3' }, 'address3'],
+    [{ label: '⑥Address-4（State/Province/Region）', name: 'address_4' }, 'address4'],
+    [{ label: '⑦Postal code（最大文字数：20） ※半角英数で入力', name: 'postal_code' }, 'postalCode'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: '住所' },
+    { label: '郵便番号' },
+    { label: '市区町村' },
+    { label: '国名' },
+    { label: 'メールアドレス' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as overseas', (p) => {
+    expect(cat(p) ?? '').not.toMatch(/^(country|address[1-4]|postalCode)$/);
+  });
+});
+
 describe('classifyField: romaji names', () => {
   it.each([
     [{ label: '①Name（最大文字数：80） ※半角英数で入力', name: 'name_last' }, 'fullNameRomaji'],

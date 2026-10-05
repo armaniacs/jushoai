@@ -166,6 +166,28 @@ export function classifyField(m: FieldMeta): Classification | null {
     if (DEPT.test(legendText)) return make('department', 0.65);
     if (GENDER.test(ownText)) return make('gender', 0.7);
     if (GENDER.test(legendText)) return make('gender', 0.65);
+    // Overseas address fields are named explicitly (country, address_1..4,
+    // postal_code), so they classify without sibling refinement. 国名 alone
+    // stays unclassified: on domestic forms it is ambiguous with person names.
+    // Bare address1/address2 keep their domestic readings (addressFull/building):
+    // the overseas reading needs an overseas context (city/state/street words
+    // or a half-width note) in the field or its heading.
+    const COUNTRY = /country/i;
+    const ADDR_LINE = /address[_-]?([1-4])/i;
+    const POSTAL_CODE = /postal[-_ ]?code/i;
+    const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
+    const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
+    const overseasCtx = `${ownText} ${legendText}`;
+    if (COUNTRY.test(ownText)) return make('country', 0.7);
+    if (COUNTRY.test(legendText)) return make('country', 0.65);
+    const addrLine = ownText.match(ADDR_LINE);
+    if (addrLine && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLine[1]}` as Category, 0.7);
+    const addrLegend = legendText.match(ADDR_LINE);
+    if (addrLegend && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLegend[1]}` as Category, 0.65);
+    if (POSTAL_CODE.test(ownText) && FOREIGN_MARK.test(ownText)) return make('postalCode', 0.7);
+    if (POSTAL_CODE.test(legendText) && FOREIGN_MARK.test(overseasCtx)) {
+      return make('postalCode', 0.65);
+    }
     // A numeric age text box (年齢を数字で入力) must not qualify: only selects
     // whose options carry decade (代) readings are decade fields.
     const AGE = /年齢|年代|ねんだい|年齢層|age/;

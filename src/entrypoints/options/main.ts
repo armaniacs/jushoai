@@ -3,7 +3,7 @@ import { PREFECTURES } from '../../core/prefectures';
 import {
   normalizeAddress, normalizeProfile, validateAddress, validateProfile,
 } from '../../core/profile';
-import { EMPTY_PROFILE } from '../../core/types';
+import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
 import { labeled, textInput, kanaHiraganaHint } from './dom';
@@ -29,6 +29,15 @@ const ADDRESS_FIELDS: { key: Exclude<keyof Address, 'id' | 'prefecture'>; label:
   { key: 'city', label: '市区町村', placeholder: '千代田区' },
   { key: 'street', label: '番地', placeholder: '千代田1-1' },
   { key: 'building', label: '建物名・部屋番号（任意）', placeholder: '千代田ビル101' },
+];
+
+const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
+  { key: 'country', label: '国名（半角英数・任意）', placeholder: 'United States' },
+  { key: 'address1', label: '建物名（半角英数・任意）', placeholder: '#123 Central Apartment' },
+  { key: 'address2', label: '番地（半角英数・任意）', placeholder: '25-15 M.G.Peterson Ave' },
+  { key: 'address3', label: '市（半角英数・任意）', placeholder: 'Long Island City' },
+  { key: 'address4', label: '州・地域（半角英数・任意）', placeholder: 'NEW YORK' },
+  { key: 'postalCode', label: '海外の郵便番号（半角英数・任意）', placeholder: '11375' },
 ];
 
 const app = document.getElementById('app')!;
@@ -141,6 +150,12 @@ function render(notice?: HTMLElement) {
     for (const f of ADDRESS_FIELDS.slice(2)) {
       set.append(labeled(f.label, textInput(a[f.key], f.placeholder, (v) => { a[f.key] = v; })));
     }
+    const overseasTitle = document.createElement('h3');
+    overseasTitle.textContent = '海外住所（任意）';
+    set.append(overseasTitle);
+    for (const f of OVERSEAS_FIELDS) {
+      set.append(labeled(f.label, textInput(a[f.key] ?? '', f.placeholder, (v) => { a[f.key] = v; })));
+    }
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.textContent = 'この住所を削除';
@@ -156,9 +171,7 @@ function render(notice?: HTMLElement) {
   add.type = 'button';
   add.textContent = '住所を追加';
   add.addEventListener('click', () => {
-    state.addresses.push({
-      id: crypto.randomUUID(), label: '', zip: '', prefecture: '', city: '', street: '', building: '',
-    });
+    state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID() });
     render();
   });
 
@@ -203,9 +216,7 @@ void loadData().then((data) => {
     state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
   }
   if (state.addresses.length === 0) {
-    state.addresses.push({
-      id: crypto.randomUUID(), label: '自宅', zip: '', prefecture: '', city: '', street: '', building: '',
-    });
+    state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID(), label: '自宅' });
   }
   render();
 });

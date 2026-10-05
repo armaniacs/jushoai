@@ -15,6 +15,13 @@ const profile: Profile = {
 const address: Address = {
   id: 'a1', label: '自宅', zip: '1000001', prefecture: '東京都',
   city: '千代田区', street: '千代田1-1', building: '千代田ビル101',
+  country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
+};
+const overseas: Address = {
+  ...address, id: 'a2', label: '海外',
+  country: 'United States', address1: '#123 Central Apartment',
+  address2: '25-15 M.G.Peterson Ave', address3: 'Long Island City',
+  address4: 'NEW YORK', postalCode: '11375',
 };
 
 let seq = 0;
@@ -192,6 +199,25 @@ describe('age decade select', () => {
     expect(missing.status).toBe('warn-no-option');
     const bare = { ...profile, birthday: '' };
     expect(buildPlan([item('ageDecade', { tag: 'select', options })], { profile: bare, address, today })).toEqual([]);
+  });
+});
+
+describe('overseas address', () => {
+  const abroad = (items: Item[]) =>
+    buildPlan(items, { profile, address: overseas }).map((p) => p.value);
+
+  it('fills country, address lines, and postal code', () => {
+    expect(abroad([
+      item('country'), item('address1'), item('address2'),
+      item('address3'), item('address4'), item('postalCode'),
+    ])).toEqual([
+      'United States', '#123 Central Apartment', '25-15 M.G.Peterson Ave',
+      'Long Island City', 'NEW YORK', '11375',
+    ]);
+  });
+
+  it('skips overseas fields when nothing is registered', () => {
+    expect(values([item('country'), item('address1'), item('postalCode')])).toEqual([]);
   });
 });
 

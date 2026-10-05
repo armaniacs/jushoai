@@ -35,6 +35,8 @@ export function normalizeProfile(p: Profile): Profile {
   };
 }
 
+const half = (s: string) => s.normalize('NFKC').trim();
+
 export function normalizeAddress(a: Address): Address {
   return {
     id: a.id,
@@ -44,6 +46,12 @@ export function normalizeAddress(a: Address): Address {
     city: a.city.trim(),
     street: a.street.trim(),
     building: a.building.trim(),
+    country: half(a.country),
+    address1: half(a.address1),
+    address2: half(a.address2),
+    address3: half(a.address3),
+    address4: half(a.address4),
+    postalCode: half(a.postalCode),
   };
 }
 
@@ -78,14 +86,33 @@ export function validateProfile(p: Profile): string[] {
   return errors;
 }
 
+const ASCII = /^[\x20-\x7E]*$/;
+const OVERSEAS_LABELS: [keyof Address, string][] = [
+  ['country', '国名'],
+  ['address1', '建物名'],
+  ['address2', '番地'],
+  ['address3', '市'],
+  ['address4', '州・地域'],
+  ['postalCode', '郵便番号'],
+];
+
 export function validateAddress(a: Address): string[] {
   const errors: string[] = [];
   if (!a.label) errors.push('住所の名前（自宅など）を入力してください');
-  if (!/^\d{7}$/.test(a.zip)) errors.push('郵便番号は7桁の数字で入力してください');
-  if (!(PREFECTURES as readonly string[]).includes(a.prefecture)) {
-    errors.push('都道府県は「東京都」のように正式名称で入力してください');
+  // A country declares an overseas address: domestic fields stop being required,
+  // and overseas lines must be half-width ASCII for half-width-only forms.
+  const overseas = OVERSEAS_LABELS.some(([k]) => a[k]);
+  if (overseas && !a.country) errors.push('海外住所の国名を入力してください');
+  for (const [k, label] of OVERSEAS_LABELS) {
+    if (a[k] && !ASCII.test(a[k])) errors.push(`海外住所の${label}は半角英数で入力してください`);
   }
-  if (!a.city) errors.push('市区町村を入力してください');
-  if (!a.street) errors.push('番地を入力してください');
+  if (!a.country) {
+    if (!/^\d{7}$/.test(a.zip)) errors.push('郵便番号は7桁の数字で入力してください');
+    if (!(PREFECTURES as readonly string[]).includes(a.prefecture)) {
+      errors.push('都道府県は「東京都」のように正式名称で入力してください');
+    }
+    if (!a.city) errors.push('市区町村を入力してください');
+    if (!a.street) errors.push('番地を入力してください');
+  }
   return errors;
 }

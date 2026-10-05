@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   normalizeProfile, normalizeAddress, validateProfile, validateAddress,
 } from '../../src/core/profile';
-import { EMPTY_PROFILE } from '../../src/core/types';
+import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 
 const base = { ...EMPTY_PROFILE, lastName: '山田', firstName: '太郎' };
 
@@ -114,14 +114,50 @@ describe('validateProfile', () => {
 describe('address', () => {
   it('normalizes zip to 7 digits', () => {
     const a = normalizeAddress({
+      ...EMPTY_ADDRESS,
       id: '1', label: '自宅', zip: '〒100-0001', prefecture: '東京都',
       city: '千代田区', street: '千代田1-1', building: '',
     });
     expect(a.zip).toBe('1000001');
   });
 
+  it('normalizes overseas fields to half-width', () => {
+    const a = normalizeAddress({
+      id: '1', label: '海外', zip: '1000001', prefecture: '東京都',
+      city: '千代田区', street: '千代田1-1', building: '',
+      country: 'Ｕｎｉｔｅｄ　Ｓｔａｔｅｓ ', address1: '', address2: '',
+      address3: '', address4: '', postalCode: ' 11375',
+    });
+    expect(a.country).toBe('United States');
+    expect(a.postalCode).toBe('11375');
+  });
+
+  it('accepts an overseas address without domestic fields', () => {
+    const errors = validateAddress({
+      id: '1', label: '海外', zip: '', prefecture: '', city: '', street: '', building: '',
+      country: 'United States', address1: '', address2: '25-15 M.G.Peterson Ave',
+      address3: '', address4: '', postalCode: '11375',
+    });
+    expect(errors).toEqual([]);
+  });
+
+  it('rejects non-ascii overseas values and a missing country', () => {
+    const errors = validateAddress({
+      id: '1', label: '海外', zip: '', prefecture: '', city: '', street: '', building: '',
+      country: '', address1: '', address2: '千代田1-1',
+      address3: '', address4: '', postalCode: '',
+    });
+    expect(errors).toEqual(
+      expect.arrayContaining([
+        expect.stringContaining('国名'),
+        expect.stringContaining('半角'),
+      ]),
+    );
+  });
+
   it('validates zip and prefecture', () => {
     const errors = validateAddress({
+      ...EMPTY_ADDRESS,
       id: '1', label: '自宅', zip: '123', prefecture: '東京', city: '', street: '', building: '',
     });
     expect(errors).toEqual(

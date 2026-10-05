@@ -3,6 +3,7 @@ export const CATEGORIES = [
   'lastNameKana', 'firstNameKana', 'fullNameKana',
   'lastNameRomaji', 'firstNameRomaji', 'fullNameRomaji',
   'gender', 'ageDecade',
+  'country', 'address1', 'address2', 'address3', 'address4', 'postalCode',
   'email', 'tel', 'tel1', 'tel2', 'tel3',
   'zip', 'zip1', 'zip2',
   'prefecture', 'city', 'street', 'building',
@@ -67,7 +68,18 @@ export interface Address {
   city: string;
   street: string;
   building: string;
+  country: string;
+  address1: string;
+  address2: string;
+  address3: string;
+  address4: string;
+  postalCode: string;
 }
+
+export const EMPTY_ADDRESS: Address = {
+  id: '', label: '', zip: '', prefecture: '', city: '', street: '', building: '',
+  country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
+};
 
 export interface StoredData {
   profiles: Profile[];

@@ -13,6 +13,7 @@ import table from '../../samples/table-form.html?raw';
 import roman from '../../samples/roman-name-form.html?raw';
 import gender from '../../samples/gender-select-form.html?raw';
 import decade from '../../samples/age-decade-select-form.html?raw';
+import abroad from '../../samples/overseas-address-form.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
@@ -21,6 +22,7 @@ const SAMPLES: Record<string, string> = {
   'roman-name-form.html': roman,
   'gender-select-form.html': gender,
   'age-decade-select-form.html': decade,
+  'overseas-address-form.html': abroad,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -37,6 +39,9 @@ const profile: Profile = {
 const address: Address = {
   id: 'a', label: 'home', zip: '1000001', prefecture: '東京都', city: '千代田区',
   street: '千代田1-1', building: '千代田ビル101',
+  country: 'United States', address1: '#123 Central Apartment',
+  address2: '25-15 M.G.Peterson Ave', address3: 'Long Island City',
+  address4: 'NEW YORK', postalCode: '11375',
 };
 
 async function planFor(file: string, today?: Date): Promise<Record<string, string>> {
@@ -110,6 +115,15 @@ describe('sample forms end to end', () => {
   it('age-decade-select-form fills the decade derived from the birthday', async () => {
     expect(await planFor('age-decade-select-form.html', new Date(2026, 9, 5))).toEqual({
       age: '1', fullname: '山田　太郎',
+    });
+  });
+
+  it('overseas-address-form fills the half-width address in English', async () => {
+    expect(await planFor('overseas-address-form.html')).toEqual({
+      name_last: 'Taro Yamada', country: 'United States',
+      address_1: '#123 Central Apartment', address_2: '25-15 M.G.Peterson Ave',
+      address_3: 'Long Island City', address_4: 'NEW YORK',
+      postal_code: '11375', fullname: '山田　太郎',
     });
   });
 

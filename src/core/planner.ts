@@ -89,6 +89,12 @@ function valueFor(
     case 'department': return p.department;
     case 'gender': return p.gender;
     case 'ageDecade': return toDecade(p.birthday, today) ?? '';
+    case 'country': return a?.country ?? '';
+    case 'address1': return a?.address1 ?? '';
+    case 'address2': return a?.address2 ?? '';
+    case 'address3': return a?.address3 ?? '';
+    case 'address4': return a?.address4 ?? '';
+    case 'postalCode': return a?.postalCode ?? '';
     case 'unknown': return '';
   }
 }
