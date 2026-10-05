@@ -15,6 +15,8 @@ import gender from '../../samples/gender-select-form.html?raw';
 import decade from '../../samples/age-decade-select-form.html?raw';
 import abroad from '../../samples/overseas-address-form.html?raw';
 import joshibi from '../../samples/overseas-webform-joshibi.html?raw';
+import anketo from '../../samples/formmailer-anketo-gender.html?raw';
+import raijo from '../../samples/formmailer-raijo-age.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
@@ -25,6 +27,8 @@ const SAMPLES: Record<string, string> = {
   'age-decade-select-form.html': decade,
   'overseas-address-form.html': abroad,
   'overseas-webform-joshibi.html': joshibi,
+  'formmailer-anketo-gender.html': anketo,
+  'formmailer-raijo-age.html': raijo,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -126,6 +130,30 @@ describe('sample forms end to end', () => {
       address_1: '#123 Central Apartment', address_2: '25-15 M.G.Peterson Ave',
       address_3: 'Long Island City', address_4: 'NEW YORK',
       postal_code: '11375', fullname: '山田　太郎',
+    });
+  });
+
+  it('formmailer-anketo-gender resolves the prefecture and skips the gender radios', async () => {
+    expect(await planFor('formmailer-anketo-gender.html')).toEqual({
+      field_2760246: '12',
+    });
+  });
+
+  // The age radios (field_4609097) are skipped until the radio backlog lands.
+  // Split phone/zip with distinct per-part labels are also skipped: splitGroups
+  // only groups fields sharing one label (a separate future PBI if needed).
+  it('formmailer-raijo-age fills names and address but skips the age radios', async () => {
+    expect(await planFor('formmailer-raijo-age.html')).toEqual({
+      field_4609044_sei: '山田',
+      field_4609044_mei: '太郎',
+      field_4609085_sei: 'ヤマダ',
+      field_4609085_mei: 'タロウ',
+      field_4609045: 'yamada@example.com',
+      field_4609045_mcon: 'yamada@example.com',
+      field_4609048_city: '千代田区',
+      field_4609048_block: '千代田1-1',
+      field_4609048_building: '千代田ビル101',
+      field_4609048_pref: '東京都',
     });
   });
 
