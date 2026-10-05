@@ -2,6 +2,7 @@ import { PREFECTURES } from '../../core/prefectures';
 import {
   normalizeAddress, normalizeProfile, validateAddress, validateProfile,
 } from '../../core/profile';
+import { EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
 import { labeled, textInput, kanaHiraganaHint } from './dom';
@@ -12,6 +13,9 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; 
   { key: 'firstName', label: '名', placeholder: '太郎' },
   { key: 'lastNameKana', label: 'セイ（フリガナ・ふりがな入力可）', placeholder: 'ヤマダ' },
   { key: 'firstNameKana', label: 'メイ（フリガナ・ふりがな入力可）', placeholder: 'タロウ' },
+  { key: 'birthday', label: '生年月日', placeholder: '1990-05-07' },
+  { key: 'school', label: '学校名', placeholder: '都立日比谷高校' },
+  { key: 'department', label: '学部・学科', placeholder: '普通科' },
   { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email' },
   { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel' },
 ];
@@ -57,25 +61,57 @@ function render(notice?: HTMLElement) {
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
-  const profileSet = document.createElement('fieldset');
-  const profileLegend = document.createElement('legend');
-  profileLegend.textContent = 'プロファイル';
-  profileSet.append(profileLegend);
-  for (const f of PROFILE_FIELDS) {
-    const isKana = f.key === 'lastNameKana' || f.key === 'firstNameKana';
-    const hint = isKana ? document.createElement('p') : null;
-    if (hint) hint.className = 'kana-preview';
-    const syncHint = (v: string) => {
-      if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
-    };
-    const input = textInput(state.profile[f.key], f.placeholder, (v) => {
-      state.profile[f.key] = v;
-      syncHint(v);
-    }, f.type);
-    syncHint(state.profile[f.key]);
-    profileSet.append(labeled(f.label, input));
-    if (hint) profileSet.append(hint);
-  }
+  const profileCards = state.profiles.map((p, i) => {
+    const set = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = `プロファイル ${i + 1}`;
+    set.append(legend);
+    set.append(labeled('名前（個人用・テスト用など）', textInput(p.label, '個人用', (v) => { p.label = v; })));
+    for (const f of PROFILE_FIELDS) {
+      const isKana = f.key === 'lastNameKana' || f.key === 'firstNameKana';
+      const hint = isKana ? document.createElement('p') : null;
+      if (hint) hint.className = 'kana-preview';
+      const syncHint = (v: string) => {
+        if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
+      };
+      const input = textInput(p[f.key], f.placeholder, (v) => {
+        p[f.key] = v;
+        syncHint(v);
+      }, f.type);
+      syncHint(p[f.key]);
+      set.append(labeled(f.label, input));
+      if (hint) set.append(hint);
+    }
+    const copy = document.createElement('button');
+    copy.type = 'button';
+    copy.textContent = 'このプロファイルを複製';
+    copy.disabled = state.profiles.length >= 10;
+    copy.addEventListener('click', () => {
+      state.profiles.push({ ...p, id: crypto.randomUUID(), label: `${p.label} のコピー` });
+      render();
+    });
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.textContent = 'このプロファイルを削除';
+    remove.disabled = state.profiles.length <= 1;
+    remove.addEventListener('click', () => {
+      state.profiles.splice(i, 1);
+      render();
+    });
+    set.append(copy, remove);
+    return set;
+  });
+
+  const addProfile = document.createElement('button');
+  addProfile.type = 'button';
+  addProfile.textContent = 'プロファイルを新規追加';
+  addProfile.disabled = state.profiles.length >= 10;
+  addProfile.addEventListener('click', () => {
+    state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
+    render();
+  });
+  const limitNote = document.createElement('p');
+  limitNote.textContent = state.profiles.length >= 10 ? 'プロファイルは10件まで登録できます' : '';
 
   const addressHeading = document.createElement('h2');
   addressHeading.textContent = '住所';
@@ -117,30 +153,38 @@ function render(notice?: HTMLElement) {
 
   const actions = document.createElement('div');
   actions.className = 'row';
-  actions.append(add, save);
+  actions.append(addProfile, add, save);
 
-  app.replaceChildren(title, profileSet, addressHeading, ...addressCards, actions, ...(notice ? [notice] : []));
+  app.replaceChildren(
+    title, ...profileCards, addProfile,
+    ...(limitNote.textContent ? [limitNote] : []),
+    addressHeading, ...addressCards, actions, ...(notice ? [notice] : []),
+  );
 }
 
 async function onSave() {
-  const profile = normalizeProfile(state.profile);
+  const profiles = state.profiles.map(normalizeProfile);
   const addresses = state.addresses.map(normalizeAddress);
   const errors = [
-    ...validateProfile(profile),
+    ...profiles.flatMap((p, i) => validateProfile(p).map((e) => `${p.label || `プロファイル${i + 1}`}: ${e}`)),
     ...addresses.flatMap((a) => validateAddress(a).map((e) => `${a.label || '住所'}: ${e}`)),
   ];
+  if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
   if (addresses.length === 0) errors.push('住所を1件以上登録してください');
   if (errors.length > 0) {
     render(message('errors', errors));
     return;
   }
-  state = { profile, addresses };
+  state = { profiles, addresses };
   await saveData(state);
   render(message('saved', ['保存しました']));
 }
 
 void loadData().then((data) => {
   state = data;
+  if (state.profiles.length === 0) {
+    state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
+  }
   if (state.addresses.length === 0) {
     state.addresses.push({
       id: crypto.randomUUID(), label: '自宅', zip: '', prefecture: '', city: '', street: '', building: '',
