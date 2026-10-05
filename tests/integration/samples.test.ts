@@ -140,8 +140,6 @@ describe('sample forms end to end', () => {
   });
 
   // The age radios (field_4609097) are skipped until the radio backlog lands.
-  // Split phone/zip with distinct per-part labels are also skipped: splitGroups
-  // only groups fields sharing one label (a separate future PBI if needed).
   it('formmailer-raijo-age fills names and address but skips the age radios', async () => {
     expect(await planFor('formmailer-raijo-age.html')).toEqual({
       field_4609044_sei: '山田',
@@ -150,10 +148,15 @@ describe('sample forms end to end', () => {
       field_4609085_mei: 'タロウ',
       field_4609045: 'yamada@example.com',
       field_4609045_mcon: 'yamada@example.com',
+      field_4609048_zip1: '100',
+      field_4609048_zip2: '0001',
       field_4609048_city: '千代田区',
       field_4609048_block: '千代田1-1',
       field_4609048_building: '千代田ビル101',
       field_4609048_pref: '東京都',
+      field_4609049_1: '090',
+      field_4609049_2: '1234',
+      field_4609049_3: '5678',
     });
   });
 

@@ -267,6 +267,35 @@ export function refineClassifications(items: Item[]): Item[] {
   splitGroups('fullName', ['lastName', 'firstName']);
   splitGroups('fullNameKana', ['lastNameKana', 'firstNameKana']);
 
+  // Split parts whose labels spell the part out (市外局番/市内局番/加入者番号,
+  // 上3桁/下4桁): they share a heading but not a label, so the pass above never
+  // groups them. Only consecutive fields under one heading whose labels arrive in
+  // part order qualify; anything else keeps the current unsplit protection.
+  const TEL_PARTS = [/市外/, /市内/, /加入者/];
+  const ZIP_PARTS = [/上.{0,2}3桁/, /下.{0,2}4桁/];
+  const partRank = (label: string, parts: RegExp[]): number => {
+    const t = norm(label);
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i]!.test(t)) return i;
+    }
+    return -1;
+  };
+  const splitGroupsByPart = (cat: Category, cats: Category[], parts: RegExp[]) => {
+    const groups = new Map<string, number[]>();
+    for (const i of indices(cat)) {
+      const nearby = out[i]!.meta.nearby;
+      groups.set(nearby, [...(groups.get(nearby) ?? []), i]);
+    }
+    for (const idx of groups.values()) {
+      if (idx.length !== cats.length) continue;
+      if (!idx.every((v, k) => k === 0 || v === idx[k - 1]! + 1)) continue;
+      if (!idx.every((v, k) => partRank(out[v]!.meta.label, parts) === k)) continue;
+      retag(idx, cats);
+    }
+  };
+  splitGroupsByPart('tel', ['tel1', 'tel2', 'tel3'], TEL_PARTS);
+  splitGroupsByPart('zip', ['zip1', 'zip2'], ZIP_PARTS);
+
   const hasCity = out.some((it) => it.cls.category === 'city');
   const hasPref = out.some((it) => it.cls.category === 'prefecture');
   for (const it of out) {

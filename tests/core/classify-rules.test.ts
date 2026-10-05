@@ -207,6 +207,48 @@ describe('refineClassifications', () => {
     expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
   });
 
+  it('splits tel fields with distinct part labels sharing a heading', () => {
+    const labels = ['電話番号の市外局番', '電話番号の市内局番', '電話番号の加入者番号'];
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: labels[i]!, nearby: '電話番号' }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+
+  it('splits zip fields with distinct part labels sharing a heading', () => {
+    const items = ['a', 'b'].map((id, i) => ({
+      ...item('zip', id),
+      meta: makeMeta({
+        id,
+        label: ['郵便番号の上3桁', '郵便番号の下4桁'][i]!,
+        nearby: '郵便番号',
+      }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['zip1', 'zip2']);
+  });
+
+  it('keeps part-labeled tel fields with different headings unsplit', () => {
+    const labels = ['電話番号の市外局番', '電話番号の市内局番', '電話番号の加入者番号'];
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: labels[i]!, nearby: `ブロック${i}` }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
+  it('keeps part-labeled fields unsplit when a part repeats', () => {
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({
+        id,
+        label: ['電話番号の市外局番', '電話番号の市外局番', '電話番号の加入者番号'][i]!,
+        nearby: '電話番号',
+      }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
   it('drops ambiguous groups of more than two identical fullName fields', () => {
     const four = ['a', 'b', 'c', 'd'].map((id) => item('fullName', id));
     expect(refineClassifications([...four, item('email', 'e')]).map((i) => i.meta.id)).toEqual(['e']);
