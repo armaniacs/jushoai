@@ -47,6 +47,6 @@ The AI classifies only the fields the rules cannot identify. It does not produce
 
 ## Unsupported fields
 
-The extension supports text, email, tel and search inputs, and select lists. Other controls, such as checkboxes, radio buttons and date fields, are not supported.
+The extension supports text, email, tel and search inputs, select lists, and gender and decade radio button groups. Other controls, such as checkboxes and date fields, are not supported.
 
-Fields that cannot be identified are not filled. Items such as date of birth and gender are not handled.
+Fields that cannot be identified are not filled. Items such as date of birth are not handled. Gender and decade are supported for select lists and radio button groups; other radio buttons are not filled.

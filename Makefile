@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check zip clean site site-serve
+.PHONY: help install dev build test typecheck check zip clean site site-serve addurl
 
 help: ## Show available targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -35,3 +35,10 @@ site: ## Build and check the documentation site into site-dist (SITE_BASE sets t
 
 site-serve: site ## Serve site-dist at http://127.0.0.1:4173
 	node site/serve.ts
+
+addurl: ## Register URL in tests/target-url.md and sync fixtures (URL=... [FIXTURE=...])
+ifndef URL
+	$(error Usage: make addurl URL=https://example.com/form [FIXTURE=name.html])
+endif
+	@grep -qF -- "$(URL)" tests/target-url.md || printf -- '- %s%s\n' "$(URL)" "$(if $(FIXTURE), → $(FIXTURE))" >> tests/target-url.md
+	node scripts/sync-target-urls.mjs

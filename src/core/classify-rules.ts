@@ -1,4 +1,6 @@
-import type { Category, Classification, FieldMeta, KanaKind } from './types';
+import type {
+  Category, Classification, FieldMeta, KanaKind, SelectOption,
+} from './types';
 import { stripExample } from './formatters';
 
 export const ACCEPT_THRESHOLD = 0.6;
@@ -26,9 +28,14 @@ const AUTOCOMPLETE: Record<string, Category> = {
   'address-line1': 'addressFull',
   'address-line2': 'building',
   'street-address': 'addressFull',
+  'bday-year': 'birthYear',
+  'bday-month': 'birthMonth',
+  'bday-day': 'birthDay',
 };
 
-const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|学校|店舗/;
+// 学校 is claimed by the school pre-pass below, so it stays out of this list; the office
+// vocabulary (会社/法人/企業/店舗/部署) must still be excluded for the new categories too.
+const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|店舗/;
 // Applied only to the person-name step so e.g. a user_email field stays an email.
 const NAME_EXCLUDE =
   /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|(^|[^a-z])cc([^a-z]|$)/;
@@ -118,6 +125,93 @@ export function classifyField(m: FieldMeta): Classification | null {
   if (AUTOCOMPLETE[ac]) return make(AUTOCOMPLETE[ac], 0.95);
   if (m.type === 'email') return make('email', 0.9);
 
+  // Birth/school/department signals are field-level: a legend like 生年月日 qualifies
+  // 年/月/日 words found on the field itself, and era/school words stand alone.
+  const BIRTH_CTX = /bday|birth|dob|生年月日|誕生/;
+  const ERA_CTX = /元号|年号|和暦|era|wareki|gengou/;
+  // 元号/年号/和暦 alone are era evidence, but romaji hits (generation, operate) and
+  // place names sharing era kanji (昭和区) need the ERA_CTX gate above.
+  const ERA_NAME = /元号|年号|和暦|令和|平成|昭和|大正|明治/;
+  const SCHOOL = /学校|school|univ|college|高校|大学/;
+  const DEPT = /学部|学科|専攻|department|major|faculty/;
+  const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
+  const GENDER = /性別|せいべつ|ジェンダー|gender|sex/;
+  const ownText = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
+  const legendText = norm(m.nearby);
+  const officeField = EXCLUDE.test(ownText);
+
+  const ownTrimmed = ownText.trim();
+  // A field that is only the birth phrase itself (a single full-date field) must not
+  // receive a partial year/month/day value.
+  if (/^(ご|御)?(誕生日|生年月日|誕生年月日)$/.test(ownTrimmed) || /^(birthday|date of birth)$/.test(ownTrimmed)) {
+    return null;
+  }
+
+  if (!officeField) {
+    if (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) {
+      // 年/月/日 share 年月日, so month and day are tested first: 生年月日の月 must not
+      // read as a year, and 生年月日の日 must not read as a month.
+      if (/bday-month|(^|[^a-z])month|(^|[^\d年月日])月/.test(ownText)) return make('birthMonth', 0.7);
+      if (/bday-day|(^|[^a-z])day|(^|[^\d年月日])日/.test(ownText)) return make('birthDay', 0.7);
+      if (/bday-year|(^|[^a-z])year|(^|[^\d年月日])年/.test(ownText)) return make('birthYear', 0.7);
+    }
+    const eraByContext = ERA_CTX.test(`${ownText} ${legendText}`) && ERA_NAME.test(ownText);
+    const eraExact =
+      /^(令和|平成|昭和|大正|明治)$/.test(m.label.trim()) ||
+      /^(令和|平成|昭和|大正|明治)$/.test(stripExample(m.placeholder).trim());
+    if (eraByContext || eraExact) return make('birthEra', 0.7);
+    if (SCHOOL.test(ownText)) return make('school', 0.7);
+    if (SCHOOL.test(legendText)) return make('school', 0.65);
+    if (DEPT.test(ownText)) return make('department', 0.7);
+    if (DEPT.test(legendText)) return make('department', 0.65);
+    if (GENDER.test(ownText)) return make('gender', 0.7);
+    if (GENDER.test(legendText)) return make('gender', 0.65);
+    // Overseas address fields are named explicitly (country, address_1..4,
+    // postal_code), so they classify without sibling refinement. 国名 alone
+    // stays unclassified: on domestic forms it is ambiguous with person names.
+    // Bare address1/address2 keep their domestic readings (addressFull/building):
+    // the overseas reading needs an overseas context (city/state/street words
+    // or a half-width note) in the field or its heading.
+    const COUNTRY = /country/i;
+    const ADDR_LINE = /address[_-]?([1-4])/i;
+    const POSTAL_CODE = /postal[-_ ]?code/i;
+    const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
+    const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
+    const overseasCtx = `${ownText} ${legendText}`;
+    if (COUNTRY.test(ownText)) return make('country', 0.7);
+    if (COUNTRY.test(legendText)) return make('country', 0.65);
+    const addrLine = ownText.match(ADDR_LINE);
+    if (addrLine && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLine[1]}` as Category, 0.7);
+    const addrLegend = legendText.match(ADDR_LINE);
+    if (addrLegend && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLegend[1]}` as Category, 0.65);
+    if (POSTAL_CODE.test(ownText) && FOREIGN_MARK.test(ownText)) return make('postalCode', 0.7);
+    if (POSTAL_CODE.test(legendText) && FOREIGN_MARK.test(overseasCtx)) {
+      return make('postalCode', 0.65);
+    }
+    // A numeric age text box (年齢を数字で入力) must not qualify: only selects
+    // and radio groups whose options carry decade (代) readings are decade fields.
+    const AGE = /年齢|年代|ねんだい|年齢層|age/;
+    const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
+    const isOptionField = m.tag === 'select' || m.tag === 'radio';
+    if (AGE.test(ownText) && isOptionField && hasDecadeOptions(m.options)) {
+      return make('ageDecade', 0.7);
+    }
+    if (AGE.test(legendText) && isOptionField && hasDecadeOptions(m.options)) {
+      return make('ageDecade', 0.65);
+    }
+    // A half-width note plus a name signal means the field wants a latin name,
+    // even when name/id alone would read as a plain Japanese name (name_last).
+    // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
+    if (ROMAJI_CTX.test(ownText) && !NAME_EXCLUDE.test(ownText)) {
+      if (FULL_NAME.test(ownText)) return make('fullNameRomaji', 0.7);
+      const last = LAST.test(ownText);
+      const first = FIRST.test(ownText);
+      if (last && !first) return make('lastNameRomaji', 0.7);
+      if (first && !last) return make('firstNameRomaji', 0.7);
+      if (last || first) return make('fullNameRomaji', 0.7);
+    }
+  }
+
   const ph = stripExample(norm(m.placeholder));
   const placeholderIsKana = ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
   // A kanji or latin placeholder (山田) means the field wants a plain name even if a shared heading says フリガナ.
@@ -173,6 +267,35 @@ export function refineClassifications(items: Item[]): Item[] {
   splitGroups('zip', ['zip1', 'zip2']);
   splitGroups('fullName', ['lastName', 'firstName']);
   splitGroups('fullNameKana', ['lastNameKana', 'firstNameKana']);
+
+  // Split parts whose labels spell the part out (市外局番/市内局番/加入者番号,
+  // 上3桁/下4桁): they share a heading but not a label, so the pass above never
+  // groups them. Only consecutive fields under one heading whose labels arrive in
+  // part order qualify; anything else keeps the current unsplit protection.
+  const TEL_PARTS = [/市外/, /市内/, /加入者/];
+  const ZIP_PARTS = [/上.{0,2}3桁/, /下.{0,2}4桁/];
+  const partRank = (label: string, parts: RegExp[]): number => {
+    const t = norm(label);
+    for (let i = 0; i < parts.length; i++) {
+      if (parts[i]!.test(t)) return i;
+    }
+    return -1;
+  };
+  const splitGroupsByPart = (cat: Category, cats: Category[], parts: RegExp[]) => {
+    const groups = new Map<string, number[]>();
+    for (const i of indices(cat)) {
+      const nearby = out[i]!.meta.nearby;
+      groups.set(nearby, [...(groups.get(nearby) ?? []), i]);
+    }
+    for (const idx of groups.values()) {
+      if (idx.length !== cats.length) continue;
+      if (!idx.every((v, k) => k === 0 || v === idx[k - 1]! + 1)) continue;
+      if (!idx.every((v, k) => partRank(out[v]!.meta.label, parts) === k)) continue;
+      retag(idx, cats);
+    }
+  };
+  splitGroupsByPart('tel', ['tel1', 'tel2', 'tel3'], TEL_PARTS);
+  splitGroupsByPart('zip', ['zip1', 'zip2'], ZIP_PARTS);
 
   const hasCity = out.some((it) => it.cls.category === 'city');
   const hasPref = out.some((it) => it.cls.category === 'prefecture');

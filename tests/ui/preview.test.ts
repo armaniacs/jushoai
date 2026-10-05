@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { showPreview } from '../../src/ui/preview';
 import type { PreviewOptions, PreviewRow } from '../../src/ui/preview';
+import { EMPTY_PROFILE, type Profile } from '../../src/core/types';
 
 const row = (status: PreviewRow['status']): PreviewRow => ({
   label: '姓', display: '山田', status, source: 'rule',
@@ -18,6 +19,7 @@ function open(opts: Partial<PreviewOptions> = {}) {
   });
   const handle = showPreview({
     rows: [], addresses: [], selectedAddressId: '', onAddressChange: () => {},
+    profiles: [], selectedProfileId: '', onProfileChange: () => {},
     onApply: () => {}, onCancel: () => {}, ...opts,
   });
   return { handle, root };
@@ -75,5 +77,33 @@ describe('showPreview', () => {
     await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
     expect(button(root, '入力する')!.disabled).toBe(false);
     expect(button(root, 'キャンセル')!.disabled).toBe(false);
+  });
+});
+
+const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });
+
+describe('showPreview profile select', () => {
+  it('renders the profile select only when multiple profiles exist', () => {
+    const one = open({ profiles: [prof('p1', 'メイン')], selectedProfileId: 'p1', onProfileChange: () => {} });
+    expect(one.root.querySelectorAll('select')).toHaveLength(0);
+    const two = open({
+      profiles: [prof('p1', 'メイン'), prof('p2', '仕事用')],
+      selectedProfileId: 'p1', onProfileChange: () => {},
+    });
+    const selects = two.root.querySelectorAll('select');
+    expect(selects).toHaveLength(1);
+    expect([...selects[0]!.options].map((o) => o.text)).toEqual(['メイン', '仕事用']);
+  });
+
+  it('notifies profile changes', () => {
+    const onProfileChange = vi.fn();
+    const { root } = open({
+      profiles: [prof('p1', 'メイン'), prof('p2', '仕事用')],
+      selectedProfileId: 'p1', onProfileChange,
+    });
+    const select = root.querySelector('select')!;
+    select.value = 'p2';
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(onProfileChange).toHaveBeenCalledWith('p2');
   });
 });

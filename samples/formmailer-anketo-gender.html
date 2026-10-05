@@ -1,0 +1,137 @@
+<!doctype html>
+<!--
+  Local e2e fixture modeled on https://pro.form-mailer.jp/lp/f3553ff3175246
+  (お客様アンケート). Field ids, names, legends, labels, and options mirror the
+  real page; site chrome is omitted.
+  The 性別 field (fieldset 2760244) is a radio group resolved against the profile
+  gender. The 都道府県 select uses numeric
+  option values, pinning text-based resolution.
+-->
+<html lang="ja"><meta charset="utf-8"><title>form-mailer survey (gender radio)</title>
+<form action="/lp/f3553ff3175246/submissions/confirm" method="post" name="form1" enctype="multipart/form-data" class="formmailer-form" accept-charset="UTF-8" novalidate>
+  <div role="group" data-fieldset-id="2760238" class="form-fieldset form-fieldset-dropdown required" data-fieldset-label="ご来店した店舗を教えてください">
+    <legend>ご来店した店舗を教えてください</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <label for="field_2760238" class="visually-hidden">ご来店した店舗を教えてください</label>
+        <select id="field_2760238" class="form-select" name="field_2760238" required>
+          <option value="">選択してください</option>
+          <option value="0">京都本店</option>
+          <option value="1">山科店</option>
+          <option value="2">心斎橋店</option>
+          <option value="3">難波店</option>
+          <option value="4">河内長野店</option>
+          <option value="5">梅田店</option>
+          <option value="6">三宮店</option>
+          <option value="7">草津店</option>
+          <option value="8">秋葉原店</option>
+          <option value="9">六本木店</option>
+          <option value="10">品川店</option>
+          <option value="11">新宿店</option>
+          <option value="12">所沢店</option>
+          <option value="13">横浜店</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div role="group" data-fieldset-id="2760240" class="form-fieldset form-fieldset-date optional" data-fieldset-label="いつ頃ご来店しましたか">
+    <legend>いつ頃ご来店しましたか</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <div class="d-flex align-items-center flex-wrap">
+          <label for="field_2760240_y" class="visually-hidden">いつ頃ご来店しましたかの年</label>
+          <input id="field_2760240_y" name="field_2760240_y" type="text" value="" maxlength="4" pattern="^\d+$" placeholder="2000" inputmode="numeric">
+          <div class="mx-1">年</div>
+          <label for="field_2760240_m" class="visually-hidden">いつ頃ご来店しましたかの月</label>
+          <select id="field_2760240_m" name="field_2760240_m">
+            <option value="">--</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+            <option value="7">7</option>
+            <option value="8">8</option>
+            <option value="9">9</option>
+            <option value="10">10</option>
+            <option value="11">11</option>
+            <option value="12">12</option>
+          </select>
+          <div class="mx-1">月</div>
+          <label for="field_2760240_d" class="visually-hidden">いつ頃ご来店しましたかの日</label>
+          <select id="field_2760240_d" name="field_2760240_d">
+            <option value="">--</option>
+            <option value="1">1</option>
+            <option value="10">10</option>
+            <option value="20">20</option>
+            <option value="31">31</option>
+          </select>
+          <div class="mx-1">日</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div role="group" data-fieldset-id="2760244" class="form-fieldset form-fieldset-radiobutton optional" data-fieldset-label="性別">
+    <legend>性別</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <div class="row g-2">
+          <input name="field_2760244" type="hidden" class="request-parameter-default-empty" value="">
+          <div class="col-md-6 d-flex">
+            <label for="field_2760244_0" class="d-flex align-items-center">
+              <input id="field_2760244_0" name="field_2760244" type="radio" value="0">
+              男性
+            </label>
+          </div>
+          <div class="col-md-6 d-flex">
+            <label for="field_2760244_1" class="d-flex align-items-center">
+              <input id="field_2760244_1" name="field_2760244" type="radio" value="1">
+              女性
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div role="group" data-fieldset-id="2760243" class="form-fieldset form-fieldset-dropdown optional" data-fieldset-label="職業">
+    <legend>職業</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <label for="field_2760243" class="visually-hidden">職業</label>
+        <select id="field_2760243" name="field_2760243">
+          <option value="">選択してください</option>
+          <option value="9">会社員</option>
+          <option value="14">その他</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div role="group" data-fieldset-id="2760246" class="form-fieldset form-fieldset-dropdown optional" data-fieldset-label="お住まいの都道府県">
+    <legend>お住まいの都道府県</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <label for="field_2760246" class="visually-hidden">お住まいの都道府県</label>
+        <select id="field_2760246" name="field_2760246">
+          <option value="">選択してください</option>
+          <option value="0">北海道</option>
+          <option value="12">東京都</option>
+          <option value="26">大阪府</option>
+          <option value="47">その他</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div role="group" data-fieldset-id="2760237" class="form-fieldset form-fieldset-text required" data-fieldset-label="その他、どこでお知りになりましたか">
+    <legend>その他、どこでお知りになりましたか</legend>
+    <div>
+      <div class="form-group form-fieldgroup">
+        <label for="field_2760237" class="visually-hidden">その他、どこでお知りになりましたか</label>
+        <input id="field_2760237" name="field_2760237" type="text" value="" required>
+      </div>
+    </div>
+  </div>
+  <input type="hidden" name="key" value="f3553ff3175246">
+  <input type="submit" name="submit" value="確認画面へ">
+</form>
+</html>

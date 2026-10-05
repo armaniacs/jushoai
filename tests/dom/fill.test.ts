@@ -36,3 +36,17 @@ describe('fillField', () => {
     expect(select.value).toBe('13');
   });
 });
+
+describe('fillField radio', () => {
+  it('checks the radio and fires input, change, blur without touching value', () => {
+    document.body.innerHTML = '<input name="g" type="radio" value="0"><input name="g" type="radio" value="1">';
+    const target = document.querySelectorAll('input')[1]!;
+    const events: string[] = [];
+    for (const type of ['input', 'change', 'blur']) {
+      target.addEventListener(type, () => events.push(type));
+    }
+    fillField(target, '1');
+    expect(target.checked).toBe(true);
+    expect(events).toEqual(['input', 'change', 'blur']);
+  });
+});

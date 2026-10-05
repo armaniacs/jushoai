@@ -5,6 +5,7 @@ export type Control = HTMLInputElement | HTMLSelectElement;
 export interface ScannedField {
   meta: FieldMeta;
   el: Control;
+  radioInputs?: HTMLInputElement[];
 }
 
 const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search']);
@@ -62,9 +63,65 @@ function isHidden(el: Control): boolean {
 export const containerOf = (el: Control, doc: Document): Element =>
   el.form ?? el.closest('form') ?? doc.body;
 
+// One logical field per radio name: the same-name hidden shim (an empty-submit
+// workaround) is never an option, and option text comes from the wrapping label.
+function scanRadioGroups(root: ParentNode, nextId: () => string): ScannedField[] {
+  const boxes = Array.from(root.querySelectorAll('fieldset, div[role="group"], form'));
+  const seen = new Map<string, HTMLInputElement[]>();
+  const singles: HTMLInputElement[] = [];
+  for (const el of Array.from(root.querySelectorAll('input'))) {
+    if (el.type !== 'radio' || isHidden(el)) continue;
+    if (!el.name) {
+      singles.push(el);
+      continue;
+    }
+    const box = el.closest('fieldset') ?? el.closest('div[role="group"]') ?? el.form;
+    const key = `${el.name} ${box ? boxes.indexOf(box) : -1}`;
+    const list = seen.get(key) ?? [];
+    list.push(el);
+    seen.set(key, list);
+  }
+  const groups: HTMLInputElement[][] = [...seen.values(), ...singles.map((el) => [el])];
+  return groups.map((inputs) => {
+    const first = inputs[0]!;
+    const box = first.closest('fieldset') ?? first.closest('div[role="group"]');
+    const legend = box?.querySelector(':scope > legend') ?? box?.querySelector('legend');
+    const label = clean(legend ? textWithoutControls(legend) : '') ||
+      clean(box?.getAttribute('data-fieldset-label') ?? '') ||
+      labelOf(first);
+    const checked = inputs.find((r) => r.checked);
+    return {
+      el: first,
+      radioInputs: inputs,
+      meta: {
+        id: nextId(),
+        tag: 'radio',
+        type: 'radio',
+        name: first.name,
+        htmlId: first.id,
+        autocomplete: '',
+        label,
+        placeholder: '',
+        nearby: '',
+        maxLength: null,
+        pattern: '',
+        options: inputs.map((r) => ({
+          value: r.value,
+          text: labelOf(r),
+          ...(r.disabled ? { disabled: true as const } : {}),
+        })),
+        readOnly: false,
+        disabled: inputs.every((r) => r.disabled),
+        value: checked?.value ?? '',
+      },
+    };
+  });
+}
+
 export function scanFields(root: ParentNode): ScannedField[] {
   const out: ScannedField[] = [];
   let n = 0;
+  const nextId = () => `jai-${n++}`;
   for (const el of Array.from(root.querySelectorAll<Control>('input, select'))) {
     const isSelect = el.tagName === 'SELECT';
     if (!isSelect && !TEXT_TYPES.has((el as HTMLInputElement).type)) continue;
@@ -74,7 +131,7 @@ export function scanFields(root: ParentNode): ScannedField[] {
     out.push({
       el,
       meta: {
-        id: `jai-${n++}`,
+        id: nextId(),
         tag: isSelect ? 'select' : 'input',
         type: isSelect ? 'select' : input!.type,
         name: el.name,
@@ -94,5 +151,6 @@ export function scanFields(root: ParentNode): ScannedField[] {
       },
     });
   }
+  out.push(...scanRadioGroups(root, nextId));
   return out;
 }

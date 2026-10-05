@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja"><meta charset="utf-8"><title>profile fields form</title>
+<form onsubmit="return false">
+  <fieldset data-fieldset-label="生年月日">
+    <legend>生年月日</legend>
+    <label for="by_y" class="visually-hidden">生年月日の年</label>
+    <input id="by_y" name="by_y" type="text" placeholder="2000" maxlength="4" autocomplete="bday-year">
+    <label for="by_m" class="visually-hidden">生年月日の月</label>
+    <select id="by_m" name="by_m" autocomplete="bday-month">
+      <option value="">--</option><option value="04">4</option><option value="05">5</option><option value="06">6</option>
+    </select>
+    <label for="by_d" class="visually-hidden">生年月日の日</label>
+    <select id="by_d" name="by_d" autocomplete="bday-day">
+      <option value="">--</option><option value="06">6</option><option value="07">7</option><option value="08">8</option>
+    </select>
+  </fieldset>
+  <fieldset data-fieldset-label="学校名">
+    <legend>学校名</legend>
+    <label for="sch" class="visually-hidden">学校名</label>
+    <input id="sch" name="sch" type="text" placeholder="">
+  </fieldset>
+  <fieldset data-fieldset-label="学部・学科">
+    <legend>学部・学科</legend>
+    <label for="dep" class="visually-hidden">学部・学科</label>
+    <input id="dep" name="dep" type="text" placeholder="">
+  </fieldset>
+</form>
+</html>

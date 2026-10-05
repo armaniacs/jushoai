@@ -35,10 +35,10 @@ First run `接続テスト（保存済みの設定で実行）` (connection test
 
 ## When nothing is filled or the result is wrong
 
-- The `JushoAI で入力` button does not appear: it appears only on a form with at least 3 text, email, tel or search inputs and select lists, where at least 2 can be identified. Hidden fields are not counted.
+- The `JushoAI で入力` button does not appear: it appears only on a form with at least 3 text, email, tel or search inputs, select lists and radio button groups combined, where at least 2 can be identified. Hidden fields are not counted.
 - The settings page opens: you have not registered a profile and at least one address.
 - A field is not filled: only fields without a note are filled. The preview adds a note to fields that are already filled, too long, or have no matching option. `readonly` and `disabled` fields are skipped.
-- Some fields are not supported: checkboxes, radio buttons and date fields are out of scope. Fields that cannot be identified are not filled.
+- Some fields are not supported: checkboxes and date fields are out of scope. Only gender and decade radio button groups are supported; other radio buttons are out of scope. Fields that cannot be identified are not filled.
 - The postal code is filled last: this avoids conflicts with forms that complete the address automatically.
 
 For details on how fields are identified, see [Supported forms and how it works](/en/guides/how-it-works/).
@@ -59,7 +59,7 @@ The preview lets you check fields and values before anything is filled. Only fie
 
 ### Which forms does it work on?
 
-It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. Items such as date of birth and gender are not handled.
+It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. Items such as date of birth are not handled. Gender is supported for select lists only.
 
 ### Ollama returns 403.
 

@@ -1,7 +1,11 @@
 import type { Item } from './classify-rules';
 import {
+  matchDecadeOption, matchEraOption, matchNumberOption, splitBirthday, toDecade, toEraDate,
+} from './eras';
+import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
 } from './formatters';
+import { matchGenderOption } from './genders';
 import { matchPrefectureOption } from './prefectures';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 
@@ -19,12 +23,13 @@ export interface PlanItem {
 export interface PlanContext {
   profile: Profile;
   address: Address | null;
+  today?: Date;
 }
 
 function valueFor(
   cls: Classification,
   meta: FieldMeta,
-  { profile: p, address: a }: PlanContext,
+  { profile: p, address: a, today }: PlanContext,
   present: Set<Category>,
 ): string {
   const kind = cls.kanaKind ?? 'katakana';
@@ -33,6 +38,7 @@ function valueFor(
     present.has('building') || !a?.building ? base : `${base} ${a.building}`;
   const tel = (i: number) => (p.tel ? (splitTel(p.tel)[i] ?? '') : '');
   const zip = (i: number) => (a ? (splitZip(a.zip)[i] ?? '') : '');
+  const bd = splitBirthday(p.birthday);
 
   switch (cls.category) {
     case 'lastName': return p.lastName;
@@ -45,6 +51,12 @@ function valueFor(
       return p.lastNameKana && p.firstNameKana
         ? joinName(formatKana(p.lastNameKana, kind), formatKana(p.firstNameKana, kind), sep)
         : '';
+    case 'lastNameRomaji': return p.lastNameRomaji;
+    case 'firstNameRomaji': return p.firstNameRomaji;
+    // Western order (given name first); empty romaji never falls back to kanji
+    // so half-width-only fields are left untouched instead of misfilled.
+    case 'fullNameRomaji':
+      return p.lastNameRomaji && p.firstNameRomaji ? `${p.firstNameRomaji} ${p.lastNameRomaji}` : '';
     case 'email': return p.email;
     case 'tel':
       if (!p.tel) return '';
@@ -63,6 +75,26 @@ function valueFor(
     case 'building': return a?.building ?? '';
     case 'addressNoPref': return a ? withBuilding(a.city + a.street) : '';
     case 'addressFull': return a ? withBuilding(a.prefecture + a.city + a.street) : '';
+    case 'birthYear':
+      if (!bd) return '';
+      if (present.has('birthEra')) {
+        const e = toEraDate(p.birthday);
+        return e ? String(e.year) : '';
+      }
+      return bd.y;
+    case 'birthMonth': return bd ? bd.m : '';
+    case 'birthDay': return bd ? bd.d : '';
+    case 'birthEra': return p.birthday ? (toEraDate(p.birthday)?.era ?? '') : '';
+    case 'school': return p.school;
+    case 'department': return p.department;
+    case 'gender': return p.gender;
+    case 'ageDecade': return toDecade(p.birthday, today) ?? '';
+    case 'country': return a?.country ?? '';
+    case 'address1': return a?.address1 ?? '';
+    case 'address2': return a?.address2 ?? '';
+    case 'address3': return a?.address3 ?? '';
+    case 'address4': return a?.address4 ?? '';
+    case 'postalCode': return a?.postalCode ?? '';
     case 'unknown': return '';
   }
 }
@@ -81,18 +113,35 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     if (!raw) continue;
     const base = { fieldId: meta.id, category: cls.category, source: cls.source };
 
-    if (meta.tag === 'select') {
-      if (cls.category !== 'prefecture') continue;
-      if (!isUntouchedSelect(meta)) {
-        plan.push({ ...base, value: '', display: raw, status: 'filled' });
+    // A radio group resting with nothing checked is untouched; unlike a select it
+    // has no placeholder first option, so only an empty value counts as untouched.
+    const isUntouchedOption = meta.tag === 'select' ? isUntouchedSelect(meta) : meta.value === '';
+    if (meta.tag === 'select' || meta.tag === 'radio') {
+      if (
+        cls.category === 'prefecture' || cls.category === 'birthMonth' ||
+        cls.category === 'birthDay' || cls.category === 'birthEra' ||
+        cls.category === 'gender' || cls.category === 'ageDecade'
+      ) {
+        if (!isUntouchedOption) {
+          plan.push({ ...base, value: '', display: raw, status: 'filled' });
+          continue;
+        }
+        const option = cls.category === 'prefecture'
+          ? matchPrefectureOption(meta.options, raw)
+          : cls.category === 'birthEra'
+            ? matchEraOption(meta.options, raw)
+            : cls.category === 'gender'
+              ? matchGenderOption(meta.options, raw)
+              : cls.category === 'ageDecade'
+                ? matchDecadeOption(meta.options, raw)
+                : matchNumberOption(meta.options, Number(raw));
+        plan.push(
+          option && !(meta.tag === 'radio' && option.disabled)
+            ? { ...base, value: option.value, display: option.text, status: 'ok' }
+            : { ...base, value: '', display: raw, status: 'warn-no-option' },
+        );
         continue;
       }
-      const option = matchPrefectureOption(meta.options, raw);
-      plan.push(
-        option
-          ? { ...base, value: option.value, display: option.text, status: 'ok' }
-          : { ...base, value: '', display: raw, status: 'warn-no-option' },
-      );
       continue;
     }
 

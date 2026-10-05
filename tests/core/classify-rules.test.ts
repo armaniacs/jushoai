@@ -118,6 +118,50 @@ describe('detectKanaKind', () => {
   });
 });
 
+describe('classifyField: birth, school, department', () => {
+  it('uses bday autocomplete with highest confidence', () => {
+    expect(classifyField(makeMeta({ autocomplete: 'bday-year' }))).toMatchObject({ category: 'birthYear', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'bday-month' }))).toMatchObject({ category: 'birthMonth', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'bday-day' }))).toMatchObject({ category: 'birthDay', confidence: 0.95 });
+  });
+
+  it.each([
+    [{ label: '生年月日の年', nearby: '生年月日' }, 'birthYear'],
+    [{ label: '生年月日の月', nearby: '生年月日' }, 'birthMonth'],
+    [{ label: '生年月日の日', nearby: '生年月日' }, 'birthDay'],
+    [{ label: '年', nearby: '生年月日' }, 'birthYear'],
+    [{ label: '元号' }, 'birthEra'],
+    [{ label: '令和' }, 'birthEra'],
+    [{ label: '学校名' }, 'school'],
+    [{ label: '学部・学科' }, 'department'],
+  ])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it('does not confuse 年月日 parts', () => {
+    expect(cat({ label: '生年月日の月' })).toBe('birthMonth');
+    expect(cat({ label: '生年月日の日' })).toBe('birthDay');
+  });
+
+  it('keeps company, division, and ward fields out', () => {
+    expect(cat({ label: '会社名' })).toBeNull();
+    expect(cat({ label: '部署' })).toBeNull();
+    expect(cat({ label: '昭和区' })).toBeNull();
+  });
+
+  it('leaves bare birth-phrase fields unclassified', () => {
+    expect(cat({ label: '生年月日' })).toBeNull();
+    expect(cat({ label: '誕生日' })).toBeNull();
+    expect(cat({ label: 'Birthday' })).toBeNull();
+    expect(cat({ name: 'birthday' })).toBeNull();
+  });
+
+  it('still excludes company fields from the new categories', () => {
+    expect(cat({ label: 'Company Department' })).toBeNull();
+    expect(cat({ label: 'Department' })).toBe('department');
+  });
+});
+
 describe('refineClassifications', () => {
   const item = (category: Category, id: string) => ({
     meta: makeMeta({ id }),
@@ -159,6 +203,48 @@ describe('refineClassifications', () => {
     const items = ['a', 'b', 'c'].map((id, i) => ({
       ...item('tel', id),
       meta: makeMeta({ id, label: ['自宅電話', '携帯電話', '勤務先電話'][i] }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
+  it('splits tel fields with distinct part labels sharing a heading', () => {
+    const labels = ['電話番号の市外局番', '電話番号の市内局番', '電話番号の加入者番号'];
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: labels[i]!, nearby: '電話番号' }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+
+  it('splits zip fields with distinct part labels sharing a heading', () => {
+    const items = ['a', 'b'].map((id, i) => ({
+      ...item('zip', id),
+      meta: makeMeta({
+        id,
+        label: ['郵便番号の上3桁', '郵便番号の下4桁'][i]!,
+        nearby: '郵便番号',
+      }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['zip1', 'zip2']);
+  });
+
+  it('keeps part-labeled tel fields with different headings unsplit', () => {
+    const labels = ['電話番号の市外局番', '電話番号の市内局番', '電話番号の加入者番号'];
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: labels[i]!, nearby: `ブロック${i}` }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
+  it('keeps part-labeled fields unsplit when a part repeats', () => {
+    const items = ['a', 'b', 'c'].map((id, i) => ({
+      ...item('tel', id),
+      meta: makeMeta({
+        id,
+        label: ['電話番号の市外局番', '電話番号の市外局番', '電話番号の加入者番号'][i]!,
+        nearby: '電話番号',
+      }),
     }));
     expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
   });
@@ -235,12 +321,96 @@ describe('classifyField: Japanese labels', () => {
     { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
     { label: 'ご担当者名' }, { label: '会社名' }, { label: '部署名' }, { label: '備考' },
-    { label: 'お問い合わせ内容' }, { label: 'パスワード' }, { label: '生年月日' },
-    { label: '性別' }, { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
+    { label: 'お問い合わせ内容' }, { label: 'パスワード' },
+    { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },
   ];
   it.each(negatives)('leaves %j unclassified', (p) => {
     expect(cat(p)).toBeNull();
+  });
+});
+
+describe('classifyField: gender', () => {
+  it.each([
+    [{ label: '性別' }, 'gender'],
+    [{ label: '性別（任意）', name: 'sex' }, 'gender'],
+    [{ label: 'Gender' }, 'gender'],
+    [{ nearby: '性別' }, 'gender'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: '件名' }, { label: '会社名' }, { label: 'お問い合わせ内容' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as gender', (p) => {
+    expect(cat(p)).not.toBe('gender');
+  });
+});
+
+describe('classifyField: age decade', () => {
+  const decade = (label: string): Parameters<typeof makeMeta>[0] => ({
+    tag: 'select', label,
+    options: [{ value: '', text: '-' }, { value: '0', text: '20代' }, { value: '1', text: '30代' }],
+  });
+  it.each([
+    '年齢', '年齢層', '年代', 'ねんだい', 'Age',
+  ])('classifies select %s as ageDecade', (label) => {
+    expect(cat(decade(label))).toBe('ageDecade');
+  });
+
+  it.each([
+    { label: '年齢', placeholder: '30' },
+    { label: 'ご来場予定人数' },
+    { label: '学年' },
+    { label: '年代物の家具' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as ageDecade', (p) => {
+    expect(cat(p)).not.toBe('ageDecade');
+  });
+});
+
+describe('classifyField: overseas address', () => {
+  it.each([
+    [{ label: '②Country　 ※半角英数で入力', name: 'country' }, 'country'],
+    [{ label: 'Country' }, 'country'],
+    [{ label: '③Address-1（Building or Apartment number）（最大文字数：80） ※半角英数で入力', name: 'address_1' }, 'address1'],
+    [{ label: '④Address-2（Street number, Street name）', name: 'address_2' }, 'address2'],
+    [{ label: '⑤Address-3（City）', name: 'address_3' }, 'address3'],
+    [{ label: '⑥Address-4（State/Province/Region）', name: 'address_4' }, 'address4'],
+    [{ label: '⑦Postal code（最大文字数：20） ※半角英数で入力', name: 'postal_code' }, 'postalCode'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: '住所' },
+    { label: '郵便番号' },
+    { label: '市区町村' },
+    { label: '国名' },
+    { label: 'メールアドレス' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as overseas', (p) => {
+    expect(cat(p) ?? '').not.toMatch(/^(country|address[1-4]|postalCode)$/);
+  });
+});
+
+describe('classifyField: romaji names', () => {
+  it.each([
+    [{ label: '①Name（最大文字数：80） ※半角英数で入力', name: 'name_last' }, 'fullNameRomaji'],
+    [{ label: 'Name ※半角英数で入力' }, 'fullNameRomaji'],
+    [{ label: '氏名（ローマ字）' }, 'fullNameRomaji'],
+    [{ label: '姓（ローマ字・半角英字）', name: 'sei_romaji' }, 'lastNameRomaji'],
+    [{ label: '名（ローマ字）' }, 'firstNameRomaji'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: 'お名前' },
+    { label: '氏名' },
+    { label: 'メールアドレス ※半角英数で入力' },
+    { label: 'ユーザー名 ※半角英数' },
+    { label: '会社名（英文）' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as romaji', (p) => {
+    expect(cat(p) ?? '').not.toMatch(/Romaji$/);
   });
 });
 
@@ -298,5 +468,28 @@ describe('wantsKana', () => {
     expect(wantsKana(makeMeta({ pattern: '^[ぁ-ん]+$' }))).toBe(true);
     expect(wantsKana(makeMeta({ pattern: '^\\d{4}$' }))).toBe(false);
     expect(wantsKana(makeMeta())).toBe(false);
+  });
+});
+
+describe('radio group classification', () => {
+  const radio = (p: Partial<import('../../src/core/types').FieldMeta>) =>
+    makeMeta({ tag: 'radio', type: 'radio', ...p });
+  it('classifies a legend-labeled group as gender', () => {
+    expect(classifyField(radio({
+      name: 'field_2760244', label: '性別',
+      options: [{ value: '0', text: '男性' }, { value: '1', text: '女性' }],
+    }))?.category).toBe('gender');
+  });
+  it('classifies a decade-option group as ageDecade', () => {
+    expect(classifyField(radio({
+      name: 'field_4609097', label: '年齢',
+      options: [{ value: '0', text: '20代' }, { value: '1', text: '30代' }],
+    }))?.category).toBe('ageDecade');
+  });
+  it('leaves a non-decade radio group unclassified', () => {
+    expect(classifyField(radio({
+      name: 'field_4609054', label: '来場場所',
+      options: [{ value: '0', text: '東京' }, { value: '1', text: '大阪' }],
+    }))).toBeNull();
   });
 });

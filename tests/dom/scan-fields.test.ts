@@ -87,3 +87,38 @@ describe('scanFields: layout visibility', () => {
     expect(metas()).toHaveLength(0);
   });
 });
+
+describe('scanFields radio groups', () => {
+  const groupHtml = `
+    <div role="group" data-fieldset-label="性別">
+      <legend>性別</legend>
+      <input name="g" type="hidden" value="">
+      <label for="g0">男性<input id="g0" name="g" type="radio" value="0"></label>
+      <label for="g1">女性<input id="g1" name="g" type="radio" value="1"></label>
+    </div>`;
+  it('scans one logical field per radio name with legend label and options', () => {
+    document.body.innerHTML = groupHtml;
+    const fields = scanFields(document.body);
+    expect(fields).toHaveLength(1);
+    expect(fields[0]!.meta).toMatchObject({
+      tag: 'radio', type: 'radio', name: 'g', label: '性別', value: '',
+    });
+    expect(fields[0]!.meta.options).toEqual([
+      { value: '0', text: '男性' }, { value: '1', text: '女性' },
+    ]);
+    expect(fields[0]!.el.getAttribute('name')).toBe('g');
+  });
+  it('ignores the same-name hidden shim and reports the checked value', () => {
+    document.body.innerHTML = groupHtml.replace('value="1"', 'value="1" checked');
+    const fields = scanFields(document.body);
+    expect(fields).toHaveLength(1);
+    expect(fields[0]!.meta.value).toBe('1');
+  });
+  it('keeps separate groups for different names apart', () => {
+    document.body.innerHTML = `${groupHtml}
+      <div role="group"><legend>年齢</legend>
+        <label>20代<input name="a" type="radio" value="0"></label>
+      </div>`;
+    expect(scanFields(document.body).map((f) => f.meta.name)).toEqual(['g', 'a']);
+  });
+});

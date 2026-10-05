@@ -10,6 +10,12 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 - email: メールアドレス
 - tel: 電話番号1欄 / tel1, tel2, tel3: 電話番号の分割欄（市外局番, 市内局番, 加入者番号）
 - zip: 郵便番号1欄 / zip1, zip2: 郵便番号の分割欄（上3桁, 下4桁）
+- birthYear: 生まれ年（西暦4桁）/ birthMonth: 生まれ月 / birthDay: 生まれ日 / birthEra: 和暦の元号
+- school: 学校名 / department: 学部・学科
+- lastNameRomaji: 姓(ローマ字・半角英字) / firstNameRomaji: 名(ローマ字) / fullNameRomaji: 姓名のローマ字を1欄に入力(半角英数指定)
+- gender: 性別
+- ageDecade: 年代(20代〜70代以上。生年月日から導出する値)
+- country: 国名(半角英数) / address1, address2, address3, address4: 海外住所の建物・番地・市・州(半角英数) / postalCode: 海外の郵便番号(半角英数)
 - prefecture: 都道府県 / city: 市区町村 / street: 番地 / building: 建物名・部屋番号
 - addressFull: 都道府県から全部入る住所1欄 / addressNoPref: 市区町村以降の住所1欄
 - unknown: 上記のどれでもない

@@ -1,5 +1,5 @@
 import type { PlanStatus } from '../core/planner';
-import type { Address } from '../core/types';
+import type { Address, Profile } from '../core/types';
 import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
 
 export interface PreviewRow {
@@ -14,7 +14,10 @@ export interface PreviewOptions {
   addresses: Address[];
   selectedAddressId: string;
   onAddressChange(id: string): void;
-  onApply(): void;
+  profiles: Profile[];
+  selectedProfileId: string;
+  onProfileChange(id: string): void;
+  onApply(sendFeedback: boolean): void;
   onCancel(): void;
   onReanalyze?(): void | Promise<void>;
 }
@@ -45,6 +48,9 @@ const CSS = `
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
   .actions .reanalyze { margin-right: auto; }
+  .feedback { display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
+    color: #5a6270; cursor: pointer; }
+  .feedback input { margin: 0; }
   button:disabled { opacity: .5; cursor: default; }
 `;
 
@@ -59,6 +65,19 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const title = document.createElement('h2');
   title.textContent = '入力内容の確認';
   panel.append(title);
+
+  if (opts.profiles.length > 1) {
+    const select = document.createElement('select');
+    for (const p of opts.profiles) {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.label;
+      o.selected = p.id === opts.selectedProfileId;
+      select.append(o);
+    }
+    select.addEventListener('change', () => opts.onProfileChange(select.value));
+    panel.append(select);
+  }
 
   if (opts.addresses.length > 1) {
     const select = document.createElement('select');
@@ -92,6 +111,16 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     : null;
   let hasOk = false;
   let busy = false;
+  let reanalyzed = false;
+  const feedback = document.createElement('label');
+  feedback.className = 'feedback';
+  feedback.hidden = true;
+  const feedbackBox = document.createElement('input');
+  feedbackBox.type = 'checkbox';
+  const feedbackText = document.createElement('span');
+  feedbackText.textContent = '開発にFBする';
+  feedback.title = '公開 issue が開きます。プロファイルの値は送りません';
+  feedback.append(feedbackBox, feedbackText);
   const syncButtons = () => {
     if (reanalyze) {
       reanalyze.disabled = busy;
@@ -99,10 +128,12 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     }
     cancel.disabled = busy;
     apply.disabled = busy || !hasOk;
+    feedbackBox.disabled = busy;
+    feedback.hidden = !(reanalyze && reanalyzed);
   };
   const actions = document.createElement('div');
   actions.className = 'actions';
-  actions.append(...(reanalyze ? [reanalyze, cancel, apply] : [cancel, apply]));
+  actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
   panel.append(list, empty, actions);
 
   const setRows = (rows: PreviewRow[]) => {
@@ -148,6 +179,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       // becomes a rejection instead of escaping the listener uncaught.
       void Promise.resolve()
         .then(onReanalyze)
+        .then(() => {
+          reanalyzed = true;
+          syncButtons();
+        })
         .catch((e) => console.error('JushoAI: reanalysis failed', e))
         .finally(() => setReanalyzing(false));
     });
@@ -158,7 +193,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     host.remove();
   };
   const detachEscape = attachEscapeClose(() => opts.onCancel());
-  apply.addEventListener('click', () => opts.onApply());
+  apply.addEventListener('click', () => opts.onApply(feedbackBox.checked && !feedback.hidden));
   cancel.addEventListener('click', () => opts.onCancel());
 
   setRows(opts.rows);
