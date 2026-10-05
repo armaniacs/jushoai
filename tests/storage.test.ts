@@ -17,7 +17,7 @@ beforeEach(() => {
 });
 
 const ready: StoredData = {
-  profile: { ...EMPTY_PROFILE, lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ' },
+  profile: { ...EMPTY_PROFILE, label: 'メイン', lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ' },
   addresses: [{ id: '1', label: '自宅', zip: '1000001', prefecture: '東京都', city: '千代田区', street: '千代田1-1', building: '' }],
 };
 
