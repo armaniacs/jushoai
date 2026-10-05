@@ -26,7 +26,7 @@ Scenario: 一致なし・入力済みは触らない
 - [x] radio群が年代カテゴリに分類される
 - [x] planner が radio群の年代解決(warn-no-option/filled 含む)ができる
 - [x] fill が checked + input/change/blur 発火で検知される(PBI-02の基盤を流用)
-- [ ] 対象URL相当のサンプルで手動確認できる(ユーザー作業として残す。自動e2eは来場予約fixtureで代替)
+- [x] 対象URL相当のサンプルで手動確認できる(ユーザー確認済み。自動e2eは来場予約fixtureで代替)
 
 ## テスト戦略（t_wadaスタイル）
 

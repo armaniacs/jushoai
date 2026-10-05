@@ -28,7 +28,7 @@ Scenario: 一致なし・入力済みは触らない
 - [x] planner が radio群の選択肢解決(warn-no-option/filled 含む)ができる
 - [x] fill が checked + input/change/blur 発火でフレームワークに検知される
 - [x] プレビュー表示が radio群に対応する(汎用行表示のため追加変更なし。表示文言はplannerテストで検証)
-- [ ] 対象URL相当のサンプルで手動確認できる(ユーザー作業として残す。自動e2eは来場アンケートfixtureで代替)
+- [x] 対象URL相当のサンプルで手動確認できる(ユーザー確認済み。自動e2eは来場アンケートfixtureで代替)
 
 ## テスト戦略（t_wadaスタイル）
 
