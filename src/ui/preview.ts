@@ -119,6 +119,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   feedbackBox.type = 'checkbox';
   const feedbackText = document.createElement('span');
   feedbackText.textContent = '開発にFBする';
+  feedback.title = '公開 issue が開きます。プロファイルの値は送りません';
   feedback.append(feedbackBox, feedbackText);
   const syncButtons = () => {
     if (reanalyze) {

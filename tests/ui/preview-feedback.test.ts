@@ -54,6 +54,15 @@ describe('preview feedback checkbox', () => {
     expect(isFeedbackVisible(root)).toBe(false);
   });
 
+  it('carries a privacy note that values are never sent', async () => {
+    const onReanalyze = vi.fn(async () => {});
+    const { root } = open({ rows: [row('ok')], onReanalyze });
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'LLM で再分析')!.click();
+    await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
+    const label = feedbackLabel(root)! as HTMLElement;
+    expect(label.title).toContain('プロファイルの値は送りません');
+  });
+
   it('passes the checked flag to onApply', async () => {
     const onApply = vi.fn();
     const onReanalyze = vi.fn(async () => {});
