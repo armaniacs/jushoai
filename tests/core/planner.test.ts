@@ -5,7 +5,9 @@ import type { Address, Category, FieldMeta, KanaKind, Profile } from '../../src/
 import { makeMeta } from '../helpers';
 
 const profile: Profile = {
+  id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {

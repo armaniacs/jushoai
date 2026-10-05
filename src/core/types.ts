@@ -4,7 +4,10 @@ export const CATEGORIES = [
   'email', 'tel', 'tel1', 'tel2', 'tel3',
   'zip', 'zip1', 'zip2',
   'prefecture', 'city', 'street', 'building',
-  'addressFull', 'addressNoPref', 'unknown',
+  'addressFull', 'addressNoPref',
+  'birthYear', 'birthMonth', 'birthDay', 'birthEra',
+  'school', 'department',
+  'unknown',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -38,10 +41,15 @@ export interface Classification {
 }
 
 export interface Profile {
+  id: string;
+  label: string;
   lastName: string;
   firstName: string;
   lastNameKana: string;
   firstNameKana: string;
+  birthday: string;
+  school: string;
+  department: string;
   email: string;
   tel: string;
 }
@@ -57,10 +65,13 @@ export interface Address {
 }
 
 export interface StoredData {
-  profile: Profile;
+  profiles: Profile[];
   addresses: Address[];
 }
 
 export const EMPTY_PROFILE: Profile = {
-  lastName: '', firstName: '', lastNameKana: '', firstNameKana: '', email: '', tel: '',
+  id: '', label: '',
+  lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
+  birthday: '', school: '', department: '',
+  email: '', tel: '',
 };
