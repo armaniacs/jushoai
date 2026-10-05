@@ -2,7 +2,7 @@ import type { SelectOption } from './types';
 
 export interface EraDate { era: string; year: number }
 
-// 開始日の昇順。和暦年 = 西暦年 − 開始年 ＋ 1。元年は 1 と表記する。
+// Ascending start dates. Wareki year = seireki year - start year + 1; the first year is 1.
 const ERAS: { name: string; start: string }[] = [
   { name: '明治', start: '1868-09-08' },
   { name: '大正', start: '1912-07-30' },
@@ -32,7 +32,7 @@ const leadingDigits = (s: string) => {
   return m ? Number(m[0]) : NaN;
 };
 
-// value="01" / text "1" / text "5月" の表記ゆれを数値で吸収する。
+// Absorbs notation differences (value="01", text "1", text "5月") by numeric comparison.
 export function matchNumberOption(options: SelectOption[], n: number): SelectOption | null {
   if (!Number.isInteger(n)) return null;
   return options.find((o) => leadingDigits(o.value) === n || leadingDigits(o.text) === n) ?? null;
