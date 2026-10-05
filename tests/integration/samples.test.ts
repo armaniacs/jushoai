@@ -10,11 +10,13 @@ import profileFields from '../../samples/profile-fields-form.html?raw';
 import single from '../../samples/single-field-form.html?raw';
 import split from '../../samples/split-form.html?raw';
 import table from '../../samples/table-form.html?raw';
+import roman from '../../samples/roman-name-form.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
   'split-form.html': split,
   'single-field-form.html': single,
+  'roman-name-form.html': roman,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -23,6 +25,7 @@ const SAMPLES: Record<string, string> = {
 const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+  lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -84,6 +87,12 @@ describe('sample forms end to end', () => {
   it('profile-fields-form', async () => {
     expect(await planFor('profile-fields-form.html')).toEqual({
       by_y: '1990', by_m: '05', by_d: '07', sch: '都立日比谷高校', dep: '普通科',
+    });
+  });
+
+  it('roman-name-form fills the half-width name in romaji and keeps the Japanese name', async () => {
+    expect(await planFor('roman-name-form.html')).toEqual({
+      name_last: 'Taro Yamada', fullname: '山田　太郎', mail: 'yamada@example.com',
     });
   });
 

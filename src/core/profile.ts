@@ -4,6 +4,9 @@ import type { Address, Profile } from './types';
 
 const digits = (s: string) => s.normalize('NFKC').replace(/\D/g, '');
 const kana = (s: string) => toKatakana(s.normalize('NFKC').trim());
+// NFKC folds full-width alphabet into half-width, so Ｙａｍａｄａ becomes Yamada
+const romaji = (s: string) => s.normalize('NFKC').trim();
+const ROMAJI = /^[A-Za-z][A-Za-z .,'-]*$/;
 // Accepts 1990/5/7 or 1990年5月7日 style input but leaves year-only strings untouched
 const birthday = (s: string) => {
   const t = s.normalize('NFKC').trim();
@@ -20,6 +23,8 @@ export function normalizeProfile(p: Profile): Profile {
     firstName: p.firstName.trim(),
     lastNameKana: kana(p.lastNameKana),
     firstNameKana: kana(p.firstNameKana),
+    lastNameRomaji: romaji(p.lastNameRomaji),
+    firstNameRomaji: romaji(p.firstNameRomaji),
     birthday: birthday(p.birthday),
     school: p.school.trim(),
     department: p.department.trim(),
@@ -46,6 +51,8 @@ export function validateProfile(p: Profile): string[] {
   if (!p.firstName) errors.push('名を入力してください');
   if (!/^[ァ-ヶー]+$/.test(p.lastNameKana)) errors.push('セイは全角カナで入力してください');
   if (!/^[ァ-ヶー]+$/.test(p.firstNameKana)) errors.push('メイは全角カナで入力してください');
+  if (p.lastNameRomaji && !ROMAJI.test(p.lastNameRomaji)) errors.push('ローマ字姓は半角英字で入力してください');
+  if (p.firstNameRomaji && !ROMAJI.test(p.firstNameRomaji)) errors.push('ローマ字名は半角英字で入力してください');
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
     errors.push('メールアドレスの形式が正しくありません');
   }

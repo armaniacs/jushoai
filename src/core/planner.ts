@@ -49,6 +49,12 @@ function valueFor(
       return p.lastNameKana && p.firstNameKana
         ? joinName(formatKana(p.lastNameKana, kind), formatKana(p.firstNameKana, kind), sep)
         : '';
+    case 'lastNameRomaji': return p.lastNameRomaji;
+    case 'firstNameRomaji': return p.firstNameRomaji;
+    // Western order (given name first); empty romaji never falls back to kanji
+    // so half-width-only fields are left untouched instead of misfilled.
+    case 'fullNameRomaji':
+      return p.lastNameRomaji && p.firstNameRomaji ? `${p.firstNameRomaji} ${p.lastNameRomaji}` : '';
     case 'email': return p.email;
     case 'tel':
       if (!p.tel) return '';

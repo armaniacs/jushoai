@@ -13,6 +13,8 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; 
   { key: 'firstName', label: '名', placeholder: '太郎' },
   { key: 'lastNameKana', label: 'セイ（フリガナ・ふりがな入力可）', placeholder: 'ヤマダ' },
   { key: 'firstNameKana', label: 'メイ（フリガナ・ふりがな入力可）', placeholder: 'タロウ' },
+  { key: 'lastNameRomaji', label: '姓（ローマ字・半角英字・任意）', placeholder: 'Yamada' },
+  { key: 'firstNameRomaji', label: '名（ローマ字・半角英字・任意）', placeholder: 'Taro' },
   { key: 'birthday', label: '生年月日', placeholder: '1990-05-07' },
   { key: 'school', label: '学校名', placeholder: '都立日比谷高校' },
   { key: 'department', label: '学部・学科', placeholder: '普通科' },

@@ -288,6 +288,28 @@ describe('classifyField: Japanese labels', () => {
   });
 });
 
+describe('classifyField: romaji names', () => {
+  it.each([
+    [{ label: '①Name（最大文字数：80） ※半角英数で入力', name: 'name_last' }, 'fullNameRomaji'],
+    [{ label: 'Name ※半角英数で入力' }, 'fullNameRomaji'],
+    [{ label: '氏名（ローマ字）' }, 'fullNameRomaji'],
+    [{ label: '姓（ローマ字・半角英字）', name: 'sei_romaji' }, 'lastNameRomaji'],
+    [{ label: '名（ローマ字）' }, 'firstNameRomaji'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: 'お名前' },
+    { label: '氏名' },
+    { label: 'メールアドレス ※半角英数で入力' },
+    { label: 'ユーザー名 ※半角英数' },
+    { label: '会社名（英文）' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as romaji', (p) => {
+    expect(cat(p) ?? '').not.toMatch(/Romaji$/);
+  });
+});
+
 describe('classifyField: kana source', () => {
   const four = [
     makeMeta({ id: 'a', placeholder: '山田', nearby: 'お名前・フリガナ' }),

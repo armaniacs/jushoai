@@ -28,6 +28,12 @@ describe('normalizeProfile', () => {
     expect(normalizeProfile({ ...base, birthday: '1990' }).birthday).toBe('1990');
   });
 
+  it('normalizes full-width romaji to half-width', () => {
+    const p = normalizeProfile({ ...base, lastNameRomaji: 'Ｙａｍａｄａ ', firstNameRomaji: 'Taro' });
+    expect(p.lastNameRomaji).toBe('Yamada');
+    expect(p.firstNameRomaji).toBe('Taro');
+  });
+
   it('keeps id and trims label, school, and department', () => {
     const p = normalizeProfile({
       ...base, id: 'p9', label: ' 仕事用 ', school: ' 都立日比谷高校 ', department: '普通科 ',
@@ -58,6 +64,15 @@ describe('validateProfile', () => {
         expect.stringContaining('メールアドレス'),
         expect.stringContaining('電話番号'),
       ]),
+    );
+  });
+
+  it('accepts blank romaji but rejects non-latin values', () => {
+    expect(validateProfile({ ...EMPTY_PROFILE, lastNameRomaji: '', firstNameRomaji: '' })).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('ローマ字')]),
+    );
+    expect(validateProfile({ ...EMPTY_PROFILE, lastNameRomaji: '山田' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('ローマ字')]),
     );
   });
 

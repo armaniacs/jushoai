@@ -7,6 +7,7 @@ import { makeMeta } from '../helpers';
 const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+  lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -38,6 +39,17 @@ describe('names', () => {
     expect(values([item('fullNameKana', {}, 'halfKatakana')])).toEqual(['ﾔﾏﾀﾞ ﾀﾛｳ']);
     expect(values([item('lastNameKana', {}, 'hiragana')])).toEqual(['やまだ']);
     expect(values([item('firstNameKana')])).toEqual(['タロウ']);
+  });
+
+  it('fills romaji names in western order', () => {
+    expect(values([item('lastNameRomaji'), item('firstNameRomaji')])).toEqual(['Yamada', 'Taro']);
+    expect(values([item('fullNameRomaji')])).toEqual(['Taro Yamada']);
+  });
+
+  it('skips romaji fields when no romaji is registered', () => {
+    const bare = { ...profile, lastNameRomaji: '', firstNameRomaji: '' };
+    const plan = buildPlan([item('fullNameRomaji')], { profile: bare, address });
+    expect(plan).toEqual([]);
   });
 });
 
