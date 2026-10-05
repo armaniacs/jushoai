@@ -2,7 +2,7 @@
 
 ## 進行中
 
-（なし）
+- `2026-10-05-03-feat-url-fixture-workflow.md`（優先度02）
 
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
 
@@ -16,3 +16,4 @@
 | 2026-10-04-04-refactor-overlay-panel.md | 2c201d6 refactor: オーバーレイパネルの共通部分を ui/overlay に抽出する |
 | 2026-10-04-05-refactor-meta-wire-shape.md | 3fffb4b refactor: 欄メタデータの wire 形状を messages.ts に一元化する |
 | 2026-10-04-06-refactor-classifier-seam.md | d689854 refactor: FieldClassifier seam を core に移動する |
+| 2026-10-05-01-feat-split-groups-distinct-labels.md | 4acc05d feat: ラベル別文言の電話・郵便番号分割欄に対応する |
