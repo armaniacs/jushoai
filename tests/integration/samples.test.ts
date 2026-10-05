@@ -14,6 +14,7 @@ import roman from '../../samples/roman-name-form.html?raw';
 import gender from '../../samples/gender-select-form.html?raw';
 import decade from '../../samples/age-decade-select-form.html?raw';
 import abroad from '../../samples/overseas-address-form.html?raw';
+import joshibi from '../../samples/overseas-webform-joshibi.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
@@ -23,6 +24,7 @@ const SAMPLES: Record<string, string> = {
   'gender-select-form.html': gender,
   'age-decade-select-form.html': decade,
   'overseas-address-form.html': abroad,
+  'overseas-webform-joshibi.html': joshibi,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -124,6 +126,22 @@ describe('sample forms end to end', () => {
       address_1: '#123 Central Apartment', address_2: '25-15 M.G.Peterson Ave',
       address_3: 'Long Island City', address_4: 'NEW YORK',
       postal_code: '11375', fullname: '山田　太郎',
+    });
+  });
+
+  it('overseas-webform-joshibi fills the real overseas form end to end', async () => {
+    expect(await planFor('overseas-webform-joshibi.html')).toEqual({
+      'name_kana_last': 'ヤマダ タロウ',
+      'mail_confirm[mail_1]': 'yamada@example.com',
+      'mail_confirm[mail_2]': 'yamada@example.com',
+      'name_last': 'Taro Yamada',
+      'country': 'United States',
+      'address_1': '#123 Central Apartment',
+      'address_2': '25-15 M.G.Peterson Ave',
+      'address_3': 'Long Island City',
+      'address_4': 'NEW YORK',
+      'postal_code': '11375',
+      'phone': '090-1234-5678',
     });
   });
 

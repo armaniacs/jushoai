@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  Local e2e fixture modeled on https://www.joshibi.ac.jp/overseas/webform
+  (女子美術大学 海外住所入力フォーム). Field ids, names, labels, placeholders,
+  types, and maxlengths mirror the real page; site chrome is omitted.
+  Radio inputs (受け取り方法) must be skipped: only text/email/tel/search and
+  select elements are scanned.
+-->
+<html lang="ja"><meta charset="utf-8"><title>overseas webform (joshibi)</title>
+<form action="/overseas/webform" method="post" id="webform-submission-kaigai-add-form" accept-charset="UTF-8">
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-number" class="form-required">受験番号（８桁）<span>必須</span></label>
+    <input type="text" id="edit-number" name="number" value="" size="60" maxlength="8" required="required">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-name-kana-last" class="form-required">カナ氏名（受験票にある表記） ※全角で入力<span>必須</span></label>
+    <input type="text" id="edit-name-kana-last" name="name_kana_last" value="" size="60" maxlength="255" required="required">
+  </div>
+  <div class="js-form-item form-item js-form-type-email">
+    <label for="edit-mail-confirm-mail-1" class="form-required">メールアドレス<span>必須</span></label>
+    <input type="email" id="edit-mail-confirm-mail-1" name="mail_confirm[mail_1]" value="" size="60" maxlength="254" required="required">
+  </div>
+  <div class="js-form-item form-item js-form-type-email">
+    <label for="edit-mail-confirm-mail-2" class="form-required">確認のためもう一度メールアドレスをご入力ください。<span>必須</span></label>
+    <input type="email" id="edit-mail-confirm-mail-2" name="mail_confirm[mail_2]" value="" size="60" maxlength="254" required="required">
+  </div>
+  <fieldset class="radios--wrapper">
+    <legend>合格通知等の書類の受け取り方法 <span>必須</span></legend>
+    <div class="js-form-item form-item js-form-type-radio">
+      <label><input type="radio" id="edit-hegetongzhidengnoshoukequrifangfa-a" name="hegetongzhidengnoshoukequrifangfa" value="a">a.直接大学にて受け取る</label>
+    </div>
+    <div class="js-form-item form-item js-form-type-radio">
+      <label><input type="radio" id="edit-hegetongzhidengnoshoukequrifangfa-b" name="hegetongzhidengnoshoukequrifangfa" value="b">b.海外住所に送付する</label>
+    </div>
+  </fieldset>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-name-last">①Name（最大文字数：80） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-name-last" name="name_last" value="" size="60" maxlength="80" placeholder="例：Ms. Hanako Yubin">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-country">②Country　 ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-country" name="country" value="" size="60" maxlength="80">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-address-1">③Address-1（Building or Apartment number）（最大文字数：80） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-address-1" name="address_1" value="" size="60" maxlength="80" placeholder="例：#123 Central Apartment">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-address-2">④Address-2（Street number, Street name）（最大文字数：80） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-address-2" name="address_2" value="" size="60" maxlength="80" placeholder="例：25-15 M.G.Peterson Ave">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-address-3">⑤Address-3（City）（最大文字数：36） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-address-3" name="address_3" value="" size="60" maxlength="36" placeholder="例：Long Island City">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-address-4">⑥Address-4（State/Province/Region）（最大文字数：24） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-address-4" name="address_4" value="" size="60" maxlength="24" placeholder="例：NEW YORK">
+  </div>
+  <div class="js-form-item form-item js-form-type-textfield">
+    <label for="edit-postal-code">⑦Postal code（最大文字数：20） ※半角英数で入力<span>必須</span></label>
+    <input type="text" id="edit-postal-code" name="postal_code" value="" size="60" maxlength="20">
+  </div>
+  <div class="js-form-item form-item js-form-type-tel">
+    <label for="edit-phone">⑧Phone（最大文字数：20） ※半角英数で入力<span>必須</span></label>
+    <input type="tel" id="edit-phone" name="phone" value="" size="30" maxlength="128" placeholder="例：+81-12-345-678">
+  </div>
+  <input type="hidden" name="form_build_id" value="form-4KxzBbmR5Hzhc0I7Icn83xMmIK1ovbtABE8yn2iHqmM">
+  <input type="hidden" name="form_id" value="webform_submission_kaigai_add_form">
+  <input type="submit" name="op" value="入力内容の確認・送信">
+</form>
+</html>
