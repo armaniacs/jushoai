@@ -133,6 +133,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   const SCHOOL = /学校|school|univ|college|高校|大学/;
   const DEPT = /学部|学科|専攻|department|major|faculty/;
   const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
+  const GENDER = /性別|せいべつ|ジェンダー|gender|sex/;
   const ownText = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
   const legendText = norm(m.nearby);
   const officeField = EXCLUDE.test(ownText);
@@ -161,6 +162,8 @@ export function classifyField(m: FieldMeta): Classification | null {
     if (SCHOOL.test(legendText)) return make('school', 0.65);
     if (DEPT.test(ownText)) return make('department', 0.7);
     if (DEPT.test(legendText)) return make('department', 0.65);
+    if (GENDER.test(ownText)) return make('gender', 0.7);
+    if (GENDER.test(legendText)) return make('gender', 0.65);
     // A half-width note plus a name signal means the field wants a latin name,
     // even when name/id alone would read as a plain Japanese name (name_last).
     // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.

@@ -280,11 +280,28 @@ describe('classifyField: Japanese labels', () => {
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
     { label: 'ご担当者名' }, { label: '会社名' }, { label: '部署名' }, { label: '備考' },
     { label: 'お問い合わせ内容' }, { label: 'パスワード' },
-    { label: '性別' }, { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
+    { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },
   ];
   it.each(negatives)('leaves %j unclassified', (p) => {
     expect(cat(p)).toBeNull();
+  });
+});
+
+describe('classifyField: gender', () => {
+  it.each([
+    [{ label: '性別' }, 'gender'],
+    [{ label: '性別（任意）', name: 'sex' }, 'gender'],
+    [{ label: 'Gender' }, 'gender'],
+    [{ nearby: '性別' }, 'gender'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { label: '件名' }, { label: '会社名' }, { label: 'お問い合わせ内容' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as gender', (p) => {
+    expect(cat(p)).not.toBe('gender');
   });
 });
 

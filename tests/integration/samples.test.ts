@@ -11,12 +11,14 @@ import single from '../../samples/single-field-form.html?raw';
 import split from '../../samples/split-form.html?raw';
 import table from '../../samples/table-form.html?raw';
 import roman from '../../samples/roman-name-form.html?raw';
+import gender from '../../samples/gender-select-form.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
   'split-form.html': split,
   'single-field-form.html': single,
   'roman-name-form.html': roman,
+  'gender-select-form.html': gender,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -26,6 +28,7 @@ const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
+  gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -93,6 +96,12 @@ describe('sample forms end to end', () => {
   it('roman-name-form fills the half-width name in romaji and keeps the Japanese name', async () => {
     expect(await planFor('roman-name-form.html')).toEqual({
       name_last: 'Taro Yamada', fullname: '山田　太郎', mail: 'yamada@example.com',
+    });
+  });
+
+  it('gender-select-form fills the gender select', async () => {
+    expect(await planFor('gender-select-form.html')).toEqual({
+      sex: '女性', fullname: '山田　太郎',
     });
   });
 

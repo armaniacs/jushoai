@@ -49,4 +49,4 @@ The AI classifies only the fields the rules cannot identify. It does not produce
 
 The extension supports text, email, tel and search inputs, and select lists. Other controls, such as checkboxes, radio buttons and date fields, are not supported.
 
-Fields that cannot be identified are not filled. Items such as date of birth and gender are not handled.
+Fields that cannot be identified are not filled. Items such as date of birth are not handled. Gender is supported for select lists only, not for radio buttons.

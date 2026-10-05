@@ -76,6 +76,19 @@ describe('validateProfile', () => {
     );
   });
 
+  it('trims gender', () => {
+    expect(normalizeProfile({ ...base, gender: ' 女性 ' }).gender).toBe('女性');
+  });
+
+  it('accepts blank gender but rejects unknown values', () => {
+    expect(validateProfile({ ...EMPTY_PROFILE, gender: '' })).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('性別')]),
+    );
+    expect(validateProfile({ ...EMPTY_PROFILE, gender: '不明' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('性別')]),
+    );
+  });
+
   it('requires a label', () => {
     expect(validateProfile({ ...EMPTY_PROFILE, label: '   ' })).toEqual(
       expect.arrayContaining([expect.stringContaining('プロファイルの名前')]),

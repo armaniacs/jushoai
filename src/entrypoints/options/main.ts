@@ -1,3 +1,4 @@
+import { GENDERS } from '../../core/genders';
 import { PREFECTURES } from '../../core/prefectures';
 import {
   normalizeAddress, normalizeProfile, validateAddress, validateProfile,
@@ -46,6 +47,19 @@ function prefectureSelect(value: string, onChange: (v: string) => void) {
   return select;
 }
 
+function genderSelect(value: string, onChange: (v: string) => void) {
+  const select = document.createElement('select');
+  for (const g of ['', ...GENDERS]) {
+    const o = document.createElement('option');
+    o.value = g;
+    o.textContent = g || '選択してください（任意）';
+    o.selected = g === value;
+    select.append(o);
+  }
+  select.addEventListener('change', () => onChange(select.value));
+  return select;
+}
+
 function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
   if (kind === 'saved') {
     const p = document.createElement('p');
@@ -84,6 +98,7 @@ function render(notice?: HTMLElement) {
       set.append(labeled(f.label, input));
       if (hint) set.append(hint);
     }
+    set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
     const copy = document.createElement('button');
     copy.type = 'button';
     copy.textContent = 'このプロファイルを複製';

@@ -5,6 +5,7 @@ import {
 import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
 } from './formatters';
+import { matchGenderOption } from './genders';
 import { matchPrefectureOption } from './prefectures';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 
@@ -85,6 +86,7 @@ function valueFor(
     case 'birthEra': return p.birthday ? (toEraDate(p.birthday)?.era ?? '') : '';
     case 'school': return p.school;
     case 'department': return p.department;
+    case 'gender': return p.gender;
     case 'unknown': return '';
   }
 }
@@ -106,7 +108,8 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     if (meta.tag === 'select') {
       if (
         cls.category === 'prefecture' || cls.category === 'birthMonth' ||
-        cls.category === 'birthDay' || cls.category === 'birthEra'
+        cls.category === 'birthDay' || cls.category === 'birthEra' ||
+        cls.category === 'gender'
       ) {
         if (!isUntouchedSelect(meta)) {
           plan.push({ ...base, value: '', display: raw, status: 'filled' });
@@ -116,7 +119,9 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
           ? matchPrefectureOption(meta.options, raw)
           : cls.category === 'birthEra'
             ? matchEraOption(meta.options, raw)
-            : matchNumberOption(meta.options, Number(raw));
+            : cls.category === 'gender'
+              ? matchGenderOption(meta.options, raw)
+              : matchNumberOption(meta.options, Number(raw));
         plan.push(
           option
             ? { ...base, value: option.value, display: option.text, status: 'ok' }

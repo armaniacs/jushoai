@@ -1,4 +1,5 @@
 import { toKatakana } from './formatters';
+import { GENDERS } from './genders';
 import { PREFECTURES } from './prefectures';
 import type { Address, Profile } from './types';
 
@@ -25,6 +26,7 @@ export function normalizeProfile(p: Profile): Profile {
     firstNameKana: kana(p.firstNameKana),
     lastNameRomaji: romaji(p.lastNameRomaji),
     firstNameRomaji: romaji(p.firstNameRomaji),
+    gender: p.gender.normalize('NFKC').trim(),
     birthday: birthday(p.birthday),
     school: p.school.trim(),
     department: p.department.trim(),
@@ -53,6 +55,9 @@ export function validateProfile(p: Profile): string[] {
   if (!/^[ァ-ヶー]+$/.test(p.firstNameKana)) errors.push('メイは全角カナで入力してください');
   if (p.lastNameRomaji && !ROMAJI.test(p.lastNameRomaji)) errors.push('ローマ字姓は半角英字で入力してください');
   if (p.firstNameRomaji && !ROMAJI.test(p.firstNameRomaji)) errors.push('ローマ字名は半角英字で入力してください');
+  if (p.gender && !(GENDERS as readonly string[]).includes(p.gender)) {
+    errors.push('性別は「男性」「女性」「その他」「回答しない」から選んでください');
+  }
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
     errors.push('メールアドレスの形式が正しくありません');
   }

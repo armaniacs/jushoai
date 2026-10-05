@@ -8,6 +8,7 @@ const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
+  gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -50,6 +51,37 @@ describe('names', () => {
     const bare = { ...profile, lastNameRomaji: '', firstNameRomaji: '' };
     const plan = buildPlan([item('fullNameRomaji')], { profile: bare, address });
     expect(plan).toEqual([]);
+  });
+});
+
+describe('gender select', () => {
+  const options = [
+    { value: '', text: '選択してください' },
+    { value: '男性', text: '男性' },
+    { value: '女性', text: '女性' },
+    { value: 'その他', text: 'その他' },
+  ];
+
+  it('resolves a gender select to the matching option', () => {
+    const p = buildPlan([item('gender', { tag: 'select', options })], { profile, address })[0]!;
+    expect(p).toMatchObject({ value: '女性', display: '女性', status: 'ok' });
+  });
+
+  it('matches abbreviated options by leading character', () => {
+    const opts = [{ value: '0', text: '男' }, { value: '1', text: '女' }];
+    const p = buildPlan([item('gender', { tag: 'select', options: opts })], { profile, address })[0]!;
+    expect(p).toMatchObject({ value: '1', status: 'ok' });
+  });
+
+  it('warns when no option matches and skips when gender is empty', () => {
+    const other = { ...profile, gender: '回答しない' };
+    const warn = buildPlan(
+      [item('gender', { tag: 'select', options: [{ value: '', text: '-' }, { value: 'x', text: '男性' }] })],
+      { profile: other, address },
+    )[0]!;
+    expect(warn.status).toBe('warn-no-option');
+    const bare = { ...profile, gender: '' };
+    expect(buildPlan([item('gender', { tag: 'select', options })], { profile: bare, address })).toEqual([]);
   });
 });
 

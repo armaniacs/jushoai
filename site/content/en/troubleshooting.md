@@ -59,7 +59,7 @@ The preview lets you check fields and values before anything is filled. Only fie
 
 ### Which forms does it work on?
 
-It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. Items such as date of birth and gender are not handled.
+It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. Items such as date of birth are not handled. Gender is supported for select lists only.
 
 ### Ollama returns 403.
 

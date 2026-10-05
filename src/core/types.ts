@@ -2,6 +2,7 @@ export const CATEGORIES = [
   'lastName', 'firstName', 'fullName',
   'lastNameKana', 'firstNameKana', 'fullNameKana',
   'lastNameRomaji', 'firstNameRomaji', 'fullNameRomaji',
+  'gender',
   'email', 'tel', 'tel1', 'tel2', 'tel3',
   'zip', 'zip1', 'zip2',
   'prefecture', 'city', 'street', 'building',
@@ -50,6 +51,7 @@ export interface Profile {
   firstNameKana: string;
   lastNameRomaji: string;
   firstNameRomaji: string;
+  gender: string;
   birthday: string;
   school: string;
   department: string;
@@ -76,6 +78,7 @@ export const EMPTY_PROFILE: Profile = {
   id: '', label: '',
   lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
   lastNameRomaji: '', firstNameRomaji: '',
+  gender: '',
   birthday: '', school: '', department: '',
   email: '', tel: '',
 };
