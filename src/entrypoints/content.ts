@@ -56,11 +56,13 @@ export default defineContentScript({
       let items = await classifyAll(metas, classifier);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
+      let profileId = data.profiles[0]!.id;
       let addressId = data.addresses[0]!.id;
       let plan: PlanItem[] = [];
       const replan = (): PreviewRow[] => {
+        const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
         const address = data.addresses.find((a) => a.id === addressId) ?? null;
-        plan = buildPlan(items, { profile: data.profile, address });
+        plan = buildPlan(items, { profile, address });
         return plan.map((p) => {
           const m = byId.get(p.fieldId)!.meta;
           return {
@@ -88,6 +90,12 @@ export default defineContentScript({
         addresses: data.addresses,
         selectedAddressId: addressId,
         onReanalyze: classifier ? reanalyze : undefined,
+        profiles: data.profiles,
+        selectedProfileId: profileId,
+        onProfileChange: (id) => {
+          profileId = id;
+          preview.setRows(replan());
+        },
         onAddressChange: (id) => {
           addressId = id;
           preview.setRows(replan());

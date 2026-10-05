@@ -1,5 +1,5 @@
 import type { PlanStatus } from '../core/planner';
-import type { Address } from '../core/types';
+import type { Address, Profile } from '../core/types';
 import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
 
 export interface PreviewRow {
@@ -14,6 +14,9 @@ export interface PreviewOptions {
   addresses: Address[];
   selectedAddressId: string;
   onAddressChange(id: string): void;
+  profiles: Profile[];
+  selectedProfileId: string;
+  onProfileChange(id: string): void;
   onApply(): void;
   onCancel(): void;
   onReanalyze?(): void | Promise<void>;
@@ -59,6 +62,19 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const title = document.createElement('h2');
   title.textContent = '入力内容の確認';
   panel.append(title);
+
+  if (opts.profiles.length > 1) {
+    const select = document.createElement('select');
+    for (const p of opts.profiles) {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.label;
+      o.selected = p.id === opts.selectedProfileId;
+      select.append(o);
+    }
+    select.addEventListener('change', () => opts.onProfileChange(select.value));
+    panel.append(select);
+  }
 
   if (opts.addresses.length > 1) {
     const select = document.createElement('select');
