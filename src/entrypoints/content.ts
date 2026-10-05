@@ -1,11 +1,13 @@
 import { classifyAll } from '../core/analyze';
+import type { Item } from '../core/classify-rules';
 import { buildPlan, type PlanItem } from '../core/planner';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
-import { isReady, loadData } from '../storage';
+import { buildFeedbackIssueUrl, FEEDBACK_REPO, type FeedbackSnapshot } from '../feedback/issue-url';
+import { isReady, loadData, loadLastUsed, resolveLastId, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
@@ -35,7 +37,7 @@ export default defineContentScript({
     }
 
     async function run(container: Element, button: ButtonHandle) {
-      const data = await loadData();
+      const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
       if (!isReady(data)) {
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
@@ -55,9 +57,13 @@ export default defineContentScript({
       const metas = fields.map((f) => f.meta);
       let items = await classifyAll(metas, classifier);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
+      const snapshot = (list: Item[]): Map<string, FeedbackSnapshot> =>
+        new Map(list.map((i) => [i.meta.id, { category: i.cls.category, source: i.cls.source }]));
+      const beforeItems = snapshot(items);
+      let afterItems: Map<string, FeedbackSnapshot> | null = null;
 
-      let profileId = data.profiles[0]!.id;
-      let addressId = data.addresses[0]!.id;
+      let profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id)) ?? data.profiles[0]!.id;
+      let addressId = resolveLastId(last.addressId, data.addresses.map((a) => a.id)) ?? data.addresses[0]!.id;
       let plan: PlanItem[] = [];
       const replan = (): PreviewRow[] => {
         const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
@@ -77,6 +83,7 @@ export default defineContentScript({
       async function reanalyze() {
         if (!classifier) return;
         items = await classifyAll(metas, classifier, { force: true });
+        afterItems = snapshot(items);
         preview.setRows(replan());
       }
 
@@ -100,10 +107,22 @@ export default defineContentScript({
           addressId = id;
           preview.setRows(replan());
         },
-        onApply: () => {
+        onApply: (sendFeedback) => {
+          void saveLastUsed({ profileId, addressId });
           applyPlan(plan, byId, fillField);
           preview.close();
           openPreview = null;
+          if (sendFeedback && afterItems) {
+            const url = buildFeedbackIssueUrl(FEEDBACK_REPO, {
+              pageHref: location.href,
+              provider: info.provider,
+              version: chrome.runtime.getManifest().version,
+              before: beforeItems,
+              after: afterItems,
+              fields: metas,
+            });
+            window.open(url, '_blank', 'noopener');
+          }
         },
         onCancel: () => {
           preview.close();
