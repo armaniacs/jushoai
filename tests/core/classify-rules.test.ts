@@ -148,6 +148,18 @@ describe('classifyField: birth, school, department', () => {
     expect(cat({ label: '部署' })).toBeNull();
     expect(cat({ label: '昭和区' })).toBeNull();
   });
+
+  it('leaves bare birth-phrase fields unclassified', () => {
+    expect(cat({ label: '生年月日' })).toBeNull();
+    expect(cat({ label: '誕生日' })).toBeNull();
+    expect(cat({ label: 'Birthday' })).toBeNull();
+    expect(cat({ name: 'birthday' })).toBeNull();
+  });
+
+  it('still excludes company fields from the new categories', () => {
+    expect(cat({ label: 'Company Department' })).toBeNull();
+    expect(cat({ label: 'Department' })).toBe('department');
+  });
 });
 
 describe('refineClassifications', () => {

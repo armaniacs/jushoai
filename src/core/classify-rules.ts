@@ -134,22 +134,33 @@ export function classifyField(m: FieldMeta): Classification | null {
   const DEPT = /学部|学科|専攻|department|major|faculty/;
   const ownText = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
   const legendText = norm(m.nearby);
-  if (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) {
-    // 年/月/日 share 年月日, so month and day are tested first: 生年月日の月 must not
-    // read as a year, and 生年月日の日 must not read as a month.
-    if (/bday-month|month|(^|[^\d年月日])月/.test(ownText)) return make('birthMonth', 0.7);
-    if (/bday-day|day|(^|[^\d年月日])日/.test(ownText)) return make('birthDay', 0.7);
-    if (/bday-year|year|(^|[^\d年月日])年/.test(ownText)) return make('birthYear', 0.7);
+  const officeField = EXCLUDE.test(ownText);
+
+  const ownTrimmed = ownText.trim();
+  // A field that is only the birth phrase itself (a single full-date field) must not
+  // receive a partial year/month/day value.
+  if (/^(ご|御)?(誕生日|生年月日|誕生年月日)$/.test(ownTrimmed) || /^(birthday|date of birth)$/.test(ownTrimmed)) {
+    return null;
   }
-  const eraByContext = ERA_CTX.test(`${ownText} ${legendText}`) && ERA_NAME.test(ownText);
-  const eraExact =
-    /^(令和|平成|昭和|大正|明治)$/.test(m.label.trim()) ||
-    /^(令和|平成|昭和|大正|明治)$/.test(stripExample(m.placeholder).trim());
-  if (eraByContext || eraExact) return make('birthEra', 0.7);
-  if (SCHOOL.test(ownText)) return make('school', 0.7);
-  if (SCHOOL.test(legendText)) return make('school', 0.65);
-  if (DEPT.test(ownText)) return make('department', 0.7);
-  if (DEPT.test(legendText)) return make('department', 0.65);
+
+  if (!officeField) {
+    if (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) {
+      // 年/月/日 share 年月日, so month and day are tested first: 生年月日の月 must not
+      // read as a year, and 生年月日の日 must not read as a month.
+      if (/bday-month|(^|[^a-z])month|(^|[^\d年月日])月/.test(ownText)) return make('birthMonth', 0.7);
+      if (/bday-day|(^|[^a-z])day|(^|[^\d年月日])日/.test(ownText)) return make('birthDay', 0.7);
+      if (/bday-year|(^|[^a-z])year|(^|[^\d年月日])年/.test(ownText)) return make('birthYear', 0.7);
+    }
+    const eraByContext = ERA_CTX.test(`${ownText} ${legendText}`) && ERA_NAME.test(ownText);
+    const eraExact =
+      /^(令和|平成|昭和|大正|明治)$/.test(m.label.trim()) ||
+      /^(令和|平成|昭和|大正|明治)$/.test(stripExample(m.placeholder).trim());
+    if (eraByContext || eraExact) return make('birthEra', 0.7);
+    if (SCHOOL.test(ownText)) return make('school', 0.7);
+    if (SCHOOL.test(legendText)) return make('school', 0.65);
+    if (DEPT.test(ownText)) return make('department', 0.7);
+    if (DEPT.test(legendText)) return make('department', 0.65);
+  }
 
   const ph = stripExample(norm(m.placeholder));
   const placeholderIsKana = ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
