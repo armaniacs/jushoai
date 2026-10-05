@@ -23,12 +23,12 @@ Scenario: 一致なし・入力済みは触らない
 ```
 
 ## 受け入れ基準
-- [ ] radio群(fieldset/legend/name 単位)が1つの論理欄として走査される
-- [ ] radio群が gender に分類される
-- [ ] planner が radio群の選択肢解決(warn-no-option/filled 含む)ができる
-- [ ] fill が checked + input/change/blur 発火でフレームワークに検知される
-- [ ] プレビュー表示が radio群に対応する
-- [ ] 対象URL相当のサンプルで手動確認できる
+- [x] radio群(fieldset/legend/name 単位)が1つの論理欄として走査される
+- [x] radio群が gender に分類される
+- [x] planner が radio群の選択肢解決(warn-no-option/filled 含む)ができる
+- [x] fill が checked + input/change/blur 発火でフレームワークに検知される
+- [x] プレビュー表示が radio群に対応する(汎用行表示のため追加変更なし。表示文言はplannerテストで検証)
+- [ ] 対象URL相当のサンプルで手動確認できる(ユーザー作業として残す。自動e2eは来場アンケートfixtureで代替)
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -77,12 +77,12 @@ Outside-Inの縦スライス順:
 - フロント/バックの技術レイヤーで分割しないこと。radio群の縦スライスで進める
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] テストカバレッジが基準を満たす（E2E/統合/単体すべて）
-- [ ] `make check` が通る
-- [ ] コードレビュー完了
-- [ ] リファクタリング完了（グリーン後）
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが自動テストとして実装されパスする(手動確認を除く。一致なし・入力済みは単体テストで検証)
+- [x] テストカバレッジが基準を満たす（E2E/統合/単体すべて）
+- [x] `make check` が通る
+- [ ] コードレビュー完了(ユーザー作業として残す)
+- [x] リファクタリング完了（グリーン後）
+- [x] ドキュメント更新済み(サイト日英・CLAUDE.md・雛形スクリプトの除外理由)
 
 ## INVEST + Readyチェック
 - Independent: PBI-01完了後は単独で価値提供可(依存はPBI-01のみ)

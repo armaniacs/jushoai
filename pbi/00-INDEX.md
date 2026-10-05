@@ -18,3 +18,5 @@
 | 2026-10-04-06-refactor-classifier-seam.md | d689854 refactor: FieldClassifier seam を core に移動する |
 | 2026-10-05-01-feat-split-groups-distinct-labels.md | 4acc05d feat: ラベル別文言の電話・郵便番号分割欄に対応する |
 | 2026-10-05-03-feat-url-fixture-workflow.md | 5bc3851 feat: URL付きPBIのfixture雛形生成スクリプトと運用ルールを追加する |
+| 2026-10-05-02-backlog-gender-radio.md | 29823f6 feat: 性別・年代のradio群の走査・分類・注入に対応する |
+| 2026-10-05-04-backlog-age-decade-radio.md | 29823f6 feat: 性別・年代のradio群の走査・分類・注入に対応する |
