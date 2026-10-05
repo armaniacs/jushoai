@@ -4,13 +4,25 @@ import type { Address, Profile } from './types';
 
 const digits = (s: string) => s.normalize('NFKC').replace(/\D/g, '');
 const kana = (s: string) => toKatakana(s.normalize('NFKC').trim());
+// Accepts 1990/5/7 or 1990年5月7日 style input but leaves year-only strings untouched
+const birthday = (s: string) => {
+  const t = s.normalize('NFKC').trim();
+  const m = t.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})日?$/);
+  if (!m) return t;
+  return `${m[1]}-${m[2]!.padStart(2, '0')}-${m[3]!.padStart(2, '0')}`;
+};
 
 export function normalizeProfile(p: Profile): Profile {
   return {
+    id: p.id,
+    label: p.label.trim(),
     lastName: p.lastName.trim(),
     firstName: p.firstName.trim(),
     lastNameKana: kana(p.lastNameKana),
     firstNameKana: kana(p.firstNameKana),
+    birthday: birthday(p.birthday),
+    school: p.school.trim(),
+    department: p.department.trim(),
     email: p.email.normalize('NFKC').trim(),
     tel: digits(p.tel),
   };
@@ -38,6 +50,19 @@ export function validateProfile(p: Profile): string[] {
     errors.push('メールアドレスの形式が正しくありません');
   }
   if (p.tel && !/^\d{10,11}$/.test(p.tel)) errors.push('電話番号は10〜11桁の数字で入力してください');
+  if (!p.label.trim()) errors.push('プロファイルの名前を入力してください');
+  if (p.birthday) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(p.birthday)) {
+      errors.push('生年月日は YYYY-MM-DD の形式で入力してください');
+    } else {
+      // Round-trip through Date: rollover (e.g. Feb 30) shifts the fields and gets rejected
+      const [y, m, d] = p.birthday.split('-').map(Number);
+      const dt = new Date(y!, m! - 1, d!);
+      if (dt.getFullYear() !== y || dt.getMonth() !== m! - 1 || dt.getDate() !== d) {
+        errors.push('生年月日が正しい日付ではありません');
+      }
+    }
+  }
   return errors;
 }
 

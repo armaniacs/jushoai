@@ -20,12 +20,29 @@ describe('normalizeProfile', () => {
   it('trims email', () => {
     expect(normalizeProfile({ ...base, email: ' a@example.com ' }).email).toBe('a@example.com');
   });
+
+  it('normalizes birthday separators to zero-padded ISO', () => {
+    expect(normalizeProfile({ ...base, birthday: '1990/5/7' }).birthday).toBe('1990-05-07');
+    expect(normalizeProfile({ ...base, birthday: '1990年5月7日' }).birthday).toBe('1990-05-07');
+    expect(normalizeProfile({ ...base, birthday: '1990-05-07' }).birthday).toBe('1990-05-07');
+    expect(normalizeProfile({ ...base, birthday: '1990' }).birthday).toBe('1990');
+  });
+
+  it('keeps id and trims label, school, and department', () => {
+    const p = normalizeProfile({
+      ...base, id: 'p9', label: ' 仕事用 ', school: ' 都立日比谷高校 ', department: '普通科 ',
+    });
+    expect(p.id).toBe('p9');
+    expect(p.label).toBe('仕事用');
+    expect(p.school).toBe('都立日比谷高校');
+    expect(p.department).toBe('普通科');
+  });
 });
 
 describe('validateProfile', () => {
   it('accepts a valid profile', () => {
     const p = normalizeProfile({
-      ...base, lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+      ...base, label: 'メイン', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
       email: 'a@example.com', tel: '09012345678',
     });
     expect(validateProfile(p)).toEqual([]);
@@ -41,6 +58,27 @@ describe('validateProfile', () => {
         expect.stringContaining('メールアドレス'),
         expect.stringContaining('電話番号'),
       ]),
+    );
+  });
+
+  it('requires a label', () => {
+    expect(validateProfile({ ...EMPTY_PROFILE, label: '   ' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('プロファイルの名前')]),
+    );
+  });
+
+  it('accepts a blank birthday but rejects malformed or unreal dates', () => {
+    expect(validateProfile({ ...EMPTY_PROFILE, birthday: '' })).not.toEqual(
+      expect.arrayContaining([expect.stringContaining('生年月日')]),
+    );
+    expect(validateProfile({ ...EMPTY_PROFILE, birthday: '1990/5/7' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('生年月日')]),
+    );
+    expect(validateProfile({ ...EMPTY_PROFILE, birthday: '1990-13-01' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('生年月日')]),
+    );
+    expect(validateProfile({ ...EMPTY_PROFILE, birthday: '1990-02-30' })).toEqual(
+      expect.arrayContaining([expect.stringContaining('生年月日')]),
     );
   });
 });
