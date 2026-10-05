@@ -16,11 +16,11 @@ export type Category = (typeof CATEGORIES)[number];
 
 export type KanaKind = 'katakana' | 'hiragana' | 'halfKatakana';
 
-export interface SelectOption { value: string; text: string }
+export interface SelectOption { value: string; text: string; disabled?: boolean }
 
 export interface FieldMeta {
   id: string;
-  tag: 'input' | 'select';
+  tag: 'input' | 'select' | 'radio';
   type: string;
   name: string;
   htmlId: string;

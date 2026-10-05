@@ -189,13 +189,14 @@ export function classifyField(m: FieldMeta): Classification | null {
       return make('postalCode', 0.65);
     }
     // A numeric age text box (年齢を数字で入力) must not qualify: only selects
-    // whose options carry decade (代) readings are decade fields.
+    // and radio groups whose options carry decade (代) readings are decade fields.
     const AGE = /年齢|年代|ねんだい|年齢層|age/;
     const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
-    if (AGE.test(ownText) && m.tag === 'select' && hasDecadeOptions(m.options)) {
+    const isOptionField = m.tag === 'select' || m.tag === 'radio';
+    if (AGE.test(ownText) && isOptionField && hasDecadeOptions(m.options)) {
       return make('ageDecade', 0.7);
     }
-    if (AGE.test(legendText) && m.tag === 'select' && hasDecadeOptions(m.options)) {
+    if (AGE.test(legendText) && isOptionField && hasDecadeOptions(m.options)) {
       return make('ageDecade', 0.65);
     }
     // A half-width note plus a name signal means the field wants a latin name,

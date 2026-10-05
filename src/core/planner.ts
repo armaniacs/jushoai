@@ -113,13 +113,16 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     if (!raw) continue;
     const base = { fieldId: meta.id, category: cls.category, source: cls.source };
 
-    if (meta.tag === 'select') {
+    // A radio group resting with nothing checked is untouched; unlike a select it
+    // has no placeholder first option, so only an empty value counts as untouched.
+    const isUntouchedOption = meta.tag === 'select' ? isUntouchedSelect(meta) : meta.value === '';
+    if (meta.tag === 'select' || meta.tag === 'radio') {
       if (
         cls.category === 'prefecture' || cls.category === 'birthMonth' ||
         cls.category === 'birthDay' || cls.category === 'birthEra' ||
         cls.category === 'gender' || cls.category === 'ageDecade'
       ) {
-        if (!isUntouchedSelect(meta)) {
+        if (!isUntouchedOption) {
           plan.push({ ...base, value: '', display: raw, status: 'filled' });
           continue;
         }
@@ -133,7 +136,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
                 ? matchDecadeOption(meta.options, raw)
                 : matchNumberOption(meta.options, Number(raw));
         plan.push(
-          option
+          option && !(meta.tag === 'radio' && option.disabled)
             ? { ...base, value: option.value, display: option.text, status: 'ok' }
             : { ...base, value: '', display: raw, status: 'warn-no-option' },
         );

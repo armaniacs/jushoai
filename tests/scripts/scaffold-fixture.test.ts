@@ -31,7 +31,8 @@ describe('scaffold-fixture', () => {
     expect(skipped.map((s) => `${s.key}:${s.type}`)).toEqual(
       ['g:radio', 'g_empty:hidden', '(no name/id):submit'],
     );
-    for (const s of skipped) expect(s.reason).toMatch(/skip fixed|exclude/);
+    expect(skipped[0]!.reason).toMatch(/grouped as one field/);
+    for (const s of skipped.slice(1)) expect(s.reason).toMatch(/skip fixed|exclude/);
   });
 
   it('renders a fixture and planFor stub that mention skipped elements', () => {

@@ -133,14 +133,14 @@ describe('sample forms end to end', () => {
     });
   });
 
-  it('formmailer-anketo-gender resolves the prefecture and skips the gender radios', async () => {
+  it('formmailer-anketo-gender resolves the prefecture and the gender radios', async () => {
     expect(await planFor('formmailer-anketo-gender.html')).toEqual({
       field_2760246: '12',
+      field_2760244: '1',
     });
   });
 
-  // The age radios (field_4609097) are skipped until the radio backlog lands.
-  it('formmailer-raijo-age fills names and address but skips the age radios', async () => {
+  it('formmailer-raijo-age fills names, address and the age radios', async () => {
     expect(await planFor('formmailer-raijo-age.html')).toEqual({
       field_4609044_sei: '山田',
       field_4609044_mei: '太郎',
@@ -157,6 +157,7 @@ describe('sample forms end to end', () => {
       field_4609049_1: '090',
       field_4609049_2: '1234',
       field_4609049_3: '5678',
+      field_4609097: '1',
     });
   });
 

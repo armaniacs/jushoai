@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 
 const IN_SCOPE_TYPES = new Set(['text', 'email', 'tel', 'search']);
 const SKIP_REASONS = {
-  radio: 'out of scope until the radio backlog lands (skip fixed)',
+  radio: 'grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
   checkbox: 'out of scope (skip fixed)',
   hidden: 'empty-submit shim or server state, never a fill target (exclude)',
   submit: 'action element, never a fill target (exclude)',

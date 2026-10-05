@@ -3,8 +3,8 @@
   Local e2e fixture modeled on https://www.joshibi.ac.jp/overseas/webform
   (女子美術大学 海外住所入力フォーム). Field ids, names, labels, placeholders,
   types, and maxlengths mirror the real page; site chrome is omitted.
-  Radio inputs (受け取り方法) must be skipped: only text/email/tel/search and
-  select elements are scanned.
+  Radio inputs (受け取り方法) must be skipped: radio groups are scanned but only
+  gender and decade groups resolve, so this group stays unclassified.
 -->
 <html lang="ja"><meta charset="utf-8"><title>overseas webform (joshibi)</title>
 <form action="/overseas/webform" method="post" id="webform-submission-kaigai-add-form" accept-charset="UTF-8">

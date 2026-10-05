@@ -470,3 +470,26 @@ describe('wantsKana', () => {
     expect(wantsKana(makeMeta())).toBe(false);
   });
 });
+
+describe('radio group classification', () => {
+  const radio = (p: Partial<import('../../src/core/types').FieldMeta>) =>
+    makeMeta({ tag: 'radio', type: 'radio', ...p });
+  it('classifies a legend-labeled group as gender', () => {
+    expect(classifyField(radio({
+      name: 'field_2760244', label: '性別',
+      options: [{ value: '0', text: '男性' }, { value: '1', text: '女性' }],
+    }))?.category).toBe('gender');
+  });
+  it('classifies a decade-option group as ageDecade', () => {
+    expect(classifyField(radio({
+      name: 'field_4609097', label: '年齢',
+      options: [{ value: '0', text: '20代' }, { value: '1', text: '30代' }],
+    }))?.category).toBe('ageDecade');
+  });
+  it('leaves a non-decade radio group unclassified', () => {
+    expect(classifyField(radio({
+      name: 'field_4609054', label: '来場場所',
+      options: [{ value: '0', text: '東京' }, { value: '1', text: '大阪' }],
+    }))).toBeNull();
+  });
+});

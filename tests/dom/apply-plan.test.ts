@@ -58,3 +58,24 @@ describe('applyPlan', () => {
     expect(order).toEqual(['a', 's', 'b', 'zip', 'z1']);
   });
 });
+
+describe('applyPlan radio groups', () => {
+  const radios = () => {
+    document.body.innerHTML = '<input id="r0" name="g" type="radio" value="0"><input id="r1" name="g" type="radio" value="1">';
+    const inputs = Array.from(document.querySelectorAll('input'));
+    return new Map([['g', { el: inputs[0]!, radioInputs: inputs }]]);
+  };
+  it('fills the matching option input', () => {
+    const fill = vi.fn();
+    applyPlan([item('g', 'gender', '1')], radios(), fill);
+    expect(fill).toHaveBeenCalledTimes(1);
+    expect(fill.mock.calls[0]![0]).toBe(document.getElementById('r1'));
+  });
+  it('skips the group when one option is already checked', () => {
+    const map = radios();
+    (document.getElementById('r0') as HTMLInputElement).checked = true;
+    const fill = vi.fn();
+    applyPlan([item('g', 'gender', '1')], map, fill);
+    expect(fill).not.toHaveBeenCalled();
+  });
+});

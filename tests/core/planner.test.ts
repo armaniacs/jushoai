@@ -281,3 +281,42 @@ describe('birth selects', () => {
     expect(plan.map((p) => [p.value, p.display, p.status])).toEqual([[ '平成', '平成', 'ok' ]]);
   });
 });
+
+describe('radio groups', () => {
+  const genderMeta = (value = '') => makeMeta({
+    tag: 'radio', type: 'radio', name: 'g', label: '性別', value,
+    options: [{ value: '0', text: '男性' }, { value: '1', text: '女性' }],
+  });
+  it('resolves the gender option by text', () => {
+    const plan = buildPlan([{ meta: genderMeta(), cls: { category: 'gender', confidence: 0.7, source: 'rule' } }], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '1', display: '女性', status: 'ok' })]);
+  });
+  it('marks a checked group filled and an unmatched value warn-no-option', () => {
+    const checked = buildPlan([{ meta: genderMeta('0'), cls: { category: 'gender', confidence: 0.7, source: 'rule' } }], { profile, address });
+    expect(checked[0]!.status).toBe('filled');
+    const noMatch = buildPlan([{
+      meta: makeMeta({ tag: 'radio', type: 'radio', name: 'g', label: '性別', options: [{ value: '0', text: '男' }] }),
+      cls: { category: 'gender', confidence: 0.7, source: 'rule' },
+    }], { profile: { ...profile, gender: 'X' }, address });
+    expect(noMatch[0]!.status).toBe('warn-no-option');
+  });
+  it('resolves the decade from the birthday and rejects a disabled match', () => {
+    const decade = makeMeta({
+      tag: 'radio', type: 'radio', name: 'a', label: '年齢',
+      options: [{ value: '0', text: '20代' }, { value: '1', text: '30代' }],
+    });
+    const plan = buildPlan(
+      [{ meta: decade, cls: { category: 'ageDecade', confidence: 0.7, source: 'rule' } }],
+      { profile, address, today: new Date('2026-10-05') },
+    );
+    expect(plan[0]).toEqual(expect.objectContaining({ value: '1', display: '30代', status: 'ok' }));
+    const disabled = buildPlan(
+      [{
+        meta: makeMeta({ ...decade, options: [{ value: '1', text: '30代', disabled: true }] }),
+        cls: { category: 'ageDecade', confidence: 0.7, source: 'rule' },
+      }],
+      { profile, address, today: new Date('2026-10-05') },
+    );
+    expect(disabled[0]!.status).toBe('warn-no-option');
+  });
+});
