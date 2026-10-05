@@ -42,6 +42,21 @@ export function insertTestCase(source, stub) {
   return `${source.slice(0, idx)}\n${stub}${source.slice(idx + 1)}`;
 }
 
+export function buildWiring(html, sourceLabel, file) {
+  const extracted = extractControls(html);
+  const varName = varNameFromFile(file);
+  return {
+    file,
+    fixture: renderFixture(sourceLabel, extracted),
+    controls: extracted.controls.filter((c) => c.name).length,
+    applyTest(testSource) {
+      let s = insertImport(testSource, varName, file);
+      s = insertSampleEntry(s, file, varName);
+      return insertTestCase(s, renderTestStub(file, extracted));
+    },
+  };
+}
+
 // CLI: node scripts/add-fixture.mjs <url> [fixture-name]
 // Guarded so importing the pure functions has no side effects.
 if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
@@ -53,18 +68,11 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
     process.exit(1);
   }
   const html = await res.text();
-  const file = wanted ?? fixtureNameFromUrl(url);
-  const extracted = extractControls(html);
-  writeFileSync(new URL(`../samples/${file}`, import.meta.url), renderFixture(url, extracted));
-  const varName = varNameFromFile(file);
+  const wiring = buildWiring(html, url, wanted ?? fixtureNameFromUrl(url));
+  writeFileSync(new URL(`../samples/${wiring.file}`, import.meta.url), wiring.fixture);
   const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
-  let testSource = readFileSync(testPath, 'utf8');
-  testSource = insertImport(testSource, varName, file);
-  testSource = insertSampleEntry(testSource, file, varName);
-  testSource = insertTestCase(testSource, renderTestStub(file, extracted));
-  writeFileSync(testPath, testSource);
-  const todo = extracted.controls.filter((c) => c.name).length;
-  console.log(`wrote samples/${file} and wired a case into samples.test.ts (${todo} controls, expectations are '<expected>' placeholders).`);
+  writeFileSync(testPath, wiring.applyTest(readFileSync(testPath, 'utf8')));
+  console.log(`wrote samples/${wiring.file} and wired a case into samples.test.ts (${wiring.controls} controls, expectations are '<expected>' placeholders).`);
   console.log('next: trim the fixture to the smallest reproduction, fill the expectations, run vitest.');
 }
 }
