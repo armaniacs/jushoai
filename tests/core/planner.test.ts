@@ -126,3 +126,64 @@ describe('select and states', () => {
     expect(buildPlan([llm], { profile, address })[0]!.source).toBe('llm');
   });
 });
+
+describe('birthday', () => {
+  const dated = { ...profile, birthday: '1990-05-07' };
+  const datedValues = (items: Item[]) =>
+    buildPlan(items, { profile: dated, address }).map((p) => p.value);
+
+  it('splits an ISO birthday', () => {
+    expect(datedValues([item('birthYear'), item('birthMonth'), item('birthDay')])).toEqual(['1990', '05', '07']);
+  });
+
+  it('uses the wareki year when the form has an era field', () => {
+    const plan = buildPlan([item('birthEra'), item('birthYear')], { profile: dated, address });
+    expect(plan.map((p) => p.value)).toEqual(['平成', '2']);
+  });
+
+  it('skips birth fields when the birthday is empty or malformed', () => {
+    expect(buildPlan([item('birthYear')], { profile: { ...profile, birthday: '' }, address })).toEqual([]);
+    expect(buildPlan([item('birthYear')], { profile: { ...dated, birthday: '1990/5/7' }, address })).toEqual([]);
+  });
+});
+
+describe('school', () => {
+  const schooled = { ...profile, school: '都立日比谷高校', department: '普通科' };
+
+  it('fills school and department, skips when blank', () => {
+    const vals = buildPlan([item('school'), item('department')], { profile: schooled, address }).map((p) => p.value);
+    expect(vals).toEqual(['都立日比谷高校', '普通科']);
+    expect(buildPlan([item('school')], { profile: { ...profile, school: '' }, address })).toEqual([]);
+  });
+});
+
+describe('birth selects', () => {
+  const dated = { ...profile, birthday: '1990-05-07' };
+  const monthOpts = [{ value: '', text: '--' }, { value: '04', text: '4' }, { value: '05', text: '5' }];
+
+  it('matches month options by number across notations', () => {
+    const plan = buildPlan([item('birthMonth', { tag: 'select', options: monthOpts })], { profile: dated, address });
+    expect(plan.map((p) => [p.value, p.display, p.status])).toEqual([[ '05', '5', 'ok' ]]);
+  });
+
+  it('warns when no option matches and keeps filled selects', () => {
+    const noMatch = buildPlan(
+      [item('birthMonth', { tag: 'select', options: [{ value: '', text: '--' }] })],
+      { profile: dated, address },
+    );
+    expect(noMatch.map((p) => p.status)).toEqual(['warn-no-option']);
+    const filled = buildPlan(
+      [item('birthMonth', { tag: 'select', value: '04', options: monthOpts })],
+      { profile: dated, address },
+    );
+    expect(filled.map((p) => p.status)).toEqual(['filled']);
+  });
+
+  it('matches an era option by text', () => {
+    const plan = buildPlan(
+      [item('birthEra', { tag: 'select', options: [{ value: '', text: '--' }, { value: '平成', text: '平成' }, { value: '令和', text: '令和' }] })],
+      { profile: dated, address },
+    );
+    expect(plan.map((p) => [p.value, p.display, p.status])).toEqual([[ '平成', '平成', 'ok' ]]);
+  });
+});

@@ -1,5 +1,8 @@
 import type { Item } from './classify-rules';
 import {
+  matchEraOption, matchNumberOption, splitBirthday, toEraDate,
+} from './eras';
+import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
 } from './formatters';
 import { matchPrefectureOption } from './prefectures';
@@ -33,6 +36,7 @@ function valueFor(
     present.has('building') || !a?.building ? base : `${base} ${a.building}`;
   const tel = (i: number) => (p.tel ? (splitTel(p.tel)[i] ?? '') : '');
   const zip = (i: number) => (a ? (splitZip(a.zip)[i] ?? '') : '');
+  const bd = splitBirthday(p.birthday);
 
   switch (cls.category) {
     case 'lastName': return p.lastName;
@@ -63,6 +67,18 @@ function valueFor(
     case 'building': return a?.building ?? '';
     case 'addressNoPref': return a ? withBuilding(a.city + a.street) : '';
     case 'addressFull': return a ? withBuilding(a.prefecture + a.city + a.street) : '';
+    case 'birthYear':
+      if (!bd) return '';
+      if (present.has('birthEra')) {
+        const e = toEraDate(p.birthday);
+        return e ? String(e.year) : '';
+      }
+      return bd.y;
+    case 'birthMonth': return bd ? bd.m : '';
+    case 'birthDay': return bd ? bd.d : '';
+    case 'birthEra': return p.birthday ? (toEraDate(p.birthday)?.era ?? '') : '';
+    case 'school': return p.school;
+    case 'department': return p.department;
     case 'unknown': return '';
   }
 }
@@ -82,17 +98,26 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     const base = { fieldId: meta.id, category: cls.category, source: cls.source };
 
     if (meta.tag === 'select') {
-      if (cls.category !== 'prefecture') continue;
-      if (!isUntouchedSelect(meta)) {
-        plan.push({ ...base, value: '', display: raw, status: 'filled' });
+      if (
+        cls.category === 'prefecture' || cls.category === 'birthMonth' ||
+        cls.category === 'birthDay' || cls.category === 'birthEra'
+      ) {
+        if (!isUntouchedSelect(meta)) {
+          plan.push({ ...base, value: '', display: raw, status: 'filled' });
+          continue;
+        }
+        const option = cls.category === 'prefecture'
+          ? matchPrefectureOption(meta.options, raw)
+          : cls.category === 'birthEra'
+            ? matchEraOption(meta.options, raw)
+            : matchNumberOption(meta.options, Number(raw));
+        plan.push(
+          option
+            ? { ...base, value: option.value, display: option.text, status: 'ok' }
+            : { ...base, value: '', display: raw, status: 'warn-no-option' },
+        );
         continue;
       }
-      const option = matchPrefectureOption(meta.options, raw);
-      plan.push(
-        option
-          ? { ...base, value: option.value, display: option.text, status: 'ok' }
-          : { ...base, value: '', display: raw, status: 'warn-no-option' },
-      );
       continue;
     }
 
