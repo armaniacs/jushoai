@@ -37,7 +37,7 @@ const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string 
   { key: 'address2', label: '番地（半角英数・任意）', placeholder: '25-15 M.G.Peterson Ave' },
   { key: 'address3', label: '市（半角英数・任意）', placeholder: 'Long Island City' },
   { key: 'address4', label: '州・地域（半角英数・任意）', placeholder: 'NEW YORK' },
-  { key: 'postalCode', label: '海外の郵便番号（半角英数・任意）', placeholder: '11375' },
+  { key: 'postalCode', label: '英語の郵便番号（半角英数・任意）', placeholder: '11375' },
 ];
 
 const app = document.getElementById('app')!;
@@ -151,7 +151,7 @@ function render(notice?: HTMLElement) {
       set.append(labeled(f.label, textInput(a[f.key], f.placeholder, (v) => { a[f.key] = v; })));
     }
     const overseasTitle = document.createElement('h3');
-    overseasTitle.textContent = '海外住所（任意）';
+    overseasTitle.textContent = '英語住所（任意）';
     set.append(overseasTitle);
     for (const f of OVERSEAS_FIELDS) {
       set.append(labeled(f.label, textInput(a[f.key] ?? '', f.placeholder, (v) => { a[f.key] = v; })));

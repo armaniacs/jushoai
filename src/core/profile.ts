@@ -102,9 +102,9 @@ export function validateAddress(a: Address): string[] {
   // A country declares an overseas address: domestic fields stop being required,
   // and overseas lines must be half-width ASCII for half-width-only forms.
   const overseas = OVERSEAS_LABELS.some(([k]) => a[k]);
-  if (overseas && !a.country) errors.push('海外住所の国名を入力してください');
+  if (overseas && !a.country) errors.push('英語住所の国名を入力してください');
   for (const [k, label] of OVERSEAS_LABELS) {
-    if (a[k] && !ASCII.test(a[k])) errors.push(`海外住所の${label}は半角英数で入力してください`);
+    if (a[k] && !ASCII.test(a[k])) errors.push(`英語住所の${label}は半角英数で入力してください`);
   }
   if (!a.country) {
     if (!/^\d{7}$/.test(a.zip)) errors.push('郵便番号は7桁の数字で入力してください');
