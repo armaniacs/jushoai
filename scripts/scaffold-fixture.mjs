@@ -89,12 +89,15 @@ export function renderTestStub(fileName, { controls, skipped }) {
 }
 
 // CLI: node scripts/scaffold-fixture.mjs <source.html> [fixture-name]
-const [src, fixtureName] = process.argv.slice(2);
-if (src) {
-  const html = readFileSync(src, 'utf8');
-  const extracted = extractControls(html);
-  const name = fixtureName ?? 'new-fixture.html';
-  process.stdout.write(renderFixture(src, extracted));
-  process.stdout.write('\n');
-  process.stdout.write(renderTestStub(name, extracted));
+// Guarded so importing the pure functions has no side effects.
+if (process.argv[1]?.endsWith('scripts/scaffold-fixture.mjs')) {
+  const [src, fixtureName] = process.argv.slice(2);
+  if (src) {
+    const html = readFileSync(src, 'utf8');
+    const extracted = extractControls(html);
+    const name = fixtureName ?? 'new-fixture.html';
+    process.stdout.write(renderFixture(src, extracted));
+    process.stdout.write('\n');
+    process.stdout.write(renderTestStub(name, extracted));
+  }
 }
