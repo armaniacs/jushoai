@@ -118,6 +118,38 @@ describe('detectKanaKind', () => {
   });
 });
 
+describe('classifyField: birth, school, department', () => {
+  it('uses bday autocomplete with highest confidence', () => {
+    expect(classifyField(makeMeta({ autocomplete: 'bday-year' }))).toMatchObject({ category: 'birthYear', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'bday-month' }))).toMatchObject({ category: 'birthMonth', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'bday-day' }))).toMatchObject({ category: 'birthDay', confidence: 0.95 });
+  });
+
+  it.each([
+    [{ label: '生年月日の年', nearby: '生年月日' }, 'birthYear'],
+    [{ label: '生年月日の月', nearby: '生年月日' }, 'birthMonth'],
+    [{ label: '生年月日の日', nearby: '生年月日' }, 'birthDay'],
+    [{ label: '年', nearby: '生年月日' }, 'birthYear'],
+    [{ label: '元号' }, 'birthEra'],
+    [{ label: '令和' }, 'birthEra'],
+    [{ label: '学校名' }, 'school'],
+    [{ label: '学部・学科' }, 'department'],
+  ])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it('does not confuse 年月日 parts', () => {
+    expect(cat({ label: '生年月日の月' })).toBe('birthMonth');
+    expect(cat({ label: '生年月日の日' })).toBe('birthDay');
+  });
+
+  it('keeps company, division, and ward fields out', () => {
+    expect(cat({ label: '会社名' })).toBeNull();
+    expect(cat({ label: '部署' })).toBeNull();
+    expect(cat({ label: '昭和区' })).toBeNull();
+  });
+});
+
 describe('refineClassifications', () => {
   const item = (category: Category, id: string) => ({
     meta: makeMeta({ id }),
@@ -235,7 +267,7 @@ describe('classifyField: Japanese labels', () => {
     { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
     { label: 'ご担当者名' }, { label: '会社名' }, { label: '部署名' }, { label: '備考' },
-    { label: 'お問い合わせ内容' }, { label: 'パスワード' }, { label: '生年月日' },
+    { label: 'お問い合わせ内容' }, { label: 'パスワード' },
     { label: '性別' }, { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },
   ];
