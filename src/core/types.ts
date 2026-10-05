@@ -2,7 +2,7 @@ export const CATEGORIES = [
   'lastName', 'firstName', 'fullName',
   'lastNameKana', 'firstNameKana', 'fullNameKana',
   'lastNameRomaji', 'firstNameRomaji', 'fullNameRomaji',
-  'gender',
+  'gender', 'ageDecade',
   'email', 'tel', 'tel1', 'tel2', 'tel3',
   'zip', 'zip1', 'zip2',
   'prefecture', 'city', 'street', 'building',

@@ -1,4 +1,6 @@
-import type { Category, Classification, FieldMeta, KanaKind } from './types';
+import type {
+  Category, Classification, FieldMeta, KanaKind, SelectOption,
+} from './types';
 import { stripExample } from './formatters';
 
 export const ACCEPT_THRESHOLD = 0.6;
@@ -164,6 +166,16 @@ export function classifyField(m: FieldMeta): Classification | null {
     if (DEPT.test(legendText)) return make('department', 0.65);
     if (GENDER.test(ownText)) return make('gender', 0.7);
     if (GENDER.test(legendText)) return make('gender', 0.65);
+    // A numeric age text box (年齢を数字で入力) must not qualify: only selects
+    // whose options carry decade (代) readings are decade fields.
+    const AGE = /年齢|年代|ねんだい|年齢層|age/;
+    const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
+    if (AGE.test(ownText) && m.tag === 'select' && hasDecadeOptions(m.options)) {
+      return make('ageDecade', 0.7);
+    }
+    if (AGE.test(legendText) && m.tag === 'select' && hasDecadeOptions(m.options)) {
+      return make('ageDecade', 0.65);
+    }
     // A half-width note plus a name signal means the field wants a latin name,
     // even when name/id alone would read as a plain Japanese name (name_last).
     // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.

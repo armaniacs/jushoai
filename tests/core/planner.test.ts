@@ -171,6 +171,30 @@ describe('select and states', () => {
   });
 });
 
+describe('age decade select', () => {
+  const options = [
+    { value: '', text: '-' },
+    { value: '0', text: '20代' },
+    { value: '1', text: '30代' },
+  ];
+  const today = new Date(2026, 9, 5);
+
+  it('resolves the decade derived from the birthday', () => {
+    const p = buildPlan([item('ageDecade', { tag: 'select', options })], { profile, address, today })[0]!;
+    expect(p).toMatchObject({ value: '1', display: '30代', status: 'ok' });
+  });
+
+  it('warns when the decade option is missing and skips when birthday is empty', () => {
+    const missing = buildPlan(
+      [item('ageDecade', { tag: 'select', options: [{ value: '', text: '-' }, { value: '0', text: '20代' }] })],
+      { profile, address, today },
+    )[0]!;
+    expect(missing.status).toBe('warn-no-option');
+    const bare = { ...profile, birthday: '' };
+    expect(buildPlan([item('ageDecade', { tag: 'select', options })], { profile: bare, address, today })).toEqual([]);
+  });
+});
+
 describe('birthday', () => {
   const dated = { ...profile, birthday: '1990-05-07' };
   const datedValues = (items: Item[]) =>

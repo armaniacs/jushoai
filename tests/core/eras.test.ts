@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  matchEraOption, matchNumberOption, splitBirthday, toEraDate,
+  matchDecadeOption, matchEraOption, matchNumberOption, splitBirthday, toDecade, toEraDate,
 } from '../../src/core/eras';
 import type { SelectOption } from '../../src/core/types';
 
@@ -49,6 +49,43 @@ describe('matchNumberOption', () => {
   it('returns null when nothing matches', () => {
     expect(matchNumberOption(options, 7)).toBeNull();
     expect(matchNumberOption(options, NaN)).toBeNull();
+  });
+});
+
+describe('toDecade', () => {
+  const today = new Date(2026, 9, 5);
+  it.each([
+    ['1990-05-07', '30代'],
+    ['2006-10-05', '20代'],
+    ['2006-10-06', '10代'],
+    ['1956-10-05', '70代以上'],
+    ['1940-01-01', '70代以上'],
+    ['2016-05-07', '10代'],
+    ['2020-01-01', '10代未満'],
+  ])('converts %s to %s', (iso, expected) => {
+    expect(toDecade(iso, today)).toBe(expected);
+  });
+
+  it('returns null for blank, malformed, or future birthdays', () => {
+    expect(toDecade('', today)).toBeNull();
+    expect(toDecade('1990/5/7', today)).toBeNull();
+    expect(toDecade('2030-01-01', today)).toBeNull();
+  });
+});
+
+describe('matchDecadeOption', () => {
+  const options = opts([['', '--'], ['0', '20代'], ['1', '30代']]);
+
+  it('matches exact text, then numeric notation', () => {
+    expect(matchDecadeOption(options, '30代')).toEqual({ value: '1', text: '30代' });
+    expect(matchDecadeOption(opts([['a', '30歳代']]), '30代')).toEqual({ value: 'a', text: '30歳代' });
+    expect(matchDecadeOption(opts([['a', '30s']]), '30代')).toEqual({ value: 'a', text: '30s' });
+  });
+
+  it('returns null for blank, unknown, or under-10 decades', () => {
+    expect(matchDecadeOption(options, '')).toBeNull();
+    expect(matchDecadeOption(options, '40代')).toBeNull();
+    expect(matchDecadeOption(options, '10代未満')).toBeNull();
   });
 });
 

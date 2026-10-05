@@ -305,6 +305,27 @@ describe('classifyField: gender', () => {
   });
 });
 
+describe('classifyField: age decade', () => {
+  const decade = (label: string): Parameters<typeof makeMeta>[0] => ({
+    tag: 'select', label,
+    options: [{ value: '', text: '-' }, { value: '0', text: '20代' }, { value: '1', text: '30代' }],
+  });
+  it.each([
+    '年齢', '年齢層', '年代', 'ねんだい', 'Age',
+  ])('classifies select %s as ageDecade', (label) => {
+    expect(cat(decade(label))).toBe('ageDecade');
+  });
+
+  it.each([
+    { label: '年齢', placeholder: '30' },
+    { label: 'ご来場予定人数' },
+    { label: '学年' },
+    { label: '年代物の家具' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as ageDecade', (p) => {
+    expect(cat(p)).not.toBe('ageDecade');
+  });
+});
+
 describe('classifyField: romaji names', () => {
   it.each([
     [{ label: '①Name（最大文字数：80） ※半角英数で入力', name: 'name_last' }, 'fullNameRomaji'],

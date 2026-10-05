@@ -1,6 +1,6 @@
 import type { Item } from './classify-rules';
 import {
-  matchEraOption, matchNumberOption, splitBirthday, toEraDate,
+  matchDecadeOption, matchEraOption, matchNumberOption, splitBirthday, toDecade, toEraDate,
 } from './eras';
 import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
@@ -23,12 +23,13 @@ export interface PlanItem {
 export interface PlanContext {
   profile: Profile;
   address: Address | null;
+  today?: Date;
 }
 
 function valueFor(
   cls: Classification,
   meta: FieldMeta,
-  { profile: p, address: a }: PlanContext,
+  { profile: p, address: a, today }: PlanContext,
   present: Set<Category>,
 ): string {
   const kind = cls.kanaKind ?? 'katakana';
@@ -87,6 +88,7 @@ function valueFor(
     case 'school': return p.school;
     case 'department': return p.department;
     case 'gender': return p.gender;
+    case 'ageDecade': return toDecade(p.birthday, today) ?? '';
     case 'unknown': return '';
   }
 }
@@ -109,7 +111,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
       if (
         cls.category === 'prefecture' || cls.category === 'birthMonth' ||
         cls.category === 'birthDay' || cls.category === 'birthEra' ||
-        cls.category === 'gender'
+        cls.category === 'gender' || cls.category === 'ageDecade'
       ) {
         if (!isUntouchedSelect(meta)) {
           plan.push({ ...base, value: '', display: raw, status: 'filled' });
@@ -121,7 +123,9 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
             ? matchEraOption(meta.options, raw)
             : cls.category === 'gender'
               ? matchGenderOption(meta.options, raw)
-              : matchNumberOption(meta.options, Number(raw));
+              : cls.category === 'ageDecade'
+                ? matchDecadeOption(meta.options, raw)
+                : matchNumberOption(meta.options, Number(raw));
         plan.push(
           option
             ? { ...base, value: option.value, display: option.text, status: 'ok' }

@@ -14,6 +14,7 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 - school: 学校名 / department: 学部・学科
 - lastNameRomaji: 姓(ローマ字・半角英字) / firstNameRomaji: 名(ローマ字) / fullNameRomaji: 姓名のローマ字を1欄に入力(半角英数指定)
 - gender: 性別
+- ageDecade: 年代(20代〜70代以上。生年月日から導出する値)
 - prefecture: 都道府県 / city: 市区町村 / street: 番地 / building: 建物名・部屋番号
 - addressFull: 都道府県から全部入る住所1欄 / addressNoPref: 市区町村以降の住所1欄
 - unknown: 上記のどれでもない

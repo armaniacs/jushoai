@@ -12,6 +12,7 @@ import split from '../../samples/split-form.html?raw';
 import table from '../../samples/table-form.html?raw';
 import roman from '../../samples/roman-name-form.html?raw';
 import gender from '../../samples/gender-select-form.html?raw';
+import decade from '../../samples/age-decade-select-form.html?raw';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
@@ -19,6 +20,7 @@ const SAMPLES: Record<string, string> = {
   'single-field-form.html': single,
   'roman-name-form.html': roman,
   'gender-select-form.html': gender,
+  'age-decade-select-form.html': decade,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -37,12 +39,12 @@ const address: Address = {
   street: '千代田1-1', building: '千代田ビル101',
 };
 
-async function planFor(file: string): Promise<Record<string, string>> {
+async function planFor(file: string, today?: Date): Promise<Record<string, string>> {
   const html = SAMPLES[file]!;
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
   const fields = scanFields(document.body);
   const items = await classifyAll(fields.map((f) => f.meta), null);
-  const plan = buildPlan(items, { profile, address });
+  const plan = buildPlan(items, { profile, address, today });
   const keyOf = new Map(fields.map((f) => [f.meta.id, f.meta.name || f.meta.htmlId]));
   const out: Record<string, string> = {};
   for (const p of plan) if (p.status === 'ok') out[keyOf.get(p.fieldId)!] = p.value;
@@ -102,6 +104,12 @@ describe('sample forms end to end', () => {
   it('gender-select-form fills the gender select', async () => {
     expect(await planFor('gender-select-form.html')).toEqual({
       sex: '女性', fullname: '山田　太郎',
+    });
+  });
+
+  it('age-decade-select-form fills the decade derived from the birthday', async () => {
+    expect(await planFor('age-decade-select-form.html', new Date(2026, 9, 5))).toEqual({
+      age: '1', fullname: '山田　太郎',
     });
   });
 

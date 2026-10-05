@@ -21,6 +21,20 @@ export function toEraDate(iso: string): EraDate | null {
   return current;
 }
 
+// Full age on the reference day; the birthday itself counts as reached.
+// `today` is a parameter (not `new Date()` inside) so tests pin the boundary.
+export function toDecade(iso: string, today: Date = new Date()): string | null {
+  const parts = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').map(Number) : null;
+  if (!parts) return null;
+  const [y, m, d] = parts as [number, number, number];
+  let age = today.getFullYear() - y!;
+  if (today.getMonth() + 1 < m! || (today.getMonth() + 1 === m! && today.getDate() < d!)) age -= 1;
+  if (age < 0) return null;
+  if (age < 10) return '10代未満';
+  if (age >= 70) return '70代以上';
+  return `${Math.floor(age / 10) * 10}代`;
+}
+
 export function splitBirthday(iso: string): { y: string; m: string; d: string } | null {
   const parts = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-') : null;
   if (!parts) return null;
@@ -36,6 +50,20 @@ const leadingDigits = (s: string) => {
 export function matchNumberOption(options: SelectOption[], n: number): SelectOption | null {
   if (!Number.isInteger(n)) return null;
   return options.find((o) => leadingDigits(o.value) === n || leadingDigits(o.text) === n) ?? null;
+}
+
+// Exact text/value wins; otherwise the leading number absorbs 20歳代/20s style
+// variants. An under-10 decade never falls back to 10代, only exact matches.
+export function matchDecadeOption(options: SelectOption[], decade: string): SelectOption | null {
+  const t = decade.normalize('NFKC').trim();
+  if (!t) return null;
+  const exact = options.find((o) => o.text.normalize('NFKC').trim() === t)
+    ?? options.find((o) => o.value.normalize('NFKC').trim() === t);
+  if (exact) return exact;
+  if (/未満/.test(t)) return null;
+  const n = leadingDigits(t);
+  if (Number.isNaN(n)) return null;
+  return options.find((o) => leadingDigits(o.text) === n || leadingDigits(o.value) === n) ?? null;
 }
 
 export function matchEraOption(options: SelectOption[], era: string): SelectOption | null {
