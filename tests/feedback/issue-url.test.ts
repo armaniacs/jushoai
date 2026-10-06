@@ -29,7 +29,9 @@ describe('buildFeedbackIssueUrl', () => {
     expect(`${u.origin}${u.pathname}`).toBe('https://github.com/armaniacs/jushoai/issues/new');
     expect(u.searchParams.get('labels')).toBe('feedback');
     const body = u.searchParams.get('body') ?? '';
-    expect(body).toContain('初回では該当のURLは成功しなかった');
+    expect(body).toContain('初回では入力できなかったが、AIで分析したら成功した');
+    expect(body).toContain('開発に報告する');
+    expect(body).not.toContain('FB');
     expect(body).toContain('https://pro.form-mailer.jp/fms/abc');
     expect(body).not.toContain('token=secret');
     expect(body).not.toContain('SECRET-PAGE-VALUE');
@@ -48,6 +50,8 @@ describe('buildFeedbackIssueUrl', () => {
     });
     const u = new URL(url);
     expect(u.searchParams.get('title')).toContain('AIで分析');
+    expect(u.searchParams.get('title')).toContain('開発に報告');
+    expect(u.searchParams.get('title')).not.toContain('FB');
     expect(u.searchParams.get('title')).not.toContain('LLM');
     expect(u.searchParams.get('body')).not.toContain('LLM');
   });

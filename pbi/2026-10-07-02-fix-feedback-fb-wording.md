@@ -29,12 +29,12 @@ Scenario: 送る内容が変わらない
   Then title と body 冒頭の文言以外は変わらない
 
 ## 受け入れ基準
-- [ ] Issue title に FB という略語が残っていない
-- [ ] Issue body 冒頭が画面の報告表記と一致する言葉になっている
-- [ ] repo・labels が不変である
-- [ ] field metadata の内容が不変である
-- [ ] site 日英の該当記載があれば画面・Issue 文言と一致する
-- [ ] 既存テストが green である
+- [x] Issue title に FB という略語が残っていない
+- [x] Issue body 冒頭が画面の報告表記と一致する言葉になっている
+- [x] repo・labels が不変である
+- [x] field metadata の内容が不変である
+- [x] site 日英の該当記載があれば画面・Issue 文言と一致する
+- [x] 既存テストが green である
 
 ## テスト戦略
 - 単体: vitest で `tests/` の feedback 系に title と body 文言の期待値を追加・更新する
@@ -44,6 +44,6 @@ Scenario: 送る内容が変わらない
 0.5pt
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] ドキュメント更新済み

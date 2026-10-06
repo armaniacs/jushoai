@@ -40,9 +40,9 @@ export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): strin
       return 'unknown';
     }
   })();
-  const title = `分類FB: 初回NG→AIで分析OK (${host})`;
+  const title = `開発に報告: 初回NG→AIで分析OK (${host})`;
   const lines: string[] = [
-    '初回では該当のURLは成功しなかったが、AIで分析したら成功した。',
+    '初回では入力できなかったが、AIで分析したら成功した。「開発に報告する」から送る報告です。',
     '',
     `- Page: ${page}`,
     `- Provider: ${input.provider}`,
