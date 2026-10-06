@@ -23,7 +23,7 @@ function open(opts: Partial<PreviewOptions> = {}) {
 }
 
 const feedbackLabel = (root: ShadowRoot) =>
-  [...root.querySelectorAll('label')].find((l) => l.textContent === '開発にFBする');
+  [...root.querySelectorAll('label')].find((l) => l.textContent === '開発に報告する');
 const isFeedbackVisible = (root: ShadowRoot) => {
   const l = feedbackLabel(root);
   return !!l && !(l as HTMLElement).hidden;
@@ -41,7 +41,7 @@ describe('preview feedback checkbox', () => {
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     const actions = [...root.querySelectorAll('.actions')[0]!.children].map((el) => el.textContent);
-    expect(actions.indexOf('開発にFBする')).toBeGreaterThan(actions.indexOf('入力する'));
+    expect(actions.indexOf('開発に報告する')).toBeGreaterThan(actions.indexOf('入力する'));
     expect(applyButton(root)!.disabled).toBe(false);
   });
 

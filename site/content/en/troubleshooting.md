@@ -167,7 +167,7 @@ No. Communication happens only when you click `JushoAI で入力` (fill with Jus
 
 ### A field stays empty even after re-analysis.
 
-Filling it by hand is fine. JushoAI never breaks fields that already have a value. When re-analysis makes a form work, you can tell the developers with `開発にFBする` (send feedback) in the preview.
+Filling it by hand is fine. JushoAI never breaks fields that already have a value. When re-analysis makes a form work, you can tell the developers with `開発に報告する` (send feedback) in the preview.
 
 ### I want a form to be supported.
 

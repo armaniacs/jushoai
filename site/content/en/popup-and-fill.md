@@ -39,7 +39,7 @@ Fields classified by AI are marked `AI判定` (decided by AI). Close the preview
 
 If some fields could not be classified by the rules, use `AI で分析` (analyze with AI) in the preview to have the AI you configured classify them again. Once configured, fields the rules could not identify can also be classified by AI. See [Setting up an AI provider](/en/guides/ai-providers/) for the AI settings.
 
-If re-analysis makes a form work, you can tell the developers with `開発にFBする` (send feedback). It opens a public GitHub issue and sends only field metadata, never your profile values.
+If re-analysis makes a form work, you can tell the developers with `開発に報告する` (send feedback). It opens a public GitHub issue and sends only field metadata, never your profile values.
 
 ## What to read next
 
