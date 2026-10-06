@@ -52,6 +52,18 @@ describe('tel / zip', () => {
   it('splits 10-digit numbers with 4-digit area codes as 4-2-4', () => {
     expect(splitTel('0134321234')).toEqual(['0134', '32', '1234']);
     expect(splitTel('0166231234')).toEqual(['0166', '23', '1234']);
+    // Codes from the MIC list (2026-03-01) missing from the old table.
+    expect(splitTel('0422121234')).toEqual(['0422', '12', '1234']);
+    expect(splitTel('0439121234')).toEqual(['0439', '12', '1234']);
+    expect(splitTel('0533121234')).toEqual(['0533', '12', '1234']);
+    expect(splitTel('0743121234')).toEqual(['0743', '12', '1234']);
+    expect(splitTel('0798121234')).toEqual(['0798', '12', '1234']);
+    expect(splitTel('0848121234')).toEqual(['0848', '12', '1234']);
+  });
+
+  it('splits 10-digit numbers with 5-digit area codes as 5-1-4', () => {
+    expect(splitTel('0126711234')).toEqual(['01267', '1', '1234']);
+    expect(splitTel('0499811234')).toEqual(['04998', '1', '1234']);
   });
 
   it('splits zip', () => {
