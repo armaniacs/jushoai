@@ -2,7 +2,12 @@
 
 ## 進行中
 
-- （なし）
+- arch深掘りラウンド（2026-10-07）: 05 → 06 → 07（逐次・統合側）
+- `2026-10-07-05-fix-analyze-reason-union.md` — AnalyzeResponse reason の union 化
+- `2026-10-07-06-docs-classify-caps-contract.md` — 送信上限 30/20/60 の契約コメント
+- `2026-10-07-07-refactor-nav-hash-helper.md` — nav hash 読みの helper 抽出
+
+台帳: `2026-10-07-00-backlog-arch-deepening-b.md`
 
 台帳: `2026-10-07-00-backlog-holistic-improvement-b.md`
 
