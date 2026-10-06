@@ -25,6 +25,7 @@ export interface PreviewOptions {
 export interface PreviewHandle {
   setRows(rows: PreviewRow[]): void;
   setReanalyzing(busy: boolean): void;
+  setAddressId(id: string): void;
   close(): void;
 }
 
@@ -79,6 +80,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     panel.append(select);
   }
 
+  let addressSelect: HTMLSelectElement | null = null;
   if (opts.addresses.length > 1) {
     const select = document.createElement('select');
     for (const a of opts.addresses) {
@@ -90,6 +92,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     }
     select.addEventListener('change', () => opts.onAddressChange(select.value));
     panel.append(select);
+    addressSelect = select;
   }
 
   const list = document.createElement('ul');
@@ -199,5 +202,8 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   setRows(opts.rows);
   root.append(style, panel);
   document.body.append(host);
-  return { setRows, setReanalyzing, close };
+  const setAddressId = (id: string): void => {
+    if (addressSelect) addressSelect.value = id;
+  };
+  return { setRows, setReanalyzing, setAddressId, close };
 }

@@ -7,7 +7,7 @@ import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { buildFeedbackIssueUrl, FEEDBACK_REPO, type FeedbackSnapshot } from '../feedback/issue-url';
-import { isReady, loadData, loadLastUsed, resolveLastId, saveLastUsed } from '../storage';
+import { isReady, loadData, loadLastUsed, resolveAddressId, resolveLastId, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
@@ -63,7 +63,7 @@ export default defineContentScript({
       let afterItems: Map<string, FeedbackSnapshot> | null = null;
 
       let profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id)) ?? data.profiles[0]!.id;
-      let addressId = resolveLastId(last.addressId, data.addresses.map((a) => a.id)) ?? data.addresses[0]!.id;
+      let addressId = resolveAddressId(data.addresses, profileId, last.addressId) ?? data.addresses[0]!.id;
       let plan: PlanItem[] = [];
       const replan = (): PreviewRow[] => {
         const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
@@ -101,6 +101,8 @@ export default defineContentScript({
         selectedProfileId: profileId,
         onProfileChange: (id) => {
           profileId = id;
+          addressId = resolveAddressId(data.addresses, id, addressId) ?? data.addresses[0]!.id;
+          preview.setAddressId(addressId);
           preview.setRows(replan());
         },
         onAddressChange: (id) => {

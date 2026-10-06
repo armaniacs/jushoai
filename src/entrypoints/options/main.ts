@@ -8,6 +8,7 @@ import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, saveData } from '../../storage';
 import { labeled, textInput, kanaHiraganaHint } from './dom';
 import { mountAiSection } from './ai-section';
+import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID } from './nav';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
   { key: 'lastName', label: '姓', placeholder: '山田' },
@@ -69,6 +70,24 @@ function genderSelect(value: string, onChange: (v: string) => void) {
   return select;
 }
 
+function ownerSelect(value: string, onChange: (v: string) => void) {
+  const select = document.createElement('select');
+  const shared = document.createElement('option');
+  shared.value = '';
+  shared.textContent = '共通（どのプロファイルでも使う）';
+  shared.selected = value === '';
+  select.append(shared);
+  state.profiles.forEach((p, i) => {
+    const o = document.createElement('option');
+    o.value = p.id;
+    o.textContent = p.label || `プロファイル ${i + 1}`;
+    o.selected = p.id !== '' && p.id === value;
+    select.append(o);
+  });
+  select.addEventListener('change', () => onChange(select.value));
+  return select;
+}
+
 function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
   if (kind === 'saved') {
     const p = document.createElement('p');
@@ -85,6 +104,9 @@ function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
 function render(notice?: HTMLElement) {
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
+
+  const profileHeading = document.createElement('h2');
+  profileHeading.textContent = 'プロファイル';
 
   const profileCards = state.profiles.map((p, i) => {
     const set = document.createElement('fieldset');
@@ -143,6 +165,7 @@ function render(notice?: HTMLElement) {
   addressHeading.textContent = '住所';
   const addressCards = state.addresses.map((a, i) => {
     const set = document.createElement('fieldset');
+    set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; })));
     for (const f of ADDRESS_FIELDS.slice(0, 2)) {
       set.append(labeled(f.label, textInput(a[f.key], f.placeholder, (v) => { a[f.key] = v; })));
     }
@@ -181,15 +204,24 @@ function render(notice?: HTMLElement) {
   save.textContent = '保存';
   save.addEventListener('click', onSave);
 
-  const actions = document.createElement('div');
-  actions.className = 'row';
-  actions.append(addProfile, add, save);
+  const footer = document.createElement('div');
+  footer.className = 'row';
+  footer.append(save);
+
+  const profilePage = document.createElement('div');
+  profilePage.id = PROFILES_SECTION_ID;
+  profilePage.append(
+    profileHeading, ...profileCards, addProfile,
+    ...(limitNote.textContent ? [limitNote] : []),
+  );
+  const addressPage = document.createElement('div');
+  addressPage.id = ADDRESSES_SECTION_ID;
+  addressPage.append(addressHeading, ...addressCards, add);
 
   app.replaceChildren(
-    title, ...profileCards, addProfile,
-    ...(limitNote.textContent ? [limitNote] : []),
-    addressHeading, ...addressCards, actions, ...(notice ? [notice] : []),
+    title, profilePage, addressPage, footer, ...(notice ? [notice] : []),
   );
+  applyActivePage();
 }
 
 async function onSave() {
@@ -222,3 +254,4 @@ void loadData().then((data) => {
 });
 
 mountAiSection(document.getElementById('ai-app')!);
+mountNav(document.getElementById('side')!);

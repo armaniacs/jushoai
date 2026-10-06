@@ -43,7 +43,7 @@ const profile: Profile = {
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
-  id: 'a', label: 'home', zip: '1000001', prefecture: '東京都', city: '千代田区',
+  id: 'a', label: 'home', profileId: '', zip: '1000001', prefecture: '東京都', city: '千代田区',
   street: '千代田1-1', building: '千代田ビル101',
   country: 'United States', address1: '#123 Central Apartment',
   address2: '25-15 M.G.Peterson Ave', address3: 'Long Island City',

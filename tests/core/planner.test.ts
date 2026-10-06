@@ -13,7 +13,7 @@ const profile: Profile = {
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
-  id: 'a1', label: '自宅', zip: '1000001', prefecture: '東京都',
+  id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',
   city: '千代田区', street: '千代田1-1', building: '千代田ビル101',
   country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
 };

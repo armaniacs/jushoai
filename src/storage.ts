@@ -16,6 +16,20 @@ export function resolveLastId(stored: string | undefined, ids: string[]): string
   return stored && ids.includes(stored) ? stored : undefined;
 }
 
+// Picks the address for a profile: the preferred one when it is shared or
+// linked to the profile, otherwise the first shared/linked address,
+// otherwise the first address. Never returns undefined for a non-empty list.
+export function resolveAddressId(
+  addresses: Address[], profileId: string, preferredId?: string,
+): string | undefined {
+  const preferred = preferredId ? addresses.find((a) => a.id === preferredId) : undefined;
+  if (preferred && (!preferred.profileId || preferred.profileId === profileId)) {
+    return preferred.id;
+  }
+  return addresses.find((a) => !a.profileId || a.profileId === profileId)?.id
+    ?? addresses[0]?.id;
+}
+
 export async function loadLastUsed(): Promise<LastUsed> {
   const result = await chrome.storage.local.get(LAST_KEY);
   const v = result[LAST_KEY] as Partial<LastUsed> | undefined;
@@ -37,12 +51,8 @@ interface LegacyStoredData {
 
 // Normalizes any stored shape to the current one: a legacy single profile becomes the
 // first entry labeled メイン, and every entry gets defaults for missing keys.
+// Addresses linked to a deleted profile become shared instead of dangling.
 export function migrateData(stored: LegacyStoredData | undefined): StoredData {
-  const addresses = ((stored?.addresses ?? []) as Partial<Address>[]).map((a) => ({
-    ...EMPTY_ADDRESS,
-    ...a,
-    id: a.id || crypto.randomUUID(),
-  }));
   const fromList = !!stored?.profiles && stored.profiles.length > 0;
   const legacy = !fromList && stored?.profile ? [{ ...stored.profile }] : [];
   const list = fromList ? stored.profiles! : legacy;
@@ -51,6 +61,13 @@ export function migrateData(stored: LegacyStoredData | undefined): StoredData {
     ...p,
     id: p.id || crypto.randomUUID(),
     label: p.label || (fromList ? '' : 'メイン'),
+  }));
+  const profileIds = new Set(profiles.map((p) => p.id));
+  const addresses = ((stored?.addresses ?? []) as Partial<Address>[]).map((a) => ({
+    ...EMPTY_ADDRESS,
+    ...a,
+    id: a.id || crypto.randomUUID(),
+    profileId: a.profileId && profileIds.has(a.profileId) ? a.profileId : '',
   }));
   return { profiles, addresses };
 }

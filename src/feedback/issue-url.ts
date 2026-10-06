@@ -79,3 +79,24 @@ export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): strin
   });
   return `${repo.replace(/\/$/, '')}/issues/new?${params.toString()}`;
 }
+
+export function buildSettingsReportUrl(repo: string, version: string): string {
+  const lines: string[] = [
+    '設定画面または入力結果の問題を報告します。',
+    '',
+    `- Extension version: ${version || 'unknown'}`,
+    '- 再現手順:',
+    '  1. ',
+    '  2. ',
+    '- 期待する動作: ',
+    '- 実際の動作: ',
+    '',
+    '注意: 公開 issue が開きます。プロファイルの値や住所の値は書かないでください。',
+  ];
+  const params = new URLSearchParams({
+    title: '設定画面からの不具合報告',
+    body: lines.join('\n'),
+    labels: 'feedback',
+  });
+  return `${repo.replace(/\/$/, '')}/issues/new?${params.toString()}`;
+}

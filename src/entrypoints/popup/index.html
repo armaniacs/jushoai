@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>入力内容の確認 - JushoAI</title>
+    <style>
+      :root { color-scheme: light dark; --line: #c8ccd4; --accent: #2457d6; --bg: #fff; --fg: #1a1a1a; }
+      @media (prefers-color-scheme: dark) { :root { --line: #444a56; --bg: #16181d; --fg: #e8e9ec; } }
+      body { margin: 0; min-width: 320px; max-width: 420px; background: var(--bg); color: var(--fg);
+        font: 13px/1.6 system-ui, sans-serif; }
+      main { padding: 12px 14px 16px; }
+      .header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+      h1 { font-size: 15px; margin: 0; }
+      .gear { font-size: 15px; line-height: 1; padding: 4px 8px; }
+      h2 { font-size: 13px; margin: 14px 0 6px; }
+      button { font: inherit; padding: 4px 10px; border-radius: 6px; border: 1px solid var(--line);
+        background: transparent; color: inherit; cursor: pointer; }
+      ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+      li { border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; }
+      .name { font-weight: 700; }
+      .sub { font-size: 12px; opacity: .75; }
+      .badge { font-size: 11px; color: #fff; background: var(--accent); border-radius: 4px;
+        padding: 0 6px; margin-left: 6px; }
+      .empty { opacity: .8; }
+    </style>
+  </head>
+  <body>
+    <main id="popup"></main>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

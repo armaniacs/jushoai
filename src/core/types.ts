@@ -63,6 +63,8 @@ export interface Profile {
 export interface Address {
   id: string;
   label: string;
+  // Owner profile id. Empty means shared: usable with any profile.
+  profileId: string;
   zip: string;
   prefecture: string;
   city: string;
@@ -77,7 +79,7 @@ export interface Address {
 }
 
 export const EMPTY_ADDRESS: Address = {
-  id: '', label: '', zip: '', prefecture: '', city: '', street: '', building: '',
+  id: '', label: '', profileId: '', zip: '', prefecture: '', city: '', street: '', building: '',
   country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
 };
 

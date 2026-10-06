@@ -41,6 +41,7 @@ export function normalizeAddress(a: Address): Address {
   return {
     id: a.id,
     label: a.label.trim(),
+    profileId: a.profileId,
     zip: digits(a.zip),
     prefecture: a.prefecture.trim(),
     city: a.city.trim(),

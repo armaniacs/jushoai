@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isReady, loadData, loadLastUsed, migrateData, resolveLastId, saveData, saveLastUsed } from '../src/storage';
+import { isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveLastUsed } from '../src/storage';
 import { EMPTY_ADDRESS, EMPTY_PROFILE, type StoredData } from '../src/core/types';
 
 let store: Record<string, unknown>;
@@ -26,7 +26,7 @@ const profile = {
 const ready: StoredData = {
   profiles: [profile],
   addresses: [{
-    id: '1', label: '自宅', zip: '1000001', prefecture: '東京都', city: '千代田区',
+    id: '1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都', city: '千代田区',
     street: '千代田1-1', building: '',
     country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
   }],
@@ -59,6 +59,45 @@ describe('migrateData', () => {
       ...EMPTY_ADDRESS, id: 'a1', label: '自宅', zip: '1000001', prefecture: '東京都',
       city: '千代田区', street: '千代田1-1', building: '',
     }]);
+  });
+
+  it('defaults missing address owner to shared', () => {
+    const out = migrateData({
+      profiles: [{ id: 'p1', label: '本人' }],
+      addresses: [{ id: 'a1', label: '自宅' }],
+    });
+    expect(out.addresses[0]?.profileId).toBe('');
+  });
+
+  it('unlinks addresses of deleted profiles to shared', () => {
+    const out = migrateData({
+      profiles: [{ id: 'p1', label: '本人' }],
+      addresses: [
+        { id: 'a1', label: '自宅', profileId: 'p1' },
+        { id: 'a2', label: '旧宅', profileId: 'gone' },
+      ],
+    });
+    expect(out.addresses[0]?.profileId).toBe('p1');
+    expect(out.addresses[1]?.profileId).toBe('');
+  });
+});
+
+describe('resolveAddressId', () => {
+  const shared = { ...EMPTY_ADDRESS, id: 'shared', label: '共通' };
+  const home = { ...EMPTY_ADDRESS, id: 'home', label: '自宅', profileId: 'p1' };
+  const office = { ...EMPTY_ADDRESS, id: 'office', label: '会社', profileId: 'p2' };
+
+  it('keeps the preferred address when shared or linked', () => {
+    expect(resolveAddressId([shared, home], 'p1', 'shared')).toBe('shared');
+    expect(resolveAddressId([shared, home], 'p1', 'home')).toBe('home');
+  });
+
+  it('falls back to a linked address when preferred belongs elsewhere', () => {
+    expect(resolveAddressId([office, home], 'p1', 'office')).toBe('home');
+  });
+
+  it('falls back to the first address when nothing is linked', () => {
+    expect(resolveAddressId([office, home], 'p9')).toBe('office');
   });
 });
 

@@ -123,7 +123,7 @@ describe('address', () => {
 
   it('normalizes overseas fields to half-width', () => {
     const a = normalizeAddress({
-      id: '1', label: '海外', zip: '1000001', prefecture: '東京都',
+      id: '1', label: '海外', profileId: '', zip: '1000001', prefecture: '東京都',
       city: '千代田区', street: '千代田1-1', building: '',
       country: 'Ｕｎｉｔｅｄ　Ｓｔａｔｅｓ ', address1: '', address2: '',
       address3: '', address4: '', postalCode: ' 11375',
@@ -132,9 +132,14 @@ describe('address', () => {
     expect(a.postalCode).toBe('11375');
   });
 
+  it('preserves the owner profile through normalization', () => {
+    const a = normalizeAddress({ ...EMPTY_ADDRESS, id: '1', label: '自宅', profileId: 'p1' });
+    expect(a.profileId).toBe('p1');
+  });
+
   it('accepts an overseas address without domestic fields', () => {
     const errors = validateAddress({
-      id: '1', label: '海外', zip: '', prefecture: '', city: '', street: '', building: '',
+      id: '1', label: '海外', profileId: '', zip: '', prefecture: '', city: '', street: '', building: '',
       country: 'United States', address1: '', address2: '25-15 M.G.Peterson Ave',
       address3: '', address4: '', postalCode: '11375',
     });
@@ -143,7 +148,7 @@ describe('address', () => {
 
   it('rejects non-ascii overseas values and a missing country', () => {
     const errors = validateAddress({
-      id: '1', label: '海外', zip: '', prefecture: '', city: '', street: '', building: '',
+      id: '1', label: '海外', profileId: '', zip: '', prefecture: '', city: '', street: '', building: '',
       country: '', address1: '', address2: '千代田1-1',
       address3: '', address4: '', postalCode: '',
     });

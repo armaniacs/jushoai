@@ -9,6 +9,7 @@ import {
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
 import { el, labeled, textInput } from './dom';
+import { AI_SECTION_ID, applyActivePage } from './nav';
 
 const PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
   { value: 'none', label: '使わない（ルールのみ）' },
@@ -142,7 +143,11 @@ export function mountAiSection(root: HTMLElement): void {
     parts.push(actions);
     if (notice) parts.push(notice);
 
-    root.replaceChildren(...parts);
+    const page = el('div');
+    page.id = AI_SECTION_ID;
+    page.append(...parts);
+    root.replaceChildren(page);
+    applyActivePage();
   }
 
   async function onSave() {
