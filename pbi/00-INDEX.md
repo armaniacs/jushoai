@@ -44,3 +44,5 @@
 | 2026-10-06-09-feat-ai-analyze-docs.md | 未コミット（同上）feat: 改名とボタンに合わせてドキュメントを直す |
 | 2026-10-06-10-fix-profile-label-example.md | c45417d fix: プロファイル名の例示からテスト用を削る |
 | 2026-10-06-11-fix-ai-notice-metadata.md | fca4316 fix: AI設定のメタデータ説明文を内訳分離で読みやすくする |
+| 2026-10-06-12-fix-auth-error-split.md | 6d15a2a fix: 認証エラー文を確認手順の順に割る（保存注意文と同梱） |
+| 2026-10-06-13-fix-save-notice-split.md | 6d15a2a fix: 保存注意文を成否と次の一手に割る（認証エラー文と同梱） |
