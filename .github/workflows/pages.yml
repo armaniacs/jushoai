@@ -37,8 +37,12 @@ jobs:
           cache: "npm"
 
       - name: Install dependencies
-        # The extension's postinstall step (wxt prepare) is not needed to build the site.
         run: npm ci --ignore-scripts
+
+      - name: Generate WXT types
+        # The root tsconfig extends .wxt/tsconfig.json, so vitest cannot load
+        # tests without this even though the site build itself needs no WXT output.
+        run: npx wxt prepare
 
       - name: Test the site build
         run: npx vitest run tests/site
