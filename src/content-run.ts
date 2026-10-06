@@ -1,8 +1,8 @@
-import type { Item } from '../core/classify-rules';
-import { buildPlan, type PlanItem } from '../core/planner';
-import type { Address, FieldMeta, Profile } from '../core/types';
-import type { FeedbackInput, FeedbackSnapshot } from '../feedback/issue-url';
-import type { PreviewRow } from '../ui/preview';
+import type { Item } from './core/classify-rules';
+import { buildPlan, type PlanItem } from './core/planner';
+import type { Address, FieldMeta, Profile } from './core/types';
+import type { FeedbackInput, FeedbackSnapshot } from './feedback/issue-url';
+import type { PreviewRow } from './ui/preview';
 
 // Pure slices of the content-script `run()` flow. DOM / Chrome API side
 // effects (scanContainer, showPreview, button.setStatus, window.open,

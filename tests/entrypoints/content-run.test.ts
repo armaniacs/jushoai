@@ -6,7 +6,7 @@ import type { FeedbackSnapshot } from '../../src/feedback/issue-url';
 import type { PreviewRow } from '../../src/ui/preview';
 import {
   buildFeedbackInput, buildPreviewRows, replanItems, snapshotItems,
-} from '../../src/entrypoints/content-run';
+} from '../../src/content-run';
 import { makeMeta } from '../helpers';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 

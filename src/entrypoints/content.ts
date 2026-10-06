@@ -1,6 +1,6 @@
 import { classifyAll } from '../core/analyze';
 import type { PlanItem } from '../core/planner';
-import { buildFeedbackInput, replanItems, snapshotItems } from './content-run';
+import { buildFeedbackInput, replanItems, snapshotItems } from '../content-run';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';

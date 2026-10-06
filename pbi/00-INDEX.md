@@ -2,7 +2,7 @@
 
 ## 進行中
 
-- 大局的改善ラウンド（2026-10-06）: バッチB（20 / 22・並列）
+- （なし）
 - `2026-10-06-17-fix-content-error-visibility.md` — 失敗理由の可視化
 - `2026-10-06-18-fix-storage-uuid-fallback.md` — storage UUID生成のフォールバック
 - `2026-10-06-19-refactor-options-select-builders.md` — 設定画面のselect生成集約
@@ -61,3 +61,5 @@
 | 2026-10-06-18-fix-storage-uuid-fallback.md | 39bd2f8 fix: ID生成にrandomUUID不可時のフォールバックを足す |
 | 2026-10-06-19-refactor-options-select-builders.md | 2276546 refactor: select生成3兄弟を単一helperに集約する |
 | 2026-10-06-21-refactor-classify-dispatch-table.md | bd3ea50 refactor: classifyFieldを優先順序付きdispatch表にする |
+| 2026-10-06-20-refactor-content-run-extraction.md | f418ed0 refactor: run()の純粋部品をcontent-runに抽出する |
+| 2026-10-06-22-refactor-options-card-builders.md | 8e0afaf refactor: カード生成の外枠を共通helperに抽出する |
