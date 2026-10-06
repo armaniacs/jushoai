@@ -4,18 +4,17 @@
 
 - （なし）
 
-台帳: `2026-10-07-00-backlog-arch-deepening-b.md`
+## 台帳
 
-台帳: `2026-10-07-00-backlog-holistic-improvement-b.md`
-
-台帳: `2026-10-06-00-backlog-holistic-improvement.md`
-
-台帳: `archived/2026-10-06-00-backlog-ai-audit-log.md`
-台帳: `2026-10-04-00-backlog-architecture-deepening.md`
-台帳: `archived/2026-10-06-00-backlog-settings-navigation.md`
-台帳: `archived/2026-10-06-00-backlog-action-popup.md`
-台帳: `archived/2026-10-06-00-backlog-ai-analyze.md`
-台帳: `2026-10-06-00-backlog-japanese-polish.md`
+- `2026-10-04-00-backlog-architecture-deepening.md`
+- `2026-10-06-00-backlog-holistic-improvement.md`
+- `2026-10-06-00-backlog-japanese-polish.md`
+- `2026-10-07-00-backlog-arch-deepening-b.md`
+- `2026-10-07-00-backlog-holistic-improvement-b.md`
+- `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
+- `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
+- `archived/2026-10-06-00-backlog-ai-audit-log.md`（アーカイブ済み）
+- `archived/2026-10-06-00-backlog-settings-navigation.md`（アーカイブ済み）
 
 ## アーカイブ一覧
 
