@@ -2,10 +2,7 @@
 
 ## 進行中
 
-- arch深掘りラウンド（2026-10-07）: 05 → 06 → 07（逐次・統合側）
-- `2026-10-07-05-fix-analyze-reason-union.md` — AnalyzeResponse reason の union 化
-- `2026-10-07-06-docs-classify-caps-contract.md` — 送信上限 30/20/60 の契約コメント
-- `2026-10-07-07-refactor-nav-hash-helper.md` — nav hash 読みの helper 抽出
+- （なし）
 
 台帳: `2026-10-07-00-backlog-arch-deepening-b.md`
 
@@ -68,3 +65,6 @@
 | 2026-10-07-02-fix-feedback-fb-wording.md | 13520f5 fix: 報告Issue雛形のFB残存を開発に報告するに揃える |
 | 2026-10-07-03-refactor-meta-clip-policy.md | 6882e63 refactor: 切り詰め幅80をMETA_CLIP_LENGTHに集約する |
 | 2026-10-07-04-refactor-options-ai-section.md | 78423d7 refactor: mountAiSectionを状態明示の責務関数群に分ける |
+| 2026-10-07-05-fix-analyze-reason-union.md | 85e2fdc fix: 分析失敗理由をseam共有のunion語彙にする |
+| 2026-10-07-06-docs-classify-caps-contract.md | 871efb2 docs: 送信上限30・20・60の契約をコメントに残す |
+| 2026-10-07-07-refactor-nav-hash-helper.md | 0b8d1fc refactor: hash読みをreadPageFromHashに集約する |
