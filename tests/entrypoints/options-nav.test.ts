@@ -112,4 +112,15 @@ describe('page switching', () => {
   it('is a no-op when the page skeleton is absent', () => {
     expect(() => applyActivePage()).not.toThrow();
   });
+
+  it('follows hash changes and ignores unknown hashes', async () => {
+    const { mountNav } = await import('../../src/entrypoints/options/nav');
+    mountNav(document.createElement('div'));
+    window.location.hash = '#ai';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(getActivePage()).toBe('ai');
+    window.location.hash = '#nope';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(getActivePage()).toBe('ai');
+  });
 });

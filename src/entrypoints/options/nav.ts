@@ -20,14 +20,18 @@ function isPageId(value: string): value is OptionsPageId {
   return OPTION_SECTIONS.some((s) => s.id === value);
 }
 
-function initialPage(): OptionsPageId {
+function readPageFromHash(): OptionsPageId | null {
   try {
     const hash = window.location.hash.replace(/^#/, '');
-    if (isPageId(hash)) return hash;
+    return isPageId(hash) ? hash : null;
   } catch {
     // Non-browser environments fall through to the default page.
+    return null;
   }
-  return PROFILES_SECTION_ID;
+}
+
+function initialPage(): OptionsPageId {
+  return readPageFromHash() ?? PROFILES_SECTION_ID;
 }
 
 let activePage: OptionsPageId = initialPage();
@@ -135,12 +139,8 @@ export function mountNav(root: HTMLElement): HTMLElement {
     setActivePage(id);
   });
   window.addEventListener('hashchange', () => {
-    try {
-      const hash = window.location.hash.replace(/^#/, '');
-      if (isPageId(hash) && hash !== activePage) setActivePage(hash);
-    } catch {
-      // Ignore hash reads that the environment does not support.
-    }
+    const hash = readPageFromHash();
+    if (hash !== null && hash !== activePage) setActivePage(hash);
   });
   return nav;
 }

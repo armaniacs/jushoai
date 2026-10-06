@@ -28,9 +28,9 @@ Scenario: hash 変更の挙動が変わらない
 
 ## 受け入れ基準
 
-- [ ] hash 読みが `readPageFromHash` 相当の1関数に集約される
-- [ ] 初期表示・hash 変更の挙動が変わらない
-- [ ] 既存テストが green を維持する
+- [x] hash 読みが `readPageFromHash` 相当の1関数に集約される
+- [x] 初期表示・hash 変更の挙動が変わらない
+- [x] 既存テストが green を維持する
 
 ## テスト戦略
 
@@ -42,6 +42,6 @@ Scenario: hash 変更の挙動が変わらない
 
 ## Definition of Done
 
-- [ ] helper に集約され、挙動不変である
-- [ ] BDDシナリオの2件がテストで裏付けられている
-- [ ] 既存テストが green である
+- [x] helper に集約され、挙動不変である
+- [x] BDDシナリオの2件がテストで裏付けられている
+- [x] 既存テストが green である
