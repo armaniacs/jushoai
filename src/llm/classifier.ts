@@ -1,5 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import { toWireMeta, type MetaWire } from '../messages';
+import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
 
@@ -21,7 +21,7 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 - unknown: 上記のどれでもない
 個人情報の値は与えられません。結果はJSONオブジェクトのみで返してください。`;
 
-const clip = (s: string) => s.slice(0, 80);
+const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
 
 // Prompt rows carry only the metadata allow-list (MetaWire), with strings clipped for prompt size.
 const toPromptRow = (f: FieldMeta): MetaWire => {

@@ -1,4 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
+import { META_CLIP_LENGTH } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
 
@@ -26,7 +27,7 @@ export function sanitizePageUrl(href: string): string {
 }
 
 function fieldLine(meta: FieldMeta, snap: FeedbackSnapshot | undefined): string {
-  const hint = [meta.label, meta.placeholder, meta.name].filter(Boolean).join(' / ').slice(0, 80);
+  const hint = [meta.label, meta.placeholder, meta.name].filter(Boolean).join(' / ').slice(0, META_CLIP_LENGTH);
   const cat = snap ? `${snap.category} (${snap.source})` : 'unknown';
   return `- ${meta.id}: ${hint} -> ${cat}`;
 }

@@ -46,6 +46,10 @@ const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, MAX_TEXT_LENGTH
 export const META_WIRE_KEYS = ['id', 'type', 'name', 'htmlId', 'label', 'placeholder', 'nearby', 'maxLength'] as const;
 export type MetaWire = Pick<FieldMeta, (typeof META_WIRE_KEYS)[number]>;
 
+// Display width for metadata strings leaving the extension (prompt rows and
+// feedback reports). Distinct from MAX_TEXT_LENGTH, which caps the wire envelope.
+export const META_CLIP_LENGTH = 80;
+
 export function toWireMeta(f: FieldMeta): MetaWire {
   return {
     id: f.id,
