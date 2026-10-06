@@ -13,6 +13,15 @@ const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejec
 export type TestFailure = (typeof TEST_FAILURES)[number];
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
 
+// Failure vocabulary for ai-classify: the TestFailure set plus 'unavailable'
+// (built-in AI present in settings but not usable right now).
+const CLASSIFY_FAILURES = [...TEST_FAILURES, 'unavailable'] as const;
+
+export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
+export type ClassifyResponse =
+  | { ok: true; entries: [string, Category][] }
+  | { ok: false; reason: ClassifyFailure };
+
 export type AiRequest =
   | { type: 'ai-status' }
   | { type: 'ai-classify'; fields: FieldMeta[] }
@@ -85,7 +94,20 @@ export function parseRequest(msg: unknown): AiRequest | null {
 }
 
 export function parseClassifyResponse(res: unknown): Map<string, Category> | null {
-  if (!isRecord(res) || res.ok !== true || !Array.isArray(res.entries)) return null;
+  const parsed = parseClassifyResult(res);
+  return parsed?.ok === true ? parsed.map : null;
+}
+
+// Reason-aware counterpart of parseClassifyResponse: keeps the failure reason
+// from an ai-classify reply instead of collapsing it to null.
+export function parseClassifyResult(res: unknown): { ok: true; map: Map<string, Category> } | { ok: false; reason: ClassifyFailure } | null {
+  if (!isRecord(res)) return null;
+  if (res.ok === false) {
+    return typeof res.reason === 'string' && (CLASSIFY_FAILURES as readonly string[]).includes(res.reason)
+      ? { ok: false, reason: res.reason as ClassifyFailure }
+      : null;
+  }
+  if (res.ok !== true || !Array.isArray(res.entries)) return null;
   const valid = new Set<string>(CATEGORIES);
   const out = new Map<string, Category>();
   for (const e of res.entries) {
@@ -93,7 +115,7 @@ export function parseClassifyResponse(res: unknown): Map<string, Category> | nul
       out.set(e[0], e[1] as Category);
     }
   }
-  return out;
+  return { ok: true, map: out };
 }
 
 export function parseStatusResponse(res: unknown): AiStatusInfo | null {

@@ -155,12 +155,20 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
         purpose: 'classify',
         pageUrl: ctx.pageUrl ? sanitizePageUrl(ctx.pageUrl) : '',
       });
-      if (!sel.ok) return { ok: false };
+      // The caller chooses its error display from the reason, so never drop it.
+      if (!sel.ok) return { ok: false, reason: sel.reason };
       try {
         return { ok: true, entries: [...(await sel.classifier.classify(req.fields))] };
       } catch (e) {
-        if (e instanceof HttpAuthError) deps.authFailed.add(settings.provider);
-        return { ok: false };
+        if (e instanceof HttpAuthError) {
+          deps.authFailed.add(settings.provider);
+          return { ok: false, reason: 'auth' };
+        }
+        if (e instanceof HttpRequestError && (e.status === 400 || e.status === 422)) {
+          return { ok: false, reason: 'rejected' };
+        }
+        if (e instanceof HttpRequestError) return { ok: false, reason: 'network' };
+        return { ok: false, reason: 'bad-response' };
       }
     }
     case 'ai-test':

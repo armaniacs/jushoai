@@ -1,6 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type TestResponse } from '../messages';
+import { parseClassifyResult, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 
 const STATUS_TIMEOUT_MS = 5_000;
@@ -48,22 +48,35 @@ export async function requestDownloadViaBackground(timeoutMs = DOWNLOAD_TIMEOUT_
 }
 
 export class BackgroundClassifier implements FieldClassifier {
+  // Reason for the chunk that stopped the run; null when every chunk succeeded.
+  // Partial results from earlier chunks are still returned.
+  lastFailureReason: ClassifyFailure | null = null;
+
   constructor(private readonly timeoutMs = CLASSIFY_TIMEOUT_MS) {}
 
   async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
     const out = new Map<string, Category>();
+    this.lastFailureReason = null;
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
       const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
+      let parsed: ReturnType<typeof parseClassifyResult>;
       try {
-        const res = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
-        const parsed = parseClassifyResponse(res);
-        // A failing provider (401, 429, timeout) would fail every later chunk too.
-        if (!parsed) break;
-        for (const [id, c] of parsed) out.set(id, c);
+        parsed = parseClassifyResult(await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs));
       } catch {
+        this.lastFailureReason = 'network';
         break;
       }
+      if (!parsed) {
+        this.lastFailureReason = 'bad-response';
+        break;
+      }
+      if (parsed.ok === false) {
+        // A failing provider (401, 429, timeout) would fail every later chunk too.
+        this.lastFailureReason = parsed.reason;
+        break;
+      }
+      for (const [id, c] of parsed.map) out.set(id, c);
     }
     return out;
   }

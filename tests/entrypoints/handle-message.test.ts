@@ -109,16 +109,16 @@ describe('handleMessage: ai-classify', () => {
 
   it('does nothing for none and for unconfigured providers', async () => {
     const none = makeDeps();
-    expect(await handleMessage(msg, none.deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, none.deps)).toEqual({ ok: false, reason: 'not-configured' });
     const unset = makeDeps({ settings: openai });
-    expect(await handleMessage(msg, unset.deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, unset.deps)).toEqual({ ok: false, reason: 'not-configured' });
     expect(none.fetchMock).not.toHaveBeenCalled();
     expect(unset.fetchMock).not.toHaveBeenCalled();
   });
 
   it('does not call the network without host permission', async () => {
     const { deps, fetchMock } = makeDeps({ settings: openai, ...configured, permitted: false });
-    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'permission' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -147,13 +147,13 @@ describe('handleMessage: ai-classify', () => {
     const ok = makeDeps({ settings: { provider: 'built-in' }, lm: builtInLm('available') });
     expect(await handleMessage(msg, ok.deps)).toEqual({ ok: true, entries: [['a', 'lastName']] });
     const off = makeDeps({ settings: { provider: 'built-in' }, lm: builtInLm('unavailable') });
-    expect(await handleMessage(msg, off.deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, off.deps)).toEqual({ ok: false, reason: 'unavailable' });
   });
 
   it('records an authentication failure and stops sending until settings change', async () => {
     const fetchMock = vi.fn().mockResolvedValue(statusJson(401));
     const { deps, authFailed } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
-    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'auth' });
     expect(authFailed.has('openai')).toBe(true);
     expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'auth-error', provider: 'openai' });
     await handleMessage(msg, deps);
@@ -162,7 +162,7 @@ describe('handleMessage: ai-classify', () => {
 
   it('returns ok:false for non-auth failures without recording an auth error', async () => {
     const { deps, authFailed } = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(500)) });
-    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'network' });
     expect(authFailed.size).toBe(0);
   });
 
@@ -201,9 +201,9 @@ describe('handleMessage: built-in behaviors', () => {
   it('reports downloadable and classifies only when available', async () => {
     const dl = makeDeps({ settings: { provider: 'built-in' }, lm: builtInLm('downloadable') });
     expect(await handleMessage({ type: 'ai-status' }, dl.deps)).toEqual({ status: 'downloadable', provider: 'built-in' });
-    expect(await handleMessage(msg, dl.deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, dl.deps)).toEqual({ ok: false, reason: 'unavailable' });
     const nolm = makeDeps({ settings: { provider: 'built-in' }, lm: null });
-    expect(await handleMessage(msg, nolm.deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, nolm.deps)).toEqual({ ok: false, reason: 'unavailable' });
   });
 
   it('returns serializable entries and never sends field values to the model', async () => {
@@ -221,7 +221,7 @@ describe('handleMessage: built-in behaviors', () => {
       create: async () => ({ prompt: async () => { throw new Error('boom'); }, destroy: () => {} }),
     } as unknown as LanguageModelStatic;
     const { deps } = makeDeps({ settings: { provider: 'built-in' }, lm });
-    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'bad-response' });
   });
 
   it('reports started:false when download is unavailable or create fails', async () => {
@@ -239,7 +239,7 @@ describe('handleMessage: decrypted-key accuracy', () => {
   it('reports not-configured and never fetches when the stored key cannot be decrypted', async () => {
     const { deps, fetchMock } = makeDeps({ settings: openai, hasKey: { openai: true, gemini: false }, secrets: {} });
     expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'not-configured', provider: 'openai' });
-    expect(await handleMessage(msg, deps)).toEqual({ ok: false });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'not-configured' });
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

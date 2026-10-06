@@ -24,15 +24,23 @@ export default defineContentScript({
     let openGuide: GuideHandle | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
+    // Only a dead extension context calls for a reload. Every other failure
+    // (classification, network, bad response) is retryable on the classify side.
+    const isContextInvalidated = (e: unknown): boolean => {
+      const msg = e instanceof Error ? e.message : String(e);
+      return msg.includes('Extension context invalidated');
+    };
+
     async function guardedRun(container: Element, button: ButtonHandle): Promise<boolean> {
       if (running.has(container)) return true;
       running.add(container);
       try {
         await run(container, button);
         return true;
-      } catch {
-        // Typically "Extension context invalidated" after the extension was updated.
-        button.showError('エラー: ページを再読み込み');
+      } catch (e) {
+        button.showError(
+          isContextInvalidated(e) ? 'エラー: ページを再読み込み' : 'エラー: 分類に失敗、再試行してください',
+        );
         return false;
       } finally {
         running.delete(container);
