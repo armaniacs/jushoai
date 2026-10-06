@@ -90,6 +90,66 @@ export function ownerSelect(value: string, onChange: (v: string) => void) {
   ]);
 }
 
+// Shared card assembly for the profile/address loops below. These move the
+// existing construction code verbatim: same elements, text, placeholders,
+// order, and attributes. Only the select builders above keep their own logic.
+function cardFieldset(legendText?: string): HTMLFieldSetElement {
+  const set = document.createElement('fieldset');
+  if (legendText !== undefined) {
+    const legend = document.createElement('legend');
+    legend.textContent = legendText;
+    set.append(legend);
+  }
+  return set;
+}
+
+function actionButton(label: string, disabled: boolean, onClick: () => void): HTMLButtonElement {
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = label;
+  button.disabled = disabled;
+  button.addEventListener('click', onClick);
+  return button;
+}
+
+function buildLimitNote(message: string, atLimit: boolean): HTMLParagraphElement {
+  const note = document.createElement('p');
+  note.textContent = atLimit ? message : '';
+  return note;
+}
+
+function appendPlainField(
+  set: HTMLElement,
+  label: string,
+  placeholder: string,
+  value: string,
+  onInput: (v: string) => void,
+  type?: string,
+): void {
+  set.append(labeled(label, textInput(value, placeholder, onInput, type)));
+}
+
+function appendProfileField(
+  set: HTMLElement,
+  field: { key: keyof Profile; label: string; placeholder: string; type?: string },
+  value: string,
+  onInput: (v: string) => void,
+): void {
+  const isKana = field.key === 'lastNameKana' || field.key === 'firstNameKana';
+  const hint = isKana ? document.createElement('p') : null;
+  if (hint) hint.className = 'kana-preview';
+  const syncHint = (v: string) => {
+    if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
+  };
+  const input = textInput(value, field.placeholder, (v) => {
+    onInput(v);
+    syncHint(v);
+  }, field.type);
+  syncHint(value);
+  set.append(labeled(field.label, input));
+  if (hint) set.append(hint);
+}
+
 function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
   if (kind === 'saved') {
     const p = document.createElement('p');
@@ -111,40 +171,17 @@ function render(notice?: HTMLElement) {
   profileHeading.textContent = 'プロファイル';
 
   const profileCards = state.profiles.map((p, i) => {
-    const set = document.createElement('fieldset');
-    const legend = document.createElement('legend');
-    legend.textContent = `プロファイル ${i + 1}`;
-    set.append(legend);
-    set.append(labeled('名前（個人用・家族用など）', textInput(p.label, '個人用', (v) => { p.label = v; })));
+    const set = cardFieldset(`プロファイル ${i + 1}`);
+    appendPlainField(set, '名前（個人用・家族用など）', '個人用', p.label, (v) => { p.label = v; });
     for (const f of PROFILE_FIELDS) {
-      const isKana = f.key === 'lastNameKana' || f.key === 'firstNameKana';
-      const hint = isKana ? document.createElement('p') : null;
-      if (hint) hint.className = 'kana-preview';
-      const syncHint = (v: string) => {
-        if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
-      };
-      const input = textInput(p[f.key], f.placeholder, (v) => {
-        p[f.key] = v;
-        syncHint(v);
-      }, f.type);
-      syncHint(p[f.key]);
-      set.append(labeled(f.label, input));
-      if (hint) set.append(hint);
+      appendProfileField(set, f, p[f.key], (v) => { p[f.key] = v; });
     }
     set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
-    const copy = document.createElement('button');
-    copy.type = 'button';
-    copy.textContent = 'このプロファイルを複製';
-    copy.disabled = state.profiles.length >= 10;
-    copy.addEventListener('click', () => {
+    const copy = actionButton('このプロファイルを複製', state.profiles.length >= 10, () => {
       state.profiles.push({ ...p, id: crypto.randomUUID(), label: `${p.label} のコピー` });
       render();
     });
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.textContent = 'このプロファイルを削除';
-    remove.disabled = state.profiles.length <= 1;
-    remove.addEventListener('click', () => {
+    const remove = actionButton('このプロファイルを削除', state.profiles.length <= 1, () => {
       state.profiles.splice(i, 1);
       render();
     });
@@ -152,39 +189,31 @@ function render(notice?: HTMLElement) {
     return set;
   });
 
-  const addProfile = document.createElement('button');
-  addProfile.type = 'button';
-  addProfile.textContent = 'プロファイルを新規追加';
-  addProfile.disabled = state.profiles.length >= 10;
-  addProfile.addEventListener('click', () => {
+  const addProfile = actionButton('プロファイルを新規追加', state.profiles.length >= 10, () => {
     state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
     render();
   });
-  const limitNote = document.createElement('p');
-  limitNote.textContent = state.profiles.length >= 10 ? 'プロファイルは10件まで登録できます' : '';
+  const limitNote = buildLimitNote('プロファイルは10件まで登録できます', state.profiles.length >= 10);
 
   const addressHeading = document.createElement('h2');
   addressHeading.textContent = '住所';
   const addressCards = state.addresses.map((a, i) => {
-    const set = document.createElement('fieldset');
+    const set = cardFieldset();
     set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; })));
     for (const f of ADDRESS_FIELDS.slice(0, 2)) {
-      set.append(labeled(f.label, textInput(a[f.key], f.placeholder, (v) => { a[f.key] = v; })));
+      appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
     set.append(labeled('都道府県', prefectureSelect(a.prefecture, (v) => { a.prefecture = v; })));
     for (const f of ADDRESS_FIELDS.slice(2)) {
-      set.append(labeled(f.label, textInput(a[f.key], f.placeholder, (v) => { a[f.key] = v; })));
+      appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
     const overseasTitle = document.createElement('h3');
     overseasTitle.textContent = '英語住所（任意）';
     set.append(overseasTitle);
     for (const f of OVERSEAS_FIELDS) {
-      set.append(labeled(f.label, textInput(a[f.key] ?? '', f.placeholder, (v) => { a[f.key] = v; })));
+      appendPlainField(set, f.label, f.placeholder, a[f.key] ?? '', (v) => { a[f.key] = v; });
     }
-    const remove = document.createElement('button');
-    remove.type = 'button';
-    remove.textContent = 'この住所を削除';
-    remove.addEventListener('click', () => {
+    const remove = actionButton('この住所を削除', false, () => {
       state.addresses.splice(i, 1);
       render();
     });
@@ -192,16 +221,11 @@ function render(notice?: HTMLElement) {
     return set;
   });
 
-  const add = document.createElement('button');
-  add.type = 'button';
-  add.textContent = '住所を追加';
-  add.disabled = state.addresses.length >= 10;
-  add.addEventListener('click', () => {
+  const add = actionButton('住所を追加', state.addresses.length >= 10, () => {
     state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID() });
     render();
   });
-  const addressLimitNote = document.createElement('p');
-  addressLimitNote.textContent = state.addresses.length >= 10 ? '住所は10件まで登録できます' : '';
+  const addressLimitNote = buildLimitNote('住所は10件まで登録できます', state.addresses.length >= 10);
 
   const save = document.createElement('button');
   save.type = 'button';
