@@ -36,4 +36,19 @@ describe('buildFeedbackIssueUrl', () => {
     expect(body).toContain('unknown (rule)');
     expect(body).toContain('lastName (llm)');
   });
+
+  it('uses AI wording without LLM in title and body', () => {
+    const url = buildFeedbackIssueUrl('https://github.com/armaniacs/jushoai', {
+      pageHref: 'https://example.com/form?x=1',
+      provider: 'openai',
+      version: '0.1.7',
+      before: new Map([['jai-0', { category: 'unknown', source: 'rule' }]]),
+      after: new Map([['jai-0', { category: 'email', source: 'llm' }]]),
+      fields: [meta('jai-0')],
+    });
+    const u = new URL(url);
+    expect(u.searchParams.get('title')).toContain('AIで分析');
+    expect(u.searchParams.get('title')).not.toContain('LLM');
+    expect(u.searchParams.get('body')).not.toContain('LLM');
+  });
 });

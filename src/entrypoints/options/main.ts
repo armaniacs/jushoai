@@ -193,10 +193,13 @@ function render(notice?: HTMLElement) {
   const add = document.createElement('button');
   add.type = 'button';
   add.textContent = '住所を追加';
+  add.disabled = state.addresses.length >= 10;
   add.addEventListener('click', () => {
     state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID() });
     render();
   });
+  const addressLimitNote = document.createElement('p');
+  addressLimitNote.textContent = state.addresses.length >= 10 ? '住所は10件まで登録できます' : '';
 
   const save = document.createElement('button');
   save.type = 'button';
@@ -216,7 +219,10 @@ function render(notice?: HTMLElement) {
   );
   const addressPage = document.createElement('div');
   addressPage.id = ADDRESSES_SECTION_ID;
-  addressPage.append(addressHeading, ...addressCards, add);
+  addressPage.append(
+    addressHeading, ...addressCards, add,
+    ...(addressLimitNote.textContent ? [addressLimitNote] : []),
+  );
 
   app.replaceChildren(
     title, profilePage, addressPage, footer, ...(notice ? [notice] : []),

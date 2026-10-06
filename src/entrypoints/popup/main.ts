@@ -1,9 +1,33 @@
-import { loadData, loadLastUsed, type LastUsed } from '../../storage';
+import { isReady, loadData, loadLastUsed, type LastUsed } from '../../storage';
 import type { Address, Profile, StoredData } from '../../core/types';
+import { ANALYZE_MESSAGE_TYPE, type AnalyzeResponse } from '../../messages';
 import { el } from '../options/dom';
 
 export function openOptionsPage(): Promise<void> {
   return chrome.runtime.openOptionsPage();
+}
+
+const ANALYZE_NOTICE: Record<string, string> = {
+  'no-form': '入力できるフォームが見つかりませんでした。フォームのあるページでお試しください。',
+};
+
+export function analyzeNoticeFor(reason: string): string {
+  return ANALYZE_NOTICE[reason] ?? 'このタブでは実行できません。フォームのあるページでお試しください。';
+}
+
+// Asks the content script of the active tab to run the usual classify → preview
+// flow. The popup itself never touches page DOM and sends no profile values.
+export async function analyzeCurrentTab(): Promise<AnalyzeResponse> {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const id = tabs[0]?.id;
+    if (id == null) return { ok: false, reason: 'no-tab' };
+    const res = (await chrome.tabs.sendMessage(id, { type: ANALYZE_MESSAGE_TYPE })) as AnalyzeResponse | undefined;
+    if (res?.ok === true) return { ok: true };
+    return { ok: false, reason: typeof res?.reason === 'string' ? res.reason : 'no-form' };
+  } catch {
+    return { ok: false, reason: 'no-tab' };
+  }
 }
 
 function profileName(p: Profile): string {
@@ -79,7 +103,30 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
   gear.setAttribute('aria-label', '設定を開く');
   gear.title = '設定を開く';
   gear.addEventListener('click', () => void openOptionsPage());
-  header.append(el('h1', '入力内容の確認'), gear);
+  const analyze = el('button', 'AI で分析');
+  analyze.type = 'button';
+  analyze.className = 'analyze';
+  const notice = el('p', '');
+  notice.className = 'notice';
+  notice.hidden = true;
+  analyze.addEventListener('click', () => {
+    // Same entry condition as the in-page button: without saved data there is
+    // nothing to fill, so go to settings instead of messaging the tab.
+    if (!isReady(data)) {
+      void openOptionsPage();
+      return;
+    }
+    notice.hidden = true;
+    void analyzeCurrentTab().then((res) => {
+      if (res.ok) {
+        window.close();
+        return;
+      }
+      notice.textContent = analyzeNoticeFor(res.reason);
+      notice.hidden = false;
+    });
+  });
+  header.append(el('h1', '入力内容の確認'), analyze, gear);
 
   const profileTitle = el('h2', 'プロファイル');
   const profileList = el('ul');
@@ -99,7 +146,7 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
     for (const a of data.addresses) addressList.append(addressItem(data, a, a.id === useId));
   }
 
-  root.replaceChildren(header, profileTitle, profileList, addressTitle, addressList);
+  root.replaceChildren(header, notice, profileTitle, profileList, addressTitle, addressList);
 }
 
 // Auto-render only as the popup entry (tests import renderPopup directly).

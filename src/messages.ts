@@ -20,6 +20,11 @@ export type AiRequest =
   | { type: 'ai-test' }
   | { type: 'open-options' };
 
+// Popup (action popup) to content script: start the usual classify → preview flow
+// on the active tab. Answered by the content script, not by the background.
+export const ANALYZE_MESSAGE_TYPE = 'jushoai-analyze';
+export type AnalyzeResponse = { ok: true } | { ok: false; reason: string };
+
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>

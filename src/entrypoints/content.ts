@@ -12,6 +12,7 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
+import { ANALYZE_MESSAGE_TYPE } from '../messages';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -23,14 +24,16 @@ export default defineContentScript({
     let openGuide: GuideHandle | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
-    async function guardedRun(container: Element, button: ButtonHandle) {
-      if (running.has(container)) return;
+    async function guardedRun(container: Element, button: ButtonHandle): Promise<boolean> {
+      if (running.has(container)) return true;
       running.add(container);
       try {
         await run(container, button);
+        return true;
       } catch {
         // Typically "Extension context invalidated" after the extension was updated.
         button.showError('エラー: ページを再読み込み');
+        return false;
       } finally {
         running.delete(container);
       }
@@ -172,6 +175,26 @@ export default defineContentScript({
       }
       mounted.forEach((m) => m.handle.reposition());
     }
+
+    // Triggered by the action popup's "AI で分析" button: runs the same flow as
+    // the in-page button on the first detected form, reusing its handle so
+    // errors surface the same way. No form mounted means nothing to fill.
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
+        return false;
+      }
+      const first = detectForms(document)[0];
+      const entry = first ? mounted.get(first.container) : undefined;
+      if (!first || !entry) {
+        sendResponse({ ok: false, reason: 'no-form' });
+        return false;
+      }
+      void guardedRun(first.container, entry.handle).then(
+        (started) => sendResponse(started ? { ok: true } : { ok: false, reason: 'error' }),
+        () => sendResponse({ ok: false, reason: 'error' }),
+      );
+      return true;
+    });
 
     let timer: number | undefined;
     const schedule = () => {

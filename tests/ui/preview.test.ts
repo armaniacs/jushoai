@@ -33,9 +33,9 @@ afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
 describe('showPreview', () => {
   it('renders the reanalyze button only when a handler is given', () => {
     const withButton = open({ onReanalyze: () => {} });
-    expect(button(withButton.root, 'LLM で再分析')).toBeTruthy();
+    expect(button(withButton.root, 'AI で分析')).toBeTruthy();
     const without = open();
-    expect(button(without.root, 'LLM で再分析')).toBeUndefined();
+    expect(button(without.root, 'AI で分析')).toBeUndefined();
   });
 
   it('keeps the apply gating by row status', () => {
@@ -49,7 +49,7 @@ describe('showPreview', () => {
     let resolve!: () => void;
     const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
     const { root } = open({ rows: [row('ok')], onReanalyze });
-    button(root, 'LLM で再分析')!.click();
+    button(root, 'AI で分析')!.click();
     // The handler runs on a microtask, so the click itself does not finish the analysis;
     // the test must wait for the restore.
     await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
@@ -57,7 +57,7 @@ describe('showPreview', () => {
     expect(button(root, '入力する')!.disabled).toBe(true);
     expect(button(root, 'キャンセル')!.disabled).toBe(true);
     resolve();
-    await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
+    await vi.waitFor(() => expect(button(root, 'AI で分析')!.disabled).toBe(false));
     expect(button(root, '入力する')!.disabled).toBe(false);
     expect(button(root, 'キャンセル')!.disabled).toBe(false);
   });
@@ -65,16 +65,16 @@ describe('showPreview', () => {
   it('re-enables the panel after a failed reanalysis', async () => {
     const onReanalyze = vi.fn(async () => { throw new Error('x'); });
     const { root } = open({ rows: [row('ok')], onReanalyze });
-    button(root, 'LLM で再分析')!.click();
-    await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
+    button(root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(button(root, 'AI で分析')!.disabled).toBe(false));
     expect(button(root, '入力する')!.disabled).toBe(false);
   });
 
   it('re-enables the panel after a synchronously throwing reanalysis', async () => {
     const onReanalyze = vi.fn(() => { throw new Error('sync'); });
     const { root } = open({ rows: [row('ok')], onReanalyze });
-    button(root, 'LLM で再分析')!.click();
-    await vi.waitFor(() => expect(button(root, 'LLM で再分析')!.disabled).toBe(false));
+    button(root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(button(root, 'AI で分析')!.disabled).toBe(false));
     expect(button(root, '入力する')!.disabled).toBe(false);
     expect(button(root, 'キャンセル')!.disabled).toBe(false);
   });

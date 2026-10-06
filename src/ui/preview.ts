@@ -109,7 +109,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const onReanalyze = opts.onReanalyze;
   const reanalyze = onReanalyze
     ? Object.assign(document.createElement('button'), {
-        type: 'button', className: 'reanalyze', textContent: 'LLM で再分析',
+        type: 'button', className: 'reanalyze', textContent: 'AI で分析',
       })
     : null;
   let hasOk = false;
@@ -127,7 +127,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const syncButtons = () => {
     if (reanalyze) {
       reanalyze.disabled = busy;
-      reanalyze.textContent = busy ? '分析中…' : 'LLM で再分析';
+      reanalyze.textContent = busy ? '分析中…' : 'AI で分析';
     }
     cancel.disabled = busy;
     apply.disabled = busy || !hasOk;

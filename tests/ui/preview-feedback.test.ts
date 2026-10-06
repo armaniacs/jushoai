@@ -38,7 +38,7 @@ describe('preview feedback checkbox', () => {
     const onReanalyze = vi.fn(async () => {});
     const { root } = open({ rows: [row('ok')], onReanalyze });
     expect(isFeedbackVisible(root)).toBe(false);
-    [...root.querySelectorAll('button')].find((b) => b.textContent === 'LLM で再分析')!.click();
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     const actions = [...root.querySelectorAll('.actions')[0]!.children].map((el) => el.textContent);
     expect(actions.indexOf('開発にFBする')).toBeGreaterThan(actions.indexOf('入力する'));
@@ -48,7 +48,7 @@ describe('preview feedback checkbox', () => {
   it('stays hidden when reanalysis fails', async () => {
     const onReanalyze = vi.fn(async () => { throw new Error('x'); });
     const { root } = open({ rows: [row('ok')], onReanalyze });
-    [...root.querySelectorAll('button')].find((b) => b.textContent === 'LLM で再分析')!.click();
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     await new Promise((r) => setTimeout(r, 20));
     expect(isFeedbackVisible(root)).toBe(false);
@@ -57,7 +57,7 @@ describe('preview feedback checkbox', () => {
   it('carries a privacy note that values are never sent', async () => {
     const onReanalyze = vi.fn(async () => {});
     const { root } = open({ rows: [row('ok')], onReanalyze });
-    [...root.querySelectorAll('button')].find((b) => b.textContent === 'LLM で再分析')!.click();
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     const label = feedbackLabel(root)! as HTMLElement;
     expect(label.title).toContain('プロファイルの値は送りません');
@@ -67,7 +67,7 @@ describe('preview feedback checkbox', () => {
     const onApply = vi.fn();
     const onReanalyze = vi.fn(async () => {});
     const { root } = open({ rows: [row('ok')], onReanalyze, onApply });
-    [...root.querySelectorAll('button')].find((b) => b.textContent === 'LLM で再分析')!.click();
+    [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     feedbackLabel(root)!.querySelector('input')!.click();
     applyButton(root)!.click();

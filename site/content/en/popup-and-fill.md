@@ -14,6 +14,7 @@ Click the JushoAI icon in the browser toolbar to open `入力内容の確認` (r
 - Which profile and address are in use
 - The profile each address belongs to (addresses with no profile show as `共通`, shared)
 - The gear at the top right, or `設定を開く` (open settings), takes you to the settings page
+- `AI で分析` (analyze with AI) starts classification through preview for the form in the open tab. On a tab without a form it shows why instead
 
 If no profile or address is registered yet, it shows guidance for registering them.
 
@@ -34,9 +35,9 @@ A `JushoAI で入力` (fill with JushoAI) button appears near a form that has se
 
 Fields classified by AI are marked `AI判定` (decided by AI). Close the preview with the Esc key or `キャンセル` (cancel).
 
-## Re-analyze with an LLM
+## Analyze with AI
 
-If some fields could not be classified by the rules, use `LLM で再分析` (re-analyze with an LLM) in the preview to have the AI you configured classify them again. See [Setting up an AI provider](/en/guides/ai-providers/) for the AI settings.
+If some fields could not be classified by the rules, use `AI で分析` (analyze with AI) in the preview to have the AI you configured classify them again. Once configured, fields the rules could not identify can also be classified by AI. See [Setting up an AI provider](/en/guides/ai-providers/) for the AI settings.
 
 If re-analysis makes a form work, you can tell the developers with `開発にFBする` (send feedback). It opens a public GitHub issue and sends only field metadata, never your profile values.
 

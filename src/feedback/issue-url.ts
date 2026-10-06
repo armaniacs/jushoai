@@ -40,9 +40,9 @@ export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): strin
       return 'unknown';
     }
   })();
-  const title = `分類FB: 初回NG→LLM再分析OK (${host})`;
+  const title = `分類FB: 初回NG→AIで分析OK (${host})`;
   const lines: string[] = [
-    '初回では該当のURLは成功しなかったが、LLMで再分析したら成功した。',
+    '初回では該当のURLは成功しなかったが、AIで分析したら成功した。',
     '',
     `- Page: ${page}`,
     `- Provider: ${input.provider}`,
@@ -51,7 +51,7 @@ export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): strin
     '### Before (初回分類)',
     ...input.fields.map((m) => fieldLine(m, input.before.get(m.id))),
     '',
-    '### After (LLM再分析)',
+    '### After (AIで分析)',
     ...input.fields.map((m) => fieldLine(m, input.after.get(m.id))),
     '',
     '### Field metadata (profile values are never included)',
