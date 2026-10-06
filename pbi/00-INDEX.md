@@ -5,6 +5,8 @@
 - （なし）
 
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
+台帳: `archived/2026-10-06-00-backlog-settings-navigation.md`
+台帳: `archived/2026-10-06-00-backlog-action-popup.md`
 
 ## アーカイブ一覧
 
@@ -23,3 +25,10 @@
 | 2026-10-05-form-report.md | f26025b feat: フィードバックに注意文を付け報告PBIと優先度メモを確定する |
 | 2026-10-05-00-backlog-priorities.md | f26025b feat: フィードバックに注意文を付け報告PBIと優先度メモを確定する |
 | 2026-10-06-01-feat-toolbar-icon.md | a371d5d feat: ツールバーに拡張機能アイコンを導入する |
+| 2026-10-06-00-backlog-settings-navigation.md | 未コミット（1006a）設定ページの左メニュー化の台帳 |
+| 2026-10-06-02-feat-options-sidebar.md | 未コミット（1006a）feat: 設定ページに左メニューを導入する |
+| 2026-10-06-03-feat-options-report-link.md | 未コミット（1006a）feat: 左メニューの最下部に不具合報告を置く |
+| 2026-10-06-00-backlog-action-popup.md | 未コミット（1006a）ロゴ・確認ポップアップ・ギアの台帳 |
+| 2026-10-06-04-feat-options-logo.md | 未コミット（1006a）feat: 設定画面の左上にロゴを置き Pages へリンクする |
+| 2026-10-06-05-feat-action-popup.md | 未コミット（1006a）feat: ツールバークリックで確認ポップアップを開く |
+| 2026-10-06-06-feat-popup-gear.md | 未コミット（1006a）feat: 確認ポップアップの右上にギアを置く |

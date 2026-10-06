@@ -1,7 +1,18 @@
 {
   "name": "jushoai",
   "private": true,
-  "version": "0.1.6",
+  "version": "0.1.7",
+  "description": "Japanese form filler: names, furigana and split addresses",
+  "license": "GPL-3.0-only",
+  "author": "armaniacs",
+  "homepage": "https://armaniacs.github.io/jushoai/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/armaniacs/jushoai.git"
+  },
+  "bugs": {
+    "url": "https://github.com/armaniacs/jushoai/issues"
+  },
   "type": "module",
   "scripts": {
     "dev": "wxt",

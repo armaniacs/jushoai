@@ -4,6 +4,26 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [0.1.7] - 2026-10-06
+
+### Added
+
+- 設定ページの左メニュー化（プロファイル・住所・AI判定のページ切り替え、URLハッシュ対応）
+- 左メニュー最下部の不具合報告リンク（GitHub issue起票ページを開く、値は送らない旨の注意書き付き）
+- 左上のロゴからドキュメント（GitHub Pages）へのリンク
+- ツールバークリックで入力内容の確認ポップアップ（保存済み一覧と使用中表示、未登録時の設定案内、右上ギアから設定画面を開く）
+- 住所へのプロファイル紐付け（使うプロファイルの選択、共通住所、プロファイル切替時の住所自動選択、ポップアップでの使う人表示）
+- ドキュメントサイトのガイド追加（プロファイル、住所、ツールバーとフォームへの入力、対応する入力欄、ライセンス）
+- ドキュメントサイトから GitHub Issue をワンクリックで起票する導線（機能の要望、入力できなかったフォーム、不具合）と Issue フォーム
+- ドキュメントサイトの英語版 404、sitemap、robots.txt、OGP メタデータ
+- 英語版 README、package.json のライセンス（GPL-3.0-only）・リポジトリ情報、リリース手順（docs/release.md）
+
+## [0.1.6] - 2026-10-06
+
+### Added
+
+- ツールバーに拡張機能アイコンを表示する
+
 ## [0.1.5] - 2026-10-06
 
 ### Added
@@ -110,3 +130,8 @@
 
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
+
+[0.1.7]: https://github.com/armaniacs/jushoai/compare/v0.1.6...v0.1.7
+[0.1.6]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.6
+[0.1.2]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.2
+[0.1.1]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.1
