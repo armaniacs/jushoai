@@ -42,3 +42,5 @@
 | 2026-10-06-07-feat-rename-to-ai-analyze.md | 未コミット（同上）feat: プレビューの再分析ボタンを AI で分析に改名する |
 | 2026-10-06-08-feat-popup-ai-analyze.md | 未コミット（同上）feat: 確認ポップアップに AI で分析ボタンを置く |
 | 2026-10-06-09-feat-ai-analyze-docs.md | 未コミット（同上）feat: 改名とボタンに合わせてドキュメントを直す |
+| 2026-10-06-10-fix-profile-label-example.md | c45417d fix: プロファイル名の例示からテスト用を削る |
+| 2026-10-06-11-fix-ai-notice-metadata.md | fca4316 fix: AI設定のメタデータ説明文を内訳分離で読みやすくする |
