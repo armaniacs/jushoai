@@ -1,6 +1,7 @@
 import { escapeHtml } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
+import { issueUrl, REPO_URL, renderFeedbackSection, type FeedbackStrings } from './feedback.ts';
 import { COPY_LABEL, pageUrl, type Lang } from './site.ts';
 
 interface Titled { title: string; body: string }
@@ -8,7 +9,7 @@ interface Titled { title: string; body: string }
 export interface Strings {
   meta: { title: string; description: string };
   chrome: Chrome;
-  hero: { eyebrow: string; titleBefore: string; titleEmphasis: string; tagline: string; ctaInstall: string; ctaGuide: string };
+  hero: { eyebrow: string; titleBefore: string; titleEmphasis: string; tagline: string; ctaInstall: string; ctaGuide: string; ctaFeedback: string };
   features: { title: string; items: Titled[] };
   mock: {
     uiNote: string; captionButton: string; captionPreview: string; captionGuide: string;
@@ -18,8 +19,10 @@ export interface Strings {
   fields: { title: string; items: Titled[] };
   providers: { title: string; lead: string; items: { name: string; body: string }[] };
   privacy: { title: string; items: Titled[]; link: string };
-  install: { title: string; steps: string[]; code: string; more: string };
+  install: { title: string; steps: string[]; code: string; more: string; releases: string };
   faq: { title: string; items: { q: string; a: string }[] };
+  feedback: FeedbackStrings;
+  license: { title: string; body: string; link: string };
   guides: { title: string; lead: string };
 }
 
@@ -36,7 +39,7 @@ export function renderLanding(p: { lang: Lang; base: string; s: Strings }): stri
 <span class="eyebrow">${e(s.hero.eyebrow)}</span>
 <h1>${e(s.hero.titleBefore)}<em>${e(s.hero.titleEmphasis)}</em></h1>
 <p class="tagline">${e(s.hero.tagline)}</p>
-<div class="actions"><a class="btn primary" href="#install">${e(s.hero.ctaInstall)}</a><a class="btn" href="${u('guides/')}">${e(s.hero.ctaGuide)}</a></div>
+<div class="actions"><a class="btn primary" href="#install">${e(s.hero.ctaInstall)}</a><a class="btn" href="${u('guides/')}">${e(s.hero.ctaGuide)}</a><a class="btn" href="${e(issueUrl('feature-request'))}" rel="noopener">${e(s.hero.ctaFeedback)}</a></div>
 <div class="hero-mock">${mockButton()}</div>
 </div></section>
 
@@ -79,7 +82,16 @@ ${cards(s.privacy.items)}
 <h2 class="section-title">${e(s.install.title)}</h2>
 <ol>${s.install.steps.map((t) => `<li>${e(t)}</li>`).join('')}</ol>
 <div class="code"><button class="copy" type="button" data-copy data-done="${e(copyLabel.done)}">${e(copyLabel.copy)}</button><pre><code>${e(s.install.code)}</code></pre></div>
+<p><a class="btn primary" href="${e(REPO_URL)}/releases/latest" rel="noopener">${e(s.install.releases)}</a></p>
 <p><a href="${u('guides/getting-started/')}">${e(s.install.more)}</a></p>
+</div></section>
+
+${renderFeedbackSection(s.feedback)}
+
+<section class="block" id="license"><div class="wrap narrow">
+<h2 class="section-title">${e(s.license.title)}</h2>
+<p>${e(s.license.body)}</p>
+<p><a href="${u('guides/license/')}">${e(s.license.link)}</a></p>
 </div></section>
 
 <section class="block" id="faq"><div class="wrap narrow">

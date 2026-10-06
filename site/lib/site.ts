@@ -5,7 +5,11 @@ import { renderMarkdown, type Heading } from './markdown.ts';
 
 export type Lang = 'ja' | 'en';
 export const LANGS: readonly Lang[] = ['ja', 'en'];
-export const GUIDE_SLUGS = ['getting-started', 'ai-providers', 'privacy', 'how-it-works', 'troubleshooting'] as const;
+export const SITE_ORIGIN = 'https://armaniacs.github.io';
+export const GUIDE_SLUGS = [
+  'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'supported-fields',
+  'ai-providers', 'privacy', 'how-it-works', 'troubleshooting', 'license',
+] as const;
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 
 export const COPY_LABEL: Record<Lang, { copy: string; done: string }> = {

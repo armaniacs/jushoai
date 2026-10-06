@@ -1,7 +1,7 @@
 ---
 title: Setting up an AI provider
 description: How to choose and configure an AI provider that classifies fields the rules cannot identify.
-order: 2
+order: 6
 ---
 
 # Setting up an AI provider

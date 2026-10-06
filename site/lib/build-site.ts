@@ -1,9 +1,10 @@
 import { cp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, relative, resolve, sep } from 'node:path';
+import { renderFeedbackFooter } from './feedback.ts';
 import { renderGuidesIndex } from './guides-index.ts';
 import { renderLanding, type Strings } from './landing.ts';
 import { renderPage } from './layout.ts';
-import { diffShape, findEmptyStrings, LANGS, loadGuides, pagePath, type Lang } from './site.ts';
+import { diffShape, findEmptyStrings, LANGS, loadGuides, pagePath, pageUrl, SITE_ORIGIN, type Lang } from './site.ts';
 
 export interface BuildOptions {
   siteDir: string;
@@ -79,19 +80,35 @@ export async function buildSite(o: BuildOptions): Promise<string[]> {
       written.push(
         await writePage(o.outDir, pagePath(lang, `guides/${g.slug}/`), renderPage({
           ...common, path: `guides/${g.slug}/`, title: `${g.title} — JushoAI`, description: g.description,
-          body: `<article class="prose">\n${g.html}</article>`, hasCode: g.html.includes('data-copy'),
+          body: `<article class="prose">\n${g.html}${renderFeedbackFooter(s.feedback)}\n</article>`, hasCode: g.html.includes('data-copy'),
         })),
       );
     }
   }
 
-  const ja = strings.ja;
+  const notFound: Record<Lang, { title: string; body: string; home: string }> = {
+    ja: { title: '404 — JushoAI', body: 'ページが見つかりません。', home: 'ホームへ戻る' },
+    en: { title: '404 — JushoAI', body: 'Page not found.', home: 'Back to home' },
+  };
+  for (const lang of LANGS) {
+    const n = notFound[lang];
+    await writeFile(
+      join(o.outDir, lang === 'en' ? 'en/404.html' : '404.html'),
+      renderPage({
+        lang, base: o.base, path: '', chrome: strings[lang].chrome, title: n.title, description: n.body,
+        body: `<div class="prose"><h1>404</h1><p>${n.body}</p><p><a href="${pageUrl(o.base, lang, '')}">${n.home}</a></p></div>`,
+      }),
+    );
+  }
+
+  const urls = written.map((f) => {
+    const dir = relative(o.outDir, dirname(f)).split(sep).join('/');
+    return `${SITE_ORIGIN}${o.base}${dir === '' ? '' : `${dir}/`}`;
+  });
   await writeFile(
-    join(o.outDir, '404.html'),
-    renderPage({
-      lang: 'ja', base: o.base, path: '', chrome: ja.chrome, title: '404 — JushoAI', description: 'ページが見つかりません',
-      body: `<div class="prose"><h1>404</h1><p>ページが見つかりません。</p><p><a href="${o.base}">ホームへ戻る</a></p></div>`,
-    }),
+    join(o.outDir, 'sitemap.xml'),
+    `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `<url><loc>${u}</loc></url>`).join('\n')}\n</urlset>\n`,
   );
+  await writeFile(join(o.outDir, 'robots.txt'), `User-agent: *\nAllow: /\n\nSitemap: ${SITE_ORIGIN}${o.base}sitemap.xml\n`);
   return written;
 }

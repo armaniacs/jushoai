@@ -3,8 +3,12 @@ import { fileURLToPath } from 'node:url';
 import { checkSite } from './lib/check-site.ts';
 import { normalizeBase } from './lib/site.ts';
 
-const outDir = resolve(dirname(fileURLToPath(import.meta.url)), '..', 'site-dist');
-const problems = await checkSite(outDir, normalizeBase(process.env.SITE_BASE));
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const problems = await checkSite(
+  resolve(root, 'site-dist'),
+  normalizeBase(process.env.SITE_BASE),
+  resolve(root, '.github', 'ISSUE_TEMPLATE'),
+);
 
 for (const p of problems) console.error(`${p.file}: ${p.message}`);
 if (problems.length > 0) {

@@ -7,7 +7,7 @@ site-dist/
 .DS_Store
 
 .kilo/
-.supoerpowers/
+.superpowers/
 .claude/
 .agents
 .env

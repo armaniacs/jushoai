@@ -1,7 +1,7 @@
 ---
 title: Supported forms and how it works
 description: How fields are identified, how values are produced, the safety measures, and which fields are not supported.
-order: 4
+order: 8
 ---
 
 # Supported forms and how it works
@@ -49,4 +49,4 @@ The AI classifies only the fields the rules cannot identify. It does not produce
 
 The extension supports text, email, tel and search inputs, select lists, and gender and decade radio button groups. Other controls, such as checkboxes and date fields, are not supported.
 
-Fields that cannot be identified are not filled. Items such as date of birth are not handled. Gender and decade are supported for select lists and radio button groups; other radio buttons are not filled.
+Fields that cannot be identified are not filled. Gender and decade are supported for select lists and radio button groups, and the birthday, school and similar items are filled into their matching fields. Other radio buttons are not filled. See [Supported fields](/en/guides/supported-fields/) for the full list.

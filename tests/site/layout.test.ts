@@ -3,8 +3,8 @@ import { describe, it, expect } from 'vitest';
 import { renderPage, type Chrome } from '../../site/lib/layout.ts';
 
 const chrome: Chrome = {
-  nav: { home: 'ホーム', guides: 'ガイド', install: 'インストール', langName: 'English', skip: '本文へ' },
-  footer: { tagline: 'tag', guides: 'ガイド', privacy: 'プライバシー', source: 'ソース' },
+  nav: { home: 'ホーム', guides: 'ガイド', install: 'インストール', feedback: '要望を送る', langName: 'English', skip: '本文へ' },
+  footer: { tagline: 'tag', guides: 'ガイド', privacy: 'プライバシー', license: 'ライセンス', feedback: '要望を送る', source: 'ソース' },
 };
 
 const page = (over: Partial<Parameters<typeof renderPage>[0]> = {}) =>
@@ -69,5 +69,19 @@ describe('renderPage', () => {
 
   it('gives the logo an empty alt because the brand name is next to it', () => {
     expect(page()).toMatch(/<img src="\/assets\/logo\.png" alt="" width="28" height="28">/);
+  });
+
+  it('links one-click issue creation from the nav and the footer, and the license page', () => {
+    const html = page();
+    const url = 'https://github.com/armaniacs/jushoai/issues/new?template=feature-request.yml';
+    expect(html.split(url).length - 1).toBe(2);
+    expect(html).toContain('href="/guides/license/"');
+  });
+
+  it('declares Open Graph metadata with absolute URLs', () => {
+    const html = page({ base: '/jushoai/' });
+    expect(html).toContain('<meta property="og:title" content="T">');
+    expect(html).toContain('<meta property="og:url" content="https://armaniacs.github.io/jushoai/guides/privacy/">');
+    expect(html).toContain('content="https://armaniacs.github.io/jushoai/assets/logo.png"');
   });
 });

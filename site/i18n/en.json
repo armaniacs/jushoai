@@ -4,8 +4,8 @@
     "description": "A Chromium browser extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
   },
   "chrome": {
-    "nav": { "home": "Home", "guides": "Guides", "install": "Install", "langName": "日本語", "skip": "Skip to content" },
-    "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "source": "Source" }
+    "nav": { "home": "Home", "guides": "Guides", "install": "Install", "feedback": "Send feedback", "langName": "日本語", "skip": "Skip to content" },
+    "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "license": "License", "feedback": "Send feedback", "source": "Source" }
   },
   "hero": {
     "eyebrow": "Extension for Chromium-based browsers (tested on Edge)",
@@ -13,7 +13,8 @@
     "titleEmphasis": "in the right fields and the right format",
     "tagline": "Forms split into family name, given name, furigana and prefecture-to-street fields get filled in one click. You review everything in a preview first.",
     "ctaInstall": "How to install",
-    "ctaGuide": "Read the guides"
+    "ctaGuide": "Read the guides",
+    "ctaFeedback": "Send feedback"
   },
   "features": {
     "title": "Built for what makes Japanese forms hard",
@@ -21,6 +22,7 @@
       { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number and prefecture-to-building address fields in the shape each field expects." },
       { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
       { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
+      { "title": "Multiple profiles and addresses", "body": "Keep up to 10 profiles and any number of addresses. Each address can be tied to the profile that uses it. The toolbar icon shows what is registered and which profile is in use." },
       { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
     ]
   },
@@ -49,6 +51,7 @@
       { "title": "Furigana", "body": "Supports full-width katakana, hiragana and half-width katakana, converting to match the field's example text or description." },
       { "title": "Addresses", "body": "Supports addresses split across fields such as prefecture, city, street and building. Prefecture dropdowns are matched even when the notation differs, such as 東京 versus 東京都." },
       { "title": "Phone and postal code", "body": "Handles hyphenated and plain numbers, in a single field or split fields, judged from the field's example text and maximum length." },
+      { "title": "Birthday, gender, age group and school", "body": "The birthday is entered as year, month, day or era. Gender and age group go into dropdowns and radio buttons, and the school and department into matching fields." },
       { "title": "Safe filling", "body": "Fields that already have a value are not overwritten, and values longer than the maximum length are not entered but flagged." }
     ]
   },
@@ -73,12 +76,13 @@
   "install": {
     "title": "Install",
     "steps": [
-      "It is not on the stores, so build it from source.",
+      "It is not on the stores. Unzip the release from GitHub Releases, or build it from source.",
       "Open chrome://extensions (Chrome) or edge://extensions (Edge) and turn on Developer mode.",
-      "Choose \"Load unpacked\" and select the built dist/chrome-mv3 folder (the label may differ by browser).",
+      "Choose \"Load unpacked\" and select the unzipped folder or the built dist/chrome-mv3 folder (the label may differ by browser).",
       "In the extension's settings page, register your profile and addresses."
     ],
     "code": "make install\nmake build",
+    "releases": "Download from GitHub Releases",
     "more": "See the \"Getting started\" guide for details."
   },
   "faq": {
@@ -91,8 +95,23 @@
       { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." }
     ]
   },
+  "feedback": {
+    "title": "Send feedback",
+    "lead": "Feature requests, forms that did not fill correctly, and bug reports are welcome as GitHub issues. The buttons below open a ready-made form (a GitHub account is required).",
+    "items": [
+      { "title": "Feature request", "body": "Tell us about a feature you would like, or something that is hard to use.", "cta": "Request a feature" },
+      { "title": "A form that did not fill", "body": "Send the URL of the form and what happened.", "cta": "Report a form" },
+      { "title": "Bug report", "body": "If something misbehaves, tell us how to reproduce it.", "cta": "Report a bug" }
+    ],
+    "note": "Issues are public. Do not include personal information such as your name, address or phone number."
+  },
+  "license": {
+    "title": "License",
+    "body": "JushoAI is open-source software released under the GNU General Public License v3.0 only (GPL-3.0-only). You may use, copy, modify and redistribute it free of charge. If you distribute a modified version, you must do so under the same GPLv3 terms and provide the source code.",
+    "link": "Read the license terms"
+  },
   "guides": {
     "title": "Guides",
-    "lead": "From installation to AI providers and privacy."
+    "lead": "From installation and setup to usage, AI providers, privacy and the license."
   }
 }

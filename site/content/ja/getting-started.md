@@ -10,7 +10,13 @@ JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録
 
 ## インストール
 
-ストアには公開していません。ソースからビルドして読み込みます。
+ストアには公開していません。GitHub Releases の zip を展開して読み込むか、ソースからビルドします。
+
+### zip から
+
+[GitHub Releases](https://github.com/armaniacs/jushoai/releases) から zip をダウンロードして、展開します。
+
+### ソースから
 
 ```bash
 make install
@@ -21,7 +27,7 @@ make build
 
 1. 「デベロッパーモード」を有効にします。
 2. 「パッケージ化されていない拡張機能を読み込む」を選びます。ボタンの表記はブラウザや言語によって異なることがあります。
-3. `dist/chrome-mv3` フォルダを選びます。
+3. 展開したフォルダ、またはビルドで出来た `dist/chrome-mv3` フォルダを選びます。
 
 ## プロファイルと住所を登録する
 
@@ -63,6 +69,8 @@ Esc キーか「キャンセル」で閉じます。プレビューを開いて�
 
 ## 次に読むもの
 
+- [プロファイル](/guides/profiles/)と[住所](/guides/addresses/)
+- [ツールバーとフォームへの入力](/guides/popup-and-fill/)
 - [AI プロバイダの設定](/guides/ai-providers/)
 - [プライバシーと送信データ](/guides/privacy/)
 - [対応するフォームと仕組み](/guides/how-it-works/)

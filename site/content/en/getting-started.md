@@ -12,7 +12,13 @@ The extension screens are in Japanese only. This guide quotes each label exactly
 
 ## Install
 
-The extension is not published in a store. Build it from source and load it into your browser.
+The extension is not published in a store. Unzip the release from GitHub Releases and load it, or build it from source.
+
+### From the zip
+
+Download the zip from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and unzip it.
+
+### From source
 
 ```bash
 make install
@@ -23,7 +29,7 @@ Then open the extensions page of your browser: `chrome://extensions` in Chrome, 
 
 1. Turn on developer mode.
 2. Choose "Load unpacked". The button label can differ by browser and language.
-3. Select the `dist/chrome-mv3` folder.
+3. Select the unzipped folder, or the built `dist/chrome-mv3` folder.
 
 ## Register your profile and addresses
 
@@ -65,6 +71,8 @@ At the top of the preview, you can choose which address to use. The list updates
 
 ## What to read next
 
+- [Profiles](/en/guides/profiles/) and [Addresses](/en/guides/addresses/)
+- [Toolbar and filling a form](/en/guides/popup-and-fill/)
 - [Setting up an AI provider](/en/guides/ai-providers/)
 - [Privacy and what is sent](/en/guides/privacy/)
 - [Supported forms and how it works](/en/guides/how-it-works/)

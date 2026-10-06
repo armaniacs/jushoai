@@ -74,7 +74,7 @@ describe('loadGuides', () => {
     expect(guides).toHaveLength(GUIDE_SLUGS.length * 2);
     const g = guides.find((x) => x.lang === 'en' && x.slug === 'privacy')!;
     expect(g.title).toBe('privacy en');
-    expect(g.order).toBe(3);
+    expect(g.order).toBe(GUIDE_SLUGS.indexOf('privacy') + 1);
     expect(g.html).toContain('<h2 id="a">A</h2>');
   });
 

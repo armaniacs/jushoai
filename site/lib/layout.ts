@@ -1,10 +1,12 @@
 import { escapeHtml } from './markdown.ts';
-import { pageUrl, type Lang } from './site.ts';
+import { issueUrl, REPO_URL } from './feedback.ts';
+import { pageUrl, SITE_ORIGIN, type Lang } from './site.ts';
 
 export interface NavStrings {
   home: string;
   guides: string;
   install: string;
+  feedback: string;
   langName: string;
   skip: string;
 }
@@ -13,6 +15,8 @@ export interface FooterStrings {
   tagline: string;
   guides: string;
   privacy: string;
+  license: string;
+  feedback: string;
   source: string;
 }
 
@@ -47,6 +51,13 @@ export function renderPage(p: PageInput): string {
 <title>${escapeHtml(p.title)}</title>
 <meta name="description" content="${escapeHtml(p.description)}">
 <meta name="color-scheme" content="dark light">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="JushoAI">
+<meta property="og:title" content="${escapeHtml(p.title)}">
+<meta property="og:description" content="${escapeHtml(p.description)}">
+<meta property="og:url" content="${escapeHtml(SITE_ORIGIN + pageUrl(p.base, p.lang, p.path))}">
+<meta property="og:image" content="${escapeHtml(SITE_ORIGIN + p.base + 'assets/logo.png')}">
+<meta name="twitter:card" content="summary">
 <link rel="icon" type="image/png" sizes="32x32" href="${asset('favicon-32.png')}">
 <link rel="apple-touch-icon" href="${asset('apple-touch-icon.png')}">
 <link rel="alternate" hreflang="ja" href="${u('ja', p.path)}">
@@ -62,6 +73,7 @@ export function renderPage(p: PageInput): string {
 <a href="${u(p.lang, '')}">${escapeHtml(nav.home)}</a>
 <a href="${u(p.lang, 'guides/')}">${escapeHtml(nav.guides)}</a>
 <a href="${u(p.lang, '')}#install">${escapeHtml(nav.install)}</a>
+<a class="cta" href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(nav.feedback)}</a>
 <a class="lang" href="${u(other, p.path)}" hreflang="${other}" lang="${other}">${escapeHtml(nav.langName)}</a>
 </nav>
 </header>
@@ -70,7 +82,7 @@ ${p.body}
 </main>
 <footer>
 <p>${escapeHtml(footer.tagline)}</p>
-<p><a href="${u(p.lang, 'guides/')}">${escapeHtml(footer.guides)}</a> / <a href="${u(p.lang, 'guides/privacy/')}">${escapeHtml(footer.privacy)}</a></p>
+<p><a href="${u(p.lang, 'guides/')}">${escapeHtml(footer.guides)}</a> / <a href="${u(p.lang, 'guides/privacy/')}">${escapeHtml(footer.privacy)}</a> / <a href="${u(p.lang, 'guides/license/')}">${escapeHtml(footer.license)}</a> / <a href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(footer.feedback)}</a> / <a href="${escapeHtml(REPO_URL)}" rel="noopener">${escapeHtml(footer.source)}</a></p>
 </footer>
 ${p.hasCode ? `<script src="${asset('copy.js')}" defer></script>\n` : ''}</body>
 </html>

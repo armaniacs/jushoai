@@ -140,3 +140,10 @@ footer p { margin: .25rem 0; }
 }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 .ui-note { margin-top: .75rem; }
+
+/* Feedback */
+.nav nav a.cta { background: var(--btn-bg); color: var(--btn-text); border-radius: 999px; padding: .2rem .9rem; font-weight: 600; }
+.nav nav a.cta:hover { color: var(--btn-text); text-decoration: underline; }
+.feedback-box { margin-top: 3rem; padding: 1.25rem 1.5rem; border: 1px solid var(--line); border-radius: var(--radius); background: var(--bg-soft); }
+.feedback-box h2 { margin-top: 0; font-size: 1.15rem; }
+.feedback-box p { margin: .5rem 0; }

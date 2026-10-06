@@ -1,5 +1,6 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { join, relative } from 'node:path';
+import { ISSUE_TEMPLATES, issueUrl } from './feedback.ts';
 
 export interface Problem {
   file: string;
@@ -28,8 +29,17 @@ const pageIds = (html: string) => new Set([...html.matchAll(/\bid="([^"]+)"/g)].
 
 const exists = (p: string) => stat(p).then((s) => s.isFile(), () => false);
 
-export async function checkSite(outDir: string, base: string): Promise<Problem[]> {
+// templatesDir is optional so unit tests can check a built tree without the repository layout.
+export async function checkSite(outDir: string, base: string, templatesDir?: string): Promise<Problem[]> {
   const problems: Problem[] = [];
+  if (templatesDir) {
+    for (const t of ISSUE_TEMPLATES) {
+      if (!(await exists(join(templatesDir, `${t}.yml`)))) problems.push({ file: templatesDir, message: `missing issue template: ${t}.yml` });
+    }
+  }
+  for (const f of ['sitemap.xml', 'robots.txt', '404.html', 'en/404.html']) {
+    if (!(await exists(join(outDir, f)))) problems.push({ file: f, message: 'missing file' });
+  }
   const idCache = new Map<string, Set<string | undefined>>();
   for (const file of await htmlFiles(outDir)) {
     const rel = relative(outDir, file);
@@ -39,6 +49,8 @@ export async function checkSite(outDir: string, base: string): Promise<Problem[]
     if (!/<html lang="[a-z-]+"/.test(html)) add('missing lang attribute on <html>');
     if (!/<title>[^<]+<\/title>/.test(html)) add('missing or empty <title>');
     if (!/<meta name="description" content="[^"]+">/.test(html)) add('missing or empty meta description');
+    if (!/<meta property="og:title" content="[^"]+">/.test(html)) add('missing og:title');
+    if (!html.includes(issueUrl('feature-request'))) add('missing one-click issue link');
     const h1 = (html.match(/<h1[\s>]/g) ?? []).length;
     if (h1 !== 1) add(`expected exactly one h1, found ${h1}`);
     for (const img of html.match(/<img\b[^>]*>/g) ?? []) {

@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 description: What to do for each badge state, what to check when AI or filling does not work, and common questions.
-order: 5
+order: 9
 ---
 
 # Troubleshooting
@@ -59,7 +59,7 @@ The preview lets you check fields and values before anything is filled. Only fie
 
 ### Which forms does it work on?
 
-It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. Items such as date of birth are not handled. Gender is supported for select lists only.
+It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. See [Supported fields](/en/guides/supported-fields/) for the fields it can fill.
 
 ### Ollama returns 403.
 

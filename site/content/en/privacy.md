@@ -1,7 +1,7 @@
 ---
 title: Privacy and what is sent
 description: What JushoAI sends and does not send, when it makes requests, and how API keys are stored.
-order: 3
+order: 7
 ---
 
 # Privacy and what is sent
