@@ -2,6 +2,10 @@ import { CATEGORIES, type Category, type FieldMeta } from './core/types';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
 
+// Send-size contract for ai-classify, shared with background-gateway:
+// the sender ships at most MAX_CLASSIFY_TOTAL fields in MAX_CLASSIFY_CHUNK
+// pieces, and the receiver backstops each message at MAX_CLASSIFY_FIELDS.
+// The chunk must stay below the backstop so a well-formed sender never trips it.
 export const MAX_CLASSIFY_FIELDS = 30;
 export const MAX_CLASSIFY_CHUNK = 20;
 const MAX_ID_LENGTH = 100;
