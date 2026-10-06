@@ -7,13 +7,13 @@
 ## 台帳
 
 - `2026-10-04-00-backlog-architecture-deepening.md`
-- `2026-10-06-00-backlog-holistic-improvement.md`
-- `2026-10-06-00-backlog-japanese-polish.md`
 - `2026-10-07-00-backlog-arch-deepening-b.md`
 - `2026-10-07-00-backlog-holistic-improvement-b.md`
 - `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-audit-log.md`（アーカイブ済み）
+- `archived/2026-10-06-00-backlog-holistic-improvement.md`（アーカイブ済み）
+- `archived/2026-10-06-00-backlog-japanese-polish.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-settings-navigation.md`（アーカイブ済み）
 
 ## アーカイブ一覧
@@ -67,3 +67,5 @@
 | 2026-10-07-05-fix-analyze-reason-union.md | 85e2fdc fix: 分析失敗理由をseam共有のunion語彙にする |
 | 2026-10-07-06-docs-classify-caps-contract.md | 871efb2 docs: 送信上限30・20・60の契約をコメントに残す |
 | 2026-10-07-07-refactor-nav-hash-helper.md | 0b8d1fc refactor: hash読みをreadPageFromHashに集約する |
+| 2026-10-06-00-backlog-holistic-improvement.md | ab3f856 fix: content-runをentrypoints走査外のsrc直下に移す（子PBI 17-22 全件完了でラウンド完結） |
+| 2026-10-06-00-backlog-japanese-polish.md | d29c9f9 chore(pbi): 完了PBI 16をアーカイブし台帳を更新する（子PBI 10-16 全件完了でラウンド完結） |
