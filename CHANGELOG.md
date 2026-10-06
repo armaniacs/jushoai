@@ -4,7 +4,7 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
-## [Unreleased]
+## [0.1.8] - 2026-10-06
 
 ### Added
 
@@ -140,6 +140,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.8]: https://github.com/armaniacs/jushoai/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/armaniacs/jushoai/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.6
 [0.1.2]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.2
