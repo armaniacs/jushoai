@@ -148,67 +148,120 @@ export function classifyField(m: FieldMeta): Classification | null {
   }
 
   if (!officeField) {
-    if (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) {
-      // 年/月/日 share 年月日, so month and day are tested first: 生年月日の月 must not
-      // read as a year, and 生年月日の日 must not read as a month.
-      if (/bday-month|(^|[^a-z])month|(^|[^\d年月日])月/.test(ownText)) return make('birthMonth', 0.7);
-      if (/bday-day|(^|[^a-z])day|(^|[^\d年月日])日/.test(ownText)) return make('birthDay', 0.7);
-      if (/bday-year|(^|[^a-z])year|(^|[^\d年月日])年/.test(ownText)) return make('birthYear', 0.7);
-    }
-    const eraByContext = ERA_CTX.test(`${ownText} ${legendText}`) && ERA_NAME.test(ownText);
-    const eraExact =
-      /^(令和|平成|昭和|大正|明治)$/.test(m.label.trim()) ||
-      /^(令和|平成|昭和|大正|明治)$/.test(stripExample(m.placeholder).trim());
-    if (eraByContext || eraExact) return make('birthEra', 0.7);
-    if (SCHOOL.test(ownText)) return make('school', 0.7);
-    if (SCHOOL.test(legendText)) return make('school', 0.65);
-    if (DEPT.test(ownText)) return make('department', 0.7);
-    if (DEPT.test(legendText)) return make('department', 0.65);
-    if (GENDER.test(ownText)) return make('gender', 0.7);
-    if (GENDER.test(legendText)) return make('gender', 0.65);
-    // Overseas address fields are named explicitly (country, address_1..4,
-    // postal_code), so they classify without sibling refinement. 国名 alone
-    // stays unclassified: on domestic forms it is ambiguous with person names.
-    // Bare address1/address2 keep their domestic readings (addressFull/building):
-    // the overseas reading needs an overseas context (city/state/street words
-    // or a half-width note) in the field or its heading.
     const COUNTRY = /country/i;
     const ADDR_LINE = /address[_-]?([1-4])/i;
     const POSTAL_CODE = /postal[-_ ]?code/i;
     const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
     const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
     const overseasCtx = `${ownText} ${legendText}`;
-    if (COUNTRY.test(ownText)) return make('country', 0.7);
-    if (COUNTRY.test(legendText)) return make('country', 0.65);
-    const addrLine = ownText.match(ADDR_LINE);
-    if (addrLine && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLine[1]}` as Category, 0.7);
-    const addrLegend = legendText.match(ADDR_LINE);
-    if (addrLegend && OVERSEAS_CTX.test(overseasCtx)) return make(`address${addrLegend[1]}` as Category, 0.65);
-    if (POSTAL_CODE.test(ownText) && FOREIGN_MARK.test(ownText)) return make('postalCode', 0.7);
-    if (POSTAL_CODE.test(legendText) && FOREIGN_MARK.test(overseasCtx)) {
-      return make('postalCode', 0.65);
-    }
     // A numeric age text box (年齢を数字で入力) must not qualify: only selects
     // and radio groups whose options carry decade (代) readings are decade fields.
     const AGE = /年齢|年代|ねんだい|年齢層|age/;
     const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
     const isOptionField = m.tag === 'select' || m.tag === 'radio';
-    if (AGE.test(ownText) && isOptionField && hasDecadeOptions(m.options)) {
-      return make('ageDecade', 0.7);
-    }
-    if (AGE.test(legendText) && isOptionField && hasDecadeOptions(m.options)) {
-      return make('ageDecade', 0.65);
-    }
-    // A half-width note plus a name signal means the field wants a latin name,
-    // even when name/id alone would read as a plain Japanese name (name_last).
-    // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
-    if (ROMAJI_CTX.test(ownText) && !NAME_EXCLUDE.test(ownText)) {
-      if (FULL_NAME.test(ownText)) return make('fullNameRomaji', 0.7);
-      const last = LAST.test(ownText);
-      const first = FIRST.test(ownText);
-      if (last && !first) return make('lastNameRomaji', 0.7);
-      if (first && !last) return make('firstNameRomaji', 0.7);
-      if (last || first) return make('fullNameRomaji', 0.7);
+
+    // Priority-ordered dispatch table: definition order is the match priority.
+    // A new field kind is one entry inserted at the right priority; existing
+    // entries stay untouched. Each matcher returns a Classification or null.
+    const dispatch: Array<() => Classification | null> = [
+      // birth: 年/月/日 share 年月日, so month and day come first: 生年月日の月 must
+      // not read as a year, and 生年月日の日 must not read as a month.
+      () =>
+        (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) &&
+        /bday-month|(^|[^a-z])month|(^|[^\d年月日])月/.test(ownText)
+          ? make('birthMonth', 0.7)
+          : null,
+      () =>
+        (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) &&
+        /bday-day|(^|[^a-z])day|(^|[^\d年月日])日/.test(ownText)
+          ? make('birthDay', 0.7)
+          : null,
+      () =>
+        (BIRTH_CTX.test(ownText) || BIRTH_CTX.test(legendText)) &&
+        /bday-year|(^|[^a-z])year|(^|[^\d年月日])年/.test(ownText)
+          ? make('birthYear', 0.7)
+          : null,
+      // era: context-gated kanji or an exact era word alone.
+      () => {
+        const eraByContext = ERA_CTX.test(`${ownText} ${legendText}`) && ERA_NAME.test(ownText);
+        const eraExact =
+          /^(令和|平成|昭和|大正|明治)$/.test(m.label.trim()) ||
+          /^(令和|平成|昭和|大正|明治)$/.test(stripExample(m.placeholder).trim());
+        return eraByContext || eraExact ? make('birthEra', 0.7) : null;
+      },
+      // school / department / gender: field itself (0.7) outranks a shared heading (0.65).
+      () => (SCHOOL.test(ownText) ? make('school', 0.7) : null),
+      () => (SCHOOL.test(legendText) ? make('school', 0.65) : null),
+      () => (DEPT.test(ownText) ? make('department', 0.7) : null),
+      () => (DEPT.test(legendText) ? make('department', 0.65) : null),
+      () => (GENDER.test(ownText) ? make('gender', 0.7) : null),
+      () => (GENDER.test(legendText) ? make('gender', 0.65) : null),
+      // Overseas address fields are named explicitly (country, address_1..4,
+      // postal_code), so they classify without sibling refinement. 国名 alone
+      // stays unclassified: on domestic forms it is ambiguous with person names.
+      // Bare address1/address2 keep their domestic readings (addressFull/building):
+      // the overseas reading needs an overseas context (city/state/street words
+      // or a half-width note) in the field or its heading.
+      () => (COUNTRY.test(ownText) ? make('country', 0.7) : null),
+      () => (COUNTRY.test(legendText) ? make('country', 0.65) : null),
+      () => {
+        const addrLine = ownText.match(ADDR_LINE);
+        return addrLine && OVERSEAS_CTX.test(overseasCtx)
+          ? make(`address${addrLine[1]}` as Category, 0.7)
+          : null;
+      },
+      () => {
+        const addrLegend = legendText.match(ADDR_LINE);
+        return addrLegend && OVERSEAS_CTX.test(overseasCtx)
+          ? make(`address${addrLegend[1]}` as Category, 0.65)
+          : null;
+      },
+      () =>
+        POSTAL_CODE.test(ownText) && FOREIGN_MARK.test(ownText) ? make('postalCode', 0.7) : null,
+      () =>
+        POSTAL_CODE.test(legendText) && FOREIGN_MARK.test(overseasCtx)
+          ? make('postalCode', 0.65)
+          : null,
+      // age: option fields with decade readings only.
+      () =>
+        AGE.test(ownText) && isOptionField && hasDecadeOptions(m.options)
+          ? make('ageDecade', 0.7)
+          : null,
+      () =>
+        AGE.test(legendText) && isOptionField && hasDecadeOptions(m.options)
+          ? make('ageDecade', 0.65)
+          : null,
+      // romaji: a half-width note plus a name signal means the field wants a latin
+      // name, even when name/id alone would read as a plain Japanese name (name_last).
+      // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
+      () =>
+        ROMAJI_CTX.test(ownText) && !NAME_EXCLUDE.test(ownText) && FULL_NAME.test(ownText)
+          ? make('fullNameRomaji', 0.7)
+          : null,
+      () =>
+        ROMAJI_CTX.test(ownText) &&
+        !NAME_EXCLUDE.test(ownText) &&
+        LAST.test(ownText) &&
+        !FIRST.test(ownText)
+          ? make('lastNameRomaji', 0.7)
+          : null,
+      () =>
+        ROMAJI_CTX.test(ownText) &&
+        !NAME_EXCLUDE.test(ownText) &&
+        FIRST.test(ownText) &&
+        !LAST.test(ownText)
+          ? make('firstNameRomaji', 0.7)
+          : null,
+      () =>
+        ROMAJI_CTX.test(ownText) &&
+        !NAME_EXCLUDE.test(ownText) &&
+        (LAST.test(ownText) || FIRST.test(ownText))
+          ? make('fullNameRomaji', 0.7)
+          : null,
+    ];
+    for (const match of dispatch) {
+      const hit = match();
+      if (hit) return hit;
     }
   }
 

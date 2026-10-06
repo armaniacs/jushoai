@@ -64,6 +64,6 @@ kana sources だけがテーブル形状（`sources: [string, number, boolean][]
 
 ## DoD
 
-- [ ] `tests/core/` の parity テストが全て緑である
-- [ ] `make check`（typecheck + test + build）が緑である
-- [ ] 新規欄種の追加手順が dispatch table の1行追加で説明できること
+- [x] `tests/core/` の parity テストが全て緑である
+- [x] `make check`（typecheck + test + build）が緑である
+- [x] 新規欄種の追加手順が dispatch table の1行追加で説明できること
