@@ -4,9 +4,12 @@
 
 - （なし）
 
+台帳: `archived/2026-10-06-00-backlog-ai-audit-log.md`
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
 台帳: `archived/2026-10-06-00-backlog-settings-navigation.md`
 台帳: `archived/2026-10-06-00-backlog-action-popup.md`
+台帳: `archived/2026-10-06-00-backlog-ai-analyze.md`
+台帳: `2026-10-06-00-backlog-japanese-polish.md`
 
 ## アーカイブ一覧
 
@@ -32,3 +35,10 @@
 | 2026-10-06-04-feat-options-logo.md | 未コミット（1006a）feat: 設定画面の左上にロゴを置き Pages へリンクする |
 | 2026-10-06-05-feat-action-popup.md | 未コミット（1006a）feat: ツールバークリックで確認ポップアップを開く |
 | 2026-10-06-06-feat-popup-gear.md | 未コミット（1006a）feat: 確認ポップアップの右上にギアを置く |
+| 2026-10-06-00-backlog-ai-audit-log.md | 未コミット（1006a）AI 通信の監査ログの台帳 |
+| 2026-10-06-01-feat-ai-audit-log.md | 未コミット（1006a）feat: AI 呼び出しの監査ログを記録する |
+| 2026-10-06-02-feat-audit-log-download.md | 未コミット（1006a）feat: 監査ログを TSV でダウンロードできるようにする |
+| 2026-10-06-00-backlog-ai-analyze.md | 未コミット（タスククローザで実装、レビュー・実機確認はユーザー作業）AI で分析ボタン・改名・ドキュメントの台帳 |
+| 2026-10-06-07-feat-rename-to-ai-analyze.md | 未コミット（同上）feat: プレビューの再分析ボタンを AI で分析に改名する |
+| 2026-10-06-08-feat-popup-ai-analyze.md | 未コミット（同上）feat: 確認ポップアップに AI で分析ボタンを置く |
+| 2026-10-06-09-feat-ai-analyze-docs.md | 未コミット（同上）feat: 改名とボタンに合わせてドキュメントを直す |

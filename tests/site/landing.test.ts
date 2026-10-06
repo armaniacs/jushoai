@@ -30,10 +30,11 @@ describe('renderLanding', () => {
     expect(en).toContain('href="/en/guides/getting-started/"');
   });
 
-  it('shows the install command with a copy button and the mocks', async () => {
+  it('shows the install steps with a download button and the mocks', async () => {
     const html = renderLanding({ lang: 'ja', base: '/', s: await load('ja') });
-    expect(html).toContain('make install\nmake build');
-    expect(html).toContain('data-copy');
+    expect(html).not.toContain('make install');
+    expect(html).not.toContain('make build');
+    expect(html).toContain('GitHub Releases からダウンロード');
     expect(html).toContain('入力内容の確認');
     expect(html).toContain('AI判定');
   });

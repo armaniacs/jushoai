@@ -10,24 +10,15 @@ JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録
 
 ## インストール
 
-ストアには公開していません。GitHub Releases の zip を展開して読み込むか、ソースからビルドします。
-
-### zip から
+ストアには公開していません。GitHub Releases の zip を使います。
 
 [GitHub Releases](https://github.com/armaniacs/jushoai/releases) から zip をダウンロードして、展開します。
-
-### ソースから
-
-```bash
-make install
-make build
-```
 
 次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。
 
 1. 「デベロッパーモード」を有効にします。
 2. 「パッケージ化されていない拡張機能を読み込む」を選びます。ボタンの表記はブラウザや言語によって異なることがあります。
-3. 展開したフォルダ、またはビルドで出来た `dist/chrome-mv3` フォルダを選びます。
+3. 展開したフォルダを選びます。
 
 ## プロファイルと住所を登録する
 
@@ -54,7 +45,7 @@ make build
 
 氏名や住所などの入力欄が複数あるフォームの近くに、「JushoAI で入力」ボタンが出ます。
 
-ボタンが出る条件は、text・email・tel・search の入力欄と select が合わせて 3 つ以上あり、そのうち 2 つ以上を判定できるフォームであることです。
+ボタンが出るのは、text・email・tel・search の入力欄と select が合わせて 3 つ以上あるフォームです。そのうち 2 つ以上を判定できる場合に限ります。
 
 1. 「JushoAI で入力」を押します。プレビューが開き、欄と値の一覧が出ます。
 2. 入力済みの欄、文字数を超える欄、選択肢がない欄には、注記が付きます。
@@ -69,9 +60,9 @@ Esc キーか「キャンセル」で閉じます。プレビューを開いて�
 
 ## 次に読むもの
 
-- [プロファイル](/guides/profiles/)と[住所](/guides/addresses/)
-- [ツールバーとフォームへの入力](/guides/popup-and-fill/)
-- [AI プロバイダの設定](/guides/ai-providers/)
-- [プライバシーと送信データ](/guides/privacy/)
-- [対応するフォームと仕組み](/guides/how-it-works/)
-- [トラブルシューティング](/guides/troubleshooting/)
+- [プロファイル](/guides/profiles/)と[住所](/guides/addresses/) — 登録内容の詳しい説明
+- [ツールバーとフォームへの入力](/guides/popup-and-fill/) — ボタンを使った入力手順
+- [AI プロバイダの設定](/guides/ai-providers/) — AI を使うための設定
+- [プライバシーと送信データ](/guides/privacy/) — 送信データの確認
+- [対応するフォームと仕組み](/guides/how-it-works/) — 判定の仕組み
+- [トラブルシューティング](/guides/troubleshooting/) — 困ったときの対処

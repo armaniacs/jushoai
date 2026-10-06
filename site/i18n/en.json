@@ -76,12 +76,11 @@
   "install": {
     "title": "Install",
     "steps": [
-      "It is not on the stores. Unzip the release from GitHub Releases, or build it from source.",
+      "It is not on the stores. Unzip the release from GitHub Releases and use it.",
       "Open chrome://extensions (Chrome) or edge://extensions (Edge) and turn on Developer mode.",
-      "Choose \"Load unpacked\" and select the unzipped folder or the built dist/chrome-mv3 folder (the label may differ by browser).",
+      "Choose \"Load unpacked\" and select the unzipped folder (the label may differ by browser).",
       "In the extension's settings page, register your profile and addresses."
     ],
-    "code": "make install\nmake build",
     "releases": "Download from GitHub Releases",
     "more": "See the \"Getting started\" guide for details."
   },
@@ -93,7 +92,8 @@
       { "q": "I'm worried about wrong entries.", "a": "You review everything in a preview before filling, and fields that already have a value are not overwritten." },
       { "q": "Does it work on every form?", "a": "It handles common inputs (text, email, tel, and prefecture dropdowns). Fields it cannot classify are left alone." },
       { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." }
-    ]
+    ],
+    "more": "More questions and fixes are here"
   },
   "feedback": {
     "title": "Send feedback",

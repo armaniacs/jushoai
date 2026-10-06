@@ -10,13 +10,11 @@ The extension's screens are in Japanese. 日本語: [README.md](README.md)
 
 ## Install
 
-It is not published in a store. Unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases), or build it from source.
+It is not published in a store. Unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and load it.
 
 1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge) and turn on developer mode.
-2. Choose "Load unpacked" and select the unzipped folder, or the built `dist/chrome-mv3`.
+2. Choose "Load unpacked" and select the unzipped folder.
 3. In the extension's settings page, register your profile and addresses.
-
-To build from source, run `make install` and `make build`. See the [Getting started guide](https://armaniacs.github.io/jushoai/en/guides/getting-started/) for details.
 
 ## Usage
 

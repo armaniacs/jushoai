@@ -6,7 +6,7 @@ order: 3
 
 # Addresses
 
-Addresses are registered separately from profiles, and you can register as many as you like, for example home, work and family.
+Addresses are registered separately from profiles, up to 10, for example home, work and family. Once you reach 10, you cannot add more.
 
 ## Register an address
 

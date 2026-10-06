@@ -64,12 +64,12 @@ The extension tries to download the model when you click `JushoAI で入力` (fi
 
 The result is `接続できました` (connected) or one of these.
 
-- Setup is incomplete.
-- Network access is not allowed.
-- Authentication failed.
-- The server refused the request. Check that the model supports JSON output.
-- The connection failed.
-- The response could not be interpreted.
+- Setup is incomplete: enter the settings again on the settings page.
+- Network access is not allowed: save the settings again and allow access.
+- Authentication failed: check the API key.
+- The server refused the request: check the model name and that the model supports JSON output.
+- The connection fails: check the URL, the model name and the network.
+- The response could not be interpreted: check that the model supports JSON output.
 
 The badge on the form shows the AI state. Click the badge to open guidance for that state. When setup is needed, the guidance has an `AI 設定を開く` (open AI settings) button. For what to do for each badge, see [Troubleshooting](/en/guides/troubleshooting/).
 
@@ -78,3 +78,7 @@ One `入力する` run sends at most 60 fields to the AI, 20 at a time. If one b
 ## Network permission
 
 When you save the settings, the browser asks whether to allow network access to that provider. Without the permission, AI is not used and the badge shows `AI 権限なし` (AI permission missing). The permission is requested only for that provider's host. See [Privacy and what is sent](/en/guides/privacy/).
+
+## Checking the communication log
+
+Communication with the API can be checked in `通信の監査ログ` (communication audit log) under `AI 判定` (AI judgment) on the settings page. The date and time, provider, destination, model, page URL, number of fields sent, and result are kept on your device for 7 days, and you can check the count, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).

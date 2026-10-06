@@ -110,7 +110,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
         ? {
             title: 'AI 判定を利用できます',
             lines: [
-              `ルールで判定できない欄の分類に ${providerName} を使います。送るのは欄のメタデータ（name・label など）だけで、入力する値は送りません。`,
+              `ルールで判定できない欄の分類に ${providerName} を使います。送るのは入力欄のメタデータ（name・label など）だけで、入力する値は送りません。`,
               RULE_LINE,
             ],
           }

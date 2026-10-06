@@ -22,10 +22,10 @@ Scenario: アイコンファイルの欠落や誤サイズを検出する
 ```
 
 ## 受け入れ基準
-- [ ] `public/icon/` に `16.png` / `32.png` / `48.png` / `128.png` が存在する
-- [ ] 各 PNG の実寸（IHDR）がファイル名のサイズと一致する
-- [ ] `make build` 後の `dist/chrome-mv3/manifest.json` に `icons` が反映される
-- [ ] ソース画像は `site/assets/logo.png`（512x512、`tmp/JushoAI_512-512.png` と SHA-256 同一）から生成する
+- [x] `public/icon/` に `16.png` / `32.png` / `48.png` / `128.png` が存在する
+- [x] 各 PNG の実寸（IHDR）がファイル名のサイズと一致する
+- [x] `make build` 後の `dist/chrome-mv3/manifest.json` に `icons` が反映される
+- [ ] ソース画像は `site/assets/logo.png`（512x512、`tmp/JushoAI_512-512.png` と SHA-256 同一）から生成する（tmp 原本なしのため再検証不可。`site/assets/logo.png` が 512x512 の追跡済みソースであることは確認済み）
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -78,8 +78,8 @@ ls public/                            # public/ は存在しない
 - `sips -z` は縦横の順（`-z height width`）だが正方形なので結果は同じ
 
 ## Definition of Done
-- [ ] `tests/icons.test.ts` がパスする
-- [ ] `make check` が通る
-- [ ] `dist/chrome-mv3/manifest.json` に `icons` が反映される
+- [x] `tests/icons.test.ts` がパスする
+- [x] `make check` が通る
+- [x] `dist/chrome-mv3/manifest.json` に `icons` が反映される
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新: 不要（README にアイコン手順の記載はスコープ外）
+- [x] ドキュメント更新: 不要（README にアイコン手順の記載はスコープ外）

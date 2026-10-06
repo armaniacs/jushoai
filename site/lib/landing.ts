@@ -2,7 +2,7 @@ import { escapeHtml } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
 import { issueUrl, REPO_URL, renderFeedbackSection, type FeedbackStrings } from './feedback.ts';
-import { COPY_LABEL, pageUrl, type Lang } from './site.ts';
+import { pageUrl, type Lang } from './site.ts';
 
 interface Titled { title: string; body: string }
 
@@ -19,8 +19,8 @@ export interface Strings {
   fields: { title: string; items: Titled[] };
   providers: { title: string; lead: string; items: { name: string; body: string }[] };
   privacy: { title: string; items: Titled[]; link: string };
-  install: { title: string; steps: string[]; code: string; more: string; releases: string };
-  faq: { title: string; items: { q: string; a: string }[] };
+  install: { title: string; steps: string[]; more: string; releases: string };
+  faq: { title: string; items: { q: string; a: string }[]; more: string };
   feedback: FeedbackStrings;
   license: { title: string; body: string; link: string };
   guides: { title: string; lead: string };
@@ -33,7 +33,6 @@ export function renderLanding(p: { lang: Lang; base: string; s: Strings }): stri
   const u = (path: string) => pageUrl(p.base, p.lang, path);
   const cards = (items: Titled[]) =>
     `<div class="grid">${items.map((i) => `<div class="card"><h3>${e(i.title)}</h3><p>${e(i.body)}</p></div>`).join('')}</div>`;
-  const copyLabel = COPY_LABEL[p.lang];
 
   return `<section class="hero"><div class="wrap">
 <span class="eyebrow">${e(s.hero.eyebrow)}</span>
@@ -81,7 +80,6 @@ ${cards(s.privacy.items)}
 <section class="block soft" id="install"><div class="wrap narrow">
 <h2 class="section-title">${e(s.install.title)}</h2>
 <ol>${s.install.steps.map((t) => `<li>${e(t)}</li>`).join('')}</ol>
-<div class="code"><button class="copy" type="button" data-copy data-done="${e(copyLabel.done)}">${e(copyLabel.copy)}</button><pre><code>${e(s.install.code)}</code></pre></div>
 <p><a class="btn primary" href="${e(REPO_URL)}/releases/latest" rel="noopener">${e(s.install.releases)}</a></p>
 <p><a href="${u('guides/getting-started/')}">${e(s.install.more)}</a></p>
 </div></section>
@@ -97,5 +95,6 @@ ${renderFeedbackSection(s.feedback)}
 <section class="block" id="faq"><div class="wrap narrow">
 <h2 class="section-title">${e(s.faq.title)}</h2>
 ${s.faq.items.map((i) => `<details class="faq"><summary>${e(i.q)}</summary><p>${e(i.a)}</p></details>`).join('\n')}
+<p><a href="${u('guides/troubleshooting/')}">${e(s.faq.more)}</a></p>
 </div></section>`;
 }
