@@ -2,7 +2,7 @@
 
 ## 進行中
 
-- （なし）
+- 2026-10-06-01-feat-toolbar-icon.md
 
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
 
