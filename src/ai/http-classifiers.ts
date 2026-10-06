@@ -109,7 +109,10 @@ export interface RetryOptions {
   onCompat?: () => void;
 }
 
-const isRejection = (status: number) => status === 400 || status === 422;
+// Shared vocabulary for "the provider rejected the request shape": the compat
+// retry condition and the failure-reason mapping must agree on this pair.
+export const isRejectedStatus = (status: number | null): boolean =>
+  status === 400 || status === 422;
 
 export class HttpClassifier implements FieldClassifier {
   // Outcome of the latest classify call, read by the audit wrapper.
@@ -140,7 +143,7 @@ export class HttpClassifier implements FieldClassifier {
     this.lastTrace = { status: null, retried: false };
     let res = await this.send(this.build(fields, compat));
     this.lastTrace.status = res.status;
-    if (this.retry && !compat && isRejection(res.status)) {
+    if (this.retry && !compat && isRejectedStatus(res.status)) {
       this.lastTrace = { status: null, retried: true };
       res = await this.send(this.build(fields, true));
       this.lastTrace.status = res.status;

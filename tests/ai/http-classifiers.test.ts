@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   buildGeminiRequest, buildOpenAiRequest, createGeminiClassifier, createOpenAiClassifier,
-  extractGeminiText, extractOpenAiText, HttpAuthError, HttpRequestError,
+  extractGeminiText, extractOpenAiText, HttpAuthError, HttpRequestError, isRejectedStatus,
 } from '../../src/ai/http-classifiers';
 import { CATEGORIES } from '../../src/core/types';
 import { makeMeta } from '../helpers';
@@ -138,6 +138,15 @@ describe('HttpClassifier', () => {
 });
 
 describe('OpenAI-compatible compatibility retry', () => {
+  it.each([400, 422])('treats %i as a rejected request shape', () => {
+    expect(isRejectedStatus(400)).toBe(true);
+    expect(isRejectedStatus(422)).toBe(true);
+  });
+
+  it.each([null, 401, 403, 429, 500])('does not treat %s as a rejected request shape', (status) => {
+    expect(isRejectedStatus(status)).toBe(false);
+  });
+
   const okBody = () => jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] });
   const bodyOf = (fetch: ReturnType<typeof vi.fn>, n: number) =>
     JSON.parse((fetch.mock.calls[n]![1] as RequestInit).body as string);

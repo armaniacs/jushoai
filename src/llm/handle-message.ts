@@ -1,6 +1,6 @@
 import { AuditedClassifier } from '../ai/audited-classifier';
 import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
-import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError } from '../ai/http-classifiers';
+import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { originPatternsFor } from '../ai/permissions';
 import { validateAiSettings } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
@@ -132,7 +132,7 @@ async function runTest(deps: HandlerDeps, s: PublicAiSettings): Promise<TestResp
       deps.authFailed.add(s.provider);
       return { ok: false, reason: 'auth' };
     }
-    if (e instanceof HttpRequestError && (e.status === 400 || e.status === 422)) {
+    if (e instanceof HttpRequestError && isRejectedStatus(e.status)) {
       return { ok: false, reason: 'rejected' };
     }
     return { ok: false, reason: 'network' };
@@ -164,7 +164,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
           deps.authFailed.add(settings.provider);
           return { ok: false, reason: 'auth' };
         }
-        if (e instanceof HttpRequestError && (e.status === 400 || e.status === 422)) {
+        if (e instanceof HttpRequestError && isRejectedStatus(e.status)) {
           return { ok: false, reason: 'rejected' };
         }
         if (e instanceof HttpRequestError) return { ok: false, reason: 'network' };
