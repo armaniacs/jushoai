@@ -2,11 +2,7 @@
 
 ## 進行中
 
-- 大局的改善ラウンド2（2026-10-07）: 01 → 02 → 03（逐次）+ 04（サブエージェント）
-- `2026-10-07-01-fix-http-rejection-mapping.md` — 400/422→rejected 判定の集約
-- `2026-10-07-02-fix-feedback-fb-wording.md` — 報告IssueのFB文言残存の除去
-- `2026-10-07-03-refactor-meta-clip-policy.md` — メタデータ切り詰め80文字の集約
-- `2026-10-07-04-refactor-options-ai-section.md` — mountAiSection の抽出
+- （なし）
 
 台帳: `2026-10-07-00-backlog-holistic-improvement-b.md`
 
@@ -63,3 +59,7 @@
 | 2026-10-06-21-refactor-classify-dispatch-table.md | bd3ea50 refactor: classifyFieldを優先順序付きdispatch表にする |
 | 2026-10-06-20-refactor-content-run-extraction.md | f418ed0 refactor: run()の純粋部品をcontent-runに抽出する |
 | 2026-10-06-22-refactor-options-card-builders.md | 8e0afaf refactor: カード生成の外枠を共通helperに抽出する |
+| 2026-10-07-01-fix-http-rejection-mapping.md | 01d051a fix: 拒否ステータス判定をisRejectedStatusに集約する |
+| 2026-10-07-02-fix-feedback-fb-wording.md | 13520f5 fix: 報告Issue雛形のFB残存を開発に報告するに揃える |
+| 2026-10-07-03-refactor-meta-clip-policy.md | 6882e63 refactor: 切り詰め幅80をMETA_CLIP_LENGTHに集約する |
+| 2026-10-07-04-refactor-options-ai-section.md | 78423d7 refactor: mountAiSectionを状態明示の責務関数群に分ける |
