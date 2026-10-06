@@ -113,7 +113,7 @@ function render(notice?: HTMLElement) {
     const legend = document.createElement('legend');
     legend.textContent = `プロファイル ${i + 1}`;
     set.append(legend);
-    set.append(labeled('名前（個人用・テスト用など）', textInput(p.label, '個人用', (v) => { p.label = v; })));
+    set.append(labeled('名前（個人用・家族用など）', textInput(p.label, '個人用', (v) => { p.label = v; })));
     for (const f of PROFILE_FIELDS) {
       const isKana = f.key === 'lastNameKana' || f.key === 'firstNameKana';
       const hint = isKana ? document.createElement('p') : null;
