@@ -2,7 +2,7 @@
 
 ## 進行中
 
-- 2026-10-06-01-feat-toolbar-icon.md
+- （なし）
 
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
 
@@ -22,3 +22,4 @@
 | 2026-10-05-04-backlog-age-decade-radio.md | 29823f6 feat: 性別・年代のradio群の走査・分類・注入に対応する |
 | 2026-10-05-form-report.md | f26025b feat: フィードバックに注意文を付け報告PBIと優先度メモを確定する |
 | 2026-10-05-00-backlog-priorities.md | f26025b feat: フィードバックに注意文を付け報告PBIと優先度メモを確定する |
+| 2026-10-06-01-feat-toolbar-icon.md | a371d5d feat: ツールバーに拡張機能アイコンを導入する |
