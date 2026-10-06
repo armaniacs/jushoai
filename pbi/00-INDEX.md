@@ -3,12 +3,6 @@
 ## 進行中
 
 - （なし）
-- `2026-10-06-17-fix-content-error-visibility.md` — 失敗理由の可視化
-- `2026-10-06-18-fix-storage-uuid-fallback.md` — storage UUID生成のフォールバック
-- `2026-10-06-19-refactor-options-select-builders.md` — 設定画面のselect生成集約
-- `2026-10-06-20-refactor-content-run-extraction.md` — content.ts run()の純粋部品抽出
-- `2026-10-06-21-refactor-classify-dispatch-table.md` — classifyFieldのテーブル駆動化
-- `2026-10-06-22-refactor-options-card-builders.md` — 設定画面のカード生成抽出
 
 台帳: `2026-10-06-00-backlog-holistic-improvement.md`
 
