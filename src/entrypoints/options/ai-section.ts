@@ -71,7 +71,7 @@ export function mountAiSection(root: HTMLElement): void {
     const title = el('h2', 'AI 判定（任意）');
     const privacy = el('div');
     for (const line of [
-      'AI を使う設定にすると、ルールで判定できない入力欄のメタデータ（name・label・placeholder・見出し・type・maxlength）が、選んだプロバイダに送られます。',
+      'AI を使う設定にすると、ルールで判定できない入力欄のメタデータが、選んだプロバイダに送られます。内訳は name・label・placeholder・見出し・type・maxlength です。',
       '入力する個人情報の値や、欄にすでに入っている値は送りません。',
       'API キーは暗号化して保存します。ストレージだけが流出しても復号できませんが、この拡張機能自身のコードからは読み出せます。',
     ]) privacy.append(el('p', line));
