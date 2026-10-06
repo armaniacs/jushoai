@@ -74,6 +74,6 @@ Then buildFeedbackIssueUrl に渡る引数が抽出前 run() 内の onApply と�
 
 ## DoD
 
-- [ ] 受け入れ基準 1-6 をすべて満たす
-- [ ] `make check`（typecheck + test + build）が成功する
-- [ ] 抽出前後で注入挙動の parity が vitest と samples/ 目視で確認される
+- [x] 受け入れ基準 1-6 をすべて満たす
+- [x] `make check`（typecheck + test + build）が成功する
+- [x] 抽出前後で注入挙動の parity が vitest と samples/ 目視で確認される

@@ -1,6 +1,6 @@
 import { classifyAll } from '../core/analyze';
-import type { Item } from '../core/classify-rules';
-import { buildPlan, type PlanItem } from '../core/planner';
+import type { PlanItem } from '../core/planner';
+import { buildFeedbackInput, replanItems, snapshotItems } from './content-run';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
@@ -68,33 +68,25 @@ export default defineContentScript({
       const metas = fields.map((f) => f.meta);
       let items = await classifyAll(metas, classifier);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
-      const snapshot = (list: Item[]): Map<string, FeedbackSnapshot> =>
-        new Map(list.map((i) => [i.meta.id, { category: i.cls.category, source: i.cls.source }]));
-      const beforeItems = snapshot(items);
+      const beforeItems = snapshotItems(items);
       let afterItems: Map<string, FeedbackSnapshot> | null = null;
 
       let profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id)) ?? data.profiles[0]!.id;
       let addressId = resolveAddressId(data.addresses, profileId, last.addressId) ?? data.addresses[0]!.id;
       let plan: PlanItem[] = [];
+      const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
       const replan = (): PreviewRow[] => {
         const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
         const address = data.addresses.find((a) => a.id === addressId) ?? null;
-        plan = buildPlan(items, { profile, address });
-        return plan.map((p) => {
-          const m = byId.get(p.fieldId)!.meta;
-          return {
-            label: m.label || m.nearby || m.placeholder || m.name || m.htmlId,
-            display: p.display,
-            status: p.status,
-            source: p.source,
-          };
-        });
+        const out = replanItems(items, profile, address, metasById);
+        plan = out.plan;
+        return out.rows;
       };
 
       async function reanalyze() {
         if (!classifier) return;
         items = await classifyAll(metas, classifier, { force: true });
-        afterItems = snapshot(items);
+        afterItems = snapshotItems(items);
         preview.setRows(replan());
       }
 
@@ -125,15 +117,17 @@ export default defineContentScript({
           applyPlan(plan, byId, fillField);
           preview.close();
           openPreview = null;
-          if (sendFeedback && afterItems) {
-            const url = buildFeedbackIssueUrl(FEEDBACK_REPO, {
-              pageHref: location.href,
-              provider: info.provider,
-              version: chrome.runtime.getManifest().version,
-              before: beforeItems,
-              after: afterItems,
-              fields: metas,
-            });
+          const feedbackInput = buildFeedbackInput({
+            pageHref: location.href,
+            provider: info.provider,
+            version: chrome.runtime.getManifest().version,
+            before: beforeItems,
+            after: afterItems,
+            fields: metas,
+            sendFeedback,
+          });
+          if (feedbackInput) {
+            const url = buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput);
             window.open(url, '_blank', 'noopener');
           }
         },
