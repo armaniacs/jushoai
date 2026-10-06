@@ -2,9 +2,7 @@
 
 ## 進行中
 
-- 大局的改善ラウンド（2026-10-06）: バッチA（17 / 18 / 19 / 21・並列）→ バッチB（20 / 22・並列）+ 継続（14 / 15 / 16）
-- `2026-10-06-14-feat-readme-reading-guide.md` — README冒頭の読み分け宣言
-- `2026-10-06-15-feat-rename-feedback.md` — プレビュー報告欄のFB改名
+- 大局的改善ラウンド（2026-10-06）: バッチA（17 / 18 / 19 / 21・並列）→ バッチB（20 / 22・並列）+ 継続（16）
 - `2026-10-06-16-feat-glossary.md` — 用語集の新設
 - `2026-10-06-17-fix-content-error-visibility.md` — 失敗理由の可視化
 - `2026-10-06-18-fix-storage-uuid-fallback.md` — storage UUID生成のフォールバック
@@ -57,3 +55,5 @@
 | 2026-10-06-11-fix-ai-notice-metadata.md | fca4316 fix: AI設定のメタデータ説明文を内訳分離で読みやすくする |
 | 2026-10-06-12-fix-auth-error-split.md | 6d15a2a fix: 認証エラー文を確認手順の順に割る（保存注意文と同梱） |
 | 2026-10-06-13-fix-save-notice-split.md | 6d15a2a fix: 保存注意文を成否と次の一手に割る（認証エラー文と同梱） |
+| 2026-10-06-14-feat-readme-reading-guide.md | ff3ff28 docs: README冒頭に利用者向けと開発者向けの読み分けを足す |
+| 2026-10-06-15-feat-rename-feedback.md | 05a483c feat: 報告欄のFB表記を開発に報告するに改める |
