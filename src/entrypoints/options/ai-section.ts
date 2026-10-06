@@ -29,214 +29,275 @@ const FAILURE_TEXT: Record<TestFailure, string> = {
 };
 
 const KEYED = ['openai', 'gemini'] as const;
+type KeyedProvider = (typeof KEYED)[number];
+
+// The mutable state formerly closed over by mountAiSection. Every extracted
+// function below takes this explicitly, so display builders and the save/test
+// side effects meet only through arguments. Only presence (KeyPresence) ever
+// reaches the UI; key bodies stay in KeyUpdate/saveAiSettings.
+interface AiSectionState {
+  settings: AiSettings;
+  hasKey: KeyPresence;
+  keyInput: Record<KeyedProvider, string>;
+  removeKey: Record<KeyedProvider, boolean>;
+  savedOpenAi: { baseUrl: string; model: string };
+  testing: boolean;
+  notice: HTMLElement | null;
+}
+
+interface AiSectionRenderHooks {
+  rerender: () => void;
+  onSave: () => void;
+  onTest: () => void;
+}
+
+interface AiSectionEffectHooks {
+  rerender: () => void;
+  notify: (text: string, kind: 'saved' | 'errors') => void;
+}
+
+function createAiSectionState(): AiSectionState {
+  return {
+    settings: undefined as unknown as AiSettings,
+    hasKey: { openai: false, gemini: false },
+    keyInput: { openai: '', gemini: '' },
+    removeKey: { openai: false, gemini: false },
+    savedOpenAi: { baseUrl: '', model: '' },
+    testing: false,
+    notice: null,
+  };
+}
+
+function setAiNotice(
+  state: AiSectionState,
+  text: string,
+  kind: 'saved' | 'errors',
+  rerender: () => void,
+): void {
+  state.notice = el('p', text);
+  state.notice.className = kind === 'saved' ? 'saved' : 'errors-text';
+  rerender();
+}
+
+function buildKeyField(state: AiSectionState, provider: KeyedProvider): HTMLElement {
+  const input = textInput(
+    state.keyInput[provider],
+    state.hasKey[provider] ? '保存済み（変更する場合のみ入力）' : 'API キー',
+    (v) => { state.keyInput[provider] = v; },
+    'password',
+  );
+  const wrap = el('div');
+  wrap.append(labeled('API キー', input));
+  if (state.hasKey[provider]) {
+    const remove = el('input');
+    remove.type = 'checkbox';
+    remove.checked = state.removeKey[provider];
+    remove.addEventListener('change', () => { state.removeKey[provider] = remove.checked; });
+    const row = el('label');
+    row.append(remove, el('span', '保存済みの API キーを削除する'));
+    wrap.append(row);
+  }
+  return wrap;
+}
+
+function buildProviderSelect(state: AiSectionState, onProviderChange: (next: ProviderKind) => void): HTMLSelectElement {
+  const select = el('select');
+  for (const o of PROVIDER_OPTIONS) {
+    const opt = el('option', o.label);
+    opt.value = o.value;
+    opt.selected = state.settings.provider === o.value;
+    select.append(opt);
+  }
+  select.addEventListener('change', () => {
+    onProviderChange(select.value as ProviderKind);
+  });
+  return select;
+}
+
+function buildOpenAiFieldset(state: AiSectionState, rerender: () => void): HTMLFieldSetElement {
+  const set = el('fieldset');
+  set.append(el('legend', 'OpenAI 互換 API'));
+  const presets = el('select');
+  const placeholder = el('option', 'プリセットから選ぶ');
+  placeholder.value = '';
+  presets.append(placeholder);
+  for (const p of OPENAI_PRESETS) {
+    const opt = el('option', p.label);
+    opt.value = p.baseUrl;
+    presets.append(opt);
+  }
+  presets.addEventListener('change', () => {
+    if (presets.value) {
+      state.settings.openai.baseUrl = presets.value;
+      rerender();
+    }
+  });
+  set.append(
+    labeled('プリセット（ベース URL を埋めます）', presets),
+    labeled('ベース URL', textInput(state.settings.openai.baseUrl, 'https://api.openai.com/v1', (v) => { state.settings.openai.baseUrl = v; })),
+    labeled('モデル名', textInput(state.settings.openai.model, 'プロバイダのモデル名', (v) => { state.settings.openai.model = v; })),
+    buildKeyField(state, 'openai'),
+    el('p', 'Ollama / LM Studio など localhost の場合、API キーは不要です。'),
+    el('p', `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に chrome-extension://${chrome.runtime.id} を許可してください。`),
+  );
+  return set;
+}
+
+function buildGeminiFieldset(state: AiSectionState): HTMLFieldSetElement {
+  const set = el('fieldset');
+  set.append(el('legend', 'Google Gemini'));
+  set.append(
+    labeled('モデル名', textInput(state.settings.gemini.model, 'Gemini のモデル名', (v) => { state.settings.gemini.model = v; })),
+    labeled('API バージョン', textInput(state.settings.gemini.apiVersion, 'v1beta', (v) => { state.settings.gemini.apiVersion = v; })),
+    buildKeyField(state, 'gemini'),
+  );
+  return set;
+}
+
+function buildActionRow(state: AiSectionState, onSave: () => void, onTest: () => void): HTMLDivElement {
+  const save = el('button', '保存');
+  save.type = 'button';
+  save.className = 'primary';
+  save.addEventListener('click', onSave);
+  const test = el('button', '接続テスト（保存済みの設定で実行）');
+  test.type = 'button';
+  test.disabled = state.testing;
+  test.addEventListener('click', onTest);
+  const actions = el('div');
+  actions.className = 'row';
+  actions.append(save, test);
+  return actions;
+}
+
+function renderAiSection(root: HTMLElement, state: AiSectionState, hooks: AiSectionRenderHooks): void {
+  const title = el('h2', 'AI 判定（任意）');
+  const privacy = el('div');
+  for (const line of [
+    'AI を使う設定にすると、ルールで判定できない入力欄のメタデータが、選んだプロバイダに送られます。内訳は name・label・placeholder・見出し・type・maxlength です。',
+    '入力する個人情報の値や、欄にすでに入っている値は送りません。',
+    'API キーは暗号化して保存します。ストレージだけが流出しても復号できませんが、この拡張機能自身のコードからは読み出せます。',
+  ]) privacy.append(el('p', line));
+
+  const select = buildProviderSelect(state, (next) => {
+    state.settings.provider = next;
+    hooks.rerender();
+  });
+
+  const parts: HTMLElement[] = [title, privacy, labeled('AI プロバイダ', select)];
+
+  if (state.settings.provider === 'openai') {
+    parts.push(buildOpenAiFieldset(state, hooks.rerender));
+  }
+
+  if (state.settings.provider === 'gemini') {
+    parts.push(buildGeminiFieldset(state));
+  }
+
+  parts.push(buildActionRow(state, hooks.onSave, hooks.onTest));
+  if (state.notice) parts.push(state.notice);
+
+  const auditRoot = el('div');
+  mountAuditSection(auditRoot);
+  parts.push(auditRoot);
+
+  const page = el('div');
+  page.id = AI_SECTION_ID;
+  page.append(...parts);
+  root.replaceChildren(page);
+  applyActivePage();
+}
+
+async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore } & AiSectionEffectHooks): Promise<void> {
+  const update: KeyUpdate = {};
+  for (const p of KEYED) {
+    if (state.removeKey[p]) update[p] = '';
+    else if (state.keyInput[p] !== '') update[p] = state.keyInput[p];
+  }
+  const effective: KeyPresence = {
+    openai: !state.removeKey.openai && (state.hasKey.openai || state.keyInput.openai !== ''),
+    gemini: !state.removeKey.gemini && (state.hasKey.gemini || state.keyInput.gemini !== ''),
+  };
+  const normalized = normalizeAiSettings({
+    ...state.settings,
+    openai: resolveOpenAiToSave(state.settings.provider, state.settings.openai, state.savedOpenAi),
+  });
+  if (
+    normalized.provider === 'openai' &&
+    needsKeyReentry({
+      savedBaseUrl: state.savedOpenAi.baseUrl,
+      newBaseUrl: normalized.openai.baseUrl,
+      hadKey: state.hasKey.openai,
+      typedKey: state.keyInput.openai,
+      removing: state.removeKey.openai,
+    })
+  ) {
+    env.notify('ベース URL を変更したため、API キーを入力し直してください（保存済みのキーは別のホストに送られません）。', 'errors');
+    return;
+  }
+  const errors = validateAiSettings(normalized, effective);
+  if (errors.length > 0) {
+    env.notify(errors.join(' / '), 'errors');
+    return;
+  }
+  // The permission prompt needs the click's user gesture, so it must be the first await.
+  const origins = originPatternsFor(normalized);
+  const granted = origins.length === 0 ? true : await requestHostPermission(origins);
+  try {
+    await saveAiSettings(normalized, update, env.keyStore);
+  } catch {
+    env.notify('保存に失敗しました。もう一度お試しください。', 'errors');
+    return;
+  }
+  state.settings = normalized;
+  state.savedOpenAi = { ...normalized.openai };
+  state.keyInput.openai = '';
+  state.keyInput.gemini = '';
+  state.removeKey.openai = false;
+  state.removeKey.gemini = false;
+  // The store drops a kept key when the origin changed, so presence is re-read instead of assumed.
+  try {
+    state.hasKey = (await loadPublicAiSettings()).hasKey;
+  } catch {
+    env.notify('保存しましたが、保存状態の再読み込みに失敗しました。設定ページを開き直してください。', 'errors');
+    return;
+  }
+  env.notify(
+    granted ? '保存しました。' : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
+    granted ? 'saved' : 'errors',
+  );
+}
+
+async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): Promise<void> {
+  if (state.testing) return;
+  state.testing = true;
+  env.notify('接続テスト中…', 'saved');
+  try {
+    const result = await testAiViaBackground();
+    state.testing = false;
+    if (!result) env.notify('バックグラウンドが応答しませんでした。', 'errors');
+    else if (result.ok) env.notify(`接続できました（判定: ${result.category}）。`, 'saved');
+    else env.notify(FAILURE_TEXT[result.reason], 'errors');
+  } finally {
+    if (state.testing) {
+      state.testing = false;
+      env.rerender();
+    }
+  }
+}
 
 export function mountAiSection(root: HTMLElement): void {
-  let settings: AiSettings;
-  let hasKey: KeyPresence = { openai: false, gemini: false };
-  const keyInput = { openai: '', gemini: '' };
-  const removeKey = { openai: false, gemini: false };
-  let savedOpenAi = { baseUrl: '', model: '' };
-  let testing = false;
-  let notice: HTMLElement | null = null;
+  const state = createAiSectionState();
   const keyStore = new IdbKeyStore();
 
-  const setNotice = (text: string, kind: 'saved' | 'errors') => {
-    notice = el('p', text);
-    notice.className = kind === 'saved' ? 'saved' : 'errors-text';
-    render();
-  };
-
-  function keyField(provider: (typeof KEYED)[number]) {
-    const input = textInput(
-      keyInput[provider],
-      hasKey[provider] ? '保存済み（変更する場合のみ入力）' : 'API キー',
-      (v) => { keyInput[provider] = v; },
-      'password',
-    );
-    const wrap = el('div');
-    wrap.append(labeled('API キー', input));
-    if (hasKey[provider]) {
-      const remove = el('input');
-      remove.type = 'checkbox';
-      remove.checked = removeKey[provider];
-      remove.addEventListener('change', () => { removeKey[provider] = remove.checked; });
-      const row = el('label');
-      row.append(remove, el('span', '保存済みの API キーを削除する'));
-      wrap.append(row);
-    }
-    return wrap;
-  }
-
-  function render() {
-    const title = el('h2', 'AI 判定（任意）');
-    const privacy = el('div');
-    for (const line of [
-      'AI を使う設定にすると、ルールで判定できない入力欄のメタデータが、選んだプロバイダに送られます。内訳は name・label・placeholder・見出し・type・maxlength です。',
-      '入力する個人情報の値や、欄にすでに入っている値は送りません。',
-      'API キーは暗号化して保存します。ストレージだけが流出しても復号できませんが、この拡張機能自身のコードからは読み出せます。',
-    ]) privacy.append(el('p', line));
-
-    const select = el('select');
-    for (const o of PROVIDER_OPTIONS) {
-      const opt = el('option', o.label);
-      opt.value = o.value;
-      opt.selected = settings.provider === o.value;
-      select.append(opt);
-    }
-    select.addEventListener('change', () => {
-      settings.provider = select.value as ProviderKind;
-      render();
-    });
-
-    const parts: HTMLElement[] = [title, privacy, labeled('AI プロバイダ', select)];
-
-    if (settings.provider === 'openai') {
-      const set = el('fieldset');
-      set.append(el('legend', 'OpenAI 互換 API'));
-      const presets = el('select');
-      const placeholder = el('option', 'プリセットから選ぶ');
-      placeholder.value = '';
-      presets.append(placeholder);
-      for (const p of OPENAI_PRESETS) {
-        const opt = el('option', p.label);
-        opt.value = p.baseUrl;
-        presets.append(opt);
-      }
-      presets.addEventListener('change', () => {
-        if (presets.value) {
-          settings.openai.baseUrl = presets.value;
-          render();
-        }
-      });
-      set.append(
-        labeled('プリセット（ベース URL を埋めます）', presets),
-        labeled('ベース URL', textInput(settings.openai.baseUrl, 'https://api.openai.com/v1', (v) => { settings.openai.baseUrl = v; })),
-        labeled('モデル名', textInput(settings.openai.model, 'プロバイダのモデル名', (v) => { settings.openai.model = v; })),
-        keyField('openai'),
-        el('p', 'Ollama / LM Studio など localhost の場合、API キーは不要です。'),
-        el('p', `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に chrome-extension://${chrome.runtime.id} を許可してください。`),
-      );
-      parts.push(set);
-    }
-
-    if (settings.provider === 'gemini') {
-      const set = el('fieldset');
-      set.append(el('legend', 'Google Gemini'));
-      set.append(
-        labeled('モデル名', textInput(settings.gemini.model, 'Gemini のモデル名', (v) => { settings.gemini.model = v; })),
-        labeled('API バージョン', textInput(settings.gemini.apiVersion, 'v1beta', (v) => { settings.gemini.apiVersion = v; })),
-        keyField('gemini'),
-      );
-      parts.push(set);
-    }
-
-    const save = el('button', '保存');
-    save.type = 'button';
-    save.className = 'primary';
-    save.addEventListener('click', () => void onSave());
-    const test = el('button', '接続テスト（保存済みの設定で実行）');
-    test.type = 'button';
-    test.disabled = testing;
-    test.addEventListener('click', () => void onTest());
-    const actions = el('div');
-    actions.className = 'row';
-    actions.append(save, test);
-    parts.push(actions);
-    if (notice) parts.push(notice);
-
-    const auditRoot = el('div');
-    mountAuditSection(auditRoot);
-    parts.push(auditRoot);
-
-    const page = el('div');
-    page.id = AI_SECTION_ID;
-    page.append(...parts);
-    root.replaceChildren(page);
-    applyActivePage();
-  }
-
-  async function onSave() {
-    const update: KeyUpdate = {};
-    for (const p of KEYED) {
-      if (removeKey[p]) update[p] = '';
-      else if (keyInput[p] !== '') update[p] = keyInput[p];
-    }
-    const effective: KeyPresence = {
-      openai: !removeKey.openai && (hasKey.openai || keyInput.openai !== ''),
-      gemini: !removeKey.gemini && (hasKey.gemini || keyInput.gemini !== ''),
-    };
-    const normalized = normalizeAiSettings({
-      ...settings,
-      openai: resolveOpenAiToSave(settings.provider, settings.openai, savedOpenAi),
-    });
-    if (
-      normalized.provider === 'openai' &&
-      needsKeyReentry({
-        savedBaseUrl: savedOpenAi.baseUrl,
-        newBaseUrl: normalized.openai.baseUrl,
-        hadKey: hasKey.openai,
-        typedKey: keyInput.openai,
-        removing: removeKey.openai,
-      })
-    ) {
-      setNotice('ベース URL を変更したため、API キーを入力し直してください（保存済みのキーは別のホストに送られません）。', 'errors');
-      return;
-    }
-    const errors = validateAiSettings(normalized, effective);
-    if (errors.length > 0) {
-      setNotice(errors.join(' / '), 'errors');
-      return;
-    }
-    // The permission prompt needs the click's user gesture, so it must be the first await.
-    const origins = originPatternsFor(normalized);
-    const granted = origins.length === 0 ? true : await requestHostPermission(origins);
-    try {
-      await saveAiSettings(normalized, update, keyStore);
-    } catch {
-      setNotice('保存に失敗しました。もう一度お試しください。', 'errors');
-      return;
-    }
-    settings = normalized;
-    savedOpenAi = { ...normalized.openai };
-    keyInput.openai = '';
-    keyInput.gemini = '';
-    removeKey.openai = false;
-    removeKey.gemini = false;
-    // The store drops a kept key when the origin changed, so presence is re-read instead of assumed.
-    try {
-      hasKey = (await loadPublicAiSettings()).hasKey;
-    } catch {
-      setNotice('保存しましたが、保存状態の再読み込みに失敗しました。設定ページを開き直してください。', 'errors');
-      return;
-    }
-    setNotice(
-      granted ? '保存しました。' : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
-      granted ? 'saved' : 'errors',
-    );
-  }
-
-  async function onTest() {
-    if (testing) return;
-    testing = true;
-    setNotice('接続テスト中…', 'saved');
-    try {
-      const result = await testAiViaBackground();
-      testing = false;
-      if (!result) setNotice('バックグラウンドが応答しませんでした。', 'errors');
-      else if (result.ok) setNotice(`接続できました（判定: ${result.category}）。`, 'saved');
-      else setNotice(FAILURE_TEXT[result.reason], 'errors');
-    } finally {
-      if (testing) {
-        testing = false;
-        render();
-      }
-    }
-  }
+  const rerender = () => renderAiSection(root, state, { rerender, onSave: runSave, onTest: runTest });
+  const notify = (text: string, kind: 'saved' | 'errors') => setAiNotice(state, text, kind, rerender);
+  const runSave = () => void saveAiSection(state, { keyStore, rerender, notify });
+  const runTest = () => void testAiSection(state, { rerender, notify });
 
   void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
-    settings = loaded;
-    savedOpenAi = { ...loaded.openai };
-    hasKey = keys;
-    render();
+    state.settings = loaded;
+    state.savedOpenAi = { ...loaded.openai };
+    state.hasKey = keys;
+    rerender();
   });
 }
