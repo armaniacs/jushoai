@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: ドキュメント / Documentation
+    url: https://armaniacs.github.io/jushoai/
+    about: 使い方とトラブルシューティングを先に確認できます。

@@ -1,0 +1,23 @@
+name: 機能の要望 / Feature request
+description: こんな機能がほしい、という要望を送る
+title: "要望: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        公開の Issue になります。氏名・住所・電話番号などの個人情報は書かないでください。
+        This issue is public. Do not include personal information.
+  - type: textarea
+    id: want
+    attributes:
+      label: やりたいこと / What do you want to do
+      description: どんな場面で困っているかを書いてください。
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: こうなるとうれしい / Desired behavior
+    validations:
+      required: false

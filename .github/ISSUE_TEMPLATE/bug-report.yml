@@ -1,0 +1,28 @@
+name: 不具合の報告 / Bug report
+description: 動作がおかしいときに報告する
+title: "不具合: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        公開の Issue になります。プロファイルの値や住所など、個人情報は書かないでください。
+        This issue is public. Do not include personal information.
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順 / Steps to reproduce
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期待する動作と実際の動作 / Expected and actual behavior
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: ブラウザと拡張機能のバージョン / Browser and extension version
+    validations:
+      required: true

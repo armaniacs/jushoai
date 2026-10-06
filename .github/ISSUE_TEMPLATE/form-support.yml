@@ -1,0 +1,30 @@
+name: 入力できなかったフォーム / Form not supported
+description: うまく入力できなかったフォームを知らせる
+title: "フォーム: "
+labels: ["feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        公開の Issue になります。プロファイルの値や住所など、個人情報は書かないでください。
+        This issue is public. Do not include personal information.
+  - type: input
+    id: url
+    attributes:
+      label: フォームの URL / Form URL
+      description: ログインが必要なページは、URL だけで構いません。
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 起きたこと / What happened
+      description: 入力されなかった欄、違う欄に入った欄を書いてください（欄のラベルなど）。
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: 拡張機能のバージョン / Extension version
+    validations:
+      required: false
