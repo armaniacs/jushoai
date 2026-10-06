@@ -63,6 +63,6 @@ Then 既存の id と profileId の関連付けは変更されない
 
 ## DoD
 
-- [ ] 受け入れ基準の全項目を満たすこと
-- [ ] `tests/storage.test.ts` の新規・既存ケースが green であること
-- [ ] 実装が `migrateData` のフォールバックに限定され、他の移行仕様を変更していないこと
+- [x] 受け入れ基準の全項目を満たすこと
+- [x] `tests/storage.test.ts` の新規・既存ケースが green であること
+- [x] 実装が `migrateData` のフォールバックに限定され、他の移行仕様を変更していないこと

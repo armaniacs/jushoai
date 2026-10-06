@@ -49,6 +49,25 @@ interface LegacyStoredData {
   addresses?: Partial<Address>[];
 }
 
+let fallbackCounter = 0;
+
+// ID generation that survives contexts without crypto.randomUUID.
+// Uses randomUUID when available, otherwise falls back to a time + random +
+// counter hex shape that stays unique within a migration run.
+function newId(): string {
+  try {
+    const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
+    if (c && typeof c.randomUUID === 'function') return c.randomUUID();
+  } catch {
+    // Fall through to the fallback when globalThis is unreachable
+  }
+  fallbackCounter += 1;
+  const time = Date.now().toString(16);
+  const count = fallbackCounter.toString(16).padStart(4, '0');
+  const rand = Math.floor(Math.random() * 0xffffffff).toString(16).padStart(8, '0');
+  return `fallback-${time}-${count}-${rand}`;
+}
+
 // Normalizes any stored shape to the current one: a legacy single profile becomes the
 // first entry labeled メイン, and every entry gets defaults for missing keys.
 // Addresses linked to a deleted profile become shared instead of dangling.
@@ -59,14 +78,14 @@ export function migrateData(stored: LegacyStoredData | undefined): StoredData {
   const profiles = list.map((p) => ({
     ...EMPTY_PROFILE,
     ...p,
-    id: p.id || crypto.randomUUID(),
+    id: p.id || newId(),
     label: p.label || (fromList ? '' : 'メイン'),
   }));
   const profileIds = new Set(profiles.map((p) => p.id));
   const addresses = ((stored?.addresses ?? []) as Partial<Address>[]).map((a) => ({
     ...EMPTY_ADDRESS,
     ...a,
-    id: a.id || crypto.randomUUID(),
+    id: a.id || newId(),
     profileId: a.profileId && profileIds.has(a.profileId) ? a.profileId : '',
   }));
   return { profiles, addresses };

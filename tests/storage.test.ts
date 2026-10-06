@@ -80,6 +80,46 @@ describe('migrateData', () => {
     expect(out.addresses[0]?.profileId).toBe('p1');
     expect(out.addresses[1]?.profileId).toBe('');
   });
+
+  it('assigns UUIDs via randomUUID when available', () => {
+    const out = migrateData({
+      profile: { lastName: '山田' },
+      addresses: [{ label: '自宅' }],
+    });
+    expect(out.profiles[0]?.id).toBe('uuid-1');
+    expect(out.profiles[0]?.label).toBe('メイン');
+    expect(out.addresses[0]?.id).toBe('uuid-2');
+  });
+
+  describe('without crypto.randomUUID', () => {
+    it('completes migration with unique ids', () => {
+      vi.stubGlobal('crypto', {});
+      const out = migrateData({
+        profile: { lastName: '山田' },
+        addresses: [{ label: '自宅' }, { label: '会社' }],
+      });
+      expect(out.profiles[0]?.label).toBe('メイン');
+      const ids = [out.profiles[0]?.id, ...out.addresses.map((a) => a.id)];
+      expect(ids.every((id) => typeof id === 'string' && id.length > 0)).toBe(true);
+      expect(new Set(ids).size).toBe(ids.length);
+    });
+
+    it('keeps existing ids and links', () => {
+      vi.stubGlobal('crypto', {});
+      const out = migrateData({
+        profiles: [{ id: 'p1', label: '本人' }],
+        addresses: [
+          { id: 'a1', label: '自宅', profileId: 'p1' },
+          { id: 'a2', label: '旧宅', profileId: 'gone' },
+        ],
+      });
+      expect(out.profiles[0]?.id).toBe('p1');
+      expect(out.addresses[0]?.id).toBe('a1');
+      expect(out.addresses[0]?.profileId).toBe('p1');
+      expect(out.addresses[1]?.id).toBe('a2');
+      expect(out.addresses[1]?.profileId).toBe('');
+    });
+  });
 });
 
 describe('resolveAddressId', () => {
