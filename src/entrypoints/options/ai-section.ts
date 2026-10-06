@@ -8,6 +8,7 @@ import {
 } from '../../ai/types';
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
+import { mountAuditSection } from './audit-section';
 import { el, labeled, textInput } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
@@ -142,6 +143,10 @@ export function mountAiSection(root: HTMLElement): void {
     actions.append(save, test);
     parts.push(actions);
     if (notice) parts.push(notice);
+
+    const auditRoot = el('div');
+    mountAuditSection(auditRoot);
+    parts.push(auditRoot);
 
     const page = el('div');
     page.id = AI_SECTION_ID;

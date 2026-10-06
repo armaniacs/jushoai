@@ -1,3 +1,4 @@
+import { AuditStore } from '../ai/audit-log';
 import { hasHostPermission } from '../ai/permissions';
 import { IdbKeyStore, type KeyStore } from '../ai/secret-store';
 import { AI_SETTINGS_KEY, loadAiSecrets, loadPublicAiSettings } from '../ai/settings-store';
@@ -15,6 +16,7 @@ export default defineBackground(() => {
       return () => (key ??= keyStore.getKey());
     })(),
   };
+  const audit = new AuditStore();
   const authFailed = new Set<ProviderKind>();
   const compat = new Set<ProviderKind>();
   let secretsPromise: Promise<{ openai?: string; gemini?: string }> | null = null;
@@ -44,7 +46,8 @@ export default defineBackground(() => {
       fetch: globalThis.fetch.bind(globalThis),
       authFailed,
       compat,
-    }).then(sendResponse, () => sendResponse(undefined));
+      audit,
+    }, { pageUrl: sender.tab?.url }).then(sendResponse, () => sendResponse(undefined));
     return true;
   });
 });

@@ -112,6 +112,9 @@ export interface RetryOptions {
 const isRejection = (status: number) => status === 400 || status === 422;
 
 export class HttpClassifier implements FieldClassifier {
+  // Outcome of the latest classify call, read by the audit wrapper.
+  lastTrace: { status: number | null; retried: boolean } = { status: null, retried: false };
+
   constructor(
     private readonly build: (fields: FieldMeta[], compat: boolean) => HttpRequest,
     private readonly extract: (json: unknown) => string | null,
@@ -134,9 +137,13 @@ export class HttpClassifier implements FieldClassifier {
   async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
     if (fields.length === 0) return new Map();
     const compat = this.retry?.compat ?? false;
+    this.lastTrace = { status: null, retried: false };
     let res = await this.send(this.build(fields, compat));
+    this.lastTrace.status = res.status;
     if (this.retry && !compat && isRejection(res.status)) {
+      this.lastTrace = { status: null, retried: true };
       res = await this.send(this.build(fields, true));
+      this.lastTrace.status = res.status;
       if (res.ok) this.retry.onCompat?.();
     }
     if (res.status === 401 || res.status === 403) throw new HttpAuthError();

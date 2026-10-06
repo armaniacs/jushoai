@@ -1,8 +1,11 @@
+import { AuditedClassifier } from '../ai/audited-classifier';
+import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError } from '../ai/http-classifiers';
 import { originPatternsFor } from '../ai/permissions';
 import { validateAiSettings } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
-import type { AiStatusInfo, ProviderKind, PublicAiSettings } from '../ai/types';
+import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
+import { sanitizePageUrl } from '../feedback/issue-url';
 import type { FieldMeta } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
 import { parseRequest, type TestResponse } from '../messages';
@@ -19,6 +22,12 @@ export interface HandlerDeps {
   authFailed: Set<ProviderKind>;
   // Providers that need the OpenAI-compatible fallback request; same lifetime as authFailed.
   compat: Set<ProviderKind>;
+  audit: AuditRecorder;
+}
+
+// Where the page that triggered the call lives; taken from the sender, never from the message.
+export interface CallContext {
+  pageUrl?: string;
 }
 
 type Selection =
@@ -48,10 +57,35 @@ async function statusOf(
   };
 }
 
+const hostOf = (url: string) => {
+  try {
+    return new URL(url).host;
+  } catch {
+    return '';
+  }
+};
+
+function auditTarget(s: PublicAiSettings): { host: string; model: string } {
+  if (s.provider === 'openai') return { host: hostOf(s.openai.baseUrl), model: s.openai.model };
+  if (s.provider === 'gemini') return { host: hostOf(GEMINI_BASE_URL), model: s.gemini.model };
+  return { host: '', model: '' };
+}
+
 async function selectClassifier(
   deps: HandlerDeps,
   s: PublicAiSettings,
-  opts: { ignoreAuthFailure?: boolean } = {},
+  opts: { purpose: AuditPurpose; pageUrl: string; ignoreAuthFailure?: boolean },
+): Promise<Selection> {
+  const sel = await selectRaw(deps, s, opts);
+  if (!sel.ok) return sel;
+  const ctx = { provider: s.provider, ...auditTarget(s), purpose: opts.purpose, pageUrl: opts.pageUrl };
+  return { ok: true, classifier: new AuditedClassifier(sel.classifier, ctx, deps.audit) };
+}
+
+async function selectRaw(
+  deps: HandlerDeps,
+  s: PublicAiSettings,
+  opts: { ignoreAuthFailure?: boolean },
 ): Promise<Selection> {
   const secrets = await deps.loadSecrets();
   const { status } = await statusOf(deps, s, secrets);
@@ -86,7 +120,7 @@ const TEST_FIELD: FieldMeta = {
 };
 
 async function runTest(deps: HandlerDeps, s: PublicAiSettings): Promise<TestResponse> {
-  const sel = await selectClassifier(deps, s, { ignoreAuthFailure: true });
+  const sel = await selectClassifier(deps, s, { purpose: 'connection-test', pageUrl: '', ignoreAuthFailure: true });
   if (!sel.ok) return { ok: false, reason: sel.reason === 'unavailable' ? 'network' : sel.reason };
   try {
     const category = (await sel.classifier.classify([TEST_FIELD])).get('t');
@@ -106,7 +140,7 @@ async function runTest(deps: HandlerDeps, s: PublicAiSettings): Promise<TestResp
 }
 
 // Returns undefined for anything that is not exactly one of the AI request shapes.
-export async function handleMessage(msg: unknown, deps: HandlerDeps): Promise<unknown> {
+export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallContext = {}): Promise<unknown> {
   const req = parseRequest(msg);
   if (!req) return undefined;
   const settings = await deps.loadSettings();
@@ -117,7 +151,10 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps): Promise<un
     case 'ai-download':
       return { started: settings.provider === 'built-in' && deps.lm ? await startDownload(deps.lm) : false };
     case 'ai-classify': {
-      const sel = await selectClassifier(deps, settings);
+      const sel = await selectClassifier(deps, settings, {
+        purpose: 'classify',
+        pageUrl: ctx.pageUrl ? sanitizePageUrl(ctx.pageUrl) : '',
+      });
       if (!sel.ok) return { ok: false };
       try {
         return { ok: true, entries: [...(await sel.classifier.classify(req.fields))] };

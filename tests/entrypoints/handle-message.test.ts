@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import type { AuditDraft } from '../../src/ai/audit-log';
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from '../../src/ai/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
 import { parseTestResponse } from '../../src/messages';
@@ -26,6 +27,7 @@ function makeDeps(o: Opts = {}) {
   const fetchMock = o.fetch ?? vi.fn();
   const authFailed = o.authFailed ?? new Set<ProviderKind>();
   const compat = o.compat ?? new Set<ProviderKind>();
+  const audits: AuditDraft[] = [];
   const settings = { ...DEFAULT_AI_SETTINGS, ...o.settings, hasKey: o.hasKey ?? { openai: false, gemini: false } };
   const deps: HandlerDeps = {
     lm: o.lm ?? null,
@@ -35,8 +37,9 @@ function makeDeps(o: Opts = {}) {
     fetch: fetchMock as unknown as typeof fetch,
     authFailed,
     compat,
+    audit: { record: async (d) => { audits.push(d); } },
   };
-  return { deps, fetchMock, authFailed, compat };
+  return { deps, fetchMock, authFailed, compat, audits };
 }
 
 const openai: Partial<AiSettings> = {
@@ -309,5 +312,53 @@ describe('handleMessage: ai-test auth bookkeeping', () => {
   it('never echoes the key for a failing provider', async () => {
     const { deps } = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockRejectedValue(new TypeError('sk-test')) });
     expect(JSON.stringify(await handleMessage({ type: 'ai-test' }, deps))).not.toContain('sk-test');
+  });
+});
+
+describe('handleMessage: audit log', () => {
+  const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+
+  it('records a classify call with the sanitized page url from the sender and no secrets', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps, audits } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    await handleMessage(msg, deps, { pageUrl: 'https://example.com/form?email=a@b.c#x' });
+    expect(audits).toEqual([{
+      provider: 'openai', host: 'api.openai.com', model: 'm', purpose: 'classify',
+      pageUrl: 'https://example.com/form', fieldCount: 1, result: 'success', httpStatus: 200, retried: false,
+    }]);
+    expect(JSON.stringify(audits)).not.toContain('secret');
+    expect(JSON.stringify(audits)).not.toContain('姓');
+  });
+
+  it('records auth errors, the compat retry and connection tests', async () => {
+    const auth = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(401)) });
+    await handleMessage(msg, auth.deps);
+    expect(auth.audits[0]).toMatchObject({ result: 'auth-error', httpStatus: 401, pageUrl: '' });
+
+    const retry = makeDeps({
+      settings: openai, ...configured,
+      fetch: vi.fn().mockResolvedValueOnce(statusJson(400)).mockResolvedValueOnce(openaiBody('{"a":"lastName"}')),
+    });
+    await handleMessage(msg, retry.deps);
+    expect(retry.audits).toHaveLength(1);
+    expect(retry.audits[0]).toMatchObject({ result: 'success', httpStatus: 200, retried: true });
+
+    const test = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(openaiBody('{"t":"fullName"}')) });
+    await handleMessage({ type: 'ai-test' }, test.deps);
+    expect(test.audits[0]).toMatchObject({ purpose: 'connection-test', pageUrl: '', fieldCount: 1 });
+  });
+
+  it('records a built-in call without a host, and nothing when AI is off or unusable', async () => {
+    const lm = builtInLm('available');
+    const built = makeDeps({ settings: { provider: 'built-in' }, lm });
+    await handleMessage(msg, built.deps, { pageUrl: 'https://example.com/a' });
+    expect(built.audits[0]).toMatchObject({ provider: 'built-in', host: '', model: '', result: 'success', httpStatus: null });
+
+    const none = makeDeps();
+    await handleMessage(msg, none.deps);
+    const noPerm = makeDeps({ settings: openai, ...configured, permitted: false });
+    await handleMessage(msg, noPerm.deps);
+    expect(none.audits).toEqual([]);
+    expect(noPerm.audits).toEqual([]);
   });
 });

@@ -29,6 +29,30 @@ Labels and headings are text from the page. They can contain personal informatio
 
 Requests happen only when you click `JushoAI で入力`. Opening a page does not contact an AI provider. Checking the badge state only reads the saved settings and permissions. It makes no request.
 
+## Audit log
+
+Every time an AI is called, JushoAI keeps a record on your device. In the settings page, open `通信の監査ログ` (communication audit log) under `AI 判定` to see the count, download or delete it. Calls to the built-in AI and connection tests are recorded too.
+
+| Column | Meaning |
+|---|---|
+| `id` | Sequential number |
+| `created_at` | When it was recorded (ISO 8601) |
+| `provider` | `openai`, `gemini` or `built-in` |
+| `host` | The host the request went to. Empty for the built-in AI |
+| `model` | The model name. Empty for the built-in AI |
+| `purpose` | `classify` (classification when filling) or `connection-test` |
+| `page_url` | The address and path of the page you filled. No query or fragment. Empty for connection tests |
+| `field_count` | How many fields were sent |
+| `result` | `success`, `auth-error`, `http-error`, `network-error`, `invalid-response` or `error` |
+| `http_status` | The HTTP status. Empty when no response arrived, and for the built-in AI |
+| `retried` | Whether the request was retried in compatibility mode |
+
+These are never recorded: the contents of fields (name, label and so on), your profile values, API keys, request headers and response contents.
+
+Records are kept for 7 days and then deleted automatically. The period cannot be changed. If there are more than 1,000 records, the oldest are deleted first. You can delete everything at any time with `ログを削除` (delete the log). Nothing is recorded while AI is off.
+
+`TSV でダウンロード` (download as TSV) saves a TSV file named `jushoai-audit-log-YYYY-MM-DD.tsv`, newest first. Values starting with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas. The file contains page addresses, so handling it is your own responsibility.
+
 ## How API keys are stored
 
 API keys are encrypted with AES-GCM before they are saved. The encryption key is stored in a non-extractable form in a separate store (IndexedDB). If only the storage leaks, the keys cannot be decrypted. The extension's own code can still read them.
