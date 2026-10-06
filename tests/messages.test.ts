@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS } from '../src/messages';
+import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS } from '../src/messages';
 import { makeMeta } from './helpers';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 'n', ...extra });
@@ -110,6 +110,12 @@ describe('parseTestResponse', () => {
     expect(parseTestResponse({ ok: true, category: 'lastName' })).toEqual({ ok: true, category: 'lastName' });
     expect(parseTestResponse({ ok: false, reason: 'auth' })).toEqual({ ok: false, reason: 'auth' });
     expect(parseTestResponse({ ok: false, reason: 'rejected' })).toEqual({ ok: false, reason: 'rejected' });
+  });
+
+  it('guards the analyze reason vocabulary', () => {
+    for (const r of ANALYZE_REASONS) expect(isAnalyzeReason(r)).toBe(true);
+    expect(isAnalyzeReason('boom')).toBe(false);
+    expect(isAnalyzeReason(null)).toBe(false);
   });
 
   it.each([null, { ok: true, category: 'nonsense' }, { ok: false, reason: 'boom' }, { ok: false }])('rejects %j', (v) => {

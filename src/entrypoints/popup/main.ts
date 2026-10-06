@@ -1,17 +1,19 @@
 import { isReady, loadData, loadLastUsed, type LastUsed } from '../../storage';
 import type { Address, Profile, StoredData } from '../../core/types';
-import { ANALYZE_MESSAGE_TYPE, type AnalyzeResponse } from '../../messages';
+import { ANALYZE_MESSAGE_TYPE, isAnalyzeReason, type AnalyzeReason, type AnalyzeResponse } from '../../messages';
 import { el } from '../options/dom';
 
 export function openOptionsPage(): Promise<void> {
   return chrome.runtime.openOptionsPage();
 }
 
-const ANALYZE_NOTICE: Record<string, string> = {
+const ANALYZE_NOTICE: Record<AnalyzeReason, string> = {
   'no-form': '入力できるフォームが見つかりませんでした。フォームのあるページでお試しください。',
+  'no-tab': 'このタブでは実行できません。フォームのあるページでお試しください。',
+  error: 'このタブでは実行できません。フォームのあるページでお試しください。',
 };
 
-export function analyzeNoticeFor(reason: string): string {
+export function analyzeNoticeFor(reason: AnalyzeReason): string {
   return ANALYZE_NOTICE[reason] ?? 'このタブでは実行できません。フォームのあるページでお試しください。';
 }
 
@@ -24,7 +26,7 @@ export async function analyzeCurrentTab(): Promise<AnalyzeResponse> {
     if (id == null) return { ok: false, reason: 'no-tab' };
     const res = (await chrome.tabs.sendMessage(id, { type: ANALYZE_MESSAGE_TYPE })) as AnalyzeResponse | undefined;
     if (res?.ok === true) return { ok: true };
-    return { ok: false, reason: typeof res?.reason === 'string' ? res.reason : 'no-form' };
+    return { ok: false, reason: isAnalyzeReason(res?.reason) ? res.reason : 'no-form' };
   } catch {
     return { ok: false, reason: 'no-tab' };
   }

@@ -29,10 +29,10 @@ Scenario: 未知の理由は汎用文言になる
 
 ## 受け入れ基準
 
-- [ ] `AnalyzeResponse` の `reason` が union 型で定義される
-- [ ] 送信側（content.ts）と受信側（popup/main.ts）がその型を共有する
-- [ ] 既存の `no-form` / `error` の表示が変わらない
-- [ ] 既存テストが green を維持する
+- [x] `AnalyzeResponse` の `reason` が union 型で定義される
+- [x] 送信側（content.ts）と受信側（popup/main.ts）がその型を共有する
+- [x] 既存の `no-form` / `error` の表示が変わらない
+- [x] 既存テストが green を維持する
 
 ## テスト戦略
 
@@ -45,6 +45,6 @@ Scenario: 未知の理由は汎用文言になる
 
 ## Definition of Done
 
-- [ ] reason 語彙が messages.ts の1箇所に集約されている
-- [ ] BDDシナリオの2件がテストで裏付けられている
-- [ ] 既存テストが green である
+- [x] reason 語彙が messages.ts の1箇所に集約されている
+- [x] BDDシナリオの2件がテストで裏付けられている
+- [x] 既存テストが green である

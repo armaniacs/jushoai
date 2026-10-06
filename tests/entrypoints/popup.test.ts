@@ -146,3 +146,11 @@ describe('renderPopup', () => {
     expect(open).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('analyzeNoticeFor', () => {
+  it('covers every reason of the shared vocabulary', () => {
+    expect(analyzeNoticeFor('no-form')).toContain('入力できるフォームが見つかりませんでした');
+    expect(analyzeNoticeFor('no-tab')).toContain('このタブでは実行できません');
+    expect(analyzeNoticeFor('error')).toContain('このタブでは実行できません');
+  });
+});
