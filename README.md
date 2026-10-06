@@ -2,7 +2,11 @@
 
 日本式フォーム（姓名・フリガナ・分割された住所）を、正しい欄に 1 クリックで入力する Chromium 系ブラウザ（Chrome / Edge）向けの拡張機能。フィールドの分類はルールで行い、判定できない欄だけ AI で補助できる（OpenAI 互換 API、Gemini、またはブラウザ内蔵 AI から選ぶ）。値の整形は決定的なコードで行い、プロファイルの値は外部に送信しない（AI を設定した場合のみ、入力欄のメタデータが選択したプロバイダに送られる）。入力する前に、プレビューで確認できる。
 
-English: [README.en.md](README.en.md)
+<!-- README-I18N:START -->
+
+**日本語** | [English](./README.en.md)
+
+<!-- README-I18N:END -->
 
 - ドキュメント: https://armaniacs.github.io/jushoai/
 - 要望・不具合: [Issue を作成する](https://github.com/armaniacs/jushoai/issues/new/choose)（機能の要望、入力できなかったフォーム、不具合のフォームが開く）

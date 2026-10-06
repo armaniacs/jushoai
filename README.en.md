@@ -2,7 +2,11 @@
 
 A browser extension for Chromium-based browsers (Chrome and Edge) that fills Japanese web forms (split names, furigana and split addresses) into the right fields in one click. Rules classify the fields, and an AI you choose (an OpenAI-compatible API, Gemini, or the browser's built-in AI) helps only with the fields the rules cannot decide. Values are produced by deterministic code, and your profile values are never sent anywhere. Only field metadata goes to the provider, and only if you turn AI on. You review everything in a preview before it is entered.
 
-The extension's screens are in Japanese. 日本語: [README.md](README.md)
+<!-- README-I18N:START -->
+
+The extension's screens are in Japanese. [日本語](./README.md) | **English**
+
+<!-- README-I18N:END -->
 
 - Documentation: https://armaniacs.github.io/jushoai/en/
 - Requests and bugs: [Create an issue](https://github.com/armaniacs/jushoai/issues/new/choose) (opens a form for a feature request, a form that did not fill, or a bug)
