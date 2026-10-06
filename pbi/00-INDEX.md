@@ -2,8 +2,7 @@
 
 ## 進行中
 
-- 大局的改善ラウンド（2026-10-06）: バッチA（17 / 18 / 19 / 21・並列）→ バッチB（20 / 22・並列）+ 継続（16）
-- `2026-10-06-16-feat-glossary.md` — 用語集の新設
+- 大局的改善ラウンド（2026-10-06）: バッチA（17 / 18 / 19 / 21・並列）→ バッチB（20 / 22・並列）
 - `2026-10-06-17-fix-content-error-visibility.md` — 失敗理由の可視化
 - `2026-10-06-18-fix-storage-uuid-fallback.md` — storage UUID生成のフォールバック
 - `2026-10-06-19-refactor-options-select-builders.md` — 設定画面のselect生成集約
@@ -57,3 +56,4 @@
 | 2026-10-06-13-fix-save-notice-split.md | 6d15a2a fix: 保存注意文を成否と次の一手に割る（認証エラー文と同梱） |
 | 2026-10-06-14-feat-readme-reading-guide.md | ff3ff28 docs: README冒頭に利用者向けと開発者向けの読み分けを足す |
 | 2026-10-06-15-feat-rename-feedback.md | 05a483c feat: 報告欄のFB表記を開発に報告するに改める |
+| 2026-10-06-16-feat-glossary.md | 020d902 feat: ガイド群の前提語彙を集めた用語集を新設する |
