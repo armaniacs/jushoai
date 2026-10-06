@@ -22,7 +22,7 @@ const PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
 const FAILURE_TEXT: Record<TestFailure, string> = {
   'not-configured': '設定が完了していません。保存してから試してください。',
   permission: '通信が許可されていません。保存し直して許可してください。',
-  auth: '認証に失敗しました。API キーを確認してください。Ollama などローカルのサーバーの場合は、API キーではなく OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
+  auth: '認証に失敗しました。まず API キーを確認してください。Ollama などローカルのサーバーの場合は、OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
   network: '接続に失敗しました。URL・モデル名・ネットワークを確認してください。',
   rejected: 'サーバーがリクエストを拒否しました。モデル名と、モデルが JSON 形式の出力に対応しているかを確認してください。',
   'bad-response': '応答を解釈できませんでした。モデルが JSON 形式の出力に対応しているか確認してください。',
@@ -210,7 +210,7 @@ export function mountAiSection(root: HTMLElement): void {
       return;
     }
     setNotice(
-      granted ? '保存しました。' : '保存しました。通信が許可されていないため AI は使えません。もう一度保存して、許可してください。',
+      granted ? '保存しました。' : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
       granted ? 'saved' : 'errors',
     );
   }
