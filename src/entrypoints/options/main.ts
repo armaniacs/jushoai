@@ -44,48 +44,50 @@ const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string 
 const app = document.getElementById('app')!;
 let state: StoredData;
 
-function prefectureSelect(value: string, onChange: (v: string) => void) {
+interface SelectEntry {
+  value: string;
+  text: string;
+  selected: boolean;
+}
+
+function buildSelect(onChange: (v: string) => void, entries: SelectEntry[]) {
   const select = document.createElement('select');
-  for (const p of ['', ...PREFECTURES]) {
+  for (const e of entries) {
     const o = document.createElement('option');
-    o.value = p;
-    o.textContent = p || '選択してください';
-    o.selected = p === value;
+    o.value = e.value;
+    o.textContent = e.text;
+    o.selected = e.selected;
     select.append(o);
   }
   select.addEventListener('change', () => onChange(select.value));
   return select;
 }
 
-function genderSelect(value: string, onChange: (v: string) => void) {
-  const select = document.createElement('select');
-  for (const g of ['', ...GENDERS]) {
-    const o = document.createElement('option');
-    o.value = g;
-    o.textContent = g || '選択してください（任意）';
-    o.selected = g === value;
-    select.append(o);
-  }
-  select.addEventListener('change', () => onChange(select.value));
-  return select;
+export function prefectureSelect(value: string, onChange: (v: string) => void) {
+  return buildSelect(onChange, ['', ...PREFECTURES].map((p) => ({
+    value: p,
+    text: p || '選択してください',
+    selected: p === value,
+  })));
 }
 
-function ownerSelect(value: string, onChange: (v: string) => void) {
-  const select = document.createElement('select');
-  const shared = document.createElement('option');
-  shared.value = '';
-  shared.textContent = '共通（どのプロファイルでも使う）';
-  shared.selected = value === '';
-  select.append(shared);
-  state.profiles.forEach((p, i) => {
-    const o = document.createElement('option');
-    o.value = p.id;
-    o.textContent = p.label || `プロファイル ${i + 1}`;
-    o.selected = p.id !== '' && p.id === value;
-    select.append(o);
-  });
-  select.addEventListener('change', () => onChange(select.value));
-  return select;
+export function genderSelect(value: string, onChange: (v: string) => void) {
+  return buildSelect(onChange, ['', ...GENDERS].map((g) => ({
+    value: g,
+    text: g || '選択してください（任意）',
+    selected: g === value,
+  })));
+}
+
+export function ownerSelect(value: string, onChange: (v: string) => void) {
+  return buildSelect(onChange, [
+    { value: '', text: '共通（どのプロファイルでも使う）', selected: value === '' },
+    ...state.profiles.map((p, i) => ({
+      value: p.id,
+      text: p.label || `プロファイル ${i + 1}`,
+      selected: p.id !== '' && p.id === value,
+    })),
+  ]);
 }
 
 function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {

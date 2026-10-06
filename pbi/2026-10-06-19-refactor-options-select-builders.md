@@ -56,6 +56,6 @@
 
 ## DoD
 
-- [ ] parity テストが先行追加され、リファクタ前後で green である
-- [ ] 3兄弟が helper に集約され、挙動不変であることがテストと目視で確認できている
-- [ ] `make typecheck` が green である
+- [x] parity テストが先行追加され、リファクタ前後で green である
+- [x] 3兄弟が helper に集約され、挙動不変であることがテストと目視で確認できている
+- [x] `make typecheck` が green である
