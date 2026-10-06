@@ -2,7 +2,18 @@
 
 ## 進行中
 
-- （なし）
+- 大局的改善ラウンド（2026-10-06）: バッチA（17 / 18 / 19 / 21・並列）→ バッチB（20 / 22・並列）+ 継続（14 / 15 / 16）
+- `2026-10-06-14-feat-readme-reading-guide.md` — README冒頭の読み分け宣言
+- `2026-10-06-15-feat-rename-feedback.md` — プレビュー報告欄のFB改名
+- `2026-10-06-16-feat-glossary.md` — 用語集の新設
+- `2026-10-06-17-fix-content-error-visibility.md` — 失敗理由の可視化
+- `2026-10-06-18-fix-storage-uuid-fallback.md` — storage UUID生成のフォールバック
+- `2026-10-06-19-refactor-options-select-builders.md` — 設定画面のselect生成集約
+- `2026-10-06-20-refactor-content-run-extraction.md` — content.ts run()の純粋部品抽出
+- `2026-10-06-21-refactor-classify-dispatch-table.md` — classifyFieldのテーブル駆動化
+- `2026-10-06-22-refactor-options-card-builders.md` — 設定画面のカード生成抽出
+
+台帳: `2026-10-06-00-backlog-holistic-improvement.md`
 
 台帳: `archived/2026-10-06-00-backlog-ai-audit-log.md`
 台帳: `2026-10-04-00-backlog-architecture-deepening.md`
