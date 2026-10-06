@@ -2,7 +2,13 @@
 
 ## 進行中
 
-- （なし）
+- 大局的改善ラウンド2（2026-10-07）: 01 → 02 → 03（逐次）+ 04（サブエージェント）
+- `2026-10-07-01-fix-http-rejection-mapping.md` — 400/422→rejected 判定の集約
+- `2026-10-07-02-fix-feedback-fb-wording.md` — 報告IssueのFB文言残存の除去
+- `2026-10-07-03-refactor-meta-clip-policy.md` — メタデータ切り詰め80文字の集約
+- `2026-10-07-04-refactor-options-ai-section.md` — mountAiSection の抽出
+
+台帳: `2026-10-07-00-backlog-holistic-improvement-b.md`
 
 台帳: `2026-10-06-00-backlog-holistic-improvement.md`
 
