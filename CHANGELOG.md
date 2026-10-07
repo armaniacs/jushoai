@@ -4,6 +4,29 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [0.1.10] - 2026-10-07
+
+### Added
+
+- 英語ページの判定（本文の日本語文字が 3% 以下でラテン文字が十分にあるページ）。英語ページでは姓名をローマ字、郵便番号・市・都道府県・番地・建物名を英語住所の項目で入力する
+
+### Fixed
+
+- 「First name on ID (if different from above)」のような任意の別名欄を人名として分類しない
+
+## [0.1.9] - 2026-10-07
+
+### Added
+
+- AI 判定の失敗理由を区別して表示する（未設定・未許可・認証失敗・内蔵 AI 未準備・通信失敗・要求拒否・応答の解釈失敗）。ルールのみで動作を続ける点は変わらない
+- AI 接続テストでブラウザ内蔵 AI の未準備を接続失敗と区別し、専用の案内を表示する
+
+### Fixed
+
+- フィードバック報告の公開 Page 行をオリジンと先頭パスのみにし、深いパスの識別子やクエリが含まれないようにする
+- フィードバック報告の欄メタデータを文字数制限付きにし、長い見出し文言がそのまま送られないようにする
+- `crypto.randomUUID` がない実行環境でも設定の ID 生成が動くようにする
+
 ## [0.1.8] - 2026-10-06
 
 ### Added
@@ -140,6 +163,8 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.10]: https://github.com/armaniacs/jushoai/compare/v0.1.9...v0.1.10
+[0.1.9]: https://github.com/armaniacs/jushoai/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/armaniacs/jushoai/compare/v0.1.7...v0.1.8
 [0.1.7]: https://github.com/armaniacs/jushoai/compare/v0.1.6...v0.1.7
 [0.1.6]: https://github.com/armaniacs/jushoai/releases/tag/v0.1.6
