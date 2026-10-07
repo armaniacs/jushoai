@@ -8,3 +8,4 @@
 - https://pro.form-mailer.jp/lp/f9334cf2294970 → formmailer-raijo-age.html
 - https://www.joshibi.ac.jp/overseas/webform → overseas-webform-joshibi.html
 - https://pro.form-mailer.jp/fms/6d59e0a6280818 → furigana-fieldset-form.html
+- https://registration.awsevents.com/flow/awsevents/reinvent2026/reg/form/contactInfo → reinvent-registration-contact.html

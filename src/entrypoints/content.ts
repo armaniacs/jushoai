@@ -1,4 +1,5 @@
 import { classifyAll } from '../core/analyze';
+import { isEnglishPageText } from '../core/page-language';
 import type { PlanItem } from '../core/planner';
 import { buildFeedbackInput, replanItems, snapshotItems } from '../content-run';
 import { applyPlan } from '../dom/apply-plan';
@@ -66,7 +67,10 @@ export default defineContentScript({
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const metas = fields.map((f) => f.meta);
-      let items = await classifyAll(metas, classifier);
+      const englishPage = isEnglishPageText(document.body?.innerText ?? '');
+      let items = await classifyAll(metas, classifier, { englishPage });
+      const reason = classifier?.lastFailureReason;
+      if (reason) button.showError(AI_FAILURE_HINT[reason]);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
       const beforeItems = snapshotItems(items);
       let afterItems: Map<string, FeedbackSnapshot> | null = null;
@@ -85,7 +89,9 @@ export default defineContentScript({
 
       async function reanalyze() {
         if (!classifier) return;
-        items = await classifyAll(metas, classifier, { force: true });
+        items = await classifyAll(metas, classifier, { force: true, englishPage });
+        const reason = classifier.lastFailureReason;
+        if (reason) button.showError(AI_FAILURE_HINT[reason]);
         afterItems = snapshotItems(items);
         preview.setRows(replan());
       }

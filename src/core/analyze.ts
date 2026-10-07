@@ -4,6 +4,7 @@ import {
 } from './classify-rules';
 import type { Category, FieldMeta } from './types';
 import type { FieldClassifier } from './classifier';
+import { applyEnglishPage } from './page-language';
 
 const KANA_CATEGORY: Partial<Record<Category, Category>> = {
   lastName: 'lastNameKana',
@@ -33,7 +34,7 @@ function applyKanaOverlay(items: Item[]): void {
 export async function classifyAll(
   metas: FieldMeta[],
   classifier: FieldClassifier | null,
-  opts: { force?: boolean } = {},
+  opts: { force?: boolean; englishPage?: boolean } = {},
 ): Promise<Item[]> {
   const force = opts.force === true;
   const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
@@ -70,5 +71,6 @@ export async function classifyAll(
     if (force && cls) items.push({ meta, cls });
   }
   applyKanaOverlay(items);
-  return refineClassifications(items);
+  const refined = refineClassifications(items);
+  return opts.englishPage ? applyEnglishPage(refined) : refined;
 }

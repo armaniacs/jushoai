@@ -17,6 +17,8 @@ import abroad from '../../samples/overseas-address-form.html?raw';
 import joshibi from '../../samples/overseas-webform-joshibi.html?raw';
 import anketo from '../../samples/formmailer-anketo-gender.html?raw';
 import raijo from '../../samples/formmailer-raijo-age.html?raw';
+import reinvent from '../../samples/reinvent-registration-contact.html?raw';
+import { isEnglishPageText } from '../../src/core/page-language';
 
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
@@ -29,6 +31,7 @@ const SAMPLES: Record<string, string> = {
   'overseas-webform-joshibi.html': joshibi,
   'formmailer-anketo-gender.html': anketo,
   'formmailer-raijo-age.html': raijo,
+  'reinvent-registration-contact.html': reinvent,
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
@@ -54,7 +57,9 @@ async function planFor(file: string, today?: Date): Promise<Record<string, strin
   const html = SAMPLES[file]!;
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
   const fields = scanFields(document.body);
-  const items = await classifyAll(fields.map((f) => f.meta), null);
+  const items = await classifyAll(fields.map((f) => f.meta), null, {
+    englishPage: isEnglishPageText(document.body.textContent ?? ''),
+  });
   const plan = buildPlan(items, { profile, address, today });
   const keyOf = new Map(fields.map((f) => [f.meta.id, f.meta.name || f.meta.htmlId]));
   const out: Record<string, string> = {};
@@ -174,6 +179,15 @@ describe('sample forms end to end', () => {
       'address_4': 'NEW YORK',
       'postal_code': '11375',
       'phone': '090-1234-5678',
+    });
+  });
+
+  it('reinvent-registration-contact fills latin values and leaves the optional ID names empty', async () => {
+    expect(await planFor('reinvent-registration-contact.html')).toEqual({
+      'formAttendee-firstname': 'Taro',
+      'formAttendee-lastname': 'Yamada',
+      'formAttendee-city': 'Long Island City',
+      'formAttendee-zip': '11375',
     });
   });
 
