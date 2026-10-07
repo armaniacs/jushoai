@@ -107,9 +107,10 @@ describe('sample forms end to end', () => {
     },
   );
 
-  // Labels carry no vocabulary the rules know, so only an LLM can place these ten fields.
-  it('demo-ai-ambiguous is left alone by the rules and filled once the LLM classifies it', async () => {
-    expect(await planFor('demo-ai-ambiguous.html')).toEqual({});
+  // Only the email field (type=email) is recognised by the rules; it is also what makes the button appear.
+  // The other nine labels carry no vocabulary the rules know, so only an LLM can place them.
+  it('demo-ai-ambiguous is mostly left alone by the rules and filled once the LLM classifies it', async () => {
+    expect(await planFor('demo-ai-ambiguous.html')).toEqual({ f10: 'yamada@example.com' });
     const byHtmlId: Record<string, Category> = {
       f1: 'lastName', f2: 'firstName', f3: 'lastNameKana', f4: 'firstNameKana', f5: 'zip',
       f6: 'prefecture', f7: 'addressNoPref', f8: 'building', f9: 'tel', f10: 'email',
