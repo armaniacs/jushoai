@@ -18,12 +18,9 @@
 
 CHANGELOG に該当節がない、またはタグと version が違うときは、Release を作らずに失敗する。ローカルで本文を確認するには `node scripts/release-notes.mjs X.Y.Z`。
 
-## ストア公開の準備（未実施）
+## ストア公開の準備
 
-- 権限の利用理由
-  - `storage`: プロファイル、住所、設定の保存
-  - `<all_urls>` の Content Script: 任意のページのフォームを検出し、「JushoAI で入力」を表示するため
-  - `optional_host_permissions`: ユーザーが選んだ AI プロバイダへの通信を、設定の保存時に許可してもらうため
+掲載文、権限の利用理由、データ使用の申告は `docs/store-listing.md` にまとめている。提出物は `make zip` が作る `dist/jushoai-X.Y.Z-chrome.zip`。
+
+- 必要な画像: スクリーンショット（1280x800 または 640x400）、小プロモタイル（440x280）
 - プライバシーポリシー: ドキュメントサイトの `guides/privacy/`（日英）
-- 必要な画像: スクリーンショット（1280x800 または 640x400）、プロモーションタイル
-- 掲載文: `site/i18n/{ja,en}.json` の `meta` と `hero` を元にする
