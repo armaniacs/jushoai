@@ -13,7 +13,7 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
-import { ANALYZE_MESSAGE_TYPE } from '../messages';
+import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -47,6 +47,19 @@ export default defineContentScript({
         running.delete(container);
       }
     }
+
+    // The classifier keeps working rule-only when AI fails, so surface WHY it
+    // failed (set-up vs retryable) instead of leaving the user to guess.
+    // Raw statuses never leave this map; only these coarse guidance lines do.
+    const AI_FAILURE_HINT: Record<ClassifyFailure, string> = {
+      'not-configured': 'AI未設定のためルールのみで表示',
+      permission: 'AI通信が未許可のためルールのみで表示: 設定で許可してください',
+      auth: 'AI認証に失敗したためルールのみで表示: APIキーを確認してください',
+      unavailable: '内蔵AIが未準備のためルールのみで表示',
+      network: 'AI通信に失敗したためルールのみで表示: 再試行できます',
+      rejected: 'AIが要求を拒否したためルールのみで表示: モデル設定を確認してください',
+      'bad-response': 'AI応答を解釈できずルールのみで表示',
+    };
 
     async function run(container: Element, button: ButtonHandle) {
       const [data, last] = await Promise.all([loadData(), loadLastUsed()]);

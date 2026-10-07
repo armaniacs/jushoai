@@ -34,6 +34,7 @@ function makeAddress(id: string) {
 }
 
 vi.mock('../../src/storage', () => ({
+  newId: () => 'test-id',
   loadData: async () => ({
     profiles: [makeProfile('p1', 'A'), makeProfile('p2', 'B')],
     addresses: [makeAddress('a1')],

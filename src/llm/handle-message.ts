@@ -121,7 +121,7 @@ const TEST_FIELD: FieldMeta = {
 
 async function runTest(deps: HandlerDeps, s: PublicAiSettings): Promise<TestResponse> {
   const sel = await selectClassifier(deps, s, { purpose: 'connection-test', pageUrl: '', ignoreAuthFailure: true });
-  if (!sel.ok) return { ok: false, reason: sel.reason === 'unavailable' ? 'network' : sel.reason };
+  if (!sel.ok) return sel;
   try {
     const category = (await sel.classifier.classify([TEST_FIELD])).get('t');
     if (!category) return { ok: false, reason: 'bad-response' };

@@ -110,6 +110,7 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
   analyze.className = 'analyze';
   const notice = el('p', '');
   notice.className = 'notice';
+  notice.setAttribute('role', 'status');
   notice.hidden = true;
   analyze.addEventListener('click', () => {
     // Same entry condition as the in-page button: without saved data there is

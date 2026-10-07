@@ -26,6 +26,7 @@ const FAILURE_TEXT: Record<TestFailure, string> = {
   network: '接続に失敗しました。URL・モデル名・ネットワークを確認してください。',
   rejected: 'サーバーがリクエストを拒否しました。モデル名と、モデルが JSON 形式の出力に対応しているかを確認してください。',
   'bad-response': '応答を解釈できませんでした。モデルが JSON 形式の出力に対応しているか確認してください。',
+  unavailable: 'ブラウザ内蔵 AI がまだ使えません。モデルのダウンロード状況を確認してください。',
 };
 
 const KEYED = ['openai', 'gemini'] as const;
@@ -56,16 +57,33 @@ interface AiSectionEffectHooks {
   notify: (text: string, kind: 'saved' | 'errors') => void;
 }
 
-function createAiSectionState(): AiSectionState {
-  return {
-    settings: undefined as unknown as AiSettings,
-    hasKey: { openai: false, gemini: false },
-    keyInput: { openai: '', gemini: '' },
-    removeKey: { openai: false, gemini: false },
-    savedOpenAi: { baseUrl: '', model: '' },
-    testing: false,
-    notice: null,
-  };
+export function mountAiSection(root: HTMLElement): void {
+  const keyStore = new IdbKeyStore();
+  // State is assembled only once the stored settings arrive, so settings is
+  // never a lie: every render below works on a complete initial value.
+  root.append(el('p', '読み込み中…'));
+
+  const rerender = (state: AiSectionState) =>
+    renderAiSection(root, state, {
+      rerender: () => rerender(state),
+      onSave: () => void saveAiSection(state, { keyStore, rerender: () => rerender(state), notify: (t, k) => setAiNotice(state, t, k, () => rerender(state)) }),
+      onTest: () => void testAiSection(state, {
+        rerender: () => rerender(state),
+        notify: (t, k) => setAiNotice(state, t, k, () => rerender(state)),
+      }),
+    });
+
+  void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
+    rerender({
+      settings: loaded,
+      hasKey: keys,
+      keyInput: { openai: '', gemini: '' },
+      removeKey: { openai: false, gemini: false },
+      savedOpenAi: { ...loaded.openai },
+      testing: false,
+      notice: null,
+    });
+  });
 }
 
 function setAiNotice(
@@ -283,21 +301,4 @@ async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): 
       env.rerender();
     }
   }
-}
-
-export function mountAiSection(root: HTMLElement): void {
-  const state = createAiSectionState();
-  const keyStore = new IdbKeyStore();
-
-  const rerender = () => renderAiSection(root, state, { rerender, onSave: runSave, onTest: runTest });
-  const notify = (text: string, kind: 'saved' | 'errors') => setAiNotice(state, text, kind, rerender);
-  const runSave = () => void saveAiSection(state, { keyStore, rerender, notify });
-  const runTest = () => void testAiSection(state, { rerender, notify });
-
-  void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
-    state.settings = loaded;
-    state.savedOpenAi = { ...loaded.openai };
-    state.hasKey = keys;
-    rerender();
-  });
 }

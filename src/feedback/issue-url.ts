@@ -1,5 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
-import { META_CLIP_LENGTH } from '../messages';
+import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
 
@@ -26,6 +26,33 @@ export function sanitizePageUrl(href: string): string {
   }
 }
 
+// The public issue body carries less than the local audit log: only the
+// origin and the first path segment, so deep path identifiers never leave
+// the machine. nearby/label text can still hold page-rendered personal data,
+// which the consent wording calls out instead of trying to detect.
+export function publicPageLabel(href: string): string {
+  try {
+    const u = new URL(href);
+    const first = u.pathname.split('/').filter(Boolean)[0];
+    return first ? `${u.origin}/${first}` : u.origin;
+  } catch {
+    return 'unknown';
+  }
+}
+
+function clippedMeta(m: FieldMeta): MetaWire {
+  const w = toWireMeta(m);
+  const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
+  return {
+    ...w,
+    name: clip(w.name),
+    htmlId: clip(w.htmlId),
+    label: clip(w.label),
+    placeholder: clip(w.placeholder),
+    nearby: clip(w.nearby),
+  };
+}
+
 function fieldLine(meta: FieldMeta, snap: FeedbackSnapshot | undefined): string {
   const hint = [meta.label, meta.placeholder, meta.name].filter(Boolean).join(' / ').slice(0, META_CLIP_LENGTH);
   const cat = snap ? `${snap.category} (${snap.source})` : 'unknown';
@@ -33,7 +60,7 @@ function fieldLine(meta: FieldMeta, snap: FeedbackSnapshot | undefined): string 
 }
 
 export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): string {
-  const page = sanitizePageUrl(input.pageHref);
+  const page = publicPageLabel(input.pageHref);
   const host = (() => {
     try {
       return new URL(input.pageHref).host;
@@ -58,16 +85,7 @@ export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): strin
     '### Field metadata (profile values are never included)',
     '```json',
     JSON.stringify(
-      input.fields.map((m) => ({
-        id: m.id,
-        type: m.type,
-        name: m.name,
-        htmlId: m.htmlId,
-        label: m.label,
-        placeholder: m.placeholder,
-        nearby: m.nearby,
-        maxLength: m.maxLength,
-      })),
+      input.fields.map((m) => clippedMeta(m)),
       null,
       2,
     ),
@@ -92,7 +110,7 @@ export function buildSettingsReportUrl(repo: string, version: string): string {
     '- 期待する動作: ',
     '- 実際の動作: ',
     '',
-    '注意: 公開 issue が開きます。プロファイルの値や住所の値は書かないでください。',
+    '注意: 公開 issue が開きます。プロファイルの値や住所の値は書かないでください。ページに表示された氏名・会員情報が欄の見出しに含まれる場合は削除してください。',
   ];
   const params = new URLSearchParams({
     title: '設定画面からの不具合報告',

@@ -5,7 +5,7 @@ import {
 } from '../../core/profile';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
-import { loadData, saveData } from '../../storage';
+import { loadData, newId, saveData } from '../../storage';
 import { labeled, textInput, kanaHiraganaHint } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID } from './nav';
@@ -79,10 +79,10 @@ export function genderSelect(value: string, onChange: (v: string) => void) {
   })));
 }
 
-export function ownerSelect(value: string, onChange: (v: string) => void) {
+export function ownerSelect(value: string, onChange: (v: string) => void, profiles: Pick<Profile, 'id' | 'label'>[]) {
   return buildSelect(onChange, [
     { value: '', text: '共通（どのプロファイルでも使う）', selected: value === '' },
-    ...state.profiles.map((p, i) => ({
+    ...profiles.map((p, i) => ({
       value: p.id,
       text: p.label || `プロファイル ${i + 1}`,
       selected: p.id !== '' && p.id === value,
@@ -178,7 +178,7 @@ function render(notice?: HTMLElement) {
     }
     set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
     const copy = actionButton('このプロファイルを複製', state.profiles.length >= 10, () => {
-      state.profiles.push({ ...p, id: crypto.randomUUID(), label: `${p.label} のコピー` });
+      state.profiles.push({ ...p, id: newId(), label: `${p.label} のコピー` });
       render();
     });
     const remove = actionButton('このプロファイルを削除', state.profiles.length <= 1, () => {
@@ -190,7 +190,7 @@ function render(notice?: HTMLElement) {
   });
 
   const addProfile = actionButton('プロファイルを新規追加', state.profiles.length >= 10, () => {
-    state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
+    state.profiles.push({ ...EMPTY_PROFILE, id: newId() });
     render();
   });
   const limitNote = buildLimitNote('プロファイルは10件まで登録できます', state.profiles.length >= 10);
@@ -199,7 +199,7 @@ function render(notice?: HTMLElement) {
   addressHeading.textContent = '住所';
   const addressCards = state.addresses.map((a, i) => {
     const set = cardFieldset();
-    set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; })));
+    set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; }, state.profiles)));
     for (const f of ADDRESS_FIELDS.slice(0, 2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
@@ -222,7 +222,7 @@ function render(notice?: HTMLElement) {
   });
 
   const add = actionButton('住所を追加', state.addresses.length >= 10, () => {
-    state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID() });
+    state.addresses.push({ ...EMPTY_ADDRESS, id: newId() });
     render();
   });
   const addressLimitNote = buildLimitNote('住所は10件まで登録できます', state.addresses.length >= 10);
@@ -277,10 +277,10 @@ async function onSave() {
 void loadData().then((data) => {
   state = data;
   if (state.profiles.length === 0) {
-    state.profiles.push({ ...EMPTY_PROFILE, id: crypto.randomUUID() });
+    state.profiles.push({ ...EMPTY_PROFILE, id: newId() });
   }
   if (state.addresses.length === 0) {
-    state.addresses.push({ ...EMPTY_ADDRESS, id: crypto.randomUUID(), label: '自宅' });
+    state.addresses.push({ ...EMPTY_ADDRESS, id: newId(), label: '自宅' });
   }
   render();
 });

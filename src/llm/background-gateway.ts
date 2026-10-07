@@ -1,6 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { parseClassifyResult, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
+import { parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 
 const STATUS_TIMEOUT_MS = 5_000;
@@ -61,14 +61,17 @@ export class BackgroundClassifier implements FieldClassifier {
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
       const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
       let parsed: ReturnType<typeof parseClassifyResult>;
+      let raw: unknown;
       try {
-        parsed = parseClassifyResult(await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs));
+        raw = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
+        parsed = parseClassifyResult(raw);
       } catch {
         this.lastFailureReason = 'network';
         break;
       }
       if (!parsed) {
-        this.lastFailureReason = 'bad-response';
+        // A legacy reply carries no reason; record unknown instead of crying wolf.
+        this.lastFailureReason = isLegacyClassifyFailure(raw) ? null : 'bad-response';
         break;
       }
       if (parsed.ok === false) {

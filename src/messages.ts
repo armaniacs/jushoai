@@ -12,14 +12,14 @@ const MAX_ID_LENGTH = 100;
 const MAX_TEXT_LENGTH = 200;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
-const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response'] as const;
+const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable'] as const;
 
 export type TestFailure = (typeof TEST_FAILURES)[number];
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
 
-// Failure vocabulary for ai-classify: the TestFailure set plus 'unavailable'
-// (built-in AI present in settings but not usable right now).
-const CLASSIFY_FAILURES = [...TEST_FAILURES, 'unavailable'] as const;
+// Failure vocabulary for ai-classify: the TestFailure set, which includes
+// 'unavailable' (built-in AI present in settings but not usable right now).
+const CLASSIFY_FAILURES = [...TEST_FAILURES] as const;
 
 export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
 export type ClassifyResponse =
@@ -110,6 +110,13 @@ export function parseRequest(msg: unknown): AiRequest | null {
 export function parseClassifyResponse(res: unknown): Map<string, Category> | null {
   const parsed = parseClassifyResult(res);
   return parsed?.ok === true ? parsed.map : null;
+}
+
+// Old background replies used {ok:false} without a reason vocabulary.
+// Telling a missing reason apart from a malformed one keeps the gateway from
+// mislabeling a legacy failure as a bad response.
+export function isLegacyClassifyFailure(res: unknown): boolean {
+  return isRecord(res) && res.ok === false && res.reason === undefined;
 }
 
 // Reason-aware counterpart of parseClassifyResponse: keeps the failure reason

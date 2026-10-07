@@ -5,6 +5,7 @@ import { PREFECTURES } from '../../src/core/prefectures';
 // PBI-19 parity: pins the exact option order/value/text/initial-selection and
 // change-callback behavior of the three select builders before aggregation.
 vi.mock('../../src/storage', () => ({
+  newId: () => 'test-id',
   loadData: async () => ({
     profiles: [
       {
@@ -121,8 +122,14 @@ describe('genderSelect parity', () => {
 });
 
 describe('ownerSelect parity', () => {
+  const PROFILES = [
+    { id: 'p1', label: '個人用' },
+    { id: 'p2', label: '' },
+    { id: '', label: '空ID' },
+  ];
+
   it('lists the shared option then one per profile with label fallback', () => {
-    const select = ownerSelect('', () => {});
+    const select = ownerSelect('', () => {}, PROFILES);
     expect(snapshot(select).map((o) => [o.value, o.text])).toEqual([
       ['', '共通（どのプロファイルでも使う）'],
       ['p1', '個人用'],
@@ -132,24 +139,24 @@ describe('ownerSelect parity', () => {
   });
 
   it('selects shared for empty but never an empty-id profile', () => {
-    const selected = snapshot(ownerSelect('', () => {})).filter((o) => o.selected);
+    const selected = snapshot(ownerSelect('', () => {}, PROFILES)).filter((o) => o.selected);
     expect(selected).toEqual([
       { value: '', text: '共通（どのプロファイルでも使う）', selected: true },
     ]);
   });
 
   it('selects the matching profile, none for unknown', () => {
-    expect(snapshot(ownerSelect('p1', () => {})).filter((o) => o.selected))
+    expect(snapshot(ownerSelect('p1', () => {}, PROFILES)).filter((o) => o.selected))
       .toEqual([{ value: 'p1', text: '個人用', selected: true }]);
-    expect(snapshot(ownerSelect('zzz', () => {})).filter((o) => o.selected)).toEqual([
+    expect(snapshot(ownerSelect('zzz', () => {}, PROFILES)).filter((o) => o.selected)).toEqual([
       { value: '', text: '共通（どのプロファイルでも使う）', selected: true },
     ]);
-    expect(ownerSelect('zzz', () => {}).selectedIndex).toBe(0);
+    expect(ownerSelect('zzz', () => {}, PROFILES).selectedIndex).toBe(0);
   });
 
   it('calls onChange once with the new value', () => {
     const onChange = vi.fn();
-    const select = ownerSelect('', onChange);
+    const select = ownerSelect('', onChange, PROFILES);
     fireChange(select, 'p2');
     expect(onChange).toHaveBeenCalledTimes(1);
     expect(onChange).toHaveBeenCalledWith('p2');

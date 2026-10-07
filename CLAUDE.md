@@ -47,3 +47,13 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - 正規表現のテストが落ちたら、期待値ではなく正規表現を直す。
 - Gemini Nano の実精度とページ上の挙動は自動化できないため、`samples/` のサンプルフォームで手動確認する（手順は実装計画の Task 11）。
 - 対象 URL を持つ PBI を作るときは `samples/` への fixture 追加と `tests/integration/samples.test.ts` へのケース追加を必須とする。手順は `make addurl URL=<url>` から始める。この1コマンドが `tests/target-url.md` への登録・取得・雛形生成・テスト配線まで行うので、人は最小再現まで削って期待値を埋めるだけ。台帳だけ追って後で一括する場合は `node scripts/sync-target-urls.mjs`、単発の取り込みは `node scripts/add-fixture.mjs <url> [fixture名]`、JS 描画のページは保存した HTML から `node scripts/scaffold-fixture.mjs <source.html> [fixture名]` で雛形を作る。radio は name 単位で1欄に束ね、性別・年代のみ分類してそれ以外は未分類のまま置く。checkbox は対象外（skip 固定）、hidden は送信用等のため除外、submit・button 系は操作要素のため除外、text・email・tel・search と select 以外の型は走査対象外として除外する。
+
+## graphify
+
+This project has a knowledge graph at graphify-out/ with god nodes, community structure, and cross-file relationships.
+
+Rules:
+- For codebase questions, first run `graphify query "<question>"` when graphify-out/graph.json exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than GRAPH_REPORT.md or raw grep output.
+- If graphify-out/wiki/index.md exists, use it for broad navigation instead of raw source browsing.
+- Read graphify-out/GRAPH_REPORT.md only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).

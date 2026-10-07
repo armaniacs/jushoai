@@ -32,7 +32,8 @@ describe('buildFeedbackIssueUrl', () => {
     expect(body).toContain('初回では入力できなかったが、AIで分析したら成功した');
     expect(body).toContain('開発に報告する');
     expect(body).not.toContain('FB');
-    expect(body).toContain('https://pro.form-mailer.jp/fms/abc');
+    expect(body).toContain('https://pro.form-mailer.jp/fms');
+    expect(body).not.toContain('/fms/abc');
     expect(body).not.toContain('token=secret');
     expect(body).not.toContain('SECRET-PAGE-VALUE');
     expect(body).toContain('unknown (rule)');

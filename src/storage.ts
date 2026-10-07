@@ -54,7 +54,7 @@ let fallbackCounter = 0;
 // ID generation that survives contexts without crypto.randomUUID.
 // Uses randomUUID when available, otherwise falls back to a time + random +
 // counter hex shape that stays unique within a migration run.
-function newId(): string {
+export function newId(): string {
   try {
     const c = (globalThis as { crypto?: { randomUUID?: () => string } }).crypto;
     if (c && typeof c.randomUUID === 'function') return c.randomUUID();
