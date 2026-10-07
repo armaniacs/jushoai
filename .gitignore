@@ -12,3 +12,5 @@ site-dist/
 .agents
 .env
 tmp/
+graphify-out/
+.checking-team-tmp/

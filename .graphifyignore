@@ -1,0 +1,5 @@
+# graphify corpus exclusions (project-local noise, not product knowledge)
+.checking-team-tmp/
+tmp/
+site-dist/
+dist/
