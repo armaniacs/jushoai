@@ -25,12 +25,15 @@ fieldset{border:0;margin:0 0 16px;padding:0}
 .pair{display:flex;gap:14px;flex-wrap:wrap}
 .pair>div{flex:1 1 180px}
 .pair .sub{display:block;font-size:12px;color:var(--sub);margin-bottom:3px}
-label.t{display:block;font-size:14px;font-weight:600;padding-top:7px}
+.k2{display:flex;align-items:flex-start;padding-top:7px}
+label.t{display:block;font-size:14px;font-weight:600}
+.k2 .req{margin-top:3px}
 .req{display:inline-block;margin-left:8px;padding:0 6px;font-size:11px;line-height:18px;border-radius:3px;color:#fff;background:#d64545;vertical-align:1px}
 .opt{background:#8a94a6}
 input[type=text],input[type=tel],input[type=email],select,textarea{width:100%;padding:8px 12px;font:inherit;font-size:15px;border:1px solid #c5ccd8;border-radius:6px;background:#fff;color:var(--text)}
 input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
 input.s{max-width:180px}
+input.m{max-width:300px}
 select{max-width:260px}
 .hint{font-size:12px;color:var(--sub);margin-top:4px}
 .check{font-size:14px;display:flex;gap:8px;align-items:flex-start;margin:6px 0}
@@ -53,29 +56,31 @@ footer{border-top:1px solid var(--line);padding:22px;text-align:center;font-size
 <form class="card" onsubmit="return false">
 <fieldset>
 <p class="sec">お名前</p>
-<div class="row"><div class="k">氏名<span class="req">必須</span></div>
-<div class="pair"><div><label for="ln" class="sub">姓</label><input id="ln" name="lastName" type="text" autocomplete="off"></div>
-<div><label for="fn" class="sub">名</label><input id="fn" name="firstName" type="text" autocomplete="off"></div></div></div>
-<div class="row"><div class="k">フリガナ<span class="req">必須</span></div>
-<div class="pair"><div><label for="lk" class="sub">セイ</label><input id="lk" name="lastNameKana" type="text" placeholder="ヤマダ"></div>
-<div><label for="fk" class="sub">メイ</label><input id="fk" name="firstNameKana" type="text" placeholder="タロウ"></div></div></div>
+<div class="row"><div class="k2"><label for="ln" class="t">姓</label><span class="req">必須</span></div>
+<div><input id="ln" name="lastName" type="text" class="m" autocomplete="off"></div></div>
+<div class="row"><div class="k2"><label for="fn" class="t">名</label><span class="req">必須</span></div>
+<div><input id="fn" name="firstName" type="text" class="m" autocomplete="off"></div></div>
+<div class="row"><div class="k2"><label for="lk" class="t">セイ</label><span class="req">必須</span></div>
+<div><input id="lk" name="lastNameKana" type="text" class="m" placeholder="ヤマダ"></div></div>
+<div class="row"><div class="k2"><label for="fk" class="t">メイ</label><span class="req">必須</span></div>
+<div><input id="fk" name="firstNameKana" type="text" class="m" placeholder="タロウ"></div></div>
 </fieldset>
 <fieldset>
 <p class="sec">ご住所</p>
-<div class="row"><label for="zip" class="t">郵便番号<span class="req">必須</span></label>
+<div class="row"><div class="k2"><label for="zip" class="t">郵便番号</label><span class="req">必須</span></div>
 <div><input id="zip" name="zip" type="text" class="s" placeholder="123-4567"><p class="hint">半角、ハイフンありで入力してください</p></div></div>
-<div class="row"><label for="pref" class="t">都道府県<span class="req">必須</span></label>
+<div class="row"><div class="k2"><label for="pref" class="t">都道府県</label><span class="req">必須</span></div>
 <div><select id="pref" name="pref"><option value="">選択してください</option><option value="01">北海道</option><option value="02">青森県</option><option value="03">岩手県</option><option value="04">宮城県</option><option value="05">秋田県</option><option value="06">山形県</option><option value="07">福島県</option><option value="08">茨城県</option><option value="09">栃木県</option><option value="10">群馬県</option><option value="11">埼玉県</option><option value="12">千葉県</option><option value="13">東京都</option><option value="14">神奈川県</option><option value="15">新潟県</option><option value="16">富山県</option><option value="17">石川県</option><option value="18">福井県</option><option value="19">山梨県</option><option value="20">長野県</option><option value="21">岐阜県</option><option value="22">静岡県</option><option value="23">愛知県</option><option value="24">三重県</option><option value="25">滋賀県</option><option value="26">京都府</option><option value="27">大阪府</option><option value="28">兵庫県</option><option value="29">奈良県</option><option value="30">和歌山県</option><option value="31">鳥取県</option><option value="32">島根県</option><option value="33">岡山県</option><option value="34">広島県</option><option value="35">山口県</option><option value="36">徳島県</option><option value="37">香川県</option><option value="38">愛媛県</option><option value="39">高知県</option><option value="40">福岡県</option><option value="41">佐賀県</option><option value="42">長崎県</option><option value="43">熊本県</option><option value="44">大分県</option><option value="45">宮崎県</option><option value="46">鹿児島県</option><option value="47">沖縄県</option></select></div></div>
-<div class="row"><label for="ad1" class="t">住所（市区町村・番地）<span class="req">必須</span></label>
+<div class="row"><div class="k2"><label for="ad1" class="t">住所（市区町村・番地）</label><span class="req">必須</span></div>
 <div><input id="ad1" name="address1" type="text" placeholder="千代田区千代田1-1"></div></div>
-<div class="row"><label for="ad2" class="t">建物名・部屋番号<span class="req opt">任意</span></label>
+<div class="row"><div class="k2"><label for="ad2" class="t">建物名・部屋番号</label><span class="req opt">任意</span></div>
 <div><input id="ad2" name="address2" type="text" placeholder="サンプルビル101"></div></div>
 </fieldset>
 <fieldset>
 <p class="sec">ご連絡先</p>
-<div class="row"><label for="tel" class="t">電話番号<span class="req">必須</span></label>
+<div class="row"><div class="k2"><label for="tel" class="t">電話番号</label><span class="req">必須</span></div>
 <div><input id="tel" name="tel" type="tel" class="s" placeholder="090-1234-5678"></div></div>
-<div class="row"><label for="em" class="t">メールアドレス<span class="req">必須</span></label>
+<div class="row"><div class="k2"><label for="em" class="t">メールアドレス</label><span class="req">必須</span></div>
 <div><input id="em" name="email" type="email" placeholder="example@example.com"></div></div>
 </fieldset>
 <label class="check"><input type="checkbox"><span>利用規約とプライバシーポリシーに同意する</span></label>
