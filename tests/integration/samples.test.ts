@@ -9,6 +9,9 @@ import katakana from '../../samples/katakana-fieldset-form.html?raw';
 import profileFields from '../../samples/profile-fields-form.html?raw';
 import single from '../../samples/single-field-form.html?raw';
 import split from '../../samples/split-form.html?raw';
+import demoRegistration from '../../samples/demo-registration.html?raw';
+import demoCheckout from '../../samples/demo-shop-checkout.html?raw';
+import demoRequest from '../../samples/demo-request-info.html?raw';
 import table from '../../samples/table-form.html?raw';
 import roman from '../../samples/roman-name-form.html?raw';
 import gender from '../../samples/gender-select-form.html?raw';
@@ -23,6 +26,9 @@ import { isEnglishPageText } from '../../src/core/page-language';
 const SAMPLES: Record<string, string> = {
   'table-form.html': table,
   'split-form.html': split,
+  'demo-registration.html': demoRegistration,
+  'demo-shop-checkout.html': demoCheckout,
+  'demo-request-info.html': demoRequest,
   'single-field-form.html': single,
   'roman-name-form.html': roman,
   'gender-select-form.html': gender,
@@ -83,6 +89,17 @@ describe('sample forms end to end', () => {
       tel: '09012345678', em: 'yamada@example.com',
     });
   });
+
+  it.each(['demo-registration.html', 'demo-shop-checkout.html', 'demo-request-info.html'])(
+    '%s fills the ten address fields',
+    async (file) => {
+      expect(await planFor(file)).toEqual({
+        lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+        zip: '100-0001', pref: '13', address1: '千代田区千代田1-1', address2: '千代田ビル101',
+        tel: '090-1234-5678', email: 'yamada@example.com',
+      });
+    },
+  );
 
   it('single-field-form', async () => {
     expect(await planFor('single-field-form.html')).toEqual({
