@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { classifyAll } from '../../src/core/analyze';
+import type { FieldClassifier } from '../../src/core/classifier';
+import type { Category } from '../../src/core/types';
 import { buildPlan } from '../../src/core/planner';
 import type { Address, Profile } from '../../src/core/types';
 import { detectForms } from '../../src/dom/detect-forms';
@@ -12,6 +14,7 @@ import split from '../../samples/split-form.html?raw';
 import demoRegistration from '../../samples/demo-registration.html?raw';
 import demoCheckout from '../../samples/demo-shop-checkout.html?raw';
 import demoRequest from '../../samples/demo-request-info.html?raw';
+import demoAmbiguous from '../../samples/demo-ai-ambiguous.html?raw';
 import table from '../../samples/table-form.html?raw';
 import roman from '../../samples/roman-name-form.html?raw';
 import gender from '../../samples/gender-select-form.html?raw';
@@ -29,6 +32,7 @@ const SAMPLES: Record<string, string> = {
   'demo-registration.html': demoRegistration,
   'demo-shop-checkout.html': demoCheckout,
   'demo-request-info.html': demoRequest,
+  'demo-ai-ambiguous.html': demoAmbiguous,
   'single-field-form.html': single,
   'roman-name-form.html': roman,
   'gender-select-form.html': gender,
@@ -59,11 +63,13 @@ const address: Address = {
   address4: 'NEW YORK', postalCode: '11375',
 };
 
-async function planFor(file: string, today?: Date): Promise<Record<string, string>> {
+async function planFor(
+  file: string, today?: Date, classifier: FieldClassifier | null = null,
+): Promise<Record<string, string>> {
   const html = SAMPLES[file]!;
   document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
   const fields = scanFields(document.body);
-  const items = await classifyAll(fields.map((f) => f.meta), null, {
+  const items = await classifyAll(fields.map((f) => f.meta), classifier, {
     englishPage: isEnglishPageText(document.body.textContent ?? ''),
   });
   const plan = buildPlan(items, { profile, address, today });
@@ -100,6 +106,22 @@ describe('sample forms end to end', () => {
       });
     },
   );
+
+  // Labels carry no vocabulary the rules know, so only an LLM can place these ten fields.
+  it('demo-ai-ambiguous is left alone by the rules and filled once the LLM classifies it', async () => {
+    expect(await planFor('demo-ai-ambiguous.html')).toEqual({});
+    const byHtmlId: Record<string, Category> = {
+      f1: 'lastName', f2: 'firstName', f3: 'lastNameKana', f4: 'firstNameKana', f5: 'zip',
+      f6: 'prefecture', f7: 'addressNoPref', f8: 'building', f9: 'tel', f10: 'email',
+    };
+    const llm: FieldClassifier = {
+      classify: async (metas) => new Map(metas.map((m) => [m.id, byHtmlId[m.htmlId] ?? 'unknown'])),
+    };
+    expect(await planFor('demo-ai-ambiguous.html', undefined, llm)).toEqual({
+      f1: '山田', f2: '太郎', f3: 'ヤマダ', f4: 'タロウ', f5: '100-0001', f6: '13',
+      f7: '千代田区千代田1-1', f8: '千代田ビル101', f9: '090-1234-5678', f10: 'yamada@example.com',
+    });
+  });
 
   it('single-field-form', async () => {
     expect(await planFor('single-field-form.html')).toEqual({

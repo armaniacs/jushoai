@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>お見積り・お申し込み | サンプル保険</title>
+<style>
+:root{--accent:#7c3aed;--bg:#f6f4fb;--text:#1f2937;--sub:#667085;--line:#e3e7ee}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;color:var(--text);background:var(--bg);line-height:1.6}
+a{color:var(--accent);text-decoration:none}
+.top{background:#fff;border-bottom:1px solid var(--line)}
+.top .in{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:14px}
+.logo{width:34px;height:34px;border-radius:8px;background:var(--accent);color:#fff;font-weight:700;display:grid;place-items:center;font-size:18px}
+.brand{font-weight:700;font-size:18px}
+.top nav{margin-left:auto;display:flex;gap:22px;font-size:14px;color:var(--sub)}
+.wrap{max-width:1080px;margin:0 auto;padding:22px 24px 40px}
+h1{font-size:24px;margin:0 0 6px}
+.lead{margin:0 0 16px;color:var(--sub);font-size:14px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:22px 32px;box-shadow:0 1px 3px rgba(20,30,60,.05)}
+fieldset{border:0;margin:0 0 16px;padding:0}
+.sec{font-size:15px;font-weight:700;margin:0 0 12px;padding-left:10px;border-left:4px solid var(--accent)}
+.row{display:grid;grid-template-columns:200px 1fr;gap:6px 18px;align-items:start;margin-bottom:9px}
+.row>.k{padding-top:7px;font-size:14px;font-weight:600}
+.pair{display:flex;gap:14px;flex-wrap:wrap}
+.pair>div{flex:1 1 180px}
+.pair .sub{display:block;font-size:12px;color:var(--sub);margin-bottom:3px}
+.k2{display:flex;align-items:flex-start;padding-top:7px}
+label.t{display:block;font-size:14px;font-weight:600}
+.k2 .req{margin-top:3px}
+.req{display:inline-block;margin-left:8px;padding:0 6px;font-size:11px;line-height:18px;border-radius:3px;color:#fff;background:#d64545;vertical-align:1px}
+.opt{background:#8a94a6}
+input[type=text],input[type=tel],input[type=email],select,textarea{width:100%;padding:8px 12px;font:inherit;font-size:15px;border:1px solid #c5ccd8;border-radius:6px;background:#fff;color:var(--text)}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:0;border-color:var(--accent)}
+input.s{max-width:180px}
+input.m{max-width:300px}
+select{max-width:260px}
+.hint{font-size:12px;color:var(--sub);margin-top:4px}
+.check{font-size:14px;display:flex;gap:8px;align-items:flex-start;margin:6px 0}
+.btn{display:block;width:100%;max-width:320px;margin:18px auto 0;padding:14px;border:0;border-radius:8px;background:var(--accent);color:#fff;font:inherit;font-size:16px;font-weight:700;cursor:pointer}
+footer{border-top:1px solid var(--line);padding:22px;text-align:center;font-size:12px;color:var(--sub);background:#fff}
+@media(max-width:720px){.row{grid-template-columns:1fr}.row>.k{padding-top:0}.card{padding:20px}.top nav{display:none}}
+.steps{display:flex;flex-wrap:wrap;gap:8px 10px;margin:0 0 22px;padding:0;list-style:none;font-size:13px;color:var(--sub)}
+.steps li{display:flex;align-items:center;gap:6px}
+.steps li b{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;background:#d5dbe8;color:#fff;font-size:12px}
+.steps li.on{color:var(--text);font-weight:700}.steps li.on b{background:var(--accent)}
+.steps li+li::before{content:"";width:28px;height:1px;background:#c5ccd8;margin-right:4px}
+</style>
+</head>
+<body>
+<header class="top"><div class="in"><span class="logo">保</span><span class="brand">サンプル保険</span><nav><span>商品のご案内</span><span>ご契約者さまページ</span><span>お問い合わせ</span></nav></div></header>
+<main class="wrap">
+<h1>お見積り・お申し込み</h1>
+<p class="lead">以下の項目を入力して、お申し込みへお進みください。<span class="req" style="margin:0 4px 0 0">必須</span>は入力が必要です。</p>
+<ol class="steps"><li class="on"><b>1</b>ご契約者さまの情報</li><li><b>2</b>補償内容の選択</li><li><b>3</b>お申し込み完了</li></ol>
+<form class="card" onsubmit="return false">
+<fieldset>
+<p class="sec">ご契約者さま</p>
+<div class="row"><div class="k2"><label for="f1" class="t">ご契約者さま</label><span class="req">必須</span></div>
+<div><div class="pair"><div><input id="f1" name="f1" type="text" class="m" placeholder="山田"></div><div><input id="f2" name="f2" type="text" class="m" placeholder="太郎"></div></div></div></div>
+<div class="row"><div class="k2"><label for="f3" class="t">ご契約者さま（かな）</label><span class="req">必須</span></div>
+<div><div class="pair"><div><input id="f3" name="f3" type="text" class="m" placeholder=""></div><div><input id="f4" name="f4" type="text" class="m" placeholder=""></div></div></div></div>
+</fieldset>
+<fieldset>
+<p class="sec">お住まい</p>
+<div class="row"><div class="k2"><label for="f5" class="t">お住まいの数字7けた</label><span class="req">必須</span></div>
+<div><input id="f5" name="f5" type="text" class="s" placeholder="123-4567"></div></div>
+<div class="row"><div class="k2"><label for="f6" class="t">お住まいの地域</label><span class="req">必須</span></div>
+<div><select id="f6" name="f6"><option value="">選択してください</option><option value="01">北海道</option><option value="02">青森県</option><option value="03">岩手県</option><option value="04">宮城県</option><option value="05">秋田県</option><option value="06">山形県</option><option value="07">福島県</option><option value="08">茨城県</option><option value="09">栃木県</option><option value="10">群馬県</option><option value="11">埼玉県</option><option value="12">千葉県</option><option value="13">東京都</option><option value="14">神奈川県</option><option value="15">新潟県</option><option value="16">富山県</option><option value="17">石川県</option><option value="18">福井県</option><option value="19">山梨県</option><option value="20">長野県</option><option value="21">岐阜県</option><option value="22">静岡県</option><option value="23">愛知県</option><option value="24">三重県</option><option value="25">滋賀県</option><option value="26">京都府</option><option value="27">大阪府</option><option value="28">兵庫県</option><option value="29">奈良県</option><option value="30">和歌山県</option><option value="31">鳥取県</option><option value="32">島根県</option><option value="33">岡山県</option><option value="34">広島県</option><option value="35">山口県</option><option value="36">徳島県</option><option value="37">香川県</option><option value="38">愛媛県</option><option value="39">高知県</option><option value="40">福岡県</option><option value="41">佐賀県</option><option value="42">長崎県</option><option value="43">熊本県</option><option value="44">大分県</option><option value="45">宮崎県</option><option value="46">鹿児島県</option><option value="47">沖縄県</option></select></div></div>
+<div class="row"><div class="k2"><label for="f7" class="t">ご自宅</label><span class="req">必須</span></div>
+<div><input id="f7" name="f7" type="text" placeholder="例）千代田区千代田1-1"></div></div>
+<div class="row"><div class="k2"><label for="f8" class="t">つづき</label><span class="req opt">任意</span></div>
+<div><input id="f8" name="f8" type="text" placeholder="例）サンプルビル101"></div></div>
+</fieldset>
+<fieldset>
+<p class="sec">ご連絡方法</p>
+<div class="row"><div class="k2"><label for="f9" class="t">ご連絡のつく番号</label><span class="req">必須</span></div>
+<div><input id="f9" name="f9" type="text" class="s" placeholder="090-1234-5678"></div></div>
+<div class="row"><div class="k2"><label for="f10" class="t">ご連絡用のアドレス</label><span class="req">必須</span></div>
+<div><input id="f10" name="f10" type="text" placeholder="example@example.com"></div></div>
+</fieldset>
+<label class="check"><input type="checkbox"><span>重要事項と個人情報の取り扱いに同意する</span></label>
+<button class="btn" type="button">補償内容の選択へ進む</button>
+</form>
+</main>
+<footer>&copy; サンプル保険（架空のサービスです）</footer>
+</body>
+</html>
