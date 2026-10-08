@@ -107,10 +107,10 @@ describe('sample forms end to end', () => {
     },
   );
 
-  // Only the email field (type=email) is recognised by the rules; it is also what makes the button appear.
-  // The other nine labels carry no vocabulary the rules know, so only an LLM can place them.
+  // Only the tel and email fields (by input type) are recognised by the rules; the button needs two such
+  // fields to appear. The other eight labels carry no vocabulary the rules know, so only an LLM can place them.
   it('demo-ai-ambiguous is mostly left alone by the rules and filled once the LLM classifies it', async () => {
-    expect(await planFor('demo-ai-ambiguous.html')).toEqual({ f10: 'yamada@example.com' });
+    expect(await planFor('demo-ai-ambiguous.html')).toEqual({ tel: '090-1234-5678', f10: 'yamada@example.com' });
     const byHtmlId: Record<string, Category> = {
       f1: 'lastName', f2: 'firstName', f3: 'lastNameKana', f4: 'firstNameKana', f5: 'zip',
       f6: 'prefecture', f7: 'addressNoPref', f8: 'building', f9: 'tel', f10: 'email',
@@ -120,7 +120,7 @@ describe('sample forms end to end', () => {
     };
     expect(await planFor('demo-ai-ambiguous.html', undefined, llm)).toEqual({
       f1: '山田', f2: '太郎', f3: 'ヤマダ', f4: 'タロウ', f5: '100-0001', f6: '13',
-      f7: '千代田区千代田1-1', f8: '千代田ビル101', f9: '090-1234-5678', f10: 'yamada@example.com',
+      f7: '千代田区千代田1-1', f8: '千代田ビル101', tel: '090-1234-5678', f10: 'yamada@example.com',
     });
   });
 
