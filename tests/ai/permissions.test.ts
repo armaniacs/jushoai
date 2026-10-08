@@ -40,3 +40,41 @@ describe('host permission helpers', () => {
     expect(api.request).not.toHaveBeenCalled();
   });
 });
+
+describe('data collection consent', () => {
+  const origins = ['https://a/*'];
+  const makeApi = () => ({ contains: vi.fn().mockResolvedValue(true), request: vi.fn().mockResolvedValue(true) });
+
+  it('asks for websiteContent together with the origins on Firefox', async () => {
+    const api = makeApi();
+    await hasHostPermission(origins, api, true);
+    await requestHostPermission(origins, api, true);
+    const query = { origins, data_collection: ['websiteContent'] };
+    expect(api.contains).toHaveBeenCalledWith(query);
+    expect(api.request).toHaveBeenCalledWith(query);
+  });
+
+  it('keeps the Chrome query to origins only', async () => {
+    const api = makeApi();
+    await hasHostPermission(origins, api, false);
+    await requestHostPermission(origins, api, false);
+    expect(api.contains.mock.calls[0]![0]).toStrictEqual({ origins });
+    expect(api.request.mock.calls[0]![0]).toStrictEqual({ origins });
+  });
+
+  it('treats a denied or throwing API as not granted on Firefox', async () => {
+    const denied = { contains: vi.fn().mockResolvedValue(false), request: vi.fn().mockResolvedValue(false) };
+    expect(await hasHostPermission(origins, denied, true)).toBe(false);
+    expect(await requestHostPermission(origins, denied, true)).toBe(false);
+    const failing = { contains: vi.fn().mockRejectedValue(new Error('x')), request: vi.fn().mockRejectedValue(new Error('x')) };
+    expect(await hasHostPermission(origins, failing, true)).toBe(false);
+    expect(await requestHostPermission(origins, failing, true)).toBe(false);
+  });
+
+  it('never asks the API without origins even on Firefox', async () => {
+    const api = makeApi();
+    expect(await requestHostPermission([], api, true)).toBe(false);
+    expect(api.request).not.toHaveBeenCalled();
+  });
+});
+
