@@ -49,7 +49,7 @@ Set these three items.
 
 ## Built-in browser AI
 
-The model runs on your device and nothing is sent outside it. Turn on the browser flag, then restart the browser.
+The model runs on your device and nothing is sent outside it. The built-in AI is not available in Firefox. Turn on the browser flag, then restart the browser.
 
 | Browser | Model | Flag |
 |---|---|---|

@@ -1,6 +1,6 @@
 # JushoAI
 
-日本式フォーム（姓名・フリガナ・分割された住所）を、正しい欄に 1 クリックで入力する Chromium 系ブラウザ（Chrome / Edge）向けの拡張機能。フィールドの分類はルールで行い、判定できない欄だけ AI で補助できる（OpenAI 互換 API、Gemini、またはブラウザ内蔵 AI から選ぶ）。値の整形は決定的なコードで行い、プロファイルの値は外部に送信しない（AI を設定した場合のみ、入力欄のメタデータが選択したプロバイダに送られる）。入力する前に、プレビューで確認できる。
+日本式フォーム（姓名・フリガナ・分割された住所）を、正しい欄に 1 クリックで入力する Chromium 系ブラウザ（Chrome / Edge）と Firefox 128 以上向けの拡張機能。フィールドの分類はルールで行い、判定できない欄だけ AI で補助できる（OpenAI 互換 API、Gemini、またはブラウザ内蔵 AI から選ぶ）。値の整形は決定的なコードで行い、プロファイルの値は外部に送信しない（AI を設定した場合のみ、入力欄のメタデータが選択したプロバイダに送られる）。入力する前に、プレビューで確認できる。
 
 使うだけなら「使い方」まで読めば足ります。開発に参加する人は「開発者向け」から読んでください。
 
@@ -19,6 +19,7 @@
 ストアには公開していない。[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開して読み込む。
 
 1. Chrome は `chrome://extensions`、Edge は `edge://extensions` を開き、デベロッパーモードを有効にする
+   Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選ぶ（再起動すると外れる）
 2. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ
 3. 拡張機能の設定ページで、プロファイルと住所を登録する
 
@@ -69,15 +70,34 @@ Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension
     make install       # 依存の取得
     make dev           # 開発ビルド（Chrome が起動する）
     make build         # dist/chrome-mv3 に出力
+    make build-firefox # dist/firefox-mv3 に出力
+    make lint-firefox  # web-ext lint
+    make test-build    # 両ブラウザのビルドと manifest を検査
+    make e2e-firefox   # 実 Firefox で E2E（FIREFOX_BIN でバイナリ指定、HEADLESS=1 でヘッドレス）
+    make zip-firefox   # Firefox 用の配布 zip を作る
     make test          # Vitest
     make typecheck     # tsc --noEmit
-    make check         # typecheck + test + build
+    make check         # typecheck + test + 両ブラウザのビルド + manifest 検査 + web-ext lint
     make zip           # dist に配布用 zip を作る
     make site          # ドキュメントサイトを site-dist に生成して検査する
     make site-serve    # site-dist を http://127.0.0.1:4173 で確認する
     make clean         # 生成物を削除
 
 `make help` で一覧を表示する。
+
+Firefox 向けの検査は `make test` に含まれない。manifest の検査は `tests/build/`（`*.build.ts`）、実 Firefox の E2E は `tests/e2e/`（`*.e2e.ts`）にある。
+
+- Firefox の manifest は `data_collection_permissions`（`required: ['none']`、`optional: ['websiteContent']`）を宣言する。AI は、ユーザーがクラウドプロバイダを有効にしたときだけ入力欄のメタデータを送る。
+- `strict_min_version` が 128.0 のため、`make lint-firefox` はこのキーが Firefox 140 / Android 142 未満で無視される旨の警告を 2 件出す。想定どおりで、対処は不要。
+- E2E は Selenium と geckodriver で動かす。WebDriver は `moz-extension://` への遷移を拒否するため、拡張のページは Firefox の chrome コンテキストから開き、geckodriver は `--allow-system-access` で起動する。macOS では、ターミナルから Firefox を起動するために、ターミナルに `~/Library/Application Support/Firefox` へのアクセス（フルディスクアクセス）が必要。
+
+### 手動確認（Firefox）
+
+自動化していない項目を手で確認する。
+
+1. クラウドプロバイダを保存したときの権限の確認
+2. API キーの保存と復号（IndexedDB と WebCrypto）
+3. ブラウザを再起動した後の動作
 
 ### 手動確認（AI プロバイダ）
 

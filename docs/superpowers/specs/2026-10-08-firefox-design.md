@@ -14,8 +14,8 @@ Chrome / Edge 向けの拡張機能を Firefox（デスクトップ、MV3）で�
 
 ### ブラウザ API の抽象化
 
-- `src/` の `chrome.*`（storage / runtime / permissions / tabs）を WXT の `browser`（`wxt/browser`）に置き換える。対象は `storage.ts`、`ai/*`、`llm/*`、`entrypoints/*` の約 30 箇所。
-- `PermissionsApi` のように注入可能な境界はそのまま維持する。
+- `chrome.*` をそのまま使う。Firefox の MV3 は `chrome.*` を Promise 付きでサポートするため、置き換えは不要。既存のユニットテストの `chrome` スタブも変えずに済む。
+- ビルドターゲットの差は `import.meta.env.FIREFOX` だけに閉じ込める。
 
 ### マニフェスト
 

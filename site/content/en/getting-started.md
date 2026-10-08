@@ -6,7 +6,7 @@ order: 1
 
 # Getting started
 
-JushoAI is a browser extension for Chromium-based browsers. It fills forms that ask for a name and an address with the information you registered. It has been verified in Edge.
+JushoAI is a browser extension for Chromium-based browsers and Firefox 128 or later. It fills forms that ask for a name and an address with the information you registered. It has been verified in Edge and Firefox.
 
 The extension screens are in Japanese only. This guide quotes each label exactly as it appears, with a short English gloss on first use.
 
