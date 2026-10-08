@@ -138,6 +138,8 @@ The source code is published on GitHub (GPL).
 
 YouTube に公開した動画の URL を、ダッシュボードの「全言語向けプロモーション動画」に入力する。公開設定は「限定公開」でもよい。音声は入れず、字幕だけで伝える。形式は MP4（H.264）、解像度は 1920x1080（最低 1280x720）の 16:9、長さは約 2 分とする。
 
+動画の制作物（録画スクリプト、Remotion の構成）は [video/](../video/README.md) にある。
+
 ### 台本（約 120 秒）
 
 前半はルールだけの入力（3 ページ）、後半は AI 支援（設定画面と、ルールで判定できない欄を持つページ）を見せる。ページはどれも `samples/` のデモ用（`demo-registration.html`、`demo-shop-checkout.html`、`demo-request-info.html`、`demo-ai-ambiguous.html`）で、別々のクリップとして録って、場面の切り替えでつなぐ。プレビューが開いている間は、右上のパネルへ拡大する。クリックの瞬間には、カーソルの位置に波紋を出す。
