@@ -4,6 +4,12 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [Unreleased]
+
+### Changed
+
+- 「JushoAI で入力」ボタンを、フォームの最初のテキスト入力欄の隣に出す。ルールで判定できない欄（AI に任せる欄）が先頭にあっても、ボタンが下の判定済みの欄まで下がらない。先頭の選択欄・ラジオには付けない
+
 ## [0.1.10] - 2026-10-07
 
 ### Added

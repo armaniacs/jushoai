@@ -61,7 +61,7 @@ describe('scanContainer', () => {
 });
 
 describe('detectForms anchor', () => {
-  it('anchors on the first classified field, not a leading unclassified control', () => {
+  it('anchors on the first text input or classified field, not a leading select', () => {
     document.body.innerHTML = `
 <form id="f">
 <select name="qty"><option>1</option></select>
@@ -70,5 +70,15 @@ describe('detectForms anchor', () => {
     const [form] = detectForms(document);
     expect(form!.fields[0]!.el.getAttribute('name')).toBe('qty');
     expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
+
+  it('anchors on a leading text input even when the rules cannot classify it', () => {
+    document.body.innerHTML = `
+<form id="f">
+<input name="q1" placeholder="山田"><input name="q2" placeholder="太郎">
+<input name="tel" type="tel"><input name="mail" type="email">
+</form>`;
+    const [form] = detectForms(document);
+    expect(form!.anchor.el.getAttribute('name')).toBe('q1');
   });
 });
