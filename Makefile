@@ -3,7 +3,7 @@
 .PHONY: help install dev build test typecheck check zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox zip-firefox
 
 help: ## Show available targets
-	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
+	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
 
 install: ## Install dependencies and generate WXT types
 	npm install
