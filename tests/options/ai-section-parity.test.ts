@@ -33,7 +33,7 @@ vi.mock('../../src/entrypoints/options/audit-section', () => ({
   }),
 }));
 
-vi.stubGlobal('chrome', { runtime: { id: 'test-ext-id' } });
+vi.stubGlobal('chrome', { runtime: { id: 'test-ext-id', getURL: (p: string) => `chrome-extension://test-ext-id/${p}` } });
 
 import { mountAiSection } from '../../src/entrypoints/options/ai-section';
 import type { PublicAiSettings } from '../../src/ai/types';

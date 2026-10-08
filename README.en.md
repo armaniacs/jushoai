@@ -1,6 +1,6 @@
 # JushoAI
 
-A browser extension for Chromium-based browsers (Chrome and Edge) that fills Japanese web forms (split names, furigana and split addresses) into the right fields in one click. Rules classify the fields, and an AI you choose (an OpenAI-compatible API, Gemini, or the browser's built-in AI) helps only with the fields the rules cannot decide. Values are produced by deterministic code, and your profile values are never sent anywhere. Only field metadata goes to the provider, and only if you turn AI on. You review everything in a preview before it is entered.
+A browser extension for Chromium-based browsers (Chrome and Edge) and Firefox 128 or later that fills Japanese web forms (split names, furigana and split addresses) into the right fields in one click. Rules classify the fields, and an AI you choose (an OpenAI-compatible API, Gemini, or the browser's built-in AI) helps only with the fields the rules cannot decide. Values are produced by deterministic code, and your profile values are never sent anywhere. Only field metadata goes to the provider, and only if you turn AI on. You review everything in a preview before it is entered.
 
 If you just want to use it, read up to Usage. To contribute, start with Development.
 
@@ -19,6 +19,7 @@ The extension's screens are in Japanese. [日本語](./README.md) | **English**
 It is not published in a store. Unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and load it.
 
 1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge) and turn on developer mode.
+   - For Firefox, unzip `jushoai-<version>-firefox.zip`, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
 2. Choose "Load unpacked" and select the unzipped folder.
 3. In the extension's settings page, register your profile and addresses.
 
@@ -32,7 +33,7 @@ The toolbar icon shows what is registered and which profile is in use. Fields th
 
 ## AI provider (optional)
 
-AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).
+AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini; not available in Firefox). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).
 
 ## Feedback
 
@@ -44,4 +45,4 @@ GNU General Public License v3.0 only (GPL-3.0-only). Copyright (C) 2026 armaniac
 
 ## Development
 
-`make help` lists the commands. `make check` runs typecheck, tests and build. `make site` builds and checks the documentation site into `site-dist/`.
+`make help` lists the commands. `make check` runs typecheck, tests, builds for both browsers, manifest checks and web-ext lint. `make build-firefox` writes `dist/firefox-mv3`, and `make e2e-firefox` runs the end-to-end test in a real Firefox (`FIREFOX_BIN` selects the binary, `HEADLESS=1` runs headless). `make site` builds and checks the documentation site into `site-dist/`.

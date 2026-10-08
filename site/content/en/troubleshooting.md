@@ -27,7 +27,7 @@ Click the badge to open guidance for its state. When setup is needed, the guidan
 First run `接続テスト（保存済みの設定で実行）` (connection test, run with the saved settings) on the settings page. Save before you run it.
 
 - Authentication fails: check the API key.
-- Ollama returns 403: allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS` on the Ollama side.
+- Ollama returns 403: allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS` on the Ollama side (in Firefox, the `moz-extension://<UUID>` shown on the settings page; the UUID changes with each install).
 - The server refuses the request: check the model name, and check that the model supports JSON output.
 - The connection fails: check the URL, the model name and the network.
 - Network access is not allowed: save the settings again and allow access.
@@ -63,7 +63,7 @@ It handles text, email, tel and search inputs, and select lists. The form needs 
 
 ### Ollama returns 403.
 
-Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_ORIGINS` allows them. Allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS`.
+Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_ORIGINS` allows them. Allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS`. In Firefox, allow the `moz-extension://<UUID>` shown on the settings page; the UUID changes with each install.
 
 ### What do I check in the preview?
 

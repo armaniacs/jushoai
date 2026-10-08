@@ -4,6 +4,22 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [Unreleased]
+
+## [0.1.11] - 2026-10-08
+
+### Added
+
+- Firefox 128 以上に対応する。入力の流れ（ボタン・プレビュー・注入）は Chrome / Edge と同じコードで動く。Firefox 用の zip（`jushoai-X.Y.Z-firefox.zip`）と AMO 提出用のソース zip（`jushoai-X.Y.Z-sources.zip`）を Release に添付する
+- Firefox ではクラウド AI の権限を許可するとき、ホストへの通信に加えてデータ収集（`websiteContent`）の同意も求める。manifest で `data_collection_permissions`（必須 `none`、任意 `websiteContent`）を宣言する
+- Firefox ビルド（`make build-firefox`）、manifest の検査（`make test-build`）、`web-ext lint`、実 Firefox の E2E（`make e2e-firefox`）
+
+### Changed
+
+- 「JushoAI で入力」ボタンを、フォームの最初のテキスト入力欄の隣に出す。ルールで判定できない欄（AI に任せる欄）が先頭にあっても、ボタンが下の判定済みの欄まで下がらない。先頭の選択欄・ラジオには付けない
+- Firefox ではブラウザ内蔵 AI（Prompt API）を選べない。保存済みの設定が内蔵 AI でも「使わない」として扱う
+- 設定ページの Ollama の案内で、Firefox では `moz-extension://<UUID>` を許可するよう案内する（UUID はインストールごとに変わる）
+
 ## [0.1.10] - 2026-10-07
 
 ### Added
@@ -163,6 +179,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.11]: https://github.com/armaniacs/jushoai/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/armaniacs/jushoai/compare/v0.1.9...v0.1.10
 [0.1.9]: https://github.com/armaniacs/jushoai/compare/v0.1.8...v0.1.9
 [0.1.8]: https://github.com/armaniacs/jushoai/compare/v0.1.7...v0.1.8

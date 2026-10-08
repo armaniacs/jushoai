@@ -1,16 +1,17 @@
+import { IS_FIREFOX, selectableProviders } from './browser-target';
 import {
-  DEFAULT_AI_SETTINGS, PROVIDER_KINDS, type AiSettings, type KeyPresence, type ProviderKind,
+  DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind,
 } from './types';
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
-export function normalizeAiSettings(raw: unknown): AiSettings {
+export function normalizeAiSettings(raw: unknown, isFirefox: boolean = IS_FIREFOX): AiSettings {
   const r = isRecord(raw) ? raw : {};
   const openai = isRecord(r.openai) ? r.openai : {};
   const gemini = isRecord(r.gemini) ? r.gemini : {};
-  const provider = (PROVIDER_KINDS as readonly string[]).includes(r.provider as ProviderKind)
+  const provider = (selectableProviders(isFirefox) as readonly string[]).includes(r.provider as ProviderKind)
     ? (r.provider as ProviderKind)
     : 'none';
   return {

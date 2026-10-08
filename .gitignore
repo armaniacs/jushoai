@@ -14,3 +14,11 @@ site-dist/
 tmp/
 graphify-out/
 .checking-team-tmp/
+
+# video/: generated or restricted material (the music track may not be redistributed on its own)
+video/ext/
+video/output/
+video/playwright/.work/
+video/remotion/node_modules/
+video/remotion/public/*.webm
+video/remotion/public/bgm.*

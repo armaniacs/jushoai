@@ -35,7 +35,9 @@ jobs:
         run: make check
 
       - name: Package
-        run: make zip
+        run: |
+          make zip
+          make zip-firefox
 
       - name: Extract release notes
         run: node scripts/release-notes.mjs "${GITHUB_REF_NAME}" > release-notes.md
@@ -44,6 +46,10 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" dist/*.zip \
+          version="$(node -p "require('./package.json').version")"
+          gh release create "${GITHUB_REF_NAME}" \
+            "dist/jushoai-${version}-chrome.zip" \
+            "dist/jushoai-${version}-firefox.zip" \
+            "dist/jushoai-${version}-sources.zip" \
             --title "${GITHUB_REF_NAME}" \
             --notes-file release-notes.md

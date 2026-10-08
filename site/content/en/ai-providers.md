@@ -39,6 +39,8 @@ Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_OR
 chrome-extension://<extension ID>
 ```
 
+In Firefox, allow `moz-extension://<UUID>` instead. The UUID is shown on the settings page and changes with each install.
+
 ## Google Gemini
 
 Set these three items.
@@ -49,7 +51,7 @@ Set these three items.
 
 ## Built-in browser AI
 
-The model runs on your device and nothing is sent outside it. Turn on the browser flag, then restart the browser.
+The model runs on your device and nothing is sent outside it. In Chrome and Edge, turn on the browser flag, then restart the browser. The built-in AI is not available in Firefox.
 
 | Browser | Model | Flag |
 |---|---|---|

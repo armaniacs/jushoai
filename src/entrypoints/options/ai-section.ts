@@ -8,16 +8,28 @@ import {
 } from '../../ai/types';
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
+import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
 import { mountAuditSection } from './audit-section';
 import { el, labeled, textInput } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
-const PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
+const ALL_PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
   { value: 'none', label: '使わない（ルールのみ）' },
   { value: 'built-in', label: 'ブラウザ内蔵 AI（Chrome / Edge。端末とフラグの設定が必要）' },
   { value: 'openai', label: 'OpenAI 互換 API（OpenAI / Groq / Mistral / Ollama / LM Studio など）' },
   { value: 'gemini', label: 'Google Gemini' },
 ];
+
+export function providerOptions(isFirefox: boolean = IS_FIREFOX): { value: ProviderKind; label: string }[] {
+  const allowed = selectableProviders(isFirefox);
+  return ALL_PROVIDER_OPTIONS.filter((o) => allowed.includes(o.value));
+}
+
+// Firefox assigns a random UUID to the extension per install, so a stale allow-list entry silently stops working.
+export function extensionOriginHint(origin: string, isFirefox: boolean = IS_FIREFOX): string {
+  const base = `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に ${origin} を許可してください。`;
+  return isFirefox ? `${base}Firefox ではこのオリジンがインストールごとに変わるため、再インストール後は設定し直してください。` : base;
+}
 
 const FAILURE_TEXT: Record<TestFailure, string> = {
   'not-configured': '設定が完了していません。保存してから試してください。',
@@ -120,7 +132,7 @@ function buildKeyField(state: AiSectionState, provider: KeyedProvider): HTMLElem
 
 function buildProviderSelect(state: AiSectionState, onProviderChange: (next: ProviderKind) => void): HTMLSelectElement {
   const select = el('select');
-  for (const o of PROVIDER_OPTIONS) {
+  for (const o of providerOptions()) {
     const opt = el('option', o.label);
     opt.value = o.value;
     opt.selected = state.settings.provider === o.value;
@@ -156,7 +168,7 @@ function buildOpenAiFieldset(state: AiSectionState, rerender: () => void): HTMLF
     labeled('モデル名', textInput(state.settings.openai.model, 'プロバイダのモデル名', (v) => { state.settings.openai.model = v; })),
     buildKeyField(state, 'openai'),
     el('p', 'Ollama / LM Studio など localhost の場合、API キーは不要です。'),
-    el('p', `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に chrome-extension://${chrome.runtime.id} を許可してください。`),
+    el('p', extensionOriginHint(chrome.runtime.getURL('').replace(/\/$/, ''))),
   );
   return set;
 }
