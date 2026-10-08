@@ -25,6 +25,12 @@ describe('normalizeAiSettings', () => {
   it('keeps a valid provider', () => {
     expect(normalizeAiSettings({ provider: 'gemini' }).provider).toBe('gemini');
   });
+
+  it('keeps built-in outside Firefox and falls back to none on Firefox', () => {
+    expect(normalizeAiSettings({ provider: 'built-in' }, false).provider).toBe('built-in');
+    expect(normalizeAiSettings({ provider: 'built-in' }, true).provider).toBe('none');
+    expect(normalizeAiSettings({ provider: 'openai' }, true).provider).toBe('openai');
+  });
 });
 
 describe('isLoopbackHost', () => {
