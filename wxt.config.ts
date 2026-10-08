@@ -8,7 +8,7 @@ export default defineConfig({
     excludeSources: [
       'video/**', 'site/**', 'site-dist/**', 'docs/**', 'samples/**', 'tests/**', 'tmp/**',
       'graphify-out/**', 'pbi/**', 'plans/**', 'scripts/**', 'CLAUDE.md', 'CHANGELOG.md',
-      'vitest*.config.ts', '.superpowers/**',
+      'vitest*.config.ts', '.superpowers/**', '.github/**',
     ],
   },
   manifest: ({ browser }) => ({
