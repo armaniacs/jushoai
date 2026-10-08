@@ -6,7 +6,7 @@ order: 1
 
 # Getting started
 
-JushoAI is a browser extension for Chromium-based browsers and Firefox 128 or later. It fills forms that ask for a name and an address with the information you registered. It has been verified in Edge and Firefox.
+JushoAI is a browser extension for Chromium-based browsers and Firefox 128 or later. It fills forms that ask for a name and an address with the information you registered. It has been verified in Edge. In Firefox (128 or later), the flow of filling a form is checked by automated tests; communication with cloud AI has not been verified.
 
 The extension screens are in Japanese only. This guide quotes each label exactly as it appears, with a short English gloss on first use.
 
@@ -16,7 +16,7 @@ The extension is not published in a store. Use the zip from GitHub Releases.
 
 Download the zip from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and unzip it.
 
-Then open the extensions page of your browser: `chrome://extensions` in Chrome, or `edge://extensions` in Edge.
+Then open the extensions page of your browser: `chrome://extensions` in Chrome, or `edge://extensions` in Edge. In Firefox, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the `firefox-mv3` folder (it is removed when Firefox restarts).
 
 1. Turn on developer mode.
 2. Choose "Load unpacked". The button label can differ by browser and language.

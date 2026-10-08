@@ -6,7 +6,7 @@ order: 1
 
 # はじめに
 
-JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録した情報を入力する Chromium 系ブラウザと Firefox 128 以上向けの拡張機能です。Edge と Firefox で動作を確認しています。
+JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録した情報を入力する Chromium 系ブラウザと Firefox 128 以上向けの拡張機能です。Edge で動作を確認しています。Firefox（128 以上）は、フォームへの入力の流れを自動テストで確認しています（クラウド AI の通信は未確認です）。
 
 ## インストール
 
@@ -14,7 +14,7 @@ JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録
 
 [GitHub Releases](https://github.com/armaniacs/jushoai/releases) から zip をダウンロードして、展開します。
 
-次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。
+次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選びます（Firefox を再起動すると外れます）。
 
 1. 「デベロッパーモード」を有効にします。
 2. 「パッケージ化されていない拡張機能を読み込む」を選びます。ボタンの表記はブラウザや言語によって異なることがあります。

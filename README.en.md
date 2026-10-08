@@ -18,7 +18,8 @@ The extension's screens are in Japanese. [日本語](./README.md) | **English**
 
 It is not published in a store. Unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and load it.
 
-1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge) and turn on developer mode. For Firefox, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the `firefox-mv3` folder (it is removed when Firefox restarts).
+1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge) and turn on developer mode.
+   - For Firefox, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the `firefox-mv3` folder (it is removed when Firefox restarts).
 2. Choose "Load unpacked" and select the unzipped folder.
 3. In the extension's settings page, register your profile and addresses.
 

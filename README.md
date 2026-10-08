@@ -19,7 +19,7 @@
 ストアには公開していない。[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開して読み込む。
 
 1. Chrome は `chrome://extensions`、Edge は `edge://extensions` を開き、デベロッパーモードを有効にする
-   Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選ぶ（再起動すると外れる）
+   - Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選ぶ（再起動すると外れる）
 2. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ
 3. 拡張機能の設定ページで、プロファイルと住所を登録する
 
