@@ -12,6 +12,13 @@ describe('firefox manifest', () => {
     expect(m.browser_specific_settings.gecko.strict_min_version).toBe('128.0');
   });
 
+  it('declares data collection: none required, website content optional', () => {
+    expect(m.browser_specific_settings.gecko.data_collection_permissions).toEqual({
+      required: ['none'],
+      optional: ['websiteContent'],
+    });
+  });
+
   it('runs the background as an event page, not a service worker', () => {
     expect(m.background.scripts).toEqual(['background.js']);
     expect(m.background.service_worker).toBeUndefined();
@@ -28,6 +35,7 @@ describe('chrome manifest', () => {
   it('has no gecko settings and keeps the service worker', () => {
     const c = read('chrome-mv3');
     expect(c.browser_specific_settings).toBeUndefined();
+    expect(JSON.stringify(c)).not.toContain('data_collection_permissions');
     expect(c.background.service_worker).toBe('background.js');
   });
 });

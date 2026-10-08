@@ -10,7 +10,11 @@ export default defineConfig({
     optional_host_permissions: ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*'],
     ...(browser === 'firefox' && {
       browser_specific_settings: {
-        gecko: { id: 'jushoai@armaniacs.github.io', strict_min_version: '128.0' },
+        gecko: {
+          id: 'jushoai@armaniacs.github.io',
+          strict_min_version: '128.0',
+          data_collection_permissions: { required: ['none'], optional: ['websiteContent'] },
+        },
       },
     }),
   }),

@@ -1,6 +1,6 @@
 import { createServer, type Server } from 'node:http';
-import { existsSync, readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { extname, resolve, sep } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { Builder, By, until, type WebDriver, type WebElement } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox.js';
@@ -25,8 +25,6 @@ export async function startDriver(): Promise<WebDriver> {
   const bin = firefoxBinary();
   if (bin) options.setBinary(bin);
   if (process.env.HEADLESS === '1') options.addArguments('-headless');
-  options.setPreference('devtools.chrome.enabled', true);
-  options.setPreference('devtools.debugger.remote-enabled', true);
   options.setPreference('extensions.webextensions.uuids', JSON.stringify({ [GECKO_ID]: EXT_UUID }));
   // Chrome-context scripting (used to open moz-extension:// tabs) needs geckodriver's system-access flag.
   const service = new firefox.ServiceBuilder().addArguments('--allow-system-access');
@@ -42,14 +40,26 @@ export interface PageServer { origin: string; close(): Promise<void> }
 // Serves the repo's samples/ and tests/e2e/pages/ over http: content scripts need a real http(s) origin.
 export async function startPageServer(): Promise<PageServer> {
   const roots = [resolve('samples'), resolve('tests/e2e/pages')];
+  const types: Record<string, string> = {
+    '.html': 'text/html; charset=utf-8',
+    '.css': 'text/css; charset=utf-8',
+    '.js': 'text/javascript; charset=utf-8',
+  };
   const server: Server = createServer((req, res) => {
-    const name = decodeURIComponent((req.url ?? '/').slice(1)).replace(/\.\./g, '');
-    const file = roots.map((r) => resolve(r, name)).find((p) => existsSync(p));
-    if (!file) {
-      res.writeHead(404).end();
-      return;
+    try {
+      const name = decodeURIComponent((req.url ?? '/').split('?')[0]!.slice(1));
+      const file = roots
+        .map((r) => ({ root: r, path: resolve(r, name) }))
+        .find((c) => c.path.startsWith(c.root + sep) && existsSync(c.path) && statSync(c.path).isFile());
+      if (!file) {
+        res.writeHead(404).end();
+        return;
+      }
+      res.writeHead(200, { 'content-type': types[extname(file.path)] ?? 'application/octet-stream' })
+        .end(readFileSync(file.path));
+    } catch {
+      res.writeHead(500).end();
     }
-    res.writeHead(200, { 'content-type': 'text/html; charset=utf-8' }).end(readFileSync(file));
   });
   await new Promise<void>((ok) => server.listen(0, '127.0.0.1', ok));
   const { port } = server.address() as AddressInfo;

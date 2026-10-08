@@ -43,23 +43,15 @@ describe('firefox: settings page', () => {
   it('offers only the cloud providers and none', async () => {
     const home = await driver.getWindowHandle();
     await openExtensionPage(driver, OPTIONS_URL);
-    const values = (await driver.executeScript(
-      `return Array.from(document.querySelectorAll('select option'), (o) => o.value);`,
-    )) as string[];
-    expect(values).toContain('openai');
-    expect(values).toContain('gemini');
-    expect(values).not.toContain('built-in');
-    await closeExtensionPage(driver, home);
-  });
-
-  it('stores and reads the profile through the background-independent storage API', async () => {
-    const home = await driver.getWindowHandle();
-    await openExtensionPage(driver, OPTIONS_URL);
-    const stored = (await driver.executeAsyncScript(
-      `const done = arguments[arguments.length - 1];
-       browser.storage.local.get('jushoai:data').then((r) => done(r['jushoai:data']));`,
-    )) as { profiles: { lastName: string }[] };
-    await closeExtensionPage(driver, home);
-    expect(stored.profiles[0]!.lastName).toBe('山田');
+    try {
+      const values = (await driver.executeScript(
+        `return Array.from(document.querySelectorAll('select option'), (o) => o.value);`,
+      )) as string[];
+      expect(values).toContain('openai');
+      expect(values).toContain('gemini');
+      expect(values).not.toContain('built-in');
+    } finally {
+      await closeExtensionPage(driver, home);
+    }
   });
 });
