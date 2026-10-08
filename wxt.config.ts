@@ -3,6 +3,14 @@ import { defineConfig } from 'wxt';
 export default defineConfig({
   srcDir: 'src',
   outDir: 'dist',
+  // The sources zip is what AMO reviewers rebuild from; keep only what `npm ci && wxt build` needs.
+  zip: {
+    excludeSources: [
+      'video/**', 'site/**', 'site-dist/**', 'docs/**', 'samples/**', 'tests/**', 'tmp/**',
+      'graphify-out/**', 'pbi/**', 'plans/**', 'scripts/**', 'CLAUDE.md', 'CHANGELOG.md',
+      'vitest*.config.ts', '.superpowers/**',
+    ],
+  },
   manifest: ({ browser }) => ({
     name: 'JushoAI',
     description: '日本式フォームの住所・氏名・フリガナを補完する',
