@@ -13,7 +13,7 @@
 
 1. `package.json` の `version` と CHANGELOG の `## [X.Y.Z]` 節を整えて、main にコミットする
 2. `git tag vX.Y.Z && git push origin main vX.Y.Z`
-3. ワークフローが、タグと `package.json` の version の一致を確かめ、`make check` と `make zip` を実行する。CHANGELOG の該当節を本文にして、`dist/*.zip` を添付した Release を作る
+3. ワークフローが、タグと `package.json` の version の一致を確かめ、`make check`、`make zip`、`make zip-firefox` を実行する。CHANGELOG の該当節を本文にして、`dist/jushoai-X.Y.Z-chrome.zip`、`-firefox.zip`、`-sources.zip`（AMO 提出用）を添付した Release を作る
 4. main への push で、GitHub Pages のワークフローがサイトをデプロイする。`https://armaniacs.github.io/jushoai/` を開き、日英のトップとライセンスのページ、Issue ボタンのリンク先を確認する
 
 CHANGELOG に該当節がない、またはタグと version が違うときは、Release を作らずに失敗する。ローカルで本文を確認するには `node scripts/release-notes.mjs X.Y.Z`。
