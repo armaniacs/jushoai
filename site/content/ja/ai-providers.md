@@ -39,6 +39,8 @@ Ollama は、`OLLAMA_ORIGINS` で許可していない限り、拡張機能の�
 chrome-extension://<拡張機能の ID>
 ```
 
+Firefox では、代わりに `moz-extension://<UUID>` を許可します。UUID は設定ページに表示され、インストールごとに変わります。
+
 ## Google Gemini
 
 次の 3 つを設定します。

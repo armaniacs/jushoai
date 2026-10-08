@@ -14,7 +14,7 @@ JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録
 
 [GitHub Releases](https://github.com/armaniacs/jushoai/releases) から zip をダウンロードして、展開します。
 
-次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選びます（Firefox を再起動すると外れます）。
+次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。Firefox は、`jushoai-<バージョン>-firefox.zip` を展開してから `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で展開したフォルダ内の `manifest.json` を選びます。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われます。使うたびに読み込み直して、登録し直します。
 
 1. 「デベロッパーモード」を有効にします。
 2. 「パッケージ化されていない拡張機能を読み込む」を選びます。ボタンの表記はブラウザや言語によって異なることがあります。

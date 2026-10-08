@@ -39,6 +39,8 @@ Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_OR
 chrome-extension://<extension ID>
 ```
 
+In Firefox, allow `moz-extension://<UUID>` instead. The UUID is shown on the settings page and changes with each install.
+
 ## Google Gemini
 
 Set these three items.

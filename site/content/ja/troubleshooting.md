@@ -27,7 +27,7 @@ order: 9
 まず、設定ページで「接続テスト（保存済みの設定で実行）」を試します。保存してから実行してください。
 
 - 認証に失敗する: API キーを確認します。
-- Ollama で 403 になる: Ollama 側の `OLLAMA_ORIGINS` に、`chrome-extension://<拡張機能の ID>` を許可します。
+- Ollama で 403 になる: Ollama 側の `OLLAMA_ORIGINS` に、`chrome-extension://<拡張機能の ID>`（Firefox は設定ページに表示される `moz-extension://<UUID>`。UUID はインストールごとに変わる）を許可します。
 - 拒否される: モデル名と、モデルが JSON 形式の出力に対応しているかを確認します。
 - 接続に失敗する: URL、モデル名、ネットワークを確認します。
 - 通信が許可されていない: 設定ページで保存し直し、許可します。
@@ -63,7 +63,7 @@ order: 9
 
 ### Ollama で 403 になります
 
-Ollama は、`OLLAMA_ORIGINS` で許可していない限り、拡張機能のオリジンからの要求を 403 で拒否することがあります。`OLLAMA_ORIGINS` に `chrome-extension://<拡張機能の ID>` を許可してください。
+Ollama は、`OLLAMA_ORIGINS` で許可していない限り、拡張機能のオリジンからの要求を 403 で拒否することがあります。`OLLAMA_ORIGINS` に `chrome-extension://<拡張機能の ID>` を許可してください。Firefox では、設定ページに表示される `moz-extension://<UUID>` を許可します。UUID はインストールごとに変わります。
 
 ### プレビューでは何を確認しますか
 

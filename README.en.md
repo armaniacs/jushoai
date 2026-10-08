@@ -19,7 +19,7 @@ The extension's screens are in Japanese. [日本語](./README.md) | **English**
 It is not published in a store. Unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and load it.
 
 1. Open `chrome://extensions` (Chrome) or `edge://extensions` (Edge) and turn on developer mode.
-   - For Firefox, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the `firefox-mv3` folder (it is removed when Firefox restarts).
+   - For Firefox, unzip `jushoai-<version>-firefox.zip`, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
 2. Choose "Load unpacked" and select the unzipped folder.
 3. In the extension's settings page, register your profile and addresses.
 

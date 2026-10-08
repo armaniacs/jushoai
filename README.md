@@ -19,7 +19,7 @@
 ストアには公開していない。[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開して読み込む。
 
 1. Chrome は `chrome://extensions`、Edge は `edge://extensions` を開き、デベロッパーモードを有効にする
-   - Firefox は `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で `firefox-mv3` フォルダ内の `manifest.json` を選ぶ（再起動すると外れる）
+   - Firefox 用は `jushoai-<バージョン>-firefox.zip` を展開し、`about:debugging#/runtime/this-firefox` を開いて「一時的なアドオンを読み込む」で、展開したフォルダ内の `manifest.json` を選ぶ。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われる。使うたびに読み込み直して、登録し直す
 2. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ
 3. 拡張機能の設定ページで、プロファイルと住所を登録する
 
@@ -59,7 +59,9 @@ OpenAI のリーズニング系モデルや json_schema に対応しないサー
 
 通信が発生するのは「JushoAI で入力」を押したときだけで、ページを開いただけでは何も送らない。AI を使う設定にした場合、ルールで判定できない入力欄のメタデータが、選んだプロバイダに送られる。内訳は name・label・placeholder・見出し・type・maxlength である。メタデータにはページに表示されている文字（ラベルや見出し）が含まれるため、ページ上に表示されている個人情報が送信内容に含まれることがある。プロファイルの値や、欄にすでに入っている値は送らない。ブラウザ内蔵 AI は端末内で動作し、外部には何も送らない。API キーは暗号化して保存する（ストレージだけが流出しても復号できないが、この拡張機能自身のコードからは読み出せる）。
 
-Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension://<拡張機能の ID>` を許可する。
+Firefox では、プロバイダの保存時にホストの許可と合わせて、ウェブサイトのコンテンツ（欄のメタデータ）を送ることへの同意（データ収集の権限）を求める。
+
+Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension://<拡張機能の ID>` を許可する。Firefox では `moz-extension://<UUID>` を許可する。UUID は設定ページに表示され、インストールごとに変わる。
 
 状態は「JushoAI で入力」の横のバッジに表示され、押すと原因と対処のガイドが開く。
 
@@ -91,13 +93,20 @@ Firefox 向けの検査は `make test` に含まれない。manifest の検査�
 - `strict_min_version` が 128.0 のため、`make lint-firefox` はこのキーが Firefox 140 / Android 142 未満で無視される旨の警告を 2 件出す。想定どおりで、対処は不要。
 - E2E は Selenium と geckodriver で動かす。WebDriver は `moz-extension://` への遷移を拒否するため、拡張のページは Firefox の chrome コンテキストから開き、geckodriver は `--allow-system-access` で起動する。macOS では、ターミナルから Firefox を起動するために、ターミナルに `~/Library/Application Support/Firefox` へのアクセス（フルディスクアクセス）が必要。
 
+### ソースからのビルド（AMO 審査用）
+
+リリースには拡張機能の zip に加えて `jushoai-<バージョン>-sources.zip` を添付する。Node.js 24 と npm（動作確認は npm 11）で、展開したソースから次の手順で同じ zip を作れる。
+
+    npm ci
+    make zip-firefox   # dist/jushoai-<バージョン>-firefox.zip と -sources.zip
+
 ### 手動確認（Firefox）
 
-自動化していない項目を手で確認する。
+実 Firefox での自動テスト（`make e2e-firefox`）が通っても、次の項目は自動化していないため手で確認する。
 
-1. クラウドプロバイダを保存したときの権限の確認
-2. API キーの保存と復号（IndexedDB と WebCrypto）
-3. ブラウザを再起動した後の動作
+1. クラウドプロバイダを保存したとき、ホストの許可に加えてウェブサイトのコンテンツ送信への同意（データ収集の権限）の確認が出て、拒否するとバッジが「AI 権限なし」になる
+2. API キーの保存と復号（IndexedDB と WebCrypto）が、保存後に設定ページを開き直しても働く
+3. `about:debugging#/runtime/this-firefox` で拡張機能の背景ページ（イベントページ）を停止し、その後に「JushoAI で入力」を押しても、ボタンが反応して入力できる（一時的なアドオンは Firefox を終了すると登録内容ごと消えるため、再起動後の動作は確認できない）
 
 ### 手動確認（AI プロバイダ）
 

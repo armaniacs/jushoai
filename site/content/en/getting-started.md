@@ -16,7 +16,7 @@ The extension is not published in a store. Use the zip from GitHub Releases.
 
 Download the zip from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and unzip it.
 
-Then open the extensions page of your browser: `chrome://extensions` in Chrome, or `edge://extensions` in Edge. In Firefox, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the `firefox-mv3` folder (it is removed when Firefox restarts).
+Then open the extensions page of your browser: `chrome://extensions` in Chrome, or `edge://extensions` in Edge. In Firefox, unzip `jushoai-<version>-firefox.zip`, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
 
 1. Turn on developer mode.
 2. Choose "Load unpacked". The button label can differ by browser and language.

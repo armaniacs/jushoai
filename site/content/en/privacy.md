@@ -61,7 +61,7 @@ The settings page never shows a key. It shows only whether one is saved, and let
 
 ## Network permission
 
-The extension does not ask for network access at install time. When you save the settings, it asks for access to that provider's host only (an optional permission). Without the permission, AI is not used.
+The extension does not ask for network access at install time. When you save the settings, it asks for access to that provider's host only (an optional permission). Without the permission, AI is not used. In Firefox, it also asks for your consent to send website content (the field metadata) to the provider, as a data collection permission, in the same request.
 
 ## With the built-in AI
 
