@@ -58,12 +58,19 @@ export class BackgroundClassifier implements FieldClassifier {
     const out = new Map<string, Category>();
     this.lastFailureReason = null;
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
+    const chunkCount = Math.ceil(capped.length / MAX_CLASSIFY_CHUNK);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
-      const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
+      const rows = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
+      // The chunk position rides along only when the run was actually split, so
+      // single-chunk calls stay out of the audit log's scheduling fields.
+      const schedule = chunkCount > 1 ? { index: i / MAX_CLASSIFY_CHUNK + 1, count: chunkCount } : undefined;
       let parsed: ReturnType<typeof parseClassifyResult>;
       let raw: unknown;
       try {
-        raw = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
+        raw = await sendWithTimeout(
+          { type: 'ai-classify', fields: rows, ...(schedule ? { chunk: schedule } : {}) },
+          this.timeoutMs,
+        );
         parsed = parseClassifyResult(raw);
       } catch {
         this.lastFailureReason = 'network';

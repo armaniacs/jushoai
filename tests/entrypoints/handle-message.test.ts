@@ -1,7 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { AuditDraft } from '../../src/ai/audit-log';
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from '../../src/ai/types';
+import type { FieldMeta } from '../../src/core/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
+import { buildPrompt } from '../../src/llm/classifier';
 import { parseTestResponse } from '../../src/messages';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
 
@@ -317,6 +319,9 @@ describe('handleMessage: ai-test auth bookkeeping', () => {
 
 describe('handleMessage: audit log', () => {
   const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+  const sentField = {
+    id: 'a', type: 'text', name: '', htmlId: '', label: '姓', placeholder: '', nearby: '', maxLength: null,
+  } as FieldMeta;
 
   it('records a classify call with the sanitized page url from the sender and no secrets', async () => {
     const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
@@ -324,16 +329,37 @@ describe('handleMessage: audit log', () => {
     await handleMessage(msg, deps, { pageUrl: 'https://example.com/form?email=a@b.c#x' });
     expect(audits).toEqual([{
       provider: 'openai', host: 'api.openai.com', model: 'm', purpose: 'classify',
-      pageUrl: 'https://example.com/form', fieldCount: 1, result: 'success', httpStatus: 200, retried: false,
+      pageUrl: 'https://example.com/form', fieldCount: 1, request: buildPrompt([sentField]),
+      response: '{"a":"lastName"}', chunkIndex: null, chunkCount: null,
+      result: 'success', httpStatus: 200, retried: false, durationMs: expect.any(Number),
     }]);
-    expect(JSON.stringify(audits)).not.toContain('secret');
-    expect(JSON.stringify(audits)).not.toContain('姓');
+    // The label is part of the recorded trace by design; field values and the key never are.
+    expect(JSON.stringify(audits)).not.toContain('sk-test');
+  });
+
+  it('records the sent prompt without field values or the API key', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps, audits } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    await handleMessage({ type: 'ai-classify', fields: [field('a', { label: '氏名', value: '山田太郎' })] }, deps);
+    expect(audits[0]!.request).toContain('氏名');
+    expect(audits[0]!.request).not.toContain('山田太郎');
+    expect(audits[0]!.request).not.toContain('sk-test');
+    expect(audits[0]!.response).toBe('{"a":"lastName"}');
+  });
+
+  it('records the chunk schedule from the message and nothing when it is absent', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps, audits } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    await handleMessage({ type: 'ai-classify', fields: [field('a')], chunk: { index: 2, count: 3 } }, deps);
+    expect(audits[0]).toMatchObject({ chunkIndex: 2, chunkCount: 3 });
+    await handleMessage(msg, deps);
+    expect(audits[1]).toMatchObject({ chunkIndex: null, chunkCount: null });
   });
 
   it('records auth errors, the compat retry and connection tests', async () => {
     const auth = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(401)) });
     await handleMessage(msg, auth.deps);
-    expect(auth.audits[0]).toMatchObject({ result: 'auth-error', httpStatus: 401, pageUrl: '' });
+    expect(auth.audits[0]).toMatchObject({ result: 'auth-error', httpStatus: 401, pageUrl: '', response: '' });
 
     const retry = makeDeps({
       settings: openai, ...configured,
@@ -341,18 +367,21 @@ describe('handleMessage: audit log', () => {
     });
     await handleMessage(msg, retry.deps);
     expect(retry.audits).toHaveLength(1);
-    expect(retry.audits[0]).toMatchObject({ result: 'success', httpStatus: 200, retried: true });
+    expect(retry.audits[0]).toMatchObject({ result: 'success', httpStatus: 200, retried: true, response: '{"a":"lastName"}' });
 
     const test = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(openaiBody('{"t":"fullName"}')) });
     await handleMessage({ type: 'ai-test' }, test.deps);
-    expect(test.audits[0]).toMatchObject({ purpose: 'connection-test', pageUrl: '', fieldCount: 1 });
+    expect(test.audits[0]).toMatchObject({ purpose: 'connection-test', pageUrl: '', fieldCount: 1, chunkIndex: null });
   });
 
   it('records a built-in call without a host, and nothing when AI is off or unusable', async () => {
     const lm = builtInLm('available');
     const built = makeDeps({ settings: { provider: 'built-in' }, lm });
     await handleMessage(msg, built.deps, { pageUrl: 'https://example.com/a' });
-    expect(built.audits[0]).toMatchObject({ provider: 'built-in', host: '', model: '', result: 'success', httpStatus: null });
+    expect(built.audits[0]).toMatchObject({
+      provider: 'built-in', host: '', model: '', result: 'success', httpStatus: null,
+      request: buildPrompt([sentField]), response: '{"a":"lastName"}',
+    });
 
     const none = makeDeps();
     await handleMessage(msg, none.deps);

@@ -19,8 +19,11 @@ function firefoxBinary(): string | undefined {
   return process.env.FIREFOX_BIN ?? FIREFOX_CANDIDATES.find((p) => existsSync(p));
 }
 
-export async function startDriver(): Promise<WebDriver> {
-  if (!existsSync(ADDON_DIR)) throw new Error('dist/firefox-mv3 is missing: run `make build-firefox` first');
+const SESSION_RETRIES = 3;
+const SESSION_RETRY_DELAY_MS = 2_000;
+const sleep = (ms: number) => new Promise<void>((ok) => setTimeout(ok, ms));
+
+async function buildSession(): Promise<WebDriver> {
   const options = new firefox.Options();
   const bin = firefoxBinary();
   if (bin) options.setBinary(bin);
@@ -33,6 +36,25 @@ export async function startDriver(): Promise<WebDriver> {
   await (driver as WebDriver & { installAddon(p: string, temporary: boolean): Promise<string> })
     .installAddon(ADDON_DIR, true);
   return driver;
+}
+
+export async function startDriver(): Promise<WebDriver> {
+  if (!existsSync(ADDON_DIR)) throw new Error('dist/firefox-mv3 is missing: run `make build-firefox` first');
+  // Firefox occasionally exits with status 0 right after geckodriver launches it
+  // (seen in make e2e-firefox as "unexpectedly closed with status 0"), then a
+  // working instance starts seconds later; retry this error class a bounded
+  // number of times and let every other failure surface immediately.
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= SESSION_RETRIES; attempt++) {
+    try {
+      return await buildSession();
+    } catch (err) {
+      lastError = err;
+      if (attempt === SESSION_RETRIES || !`${err}`.includes('unexpectedly closed')) throw err;
+      await sleep(SESSION_RETRY_DELAY_MS);
+    }
+  }
+  throw lastError;
 }
 
 export interface PageServer { origin: string; close(): Promise<void> }

@@ -83,4 +83,4 @@ When you save the settings, the browser asks whether to allow network access to 
 
 ## Checking the communication log
 
-Communication with the API can be checked in `通信の監査ログ` (communication audit log) under `AI 判定` (AI judgment) on the settings page. The date and time, provider, destination, model, page URL, number of fields sent, and result are kept on your device for 7 days, and you can check the count, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).
+Communication with the API can be checked in `通信の監査ログ` (communication audit log) on the settings page. Records are kept on your device for 7 days. Along with the date and time, provider, destination, model, page URL, number of fields sent, and result, the prompt sent to the model and its answer are recorded. You can check the list, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).

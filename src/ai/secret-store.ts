@@ -62,12 +62,16 @@ export class IdbKeyStore implements KeyStore {
         await this.request(db, 'readwrite', (s) => s.add(created, 'kek'));
         return created;
       } catch (err) {
-        // On ConstraintError, fetch and return the stored key instead of the locally generated one.
-        if (err instanceof Error && (err.name === 'ConstraintError' || err.message.includes('ConstraintError'))) {
-          const stored = await this.request<CryptoKey | undefined>(db, 'readonly', (s) => s.get('kek'));
-          if (stored) return stored;
+        // ConstraintError is detected by name: DOMException does not reliably
+        // satisfy instanceof Error when the error crosses a realm (VM-based
+        // test pools, extension iframes), and the fallback must survive that.
+        const name = (err as { name?: unknown } | null)?.name;
+        if (name !== 'ConstraintError' && !(err instanceof Error && err.message.includes('ConstraintError'))) {
           throw err;
         }
+        // On ConstraintError, fetch and return the stored key instead of the locally generated one.
+        const stored = await this.request<CryptoKey | undefined>(db, 'readonly', (s) => s.get('kek'));
+        if (stored) return stored;
         throw err;
       }
     } finally {

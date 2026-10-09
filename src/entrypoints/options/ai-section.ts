@@ -9,7 +9,6 @@ import {
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
-import { mountAuditSection } from './audit-section';
 import { el, labeled, textInput } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
@@ -225,10 +224,6 @@ function renderAiSection(root: HTMLElement, state: AiSectionState, hooks: AiSect
 
   parts.push(buildActionRow(state, hooks.onSave, hooks.onTest));
   if (state.notice) parts.push(state.notice);
-
-  const auditRoot = el('div');
-  mountAuditSection(auditRoot);
-  parts.push(auditRoot);
 
   const page = el('div');
   page.id = AI_SECTION_ID;

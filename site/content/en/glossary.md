@@ -26,4 +26,4 @@ Letting the configured AI classify only the fields that rules could not judge. T
 
 ## Audit log
 
-The record kept on your device every time an AI is called. Under `AI 判定` (AI judgment) on the settings page, `通信の監査ログ` (communication audit log) lets you check the count, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).
+The record kept on your device every time an AI is called. On the settings page, `通信の監査ログ` (communication audit log) lets you check the list, download a TSV, or delete the log. Each record contains the prompt sent to the model and its answer. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).

@@ -114,9 +114,32 @@ export interface RetryOptions {
 export const isRejectedStatus = (status: number | null): boolean =>
   status === 400 || status === 422;
 
+// The user prompt text actually embedded in the request body, so the audit trace
+// cannot drift from what was sent when the prompt builders change.
+const promptInRequest = (init: RequestInit): string => {
+  try {
+    const body = JSON.parse(String(init.body)) as {
+      messages?: { content?: unknown }[];
+      contents?: { parts?: { text?: unknown }[] }[];
+    };
+    const message = body.messages?.[1]?.content;
+    if (typeof message === 'string') return message;
+    const parts = body.contents?.[0]?.parts;
+    if (Array.isArray(parts)) {
+      const texts = parts.map((p) => p?.text).filter((t): t is string => typeof t === 'string');
+      return texts.join('');
+    }
+  } catch {
+    // fall through: the trace keeps its empty request
+  }
+  return '';
+};
+
 export class HttpClassifier implements FieldClassifier {
   // Outcome of the latest classify call, read by the audit wrapper.
   lastTrace: { status: number | null; retried: boolean } = { status: null, retried: false };
+  // Prompt text sent and raw output from the latest classify call, read by the audit wrapper.
+  lastExchange?: { request: string; response: string };
 
   constructor(
     private readonly build: (fields: FieldMeta[], compat: boolean) => HttpRequest,
@@ -141,7 +164,10 @@ export class HttpClassifier implements FieldClassifier {
     if (fields.length === 0) return new Map();
     const compat = this.retry?.compat ?? false;
     this.lastTrace = { status: null, retried: false };
-    let res = await this.send(this.build(fields, compat));
+    const built = this.build(fields, compat);
+    const exchange: { request: string; response: string } = { request: promptInRequest(built.init), response: '' };
+    this.lastExchange = exchange;
+    let res = await this.send(built);
     this.lastTrace.status = res.status;
     if (this.retry && !compat && isRejectedStatus(res.status)) {
       this.lastTrace = { status: null, retried: true };
@@ -158,6 +184,7 @@ export class HttpClassifier implements FieldClassifier {
       throw new HttpRequestError(res.status, 'invalid response body');
     }
     const text = this.extract(json);
+    exchange.response = text ?? JSON.stringify(json);
     if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
     return parseLlmOutput(text, fields);
   }

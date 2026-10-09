@@ -93,6 +93,24 @@ describe('HttpClassifier', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
+  it('captures the trace prompt from the actual request body', async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] }),
+    );
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch });
+    await c.classify(fields);
+    const body = JSON.parse((fetch.mock.calls[0]![1] as RequestInit).body as string);
+    expect(c.lastExchange?.request).toBe(body.messages[1].content);
+
+    const gFetch = vi.fn().mockResolvedValue(
+      jsonResponse(200, { candidates: [{ content: { parts: [{ text: '{"b":"email"}' }] } }] }),
+    );
+    const g = createGeminiClassifier(gemini, 'g-key', { fetch: gFetch });
+    await g.classify(fields);
+    const gBody = JSON.parse((gFetch.mock.calls[0]![1] as RequestInit).body as string);
+    expect(g.lastExchange?.request).toBe(gBody.contents[0].parts[0].text);
+  });
+
   it('works for Gemini responses too', async () => {
     const fetch = vi.fn().mockResolvedValue(
       jsonResponse(200, { candidates: [{ content: { parts: [{ text: '{"b":"email"}' }] } }] }),

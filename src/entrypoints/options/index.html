@@ -37,6 +37,13 @@
       .errors { color: #b3261e; margin: 12px 0; padding-left: 20px; }
       .saved { color: #1e7e34; margin: 12px 0; }
       .kana-preview { margin: -4px 0 10px 2px; font-size: 12px; color: #5a6270; }
+      .audit-list { display: grid; gap: 8px; margin-top: 12px; }
+      .audit-list details { border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; }
+      .audit-list summary { cursor: pointer; font-size: 12px; }
+      .audit-list .audit-meta { margin: 6px 0 0; font-size: 12px; }
+      .audit-list details details { margin-top: 6px; }
+      .audit-list pre { white-space: pre-wrap; word-break: break-all; margin: 6px 0 0; padding: 8px;
+        border: 1px solid var(--line); border-radius: 6px; font-size: 12px; }
       main + main { padding-top: 32px; }
       .errors-text { color: #b3261e; }
       @media (max-width: 700px) {
@@ -53,6 +60,7 @@
       <div class="content">
         <main id="app"></main>
         <main id="ai-app"></main>
+        <main id="audit-app"></main>
       </div>
     </div>
     <script type="module" src="./main.ts"></script>

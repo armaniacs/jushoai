@@ -159,7 +159,7 @@ It is stored encrypted with AES-GCM. It is never shown on the settings page. Onl
 
 ### Where can I check the communication log?
 
-In `通信の監査ログ` (communication audit log) under `AI 判定` (AI judgment) on the settings page, you can check the count, download, or delete it. The date and time, provider, destination, model, page URL, number of fields sent, and result are kept for 7 days. Profile values are never recorded.
+In `通信の監査ログ` (communication audit log) on the settings page, you can check the list, download, or delete it. Along with the date and time, provider, destination, model, page URL, number of fields sent, and result, the prompt sent to the model and its answer are kept for 7 days. Profile values are never recorded.
 
 ### Does it communicate just by opening a page?
 

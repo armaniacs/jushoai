@@ -6,6 +6,7 @@
 
 ## 台帳
 
+- `2026-10-09-01-feat-audit-trace-viewer.md`
 - `2026-10-04-00-backlog-architecture-deepening.md`
 - `2026-10-07-00-backlog-arch-deepening-b.md`
 - `2026-10-07-00-backlog-holistic-improvement-b.md`

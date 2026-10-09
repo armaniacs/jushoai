@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import {
   OPTION_SECTIONS, buildNav, getActivePage, setActivePage, applyActivePage,
-  PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID,
+  PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, AUDIT_SECTION_ID,
 } from '../../src/entrypoints/options/nav';
 import { buildSettingsReportUrl } from '../../src/feedback/issue-url';
 
@@ -12,13 +12,13 @@ afterEach(() => {
 });
 
 describe('OPTION_SECTIONS', () => {
-  it('has profile, address, and AI entries', () => {
-    expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(['profiles', 'addresses', 'ai']);
+  it('has profile, address, AI and audit entries', () => {
+    expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(['profiles', 'addresses', 'ai', 'audit']);
   });
 
   it('shares one id source with the rendered headings', () => {
     expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(
-      [PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID],
+      [PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, AUDIT_SECTION_ID],
     );
   });
 });
@@ -28,7 +28,8 @@ describe('buildNav', () => {
     const root = document.createElement('div');
     const nav = buildNav(root);
     const links = [...nav.querySelectorAll('a[data-section]')];
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#profiles', '#addresses', '#ai']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#profiles', '#addresses', '#ai', '#audit']);
+    expect(links.map((a) => a.textContent)).toEqual(['プロファイル', '住所', 'AI 判定', '通信の監査ログ']);
     const report = root.querySelector('.report a');
     expect(report?.textContent).toBe('不具合報告');
     expect(report?.getAttribute('target')).toBe('_blank');
@@ -78,7 +79,12 @@ describe('page switching', () => {
     const ai = document.createElement('div');
     ai.id = 'ai';
     aiApp.append(ai);
-    content.append(app, aiApp);
+    const auditApp = document.createElement('main');
+    auditApp.id = 'audit-app';
+    const audit = document.createElement('div');
+    audit.id = 'audit';
+    auditApp.append(audit);
+    content.append(app, aiApp, auditApp);
     document.body.append(side, content);
     return side;
   }
@@ -91,6 +97,7 @@ describe('page switching', () => {
     expect(document.getElementById('profiles')?.hidden).toBe(true);
     expect(document.getElementById('app')?.hidden).toBe(false);
     expect(document.getElementById('ai-app')?.hidden).toBe(true);
+    expect(document.getElementById('audit-app')?.hidden).toBe(true);
   });
 
   it('hides the profile/address container on the AI page', () => {
@@ -99,14 +106,26 @@ describe('page switching', () => {
     expect(document.getElementById('app')?.hidden).toBe(true);
     expect(document.getElementById('ai-app')?.hidden).toBe(false);
     expect(document.getElementById('ai')?.hidden).toBe(false);
+    expect(document.getElementById('audit-app')?.hidden).toBe(true);
+  });
+
+  it('shows only the audit page content on the audit page', () => {
+    fixture();
+    setActivePage('audit');
+    expect(getActivePage()).toBe('audit');
+    expect(document.getElementById('app')?.hidden).toBe(true);
+    expect(document.getElementById('ai-app')?.hidden).toBe(true);
+    expect(document.getElementById('audit-app')?.hidden).toBe(false);
+    expect(document.getElementById('audit')?.hidden).toBe(false);
+    expect(document.getElementById('ai')?.hidden).toBe(true);
   });
 
   it('marks the active menu entry', () => {
     const side = fixture();
     buildNav(side);
-    setActivePage('addresses');
+    setActivePage('audit');
     const current = [...document.querySelectorAll('#side nav a[aria-current="true"]')];
-    expect(current.map((a) => a.getAttribute('href'))).toEqual(['#addresses']);
+    expect(current.map((a) => a.getAttribute('href'))).toEqual(['#audit']);
   });
 
   it('is a no-op when the page skeleton is absent', () => {
@@ -119,8 +138,11 @@ describe('page switching', () => {
     window.location.hash = '#ai';
     window.dispatchEvent(new HashChangeEvent('hashchange'));
     expect(getActivePage()).toBe('ai');
+    window.location.hash = '#audit';
+    window.dispatchEvent(new HashChangeEvent('hashchange'));
+    expect(getActivePage()).toBe('audit');
     window.location.hash = '#nope';
     window.dispatchEvent(new HashChangeEvent('hashchange'));
-    expect(getActivePage()).toBe('ai');
+    expect(getActivePage()).toBe('audit');
   });
 });

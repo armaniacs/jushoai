@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { AuditedClassifier, resultOf, type TracedClassifier } from '../../src/ai/audited-classifier';
-import type { AuditDraft } from '../../src/ai/audit-log';
+import { AUDIT_RESPONSE_CLIP_LENGTH, type AuditDraft } from '../../src/ai/audit-log';
 import { HttpAuthError, HttpRequestError } from '../../src/ai/http-classifiers';
 import { makeMeta } from '../helpers';
 
@@ -14,11 +14,42 @@ function setup(inner: TracedClassifier, failRecord = false) {
 }
 
 describe('AuditedClassifier', () => {
-  it('records one success entry with the field count and trace', async () => {
-    const inner: TracedClassifier = { lastTrace: { status: 200, retried: true }, classify: async () => new Map() };
+  it('records one success entry with the field count, trace and exchange', async () => {
+    const inner: TracedClassifier = {
+      lastTrace: { status: 200, retried: true },
+      lastExchange: { request: 'P', response: 'R' },
+      classify: async () => new Map(),
+    };
     const { drafts, wrapped } = setup(inner);
     await wrapped.classify(fields);
-    expect(drafts).toEqual([{ ...ctx, fieldCount: 2, result: 'success', httpStatus: 200, retried: true }]);
+    expect(drafts).toEqual([{
+      ...ctx, fieldCount: 2, request: 'P', response: 'R', chunkIndex: null, chunkCount: null,
+      result: 'success', httpStatus: 200, retried: true, durationMs: expect.any(Number),
+    }]);
+  });
+
+  it('records the chunk schedule passed by the caller', async () => {
+    const inner: TracedClassifier = { lastExchange: { request: 'P', response: 'R' }, classify: async () => new Map() };
+    const { drafts, wrapped } = setup(inner);
+    await wrapped.classify(fields, { index: 2, count: 3 });
+    expect(drafts[0]).toMatchObject({ chunkIndex: 2, chunkCount: 3 });
+  });
+
+  it('records an empty exchange and null schedule when the inner traces nothing', async () => {
+    const { drafts, wrapped } = setup({ classify: async () => new Map() });
+    await wrapped.classify(fields);
+    expect(drafts[0]).toMatchObject({ request: '', response: '', chunkIndex: null, chunkCount: null });
+  });
+
+  it('clips the recorded response past the storage cap', async () => {
+    const inner: TracedClassifier = {
+      lastExchange: { request: 'P', response: 'x'.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 5) },
+      classify: async () => new Map(),
+    };
+    const { drafts, wrapped } = setup(inner);
+    await wrapped.classify(fields);
+    expect(drafts[0]!.response).toHaveLength(AUDIT_RESPONSE_CLIP_LENGTH + 1);
+    expect(drafts[0]!.response.endsWith('…')).toBe(true);
   });
 
   it.each([
@@ -32,6 +63,7 @@ describe('AuditedClassifier', () => {
     await expect(wrapped.classify(fields)).rejects.toBe(err);
     expect(drafts).toHaveLength(1);
     expect(drafts[0]!.result).toBe(result);
+    expect(drafts[0]!.durationMs).toEqual(expect.any(Number));
     expect(resultOf(err)).toBe(result);
   });
 

@@ -66,8 +66,12 @@ try {
   console.log('test :', await notice());
   console.log('model:', MODEL);
 
-  // Diagnostics, both free of the real key. The audit log has no key either: it records host, model, result and
-  // HTTP status only. The probe uses a dummy key to see whether the extension context can reach the API at all.
+  // Diagnostics, both free of the real key. The audit log has no key either: the request trace carries the
+  // metadata-only prompt and the model's answer. The probe uses a dummy key to see whether the extension
+  // context can reach the API at all.
+  // The audit log is its own options page now; the TSV download lives there.
+  await page.goto(`chrome-extension://${id}/options.html#audit`);
+  await page.waitForTimeout(800);
   const [download] = await Promise.all([
     page.waitForEvent('download', { timeout: 5000 }).catch(() => null),
     page.getByRole('button', { name: /TSV でダウンロード/ }).click().catch(() => null),

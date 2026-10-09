@@ -24,15 +24,6 @@ vi.mock('../../src/ai/secret-store', () => ({
   IdbKeyStore: class {},
 }));
 
-vi.mock('../../src/entrypoints/options/audit-section', () => ({
-  mountAuditSection: vi.fn((root: HTMLElement) => {
-    const marker = document.createElement('div');
-    marker.dataset.audit = 'mock';
-    marker.textContent = 'audit-mock';
-    root.replaceChildren(marker);
-  }),
-}));
-
 vi.stubGlobal('chrome', { runtime: { id: 'test-ext-id', getURL: (p: string) => `chrome-extension://test-ext-id/${p}` } });
 
 import { mountAiSection } from '../../src/entrypoints/options/ai-section';
@@ -146,7 +137,7 @@ beforeEach(() => {
 });
 
 describe('display parity', () => {
-  it('renders the title, privacy lines, provider select, buttons and audit slot for none', async () => {
+  it('renders the title, privacy lines, provider select and buttons for none', async () => {
     const root = await mountWith(noneSettings());
     const page = pageOf(root);
     expect(page.querySelector('h2')?.textContent).toBe('AI 判定（任意）');
@@ -172,9 +163,8 @@ describe('display parity', () => {
     expect(test.type).toBe('button');
     expect(test.disabled).toBe(false);
     expect(test.closest('div.row')).not.toBeNull();
-    // Audit section stays embedded last.
-    const kids = [...page.children];
-    expect(kids[kids.length - 1]!.textContent).toContain('audit-mock');
+    // The audit section lives on its own page now; the AI page carries no audit log.
+    expect(page.textContent).not.toContain('監査ログ');
   });
 
   it('renders the openai fieldset with presets, placeholders and localhost notes', async () => {

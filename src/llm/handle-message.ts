@@ -158,7 +158,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
       // The caller chooses its error display from the reason, so never drop it.
       if (!sel.ok) return { ok: false, reason: sel.reason };
       try {
-        return { ok: true, entries: [...(await sel.classifier.classify(req.fields))] };
+        return { ok: true, entries: [...(await sel.classifier.classify(req.fields, req.chunk))] };
       } catch (e) {
         if (e instanceof HttpAuthError) {
           deps.authFailed.add(settings.provider);

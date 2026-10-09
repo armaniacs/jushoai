@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS } from '../src/messages';
+import { MAX_CLASSIFY_TOTAL } from '../src/llm/background-gateway';
 import { makeMeta } from './helpers';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 'n', ...extra });
@@ -27,6 +28,17 @@ describe('parseRequest', () => {
   it('rejects more than the maximum number of fields', () => {
     const fields = Array.from({ length: MAX_CLASSIFY_FIELDS + 1 }, (_, i) => field(`f${i}`));
     expect(parseRequest({ type: 'ai-classify', fields })).toBeNull();
+  });
+
+  it('accepts an optional chunk schedule and rejects malformed ones', () => {
+    const fields = [field('a')];
+    const ok = parseRequest({ type: 'ai-classify', fields, chunk: { index: 2, count: 3 } });
+    if (ok?.type !== 'ai-classify') return;
+    expect(ok.chunk).toEqual({ index: 2, count: 3 });
+    for (const chunk of ['x', {}, { index: 0, count: 3 }, { index: 4, count: 3 }, { index: 1.5, count: 3 },
+      { index: 2, count: 'x' }, { index: 2, count: MAX_CLASSIFY_TOTAL + 1 }]) {
+      expect(parseRequest({ type: 'ai-classify', fields, chunk })).toBeNull();
+    }
   });
 
   it('sanitizes fields to the metadata allow-list and drops bad ones', () => {

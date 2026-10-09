@@ -8,7 +8,8 @@ import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { labeled, textInput, kanaHiraganaHint } from './dom';
 import { mountAiSection } from './ai-section';
-import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID } from './nav';
+import { mountAuditSection } from './audit-section';
+import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
   { key: 'lastName', label: '姓', placeholder: '山田' },
@@ -286,4 +287,9 @@ void loadData().then((data) => {
 });
 
 mountAiSection(document.getElementById('ai-app')!);
+// The audit log is its own page so it can grow without pushing the AI settings down.
+const auditPage = document.createElement('div');
+auditPage.id = AUDIT_SECTION_ID;
+mountAuditSection(auditPage);
+document.getElementById('audit-app')!.replaceChildren(auditPage);
 mountNav(document.getElementById('side')!);
