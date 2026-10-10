@@ -10,13 +10,15 @@ JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録
 
 ## インストール
 
-ストアには公開していません。GitHub Releases の zip を使います。
+Chrome と Edge は、Chrome ウェブストアからインストールできます。
 
-[GitHub Releases](https://github.com/armaniacs/jushoai/releases) から zip をダウンロードして、展開します。
+[Chrome ウェブストアで JushoAI を開く](https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=ja)
 
-次に、ブラウザの拡張機能ページを開きます。Chrome は `chrome://extensions`、Edge は `edge://extensions` です。Firefox は、`jushoai-<バージョン>-firefox.zip` を展開してから `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で展開したフォルダ内の `manifest.json` を選びます。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われます。使うたびに読み込み直して、登録し直します。
+Firefox はストアにないため、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の `jushoai-<バージョン>-firefox.zip` を展開してから `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で展開したフォルダ内の `manifest.json` を選びます。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われます。使うたびに読み込み直して、登録し直します。
 
-1. 「デベロッパーモード」を有効にします。
+Chrome や Edge で zip から読み込む場合は、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開し、次の手順で読み込みます。
+
+1. 「デベロッパーモード」を有効にします（Chrome は `chrome://extensions`、Edge は `edge://extensions`）。
 2. 「パッケージ化されていない拡張機能を読み込む」を選びます。ボタンの表記はブラウザや言語によって異なることがあります。
 3. 展開したフォルダを選びます。
 

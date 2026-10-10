@@ -2,7 +2,7 @@ import { escapeHtml } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
 import { issueUrl, REPO_URL, renderFeedbackSection, type FeedbackStrings } from './feedback.ts';
-import { pageUrl, type Lang } from './site.ts';
+import { pageUrl, storeUrl, type Lang } from './site.ts';
 
 interface Titled { title: string; body: string }
 
@@ -11,6 +11,7 @@ export interface Strings {
   chrome: Chrome;
   hero: { eyebrow: string; titleBefore: string; titleEmphasis: string; tagline: string; ctaInstall: string; ctaGuide: string; ctaFeedback: string };
   features: { title: string; items: Titled[] };
+  demo: { title: string; lead: string; iframeTitle: string; link: string };
   mock: {
     uiNote: string; captionButton: string; captionPreview: string; captionGuide: string;
     captionForm: string; before: string; after: string;
@@ -19,7 +20,7 @@ export interface Strings {
   fields: { title: string; items: Titled[] };
   providers: { title: string; lead: string; items: { name: string; body: string }[] };
   privacy: { title: string; items: Titled[]; link: string };
-  install: { title: string; steps: string[]; more: string; releases: string };
+  install: { title: string; steps: string[]; store: string; storeNote: string; more: string; releases: string };
   faq: { title: string; items: { q: string; a: string }[]; more: string };
   feedback: FeedbackStrings;
   license: { title: string; body: string; link: string };
@@ -27,6 +28,13 @@ export interface Strings {
 }
 
 const e = escapeHtml;
+
+// The demo lives on YouTube. Embed through the no-cookie host so loading the page
+// does not set tracking cookies before the visitor presses play. The URLs stay in
+// code (not in the dictionary) because dictionary strings go through escapeHtml.
+const VIDEO_ID = 'Y3y9ofrsyFo';
+const VIDEO_EMBED_URL = `https://www.youtube-nocookie.com/embed/${VIDEO_ID}`;
+const VIDEO_WATCH_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
 
 export function renderLanding(p: { lang: Lang; base: string; s: Strings }): string {
   const { s } = p;
@@ -51,6 +59,13 @@ ${cards(s.features.items)}
 <figure>${mockForm(true, s.mock.after)}<figcaption>${e(s.mock.captionForm)} (${e(s.mock.after)})</figcaption></figure>
 </div>
 ${p.lang === 'en' ? `<p class="note ui-note">${e(s.mock.uiNote)}</p>` : ''}
+</div></section>
+
+<section class="block" id="demo"><div class="wrap narrow">
+<h2 class="section-title">${e(s.demo.title)}</h2>
+<p class="section-lead">${e(s.demo.lead)}</p>
+<div class="video"><iframe src="${VIDEO_EMBED_URL}" title="${e(s.demo.iframeTitle)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+<p class="note"><a href="${VIDEO_WATCH_URL}" target="_blank" rel="noopener noreferrer">${e(s.demo.link)}</a></p>
 </div></section>
 
 <section class="block soft" id="steps"><div class="wrap">
@@ -80,7 +95,8 @@ ${cards(s.privacy.items)}
 <section class="block soft" id="install"><div class="wrap narrow">
 <h2 class="section-title">${e(s.install.title)}</h2>
 <ol>${s.install.steps.map((t) => `<li>${e(t)}</li>`).join('')}</ol>
-<p><a class="btn primary" href="${e(REPO_URL)}/releases/latest" rel="noopener">${e(s.install.releases)}</a></p>
+<p><a class="btn primary" href="${e(storeUrl(p.lang))}" target="_blank" rel="noopener noreferrer">${e(s.install.store)}</a> <span class="note">${e(s.install.storeNote)}</span></p>
+<p><a class="btn" href="${e(REPO_URL)}/releases/latest" target="_blank" rel="noopener noreferrer">${e(s.install.releases)}</a></p>
 <p><a href="${u('guides/getting-started/')}">${e(s.install.more)}</a></p>
 </div></section>
 

@@ -16,9 +16,9 @@
 
 ## インストール
 
-ストアには公開していない。[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開して読み込む。
+Chrome と Edge は、[Chrome ウェブストア](https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=ja)からインストールできる。Firefox はストアにないため、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開して読み込む。
 
-1. Chrome は `chrome://extensions`、Edge は `edge://extensions` を開き、デベロッパーモードを有効にする
+1. Chrome ウェブストアを使わず zip から読み込む場合は、Chrome は `chrome://extensions`、Edge は `edge://extensions` を開き、デベロッパーモードを有効にする
    - Firefox 用は `jushoai-<バージョン>-firefox.zip` を展開し、`about:debugging#/runtime/this-firefox` を開いて「一時的なアドオンを読み込む」で、展開したフォルダ内の `manifest.json` を選ぶ。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われる。使うたびに読み込み直して、登録し直す
 2. 「パッケージ化されていない拡張機能を読み込む」で、展開したフォルダを選ぶ
 3. 拡張機能の設定ページで、プロファイルと住所を登録する
