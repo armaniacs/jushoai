@@ -1,7 +1,7 @@
 {
   "name": "jushoai",
   "private": true,
-  "version": "0.1.12",
+  "version": "0.1.13",
   "description": "Japanese form filler: names, furigana and split addresses",
   "license": "GPL-3.0-only",
   "author": "armaniacs",

@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.13] - 2026-10-10
+
 ### Fixed
 
 - `autocomplete="constructor"` のように `Object.prototype` の名前と同じ値の autocomplete 属性を持つ欄で、分類の実行全体が TypeError で中断される問題を修正し、そのような欄は未分類として扱う
@@ -209,6 +211,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.13]: https://github.com/armaniacs/jushoai/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/armaniacs/jushoai/compare/v0.1.11...v0.1.12
 [0.1.11]: https://github.com/armaniacs/jushoai/compare/v0.1.10...v0.1.11
 [0.1.10]: https://github.com/armaniacs/jushoai/compare/v0.1.9...v0.1.10
