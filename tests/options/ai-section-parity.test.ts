@@ -139,7 +139,7 @@ beforeEach(() => {
   permMocks.request.mockResolvedValue(true);
   storeMocks.save.mockResolvedValue(undefined);
   gwMocks.test.mockResolvedValue({ ok: true, category: 'email' });
-  egressMocks.validate.mockResolvedValue({ errors: [], unreachable: false });
+  egressMocks.validate.mockResolvedValue({ errors: [] });
   document.body.replaceChildren();
 });
 

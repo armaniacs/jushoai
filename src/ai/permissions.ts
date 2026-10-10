@@ -1,5 +1,5 @@
 import { IS_FIREFOX } from './browser-target';
-import { originPattern } from './settings';
+import { DOH_PERMISSION_PATTERN, originPattern } from './settings';
 import { GEMINI_ORIGIN, type AiSettings } from './types';
 
 export interface PermissionsQuery {
@@ -25,6 +25,15 @@ export function originPatternsFor(s: AiSettings): string[] {
     return pattern ? [pattern] : [];
   }
   return [];
+}
+
+// The dial-time gate resolves the saved base URL through the pinned DoH origin
+// (DOH_ORIGIN / DOH_PERMISSION_PATTERN in settings.ts), so the permissions a cloud
+// provider needs are the connection origin plus the resolver origin. Providers that
+// use no network (none / built-in) need neither.
+export function requiredHostOrigins(s: AiSettings): string[] {
+  const provider = originPatternsFor(s);
+  return provider.length === 0 ? [] : [...provider, DOH_PERMISSION_PATTERN];
 }
 
 export async function hasHostPermission(

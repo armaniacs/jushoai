@@ -1,7 +1,7 @@
 import { AuditedClassifier } from '../ai/audited-classifier';
 import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
-import { originPatternsFor } from '../ai/permissions';
+import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
@@ -54,7 +54,7 @@ async function statusOf(
     status: computeCloudStatus({
       settings: s,
       hasKey,
-      permitted: await deps.hasPermission(originPatternsFor(s)),
+      permitted: await deps.hasPermission(requiredHostOrigins(s)),
       authFailed: deps.authFailed.has(s.provider),
     }),
     provider: s.provider,

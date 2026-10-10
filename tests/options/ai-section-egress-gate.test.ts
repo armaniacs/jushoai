@@ -1,7 +1,7 @@
 // Pins the save-time resolved-address gate wiring in ai-section: a name that resolves
-// into a private range must not reach the store, an unreachable resolver only warns (the
-// save proceeds), and the gate runs after the permission prompt (the prompt needs the
-// click's user gesture as the first await).
+// into a private range must not reach the store, an unresolvable endpoint rejects the
+// save (fail-closed), and the gate runs after the permission prompt (the prompt needs
+// the click's user gesture as the first await).
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const storeMocks = vi.hoisted(() => ({ load: vi.fn(), save: vi.fn() }));
@@ -87,7 +87,7 @@ beforeEach(() => {
   permMocks.request.mockResolvedValue(true);
   storeMocks.save.mockResolvedValue(undefined);
   gwMocks.test.mockResolvedValue({ ok: true, category: 'email' });
-  egressMocks.validate.mockResolvedValue({ errors: [], unreachable: false });
+  egressMocks.validate.mockResolvedValue({ errors: [] });
   document.body.replaceChildren();
 });
 
@@ -96,7 +96,6 @@ describe('save-time resolved-address gate', () => {
     const root = await mountWith(openaiSaved());
     egressMocks.validate.mockResolvedValue({
       errors: ['接続先が内部ネットワークのアドレスに解決されるため指定できません'],
-      unreachable: false,
     });
     setInput(keyInput(root)!, 'sk-new-secret');
     buttonByText(root, '保存').click();
@@ -107,23 +106,25 @@ describe('save-time resolved-address gate', () => {
     expect(n.textContent).toBe('接続先が内部ネットワークのアドレスに解決されるため指定できません');
   });
 
-  it('saves with a warning when the resolver is unreachable', async () => {
+  it('rejects the save when the resolver cannot verify the endpoint', async () => {
     const root = await mountWith(openaiSaved());
-    egressMocks.validate.mockResolvedValue({ errors: [], unreachable: true });
+    egressMocks.validate.mockResolvedValue({
+      errors: ['接続先のアドレスを解決できなかったため、指定できません'],
+    });
     setInput(keyInput(root)!, 'sk-new-secret');
     buttonByText(root, '保存').click();
     await settle();
-    expect(storeMocks.save).toHaveBeenCalledOnce();
+    expect(storeMocks.save).not.toHaveBeenCalled();
     const n = notice(root)!;
     expect(n.className).toBe('errors-text');
-    expect(n.textContent).toBe('保存しました。接続先のアドレスを解決できなかったため、検証できていません。');
+    expect(n.textContent).toBe('接続先のアドレスを解決できなかったため、指定できません');
   });
 
   it('runs the gate after the permission prompt and before the store write', async () => {
     const root = await mountWith(openaiSaved());
     const order: string[] = [];
     permMocks.request.mockImplementation(async () => { order.push('permission'); return true; });
-    egressMocks.validate.mockImplementation(async () => { order.push('gate'); return { errors: [], unreachable: false }; });
+    egressMocks.validate.mockImplementation(async () => { order.push('gate'); return { errors: [] }; });
     storeMocks.save.mockImplementation(async () => { order.push('save'); });
     setInput(keyInput(root)!, 'sk-new-secret');
     buttonByText(root, '保存').click();

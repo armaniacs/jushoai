@@ -197,7 +197,7 @@ export class HttpClassifier implements FieldClassifier {
       const verdict = await this.deps.egress(target);
       // Blocked targets must look like ordinary request failures to callers.
       if (!verdict.ok) {
-        throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: unverified address');
+        throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: could not verify the address');
       }
     }
     const controller = new AbortController();

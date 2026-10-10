@@ -56,17 +56,17 @@ Scenario: リゾルバを必要としないプロバイダは許可を要求し�
 
 ## 受け入れ基準
 
-- [ ] `https://dns.google/*` が、クラウドプロバイダ利用時の保存で実際に `chrome.permissions.request` の対象に含まれる
-- [ ] `handle-message.ts` の権限確認も同じ集合を使い、許可が無い間は AI 状態が `permission-missing` として扱われる
-- [ ] リゾルバに到達できない・名前解決できない場合、`HttpClassifier.send` は fetch を実行しない（`tests/ai/egress-dns.test.ts` の escape hatch ケースを反転して固定する）
-- [ ] 同じ状況で保存も hard error になる（`unreachable` の警告経路を廃止する）
-- [ ] 内部アドレスへの解決は保存時・分類時の両方で拒否される（既存挙動を維持）
-- [ ] `http://127.0.0.1` / `http://localhost` の設計どおりのパスはリゾルバを呼ばずに動く
-- [ ] プロバイダが `none` / `built-in` のときはリゾルバの origin を要求しない
-- [ ] 方針（解決不能時は拒否）が `src/ai/settings.ts` の 1 か所に書かれ、コード・テスト・docs がそこを参照している
-- [ ] `src/ai/settings.ts` の `Fail-closed` を含むコメント群と、`tests/ai/egress-dns.test.ts` の `escape hatch` というテスト名が、fail-closed の記述に置き換わっている
-- [ ] 日英の `ai-providers.md` / `privacy.md` / `troubleshooting.md` と `CHANGELOG.md` が fail-closed の記述に揃っている
-- [ ] `make check` が通る
+- [x] `https://dns.google/*` が、クラウドプロバイダ利用時の保存で実際に `chrome.permissions.request` の対象に含まれる
+- [x] `handle-message.ts` の権限確認も同じ集合を使い、許可が無い間は AI 状態が `permission-missing` として扱われる
+- [x] リゾルバに到達できない・名前解決できない場合、`HttpClassifier.send` は fetch を実行しない（`tests/ai/egress-dns.test.ts` の escape hatch ケースを反転して固定する）
+- [x] 同じ状況で保存も hard error になる（`unreachable` の警告経路を廃止する）
+- [x] 内部アドレスへの解決は保存時・分類時の両方で拒否される（既存挙動を維持）
+- [x] `http://127.0.0.1` / `http://localhost` の設計どおりのパスはリゾルバを呼ばずに動く
+- [x] プロバイダが `none` / `built-in` のときはリゾルバの origin を要求しない
+- [x] 方針（解決不能時は拒否）が `src/ai/settings.ts` の 1 か所に書かれ、コード・テスト・docs がそこを参照している
+- [x] `src/ai/settings.ts` の `Fail-closed` を含むコメント群と、`tests/ai/egress-dns.test.ts` の `escape hatch` というテスト名が、fail-closed の記述に置き換わっている
+- [x] 日英の `ai-providers.md` / `privacy.md` / `troubleshooting.md` と `CHANGELOG.md` が fail-closed の記述に揃っている
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -162,11 +162,27 @@ grep -rn "escape hatch" src/ tests/            # → src/ai/settings.ts:251 / te
 - **`verified` フラグを残すか落とすか。** fail-closed 化により `ok: true` のとき `verified` は常に true になる。残すと「未確認でも通る」と読める余地が生まれ、今回の乖離を再生産する。落とす（`{ ok: true } | { ok: false; internal: boolean }`）と型が小さくなり、`src/entrypoints/options/ai-section.ts` の参照も消える。推奨は**落とす**。差分を最小にしたい場合は残してよいが、その場合は「常に true」であることをテストで固定する
 - **リゾルバを塞ぐ網の利用者に可用性を返すか。** 返す方法は、既定 OFF の明示的なオプトイン（例:「接続先を確認できないときは続行する」を設定ページに置き、選んだ事実を保存して警告に出す）である。これは silent な fail-open を**informed consent** に変える設計で、要件記録（fail-closed）と両立しうる。ただし方針の値が 2 つになるため、子 05 の一致検査は両方を覆う必要がある。**本 PBI では実装せず、必要なら別 PBI として起票する**ことを推奨する（まず fail-closed を成立させ、可用性の要望が出てから足す）
 
+### 着手時の決定（2026-10-11、なぜなぜ 30 回による自律境界の調査）
+
+- 上記の未決 2 件を決定した: **verified フラグは落とす**、**可用性の返し方は本 PBI では実装しない**（台帳に記録し、可用性の要望が出てから別 PBI で扱う）。
+- 実装は手順 1〜9 を自律で進める。利用者の作業として残るのは、実機確認（permission prompt の実挙動・塞がれたネットワークでの fail-closed 挙動・http localhost パス）、再監査での確認、push（明示指示時）、レビューの最終承認。
+- 根拠の全文は `docs/superpowers/dig/2026-10-11-autonomy-boundary-why30.md`。
+
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] `make check` が通る
-- [ ] 方針が `src/ai/settings.ts` の 1 か所に書かれ、コード・テスト・docs がそこを参照している
-- [ ] テスト名・コメント・日英 docs から escape hatch の記述が消えている
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] `make check` が通る
+- [x] 方針が `src/ai/settings.ts` の 1 か所に書かれ、コード・テスト・docs がそこを参照している
+- [x] テスト名・コメント・日英 docs から escape hatch の記述が消えている
 - [ ] コードレビュー完了
-- [ ] リファクタリング完了（`verified` フラグの扱いを決定して反映）
+- [x] リファクタリング完了（`verified` フラグは `EgressVerdict` から落とした）
+
+### 実装の記録（2026-10-11）
+
+- 実装: `requiredHostOrigins`（`DOH_PERMISSION_PATTERN` = `https://dns.google/*` を settings.ts に定義）を `ai-section.ts`（保存時の要求）と `handle-message.ts`（状態確認の contains）に配線。`verdictOf` を fail-closed にし、`EgressVerdict` から `verified` を落とし、保存時の `unreachable` 警告経路を廃止した
+- 検証: `make check` exit 0（typecheck、79 テストファイル / 1055 passed ＋ 既存の expected fail 2、両ブラウザ build、manifest 検査、web-ext lint errors 0）。`make site` も緑。escape hatch・「検証をスキップして続行」の文言は src/tests/docs に残存なし（CHANGELOG の 0.1.13 履歴と、旧挙動の説明としての言及を除く）
+- 自己レビュー（最終承認はユーザーに残す）:
+  - loopback（http://127.0.0.1）の利用者にも dns.google の許可を求める（ゲートは loopback を解決しないが、許可の集合は 1 つ）。壊れないが、必要なら requiredHostOrigins で loopback を外す後続改善がある
+  - gemini 利用者は許可の集合に dns.google が加わるため、旧設定のままだと permission-missing になる（再保存で解消）。本 PBI のテスト戦略（gemini=Gemini+リゾルバ）どおり
+  - 解決できない結果のキャッシュは空集合のまま TTL 窓で 1 回の解決遅延に保たれる（変化なし）
+- ユーザーの作業として残る項目: 実機確認（保存ボタンからの permission prompt、塞がれたネットワークでの fail-closed 挙動、http://127.0.0.1 パス）、再監査での確認、本レビューの最終承認。PBI 05 の三者一致検査の後、アーカイブする
