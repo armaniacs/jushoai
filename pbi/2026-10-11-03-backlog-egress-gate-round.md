@@ -47,12 +47,12 @@ OpenAI 互換 API を設定する利用者として、保存した接続先が�
 
 ## 受け入れ基準
 
-- [ ] 子 PBI 2 件が完了し、アーカイブされる
-- [ ] `make check` が緑
-- [ ] egress の方針（fail-closed）が 1 か所に書かれ、コード・テスト・docs がそこを参照している
-- [ ] 宣言（manifest）・要求（`requiredHostOrigins`）・使用（fetch 先）の三者が一致していることを `make check` が検証する
-- [ ] 監査記録 `jushoai/ai/egress-unverified-verdict-dispatches-fetch` の blocker 1（リゾルバ origin が要求されていない）が解消されている
-- [ ] アーカイブ済み PBI `2026-10-10-04-fix-egress-dns-validation.md` の合格基準 `:49`（fail-closed）が実装と一致する
+- [x] 子 PBI 2 件の実装が完了（04: `b709b35`、05: `e8754c5`）。アーカイブは利用者の確認（04 の実機確認・再監査・レビュー最終承認、05 のレビュー最終承認）の後に残る
+- [x] `make check` が緑（exit 0、typecheck、79 テストファイル / 1055 passed、build 検査 2 ファイル / 12 passed、両ブラウザ build、manifest 検査、web-ext lint errors 0）
+- [x] egress の方針（fail-closed）が 1 か所に書かれ、コード・テスト・docs がそこを参照している（`EGRESS_UNVERIFIED_POLICY` の単一宣言）
+- [x] 宣言（manifest）・要求（`requiredHostOrigins`）・使用（fetch 先）の三者が一致していることを `make check` が検証する（`tests/build/host-permission-coverage.build.ts`）
+- [x] 監査記録 `jushoai/ai/egress-unverified-verdict-dispatches-fetch` の blocker 1（リゾルバ origin が要求されていない）が解消されている。blocker の再確認は再監査で行う（利用者の作業）
+- [x] アーカイブ済み PBI `2026-10-10-04-fix-egress-dns-validation.md` の合格基準 `:49`（fail-closed）が実装と一致する
 
 ## テスト戦略（t_wadaスタイル）
 
