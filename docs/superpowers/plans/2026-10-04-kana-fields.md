@@ -44,7 +44,7 @@
 - Modify: `src/core/classify-rules.ts`
 - Test: `tests/core/classify-rules.test.ts`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/core/classify-rules.test.ts` の import に `wantsKana` を追加する:
 
@@ -94,12 +94,12 @@ describe('wantsKana', () => {
   });
 ```
 
-- [ ] **Step 2: テストが失敗することを確認**
+- [x] **Step 2: テストが失敗することを確認**
 
 Run: `npx vitest run tests/core/classify-rules.test.ts`
 Expected: FAIL — `wantsKana` が export されていないためモジュール読み込みエラー、または `\uXXXX` パターンの detectKanaKind テストが `katakana` を返して失敗
 
-- [ ] **Step 3: 実装する**
+- [x] **Step 3: 実装する**
 
 `src/core/classify-rules.ts`。`detectKanaKind` の直前に `decodePattern` と `wantsKana` を追加し、`detectKanaKind` の pattern 判定を復号後に変える:
 
@@ -142,12 +142,12 @@ export function detectKanaKind(m: FieldMeta): KanaKind {
 }
 ```
 
-- [ ] **Step 4: テストが通ることを確認**
+- [x] **Step 4: テストが通ることを確認**
 
 Run: `npx vitest run tests/core`
 Expected: PASS（classifyField の既存テストも含め全緑 — `classifyField` は無改変のため退行しない）
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add src/core/classify-rules.ts tests/core/classify-rules.test.ts
@@ -165,7 +165,7 @@ git commit -m "feat: カナ欄判定 wantsKana と pattern の \uXXXX 復号を�
 - Modify: `tests/core/analyze.test.ts`
 - Modify: `src/core/analyze.ts`
 
-- [ ] **Step 1: 再現サンプル HTML を 2 つ作る**
+- [x] **Step 1: 再現サンプル HTML を 2 つ作る**
 
 `samples/furigana-fieldset-form.html`（実ページ `pro.form-mailer.jp/fms/6d59e0a6280818` の最小再現。`pattern` 属性は `\uXXXX` の**リテラル文字列**として書く — HTML 属性はエスケープを解釈しないため、実ページと同じ形で保存される）:
 
@@ -219,7 +219,7 @@ git commit -m "feat: カナ欄判定 wantsKana と pattern の \uXXXX 復号を�
 </html>
 ```
 
-- [ ] **Step 2: E2E テストを追加して失敗を確認**
+- [x] **Step 2: E2E テストを追加して失敗を確認**
 
 `tests/integration/samples.test.ts`。import に 2 ファイルを追加:
 
@@ -261,7 +261,7 @@ const SAMPLES: Record<string, string> = {
 Run: `npx vitest run tests/integration/samples.test.ts`
 Expected: FAIL — `field_2_sei` が `'山田'`（autocomplete が lastName を返す現行バグ）になり `'やまだ'` と不一致。既存 3 サンプルと `field_1_*` は PASS
 
-- [ ] **Step 3: オーバーレイの単体テストを追加して失敗を確認**
+- [x] **Step 3: オーバーレイの単体テストを追加して失敗を確認**
 
 `tests/core/analyze.test.ts` に追加する:
 
@@ -326,7 +326,7 @@ describe('kana overlay', () => {
 Run: `npx vitest run tests/core/analyze.test.ts`
 Expected: FAIL — autocomplete 欄が `lastName` のまま、`kanaKind` が付かない
 
-- [ ] **Step 4: オーバーレイを実装する**
+- [x] **Step 4: オーバーレイを実装する**
 
 `src/core/analyze.ts`。import に `wantsKana` を追加:
 
@@ -365,7 +365,7 @@ function applyKanaOverlay(items: Item[]): void {
   return refineClassifications(items);
 ```
 
-- [ ] **Step 5: 全テストが通ることを確認**
+- [x] **Step 5: 全テストが通ることを確認**
 
 Run: `npx vitest run tests/core/analyze.test.ts && npx vitest run tests/integration/samples.test.ts`
 Expected: PASS — Step 2/3 の失敗がすべて解消し、既存テストも退行しない
@@ -373,7 +373,7 @@ Expected: PASS — Step 2/3 の失敗がすべて解消し、既存テストも�
 Run: `npm test`
 Expected: PASS（全スイート緑）
 
-- [ ] **Step 6: コミット**
+- [x] **Step 6: コミット**
 
 ```bash
 git add samples/furigana-fieldset-form.html samples/katakana-fieldset-form.html tests/integration/samples.test.ts tests/core/analyze.test.ts src/core/analyze.ts
@@ -388,7 +388,7 @@ git commit -m "fix: カナ欄を名前系カテゴリへ書き換えるオーバ
 - Modify: `src/core/analyze.ts`
 - Test: `tests/core/analyze.test.ts`
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/core/analyze.test.ts` に追加:
 
@@ -437,7 +437,7 @@ describe('classifyAll: force', () => {
 Run: `npx vitest run tests/core/analyze.test.ts`
 Expected: FAIL — `classifyAll` が第 3 引数を受け付けず、または confident 欄が LLM に送られない
 
-- [ ] **Step 2: 実装する**
+- [x] **Step 2: 実装する**
 
 `src/core/analyze.ts` の `classifyAll` を置き換える:
 
@@ -488,12 +488,12 @@ export async function classifyAll(
 
 通常モード（`force` 未指定）の挙動は既存と完全に同一: confident 欄は早期採用、LLM 応答欄は採用、応答なしの weak 欄はドロップ。`force: true` では全欄を LLM に送り、応答なし・`unknown`・例外の欄は confidence 不問でルール結果を採用する。
 
-- [ ] **Step 3: テストが通ることを確認**
+- [x] **Step 3: テストが通ることを確認**
 
 Run: `npm test`
 Expected: PASS — force テスト 4 件と既存 `classifyAll` テスト全件
 
-- [ ] **Step 4: コミット**
+- [x] **Step 4: コミット**
 
 ```bash
 git add src/core/analyze.ts tests/core/analyze.test.ts
@@ -508,7 +508,7 @@ git commit -m "feat: classifyAll に LLM 全欄再分析の force モードを�
 - Modify: `src/ui/preview.ts`
 - Test: `tests/ui/preview.test.ts`（新規）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/ui/preview.test.ts` を新規作成する:
 
@@ -583,7 +583,7 @@ describe('showPreview', () => {
 Run: `npx vitest run tests/ui/preview.test.ts`
 Expected: FAIL — `onReanalyze` が存在せず、再分析ボタンが描画されない
 
-- [ ] **Step 2: 実装する**
+- [x] **Step 2: 実装する**
 
 `src/ui/preview.ts`。インターフェースを変更:
 
@@ -679,12 +679,12 @@ CSS 定数に 1 行追加（`.actions` の行の後）:
   return { setRows, setReanalyzing, close };
 ```
 
-- [ ] **Step 3: テストが通ることを確認**
+- [x] **Step 3: テストが通ることを確認**
 
 Run: `npx vitest run tests/ui`
 Expected: PASS — 新規 preview テスト 4 件と既存 ui テスト全件
 
-- [ ] **Step 4: コミット**
+- [x] **Step 4: コミット**
 
 ```bash
 git add src/ui/preview.ts tests/ui/preview.test.ts
@@ -700,7 +700,7 @@ git commit -m "feat: プレビューに LLM 再分析ボタンを追加"
 
 単体テスト対象外（エントリポイントは chrome API を直接使うため、既存コードもテストなし。typecheck・build・Task 7 の手動確認で担保する）。
 
-- [ ] **Step 1: `items` を再代入可能にする**
+- [x] **Step 1: `items` を再代入可能にする**
 
 `src/entrypoints/content.ts` の `run()` 内。該当行を変更:
 
@@ -708,7 +708,7 @@ git commit -m "feat: プレビューに LLM 再分析ボタンを追加"
       let items = await classifyAll(fields.map((f) => f.meta), classifier);
 ```
 
-- [ ] **Step 2: 再分析関数を追加し、プレビューに接続する**
+- [x] **Step 2: 再分析関数を追加し、プレビューに接続する**
 
 `replan` の定義の後、`showPreview` の呼び出しの前に追加:
 
@@ -736,7 +736,7 @@ git commit -m "feat: プレビューに LLM 再分析ボタンを追加"
 
 （`onApply` / `onCancel` は変更しない。`reanalyze` は関数宣言のため `preview` より前に書いても参照できる — 呼び出しはボタン押下時で、その時点で `preview` は初期化済み）
 
-- [ ] **Step 3: 型検査とビルドを通す**
+- [x] **Step 3: 型検査とビルドを通す**
 
 Run: `npx wxt prepare && npm run typecheck`
 Expected: エラーなし
@@ -744,7 +744,7 @@ Expected: エラーなし
 Run: `npm run build`
 Expected: `dist/chrome-mv3` へのビルド成功
 
-- [ ] **Step 4: コミット**
+- [x] **Step 4: コミット**
 
 ```bash
 git add src/entrypoints/content.ts
@@ -761,7 +761,7 @@ git commit -m "feat: プレビューの再分析を content script から接続"
 - Modify: `src/entrypoints/options/index.html`
 - Test: `tests/entrypoints/options-dom.test.ts`（新規）
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/entrypoints/options-dom.test.ts` を新規作成する:
 
@@ -790,7 +790,7 @@ describe('kanaHiraganaHint', () => {
 Run: `npx vitest run tests/entrypoints/options-dom.test.ts`
 Expected: FAIL — `kanaHiraganaHint` が存在しない
 
-- [ ] **Step 2: ヘルパを実装する**
+- [x] **Step 2: ヘルパを実装する**
 
 `src/entrypoints/options/dom.ts`。冒頭に import を追加し、ファイル末尾に関数を追加する:
 
@@ -809,12 +809,12 @@ export function kanaHiraganaHint(rawKana: string): string {
 }
 ```
 
-- [ ] **Step 3: テストが通ることを確認**
+- [x] **Step 3: テストが通ることを確認**
 
 Run: `npx vitest run tests/entrypoints/options-dom.test.ts`
 Expected: PASS
 
-- [ ] **Step 4: 設定ページに組み込む**
+- [x] **Step 4: 設定ページに組み込む**
 
 `src/entrypoints/options/main.ts`。import を変更:
 
@@ -861,12 +861,12 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; 
       .kana-preview { margin: -4px 0 10px 2px; font-size: 12px; color: #5a6270; }
 ```
 
-- [ ] **Step 5: 型検査とビルドを通す**
+- [x] **Step 5: 型検査とビルドを通す**
 
 Run: `npx wxt prepare && npm run typecheck`
 Expected: エラーなし
 
-- [ ] **Step 6: コミット**
+- [x] **Step 6: コミット**
 
 ```bash
 git add src/entrypoints/options/dom.ts src/entrypoints/options/main.ts src/entrypoints/options/index.html tests/entrypoints/options-dom.test.ts
@@ -880,7 +880,7 @@ git commit -m "feat: 設定ページにセイ・メイのひらがな表示を�
 **Files:**
 - Modify: `CHANGELOG.md`
 
-- [ ] **Step 1: CHANGELOG の `[Unreleased]` に記録する**
+- [x] **Step 1: CHANGELOG の `[Unreleased]` に記録する**
 
 ```markdown
 ## [Unreleased]
@@ -895,12 +895,12 @@ git commit -m "feat: 設定ページにセイ・メイのひらがな表示を�
 - 設定ページのセイ・メイ欄に、保存・注入と同じ変換経路のひらがな表示
 ```
 
-- [ ] **Step 2: 通し検査を通す**
+- [x] **Step 2: 通し検査を通す**
 
 Run: `make check`
 Expected: typecheck（拡張 + site）・全テスト・build すべて緑
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add CHANGELOG.md

@@ -54,7 +54,7 @@ tests/ai/*.test.ts, tests/ui/status-label.test.ts ほか
 - Create: `src/ai/types.ts`, `src/ai/settings.ts`
 - Test: `tests/ai/settings.test.ts`
 
-- [ ] **Step 1: 型を定義する**
+- [x] **Step 1: 型を定義する**
 
 `src/ai/types.ts`:
 
@@ -110,7 +110,7 @@ export const OPENAI_PRESETS = [
 export const GEMINI_ORIGIN = 'https://generativelanguage.googleapis.com/*';
 ```
 
-- [ ] **Step 2: 失敗するテストを書く**
+- [x] **Step 2: 失敗するテストを書く**
 
 `tests/ai/settings.test.ts`:
 
@@ -245,12 +245,12 @@ describe('validateAiSettings', () => {
 });
 ```
 
-- [ ] **Step 3: 失敗を確認する**
+- [x] **Step 3: 失敗を確認する**
 
 Run: `npx vitest run tests/ai/settings.test.ts`
 Expected: FAIL（`settings` モジュールが無い）
 
-- [ ] **Step 4: 実装する**
+- [x] **Step 4: 実装する**
 
 `src/ai/settings.ts`:
 
@@ -352,12 +352,12 @@ export function validateAiSettings(s: AiSettings, hasKey: KeyPresence): string[]
 }
 ```
 
-- [ ] **Step 5: 通過を確認する**
+- [x] **Step 5: 通過を確認する**
 
 Run: `npx vitest run tests/ai/settings.test.ts && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/ai/types.ts src/ai/settings.ts tests/ai/settings.test.ts
@@ -374,7 +374,7 @@ git commit -m "feat: AI 設定の型・正規化・ベース URL 検証を追加
 
 jsdom 環境には `crypto.subtle` が無いため、このテストは `node` 環境で動かす。IndexedDB 実装はブラウザ依存が強いので、`KeyStore` インターフェースの背後に置き、暗号化ロジックはメモリ実装で検証する。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/ai/secret-store.test.ts`:
 
@@ -428,12 +428,12 @@ describe('secret-store', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認する**
+- [x] **Step 2: 失敗を確認する**
 
 Run: `npx vitest run tests/ai/secret-store.test.ts`
 Expected: FAIL（モジュールが無い）
 
-- [ ] **Step 3: 実装する**
+- [x] **Step 3: 実装する**
 
 `src/ai/secret-store.ts`:
 
@@ -529,12 +529,12 @@ export async function decryptSecret(env: unknown, ks: KeyStore): Promise<string>
 }
 ```
 
-- [ ] **Step 4: 通過を確認する**
+- [x] **Step 4: 通過を確認する**
 
 Run: `npx vitest run tests/ai/secret-store.test.ts && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ai/secret-store.ts tests/ai/secret-store.test.ts
@@ -551,7 +551,7 @@ git commit -m "feat: API キーの AES-GCM 暗号化と KeyStore を追加"
 
 保存形式は `chrome.storage.local` のキー `jushoai:ai-settings`。API キーは `apiKey` にエンベロープ（`{v, iv, ct}`）としてだけ保存する。キーの更新指定は `undefined` = 変更なし、`''` = 削除、それ以外 = 置き換え。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/ai/settings-store.test.ts`:
 
@@ -626,12 +626,12 @@ describe('ai settings store', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認する**
+- [x] **Step 2: 失敗を確認する**
 
 Run: `npx vitest run tests/ai/settings-store.test.ts`
 Expected: FAIL（モジュールが無い）
 
-- [ ] **Step 3: 実装する**
+- [x] **Step 3: 実装する**
 
 `src/ai/settings-store.ts`:
 
@@ -705,12 +705,12 @@ export async function saveAiSettings(settings: AiSettings, update: KeyUpdate, ks
 }
 ```
 
-- [ ] **Step 4: 通過を確認する**
+- [x] **Step 4: 通過を確認する**
 
 Run: `npx vitest run tests/ai/settings-store.test.ts && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/ai/settings-store.ts tests/ai/settings-store.test.ts
@@ -726,14 +726,14 @@ git commit -m "feat: AI 設定のストアを追加（API キーは暗号化し�
 - Modify: `src/llm/classifier.ts`（`SYSTEM_PROMPT` を export する）
 - Test: `tests/ai/http-classifiers.test.ts`
 
-- [ ] **Step 1: 各 API の現行仕様を確認する**
+- [x] **Step 1: 各 API の現行仕様を確認する**
 
 `defuddle` スキルまたは context7 で次を読み、差異があれば Step 4 のコードのリクエスト形式だけを直す（テストの意図は変えない）。確認結果と根拠（短い引用）をレポートに書く。
 
 - OpenAI Chat Completions: `response_format: { type: 'json_schema', json_schema: { name, strict, schema } }` の形式と、`choices[0].message.content` の応答形式（https://platform.openai.com/docs/api-reference/chat/create）
 - Gemini `generateContent`: `systemInstruction`、`generationConfig.responseMimeType` / `responseSchema`（型名が大文字 `OBJECT` / `STRING` か小文字か、`enum` の指定、`additionalProperties` の可否）、認証ヘッダ `x-goog-api-key`、応答 `candidates[0].content.parts[0].text`（https://ai.google.dev/api/generate-content）
 
-- [ ] **Step 2: 失敗するテストを書く**
+- [x] **Step 2: 失敗するテストを書く**
 
 `tests/ai/http-classifiers.test.ts`:
 
@@ -874,12 +874,12 @@ describe('HttpClassifier', () => {
 });
 ```
 
-- [ ] **Step 3: 失敗を確認する**
+- [x] **Step 3: 失敗を確認する**
 
 Run: `npx vitest run tests/ai/http-classifiers.test.ts`
 Expected: FAIL（モジュールが無い）
 
-- [ ] **Step 4: `SYSTEM_PROMPT` を export し、実装する**
+- [x] **Step 4: `SYSTEM_PROMPT` を export し、実装する**
 
 `src/llm/classifier.ts` の `const SYSTEM_PROMPT = ` を `export const SYSTEM_PROMPT = ` に変更する（他は変えない）。
 
@@ -1033,12 +1033,12 @@ export const createGeminiClassifier = (cfg: GeminiSettings, apiKey: string, deps
   new HttpClassifier((f) => buildGeminiRequest(cfg, apiKey, f), extractGeminiText, deps);
 ```
 
-- [ ] **Step 5: 通過を確認する**
+- [x] **Step 5: 通過を確認する**
 
 Run: `npx vitest run tests/ai tests/llm && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし（既存の `tests/llm/classifier.test.ts` も通る）
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/ai/http-classifiers.ts src/llm/classifier.ts tests/ai/http-classifiers.test.ts
@@ -1054,7 +1054,7 @@ git commit -m "feat: OpenAI 互換と Gemini の分類器を追加"
 - Modify: `src/ai/types.ts`（状態の型を追加）
 - Test: `tests/ai/permissions.test.ts`, `tests/ai/status.test.ts`
 
-- [ ] **Step 1: 状態の型を追加する**
+- [x] **Step 1: 状態の型を追加する**
 
 `src/ai/types.ts` の `AiStatusInfo` を次の定義に置き換える（`AiStatus` のインポートは残す）。
 
@@ -1068,7 +1068,7 @@ export interface AiStatusInfo {
 }
 ```
 
-- [ ] **Step 2: 失敗するテストを書く**
+- [x] **Step 2: 失敗するテストを書く**
 
 `tests/ai/permissions.test.ts`:
 
@@ -1163,12 +1163,12 @@ describe('computeCloudStatus', () => {
 });
 ```
 
-- [ ] **Step 3: 失敗を確認する**
+- [x] **Step 3: 失敗を確認する**
 
 Run: `npx vitest run tests/ai/permissions.test.ts tests/ai/status.test.ts`
 Expected: FAIL（モジュールが無い）
 
-- [ ] **Step 4: 実装する**
+- [x] **Step 4: 実装する**
 
 `src/ai/permissions.ts`:
 
@@ -1239,12 +1239,12 @@ export function computeCloudStatus(i: StatusInput): AiState {
 }
 ```
 
-- [ ] **Step 5: 通過を確認する**
+- [x] **Step 5: 通過を確認する**
 
 Run: `npx vitest run tests/ai && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src/ai/types.ts src/ai/permissions.ts src/ai/status.ts tests/ai/permissions.test.ts tests/ai/status.test.ts
@@ -1261,7 +1261,7 @@ git commit -m "feat: host 権限の対象と AI 状態の算出を追加"
 
 background の `handleMessage` が、設定に応じて分類器を選ぶ。`ai-status` は `{ status, provider }` を返し、新しい `ai-test` は合成した 1 欄を分類させて結果を返す。401/403 を受けたプロバイダは `authFailed` に記録し、設定が変わるまで「認証エラー」状態にして再送しない（`ai-test` だけはこの制限を無視して再試行できる）。
 
-- [ ] **Step 1: messages の失敗するテストを追記する**
+- [x] **Step 1: messages の失敗するテストを追記する**
 
 `tests/messages.test.ts` の末尾に追記する（既存のテストは変更しない）。import に `parseStatusResponse, parseTestResponse` を足す。
 
@@ -1299,12 +1299,12 @@ describe('parseTestResponse', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認する**
+- [x] **Step 2: 失敗を確認する**
 
 Run: `npx vitest run tests/messages.test.ts`
 Expected: FAIL（`parseStatusResponse` などが未定義）
 
-- [ ] **Step 3: messages を実装する**
+- [x] **Step 3: messages を実装する**
 
 `src/messages.ts` を次のとおり変更する。
 
@@ -1358,7 +1358,7 @@ export function parseTestResponse(res: unknown): TestResponse | null {
 Run: `npx vitest run tests/messages.test.ts`
 Expected: PASS
 
-- [ ] **Step 4: handleMessage の失敗するテストを書く**
+- [x] **Step 4: handleMessage の失敗するテストを書く**
 
 `tests/entrypoints/handle-message.test.ts` を次の内容で置き換える（旧テストの意図 — 組み込み AI の分類、利用不可で `ok:false`、ダウンロード、未知メッセージで `undefined`、偽造された値が通らないこと — は維持している）。
 
@@ -1554,12 +1554,12 @@ describe('handleMessage: ai-test', () => {
 });
 ```
 
-- [ ] **Step 5: 失敗を確認する**
+- [x] **Step 5: 失敗を確認する**
 
 Run: `npx vitest run tests/entrypoints/handle-message.test.ts`
 Expected: FAIL（`HandlerDeps` の形が違う、`ai-test` が未対応）
 
-- [ ] **Step 6: handleMessage を実装する**
+- [x] **Step 6: handleMessage を実装する**
 
 `src/llm/handle-message.ts`:
 
@@ -1679,7 +1679,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps): Promise<un
 }
 ```
 
-- [ ] **Step 7: background を組み立てる**
+- [x] **Step 7: background を組み立てる**
 
 `src/entrypoints/background.ts`:
 
@@ -1720,12 +1720,12 @@ export default defineBackground(() => {
 });
 ```
 
-- [ ] **Step 8: 通過を確認する**
+- [x] **Step 8: 通過を確認する**
 
 Run: `npx vitest run && npx tsc --noEmit`
 Expected: 全テスト PASS、型エラーなし（`tests/llm/background-gateway.test.ts` などは次の Task で変わるまで、型が合わない箇所があれば最小限で直す）
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/messages.ts src/llm/handle-message.ts src/entrypoints/background.ts tests/messages.test.ts tests/entrypoints/handle-message.test.ts
@@ -1743,7 +1743,7 @@ git commit -m "feat: background がプロバイダ設定に応じて分類器を
 
 状態は `AiStatusInfo = { status, provider }` として gateway から content、バッジ、ガイドまで流す。
 
-- [ ] **Step 1: status-label の失敗するテストを書く**
+- [x] **Step 1: status-label の失敗するテストを書く**
 
 `tests/ui/status-label.test.ts`:
 
@@ -1773,7 +1773,7 @@ describe('badgeLabel', () => {
 });
 ```
 
-- [ ] **Step 2: 失敗を確認し、実装する**
+- [x] **Step 2: 失敗を確認し、実装する**
 
 Run: `npx vitest run tests/ui/status-label.test.ts`
 Expected: FAIL（モジュールが無い）
@@ -1818,7 +1818,7 @@ export function badgeLabel(info: AiStatusInfo): string {
 Run: `npx vitest run tests/ui/status-label.test.ts`
 Expected: PASS
 
-- [ ] **Step 3: gateway を更新する**
+- [x] **Step 3: gateway を更新する**
 
 `src/llm/background-gateway.ts` を次のとおり変更し、`tests/llm/background-gateway.test.ts` の既存テストを新しい戻り値（`{ status, provider }`）に合わせて意図を保ったまま更新する。さらに次のテストを追加する。
 
@@ -1880,7 +1880,7 @@ export async function testAiViaBackground(timeoutMs = TEST_TIMEOUT_MS): Promise<
 }
 ```
 
-- [ ] **Step 4: button を更新する**
+- [x] **Step 4: button を更新する**
 
 `src/ui/button.ts` を次の内容に置き換える（変更点: 状態を `AiStatusInfo` で受け取り、文言を `badgeLabel` で作り、設定が必要な状態を赤系で表示する）。`tests/ui/button.test.ts` の既存テストは、`setStatus('available')` のような呼び出しを `setStatus({ status: 'available', provider: 'built-in' })` に、`onBadgeClick` の引数の期待を `AiStatusInfo` に直して意図を保つ。
 
@@ -1975,7 +1975,7 @@ export function mountButton(
 }
 ```
 
-- [ ] **Step 5: ai-guide の失敗するテストを追記する**
+- [x] **Step 5: ai-guide の失敗するテストを追記する**
 
 `tests/ui/ai-guide.test.ts` の既存テスト（`buildGuide('unsupported', 'edge')` のように状態の文字列を渡している箇所）は、`buildGuide({ status: 'unsupported', provider: 'built-in' }, 'edge')` の形に直して意図を保つ。次を追記する。
 
@@ -2020,7 +2020,7 @@ describe('showAiGuide: settings shortcut', () => {
 
 （closed Shadow DOM の中のボタンはテストから直接触れないため、最後のテストは「パネルが出てクローズできる」ことの確認にとどめる。ボタンの挙動は Task 9 の手動確認で見る。`vi`, `showAiGuide` の import が無ければ足す。）
 
-- [ ] **Step 6: ai-guide を更新する**
+- [x] **Step 6: ai-guide を更新する**
 
 `src/ui/ai-guide.ts` を次の内容に置き換える。
 
@@ -2207,7 +2207,7 @@ export function showAiGuide(
 }
 ```
 
-- [ ] **Step 7: content を更新する**
+- [x] **Step 7: content を更新する**
 
 `src/entrypoints/content.ts` を 2 箇所だけ変更する。
 
@@ -2263,12 +2263,12 @@ export function showAiGuide(
           },
 ```
 
-- [ ] **Step 8: 全体を確認する**
+- [x] **Step 8: 全体を確認する**
 
 Run: `npx vitest run && npx tsc --noEmit && npx wxt build`
 Expected: 全テスト PASS、型エラーなし、ビルド成功
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/ui/status-label.ts src/llm/background-gateway.ts src/ui/button.ts src/ui/ai-guide.ts src/entrypoints/content.ts tests/ui tests/llm/background-gateway.test.ts
@@ -2285,7 +2285,7 @@ git commit -m "feat: AI 状態にプロバイダを含め、バッジとガイ�
 
 設定ページの DOM 層は薄いので、既存の方針どおり自動テストは書かず、Task 9 の手動確認で検証する。ページ由来でない文字列も含め、`innerHTML` は使わず `textContent` で入れる。保存ボタンの処理では、`chrome.permissions.request` を最初の `await` にして、ユーザー操作の文脈を保つ。
 
-- [ ] **Step 1: manifest にオプショナル権限を宣言する**
+- [x] **Step 1: manifest にオプショナル権限を宣言する**
 
 `wxt.config.ts` の `manifest` に次を追加する。
 
@@ -2293,7 +2293,7 @@ git commit -m "feat: AI 状態にプロバイダを含め、バッジとガイ�
     optional_host_permissions: ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*'],
 ```
 
-- [ ] **Step 2: AI セクションを作る**
+- [x] **Step 2: AI セクションを作る**
 
 `src/entrypoints/options/ai-section.ts`:
 
@@ -2509,7 +2509,7 @@ export function mountAiSection(root: HTMLElement): void {
 }
 ```
 
-- [ ] **Step 3: 設定ページに組み込む**
+- [x] **Step 3: 設定ページに組み込む**
 
 `src/entrypoints/options/index.html` の `<main id="app"></main>` の直後に次を追加し、`<style>` の末尾に `main + main { padding-top: 0; }` と `.errors-text { color: #b3261e; }` を追加する。
 
@@ -2529,12 +2529,12 @@ import { mountAiSection } from './ai-section';
 mountAiSection(document.getElementById('ai-app')!);
 ```
 
-- [ ] **Step 4: 型とビルドを確認する**
+- [x] **Step 4: 型とビルドを確認する**
 
 Run: `npx tsc --noEmit && npx vitest run && npx wxt build`
 Expected: 型エラーなし、全テスト PASS、ビルド成功。`dist/chrome-mv3/manifest.json` に `optional_host_permissions`（`https://*/*`, `http://localhost/*`, `http://127.0.0.1/*`）が入り、`permissions` は `["storage"]` のまま、`host_permissions` が無いことを確認して、確認した行をレポートに書く。
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/entrypoints/options/ai-section.ts src/entrypoints/options/index.html src/entrypoints/options/main.ts wxt.config.ts
@@ -2548,7 +2548,7 @@ git commit -m "feat: 設定ページに AI プロバイダの設定とオプシ�
 **Files:**
 - Modify: `README.md`, `CLAUDE.md`, `docs/superpowers/specs/2026-10-03-jushoai-design.md`, `docs/superpowers/specs/2026-10-04-cloud-llm-providers-design.md`
 
-- [ ] **Step 1: README を更新する**
+- [x] **Step 1: README を更新する**
 
 `README.md` の `## AI 判定を使うには` セクション全体を次に置き換える（以降の `## 構成` はそのまま）。構成の箇条書きに `src/ai/` の行を追加する: `- \`src/ai/\` AI プロバイダの設定・API キーの暗号化・クラウド分類器`。
 
@@ -2574,7 +2574,7 @@ Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension
 状態は「JushoAI で入力」の横のバッジに表示され、押すと原因と対処のガイドが開く。
 ```
 
-- [ ] **Step 2: CLAUDE.md を更新する**
+- [x] **Step 2: CLAUDE.md を更新する**
 
 `CLAUDE.md` の「プロジェクト概要」の `個人情報は外部に送信しない。` を `プロファイルの値は外部に送信しない（AI を使う設定にした場合のみ、欄のメタデータが選択したプロバイダに送られる）。` に置き換える。
 
@@ -2584,13 +2584,13 @@ Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension
 - **AI プロバイダは設定で 1 つ選ぶ。** `none`（初期値）/ `built-in` / `openai` / `gemini`。background の `handleMessage`（`src/llm/handle-message.ts`）が設定に応じて `FieldClassifier` を選び、クラウドは `src/ai/http-classifiers.ts` が `fetch` する。API キーは `src/ai/secret-store.ts` の AES-GCM エンベロープで保存し、background だけが復号する（Content Script と設定ページには「保存済みか」だけ渡す）。通信先の host 権限は `optional_host_permissions` で、設定ページの保存時に要求する。ベース URL は `src/ai/settings.ts` の `validateBaseUrl` で検証する（https のみ、http は localhost / 127.0.0.1 のみ、内部アドレス拒否）。
 ```
 
-- [ ] **Step 3: 古い設計書を現状に合わせる**
+- [x] **Step 3: 古い設計書を現状に合わせる**
 
 `docs/superpowers/specs/2026-10-03-jushoai-design.md` の「MVP に含めない」にある `- クラウド LLM への切り替え` の行を、`- クラウド LLM プロバイダ（別設計: \`2026-10-04-cloud-llm-providers-design.md\`）` に置き換える。
 
 `docs/superpowers/specs/2026-10-04-cloud-llm-providers-design.md` の「通信」の `http` の項目の括弧内 `（\`localhost\`、\`127.0.0.1\`、\`[::1]\`）` を `（\`localhost\` と \`127.x.x.x\`。IPv6 のループバックは許可しない）` に直す。同じ節の `optional_host_permissions` の記述は `（\`https://*/*\`、\`http://localhost/*\`、\`http://127.0.0.1/*\`）` に直す。
 
-- [ ] **Step 4: 全体を確認して Commit する**
+- [x] **Step 4: 全体を確認して Commit する**
 
 Run: `make check`
 Expected: 全テスト PASS、型エラーなし、ビルド成功
