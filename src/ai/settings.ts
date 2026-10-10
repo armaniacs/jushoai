@@ -174,18 +174,25 @@ async function resolveHostAddresses(host: string, deps: ResolveDeps): Promise<st
   return addresses;
 }
 
-// Policy, declared only here: a resolution that could not be confirmed never dials.
-// A resolved internal address is `internal`; an unresolvable result (unreachable, empty
-// answer, timeout) is a non-internal failure. Both the save-time gate and the dial-time
-// gate read only this shape.
+// The verdict shape both gates read. A resolved internal address is `internal`; an
+// unresolvable result (unreachable, empty answer, timeout) follows EGRESS_UNVERIFIED_POLICY.
 export type EgressVerdict = { ok: true } | { ok: false; internal: boolean };
 export type EgressCheck = (url: URL) => Promise<EgressVerdict>;
 
+// The single declaration of the egress policy: an unconfirmed resolution never dials
+// (fail-closed). verdictOf reads this value, and tests/build/host-permission-coverage.build.ts
+// asserts the declaration and the gate behavior agree. Switching to 'proceed' restores the
+// pre-0.1.13 fail-open and fails those tests.
+export type EgressUnverifiedPolicy = 'block' | 'proceed';
+export const EGRESS_UNVERIFIED_POLICY: EgressUnverifiedPolicy = 'block';
+
 // An empty answer set (nothing could be confirmed) blocks the dial just like an internal
-// address. The fail-closed decision lives here and in createEgressCheck's catch only.
+// address, per EGRESS_UNVERIFIED_POLICY.
 function verdictOf(addresses: string[]): EgressVerdict {
   if (addresses.some((ip) => isPrivateIp(ip))) return { ok: false, internal: true };
-  if (addresses.length === 0) return { ok: false, internal: false };
+  if (addresses.length === 0) {
+    return EGRESS_UNVERIFIED_POLICY === 'block' ? { ok: false, internal: false } : { ok: true };
+  }
   return { ok: true };
 }
 

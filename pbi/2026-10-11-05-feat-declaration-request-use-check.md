@@ -44,14 +44,14 @@ Scenario: 方針の宣言と実際の挙動が食い違うと検査が失敗す�
 
 ## 受け入れ基準
 
-- [ ] `tests/build/host-permission-coverage.build.ts` が追加され、`make test-build`（`npm run test:build`）で実行される
-- [ ] fetch 先の一覧をテスト内に書き写さず、コードから import して 1 か所から取っている（新しい fetch 先を足したときに検査が追随する）
-- [ ] クラウドプロバイダ（openai / gemini）について「fetch 先の集合 ⊆ 要求集合」を断言している
-- [ ] リゾルバの origin を要求集合から外すと検査が落ちることを、実際に外して確認している
-- [ ] `none` / `built-in` では要求集合が空であることを断言している（ネットワークを使わないプロバイダに許可を求めない）
-- [ ] Chrome と Firefox の両方の `dist/*/manifest.json` について、宣言が要求集合を下回らないことを断言している
-- [ ] egress の方針が `src/ai/settings.ts` の 1 か所に宣言され、ゲートの実挙動がその宣言と一致することを断言している
-- [ ] `make check` が通る
+- [x] `tests/build/host-permission-coverage.build.ts` が追加され、`make test-build`（`npm run test:build`）で実行される
+- [x] fetch 先の一覧をテスト内に書き写さず、コードから import して 1 か所から取っている（新しい fetch 先を足したときに検査が追随する）
+- [x] クラウドプロバイダ（openai / gemini）について「fetch 先の集合 ⊆ 要求集合」を断言している
+- [x] リゾルバの origin を要求集合から外すと検査が落ちることを、実際に外して確認している
+- [x] `none` / `built-in` では要求集合が空であることを断言している（ネットワークを使わないプロバイダに許可を求めない）
+- [x] Chrome と Firefox の両方の `dist/*/manifest.json` について、宣言が要求集合を下回らないことを断言している
+- [x] egress の方針が `src/ai/settings.ts` の 1 か所に宣言され、ゲートの実挙動がその宣言と一致することを断言している
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -139,8 +139,18 @@ grep -rn "dns.google" --include=*.ts .         # → src/ai/settings.ts:130 の�
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] `make test-build` と `make check` が通る
-- [ ] 検査を意図的に壊して落ちることを確認済み（形骸化していない）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] `make test-build` と `make check` が通る
+- [x] 検査を意図的に壊して落ちることを確認済み（`requiredHostOrigins` からリゾルバを外すと「fetch target https://dns.google/resolve を要求する pattern が無い」旨で落ちることを確認）
 - [ ] コードレビュー完了
-- [ ] 方針の表現形式を決定して反映
+- [x] 方針の表現形式を決定して反映（(a) を採用: `EGRESS_UNVERIFIED_POLICY`（`'block' | 'proceed'` 型、値は `'block'`）を settings.ts に export し、`verdictOf` が値を読む分岐を実在させ、build 検査が宣言と挙動の一致を断言する
+
+### 実装の記録（2026-10-11）
+
+- 実装: `tests/build/host-permission-coverage.build.ts`（7 tests）を追加。`make test-build` の配線（`vitest.build.config.ts` の include、`environment: 'node'`）は既存のまま（新ファイルを置くだけで実行される）
+- 使用集合はコードから取る: openai は保存した接続先（`originPatternsFor`）＋ダイヤル前のゲートが解決するリゾルバ（`DOH_ORIGIN`）、gemini は compile-time 定数（`GEMINI_ORIGIN`）のみ（ダイヤル時のゲートを渡さない判断は `pbi/2026-10-11-12` に記録済み）。テストに URL を書き写していない
+- 方針の単一ソース: `EGRESS_UNVERIFIED_POLICY`（PBI 04 のコメント宣言を置き換え）を `verdictOf` が読む分岐とし、build 検査が「宣言の値」と「到達不能時の verdict」の一致を断言する
+- 破壊確認: `requiredHostOrigins` からリゾルバを外すと「covers every fetch target for openai」が `https://dns.google/resolve` を要求 pattern が覆っていない旨で落ちることを確認し、戻した
+- 検証: `make check` exit 0（typecheck、79 テストファイル / 1055 passed、build 検査 2 ファイル / 12 passed、両ブラウザ build、manifest 検査、web-ext lint errors 0）
+- 未決 2 件の決定: 方針の表現形式は (a)（上記）。port を落とす `originPattern` の扱いは本 PBI では扱わず、`pbi/2026-10-11-11`（docs）が判断と結果の記録を担う
+- ユーザーの作業として残る項目: コードレビューの最終承認
