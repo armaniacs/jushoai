@@ -46,7 +46,7 @@ vi.mock('../../src/entrypoints/options/ai-section', () => ({
   mountAiSection: vi.fn(),
 }));
 
-document.body.innerHTML = '<div id="side"></div><main id="app"></main><main id="ai-app"></main>';
+document.body.innerHTML = '<div id="side"></div><main id="app"></main><main id="ai-app"></main><main id="audit-app"></main>';
 
 await import('../../src/entrypoints/options/main');
 

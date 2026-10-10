@@ -25,7 +25,8 @@ The base URL has these rules.
 
 - Only `https` is allowed. `http` is allowed only for `localhost` and `127.x.x.x`.
 - A URL that contains credentials, a query or a fragment is rejected.
-- Internal network addresses and IPv6 addresses are rejected.
+- Internal network addresses and IPv6 addresses are rejected. When you save the URL, the host name is resolved with DNS, and the URL is rejected only when the resolved address is confirmed to be an internal one (private, loopback or link-local). Names that resolve into internal addresses, such as nip.io or sslip.io, cannot be saved either. When the resolver cannot be reached or the name cannot be resolved, saving continues with a warning that the verification was skipped.
+- The resolved address is re-checked right before each classify and connection-test call. When the address is confirmed to be internal, that call is not made and the rest of the run continues with the rules only. When the resolver is unreachable or the name cannot be resolved, the check is skipped and the call proceeds; the lexical checks on the host name still apply. Resolutions are cached with a TTL (30 seconds), and the resolver-unreachable verdict is cached with the same TTL.
 
 If you change the origin of the base URL (scheme, host or port), the saved API key is not carried over. Enter the key again. To delete a saved key, tick `保存済みの API キーを削除する` (delete the saved API key) and save.
 
@@ -83,4 +84,4 @@ When you save the settings, the browser asks whether to allow network access to 
 
 ## Checking the communication log
 
-Communication with the API can be checked in `通信の監査ログ` (communication audit log) under `AI 判定` (AI judgment) on the settings page. The date and time, provider, destination, model, page URL, number of fields sent, and result are kept on your device for 7 days, and you can check the count, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).
+Communication with the API can be checked in `通信の監査ログ` (communication audit log) on the settings page. Records are kept on your device for 7 days. Along with the date and time, provider, destination, model, page URL, number of fields sent, and result, the prompt sent to the model and its answer are recorded. You can check the list, download a TSV, or delete the log. Profile values are never recorded. See [Privacy and what is sent](/en/guides/privacy/).

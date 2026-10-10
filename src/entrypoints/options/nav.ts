@@ -4,11 +4,13 @@ import { el } from './dom';
 export const PROFILES_SECTION_ID = 'profiles';
 export const ADDRESSES_SECTION_ID = 'addresses';
 export const AI_SECTION_ID = 'ai';
+export const AUDIT_SECTION_ID = 'audit';
 
 export const OPTION_SECTIONS = [
   { id: PROFILES_SECTION_ID, label: 'プロファイル' },
   { id: ADDRESSES_SECTION_ID, label: '住所' },
   { id: AI_SECTION_ID, label: 'AI 判定' },
+  { id: AUDIT_SECTION_ID, label: '通信の監査ログ' },
 ] as const;
 
 export type OptionsPageId = (typeof OPTION_SECTIONS)[number]['id'];
@@ -51,16 +53,18 @@ export function setActivePage(id: OptionsPageId): void {
 }
 
 // Shows only the active page and hides the rest. The profile/address
-// sections live inside #app, the AI section inside #ai-app; both renders
-// recreate their elements, so this runs after every render.
+// sections live inside #app, the AI section inside #ai-app, the audit
+// section inside #audit-app; renders recreate elements, so this runs after
+// every render.
 // Safe to call before any section exists.
 export function applyActivePage(): void {
   const app = document.getElementById('app');
   const aiApp = document.getElementById('ai-app');
-  if (!app || !aiApp) return;
-  const showAi = activePage === AI_SECTION_ID;
-  app.hidden = showAi;
-  aiApp.hidden = !showAi;
+  const auditApp = document.getElementById('audit-app');
+  if (!app || !aiApp || !auditApp) return;
+  app.hidden = activePage !== PROFILES_SECTION_ID && activePage !== ADDRESSES_SECTION_ID;
+  aiApp.hidden = activePage !== AI_SECTION_ID;
+  auditApp.hidden = activePage !== AUDIT_SECTION_ID;
   for (const s of OPTION_SECTIONS) {
     const section = document.getElementById(s.id);
     if (section) section.hidden = s.id !== activePage;

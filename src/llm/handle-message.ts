@@ -2,7 +2,7 @@ import { AuditedClassifier } from '../ai/audited-classifier';
 import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { originPatternsFor } from '../ai/permissions';
-import { validateAiSettings } from '../ai/settings';
+import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
 import { sanitizePageUrl } from '../feedback/issue-url';
@@ -22,6 +22,10 @@ export interface HandlerDeps {
   authFailed: Set<ProviderKind>;
   // Providers that need the OpenAI-compatible fallback request; same lifetime as authFailed.
   compat: Set<ProviderKind>;
+  // Dial-time egress gate owned by the caller (the background builds one per SW
+  // lifetime, so its DoH TTL cache spans classify messages); the classifier factory
+  // wires a DoH default when absent.
+  egress?: EgressCheck;
   audit: AuditRecorder;
 }
 
@@ -102,7 +106,10 @@ async function selectRaw(
   // The stored key can be unreadable even though an envelope exists; treat that as not configured.
   if (validateAiSettings(s, present).length > 0) return { ok: false, reason: 'not-configured' };
   if (s.provider === 'openai') {
-    return { ok: true, classifier: createOpenAiClassifier(s.openai, secrets.openai, { fetch: deps.fetch }, {
+    return { ok: true, classifier: createOpenAiClassifier(s.openai, secrets.openai, {
+        fetch: deps.fetch,
+        egress: deps.egress,
+      }, {
         compat: deps.compat.has('openai'),
         onCompat: () => deps.compat.add('openai'),
       }) };
@@ -158,7 +165,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
       // The caller chooses its error display from the reason, so never drop it.
       if (!sel.ok) return { ok: false, reason: sel.reason };
       try {
-        return { ok: true, entries: [...(await sel.classifier.classify(req.fields))] };
+        return { ok: true, entries: [...(await sel.classifier.classify(req.fields, req.chunk))] };
       } catch (e) {
         if (e instanceof HttpAuthError) {
           deps.authFailed.add(settings.provider);

@@ -1,6 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
+import { parseAuditClearResponse, parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 
 const STATUS_TIMEOUT_MS = 5_000;
@@ -8,6 +8,7 @@ export const CLASSIFY_TIMEOUT_MS = 45_000;
 export const MAX_CLASSIFY_TOTAL = 60;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 30_000;
+const CLEAR_TIMEOUT_MS = 10_000;
 
 const UNKNOWN_STATUS: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
@@ -47,6 +48,16 @@ export async function requestDownloadViaBackground(timeoutMs = DOWNLOAD_TIMEOUT_
   }
 }
 
+// Delegates the settings-page delete to the background AuditStore so record and
+// clear share one write queue; ok:false and a stalled reply both report failure.
+export async function clearAuditViaBackground(timeoutMs = CLEAR_TIMEOUT_MS): Promise<boolean> {
+  try {
+    return parseAuditClearResponse(await sendWithTimeout({ type: 'audit-clear' }, timeoutMs))?.ok === true;
+  } catch {
+    return false;
+  }
+}
+
 export class BackgroundClassifier implements FieldClassifier {
   // Reason for the chunk that stopped the run; null when every chunk succeeded.
   // Partial results from earlier chunks are still returned.
@@ -58,12 +69,19 @@ export class BackgroundClassifier implements FieldClassifier {
     const out = new Map<string, Category>();
     this.lastFailureReason = null;
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
+    const chunkCount = Math.ceil(capped.length / MAX_CLASSIFY_CHUNK);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
-      const chunk = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
+      const rows = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
+      // The chunk position rides along only when the run was actually split, so
+      // single-chunk calls stay out of the audit log's scheduling fields.
+      const schedule = chunkCount > 1 ? { index: i / MAX_CLASSIFY_CHUNK + 1, count: chunkCount } : undefined;
       let parsed: ReturnType<typeof parseClassifyResult>;
       let raw: unknown;
       try {
-        raw = await sendWithTimeout({ type: 'ai-classify', fields: chunk }, this.timeoutMs);
+        raw = await sendWithTimeout(
+          { type: 'ai-classify', fields: rows, ...(schedule ? { chunk: schedule } : {}) },
+          this.timeoutMs,
+        );
         parsed = parseClassifyResult(raw);
       } catch {
         this.lastFailureReason = 'network';

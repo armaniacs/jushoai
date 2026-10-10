@@ -1,7 +1,7 @@
 import { originPatternsFor, requestHostPermission } from '../../ai/permissions';
 import { needsKeyReentry, resolveOpenAiToSave } from '../../ai/key-reentry';
 import { IdbKeyStore } from '../../ai/secret-store';
-import { normalizeAiSettings, validateAiSettings } from '../../ai/settings';
+import { normalizeAiSettings, validateAiSettings, validateAiSettingsResolved } from '../../ai/settings';
 import { loadPublicAiSettings, saveAiSettings, type KeyUpdate } from '../../ai/settings-store';
 import {
   OPENAI_PRESETS, type AiSettings, type KeyPresence, type ProviderKind,
@@ -9,7 +9,6 @@ import {
 import { testAiViaBackground } from '../../llm/background-gateway';
 import type { TestFailure } from '../../messages';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
-import { mountAuditSection } from './audit-section';
 import { el, labeled, textInput } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
@@ -226,10 +225,6 @@ function renderAiSection(root: HTMLElement, state: AiSectionState, hooks: AiSect
   parts.push(buildActionRow(state, hooks.onSave, hooks.onTest));
   if (state.notice) parts.push(state.notice);
 
-  const auditRoot = el('div');
-  mountAuditSection(auditRoot);
-  parts.push(auditRoot);
-
   const page = el('div');
   page.id = AI_SECTION_ID;
   page.append(...parts);
@@ -272,6 +267,18 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
   // The permission prompt needs the click's user gesture, so it must be the first await.
   const origins = originPatternsFor(normalized);
   const granted = origins.length === 0 ? true : await requestHostPermission(origins);
+  // Save-time parity with the dial-time gate: a name that resolves into a private range
+  // must not reach the store. It runs after the prompt for the gesture reason above; a
+  // granted origin is harmless because send() re-checks the resolved address anyway.
+  const resolved = await validateAiSettingsResolved(
+    normalized,
+    effective,
+    { fetch: globalThis.fetch.bind(globalThis) },
+  );
+  if (resolved.errors.length > 0) {
+    env.notify(resolved.errors.join(' / '), 'errors');
+    return;
+  }
   try {
     await saveAiSettings(normalized, update, env.keyStore);
   } catch {
@@ -291,9 +298,14 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
     env.notify('保存しましたが、保存状態の再読み込みに失敗しました。設定ページを開き直してください。', 'errors');
     return;
   }
+  // An unreachable resolver leaves the settings lexically valid but unverified, so the
+  // save proceeds and the warning rides on the saved notice instead of blocking it.
+  const saved = granted
+    ? '保存しました。'
+    : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。';
   env.notify(
-    granted ? '保存しました。' : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
-    granted ? 'saved' : 'errors',
+    resolved.unreachable ? `${saved}接続先のアドレスを解決できなかったため、検証できていません。` : saved,
+    granted && !resolved.unreachable ? 'saved' : 'errors',
   );
 }
 

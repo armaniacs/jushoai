@@ -82,18 +82,25 @@ export function parseLlmOutput(raw: string, fields: FieldMeta[]): Map<string, Ca
 }
 
 export class PromptApiClassifier implements FieldClassifier {
+  // Prompt text sent and raw output from the latest classify call, read by the audit wrapper.
+  lastExchange?: { request: string; response: string };
+
   constructor(private readonly lm: LanguageModelStatic) {}
 
   async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
     if (fields.length === 0) return new Map();
+    const prompt = buildPrompt(fields);
+    // Set before create() so a failed session still leaves the request on record.
+    this.lastExchange = { request: prompt, response: '' };
     const session = await this.lm.create({
       ...LM_OPTIONS,
       initialPrompts: [{ role: 'system', content: SYSTEM_PROMPT }],
     });
     try {
-      const raw = await session.prompt(buildPrompt(fields), {
+      const raw = await session.prompt(prompt, {
         responseConstraint: buildSchema(fields),
       });
+      this.lastExchange = { request: prompt, response: raw };
       return parseLlmOutput(raw, fields);
     } finally {
       session.destroy();

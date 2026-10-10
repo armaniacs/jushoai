@@ -65,6 +65,10 @@ Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension
 
 状態は「JushoAI で入力」の横のバッジに表示され、押すと原因と対処のガイドが開く。
 
+### 通信の監査ログ
+
+AI を呼び出すたびに、モデルに送った内容と応答がこの端末に記録される。設定ページの左メニュー「通信の監査ログ」で、一覧の確認、TSV ダウンロード、削除ができる。記録は 7 日間だけ保存される。詳しくは[プライバシーと送信データ](https://armaniacs.github.io/jushoai/guides/privacy/)を参照。
+
 ## 開発者向け
 
 ### 開発

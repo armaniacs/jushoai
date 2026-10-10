@@ -37,6 +37,20 @@ describe('classifyField: signals', () => {
   });
 });
 
+describe('classifyField: autocomplete prototype names', () => {
+  it.each([
+    'constructor', 'toString', 'valueOf', 'hasOwnProperty', '__proto__', 'off', '',
+  ])('leaves autocomplete=%j unclassified without throwing', (ac) => {
+    expect(cat({ autocomplete: ac })).toBeNull();
+  });
+
+  it('keeps defined autocomplete keys at 0.95', () => {
+    expect(classifyField(makeMeta({ autocomplete: 'email' }))).toMatchObject({ category: 'email', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'family-name' }))).toMatchObject({ category: 'lastName', confidence: 0.95 });
+    expect(classifyField(makeMeta({ autocomplete: 'postal-code' }))).toMatchObject({ category: 'zip', confidence: 0.95 });
+  });
+});
+
 describe('isConfident', () => {
   const cls = (confidence: number): Classification =>
     ({ category: 'fullName', confidence, source: 'rule' });
@@ -468,6 +482,23 @@ describe('wantsKana', () => {
     expect(wantsKana(makeMeta({ pattern: '^[ぁ-ん]+$' }))).toBe(true);
     expect(wantsKana(makeMeta({ pattern: '^\\d{4}$' }))).toBe(false);
     expect(wantsKana(makeMeta())).toBe(false);
+  });
+});
+
+describe('classifyField: bounded input after scan cap', () => {
+  it('classifies a capped 200-char label packed with address triggers quickly', () => {
+    const label = '市区町村・番地'.repeat(28) + '市区町村';
+    const start = performance.now();
+    const c = classifyField(makeMeta({ id: 'a', label }));
+    const elapsed = performance.now() - start;
+    expect(c).toMatchObject({ category: 'addressNoPref', source: 'rule' });
+    expect(elapsed).toBeLessThan(1000);
+  });
+
+  it('classifies short real-world labels the same as before the cap', () => {
+    expect(cat({ label: '市区町村・番地' })).toBe('addressNoPref');
+    expect(cat({ label: '市区町村' })).toBe('city');
+    expect(cat({ label: 'フリガナ', placeholder: 'ヤマダ' })).toBe('fullNameKana');
   });
 });
 

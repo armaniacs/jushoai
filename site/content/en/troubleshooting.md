@@ -159,7 +159,7 @@ It is stored encrypted with AES-GCM. It is never shown on the settings page. Onl
 
 ### Where can I check the communication log?
 
-In `通信の監査ログ` (communication audit log) under `AI 判定` (AI judgment) on the settings page, you can check the count, download, or delete it. The date and time, provider, destination, model, page URL, number of fields sent, and result are kept for 7 days. Profile values are never recorded.
+In `通信の監査ログ` (communication audit log) on the settings page, you can check the list, download, or delete it. Along with the date and time, provider, destination, model, page URL, number of fields sent, and result, the prompt sent to the model and its answer are kept for 7 days. Profile values are never recorded.
 
 ### Does it communicate just by opening a page?
 
@@ -180,6 +180,10 @@ Values starting with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do n
 ### I want to change or delete my API key.
 
 Entering a new one on the settings page replaces it. Checking `保存済みの API キーを削除する` (delete the saved API key) and saving deletes it. Changing the base URL origin does not carry over the saved API key.
+
+### Saving says the address resolves to an internal network address.
+
+The host name of the OpenAI-compatible base URL resolves into an internal network address. With names such as nip.io or sslip.io, the name itself looks public but the resolved address is internal, and such a URL cannot be saved. Use a public endpoint. When saving shows `保存しました。接続先のアドレスを解決できなかったため、検証できていません。` (saved, but the address could not be resolved, so it is unverified) right after saving, the resolver could not be reached or the name could not be resolved, so the verification was skipped. The settings are saved, but the destination is unverified.
 
 ### I want to make a similar profile efficiently.
 

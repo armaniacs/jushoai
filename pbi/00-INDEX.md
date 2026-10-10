@@ -6,9 +6,6 @@
 
 ## 台帳
 
-- `2026-10-04-00-backlog-architecture-deepening.md`
-- `2026-10-07-00-backlog-arch-deepening-b.md`
-- `2026-10-07-00-backlog-holistic-improvement-b.md`
 - `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-audit-log.md`（アーカイブ済み）
@@ -20,6 +17,18 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-10-00-backlog-vulnhunt-remediation.md | ラウンド完結（子 PBI 10-10-01〜07 全件アーカイブ済み） |
+| 2026-10-10-07-backlog-dev-toolchain-cves.md | 未コミット（1009a）shell-quote を overrides 1.12.0 で解消、node-forge は修正版リリースなしで追跡継続。make check green |
+| 2026-10-10-06-fix-audit-cross-context-race.md | 未コミット（1009a）fix: 監査ログの削除を単一コンテキストに集約する |
+| 2026-10-10-05-fix-provider-response-bound.md | 未コミット（1009a）fix: プロバイダ応答の読み取りを有界化する |
+| 2026-10-10-04-fix-egress-dns-validation.md | 未コミット（1009a）fix: Base URL の解決済みアドレスを保存時とダイヤル直前に検証する |
+| 2026-10-10-03-fix-audit-byte-budget.md | 未コミット（1009a）fix: 監査ログのサイズ予算をバイト長で計上する |
+| 2026-10-10-02-fix-autocomplete-proto-lookup.md | 未コミット（1009a）fix: autocomplete のルックアップをプロトタイプ継承の影響を受けない形にする |
+| 2026-10-10-01-fix-scan-text-cap.md | 未コミット（1009a）fix: スキャン時の label・placeholder に長さ上限を付ける |
+| 2026-10-09-01-feat-audit-trace-viewer.md | 095f51c feat: 監査ログの記録拡充と設定ページの独立化（0.1.12）。コードレビューのみユーザー作業として残存 |
+| 2026-10-07-00-backlog-holistic-improvement-b.md | ラウンド完結（子 PBI 07-01〜07-04 全件アーカイブ済み） |
+| 2026-10-07-00-backlog-arch-deepening-b.md | ラウンド完結（子 PBI 07-05〜07-07 全件アーカイブ済み） |
+| 2026-10-04-00-backlog-architecture-deepening.md | ラウンド完結（子 PBI 04-01〜04-06 全件アーカイブ済み） |
 | 2026-10-04-01-fix-overlay-mutual-exclusion.md | fbc767d fix: プレビューと AI ガイドのオーバーレイを相互排他にする |
 | 2026-10-04-02-refactor-classify-confidence.md | 42920aa refactor: 分類信頼度判定を isConfident に集約する |
 | 2026-10-04-03-refactor-ai-message-types.md | d6e8f3b refactor: AI 状態とメッセージ語彙を const 源に一元化する |

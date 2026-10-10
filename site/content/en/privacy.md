@@ -29,9 +29,11 @@ Labels and headings are text from the page. They can contain personal informatio
 
 Requests happen only when you click `JushoAI で入力`. Opening a page does not contact an AI provider. Checking the badge state only reads the saved settings and permissions. It makes no request.
 
+The destination host is verified down to its resolved address when you save the settings; saving is rejected only when the resolved address is confirmed to be an internal network address. When the resolver cannot be reached or the name cannot be resolved, saving continues with a warning that the verification was skipped. The resolved address is re-checked right before each call, and the call is not made when the address is confirmed to be internal. When the resolver is unreachable or the name cannot be resolved, the check is skipped and the call proceeds; the lexical checks on the host name still apply. Resolutions are cached with a TTL (30 seconds), and the resolver-unreachable verdict is cached with the same TTL. The verification and the actual connection are separate name resolutions, so a change of the resolved address between them (DNS rebinding) cannot be fully ruled out.
+
 ## Audit log
 
-Every time an AI is called, JushoAI keeps a record on your device. In the settings page, open `通信の監査ログ` (communication audit log) under `AI 判定` to see the count, download or delete it. Calls to the built-in AI and connection tests are recorded too.
+Every time an AI is called, JushoAI keeps a record on your device. On the settings page, open `通信の監査ログ` (communication audit log) to see the list, download or delete it. Calls to the built-in AI and connection tests are recorded too.
 
 | Column | Meaning |
 |---|---|
@@ -43,15 +45,21 @@ Every time an AI is called, JushoAI keeps a record on your device. In the settin
 | `purpose` | `classify` (classification when filling) or `connection-test` |
 | `page_url` | The address and path of the page you filled. No query or fragment. Empty for connection tests |
 | `field_count` | How many fields were sent |
+| `chunk_index` / `chunk_count` | The position within a run split into 20-field pieces. Empty when the run was not split |
 | `result` | `success`, `auth-error`, `http-error`, `network-error`, `invalid-response` or `error` |
 | `http_status` | The HTTP status. Empty when no response arrived, and for the built-in AI |
 | `retried` | Whether the request was retried in compatibility mode |
+| `duration_ms` | How long the call took, in milliseconds |
+| `request` | The full prompt sent to the model. It contains field metadata only |
+| `response` | What the model answered. Over 2,000 characters are cut to the head with a trailing `…` |
 
-These are never recorded: the contents of fields (name, label and so on), your profile values, API keys, request headers and response contents.
+The list is newest first, and each row shows the target page URL. Opening a record shows the prompt sent to the model, the model's answer, and the system prompt (shared by every call). If you call the AI while the settings page is open, `最新のログを読み込む` (load the latest logs) pulls in the newest records.
 
-Records are kept for 7 days and then deleted automatically. The period cannot be changed. If there are more than 1,000 records, the oldest are deleted first. You can delete everything at any time with `ログを削除` (delete the log). Nothing is recorded while AI is off.
+The prompt carries field metadata only, so your profile values, the values already in fields, API keys and request headers can never be recorded.
 
-`TSV でダウンロード` (download as TSV) saves a TSV file named `jushoai-audit-log-YYYY-MM-DD.tsv`, newest first. Values starting with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas. The file contains page addresses, so handling it is your own responsibility.
+Records are kept for 7 days and then deleted automatically. The period cannot be changed. If there are more than 1,000 records, or the records grow too large in total, the oldest are deleted first. The total size is measured in UTF-8 bytes, the unit the browser's storage quota actually charges. You can delete everything at any time with `ログを削除` (delete the log). Nothing is recorded while AI is off.
+
+`TSV でダウンロード` (download as TSV) saves a TSV file named `jushoai-audit-log-YYYY-MM-DD.tsv`, newest first. It includes the field contents sent and the answers. Values starting with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas. The file contains page addresses and field contents, so handling it is your own responsibility.
 
 ## How API keys are stored
 

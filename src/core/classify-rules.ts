@@ -15,23 +15,26 @@ export interface Item {
   cls: Classification;
 }
 
-const AUTOCOMPLETE: Record<string, Category> = {
-  'family-name': 'lastName',
-  'given-name': 'firstName',
-  name: 'fullName',
-  email: 'email',
-  tel: 'tel',
-  'tel-national': 'tel',
-  'postal-code': 'zip',
-  'address-level1': 'prefecture',
-  'address-level2': 'city',
-  'address-line1': 'addressFull',
-  'address-line2': 'building',
-  'street-address': 'addressFull',
-  'bday-year': 'birthYear',
-  'bday-month': 'birthMonth',
-  'bday-day': 'birthDay',
-};
+// A Map lookup stays on own entries: a plain-object subscript walks the prototype
+// chain, so a page-set autocomplete="constructor" (or "__proto__") resolved an
+// inherited function as a truthy category and crashed the classification run.
+const AUTOCOMPLETE = new Map<string, Category>([
+  ['family-name', 'lastName'],
+  ['given-name', 'firstName'],
+  ['name', 'fullName'],
+  ['email', 'email'],
+  ['tel', 'tel'],
+  ['tel-national', 'tel'],
+  ['postal-code', 'zip'],
+  ['address-level1', 'prefecture'],
+  ['address-level2', 'city'],
+  ['address-line1', 'addressFull'],
+  ['address-line2', 'building'],
+  ['street-address', 'addressFull'],
+  ['bday-year', 'birthYear'],
+  ['bday-month', 'birthMonth'],
+  ['bday-day', 'birthDay'],
+]);
 
 // 学校 is claimed by the school pre-pass below, so it stays out of this list; the office
 // vocabulary (会社/法人/企業/店舗/部署) must still be excluded for the new categories too.
@@ -306,7 +309,8 @@ export function classifyField(m: FieldMeta): Classification | null {
     ...(category.endsWith('Kana') ? { kanaKind } : {}),
   });
 
-  if (AUTOCOMPLETE[ac]) return make(AUTOCOMPLETE[ac], 0.95);
+  const acCategory = AUTOCOMPLETE.get(ac);
+  if (acCategory) return make(acCategory, 0.95);
   if (m.type === 'email') return make('email', 0.9);
 
   // Birth/school/department signals are field-level: a legend like 生年月日 qualifies

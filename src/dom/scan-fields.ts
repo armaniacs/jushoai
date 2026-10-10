@@ -1,4 +1,5 @@
 import type { FieldMeta } from '../core/types';
+import { MAX_TEXT_LENGTH } from '../messages';
 
 export type Control = HTMLInputElement | HTMLSelectElement;
 
@@ -10,6 +11,14 @@ export interface ScannedField {
 
 const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search']);
 const clean = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
+// One clean+clip pass for every page-controlled string (name, htmlId, label,
+// legend, option text): the matchers in core/classify-rules join these into regex inputs,
+// so an unbounded el.name/el.id reopens the quadratic amplification that label clipping
+// closed through another path.
+const clip = (s: string | null | undefined) => clean(s).slice(0, MAX_TEXT_LENGTH);
+// The placeholder keeps its raw whitespace (length-clipped only): detectNameSeparator
+// reads U+3000 vs half-width space from it as the user's intended name separator.
+const clipRaw = (s: string | null | undefined) => (s ?? '').slice(0, MAX_TEXT_LENGTH);
 
 // Option text of a select wrapped by its label would otherwise flood the label.
 // Walks text nodes instead of cloning the subtree to keep the per-field cost off the
@@ -30,12 +39,14 @@ function textWithoutControls(node: Element): string {
 }
 
 function labelOf(el: Control): string {
-  const parts = Array.from(el.labels ?? []).map(textWithoutControls);
+  // Each label source is clipped before joining, not the joined string: a decisive
+  // keyword after the 200th character of the join would otherwise lose its signal.
+  const parts = Array.from(el.labels ?? []).map((l) => clip(textWithoutControls(l)));
   const aria = el.getAttribute('aria-label');
-  if (aria) parts.push(aria);
+  if (aria) parts.push(clip(aria));
   for (const id of (el.getAttribute('aria-labelledby') ?? '').split(/\s+/).filter(Boolean)) {
     const node = el.ownerDocument.getElementById(id);
-    if (node) parts.push(textWithoutControls(node));
+    if (node) parts.push(clip(textWithoutControls(node)));
   }
   return clean(parts.join(' '));
 }
@@ -86,8 +97,8 @@ function scanRadioGroups(root: ParentNode, nextId: () => string): ScannedField[]
     const first = inputs[0]!;
     const box = first.closest('fieldset') ?? first.closest('div[role="group"]');
     const legend = box?.querySelector(':scope > legend') ?? box?.querySelector('legend');
-    const label = clean(legend ? textWithoutControls(legend) : '') ||
-      clean(box?.getAttribute('data-fieldset-label') ?? '') ||
+    const label = (legend ? clip(textWithoutControls(legend)) : '') ||
+      clip(box?.getAttribute('data-fieldset-label')) ||
       labelOf(first);
     const checked = inputs.find((r) => r.checked);
     return {
@@ -97,8 +108,8 @@ function scanRadioGroups(root: ParentNode, nextId: () => string): ScannedField[]
         id: nextId(),
         tag: 'radio',
         type: 'radio',
-        name: first.name,
-        htmlId: first.id,
+        name: clip(first.name),
+        htmlId: clip(first.id),
         autocomplete: '',
         label,
         placeholder: '',
@@ -107,7 +118,7 @@ function scanRadioGroups(root: ParentNode, nextId: () => string): ScannedField[]
         pattern: '',
         options: inputs.map((r) => ({
           value: r.value,
-          text: labelOf(r),
+          text: clip(labelOf(r)),
           ...(r.disabled ? { disabled: true as const } : {}),
         })),
         readOnly: false,
@@ -134,16 +145,16 @@ export function scanFields(root: ParentNode): ScannedField[] {
         id: nextId(),
         tag: isSelect ? 'select' : 'input',
         type: isSelect ? 'select' : input!.type,
-        name: el.name,
-        htmlId: el.id,
+        name: clip(el.name),
+        htmlId: clip(el.id),
         autocomplete: el.getAttribute('autocomplete') ?? '',
         label: labelOf(el),
-        placeholder: input?.placeholder ?? '',
+        placeholder: clipRaw(input?.placeholder),
         nearby: nearbyOf(el),
         maxLength: input && input.maxLength > 0 ? input.maxLength : null,
         pattern: input?.pattern ?? '',
         options: select
-          ? Array.from(select.options).map((o) => ({ value: o.value, text: clean(o.text) }))
+          ? Array.from(select.options).map((o) => ({ value: o.value, text: clip(o.text) }))
           : [],
         readOnly: input?.readOnly ?? false,
         disabled: el.disabled,

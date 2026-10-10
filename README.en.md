@@ -35,6 +35,10 @@ The toolbar icon shows what is registered and which profile is in use. Fields th
 
 AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini; not available in Firefox). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).
 
+### Communication audit log
+
+Every AI call is recorded on this device, with what was sent to the model and its answer. In the left menu of the settings page, `通信の監査ログ` (communication audit log) lets you check the list, download a TSV, or delete the log. Records are kept for 7 days. See the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).
+
 ## Feedback
 
 Feature requests, forms that did not fill and bug reports are welcome as GitHub issues: [Create an issue](https://github.com/armaniacs/jushoai/issues/new/choose). Issues are public, so do not include personal information.
