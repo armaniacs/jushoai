@@ -10,7 +10,9 @@ import { AI_STATUSES } from './llm/availability';
 export const MAX_CLASSIFY_FIELDS = 30;
 export const MAX_CLASSIFY_CHUNK = 20;
 const MAX_ID_LENGTH = 100;
-const MAX_TEXT_LENGTH = 200;
+// Shared with the scan side (src/dom/scan-fields.ts) so both ends cap identical
+// page-controlled strings at the same length.
+export const MAX_TEXT_LENGTH = 200;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
 const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable'] as const;
@@ -32,7 +34,11 @@ export type AiRequest =
   | { type: 'ai-classify'; fields: FieldMeta[]; chunk?: ClassifySchedule }
   | { type: 'ai-download' }
   | { type: 'ai-test' }
-  | { type: 'open-options' };
+  | { type: 'open-options' }
+  | { type: 'audit-clear' };
+
+// Reply to audit-clear; the settings page keeps its delete-failure notice on ok:false.
+export type AuditClearResponse = { ok: true } | { ok: false };
 
 // Popup (action popup) to content script: start the usual classify → preview flow
 // on the active tab. Answered by the content script, not by the background.
@@ -113,6 +119,7 @@ export function parseRequest(msg: unknown): AiRequest | null {
   if (msg.type === 'ai-download' && keys.length === 1) return { type: 'ai-download' };
   if (msg.type === 'ai-test' && keys.length === 1) return { type: 'ai-test' };
   if (msg.type === 'open-options' && keys.length === 1) return { type: 'open-options' };
+  if (msg.type === 'audit-clear' && keys.length === 1) return { type: 'audit-clear' };
   if (msg.type === 'ai-classify' && Array.isArray(msg.fields) && (keys.length === 2 || keys.length === 3)) {
     if (msg.fields.length > MAX_CLASSIFY_FIELDS) return null;
     const chunk = keys.length === 2 ? undefined : parseSchedule(msg.chunk);
@@ -170,5 +177,12 @@ export function parseTestResponse(res: unknown): TestResponse | null {
   if (res.ok === false && typeof res.reason === 'string' && (TEST_FAILURES as readonly string[]).includes(res.reason)) {
     return { ok: false, reason: res.reason as TestFailure };
   }
+  return null;
+}
+
+export function parseAuditClearResponse(res: unknown): AuditClearResponse | null {
+  if (!isRecord(res)) return null;
+  if (res.ok === true) return { ok: true };
+  if (res.ok === false) return { ok: false };
   return null;
 }

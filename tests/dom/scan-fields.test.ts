@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { scanFields } from '../../src/dom/scan-fields';
+import { classifyField } from '../../src/core/classify-rules';
 
 const metas = () => scanFields(document.body).map((f) => f.meta);
 
@@ -58,6 +59,95 @@ describe('scanFields', () => {
     const fields = scanFields(document.body);
     expect(new Set(fields.map((f) => f.meta.id)).size).toBe(2);
     expect(fields[0]!.el.getAttribute('name')).toBe('a');
+  });
+});
+
+describe('scanFields: label and placeholder cap', () => {
+  it('clips a 300-char label to the first 200 characters', () => {
+    document.body.innerHTML = `<label for="a">${'あ'.repeat(300)}</label><input id="a">`;
+    expect(metas()[0]!.label).toBe('あ'.repeat(200));
+  });
+
+  it('keeps a 200-char label unchanged', () => {
+    document.body.innerHTML = `<label for="a">${'い'.repeat(200)}</label><input id="a">`;
+    expect(metas()[0]!.label).toBe('い'.repeat(200));
+  });
+
+  it('clips a 201-char label to 200 characters', () => {
+    document.body.innerHTML = `<label for="a">${'う'.repeat(201)}</label><input id="a">`;
+    expect(metas()[0]!.label).toBe('う'.repeat(200));
+  });
+
+  it('clips a long placeholder to 200 characters', () => {
+    document.body.innerHTML = `<input name="a" placeholder="${'例'.repeat(300)}">`;
+    expect(metas()[0]!.placeholder).toBe('例'.repeat(200));
+  });
+
+  it('clips radio group labels and option text that fall back to labelOf', () => {
+    document.body.innerHTML = `<label><input name="g" type="radio" value="0">${'え'.repeat(300)}</label>`;
+    const m = metas()[0]!;
+    expect(m.label).toBe('え'.repeat(200));
+    expect(m.options).toEqual([{ value: '0', text: 'え'.repeat(200) }]);
+  });
+
+  it('keeps the existing 60-char nearby cap', () => {
+    document.body.innerHTML = `<table><tr><th>${'お'.repeat(300)}</th><td><input name="a"></td></tr></table>`;
+    expect(metas()[0]!.nearby).toBe('お'.repeat(60));
+  });
+
+  it('normalizes whitespace before clipping', () => {
+    const raw = `${'abcdefghij     '.repeat(14)}abcdefghij姓`;
+    document.body.innerHTML = `<label for="a">${raw}</label><input id="a">`;
+    const label = metas()[0]!.label;
+    expect(label.length).toBe(165);
+    expect(label.endsWith('姓')).toBe(true);
+  });
+
+  it('bounds the label that reaches classification for a 10,000-char page label', () => {
+    const trigger = '市区町村・番地'.repeat(28) + '市区町村';
+    document.body.innerHTML = `<label for="a">${trigger}${'x'.repeat(9800)}</label><input id="a">`;
+    const m = metas()[0]!;
+    expect(m.label).toBe(trigger);
+    expect(m.label.length).toBe(200);
+  });
+
+  it('keeps a keyword in a second label source beyond the first 200 characters', () => {
+    document.body.innerHTML =
+      `<label for="a">${'あ'.repeat(300)}</label><label for="a">姓</label><input id="a">`;
+    const m = metas()[0]!;
+    expect(m.label).toBe(`${'あ'.repeat(200)} 姓`);
+    expect(classifyField(m)?.category).toBe('lastName');
+  });
+
+  it('clips each aria-labelledby source before joining', () => {
+    document.body.innerHTML =
+      `<p id="l1">${'い'.repeat(300)}</p><p id="l2">電話番号</p><input name="c" aria-labelledby="l1 l2">`;
+    expect(metas()[0]!.label).toBe(`${'い'.repeat(200)} 電話番号`);
+  });
+
+  it('clips page-controlled name and id to 200 characters', () => {
+    document.body.innerHTML = `<input name="${'n'.repeat(500)}" id="${'i'.repeat(500)}">`;
+    const m = metas()[0]!;
+    expect(m.name).toBe('n'.repeat(200));
+    expect(m.htmlId).toBe('i'.repeat(200));
+  });
+
+  it('bounds classification input for a 10,000-char name and id', () => {
+    document.body.innerHTML = `<input name="${'x'.repeat(10000)}" id="${'x'.repeat(10000)}">`;
+    const m = metas()[0]!;
+    expect(m.name.length).toBe(200);
+    expect(m.htmlId.length).toBe(200);
+  });
+
+  it('clips a fieldset legend used as a radio group label', () => {
+    document.body.innerHTML =
+      `<fieldset><legend>${'れ'.repeat(300)}</legend><input name="g" type="radio" value="0"></fieldset>`;
+    expect(metas()[0]!.label).toBe('れ'.repeat(200));
+  });
+
+  it('clips select option text to 200 characters', () => {
+    document.body.innerHTML = `<select name="s"><option value="1">${'お'.repeat(300)}</option></select>`;
+    expect(metas()[0]!.options[0]!.text).toBe('お'.repeat(200));
   });
 });
 

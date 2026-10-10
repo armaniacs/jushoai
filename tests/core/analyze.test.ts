@@ -62,6 +62,19 @@ describe('classifyAll', () => {
     const items = await classifyAll(metas, null);
     expect(items.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3']);
   });
+
+  it('completes with prototype-name autocomplete fields and leaves other fields intact', async () => {
+    const { classifier, classify } = llm({ a: 'unknown' });
+    const metas = [
+      makeMeta({ id: 'a', autocomplete: 'constructor' }),
+      makeMeta({ id: 'b', autocomplete: 'toString' }),
+      makeMeta({ id: 'c', autocomplete: 'valueOf' }),
+      makeMeta({ id: 'd', name: 'last_name' }),
+    ];
+    const items = await classifyAll(metas, classifier);
+    expect(items.map((i) => [i.meta.id, i.cls.category])).toEqual([['d', 'lastName']]);
+    expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['a', 'b', 'c']);
+  });
 });
 
 describe('kana overlay', () => {

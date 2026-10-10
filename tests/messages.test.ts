@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS } from '../src/messages';
+import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, parseAuditClearResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS } from '../src/messages';
 import { MAX_CLASSIFY_TOTAL } from '../src/llm/background-gateway';
 import { makeMeta } from './helpers';
 
@@ -84,6 +84,26 @@ describe('parseRequest', () => {
   });
 });
 
+describe('wire cap agreement with the scan cap', () => {
+  it('keeps scan-clipped 200-char label and placeholder intact on the wire', () => {
+    const meta = makeMeta({ id: 'a', label: 'あ'.repeat(200), placeholder: 'い'.repeat(200) });
+    const r = parseRequest({ type: 'ai-classify', fields: [meta] });
+    if (r?.type !== 'ai-classify') return;
+    expect(r.fields[0]!.label).toBe('あ'.repeat(200));
+    expect(r.fields[0]!.placeholder).toBe('い'.repeat(200));
+  });
+
+  it('re-clips a per-source-clipped joined label beyond 200 characters', () => {
+    // What labelOf now returns: each source clipped, then joined, so the join can
+    // exceed 200 and only the wire cap trims it.
+    const joined = `${'あ'.repeat(200)} 姓`;
+    const meta = makeMeta({ id: 'a', label: joined });
+    const r = parseRequest({ type: 'ai-classify', fields: [meta] });
+    if (r?.type !== 'ai-classify') return;
+    expect(r.fields[0]!.label).toBe(joined.slice(0, 200));
+  });
+});
+
 describe('parseClassifyResponse', () => {
   it('converts valid entries to a Map and ignores malformed ones', () => {
     const m = parseClassifyResponse({ ok: true, entries: [['a', 'email'], ['b', 'bogus'], ['c'], [1, 'tel'], 'x'] });
@@ -100,6 +120,23 @@ describe('ai-test request', () => {
   it('accepts exactly { type: "ai-test" }', () => {
     expect(parseRequest({ type: 'ai-test' })).toEqual({ type: 'ai-test' });
     expect(parseRequest({ type: 'ai-test', extra: 1 })).toBeNull();
+  });
+});
+
+describe('audit-clear request', () => {
+  it('accepts exactly { type: "audit-clear" } and rejects extra keys', () => {
+    expect(parseRequest({ type: 'audit-clear' })).toEqual({ type: 'audit-clear' });
+    expect(parseRequest({ type: 'audit-clear', extra: 1 })).toBeNull();
+  });
+});
+
+describe('parseAuditClearResponse', () => {
+  it('accepts the ok and not-ok replies and rejects everything else', () => {
+    expect(parseAuditClearResponse({ ok: true })).toEqual({ ok: true });
+    expect(parseAuditClearResponse({ ok: false })).toEqual({ ok: false });
+    for (const r of [null, undefined, 'x', 1, [], {}, { ok: 'yes' }, { ok: 1 }]) {
+      expect(parseAuditClearResponse(r)).toBeNull();
+    }
   });
 });
 
