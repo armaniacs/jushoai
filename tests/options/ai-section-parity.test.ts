@@ -15,6 +15,12 @@ vi.mock('../../src/ai/permissions', async (importOriginal) => {
   return { ...actual, requestHostPermission: permMocks.request };
 });
 
+const egressMocks = vi.hoisted(() => ({ validate: vi.fn() }));
+vi.mock('../../src/ai/settings', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../src/ai/settings')>();
+  return { ...actual, validateAiSettingsResolved: egressMocks.validate };
+});
+
 const gwMocks = vi.hoisted(() => ({ test: vi.fn() }));
 vi.mock('../../src/llm/background-gateway', () => ({
   testAiViaBackground: gwMocks.test,
@@ -133,6 +139,7 @@ beforeEach(() => {
   permMocks.request.mockResolvedValue(true);
   storeMocks.save.mockResolvedValue(undefined);
   gwMocks.test.mockResolvedValue({ ok: true, category: 'email' });
+  egressMocks.validate.mockResolvedValue({ errors: [], unreachable: false });
   document.body.replaceChildren();
 });
 
