@@ -2,10 +2,24 @@
 
 ## 進行中
 
-- （なし）
+- `2026-10-11-03-backlog-egress-gate-round.md`（egress ゲートの入力修復と三者一致検査の台帳。順位 1 = リゾルバ origin の要求と fail-closed、2 = 宣言・要求・使用の一致検査。実施順は 04 → 05）
+- `2026-10-11-04-fix-egress-resolver-origin-and-fail-closed.md`
+- `2026-10-11-05-feat-declaration-request-use-check.md`
+- `2026-10-11-06-backlog-run2-remediation-round.md`（run-2 監査の残り lead と hardening の台帳。順位 1 = 同意 UI の隔離、2 = 監査ログの計上、3 = egress キャッシュの per-call 化、4 = resolve-and-pin、5 = port 粒度の説明、6 = Gemini の egress 記録、7 = リリース経路の hardening、8 = コメント是正。着手順は決定済み: 既存 04（→ 05）を先にし、07 はその後）
+- `2026-10-11-07-fix-consent-ui-isolation.md`
+- `2026-10-11-08-fix-audit-entry-bytes.md`
+- `2026-10-11-09-fix-egress-verdict-cache-ttl.md`
+- `2026-10-11-10-backlog-resolve-and-pin.md`
+- `2026-10-11-11-docs-host-permission-port-granularity.md`
+- `2026-10-11-12-fix-gemini-egress-consistency.md`
+- `2026-10-11-13-feat-release-pipeline-hardening.md`
+- `2026-10-11-14-chore-stale-source-comments.md`
 
 ## 台帳
 
+- `2026-10-11-06-backlog-run2-remediation-round.md`
+- `2026-10-11-03-backlog-egress-gate-round.md`
+- `archived/2026-10-11-00-backlog-pages-update.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-audit-log.md`（アーカイブ済み）
@@ -17,6 +31,9 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-00-backlog-pages-update.md | ラウンド完結（子 PBI 11-01・11-02 をアーカイブ済み。未コミット、`make check` / `make site` green） |
+| 2026-10-11-01-feat-store-announcement.md | 未コミット（11a）feat: Pages と README に Chrome ウェブストアの導線を足す |
+| 2026-10-11-02-feat-landing-video-embed.md | 未コミット（11a）feat: ランディングに紹介動画の埋め込みセクションを足す |
 | 2026-10-10-00-backlog-vulnhunt-remediation.md | ラウンド完結（子 PBI 10-10-01〜07 全件アーカイブ済み） |
 | 2026-10-10-07-backlog-dev-toolchain-cves.md | 未コミット（1009a）shell-quote を overrides 1.12.0 で解消、node-forge は修正版リリースなしで追跡継続。make check green |
 | 2026-10-10-06-fix-audit-cross-context-race.md | 未コミット（1009a）fix: 監査ログの削除を単一コンテキストに集約する |
