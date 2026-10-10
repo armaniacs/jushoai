@@ -15,6 +15,9 @@ tmp/
 graphify-out/
 .checking-team-tmp/
 
+# VulnHunter scan artifacts (contain throwaway test keys; never enter the repo)
+JushoAI_VULNHUNT_RESULTS_*/
+
 # video/: generated or restricted material (the music track may not be redistributed on its own)
 video/ext/
 video/output/
@@ -22,3 +25,6 @@ video/playwright/.work/
 video/remotion/node_modules/
 video/remotion/public/*.webm
 video/remotion/public/bgm.*
+
+JushoAI_VULNHUNT_*/
+promo/
