@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from 'vitest';
-import { appendEntry, EMPTY_AUDIT_STATE, type AuditDraft, type AuditEntry } from '../../src/ai/audit-log';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { AUDIT_KEY, appendEntry, EMPTY_AUDIT_STATE, type AuditDraft, type AuditEntry } from '../../src/ai/audit-log';
 import { mountAuditSection, type AuditSectionDeps } from '../../src/entrypoints/options/audit-section';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
@@ -120,5 +120,57 @@ describe('audit section', () => {
     buttons()[2]!.click();
     await flush();
     expect(root.textContent).toContain('ログは 2 件あります。');
+  });
+});
+
+describe('audit section: default deps', () => {
+  afterEach(() => { vi.unstubAllGlobals(); vi.restoreAllMocks(); });
+
+  const stubDefaultChrome = (store: Record<string, unknown>, send: unknown) => {
+    vi.stubGlobal('chrome', {
+      runtime: { sendMessage: send },
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+  };
+
+  it('delegates the default clear to the background via a runtime message', async () => {
+    const store: Record<string, unknown> = {};
+    store[AUDIT_KEY] = appendEntry(EMPTY_AUDIT_STATE, draft(), Date.now());
+    const send = vi.fn(async () => {
+      delete store[AUDIT_KEY];
+      return { ok: true };
+    });
+    stubDefaultChrome(store, send);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const root = document.createElement('div');
+    mountAuditSection(root);
+    await flush();
+    expect(root.textContent).toContain('ログは 1 件あります。');
+    [...root.querySelectorAll('button')][1]!.click();
+    await flush();
+    expect(send).toHaveBeenCalledWith({ type: 'audit-clear' });
+    expect(AUDIT_KEY in store).toBe(false);
+    expect(root.textContent).toContain('ログはありません。');
+  });
+
+  it('keeps the failure notice and the list when the background clear does not answer ok', async () => {
+    const store: Record<string, unknown> = {};
+    store[AUDIT_KEY] = appendEntry(EMPTY_AUDIT_STATE, draft(), Date.now());
+    const send = vi.fn(async () => ({ ok: false }));
+    stubDefaultChrome(store, send);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const root = document.createElement('div');
+    mountAuditSection(root);
+    await flush();
+    [...root.querySelectorAll('button')][1]!.click();
+    await flush();
+    expect(root.textContent).toContain('ログを削除できませんでした。');
+    expect(root.querySelectorAll('.audit-list > details')).toHaveLength(1);
+    expect(send).toHaveBeenCalledWith({ type: 'audit-clear' });
   });
 });

@@ -62,6 +62,50 @@ describe('appendEntry', () => {
   });
 });
 
+describe('byte budget accounting (UTF-8)', () => {
+  it('accounts CJK payloads by UTF-8 bytes, not character count', () => {
+    // 1.4M chars fit the 4M budget by count, but 4.2MB of UTF-8 does not.
+    const cjk = draft({ request: 'あ'.repeat(1_400_000) });
+    const s = appendEntry(EMPTY_AUDIT_STATE, cjk, 1);
+    expect(s.entries).toHaveLength(0);
+  });
+
+  it('keeps a CJK entry whose UTF-8 byte size fits the budget', () => {
+    const cjk = draft({ request: 'あ'.repeat(1_300_000) });
+    const s = appendEntry(EMPTY_AUDIT_STATE, cjk, 1);
+    expect(s.entries).toHaveLength(1);
+  });
+
+  it('counts surrogate pairs as 4 UTF-8 bytes rather than 2 UTF-16 units', () => {
+    const astral = draft({ request: '\u{29E3D}'.repeat(1_100_000) });
+    const s = appendEntry(EMPTY_AUDIT_STATE, astral, 1);
+    expect(s.entries).toHaveLength(0);
+  });
+
+  it('holds an entry exactly at the byte budget and drops it 1 byte over', () => {
+    const exact = draft({ request: 'あ'.repeat(1_333_247) });
+    expect(appendEntry(EMPTY_AUDIT_STATE, exact, 1).entries).toHaveLength(1);
+    const over = draft({ request: 'あ'.repeat(1_333_247) + 'a' });
+    expect(appendEntry(EMPTY_AUDIT_STATE, over, 1).entries).toHaveLength(0);
+  });
+
+  it('holds the boundary across mixed ASCII and CJK entries', () => {
+    const exact = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_482) }), 1000);
+    expect(appendEntry(exact, draft({ request: 'あ'.repeat(1_000_000) }), 2000).entries).toHaveLength(2);
+    const under = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_483) }), 1000);
+    expect(appendEntry(under, draft({ request: 'あ'.repeat(1_000_000) }), 2000).entries.map((e) => e.id)).toEqual([2]);
+  });
+
+  it('prunes CJK-heavy entries oldest-first on every append', () => {
+    const big = (): AuditDraft => draft({ request: 'あ'.repeat(700_000) });
+    let s = appendEntry(EMPTY_AUDIT_STATE, big(), 1000);
+    s = appendEntry(s, big(), 2000);
+    s = appendEntry(s, big(), 3000);
+    expect(s.entries.map((e) => e.id)).toEqual([3]);
+    expect(s.nextId).toBe(4);
+  });
+});
+
 describe('normalizeAuditState', () => {
   it('returns empty state for garbage and filters malformed entries', () => {
     expect(normalizeAuditState(null)).toEqual(EMPTY_AUDIT_STATE);
@@ -171,6 +215,27 @@ describe('AuditStore', () => {
     expect((await s.list()).map((e) => e.id)).toEqual([1, 2, 3]);
   });
 
+  it('keeps a record that races a clear queued behind it', async () => {
+    const s = new AuditStore(() => 1000);
+    await s.record(draft());
+    await Promise.all([s.clear(), s.record(draft({ provider: 'gemini' }))]);
+    expect((await s.list()).map((e) => e.provider)).toEqual(['gemini']);
+  });
+
+  it('keeps a cleared log empty when a record queues before the clear', async () => {
+    const s = new AuditStore(() => 1000);
+    await s.record(draft());
+    await s.record(draft({ provider: 'gemini' }));
+    await Promise.all([s.record(draft({ model: 'late' })), s.clear()]);
+    expect(await s.list()).toEqual([]);
+  });
+
+  it('keeps queued records on both sides of an interleaved clear in queue order', async () => {
+    const s = new AuditStore(() => 1000);
+    await Promise.all([s.record(draft()), s.clear(), s.record(draft({ provider: 'gemini' }))]);
+    expect((await s.list()).map((e) => [e.id, e.provider])).toEqual([[2, 'gemini']]);
+  });
+
   it('hides expired entries when listing and clears without reusing ids', async () => {
     let now = 1000;
     const s = new AuditStore(() => now);
@@ -183,5 +248,25 @@ describe('AuditStore', () => {
     await s.record(draft());
     expect((await s.list())[0]!.id).toBe(3);
     expect(AUDIT_KEY in store).toBe(true);
+  });
+
+  it('keeps append and list accounting consistent for CJK-heavy records', async () => {
+    const s = new AuditStore(() => 1000);
+    const big = (): AuditDraft => draft({ request: 'あ'.repeat(700_000) });
+    await s.record(big());
+    await s.record(big());
+    expect((await s.list()).map((e) => e.id)).toEqual([2]);
+  });
+
+  it('keeps recording after a failed write', async () => {
+    const get = async (key: string) => (key in store ? { [key]: store[key] } : {});
+    const set = vi.fn()
+      .mockRejectedValueOnce(new Error('quota exceeded'))
+      .mockImplementation(async (obj: Record<string, unknown>) => { Object.assign(store, obj); });
+    vi.stubGlobal('chrome', { storage: { local: { get, set } } });
+    const s = new AuditStore(() => 1000);
+    await expect(s.record(draft())).rejects.toThrow('quota exceeded');
+    await s.record(draft());
+    expect(await s.list()).toHaveLength(1);
   });
 });

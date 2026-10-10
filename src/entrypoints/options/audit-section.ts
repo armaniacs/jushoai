@@ -1,4 +1,5 @@
 import { AuditStore, auditFileName, toTsv, type AuditEntry } from '../../ai/audit-log';
+import { clearAuditViaBackground } from '../../llm/background-gateway';
 import { SYSTEM_PROMPT } from '../../llm/classifier';
 import { el } from './dom';
 
@@ -20,12 +21,22 @@ export function saveTextFile(fileName: string, content: string): void {
   URL.revokeObjectURL(url);
 }
 
-const defaultDeps = (): AuditSectionDeps => ({
-  store: new AuditStore(),
-  save: saveTextFile,
-  confirm: (m) => window.confirm(m),
-  now: () => new Date(),
-});
+// Rejecting on failure keeps the existing delete-failure notice path intact.
+const clearViaBackground = async (): Promise<void> => {
+  if (!(await clearAuditViaBackground())) throw new Error('audit-clear failed');
+};
+
+const defaultDeps = (): AuditSectionDeps => {
+  // list is read-only and cannot interleave with writes; clear is delegated to
+  // the background so record and clear share one write queue across contexts.
+  const lister = new AuditStore();
+  return {
+    store: { list: lister.list.bind(lister), clear: clearViaBackground },
+    save: saveTextFile,
+    confirm: (m) => window.confirm(m),
+    now: () => new Date(),
+  };
+};
 
 // Pure helpers below keep the entry rendering free of store access.
 const formatDateTime = (ms: number): string => {

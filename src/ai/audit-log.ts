@@ -3,9 +3,11 @@ export const AUDIT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 // Guards against a runaway loop filling storage within the retention window.
 export const AUDIT_MAX_ENTRIES = 1000;
 // Byte budget for the retained batch: entries carry request/response payloads
-// whose total size the entry count alone does not bound. Kept under the browser's
-// chrome.storage.local quota (5 MB in Firefox, 10 MB in Chrome) so a full batch
-// cannot wedge every future write.
+// whose total size the entry count alone does not bound. Measured in UTF-8
+// bytes, the unit chrome.storage.local actually charges after serialization
+// (CJK costs ~3 bytes per char, so counting chars would understate a
+// Japanese-heavy batch). Kept under the browser's quota (5 MB in Firefox,
+// 10 MB in Chrome) so a full batch cannot wedge every future write.
 export const AUDIT_MAX_BYTES = 4_000_000;
 
 export const AUDIT_RESULTS = ['success', 'auth-error', 'http-error', 'network-error', 'invalid-response', 'error'] as const;
@@ -62,14 +64,32 @@ export function pruneEntries(entries: AuditEntry[], now: number): AuditEntry[] {
 // Drops the oldest entries until the estimated serialized batch fits the byte
 // budget; without this a full batch would make chrome.storage.local.set fail on
 // every future append and the stale blob would never shrink on its own.
-const entryBytes = (e: AuditEntry): number => e.request.length + e.response.length + 256;
+// The fixed 256 approximates the per-entry JSON overhead (id, ISO date, array
+// structure, escaping); those fields are ASCII-heavy, so UTF-8 accounting keeps
+// the approximation roughly valid.
+// One encoder is shared by every measurement: the classify hot path records an
+// audit per append, so allocating an encoder per call is pure churn.
+const textEncoder = new TextEncoder();
+const utf8Bytes = (s: string): number => textEncoder.encode(s).length;
+// Sizes are memoized per entry object: entries are immutable and keep identity
+// across appends, so re-measuring the retained log on every append (and twice
+// for pruned entries) is avoided and each append only encodes the new entry.
+const sizeCache = new WeakMap<AuditEntry, number>();
+const entryBytes = (e: AuditEntry): number => {
+  const cached = sizeCache.get(e);
+  if (cached !== undefined) return cached;
+  const size = utf8Bytes(e.request) + utf8Bytes(e.response) + 256;
+  sizeCache.set(e, size);
+  return size;
+};
 
 function withinByteBudget(entries: AuditEntry[]): AuditEntry[] {
+  const sizes = entries.map(entryBytes);
   let total = 0;
-  for (const e of entries) total += entryBytes(e);
+  for (const size of sizes) total += size;
   let i = 0;
   while (i < entries.length && total > AUDIT_MAX_BYTES) {
-    total -= entryBytes(entries[i]!);
+    total -= sizes[i]!;
     i++;
   }
   return i === 0 ? entries : entries.slice(i);

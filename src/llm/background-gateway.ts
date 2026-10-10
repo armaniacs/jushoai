@@ -1,6 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
+import { parseAuditClearResponse, parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 
 const STATUS_TIMEOUT_MS = 5_000;
@@ -8,6 +8,7 @@ export const CLASSIFY_TIMEOUT_MS = 45_000;
 export const MAX_CLASSIFY_TOTAL = 60;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 30_000;
+const CLEAR_TIMEOUT_MS = 10_000;
 
 const UNKNOWN_STATUS: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
@@ -42,6 +43,16 @@ export async function requestDownloadViaBackground(timeoutMs = DOWNLOAD_TIMEOUT_
   try {
     const res = await sendWithTimeout({ type: 'ai-download' }, timeoutMs);
     return (res as { started?: unknown } | null | undefined)?.started === true;
+  } catch {
+    return false;
+  }
+}
+
+// Delegates the settings-page delete to the background AuditStore so record and
+// clear share one write queue; ok:false and a stalled reply both report failure.
+export async function clearAuditViaBackground(timeoutMs = CLEAR_TIMEOUT_MS): Promise<boolean> {
+  try {
+    return parseAuditClearResponse(await sendWithTimeout({ type: 'audit-clear' }, timeoutMs))?.ok === true;
   } catch {
     return false;
   }
