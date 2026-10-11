@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import type { AuditDraft } from '../../src/ai/audit-log';
+import { AUDIT_PAGE_URL_MAX_BYTES, type AuditDraft } from '../../src/ai/audit-log';
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from '../../src/ai/types';
 import type { FieldMeta } from '../../src/core/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
@@ -335,6 +335,15 @@ describe('handleMessage: audit log', () => {
     }]);
     // The label is part of the recorded trace by design; field values and the key never are.
     expect(JSON.stringify(audits)).not.toContain('sk-test');
+  });
+
+  it('records a capped page url when the sender url exceeds the audit bound', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps, audits } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    await handleMessage(msg, deps, { pageUrl: 'https://example.com/' + 'p'.repeat(5000) });
+    const recorded = audits[0]!.pageUrl;
+    expect(new TextEncoder().encode(recorded).length).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    expect(recorded.startsWith('https://example.com/')).toBe(true);
   });
 
   it('records the sent prompt without field values or the API key', async () => {

@@ -1,5 +1,5 @@
 import { AuditedClassifier } from '../ai/audited-classifier';
-import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
+import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
@@ -162,7 +162,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
     case 'ai-classify': {
       const sel = await selectClassifier(deps, settings, {
         purpose: 'classify',
-        pageUrl: ctx.pageUrl ? sanitizePageUrl(ctx.pageUrl) : '',
+        pageUrl: ctx.pageUrl ? capAuditPageUrl(sanitizePageUrl(ctx.pageUrl)) : '',
       });
       // The caller chooses its error display from the reason, so never drop it.
       if (!sel.ok) return { ok: false, reason: sel.reason };

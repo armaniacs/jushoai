@@ -21,6 +21,12 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-37-backlog-review3-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
+| 2026-10-11-33-fix-pageurl-cap-wiring-test.md | 未コミット fix: 入口制限の統合テスト。`make check` green |
+| 2026-10-11-34-chore-pageurl-truncation-note.md | 未コミット chore: 切詰受容の記録。`make check` green |
+| 2026-10-11-35-chore-test-describe-layout.md | 未コミット chore: describe 分離。`make check` green |
+| 2026-10-11-36-chore-import-merge.md | 未コミット chore: import 結合。`make check` green |
+| 2026-10-11-32-fix-audit-pageurl-cap.md | 未コミット fix: 監査入口で pageUrl を UTF-8 1024 バイトに制限（文字境界・共有 sanitizer 不変）。`make check` green |
 | 2026-10-11-30-feat-chrome-e2e.md | 未コミット feat: Chrome 実ブラウザ E2E（BiDi 導入・ID 解決・3 ケース）。Chrome 実機 3/3 green、`make check` green |
 | 2026-10-11-29-fix-hit-test-own-shadow-node.md | 未コミット fix: ゲートがパネル host を掴むよう修正＋ヒット判定の内側ノード受容。単体・E2E・`make check` green |
 | 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |

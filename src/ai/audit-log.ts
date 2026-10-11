@@ -10,6 +10,34 @@ export const AUDIT_MAX_ENTRIES = 1000;
 // 10 MB in Chrome) so a full batch cannot wedge every future write.
 export const AUDIT_MAX_BYTES = 4_000_000;
 
+// Upper bound for the page URL kept in an audit record. sanitizePageUrl has no
+// length limit and history.pushState can stretch the pathname, so the audit
+// ingest caps it here instead of in the shared sanitizer (which also feeds the
+// feedback report URL). 1024 bytes keeps any realistic origin (~<300 bytes)
+// with room for a path prefix. The cut is on a code-point boundary, so no
+// broken encoding or split surrogate pair is ever stored. A stored pageUrl at
+// exactly the bound may be a truncated prefix; this is accepted (the audit
+// needs the destination identity, not the full path).
+export const AUDIT_PAGE_URL_MAX_BYTES = 1024;
+const pageUrlEncoder = new TextEncoder();
+const isHighSurrogate = (code: number): boolean => code >= 0xd800 && code <= 0xdbff;
+export function capAuditPageUrl(url: string): string {
+  if (pageUrlEncoder.encode(url).length <= AUDIT_PAGE_URL_MAX_BYTES) return url;
+  // Binary-search the longest fitting UTF-16 prefix (O(log n) encodings),
+  // then drop a trailing split surrogate pair, if any. Any other cut already
+  // falls on a code-point boundary.
+  let lo = 0;
+  let hi = url.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (pageUrlEncoder.encode(url.slice(0, mid)).length <= AUDIT_PAGE_URL_MAX_BYTES) lo = mid;
+    else hi = mid - 1;
+  }
+  let end = lo;
+  if (end > 0 && isHighSurrogate(url.charCodeAt(end - 1))) end -= 1;
+  return url.slice(0, end);
+}
+
 export const AUDIT_RESULTS = ['success', 'auth-error', 'http-error', 'network-error', 'invalid-response', 'error'] as const;
 export type AuditResult = (typeof AUDIT_RESULTS)[number];
 export type AuditPurpose = 'classify' | 'connection-test';

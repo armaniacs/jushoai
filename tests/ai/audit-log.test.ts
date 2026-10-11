@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
-  appendEntry, auditFileName, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
+  AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_PAGE_URL_MAX_BYTES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
+  appendEntry, auditFileName, capAuditPageUrl, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
 } from '../../src/ai/audit-log';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
@@ -80,6 +80,39 @@ describe('appendEntry', () => {
       'provider', 'purpose', 'request', 'response', 'result', 'retried',
     ]);
     expect(s.entries).toHaveLength(1);
+  });
+});
+
+describe('capAuditPageUrl', () => {
+  const bytes = (s: string) => new TextEncoder().encode(s).length;
+
+  it('keeps a within-limit pageUrl unchanged', () => {
+    const url = 'https://example.com/' + 'a'.repeat(100);
+    expect(capAuditPageUrl(url)).toBe(url);
+  });
+
+  it('caps an over-long pageUrl at 1024 UTF-8 bytes keeping the origin', () => {
+    const url = 'https://example.com/' + 'a'.repeat(5000);
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    expect(capped.startsWith('https://example.com/')).toBe(true);
+  });
+
+  it('cuts on a character boundary without breaking multibyte text', () => {
+    const url = 'https://example.com/' + 'a'.repeat(1023) + 'あ';
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    expect(capped.endsWith('a')).toBe(true);
+  });
+
+  it('never splits a surrogate pair', () => {
+    const url = 'https://example.com/' + 'a'.repeat(1022) + '𩸽';
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    // 20 + 1004 = 1024 bytes exactly; the 4-byte pair does not fit, so it is
+    // dropped whole instead of split.
+    expect(capped).toBe('https://example.com/' + 'a'.repeat(1004));
+    expect(/[\ud800-\udbff](?![\udc00-\udfff])/.test(capped)).toBe(false);
   });
 });
 
