@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
+.PHONY: help install dev build test typecheck check check-all zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -41,6 +41,8 @@ zip-firefox: ## Package the Firefox build into dist/*.zip
 	npm run zip:firefox
 
 check: typecheck test build test-build lint-firefox ## Typecheck, test, build both browsers, verify manifests and lint
+
+check-all: check site e2e-firefox e2e-chrome ## Full verification including docs site and both browsers' E2E (needs real Chrome/Firefox; HEADLESS=1 for headless)
 
 zip: ## Package the extension into dist/*.zip
 	npx wxt zip
