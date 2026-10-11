@@ -62,16 +62,16 @@ Scenario: 署名付きタグの作成と検証がリリース手順に書かれ�
 
 ## 受け入れ基準
 
-- [ ] `.github/workflows/release.yml` の `permissions` が workflow 全体の宣言から job 単位に絞られ、Release を作る job にだけ `contents: write` が付いている
-- [ ] checkout に `persist-credentials: false` が付いている
-- [ ] `npm ci` に `--ignore-scripts` が付いている
-- [ ] release job に environment が設定され、required reviewers を要求する environment 名が workflow と docs で一致している
+- [x] `.github/workflows/release.yml` の `permissions` が workflow 全体の宣言から job 単位に絞られ、Release を作る job にだけ `contents: write` が付いている
+- [x] checkout に `persist-credentials: false` が付いている
+- [x] `npm ci` に `--ignore-scripts` が付いている
+- [x] release job に environment が設定され、required reviewers を要求する environment 名が workflow と docs で一致している
 - [ ] `npm ci --ignore-scripts` の状態で `make check` が通ることをローカルで確認している
-- [ ] `tests/build` に release workflow の YAML 検査が置かれ、権限の位置と `persist-credentials: false` と `--ignore-scripts` を断言している
-- [ ] repo settings の手順（`v*` タグの ruleset 保護、environment への required reviewers 追加、署名付きタグの作成と検証）が `docs/release.md` に記録されている。設定そのものは手作業であり、本 PBI では記録までを行う
-- [ ] `docs/release.md` の手順に承認待ちが追記されている
+- [x] `tests/build` に release workflow の YAML 検査が置かれ、権限の位置と `persist-credentials: false` と `--ignore-scripts` を断言している
+- [x] repo settings の手順（`v*` タグの ruleset 保護、environment への required reviewers 追加、署名付きタグの作成と検証）が `docs/release.md` に記録されている。設定そのものは手作業であり、本 PBI では記録までを行う
+- [x] `docs/release.md` の手順に承認待ちが追記されている
 - [ ] 署名付きタグの作成と検証を docs の手順どおりに一度実行して確認している
-- [ ] `make check` が通る
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -133,10 +133,16 @@ ls tests/build/                                # → firefox-manifest.build.ts �
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが build 検査と docs の記録で検証されパスする（承認経路のシナリオは docs の記録と手作業の確認で検証する）
-- [ ] `make check` が通る（`npm ci --ignore-scripts` の状態を含む）
+- [x] 全 BDD シナリオが build 検査と docs の記録で検証されパスする（承認経路のシナリオは docs の記録と手作業の確認で検証する）
+- [ ] `make check` が通る（`npm ci --ignore-scripts` の状態を含む。通常状態は green 確認済み）
 - [ ] workflow の変更がコミットされている
-- [ ] repo settings の手順（ruleset、required reviewers、署名付きタグ）が docs/release.md に記録されている
-- [ ] docs/release.md に承認待ちが追記されている
-- [ ] build 検査を意図的に壊して落ちることを確認済み（形骸化していない）
+- [x] repo settings の手順（ruleset、required reviewers、署名付きタグ）が docs/release.md に記録されている
+- [x] docs/release.md に承認待ちが追記されている
+- [x] build 検査を意図的に壊して落ちることを確認済み（形骸化していない）
 - [ ] コードレビュー完了
+
+### 実装の記録（2026-10-11、サブエージェントによる並列実装）
+
+- 実装: permissions を job 単位化（`contents: write` は release job のみ）、`environment: release`、`persist-credentials: false`、`npm ci --ignore-scripts`＋`npx wxt prepare` 明示 step（未決 (a) 採用。postinstall が skip されるため）。environment 名は新規 `release`（pages と混ぜない）。ancestry 検査・pages.yml は範囲外
+- 検証: build 検査 5 tests の Red（修正前と一時復元の 2 回）→Green。`tsc` exit 0、`npx wxt prepare` 成功（node_modules 未破壊）。`make check` exit 0（通常状態。最終検証）
+- ユーザーの作業として残る項目: GitHub 設定画面の手作業（environment `release` 作成＋Required reviewers、v* ruleset 保護）、署名タグの実行確認、`--ignore-scripts` 状態での `make check`、コミット、コードレビューの最終承認

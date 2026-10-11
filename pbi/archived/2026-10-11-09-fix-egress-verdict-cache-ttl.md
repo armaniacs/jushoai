@@ -68,16 +68,16 @@ Scenario: 公開エンドポイントへの連続分類は従来どおり送信�
 
 ## 受け入れ基準
 
-- [ ] 分類（dial）ごとに接続先の名前解決が行われ、検証結果が次の分類に持ち越されない（Service Worker 生涯にわたる 30 秒キャッシュの廃止）
-- [ ] 1 回目の検証の後に接続先が内部アドレスへ解決されるように変わった場合、2 回目の分類は送信を行わない
-- [ ] 1 回目の検証で解決できなかった接続先が、2 回目の分類の前に内部アドレスへ解決されるように変わった場合も、2 回目の分類は送信を行わない
-- [ ] 1 回目の検証で解決できなかった接続先が回復した場合、2 回目の分類は送信を行う（解決不能の判定が持ち越されない）
-- [ ] 内部アドレス直指定・ループバック・公開 IPv4 リテラルは従来どおり名前解決なしで判断される（既存挙動を維持。`tests/ai/egress-dns.test.ts:96`、`:104`、`:112` の各ケースは変更しない）
-- [ ] 現行のキャッシュ挙動を固定する既存テスト 4 件（`tests/ai/egress-dns.test.ts:172`、`:183`、`:320`、`:376`）が、分類ごとに解決し直す期待に書き換わっている
-- [ ] キャッシュ機構が `src/ai/settings.ts` から除去され、`EGRESS_TTL_MS` と `ttlMs` 引数の在り方が「未決の設計判断」の決定に沿って反映されている
-- [ ] 関連コメント 3 か所（`src/ai/settings.ts:188-190`、`src/entrypoints/background.ts:23-25`、`src/llm/handle-message.ts:25-27`）が per-call の記述に揃っている
-- [ ] 日英の `ai-providers.md` と `privacy.md` の「解決結果は TTL（30 秒）でキャッシュされ」の記述が per-call の記述に揃っている
-- [ ] `make check` が通る
+- [x] 分類（dial）ごとに接続先の名前解決が行われ、検証結果が次の分類に持ち越されない（Service Worker 生涯にわたる 30 秒キャッシュの廃止）
+- [x] 1 回目の検証の後に接続先が内部アドレスへ解決されるように変わった場合、2 回目の分類は送信を行わない
+- [x] 1 回目の検証で解決できなかった接続先が、2 回目の分類の前に内部アドレスへ解決されるように変わった場合も、2 回目の分類は送信を行わない
+- [x] 1 回目の検証で解決できなかった接続先が回復した場合、2 回目の分類は送信を行う（解決不能の判定が持ち越されない）
+- [x] 内部アドレス直指定・ループバック・公開 IPv4 リテラルは従来どおり名前解決なしで判断される（既存挙動を維持。`tests/ai/egress-dns.test.ts:96`、`:104`、`:112` の各ケースは変更しない）
+- [x] 現行キャッシュ挙動を固定する既存テスト 4 件（`tests/ai/egress-dns.test.ts:172`、`:183`、`:320`、`:376`）が、分類ごとに解決し直す期待に書き換わっている
+- [x] キャッシュ機構が `src/ai/settings.ts` から除去され、`EGRESS_TTL_MS` と `ttlMs` 引数の在り方が「未決の設計判断」の決定に沿って反映されている
+- [x] 関連コメント 3 か所（`src/ai/settings.ts:188-190`、`src/entrypoints/background.ts:23-25`、`src/llm/handle-message.ts:25-27`）が per-call の記述に揃っている
+- [x] 日英の `ai-providers.md` と `privacy.md` の「解決結果は TTL（30 秒）でキャッシュされ」の記述が per-call の記述に揃っている
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -145,9 +145,16 @@ grep -n "caches\|costs one lookup\|shares the egress cache" tests/ai/egress-dns.
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] `make check` が通る
-- [ ] 現行キャッシュ挙動を固定するテスト 4 件（`tests/ai/egress-dns.test.ts:172`、`:183`、`:320`、`:376`）が per-call の期待に書き換わっている
-- [ ] コード・テスト・日英 docs から「TTL（30 秒）キャッシュ」の記述が消えている
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] `make check` が通る
+- [x] 現行キャッシュ挙動を固定するテスト 4 件（`tests/ai/egress-dns.test.ts:172`、`:183`、`:320`、`:376`）が per-call の期待に書き換わっている
+- [x] コード・テスト・日英 docs から「TTL（30 秒）キャッシュ」の記述が消えている
 - [ ] コードレビュー完了
-- [ ] リファクタリング完了（`EGRESS_TTL_MS` と `ttlMs` 引数の扱いを決定して反映）
+- [x] リファクタリング完了（`EGRESS_TTL_MS` と `ttlMs` 引数の扱いを決定して反映）
+
+### 実装の記録（2026-10-11）
+
+- 未決 2 件を決定: キャッシュは廃止 (a)、`EGRESS_TTL_MS` と `ttlMs` 引数は落とす。使われない定数は誤解の温床という PBI 推奨どおり
+- 実装: `createEgressCheck` から Map・TTL 判定を除去し毎回 `resolveHostAddresses`→`verdictOf`。コメント 3 か所（settings.ts、background.ts、handle-message.ts）を per-call 記述に是正。日英 `ai-providers.md` / `privacy.md` の TTL 記述を per-call 記述に置換（H2 構成不変）
+- テスト: 4 件を per-call 期待に書き換え＋flip・回復 2 面の新規 3 件（計 7 件の周辺）。Red（6 failed）→ Green（71 passed）を確認。`npx tsc --noEmit` exit 0
+- ユーザーの作業として残る項目: `make check` フル実行（最終検証で実施）、コードレビューの最終承認

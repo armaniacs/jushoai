@@ -59,10 +59,10 @@
 ## 受け入れ基準
 
 - [ ] 子 PBI 8 件が完了し、アーカイブされる
-- [ ] `make check` が緑
-- [ ] run-2 の残り needs_validation 3 件（監査ログの pageUrl 会計、egress 30 秒キャッシュ、consent host の CSS/hit-testing）の blocker が、実装・記録・受容のいずれかで解消される
-- [ ] 各判断の記録（egress の恒久対策、port 粒度、Gemini の egress 不在）が 1 か所に置かれ、privacy.md（日英）と矛盾しない
-- [ ] リリース経路の hardening 手順が docs/release.md に記録されている
+- [x] `make check` が緑
+- [x] run-2 の残り needs_validation 3 件（監査ログの pageUrl 会計、egress 30 秒キャッシュ、consent host の CSS/hit-testing）の blocker が、実装・記録・受容のいずれかで解消される
+- [x] 各判断の記録（egress の恒久対策、port 粒度、Gemini の egress 不在）が 1 か所に置かれ、privacy.md（日英）と矛盾しない
+- [x] リリース経路の hardening 手順が docs/release.md に記録されている
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -96,6 +96,6 @@ sed -n 7,24p .github/workflows/release.yml        # → permissions contents: wr
 ## Definition of Done
 
 - [ ] 子 PBI 8 件の全 BDD シナリオが自動テストとして実装されパスする（実機確認を含む項目は手動確認を完了する）
-- [ ] `make check` と `make site` が通る
-- [ ] run-2 の残り needs_validation 3 件が再監査で決着できる状態（実装・記録・受容のいずれか）になっている
-- [ ] ドキュメント更新済み（privacy / how-it-works / ai-providers / release、日英）
+- [x] `make check` と `make site` が通る
+- [x] run-2 の残り needs_validation 3 件が再監査で決着できる状態（実装・記録・受容のいずれか）になっている
+- [x] ドキュメント更新済み（privacy / ai-providers / release、日英。how-it-works に対象の記述はなく更新不要であることを確認済み）

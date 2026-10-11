@@ -87,8 +87,8 @@ ls tests/build/                                # → firefox-manifest.build.ts �
 
 ## Definition of Done
 
-- [ ] 子 PBI 2 件の全 BDD シナリオが自動テストとして実装されパスする
-- [ ] `make check` が通る
-- [ ] 方針（fail-closed）が 1 か所に書かれ、そこからコード・テスト・docs が導かれている
+- [x] 子 PBI 2 件の全 BDD シナリオが自動テストとして実装されパスする
+- [x] `make check` が通る
+- [x] 方針（fail-closed）が 1 か所に書かれ、そこからコード・テスト・docs が導かれている
 - [ ] 監査記録の blocker が解消され、再監査で確認できる
-- [ ] ドキュメント更新済み（日英の ai-providers / privacy / troubleshooting、CHANGELOG）
+- [x] ドキュメント更新済み（日英の ai-providers / privacy / troubleshooting、CHANGELOG）

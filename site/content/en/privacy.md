@@ -29,7 +29,7 @@ Labels and headings are text from the page. They can contain personal informatio
 
 Requests happen only when you click `JushoAI で入力`. Opening a page does not contact an AI provider. Checking the badge state only reads the saved settings and permissions. It makes no request.
 
-The destination host is verified down to its resolved address when you save the settings; the save is rejected when the address resolves into an internal network address or when the resolution cannot be confirmed. The resolved address is re-checked right before each call, and the call is not made when the address is confirmed to be internal or when the resolution cannot be confirmed; the rest of the run continues with the rules only. The lexical checks on the host name still apply. Resolutions are cached with a TTL (30 seconds), and an unresolvable result is cached with the same TTL. The verification and the actual connection are separate name resolutions, so a change of the resolved address between them (DNS rebinding) cannot be fully ruled out.
+The destination host is verified down to its resolved address when you save the settings; the save is rejected when the address resolves into an internal network address or when the resolution cannot be confirmed. The resolved address is re-checked right before each call, and the call is not made when the address is confirmed to be internal or when the resolution cannot be confirmed; the rest of the run continues with the rules only. The lexical checks on the host name still apply. The host is resolved again on every call (per-call); a previous result is never carried into the next call. The verification and the actual connection are separate name resolutions, so a change of the resolved address between them (DNS rebinding) cannot be fully ruled out.
 
 ## Audit log
 
@@ -69,7 +69,7 @@ The settings page never shows a key. It shows only whether one is saved, and let
 
 ## Network permission
 
-The extension does not ask for network access at install time. When you save the settings, it asks for access to that provider's host only (an optional permission). Without the permission, AI is not used. In Firefox, it also asks for your consent to send website content (the field metadata) to the provider, as a data collection permission, in the same request.
+The extension does not ask for network access at install time. When you save the settings, it asks for access to that provider's host only (an optional permission). The permission is per host and does not distinguish ports, so it also covers the other ports on the same host. Actual requests go only to the saved endpoint. Without the permission, AI is not used. In Firefox, it also asks for your consent to send website content (the field metadata) to the provider, as a data collection permission, in the same request.
 
 ## With the built-in AI
 

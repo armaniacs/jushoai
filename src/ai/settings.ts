@@ -131,7 +131,6 @@ export const DOH_ORIGIN = 'https://dns.google/resolve';
 // the host the extension actually needs to reach for verification.
 export const DOH_PERMISSION_PATTERN = 'https://dns.google/*';
 export const DOH_TIMEOUT_MS = 3_000;
-export const EGRESS_TTL_MS = 30_000;
 
 export interface ResolveDeps {
   fetch: typeof fetch;
@@ -196,36 +195,36 @@ function verdictOf(addresses: string[]): EgressVerdict {
   return { ok: true };
 }
 
-// Dial-time gate over the same ranges as the lexical gate. Resolutions are cached per
-// check instance with a TTL; the background owns one instance per SW lifetime, so one
-// lookup per host spans every classify (including compat retries) until the TTL expires.
-export function createEgressCheck(deps: ResolveDeps, ttlMs: number = EGRESS_TTL_MS): EgressCheck {
-  const cache = new Map<string, { expires: number; addresses: string[] }>();
+// Dial-time gate over the same ranges as the lexical gate. Every call resolves the
+// host again (per-call): a verdict is never carried into the next call, so a flip to
+// an internal address after one check is caught by the next dial. The background keeps
+// one check instance for wiring, but it holds no cache. One dial costs one resolution
+// round trip (A + AAAA queries); a compat retry resolves again, so one classify costs
+// at most two round trips. This cost is accepted: there is no cache to reintroduce.
+export function createEgressCheck(deps: ResolveDeps): EgressCheck {
   return async (url: URL): Promise<EgressVerdict> => {
     const host = normalizeHost(url.hostname);
     if (isLoopbackHost(host)) return { ok: true };
     if (isPrivateHost(host)) return { ok: false, internal: true };
     // Literal IPv4 hosts need no resolution; the lexical private ranges already cover them.
     if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return { ok: true };
-    const now = Date.now();
-    const hit = cache.get(host);
-    if (hit && hit.expires > now) {
-      return verdictOf(hit.addresses);
-    }
     // An unresolvable result (unreachable, empty answer, timeout) blocks the dial per the
-    // policy above. The empty set is cached, so one TTL window pays one resolution delay.
+    // policy above. Nothing is cached, so each dial pays its own resolution delay.
     let addresses: string[] = [];
     try {
       addresses = await resolveHostAddresses(host, deps);
     } catch {
       addresses = [];
     }
-    cache.set(host, { expires: now + ttlMs, addresses });
     return verdictOf(addresses);
   };
 }
 
-// Host permission patterns ignore ports, so the pattern is protocol + hostname only.
+// The permission pattern is written without a port on purpose: the same code runs on
+// Chrome and Firefox, and Firefox match patterns cannot include a port (bug 1362809).
+// A port-less pattern matches every port on the host, so consenting to one endpoint
+// grants the whole host. Actual sends stay limited to the saved base URL: fetch uses
+// cfg.baseUrl as-is, and the key re-entry check compares full origins (port included).
 export function originPattern(baseUrl: string): string | null {
   const check = validateBaseUrl(baseUrl);
   return check.ok ? `${check.url.protocol}//${normalizeHost(check.url.hostname)}/*` : null;

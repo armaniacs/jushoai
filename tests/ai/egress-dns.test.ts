@@ -169,26 +169,70 @@ describe('createEgressCheck', () => {
     }
   });
 
-  it('caches resolutions per check instance until the TTL expires', async () => {
+  it('resolves the host on every call instead of reusing a cached verdict', async () => {
     const doh = dohFetch({ A: ['93.184.216.34'] });
-    const check = createEgressCheck({ fetch: doh.fake }, 5);
-    await check(new URL('https://api.openai.com/v1'));
-    await check(new URL('https://api.openai.com/v1'));
-    expect(doh.calls).toEqual(['A', 'AAAA']);
-    await new Promise((r) => setTimeout(r, 10));
-    await check(new URL('https://api.openai.com/v1'));
+    const check = createEgressCheck({ fetch: doh.fake });
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: true });
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: true });
     expect(doh.calls).toEqual(['A', 'AAAA', 'A', 'AAAA']);
   });
 
-  it('caches the blocked verdict so one TTL window pays one delay', async () => {
-    const doh = dohFetch({}, { fail: true });
-    const check = createEgressCheck({ fetch: doh.fake }, 5);
-    await check(new URL('https://api.openai.com/v1'));
-    await check(new URL('https://api.openai.com/v1'));
-    expect(doh.calls).toEqual(['A', 'AAAA']);
-    await new Promise((r) => setTimeout(r, 10));
-    await check(new URL('https://api.openai.com/v1'));
-    expect(doh.calls).toEqual(['A', 'AAAA', 'A', 'AAAA']);
+  it('blocks the second call when the resolution flips to an internal address', async () => {
+    let a: string[] = ['93.184.216.34'];
+    const calls: string[] = [];
+    const fake = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const type = url.searchParams.get('type') === 'AAAA' ? 'AAAA' : 'A';
+      calls.push(type);
+      const data = type === 'A' ? a : [];
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ Status: 0, Answer: data.map((d) => ({ type: 1, data: d })) }),
+      } as Response;
+    }) as typeof fetch;
+    const check = createEgressCheck({ fetch: fake });
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: true });
+    a = ['169.254.169.254'];
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: false, internal: true });
+    expect(calls).toEqual(['A', 'AAAA', 'A', 'AAAA']);
+  });
+
+  it('does not carry an unresolvable verdict into the next call', async () => {
+    let down = true;
+    const fake = (async (input: RequestInfo | URL) => {
+      if (down) throw new TypeError('doh unreachable');
+      const url = new URL(String(input));
+      const type = url.searchParams.get('type') === 'AAAA' ? 'AAAA' : 'A';
+      const data = type === 'A' ? ['93.184.216.34'] : [];
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ Status: 0, Answer: data.map((d) => ({ type: 1, data: d })) }),
+      } as Response;
+    }) as typeof fetch;
+    const check = createEgressCheck({ fetch: fake });
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: false, internal: false });
+    down = false;
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: true });
+  });
+
+  it('blocks the second call when an unresolvable host recovers to an internal address', async () => {
+    let answers: string[] = [];
+    const fake = (async (input: RequestInfo | URL) => {
+      const url = new URL(String(input));
+      const type = url.searchParams.get('type') === 'AAAA' ? 'AAAA' : 'A';
+      const data = type === 'A' ? answers : [];
+      return {
+        ok: true,
+        status: 200,
+        json: async () => ({ Status: 0, Answer: data.map((d) => ({ type: 1, data: d })) }),
+      } as Response;
+    }) as typeof fetch;
+    const check = createEgressCheck({ fetch: fake });
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: false, internal: false });
+    answers = ['169.254.169.254'];
+    await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: false, internal: true });
   });
 });
 
@@ -314,7 +358,7 @@ describe('dial-time gate in HttpClassifier.send (inverted VULN-001 dispatch)', (
     expect(classifyFetch).not.toHaveBeenCalled();
   });
 
-  it('costs one lookup per classify including the compat retry', async () => {
+  it('resolves on every dial including the compat retry', async () => {
     const doh = dohFetch({ A: ['93.184.216.34'] });
     const classifyFetch = vi.fn()
       .mockResolvedValueOnce({ ok: false, status: 400, json: async () => ({}) } as Response)
@@ -325,7 +369,7 @@ describe('dial-time gate in HttpClassifier.send (inverted VULN-001 dispatch)', (
     }, { compat: false });
     expect([...(await c.classify([field]))]).toEqual([['f', 'lastName']]);
     expect(classifyFetch).toHaveBeenCalledTimes(2);
-    expect(doh.calls).toEqual(['A', 'AAAA']);
+    expect(doh.calls).toEqual(['A', 'AAAA', 'A', 'AAAA']);
   });
 });
 
@@ -370,7 +414,7 @@ describe('handleMessage gates ai-classify and ai-test at dial time', () => {
     expect(doh.calls).toEqual(['A', 'AAAA']);
   });
 
-  it('shares the egress cache across successive messages through one deps.egress', async () => {
+  it('resolves on every message even when one deps.egress is shared', async () => {
     const doh = dohFetch({ A: ['93.184.216.34'] });
     const classifyFetch = vi.fn().mockResolvedValue(classifyOk());
     const deps = makeDeps({
@@ -382,7 +426,7 @@ describe('handleMessage gates ai-classify and ai-test at dial time', () => {
       .toEqual({ ok: true, entries: [['f', 'lastName']] });
     expect(await handleMessage({ type: 'ai-classify', fields: [field] }, deps))
       .toEqual({ ok: true, entries: [['f', 'lastName']] });
-    expect(doh.calls).toEqual(['A', 'AAAA']);
+    expect(doh.calls).toEqual(['A', 'AAAA', 'A', 'AAAA']);
   });
 
   it('blocks ai-classify when DoH is unreachable', async () => {

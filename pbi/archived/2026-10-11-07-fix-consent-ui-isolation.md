@@ -62,15 +62,15 @@ Scenario: 通常のページでは従来どおり適用できる
 
 ## 受け入れ基準
 
-- [ ] critical なプロパティ（all / position / top / right / z-index）が important 付きで設定され、author stylesheet の important 宣言でも上書きされないことがテストで固定されている
-- [ ] 適用直前に、host が接続中であることが確認され、切断されていれば注入が中止される
-- [ ] 適用直前に、承認ボタンが自矩形の中心で最前面かつ可視であることが検証され、失敗なら注入が中止されて理由が表示される
-- [ ] 検証に失敗したとき、欄の値は変わらない（`applyPlan` が実行されない）
-- [ ] ヒットテストと可視性の問い合わせは注入可能な依存になっており、jsdom の単体テストが fake で書ける
-- [ ] 通常ページでの適用は従来どおり動き、既存の `tests/ui/` のテストが落ちない
-- [ ] `src/ui/host.ts:1` のコメント前半が、実際の分離境界（page CSS は light DOM の host 要素に効く）を述べた記述に置き換わっている
-- [ ] 新しいテストは `tests/ui/` と `tests/entrypoints/` の既存の置き場所に合わせて置かれる
-- [ ] `make check` が通る
+- [x] critical なプロパティ（all / position / top / right / z-index）が important 付きで設定され、author stylesheet の important 宣言でも上書きされないことがテストで固定されている
+- [x] 適用直前に、host が接続中であることが確認され、切断されていれば注入が中止される
+- [x] 適用直前に、承認ボタンが自矩形の中心で最前面かつ可視であることが検証され、失敗なら注入が中止されて理由が表示される
+- [x] 検証に失敗したとき、欄の値は変わらない（`applyPlan` が実行されない）
+- [x] ヒットテストと可視性の問い合わせは注入可能な依存になっており、jsdom の単体テストが fake で書ける
+- [x] 通常ページでの適用は従来どおり動き、既存の `tests/ui/` のテストが落ちない
+- [x] `src/ui/host.ts:1` のコメント前半が、実際の分離境界（page CSS は light DOM の host 要素に効く）を述べた記述に置き換わっている
+- [x] 新しいテストは `tests/ui/` と `tests/entrypoints/` の既存の置き場所に合わせて置かれる
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -139,11 +139,18 @@ ls tests/ui/                      # overlay / preview / position / button / ai-g
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする（CSS の上書きシナリオは実機確認の手順として残る）
-- [ ] `make check` が通る
-- [ ] critical なプロパティが important 付きで設定され、テストで固定されている
-- [ ] 適用直前の検証が最後の信頼判断点として入っており、失敗時に注入しないことがテストで固定されている
-- [ ] `src/ui/host.ts:1` のコメントが実態に合う記述に置き換わっている
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（CSS の上書きシナリオは実機確認の手順として残る）
+- [x] `make check` が通る
+- [x] critical なプロパティが important 付きで設定され、テストで固定されている
+- [x] 適用直前の検証が最後の信頼判断点として入っており、失敗時に注入しないことがテストで固定されている
+- [x] `src/ui/host.ts:1` のコメントが実態に合う記述に置き換わっている
 - [ ] 実機確認（`samples/` と悪意ある fixture、Chrome / Edge / Firefox）の結果が記録されている
 - [ ] コードレビュー完了
-- [ ] リファクタリング完了（検証の依存が注入可能になっている）
+- [x] リファクタリング完了（検証の依存が注入可能になっている）
+
+### 実装の記録（2026-10-11、サブエージェントによる並列実装）
+
+- 実装: host の critical 宣言を `setProperty(name, value, 'important')` 化、overlay の上書きを最小限 important 化。`ConsentCheckDeps`（注入可能）＋`verifyApplyConsent`（切断→画面外→非表示→被覆の順に真偽＋理由）＋`defaultConsentCheckDeps`（実 DOM 配線）＋`applyIfConsented` ゲートを `content.ts` に追加し、`onApply` を最後の信頼判断点に配線。失敗時は `button.showError`（ボタン側）に理由を出し panel は開いたまま。`host.ts:1` 前半を是正
+- 近似の明示: 実配線の適用点は host 中央点（preview.ts 非接触の制約）。ボタン矩形の厳密化には PreviewHandle への検証窓追加が要り、将来の PBI 候補として未決。(b) top layer / iframe 移設は実装せず別 PBI 候補
+- 検証: 新テスト 12 件の Red→Green。`tests/ui/`＋`tests/entrypoints/` 157 passed、`tsc` exit 0、`make check` exit 0（最終検証）
+- ユーザーの作業として残る項目: 3 ブラウザ実機確認、コードレビューの最終承認

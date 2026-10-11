@@ -2,23 +2,17 @@
 
 ## 進行中
 
-- `2026-10-11-03-backlog-egress-gate-round.md`（egress ゲートの入力修復と三者一致検査の台帳。順位 1 = リゾルバ origin の要求と fail-closed、2 = 宣言・要求・使用の一致検査。実施順は 04 → 05）
-- `2026-10-11-04-fix-egress-resolver-origin-and-fail-closed.md`
-- `2026-10-11-05-feat-declaration-request-use-check.md`
-- `2026-10-11-06-backlog-run2-remediation-round.md`（run-2 監査の残り lead と hardening の台帳。順位 1 = 同意 UI の隔離、2 = 監査ログの計上、3 = egress キャッシュの per-call 化、4 = resolve-and-pin、5 = port 粒度の説明、6 = Gemini の egress 記録、7 = リリース経路の hardening、8 = コメント是正。着手順は決定済み: 既存 04（→ 05）を先にし、07 はその後）
-- `2026-10-11-07-fix-consent-ui-isolation.md`
-- `2026-10-11-08-fix-audit-entry-bytes.md`
-- `2026-10-11-09-fix-egress-verdict-cache-ttl.md`
-- `2026-10-11-10-backlog-resolve-and-pin.md`
-- `2026-10-11-11-docs-host-permission-port-granularity.md`
-- `2026-10-11-12-fix-gemini-egress-consistency.md`
-- `2026-10-11-13-feat-release-pipeline-hardening.md`
-- `2026-10-11-14-chore-stale-source-comments.md`
+- `2026-10-11-28-backlog-review2-suggestions-round.md`（コードレビュー第2ラウンド指摘 4 件の対応ラウンド。PBI 化のみ済み、実装は別途。実施順は 24 → 26、25・27 は独立）
+- `2026-10-11-24-fix-consent-point-throw-guard.md`
+- `2026-10-11-25-chore-test-spy-restore.md`
+- `2026-10-11-26-chore-apply-point-null-removal.md`
+- `2026-10-11-27-fix-consent-real-dom-coverage.md`
+- `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
 
 ## 台帳
 
-- `2026-10-11-06-backlog-run2-remediation-round.md`
-- `2026-10-11-03-backlog-egress-gate-round.md`
+- `archived/2026-10-11-06-backlog-run2-remediation-round.md`（アーカイブ済み）
+- `archived/2026-10-11-03-backlog-egress-gate-round.md`（アーカイブ済み）
 - `archived/2026-10-11-00-backlog-pages-update.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
@@ -31,6 +25,27 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |
+| 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |
+| 2026-10-11-15-fix-apply-point-reason.md | 未コミット（レビュー対応ラウンド順位 1）fix: ゼロ矩形と画面外の理由分離。`make check` green |
+| 2026-10-11-16-fix-opacity-compare.md | 未コミット（同順位 2）fix: opacity フォールバックの数値化。`make check` green |
+| 2026-10-11-17-fix-consent-button-point.md | 未コミット（同順位 3）fix: 検証点を承認ボタン矩形に厳密化。`make check` green |
+| 2026-10-11-18-fix-audit-budget-overhead.md | 未コミット（同順位 4）fix: 配列構造分を予算計上に加算。`make check` green |
+| 2026-10-11-19-chore-audit-remeasure-bound.md | 未コミット（同順位 5）chore: 再計測上限の記録と回数テスト。`make check` green |
+| 2026-10-11-20-chore-doh-budget-accepted.md | 未コミット（同順位 6）chore: 解決回数上限の記録。`make check` green |
+| 2026-10-11-22-chore-test-reason-assertion.md | 未コミット（同順位 8）chore: テスト断言の整理。`make check` green |
+| 2026-10-11-03-backlog-egress-gate-round.md | ラウンド完結（子 PBI 04・05 をアーカイブ済み。未コミット、`make check` green。再監査での確認はユーザー作業） |
+| 2026-10-11-04-fix-egress-resolver-origin-and-fail-closed.md | b709b35 fix: リゾルバ origin を許可要求に含め、解決不能時は fail-closed に倒す（コードレビューはユーザー作業） |
+| 2026-10-11-05-feat-declaration-request-use-check.md | e8754c5 feat: 宣言・要求・使用の一致検査を make check に入れ、egress の方針を定数の単一ソースにする（コードレビューはユーザー作業） |
+| 2026-10-11-06-backlog-run2-remediation-round.md | ラウンド完結（子 PBI 07〜14 をアーカイブ済み。未コミット、`make check` / `make site` green。実機確認・再監査はユーザー作業） |
+| 2026-10-11-07-fix-consent-ui-isolation.md | 未コミット（タスククローザの並列実装）fix: 同意 UI の important 化と適用直前検証。`make check` green。実機確認・レビューはユーザー作業 |
+| 2026-10-11-08-fix-audit-entry-bytes.md | 未コミット（同上）fix: 監査ログの計上を記録全体に拡大。(b) 不採。`make check` green。レビュー・(b) の起票判断はユーザー作業 |
+| 2026-10-11-09-fix-egress-verdict-cache-ttl.md | 未コミット（同上）fix: egress 検証を per-call 化しキャッシュを廃止。`make check` green。レビューはユーザー作業 |
+| 2026-10-11-10-backlog-resolve-and-pin.md | 未コミット（同上）判断 (c) 受容を記録（API リファレンス根拠つき）。実装なし。レビューはユーザー作業 |
+| 2026-10-11-11-docs-host-permission-port-granularity.md | 未コミット（同上）docs: 許可のホスト単位と送信先限定の記録。`make site` / `make check` green。レビューはユーザー作業 |
+| 2026-10-11-12-fix-gemini-egress-consistency.md | 未コミット（同上）docs: Gemini の egress 不通過を受容として 1 か所に記録。`make check` green。レビューはユーザー作業 |
+| 2026-10-11-13-feat-release-pipeline-hardening.md | 未コミット（同上）feat: リリース workflow の最小権限化と承認経路。GitHub 設定・署名タグ実行・コミット・レビューはユーザー作業 |
+| 2026-10-11-14-chore-stale-source-comments.md | 未コミット（同上）chore: コメント 2 か所の是正（host.ts は 07 に吸収、audit-log.ts のみ）。`make check` green。レビューはユーザー作業 |
 | 2026-10-11-00-backlog-pages-update.md | ラウンド完結（子 PBI 11-01・11-02 をアーカイブ済み。未コミット、`make check` / `make site` green） |
 | 2026-10-11-01-feat-store-announcement.md | 未コミット（11a）feat: Pages と README に Chrome ウェブストアの導線を足す |
 | 2026-10-11-02-feat-landing-video-embed.md | 未コミット（11a）feat: ランディングに紹介動画の埋め込みセクションを足す |

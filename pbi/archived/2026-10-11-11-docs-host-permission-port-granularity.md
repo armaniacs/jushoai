@@ -60,13 +60,13 @@ Scenario: コードに粒度の判断が 1 か所に記録される
 
 ## 受け入れ基準
 
-- [ ] `site/content/ja/ai-providers.md` と `site/content/en/ai-providers.md` の通信の許可の節に、許可がホスト単位でポートを区別しないことの説明が足されている
-- [ ] 同じ節に、実際の送信先が保存した接続先（保存済みのベース URL）に限定されることの説明が足されている
-- [ ] `site/content/{ja,en}/privacy.md` の通信の許可の節にも、ホスト単位の宣言と送信先の限定の対が足されている
-- [ ] `src/ai/settings.ts` の `originPattern` のコメントが、port を含めない判断と理由、同一ホストの全ポートに及ぶこと、送信先が保存した接続先に限定されることを 1 か所に記録している
-- [ ] 日英のガイドが同じ節構成を保ち、`make site` が通る
-- [ ] 既存テスト（`tests/ai/settings.test.ts` の `originPattern`、`tests/ai/permissions.test.ts`）が緑のままである（動作の変更がないことの確認）
-- [ ] `make check` が通る
+- [x] `site/content/ja/ai-providers.md` と `site/content/en/ai-providers.md` の通信の許可の節に、許可がホスト単位でポートを区別しないことの説明が足されている
+- [x] 同じ節に、実際の送信先が保存した接続先（保存済みのベース URL）に限定されることの説明が足されている
+- [x] `site/content/{ja,en}/privacy.md` の通信の許可の節にも、ホスト単位の宣言と送信先の限定の対が足されている
+- [x] `src/ai/settings.ts` の `originPattern` のコメントが、port を含めない判断と理由、同一ホストの全ポートに及ぶこと、送信先が保存した接続先に限定されることを 1 か所に記録している
+- [x] 日英のガイドが同じ節構成を保ち、`make site` が通る
+- [x] 既存テスト（`tests/ai/settings.test.ts` の `originPattern`、`tests/ai/permissions.test.ts`）が緑のままである（動作の変更がないことの確認）
+- [x] `make check` が通る
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -146,8 +146,15 @@ sed -n '98,105p' tests/ai/settings.test.ts        # → port を落とす挙動�
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが確認できている（docs PBI のため、生成サイトの日英ページの確認と `make site` の検査で行う）
-- [ ] `make site` と `make check` が通る
-- [ ] `src/ai/settings.ts` のコメントが粒度の判断の 1 か所の記録になっており、実挙動（既存テストの緑）と乖離していない
-- [ ] `Host permission patterns ignore ports` の旧 1 行コメントが、粒度の制約と使用の限定を含む記録に置き換わっている
+- [x] 全 BDD シナリオが確認できている（docs PBI のため、生成サイトの日英ページの確認と `make site` の検査で行う）
+- [x] `make site` と `make check` が通る（最終検証で green 確認済み）
+- [x] `src/ai/settings.ts` のコメントが粒度の判断の 1 か所の記録になっており、実挙動（既存テストの緑）と乖離していない
+- [x] `Host permission patterns ignore ports` の旧 1 行コメントが、粒度の制約と使用の限定を含む記録に置き換わっている
 - [ ] コードレビュー完了
+
+### 実装の記録（2026-10-11）
+
+- 未決の設計判断: 利用者向け表現は (a)「同じホストの別のポートにも許可が及ぶ」と具体で書く形を採用（既存節に文を足すのみ、H2 不変）。port 付き許可への変更は実装しない。設定ページ UI への説明追加は対象外
+- 実装: 日英 `ai-providers.md` / `privacy.md` の「通信の許可」節にホスト単位・送信先限定の対を追記。`originPattern` の 1 行コメントを判断の記録（Firefox bug 1362809、全ポートに及ぶこと、送信先は保存接続先に限定、キー再入力は full origin 比較）に置換
+- 検証: 検査の形骸化確認（H2 数不一致を純粋関数で検出できることを直接確認）→ 日英同時追記 → `npm run site` green（26 pages、check passed）。`tests/ai/settings.test.ts`＋`permissions.test.ts` 72 passed、`tsc --noEmit` exit 0
+- ユーザーの作業として残る項目: `make check` フル実行（最終検証で実施）、生成サイトの目視確認（`make site-serve`）、コードレビューの最終承認

@@ -265,5 +265,10 @@ export const createOpenAiClassifier = (
   retry,
 );
 
+// The dial-time egress gate is intentionally not wired for gemini: the destination is a
+// compile-time constant (GEMINI_BASE_URL) with a validated apiVersion and an encoded
+// model, so there is no attacker-controlled destination to verify. Wiring the gate would
+// add a DoH round trip to every classify for no defensive gain. handle-message.ts passes
+// fetch only for the same recorded reason; the user-facing note lives in the Gemini guides.
 export const createGeminiClassifier = (cfg: GeminiSettings, apiKey: string, deps: HttpDeps) =>
   new HttpClassifier((f) => buildGeminiRequest(cfg, apiKey, f), extractGeminiText, deps);

@@ -15,6 +15,115 @@ import { mountButton, type ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
 
+// Consent verification for the preview apply path. The preview host lives in
+// the page light DOM, so page CSS or scripts can hide, move, or cover it after
+// it opens. The apply click is the last trust point: verify the panel is still
+// genuinely visible before injecting anything. Hit-testing and visibility
+// queries are injectable so unit tests can use fakes (jsdom has no layout).
+export interface ConsentPoint {
+  x: number;
+  y: number;
+}
+
+// Where the consent click is aimed: a viewport point, offscreen, or without a
+// box at all (hidden). Null from legacy callers means offscreen.
+export type ApplyPoint = ConsentPoint | { offscreen: true } | { empty: true } | null;
+
+export interface ConsentCheckDeps {
+  getHost(): Element | null;
+  isHostConnected(): boolean;
+  getApplyPoint(): ApplyPoint;
+  isHostVisible(): boolean;
+  hitTest(x: number, y: number): Element | null;
+}
+
+export type ConsentVerdict = { ok: true } | { ok: false; reason: string };
+
+export function verifyApplyConsent(deps: ConsentCheckDeps): ConsentVerdict {
+  const host = deps.getHost();
+  if (host === null || !deps.isHostConnected()) {
+    return { ok: false, reason: 'パネルがページから取り除かれたため入力を中止しました' };
+  }
+  const point = deps.getApplyPoint();
+  if (point === null || 'offscreen' in point) {
+    return { ok: false, reason: 'パネルが画面の外にあるため入力を中止しました' };
+  }
+  if ('empty' in point) {
+    return { ok: false, reason: 'パネルが表示されていない疑いがあるため入力を中止しました' };
+  }
+  if (!deps.isHostVisible()) {
+    return { ok: false, reason: 'パネルが表示されていないため入力を中止しました' };
+  }
+  // Over shadow content, hit testing retargets to the host element, so only
+  // the host (or its own light-DOM children) counts as topmost here.
+  const hit = deps.hitTest(point.x, point.y);
+  if (hit === null || !host.contains(hit)) {
+    return { ok: false, reason: 'パネルが他の要素に覆われているため入力を中止しました' };
+  }
+  return { ok: true };
+}
+
+const CONSENT_HOST_SELECTOR = '[data-jushoai]';
+
+const inViewport = (x: number, y: number): boolean =>
+  x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight;
+
+// getButtonPoint reads the apply button through the preview handle (the button
+// lives inside the closed shadow root). A null button box means the button is
+// hidden, which blocks the apply; without a provider the host center is used.
+export function defaultConsentCheckDeps(
+  getButtonPoint?: () => ConsentPoint | null,
+): ConsentCheckDeps {
+  const getHost = (): Element | null => document.querySelector(CONSENT_HOST_SELECTOR);
+  const hostCenter = (): ApplyPoint => {
+    const host = getHost();
+    if (host === null) return { offscreen: true };
+    const rect = host.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return { empty: true };
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+    if (!inViewport(x, y)) return { offscreen: true };
+    return { x, y };
+  };
+  return {
+    getHost,
+    isHostConnected: () => getHost()?.isConnected ?? false,
+    getApplyPoint: () => {
+      if (!getButtonPoint) return hostCenter();
+      const p = getButtonPoint();
+      if (p === null) return { empty: true };
+      if (!inViewport(p.x, p.y)) return { offscreen: true };
+      return p;
+    },
+    isHostVisible: () => {
+      const host = getHost();
+      if (host === null) return false;
+      if (typeof host.checkVisibility === 'function') {
+        return host.checkVisibility({ opacityProperty: true, visibilityProperty: true });
+      }
+      const style = getComputedStyle(host);
+      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0;
+    },
+    hitTest: (x, y) => document.elementFromPoint(x, y),
+  };
+}
+
+// Runs apply only when consent verification passes; on failure reports the
+// reason through abort and leaves the panel open for cancel or retry.
+export function applyIfConsented(
+  deps: ConsentCheckDeps,
+  apply: () => void,
+  abort: (reason: string) => void,
+): boolean {
+  const verdict = verifyApplyConsent(deps);
+  if (!verdict.ok) {
+    abort(verdict.reason);
+    return false;
+  }
+  apply();
+  return true;
+}
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
@@ -132,23 +241,34 @@ export default defineContentScript({
           preview.setRows(replan());
         },
         onApply: (sendFeedback) => {
-          void saveLastUsed({ profileId, addressId });
-          applyPlan(plan, byId, fillField);
-          preview.close();
-          openPreview = null;
-          const feedbackInput = buildFeedbackInput({
-            pageHref: location.href,
-            provider: info.provider,
-            version: chrome.runtime.getManifest().version,
-            before: beforeItems,
-            after: afterItems,
-            fields: metas,
-            sendFeedback,
-          });
-          if (feedbackInput) {
-            const url = buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput);
-            window.open(url, '_blank', 'noopener');
-          }
+          // Last trust point: the host may have been hidden, moved, or covered
+          // since the panel opened. The aim point comes from the apply button
+          // through the preview handle; abort before injecting anything. The
+          // panel stays open for cancel or retry, and the reason goes to the
+          // form button, which stays visible even when the panel is hidden.
+          applyIfConsented(
+            defaultConsentCheckDeps(() => preview.getApplyPoint()),
+            () => {
+              void saveLastUsed({ profileId, addressId });
+              applyPlan(plan, byId, fillField);
+              preview.close();
+              openPreview = null;
+              const feedbackInput = buildFeedbackInput({
+                pageHref: location.href,
+                provider: info.provider,
+                version: chrome.runtime.getManifest().version,
+                before: beforeItems,
+                after: afterItems,
+                fields: metas,
+                sendFeedback,
+              });
+              if (feedbackInput) {
+                const url = buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput);
+                window.open(url, '_blank', 'noopener');
+              }
+            },
+            (reason) => button.showError(reason),
+          );
         },
         onCancel: () => {
           preview.close();

@@ -23,8 +23,9 @@ export interface HandlerDeps {
   // Providers that need the OpenAI-compatible fallback request; same lifetime as authFailed.
   compat: Set<ProviderKind>;
   // Dial-time egress gate owned by the caller (the background builds one per SW
-  // lifetime, so its DoH TTL cache spans classify messages); the classifier factory
-  // wires a DoH default when absent.
+  // lifetime for wiring; it holds no cache, so every dial resolves again);
+  // the classifier factory wires a DoH default when absent. Gemini omits the gate
+  // on purpose; see createGeminiClassifier for the recorded reason.
   egress?: EgressCheck;
   audit: AuditRecorder;
 }
@@ -115,6 +116,7 @@ async function selectRaw(
       }) };
   }
   if (s.provider === 'gemini' && secrets.gemini) {
+    // No egress gate: the reason is recorded at createGeminiClassifier, not here.
     return { ok: true, classifier: createGeminiClassifier(s.gemini, secrets.gemini, { fetch: deps.fetch }) };
   }
   return { ok: false, reason: 'not-configured' };
