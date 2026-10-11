@@ -150,7 +150,7 @@ sed -n '98,105p' tests/ai/settings.test.ts        # → port を落とす挙動�
 - [x] `make site` と `make check` が通る（最終検証で green 確認済み）
 - [x] `src/ai/settings.ts` のコメントが粒度の判断の 1 か所の記録になっており、実挙動（既存テストの緑）と乖離していない
 - [x] `Host permission patterns ignore ports` の旧 1 行コメントが、粒度の制約と使用の限定を含む記録に置き換わっている
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 
 ### 実装の記録（2026-10-11）
 

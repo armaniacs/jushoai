@@ -24,8 +24,8 @@ Scenario: 将来 Edge が必要になったら着手する
 
 ## 受け入れ基準
 
-- [ ] 着手条件が本 PBI に記録されている
-- [ ] 着手までは Chrome・Firefox の E2E で代用する
+- [x] 着手条件が本 PBI に記録されている
+- [x] 着手までは Chrome・Firefox の E2E で代用する
 
 ## テスト戦略
 

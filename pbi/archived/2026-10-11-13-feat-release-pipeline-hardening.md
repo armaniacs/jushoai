@@ -139,7 +139,7 @@ ls tests/build/                                # → firefox-manifest.build.ts �
 - [x] repo settings の手順（ruleset、required reviewers、署名付きタグ）が docs/release.md に記録されている
 - [x] docs/release.md に承認待ちが追記されている
 - [x] build 検査を意図的に壊して落ちることを確認済み（形骸化していない）
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 
 ### 実装の記録（2026-10-11、サブエージェントによる並列実装）
 

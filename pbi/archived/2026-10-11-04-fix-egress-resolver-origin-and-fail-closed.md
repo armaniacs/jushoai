@@ -174,7 +174,7 @@ grep -rn "escape hatch" src/ tests/            # → src/ai/settings.ts:251 / te
 - [x] `make check` が通る
 - [x] 方針が `src/ai/settings.ts` の 1 か所に書かれ、コード・テスト・docs がそこを参照している
 - [x] テスト名・コメント・日英 docs から escape hatch の記述が消えている
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] リファクタリング完了（`verified` フラグは `EgressVerdict` から落とした）
 
 ### 実装の記録（2026-10-11）

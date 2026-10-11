@@ -48,4 +48,4 @@ Scenario: Chrome で上書き・maxlength 保護が働く
 
 - [x] Chrome の 3 ケースが緑である
 - [x] `make check` が通る
-- [ ] コードレビュー完了
+- [x] コードレビュー完了

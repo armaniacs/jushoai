@@ -129,7 +129,7 @@ grep -n "byte budget\|AUDIT_MAX_BYTES" tests/ai/audit-log.test.ts
 - [x] `make check` が通る
 - [x] 計上の単位が `src/ai/audit-log.ts` の 1 か所に書かれ、コメントが実装と一致している
 - [x] 既存の境界テスト（UTF-8 計上、混在、サロゲートペア、AuditStore の一貫性）が非破壊で通る
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] (b) の採否が決定して記録されている（採る場合はシナリオと受け入れ基準を本 PBI に追加、または別 PBI を起票）
 
 ### 実装の記録（2026-10-11、サブエージェントによる並列実装）

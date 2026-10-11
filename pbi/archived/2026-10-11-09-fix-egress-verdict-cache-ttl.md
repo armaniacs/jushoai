@@ -149,7 +149,7 @@ grep -n "caches\|costs one lookup\|shares the egress cache" tests/ai/egress-dns.
 - [x] `make check` が通る
 - [x] 現行キャッシュ挙動を固定するテスト 4 件（`tests/ai/egress-dns.test.ts:172`、`:183`、`:320`、`:376`）が per-call の期待に書き換わっている
 - [x] コード・テスト・日英 docs から「TTL（30 秒）キャッシュ」の記述が消えている
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] リファクタリング完了（`EGRESS_TTL_MS` と `ttlMs` 引数の扱いを決定して反映）
 
 ### 実装の記録（2026-10-11）

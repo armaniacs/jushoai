@@ -142,7 +142,7 @@ grep -rn "dns.google" --include=*.ts .         # → src/ai/settings.ts:130 の�
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
 - [x] `make test-build` と `make check` が通る
 - [x] 検査を意図的に壊して落ちることを確認済み（`requiredHostOrigins` からリゾルバを外すと「fetch target https://dns.google/resolve を要求する pattern が無い」旨で落ちることを確認）
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] 方針の表現形式を決定して反映（(a) を採用: `EGRESS_UNVERIFIED_POLICY`（`'block' | 'proceed'` 型、値は `'block'`）を settings.ts に export し、`verdictOf` が値を読む分岐を実在させ、build 検査が宣言と挙動の一致を断言する
 
 ### 実装の記録（2026-10-11）

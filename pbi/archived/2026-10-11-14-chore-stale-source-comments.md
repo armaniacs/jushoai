@@ -135,7 +135,7 @@ grep -rn "keep identity" src/             # → src/ai/audit-log.ts:74
 - [x] 本 PBI の対象外（`src/ai/settings.ts:167-168`）が変更されていない
 - [x] 実装コード・テスト・docs が本 PBI で変更されていない（コメントのみ）
 - [x] `make check` が通る
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 
 ### 実装の記録（2026-10-11）
 
