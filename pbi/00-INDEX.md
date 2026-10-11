@@ -2,12 +2,8 @@
 
 ## 進行中
 
-- `2026-10-11-28-backlog-review2-suggestions-round.md`（コードレビュー第2ラウンド指摘 4 件の対応ラウンド。PBI 化のみ済み、実装は別途。実施順は 24 → 26、25・27 は独立）
-- `2026-10-11-24-fix-consent-point-throw-guard.md`
-- `2026-10-11-25-chore-test-spy-restore.md`
-- `2026-10-11-26-chore-apply-point-null-removal.md`
-- `2026-10-11-27-fix-consent-real-dom-coverage.md`
 - `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
+- `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
 ## 台帳
 
@@ -25,8 +21,14 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-30-feat-chrome-e2e.md | 未コミット feat: Chrome 実ブラウザ E2E（BiDi 導入・ID 解決・3 ケース）。Chrome 実機 3/3 green、`make check` green |
+| 2026-10-11-29-fix-hit-test-own-shadow-node.md | 未コミット fix: ゲートがパネル host を掴むよう修正＋ヒット判定の内側ノード受容。単体・E2E・`make check` green |
 | 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |
-| 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |
+| 2026-10-11-28-backlog-review2-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
+| 2026-10-11-24-fix-consent-point-throw-guard.md | 未コミット（レビュー第2ラウンド順位 1）fix: ボタン点取得の例外安全化。`make check` green |
+| 2026-10-11-25-chore-test-spy-restore.md | 未コミット（同順位 2）chore: スパイ復元の try/finally 化。`make check` green |
+| 2026-10-11-26-chore-apply-point-null-removal.md | 未コミット（同順位 3）chore: ApplyPoint の null 除去。`make check` green |
+| 2026-10-11-27-fix-consent-real-dom-coverage.md | 未コミット（同順位 4）fix: 同意検証の DOM 問合せ注入化。`make check` green |
 | 2026-10-11-15-fix-apply-point-reason.md | 未コミット（レビュー対応ラウンド順位 1）fix: ゼロ矩形と画面外の理由分離。`make check` green |
 | 2026-10-11-16-fix-opacity-compare.md | 未コミット（同順位 2）fix: opacity フォールバックの数値化。`make check` green |
 | 2026-10-11-17-fix-consent-button-point.md | 未コミット（同順位 3）fix: 検証点を承認ボタン矩形に厳密化。`make check` green |

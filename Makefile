@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox zip-firefox
+.PHONY: help install dev build test typecheck check zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -32,7 +32,10 @@ test-build: build build-firefox ## Verify the built manifests for Chrome and Fir
 	npm run test:build
 
 e2e-firefox: build-firefox ## Run the E2E suite in a real Firefox (FIREFOX_BIN, HEADLESS=1 optional)
-	npm run test:e2e
+	npm run test:e2e:firefox
+
+e2e-chrome: build ## Run the E2E suite in a real Chrome (HEADLESS=1 optional)
+	npm run test:e2e:chrome
 
 zip-firefox: ## Package the Firefox build into dist/*.zip
 	npm run zip:firefox

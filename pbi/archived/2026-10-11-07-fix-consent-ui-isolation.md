@@ -144,7 +144,7 @@ ls tests/ui/                      # overlay / preview / position / button / ai-g
 - [x] critical なプロパティが important 付きで設定され、テストで固定されている
 - [x] 適用直前の検証が最後の信頼判断点として入っており、失敗時に注入しないことがテストで固定されている
 - [x] `src/ui/host.ts:1` のコメントが実態に合う記述に置き換わっている
-- [ ] 実機確認（`samples/` と悪意ある fixture、Chrome / Edge / Firefox）の結果が記録されている
+- [x] 実機確認（`samples/` と悪意ある fixture、Chrome / Edge / Firefox）の結果が記録されている
 - [ ] コードレビュー完了
 - [x] リファクタリング完了（検証の依存が注入可能になっている）
 

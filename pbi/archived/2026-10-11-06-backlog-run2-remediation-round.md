@@ -95,7 +95,7 @@ sed -n 7,24p .github/workflows/release.yml        # → permissions contents: wr
 
 ## Definition of Done
 
-- [ ] 子 PBI 8 件の全 BDD シナリオが自動テストとして実装されパスする（実機確認を含む項目は手動確認を完了する）
+- [x] 子 PBI 8 件の全 BDD シナリオが自動テストとして実装されパスする（実機確認を含む項目は手動確認を完了する）
 - [x] `make check` と `make site` が通る
 - [x] run-2 の残り needs_validation 3 件が再監査で決着できる状態（実装・記録・受容のいずれか）になっている
 - [x] ドキュメント更新済み（privacy / ai-providers / release、日英。how-it-works に対象の記述はなく更新不要であることを確認済み）

@@ -47,12 +47,15 @@ describe('appendEntry', () => {
     }));
     const state = { nextId: AUDIT_MAX_ENTRIES + 1, entries };
     const stringify = vi.spyOn(JSON, 'stringify');
-    stringify.mockClear();
-    const s = appendEntry(state, draft(), 2000);
-    expect(s.entries).toHaveLength(AUDIT_MAX_ENTRIES);
-    // Retained entries are re-measured once each, plus the new entry.
-    expect(stringify.mock.calls.length).toBeLessThanOrEqual(AUDIT_MAX_ENTRIES + 1);
-    stringify.mockRestore();
+    try {
+      stringify.mockClear();
+      const s = appendEntry(state, draft(), 2000);
+      expect(s.entries).toHaveLength(AUDIT_MAX_ENTRIES);
+      // Retained entries are re-measured once each, plus the new entry.
+      expect(stringify.mock.calls.length).toBeLessThanOrEqual(AUDIT_MAX_ENTRIES + 1);
+    } finally {
+      stringify.mockRestore();
+    }
   });
 
   it('keeps entries exactly at the byte budget', () => {

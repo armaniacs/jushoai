@@ -4,6 +4,7 @@ import { extname, resolve, sep } from 'node:path';
 import type { AddressInfo } from 'node:net';
 import { Builder, By, until, type WebDriver, type WebElement } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox.js';
+import chrome from 'selenium-webdriver/chrome.js';
 
 export const GECKO_ID = 'jushoai@armaniacs.github.io';
 // Pinning the UUID makes moz-extension://<uuid>/options.html addressable from the test.
@@ -150,6 +151,38 @@ export async function seedProfile(driver: WebDriver): Promise<void> {
     PROFILE_DATA,
   );
   await closeExtensionPage(driver, home);
+}
+
+const CHROME_ADDON_DIR = resolve('dist/chrome-mv3');
+
+// Chrome: the extension id is assigned at install time, so it is resolved via
+// BiDi webextension.install (no id is written down) and the options page is
+// addressed with the returned id.
+export async function startChromeDriver(): Promise<{ driver: WebDriver; extensionId: string }> {
+  if (!existsSync(CHROME_ADDON_DIR)) throw new Error('dist/chrome-mv3 is missing: run `make build` first');
+  const options = new chrome.Options();
+  if (process.env.HEADLESS === '1') options.addArguments('--headless=new');
+  // CI/container-friendly flags (test only): the browser sandbox and /dev/shm
+  // are unavailable in restricted environments.
+  options.addArguments('--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu');
+  options.enableBidi();
+  const driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
+  const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
+    .installWebExtension(CHROME_ADDON_DIR);
+  return { driver, extensionId: ext.id };
+}
+
+export async function seedChromeProfile(driver: WebDriver, extensionId: string): Promise<void> {
+  await driver.get(`chrome-extension://${extensionId}/options.html`);
+  await driver.wait(
+    async () => (await driver.executeScript('return document.readyState')) === 'complete',
+    15_000, 'chrome options page did not load',
+  );
+  await driver.executeAsyncScript(
+    `const done = arguments[arguments.length - 1];
+     chrome.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
+    PROFILE_DATA,
+  );
 }
 
 async function shadowButton(host: WebElement, css: string): Promise<WebElement | null> {

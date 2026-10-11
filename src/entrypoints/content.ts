@@ -26,8 +26,8 @@ export interface ConsentPoint {
 }
 
 // Where the consent click is aimed: a viewport point, offscreen, or without a
-// box at all (hidden). Null from legacy callers means offscreen.
-export type ApplyPoint = ConsentPoint | { offscreen: true } | { empty: true } | null;
+// box at all (hidden).
+export type ApplyPoint = ConsentPoint | { offscreen: true } | { empty: true };
 
 export interface ConsentCheckDeps {
   getHost(): Element | null;
@@ -39,13 +39,27 @@ export interface ConsentCheckDeps {
 
 export type ConsentVerdict = { ok: true } | { ok: false; reason: string };
 
+// Whether the hit-test topmost node is our own UI. elementFromPoint retargets
+// shadow content to the host in some browsers but returns the inner node in
+// others; both mean ours is topmost. host.contains cannot pierce the shadow
+// boundary, so compare through the hit node's root instead (root.host works
+// even for closed roots). A page element covering the button is always a
+// light-DOM node outside the host and stays rejected. Our own panel content
+// cannot be a cover: pages cannot insert nodes into the closed shadow tree.
+function isOwnTopmost(host: Element, hit: Element | null): boolean {
+  if (hit === null) return false;
+  if (host.contains(hit)) return true;
+  const root = hit.getRootNode();
+  return root instanceof ShadowRoot && root.host === host;
+}
+
 export function verifyApplyConsent(deps: ConsentCheckDeps): ConsentVerdict {
   const host = deps.getHost();
   if (host === null || !deps.isHostConnected()) {
     return { ok: false, reason: 'パネルがページから取り除かれたため入力を中止しました' };
   }
   const point = deps.getApplyPoint();
-  if (point === null || 'offscreen' in point) {
+  if ('offscreen' in point) {
     return { ok: false, reason: 'パネルが画面の外にあるため入力を中止しました' };
   }
   if ('empty' in point) {
@@ -54,10 +68,10 @@ export function verifyApplyConsent(deps: ConsentCheckDeps): ConsentVerdict {
   if (!deps.isHostVisible()) {
     return { ok: false, reason: 'パネルが表示されていないため入力を中止しました' };
   }
-  // Over shadow content, hit testing retargets to the host element, so only
-  // the host (or its own light-DOM children) counts as topmost here.
+  // The topmost node must be our own UI: the host itself, its light-DOM
+  // children, or a node inside our shadow tree (see isOwnTopmost).
   const hit = deps.hitTest(point.x, point.y);
-  if (hit === null || !host.contains(hit)) {
+  if (!isOwnTopmost(host, hit)) {
     return { ok: false, reason: 'パネルが他の要素に覆われているため入力を中止しました' };
   }
   return { ok: true };
@@ -65,24 +79,64 @@ export function verifyApplyConsent(deps: ConsentCheckDeps): ConsentVerdict {
 
 const CONSENT_HOST_SELECTOR = '[data-jushoai]';
 
-const inViewport = (x: number, y: number): boolean =>
-  x >= 0 && y >= 0 && x < window.innerWidth && y < window.innerHeight;
+export interface ConsentRect {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+}
+
+// DOM queries behind the default deps. The boundary between testable logic and
+// renderer facts: hostCenter / viewport checks / visibility fallback are pure
+// over this env and unit-testable with fakes; rectOf / elementFromPoint need a
+// real layout engine, so the browser env delegates to the live DOM while tests
+// inject rects and hits.
+export interface ConsentEnv {
+  queryHost(): Element | null;
+  viewport(): { width: number; height: number };
+  rectOf(el: Element): ConsentRect;
+  elementFromPoint(x: number, y: number): Element | null;
+  computedStyle(el: Element): { display: string; visibility: string; opacity: string };
+}
+
+const browserConsentEnv: ConsentEnv = {
+  queryHost: () => document.querySelector(CONSENT_HOST_SELECTOR),
+  viewport: () => ({ width: window.innerWidth, height: window.innerHeight }),
+  rectOf: (el) => {
+    const r = el.getBoundingClientRect();
+    return { left: r.left, top: r.top, width: r.width, height: r.height };
+  },
+  elementFromPoint: (x, y) => document.elementFromPoint(x, y),
+  computedStyle: (el) => {
+    const s = getComputedStyle(el);
+    return { display: s.display, visibility: s.visibility, opacity: s.opacity };
+  },
+};
+
+const inViewport = (env: ConsentEnv, x: number, y: number): boolean => {
+  const v = env.viewport();
+  return x >= 0 && y >= 0 && x < v.width && y < v.height;
+};
 
 // getButtonPoint reads the apply button through the preview handle (the button
 // lives inside the closed shadow root). A null button box means the button is
 // hidden, which blocks the apply; without a provider the host center is used.
 export function defaultConsentCheckDeps(
   getButtonPoint?: () => ConsentPoint | null,
+  env: ConsentEnv = browserConsentEnv,
+  getPreviewHost?: () => Element | null,
 ): ConsentCheckDeps {
-  const getHost = (): Element | null => document.querySelector(CONSENT_HOST_SELECTOR);
+  // The document holds several JushoAI hosts; the gate must verify the panel
+  // host, never the first match (which is usually the form button host).
+  const getHost = (): Element | null => getPreviewHost?.() ?? env.queryHost();
   const hostCenter = (): ApplyPoint => {
     const host = getHost();
     if (host === null) return { offscreen: true };
-    const rect = host.getBoundingClientRect();
+    const rect = env.rectOf(host);
     if (rect.width === 0 && rect.height === 0) return { empty: true };
     const x = rect.left + rect.width / 2;
     const y = rect.top + rect.height / 2;
-    if (!inViewport(x, y)) return { offscreen: true };
+    if (!inViewport(env, x, y)) return { offscreen: true };
     return { x, y };
   };
   return {
@@ -90,9 +144,16 @@ export function defaultConsentCheckDeps(
     isHostConnected: () => getHost()?.isConnected ?? false,
     getApplyPoint: () => {
       if (!getButtonPoint) return hostCenter();
-      const p = getButtonPoint();
+      // A throwing provider must fail safe: block the apply instead of
+      // leaving the click half-handled.
+      let p: ConsentPoint | null;
+      try {
+        p = getButtonPoint();
+      } catch {
+        return { empty: true };
+      }
       if (p === null) return { empty: true };
-      if (!inViewport(p.x, p.y)) return { offscreen: true };
+      if (!inViewport(env, p.x, p.y)) return { offscreen: true };
       return p;
     },
     isHostVisible: () => {
@@ -101,10 +162,10 @@ export function defaultConsentCheckDeps(
       if (typeof host.checkVisibility === 'function') {
         return host.checkVisibility({ opacityProperty: true, visibilityProperty: true });
       }
-      const style = getComputedStyle(host);
+      const style = env.computedStyle(host);
       return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0;
     },
-    hitTest: (x, y) => document.elementFromPoint(x, y),
+    hitTest: (x, y) => env.elementFromPoint(x, y),
   };
 }
 
@@ -247,7 +308,7 @@ export default defineContentScript({
           // panel stays open for cancel or retry, and the reason goes to the
           // form button, which stays visible even when the panel is hidden.
           applyIfConsented(
-            defaultConsentCheckDeps(() => preview.getApplyPoint()),
+            defaultConsentCheckDeps(() => preview.getApplyPoint(), undefined, () => preview.getHost()),
             () => {
               void saveLastUsed({ profileId, addressId });
               applyPlan(plan, byId, fillField);
