@@ -165,7 +165,7 @@ export async function startChromeDriver(): Promise<{ driver: WebDriver; extensio
   // Flag assembly lives in chrome-flags.ts: --no-sandbox is added only in a
   // container or CI, where the browser sandbox and /dev/shm are unavailable;
   // local runs keep the browser sandbox enabled.
-  options.addArguments(...chromeLaunchArgs());
+  options.addArguments(...chromeLaunchArgs(process.env));
   options.enableBidi();
   const driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
   const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
