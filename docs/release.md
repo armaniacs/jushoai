@@ -31,17 +31,18 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 
 ## リポジトリ設定（GitHub の設定画面での手作業）
 
-以下の設定はソースでは強制できず、手作業である。リリースを出す前に確認すること。
+以下の設定はソースでは強制できず、リポジトリ側の設定である。リリースを出す前に状態を確認すること
+（`gh api repos/armaniacs/jushoai/environments` と `gh api repos/armaniacs/jushoai/rulesets`）。
 
-- environment `release` に required reviewers を追加する（Settings → Environments →
-  `release` → Required reviewers）。承認者なしではタグ push だけでは Release が作られない
-  ことがこの PBI の前提である。workflow 側は environment 名の宣言までを行い、
-  承認者の有無は検査の対象外である
-- `v*` タグを ruleset で保護する。2026-10-12 時点の設定（Settings → Rules → Rulesets）:
-  名前 `Protect release tags`、対象 `tag`、パターン `refs/tags/v*`、規則は作成・更新・削除の
-  制限、bypass は maintainer（`armaniacs`）のみ。これにより maintainer 以外は `v*` タグを
-  作成・移動・削除できない。現在の設定は
-  `gh api repos/armaniacs/jushoai/rulesets` で確認できる
+現在の状態（2026-10-12）:
+
+- environment `release` を作成済みで、required reviewers に `armaniacs` を設定している
+  （Settings → Environments → `release` → Required reviewers）。これによりタグ push だけでは
+  Release は作られず、Actions の画面で承認するまで job は待機する。`prevent_self_review` は
+  false なので、タグを push した本人も承認できる（単独メンテナでリリースを止めないため）
+- `v*` タグを ruleset で保護済み。設定は: 名前 `Protect release tags`、対象 `tag`、
+  パターン `refs/tags/v*`、規則は作成・更新・削除の制限、bypass は maintainer（`armaniacs`）
+  のみ。これにより maintainer 以外は `v*` タグを作成・移動・削除できない
 - 署名付きタグの運用: リリースタグは必ず `git tag -s` で署名し、`git tag -v` で検証する。
   検証に使う公開鍵（GPG）の fingerprint はメンテナ間で共有し、検証に失敗したタグの
   Release 承認は行わない
