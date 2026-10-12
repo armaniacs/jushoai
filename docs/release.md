@@ -32,6 +32,9 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 
 ## ストア自動提出（wxt submit）
 
+運用手順の全体は [store-submit.md](store-submit.md) にある（初回セットアップ・通常リリース・
+ストアごとの違い・失敗時の対処）。ここは仕組みの要点だけを残す。
+
 `release.yml` の Submit to stores が `npx wxt submit`（publish-extension 6.2.0 の別名）で
 3 ストアへ並行提出する。3 ストアは `Promise.allSettled` で提出されるため、1 件の失敗が
 他の提出を止めない。失敗したストアはログで判別できる。いずれも審査通過後は自動公開する
