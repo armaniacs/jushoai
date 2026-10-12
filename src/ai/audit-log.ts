@@ -107,6 +107,7 @@ const utf8Bytes = (s: string): number => textEncoder.encode(s).length;
 // storage round-trip and the retained log is re-measured on the next append.
 // That re-measurement is bounded: at most the retained entries
 // (AUDIT_MAX_ENTRIES) are encoded once each per append.
+// Cached sizes go stale if an entry is mutated after measuring; callers must not mutate measured entries (re-measure after any mutation).
 const sizeCache = new WeakMap<AuditEntry, number>();
 const entryBytes = (e: AuditEntry): number => {
   const cached = sizeCache.get(e);
@@ -134,7 +135,9 @@ function withinByteBudget(entries: AuditEntry[]): AuditEntry[] {
     // remainder keeps one separator per remaining pair, so subtracting both
     // keeps the estimate equal to the true serialized size while entries
     // remain. When the last entry is dropped the loop exits and the empty
-    // array costs 2 bytes.
+    // array costs 2 bytes: the subtraction above leaves total at 1 instead,
+    // but total is discarded with the loop exit so the 1-byte underestimate
+    // never affects the return value or the stored data.
     total -= sizes[i]! + 1;
     i++;
   }
