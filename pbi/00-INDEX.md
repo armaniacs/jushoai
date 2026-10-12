@@ -2,6 +2,7 @@
 
 ## 進行中
 
+- `2026-10-11-38-fix-button-anchor-placement.md`（フォームボタンの左下配置の是正。対象 URL 2 件の fixture 化を含む）
 - `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
 - `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 

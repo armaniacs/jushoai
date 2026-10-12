@@ -1,0 +1,52 @@
+<!-- Minimal reproduction of https://pro.form-mailer.jp/lp/2dd1c663300469. Values stripped; trim further before committing. -->
+<form>
+      <label for="field_4695578_sei">名前の姓</label>
+      <input name="field_4695578_sei" id="field_4695578_sei" type="text" value="" placeholder="姓" maxlength="2500" pattern="1">
+      <label for="field_4695578_mei">名前の名</label>
+      <input name="field_4695578_mei" id="field_4695578_mei" type="text" value="" placeholder="名" maxlength="2500" pattern="1">
+      <label for="field_4695585_sei">名前の姓</label>
+      <input name="field_4695585_sei" id="field_4695585_sei" type="text" value="" placeholder="セイ" maxlength="2500" pattern="6">
+      <label for="field_4695585_mei">名前の名</label>
+      <input name="field_4695585_mei" id="field_4695585_mei" type="text" value="" placeholder="メイ" maxlength="2500" pattern="6">
+      <label for="field_4695586_y">生年月日の年</label>
+      <input name="field_4695586_y" id="field_4695586_y" type="text" value="" placeholder="2000" maxlength="4" pattern="^\d{4}$">
+      <label for="field_4695586_m">生年月日の月</label>
+      <select name="field_4695586_m" id="field_4695586_m"><option value="">--</option></select>
+      <label for="field_4695586_d">生年月日の日</label>
+      <select name="field_4695586_d" id="field_4695586_d"><option value="">--</option></select>
+      <label for="field_4695587">学校名</label>
+      <input name="field_4695587" id="field_4695587" type="text" value="" pattern="1">
+      <label for="field_4695590">学部・学科</label>
+      <input name="field_4695590" id="field_4695590" type="text" value="" pattern="1">
+      <label for="field_4695579">メールアドレス</label>
+      <input name="field_4695579" id="field_4695579" type="email" value="" placeholder="info@example.com" maxlength="2500">
+      <label for="field_4695579_mcon">メールアドレスの確認用</label>
+      <input name="field_4695579_mcon" id="field_4695579_mcon" type="email" value="" placeholder="確認用" maxlength="2500">
+      <label for="field_4696239">その他の当社を知った経緯</label>
+      <input name="field_4696239" id="field_4696239" type="text" value="" pattern="1">
+<!-- skip: field_4695584 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: field_4696236[0] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[0] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696236[1] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[1] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696236[2] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[2] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696236[3] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[3] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696236[4] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[4] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696236[5] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696236[5] (checkbox): out of scope (skip fixed) -->
+<!-- skip: field_4696240 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: field_4696241 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_4696241 (checkbox): out of scope (skip fixed) -->
+<!-- skip: submit (submit): action element, never a fill target (exclude) -->
+<!-- skip: key (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: code (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: validated (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+</form>

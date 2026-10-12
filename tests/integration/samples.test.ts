@@ -24,6 +24,8 @@ import joshibi from '../../samples/overseas-webform-joshibi.html?raw';
 import anketo from '../../samples/formmailer-anketo-gender.html?raw';
 import raijo from '../../samples/formmailer-raijo-age.html?raw';
 import reinvent from '../../samples/reinvent-registration-contact.html?raw';
+import fmFreeConsult from '../../samples/12fc22bc297429.html?raw';
+import fmCompanyBriefing from '../../samples/2dd1c663300469.html?raw';
 import { isEnglishPageText } from '../../src/core/page-language';
 
 const SAMPLES: Record<string, string> = {
@@ -45,6 +47,8 @@ const SAMPLES: Record<string, string> = {
   'furigana-fieldset-form.html': furigana,
   'katakana-fieldset-form.html': katakana,
   'profile-fields-form.html': profileFields,
+  '12fc22bc297429.html': fmFreeConsult,
+  '2dd1c663300469.html': fmCompanyBriefing,
 };
 
 const profile: Profile = {
@@ -236,5 +240,97 @@ describe('sample forms end to end', () => {
     const forms = detectForms(document);
     expect(forms).toHaveLength(1);
     expect(forms[0]!.anchor.el.getAttribute('name')).toBe('n1');
+  });
+  it.each([
+    ['12fc22bc297429.html', '12fc22bc297429'],
+    ['2dd1c663300469.html', '2dd1c663300469'],
+  ])('anchors the %s button on a text input, not a leading checkbox', (file) => {
+    document.body.innerHTML = new DOMParser().parseFromString(SAMPLES[file]!, 'text/html').body.innerHTML;
+    const forms = detectForms(document);
+    expect(forms.length).toBeGreaterThan(0);
+    for (const form of forms) {
+      const el = form.anchor.el;
+      expect(el instanceof HTMLInputElement && ['text', 'email', 'tel', 'search'].includes(el.type)).toBe(true);
+    }
+  });
+  it('12fc22bc297429.html fills the in-scope fields', async () => {
+    expect(await planFor('12fc22bc297429.html')).toEqual({
+      'field_4647576_sei': '山田',
+      'field_4647576_mei': '太郎',
+      'field_4647577': 'yamada@example.com',
+      'field_4647588_sei': 'やまだ',
+      'field_4647588_mei': 'たろう',
+      'field_4647591_1': '090',
+      'field_4647591_2': '1234',
+      'field_4647591_3': '5678',
+    });
+//   field_4647587 (法人・団体名): profile has no company value, correctly unfilled
+//   field_4647590 (都道府県 select): only a `--` option, correctly warn-no-option
+//   field_4647582[0] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647582[0] (checkbox): out of scope (skip fixed)
+//   field_4647582[1] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647582[1] (checkbox): out of scope (skip fixed)
+//   field_4647582[2] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647582[2] (checkbox): out of scope (skip fixed)
+//   field_4647582[3] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647582[3] (checkbox): out of scope (skip fixed)
+//   field_4647582[4] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647582[4] (checkbox): out of scope (skip fixed)
+//   field_4647584 (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647586 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)
+//   field_4647594 (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647594 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647594 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4647579 (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4647579 (checkbox): out of scope (skip fixed)
+//   submit (submit): action element, never a fill target (exclude)
+//   validated (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+  });
+  it('2dd1c663300469.html fills the in-scope fields', async () => {
+    expect(await planFor('2dd1c663300469.html')).toEqual({
+      'field_4695578_sei': '山田',
+      'field_4695578_mei': '太郎',
+      'field_4695585_sei': 'ヤマダ',
+      'field_4695585_mei': 'タロウ',
+      'field_4695586_y': '1990',
+      'field_4695587': '都立日比谷高校',
+      'field_4695590': '普通科',
+      'field_4695579': 'yamada@example.com',
+      'field_4695579_mcon': 'yamada@example.com',
+    });
+//   field_4695586_m/_d (month/day selects): only a `--` option, correctly warn-no-option
+//   field_4696239 (その他の経緯): no profile value, correctly unfilled
+//   field_4695584 (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4695584 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   field_4696236[0] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[0] (checkbox): out of scope (skip fixed)
+//   field_4696236[1] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[1] (checkbox): out of scope (skip fixed)
+//   field_4696236[2] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[2] (checkbox): out of scope (skip fixed)
+//   field_4696236[3] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[3] (checkbox): out of scope (skip fixed)
+//   field_4696236[4] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[4] (checkbox): out of scope (skip fixed)
+//   field_4696236[5] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696236[5] (checkbox): out of scope (skip fixed)
+//   field_4696240 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)
+//   field_4696241 (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   field_4696241 (checkbox): out of scope (skip fixed)
+//   submit (submit): action element, never a fill target (exclude)
+//   key (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   code (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   validated (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
   });
 });

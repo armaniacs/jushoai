@@ -406,7 +406,24 @@ export default defineContentScript({
     schedule();
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
     const repositionAll = () => mounted.forEach((m) => m.handle.reposition());
-    window.addEventListener('resize', repositionAll);
+    // Absolute positioning does not follow layout shifts by itself: fonts,
+    // images and viewport changes (DevTools docking) move the anchor after
+    // the position was written. Re-resolve on scroll and geometry changes,
+    // rAF-throttled; reposition() itself skips zero-area anchors, so this
+    // converges instead of oscillating.
+    let raf = 0;
+    const requestReposition = () => {
+      if (raf) return;
+      raf = window.requestAnimationFrame(() => {
+        raf = 0;
+        repositionAll();
+      });
+    };
+    window.addEventListener('scroll', requestReposition, { passive: true });
+    window.addEventListener('resize', requestReposition);
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(requestReposition).observe(document.documentElement);
+    }
     window.addEventListener('load', repositionAll);
   },
 });

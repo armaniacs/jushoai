@@ -62,8 +62,9 @@ function nearbyOf(el: Control): string {
 }
 
 // jsdom has no checkVisibility and reports empty rects for everything, so the rect test is
-// gated on the same capability check to stay inert there.
-function isHidden(el: Control): boolean {
+// gated on the same capability check to stay inert there. Shared with
+// detect-forms.ts so anchor selection skips the same hidden boxes.
+export function isHidden(el: Control): boolean {
   if (el.closest('[hidden]')) return true;
   if (typeof el.checkVisibility !== 'function') return false;
   if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return true;
