@@ -13,10 +13,9 @@
 release job は environment `release` に束ねられており、Release の生成には人の承認が必要である。
 
 1. `package.json` の `version` と CHANGELOG の `## [X.Y.Z]` 節を整えて、main にコミットする
-2. 署名付きタグを作り、検証してから push する
+2. 注釈付きタグを作って push する（タグ名は `vX.Y.Z`。署名は必須ではない）
    ```bash
-   git tag -s vX.Y.Z -m "vX.Y.Z"
-   git tag -v vX.Y.Z
+   git tag -a vX.Y.Z -m "vX.Y.Z"
    git push origin main vX.Y.Z
    ```
 3. ワークフローの実行が environment `release` の承認待ちで止まる。GitHub の Actions
@@ -43,9 +42,10 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 - `v*` タグを ruleset で保護済み。設定は: 名前 `Protect release tags`、対象 `tag`、
   パターン `refs/tags/v*`、規則は作成・更新・削除の制限、bypass は maintainer（`armaniacs`）
   のみ。これにより maintainer 以外は `v*` タグを作成・移動・削除できない
-- 署名付きタグの運用: リリースタグは必ず `git tag -s` で署名し、`git tag -v` で検証する。
-  検証に使う公開鍵（GPG）の fingerprint はメンテナ間で共有し、検証に失敗したタグの
-  Release 承認は行わない
+- タグの署名は必須としない（2026-10-12 に方針変更）。リリースタグは注釈付きタグ
+  （`git tag -a`）で作り、タグ名が `package.json` の `version` と一致することを release
+  workflow が検査する。署名したい場合は `git tag -s` を使ってもよいが、承認の前提条件には
+  しない。GPG 鍵を持たない環境でもリリースを止めないための判断である
 - 可能であれば、タグが main の履歴に含まれること（ancestry）をリリース前に確認する
   (`git merge-base --is-ancestor vX.Y.Z main`)。main 外のコミットを指すタグの承認は行わない
 

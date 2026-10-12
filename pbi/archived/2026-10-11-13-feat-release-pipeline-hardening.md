@@ -53,10 +53,11 @@ Scenario: タグ push だけでは Release が作られない
   Then  Release の生成は承認の後にのみ行われる
   And   承認を待つ手順がリリース手順の文書に記録されている
 
-Scenario: 署名付きタグの作成と検証がリリース手順に書かれている
+Scenario: タグの作成と保護の確認がリリース手順に書かれている
   Given リリース手順の文書がリポジトリにある
   When  タグを打つ手順を確認する
-  Then  手順に署名付きタグの作成と検証が含まれる
+  Then  手順に注釈付きタグの作成が含まれる
+  And   署名は必須としない方針が書かれている
   And   手順に v* タグを保護する設定の確認が含まれる
 ```
 
@@ -68,11 +69,11 @@ Scenario: 署名付きタグの作成と検証がリリース手順に書かれ�
 - [x] release job に environment が設定され、required reviewers を要求する environment 名が workflow と docs で一致している
 - [x] `npm ci --ignore-scripts` の状態で `make check` が通ることをローカルで確認している
 - [x] `tests/build` に release workflow の YAML 検査が置かれ、権限の位置と `persist-credentials: false` と `--ignore-scripts` を断言している
-- [x] repo settings の手順（`v*` タグの ruleset 保護、environment への required reviewers 追加、署名付きタグの作成と検証）が `docs/release.md` に記録されている。設定そのものは手作業であり、本 PBI では記録までを行う
+- [x] repo settings の手順（`v*` タグの ruleset 保護、environment への required reviewers 追加、タグの作成）が `docs/release.md` に記録されている。設定そのものは手作業であり、本 PBI では記録までを行う
 - [x] `docs/release.md` の手順に承認待ちが追記されている
 - [x] `v*` タグの ruleset を作成し、保護が実際に効くことを確認している（下記「repo settings の実施記録」）
 - [x] environment `release` を作成し、required reviewers に `armaniacs` を設定している（下記「repo settings の実施記録」）
-- [ ] 署名付きタグの作成と検証を docs の手順どおりに一度実行して確認している
+- [x] タグの作成方針（署名を必須としない）を docs の手順に反映している
 - [x] `make check` が通る
 
 ### repo settings の実施記録（2026-10-12）
@@ -81,7 +82,7 @@ Scenario: 署名付きタグの作成と検証がリリース手順に書かれ�
 - 検証: 同一設定の一時 ruleset（パターン `refs/tags/w*`）で、bypass なしの push が `Cannot create ref due to creations being restricted` で拒否され、bypass ありの push が成功することを実測した。その後、一時 ruleset と検証タグは削除済み（削除も bypass で成功し、削除規則の検証を兼ねた）
 - 検証に `v*` を使わなかった理由: `v*` の push は release workflow を起動する。検証時点では environment `release` が未作成で承認ゲートが無く、Release が作られてしまうため、パターンだけを変えた同等の ruleset で機構を確認した
 - 作成した environment: `release`（id `24052499431`）。`required_reviewers` 保護規則に `armaniacs` を設定、`prevent_self_review: false`（単独メンテナでも承認できる）。確認は `gh api repos/armaniacs/jushoai/environments`
-- 未実施として残るもの: 署名付きタグの実行確認（GPG 鍵が未設定）。タグ push 後の承認操作そのものは、実際のリリース時に Actions の画面で行う
+- 未実施として残るもの: なし（署名は 2026-10-12 の方針変更で必須ではなくなった。GPG 鍵を持たない環境でもリリースを止めないため。署名したい場合は `git tag -s` を使ってもよい）
 
 ## テスト戦略（t_wadaスタイル）
 
