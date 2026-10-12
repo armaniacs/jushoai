@@ -2,7 +2,12 @@
 
 ## 進行中
 
-- `2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md`（0.1.14 レビュー提案 #1・#2。内部スクロールへの追従と、同意ゲートの host 解決の厳格化。0.1.15 として進める）
+- `2026-10-12-45-backlog-review4-suggestions-round.md`（0.1.14 レビューの残る提案 #3〜#7 のラウンド。順位 1〜5 は 40〜44。同点はリスク軽減で順序付け）
+- `2026-10-12-40-fix-e2e-chrome-sandbox-flag.md`（順位 1。E2E の `--no-sandbox` を CI 限定に）
+- `2026-10-12-41-chore-host-position-default.md`（順位 2。host のデッドな既定の解消）
+- `2026-10-12-42-chore-overlay-left-auto-note.md`（順位 3。`left: auto` 依存の記録）
+- `2026-10-12-43-fix-audit-separator-accounting.md`（順位 4。予算計上の区切り文字）
+- `2026-10-12-44-chore-anchor-rect-single-read.md`（順位 5。矩形読み取りの O(n log n) → O(n)）
 - `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
 - `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
@@ -22,6 +27,7 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md | 7f49af3 fix: ボタンの追従を内部スクロールにも広げ、同意ゲートのhost解決を厳格にする（PR #4 → 1341725、0.1.15 としてリリース済み） |
 | 2026-10-11-38-fix-button-anchor-placement.md | 0889bce fix: 入力ボタンの配置をビューポート基準にし、左下に張り付く問題を直す（Chrome / Firefox の E2E と実ブラウザでの座標実測で確認。0.1.14 としてリリース済み。コードレビューはユーザー作業） |
 | 2026-10-11-37-backlog-review3-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
 | 2026-10-11-33-fix-pageurl-cap-wiring-test.md | 未コミット fix: 入口制限の統合テスト。`make check` green |
