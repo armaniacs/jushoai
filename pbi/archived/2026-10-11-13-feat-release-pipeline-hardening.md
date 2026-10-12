@@ -70,8 +70,17 @@ Scenario: 署名付きタグの作成と検証がリリース手順に書かれ�
 - [x] `tests/build` に release workflow の YAML 検査が置かれ、権限の位置と `persist-credentials: false` と `--ignore-scripts` を断言している
 - [x] repo settings の手順（`v*` タグの ruleset 保護、environment への required reviewers 追加、署名付きタグの作成と検証）が `docs/release.md` に記録されている。設定そのものは手作業であり、本 PBI では記録までを行う
 - [x] `docs/release.md` の手順に承認待ちが追記されている
+- [x] `v*` タグの ruleset を作成し、保護が実際に効くことを確認している（下記「repo settings の実施記録」）
+- [ ] environment `release` の作成と required reviewers の追加（未実施。タグ push 前の必須作業）
 - [ ] 署名付きタグの作成と検証を docs の手順どおりに一度実行して確認している
 - [x] `make check` が通る
+
+### repo settings の実施記録（2026-10-12）
+
+- 作成した ruleset: 名前 `Protect release tags`、id `24909888`、対象 `tag`、パターン `refs/tags/v*`、規則は作成・更新・削除の制限、bypass は maintainer（`armaniacs`、actor id `103550`）のみ
+- 検証: 同一設定の一時 ruleset（パターン `refs/tags/w*`）で、bypass なしの push が `Cannot create ref due to creations being restricted` で拒否され、bypass ありの push が成功することを実測した。その後、一時 ruleset と検証タグは削除済み（削除も bypass で成功し、削除規則の検証を兼ねた）
+- 検証に `v*` を使わなかった理由: `v*` の push は release workflow を起動し、environment `release` が未作成のため承認なしで Release が作られてしまう。パターンだけを変えた同等の ruleset で機構を確認した
+- 未実施として残るもの: environment `release` の作成と required reviewers（これが無い限り、タグ push は無承認で Release を作る）、署名付きタグの実行確認（GPG 鍵が未設定）
 
 ## テスト戦略（t_wadaスタイル）
 

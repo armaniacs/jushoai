@@ -37,8 +37,11 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
   `release` → Required reviewers）。承認者なしではタグ push だけでは Release が作られない
   ことがこの PBI の前提である。workflow 側は environment 名の宣言までを行い、
   承認者の有無は検査の対象外である
-- `v*` タグを ruleset で保護する（Settings → Rules → Rulesets → タグ名パターン `v*`）。
-  タグの作成・更新・削除を許可する actor を制限し、bypass を許可しない
+- `v*` タグを ruleset で保護する。2026-10-12 時点の設定（Settings → Rules → Rulesets）:
+  名前 `Protect release tags`、対象 `tag`、パターン `refs/tags/v*`、規則は作成・更新・削除の
+  制限、bypass は maintainer（`armaniacs`）のみ。これにより maintainer 以外は `v*` タグを
+  作成・移動・削除できない。現在の設定は
+  `gh api repos/armaniacs/jushoai/rulesets` で確認できる
 - 署名付きタグの運用: リリースタグは必ず `git tag -s` で署名し、`git tag -v` で検証する。
   検証に使う公開鍵（GPG）の fingerprint はメンテナ間で共有し、検証に失敗したタグの
   Release 承認は行わない

@@ -53,7 +53,7 @@
 | 2026-10-11-10-backlog-resolve-and-pin.md | 未コミット（同上）判断 (c) 受容を記録（API リファレンス根拠つき）。実装なし。レビューはユーザー作業 |
 | 2026-10-11-11-docs-host-permission-port-granularity.md | 未コミット（同上）docs: 許可のホスト単位と送信先限定の記録。`make site` / `make check` green。レビューはユーザー作業 |
 | 2026-10-11-12-fix-gemini-egress-consistency.md | 未コミット（同上）docs: Gemini の egress 不通過を受容として 1 か所に記録。`make check` green。レビューはユーザー作業 |
-| 2026-10-11-13-feat-release-pipeline-hardening.md | 未コミット（同上）feat: リリース workflow の最小権限化と承認経路。GitHub 設定・署名タグ実行・コミット・レビューはユーザー作業 |
+| 2026-10-11-13-feat-release-pipeline-hardening.md | 未コミット（同上）feat: リリース workflow の最小権限化と承認経路。`v*` タグの ruleset 保護は作成・実証済み。残りは environment `release` の作成と required reviewers、署名タグ実行、レビュー |
 | 2026-10-11-14-chore-stale-source-comments.md | 未コミット（同上）chore: コメント 2 か所の是正（host.ts は 07 に吸収、audit-log.ts のみ）。`make check` green。レビューはユーザー作業 |
 | 2026-10-11-00-backlog-pages-update.md | ラウンド完結（子 PBI 11-01・11-02 をアーカイブ済み。未コミット、`make check` / `make site` green） |
 | 2026-10-11-01-feat-store-announcement.md | 未コミット（11a）feat: Pages と README に Chrome ウェブストアの導線を足す |
