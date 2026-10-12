@@ -27,6 +27,14 @@ export interface PreviewHandle {
   setReanalyzing(busy: boolean): void;
   setAddressId(id: string): void;
   close(): void;
+  // Center of the apply button in viewport coordinates, or null when it has
+  // no box (hidden). The consent gate reads this through the handle because
+  // the button lives inside the closed shadow root.
+  getApplyPoint(): { x: number; y: number } | null;
+  // The host element carrying this panel. The page holds several JushoAI
+  // hosts (form button, panel), so the gate must aim at this one rather than
+  // the first [data-jushoai] node in the document.
+  getHost(): Element;
 }
 
 const STATUS_NOTE: Record<PlanStatus, string> = {
@@ -205,5 +213,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const setAddressId = (id: string): void => {
     if (addressSelect) addressSelect.value = id;
   };
-  return { setRows, setReanalyzing, setAddressId, close };
+  const getApplyPoint = (): { x: number; y: number } | null => {
+    const rect = apply.getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) return null;
+    return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+  };
+  return { setRows, setReanalyzing, setAddressId, close, getApplyPoint, getHost: () => host };
 }

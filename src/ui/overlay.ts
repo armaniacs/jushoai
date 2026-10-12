@@ -5,9 +5,9 @@ import { createShadowHost } from './host';
 // only here; module-specific styles stay in each panel module.
 export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
   const { host, root } = createShadowHost();
-  host.style.position = 'fixed';
-  host.style.top = '16px';
-  host.style.right = '16px';
+  host.style.setProperty('position', 'fixed', 'important');
+  host.style.setProperty('top', '16px', 'important');
+  host.style.setProperty('right', '16px', 'important');
   return { host, root };
 }
 

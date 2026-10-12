@@ -81,4 +81,37 @@ describe('detectForms anchor', () => {
     const [form] = detectForms(document);
     expect(form!.anchor.el.getAttribute('name')).toBe('q1');
   });
+
+  it('prefers a later text input over a leading confident select', () => {
+    document.body.innerHTML = `
+<form id="f">
+<select name="pref"><option>東京都</option></select>
+<input name="last_name"><input name="first_name">
+</form>`;
+    const [form] = detectForms(document);
+    expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
+
+  it('skips hidden fields when picking the anchor', () => {
+    document.body.innerHTML = `
+<form id="f">
+<input name="honey" type="text" hidden><input name="last_name"><input name="first_name"><input name="email" type="email">
+</form>`;
+    const [form] = detectForms(document);
+    expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
+
+  it('skips zero-area boxes when picking the anchor', () => {
+    document.body.innerHTML = `
+<form id="f">
+<input name="honey" type="text"><input name="last_name"><input name="first_name"><input name="email" type="email">
+</form>`;
+    const zero = { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
+    const real = { top: 100, left: 50, right: 250, bottom: 124, width: 200, height: 24, x: 50, y: 100, toJSON() {} } as DOMRect;
+    for (const el of Array.from(document.querySelectorAll('input'))) {
+      el.getBoundingClientRect = () => (el.name === 'honey' ? zero : real);
+    }
+    const [form] = detectForms(document);
+    expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
 });

@@ -1,7 +1,7 @@
 {
   "name": "jushoai",
   "private": true,
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Japanese form filler: names, furigana and split addresses",
   "license": "GPL-3.0-only",
   "author": "armaniacs",
@@ -22,6 +22,8 @@
     "lint:firefox": "web-ext lint --source-dir dist/firefox-mv3",
     "test:build": "vitest run -c vitest.build.config.ts",
     "test:e2e": "vitest run -c vitest.e2e.config.ts",
+    "test:e2e:firefox": "vitest run -c vitest.e2e.config.ts firefox",
+    "test:e2e:chrome": "vitest run -c vitest.e2e.config.ts chrome",
     "typecheck": "tsc --noEmit",
     "site": "node site/build.ts && node site/check.ts",
     "test": "vitest run",

@@ -87,9 +87,7 @@ export function isPrivateIp(ip: string): boolean {
   return ip.includes(':') ? isPrivateIpv6(ip) : isInternalIpv4(ip);
 }
 
-// `unreachable` marks an endpoint the resolver could not verify (resolver down, no answer),
-// as opposed to one confirmed to resolve internally, so a save can warn instead of hard-failing.
-export type UrlCheck = { ok: true; url: URL } | { ok: false; reason: string; unreachable?: boolean };
+export type UrlCheck = { ok: true; url: URL } | { ok: false; reason: string };
 
 export function validateBaseUrl(input: string): UrlCheck {
   let url: URL;
@@ -128,8 +126,11 @@ export function validateBaseUrl(input: string): UrlCheck {
 // MV3 service workers have no DNS API, so resolution goes through a DoH JSON API pinned
 // to a fixed trusted origin; a caller-chosen resolver would open a new SSRF surface.
 export const DOH_ORIGIN = 'https://dns.google/resolve';
+// The permission counterpart of DOH_ORIGIN: the resolver host as a match pattern. The dial
+// only hits /resolve, but the requested grant is the resolver origin so the prompt names
+// the host the extension actually needs to reach for verification.
+export const DOH_PERMISSION_PATTERN = 'https://dns.google/*';
 export const DOH_TIMEOUT_MS = 3_000;
-export const EGRESS_TTL_MS = 30_000;
 
 export interface ResolveDeps {
   fetch: typeof fetch;
@@ -164,58 +165,66 @@ async function dohQuery(host: string, type: keyof typeof DNS_TYPE_IDS, deps: Res
 
 async function resolveHostAddresses(host: string, deps: ResolveDeps): Promise<string[]> {
   const [v4, v6] = await Promise.allSettled([dohQuery(host, 'A', deps), dohQuery(host, 'AAAA', deps)]);
-  // Fail-closed: any request failure or a name with no confirmed address leaves the dial
-  // target unverified, so the answer set is unusable for an allow decision.
+  // Any request failure or a name with no confirmed address throws, so the caller never
+  // receives an answer set that was not confirmed public.
   if (v4.status === 'rejected' || v6.status === 'rejected') throw new Error('dns resolution failed');
   const addresses = [...v4.value, ...v6.value];
   if (addresses.length === 0) throw new Error('dns resolution failed');
   return addresses;
 }
 
-// `verified` is false when the resolver could not confirm the addresses: a dial proceeds
-// anyway (the fetch itself surfaces the real error), while a save reports the endpoint as
-// unverified instead of vouching for it.
-export type EgressVerdict = { ok: true; verified: boolean } | { ok: false; internal: boolean };
+// The verdict shape both gates read. A resolved internal address is `internal`; an
+// unresolvable result (unreachable, empty answer, timeout) follows EGRESS_UNVERIFIED_POLICY.
+export type EgressVerdict = { ok: true } | { ok: false; internal: boolean };
 export type EgressCheck = (url: URL) => Promise<EgressVerdict>;
 
-// An empty answer set means the resolver could not confirm any address, so the verdict
-// must not count as verified even though it lets the dial proceed.
+// The single declaration of the egress policy: an unconfirmed resolution never dials
+// (fail-closed). verdictOf reads this value, and tests/build/host-permission-coverage.build.ts
+// asserts the declaration and the gate behavior agree. Switching to 'proceed' restores the
+// pre-0.1.13 fail-open and fails those tests.
+export type EgressUnverifiedPolicy = 'block' | 'proceed';
+export const EGRESS_UNVERIFIED_POLICY: EgressUnverifiedPolicy = 'block';
+
+// An empty answer set (nothing could be confirmed) blocks the dial just like an internal
+// address, per EGRESS_UNVERIFIED_POLICY.
 function verdictOf(addresses: string[]): EgressVerdict {
   if (addresses.some((ip) => isPrivateIp(ip))) return { ok: false, internal: true };
-  return { ok: true, verified: addresses.length > 0 };
+  if (addresses.length === 0) {
+    return EGRESS_UNVERIFIED_POLICY === 'block' ? { ok: false, internal: false } : { ok: true };
+  }
+  return { ok: true };
 }
 
-// Dial-time gate over the same ranges as the lexical gate. Resolutions are cached per
-// check instance with a TTL; the background owns one instance per SW lifetime, so one
-// lookup per host spans every classify (including compat retries) until the TTL expires.
-export function createEgressCheck(deps: ResolveDeps, ttlMs: number = EGRESS_TTL_MS): EgressCheck {
-  const cache = new Map<string, { expires: number; addresses: string[] }>();
+// Dial-time gate over the same ranges as the lexical gate. Every call resolves the
+// host again (per-call): a verdict is never carried into the next call, so a flip to
+// an internal address after one check is caught by the next dial. The background keeps
+// one check instance for wiring, but it holds no cache. One dial costs one resolution
+// round trip (A + AAAA queries); a compat retry resolves again, so one classify costs
+// at most two round trips. This cost is accepted: there is no cache to reintroduce.
+export function createEgressCheck(deps: ResolveDeps): EgressCheck {
   return async (url: URL): Promise<EgressVerdict> => {
     const host = normalizeHost(url.hostname);
-    if (isLoopbackHost(host)) return { ok: true, verified: true };
+    if (isLoopbackHost(host)) return { ok: true };
     if (isPrivateHost(host)) return { ok: false, internal: true };
     // Literal IPv4 hosts need no resolution; the lexical private ranges already cover them.
-    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return { ok: true, verified: true };
-    const now = Date.now();
-    const hit = cache.get(host);
-    if (hit && hit.expires > now) {
-      return verdictOf(hit.addresses);
-    }
-    // An unreachable or unresolvable DoH must not strand a previously working endpoint:
-    // the lexical gate already passed and the dial itself surfaces the real network
-    // error. The empty set is cached, so one TTL window pays at most one resolution delay.
+    if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host)) return { ok: true };
+    // An unresolvable result (unreachable, empty answer, timeout) blocks the dial per the
+    // policy above. Nothing is cached, so each dial pays its own resolution delay.
     let addresses: string[] = [];
     try {
       addresses = await resolveHostAddresses(host, deps);
     } catch {
-      // proceed unverified
+      addresses = [];
     }
-    cache.set(host, { expires: now + ttlMs, addresses });
     return verdictOf(addresses);
   };
 }
 
-// Host permission patterns ignore ports, so the pattern is protocol + hostname only.
+// The permission pattern is written without a port on purpose: the same code runs on
+// Chrome and Firefox, and Firefox match patterns cannot include a port (bug 1362809).
+// A port-less pattern matches every port on the host, so consenting to one endpoint
+// grants the whole host. Actual sends stay limited to the saved base URL: fetch uses
+// cfg.baseUrl as-is, and the key re-entry check compares full origins (port included).
 export function originPattern(baseUrl: string): string | null {
   const check = validateBaseUrl(baseUrl);
   return check.ok ? `${check.url.protocol}//${normalizeHost(check.url.hostname)}/*` : null;
@@ -248,38 +257,31 @@ export async function validateBaseUrlResolved(input: string, deps: ResolveDeps):
   const lexical = validateBaseUrl(input);
   if (!lexical.ok) return lexical;
   const verdict = await createEgressCheck(deps)(lexical.url);
-  // The dial-time escape hatch lives in the verdict's `verified` flag: an internal
-  // resolution is a hard error here, an unreachable resolver only warns at save time.
+  // The save-time gate is fail-closed too: a resolved internal address is the internal
+  // error, an unresolvable result is the resolve-failed error. Both reject the save
+  // (there is no warn-and-proceed path).
   if (!verdict.ok) {
-    return { ok: false, reason: RESOLVED_INTERNAL_MESSAGE };
-  }
-  if (!verdict.verified) {
-    return { ok: false, reason: RESOLVE_FAILED_MESSAGE, unreachable: true };
+    return { ok: false, reason: verdict.internal ? RESOLVED_INTERNAL_MESSAGE : RESOLVE_FAILED_MESSAGE };
   }
   return lexical;
 }
 
 export interface ResolvedSettingsCheck {
   errors: string[];
-  // True when the resolver could not verify the endpoint: the settings are lexically
-  // valid but unverified, so a save may proceed with a warning instead of an error.
-  unreachable: boolean;
 }
 
 // Save-time validation including the resolved-address gate. The sync validateAiSettings
-// stays lexical because origin patterns and cloud status need its timing. Only a
-// confirmed internal resolution is a hard error; an unreachable resolver keeps the
-// settings savable and reports `unreachable` for the warning notice instead.
+// stays lexical because origin patterns and cloud status need its timing. Both a confirmed
+// internal resolution and an unresolvable endpoint reject the save (fail-closed).
 export async function validateAiSettingsResolved(
   s: AiSettings,
   hasKey: KeyPresence,
   deps: ResolveDeps,
 ): Promise<ResolvedSettingsCheck> {
   const errors = validateAiSettings(s, hasKey);
-  if (s.provider !== 'openai' || !s.openai.baseUrl) return { errors, unreachable: false };
+  if (s.provider !== 'openai' || !s.openai.baseUrl) return { errors };
   const check = await validateBaseUrlResolved(s.openai.baseUrl, deps);
-  if (check.ok) return { errors, unreachable: false };
-  if (check.unreachable) return { errors, unreachable: true };
+  if (check.ok) return { errors };
   if (!errors.includes(check.reason)) errors.push(check.reason);
-  return { errors, unreachable: false };
+  return { errors };
 }

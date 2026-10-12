@@ -10,6 +10,34 @@ export const AUDIT_MAX_ENTRIES = 1000;
 // 10 MB in Chrome) so a full batch cannot wedge every future write.
 export const AUDIT_MAX_BYTES = 4_000_000;
 
+// Upper bound for the page URL kept in an audit record. sanitizePageUrl has no
+// length limit and history.pushState can stretch the pathname, so the audit
+// ingest caps it here instead of in the shared sanitizer (which also feeds the
+// feedback report URL). 1024 bytes keeps any realistic origin (~<300 bytes)
+// with room for a path prefix. The cut is on a code-point boundary, so no
+// broken encoding or split surrogate pair is ever stored. A stored pageUrl at
+// exactly the bound may be a truncated prefix; this is accepted (the audit
+// needs the destination identity, not the full path).
+export const AUDIT_PAGE_URL_MAX_BYTES = 1024;
+const pageUrlEncoder = new TextEncoder();
+const isHighSurrogate = (code: number): boolean => code >= 0xd800 && code <= 0xdbff;
+export function capAuditPageUrl(url: string): string {
+  if (pageUrlEncoder.encode(url).length <= AUDIT_PAGE_URL_MAX_BYTES) return url;
+  // Binary-search the longest fitting UTF-16 prefix (O(log n) encodings),
+  // then drop a trailing split surrogate pair, if any. Any other cut already
+  // falls on a code-point boundary.
+  let lo = 0;
+  let hi = url.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (pageUrlEncoder.encode(url.slice(0, mid)).length <= AUDIT_PAGE_URL_MAX_BYTES) lo = mid;
+    else hi = mid - 1;
+  }
+  let end = lo;
+  if (end > 0 && isHighSurrogate(url.charCodeAt(end - 1))) end -= 1;
+  return url.slice(0, end);
+}
+
 export const AUDIT_RESULTS = ['success', 'auth-error', 'http-error', 'network-error', 'invalid-response', 'error'] as const;
 export type AuditResult = (typeof AUDIT_RESULTS)[number];
 export type AuditPurpose = 'classify' | 'connection-test';
@@ -64,28 +92,35 @@ export function pruneEntries(entries: AuditEntry[], now: number): AuditEntry[] {
 // Drops the oldest entries until the estimated serialized batch fits the byte
 // budget; without this a full batch would make chrome.storage.local.set fail on
 // every future append and the stale blob would never shrink on its own.
-// The fixed 256 approximates the per-entry JSON overhead (id, ISO date, array
-// structure, escaping); those fields are ASCII-heavy, so UTF-8 accounting keeps
-// the approximation roughly valid.
+// Each entry is measured as the UTF-8 length of its JSON form, so every stored
+// field (including the page-controlled pageUrl) counts toward the budget; key
+// names and escaping are included because JSON.stringify produces them.
 // One encoder is shared by every measurement: the classify hot path records an
 // audit per append, so allocating an encoder per call is pure churn.
 const textEncoder = new TextEncoder();
 const utf8Bytes = (s: string): number => textEncoder.encode(s).length;
-// Sizes are memoized per entry object: entries are immutable and keep identity
-// across appends, so re-measuring the retained log on every append (and twice
-// for pruned entries) is avoided and each append only encodes the new entry.
+// Sizes are memoized per entry object, so the retained log is measured once
+// per entry for objects that keep identity in memory: appendEntry keeps the
+// existing entry objects and adds one, so each append only encodes the new
+// entry. AuditStore.record() re-reads the state from chrome.storage.local and
+// normalizeAuditState rebuilds every entry, so identities do not survive a
+// storage round-trip and the retained log is re-measured on the next append.
+// That re-measurement is bounded: at most the retained entries
+// (AUDIT_MAX_ENTRIES) are encoded once each per append.
 const sizeCache = new WeakMap<AuditEntry, number>();
 const entryBytes = (e: AuditEntry): number => {
   const cached = sizeCache.get(e);
   if (cached !== undefined) return cached;
-  const size = utf8Bytes(e.request) + utf8Bytes(e.response) + 256;
+  const size = utf8Bytes(JSON.stringify(e));
   sizeCache.set(e, size);
   return size;
 };
 
 function withinByteBudget(entries: AuditEntry[]): AuditEntry[] {
   const sizes = entries.map(entryBytes);
-  let total = 0;
+  // The stored batch is a JSON array, so the bracket pair and the separators
+  // between entries count too: 2 + max(0, n - 1) bytes, all ASCII.
+  let total = 2 + Math.max(0, entries.length - 1);
   for (const size of sizes) total += size;
   let i = 0;
   while (i < entries.length && total > AUDIT_MAX_BYTES) {

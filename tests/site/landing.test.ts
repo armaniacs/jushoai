@@ -14,7 +14,7 @@ describe('renderLanding', () => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });
     expect((html.match(/<h1/g) ?? []).length).toBe(1);
-    for (const id of ['features', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
+    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
       expect(html).toContain(`id="${id}"`);
     }
     for (const item of s.features.items) expect(html).toContain(item.title);
@@ -39,6 +39,33 @@ describe('renderLanding', () => {
     expect(html).toContain('AI判定');
   });
 
+  it.each(['ja', 'en'] as const)('links to the Chrome Web Store once with the %s language hint', async (lang) => {
+    const html = renderLanding({ lang, base: '/', s: await load(lang) });
+    const url = `https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=${lang}`;
+    expect(html.split(`href="${url}"`).length - 1).toBe(1);
+    expect(html).toContain('rel="noopener noreferrer"');
+    expect(html).not.toContain('utm_source');
+  });
+
+  it.each(['ja', 'en'] as const)('embeds the demo video without cookies for %s', async (lang) => {
+    const s = await load(lang);
+    const html = renderLanding({ lang, base: '/', s });
+    expect(html).toContain('src="https://www.youtube-nocookie.com/embed/Y3y9ofrsyFo"');
+    expect(html).toContain('loading="lazy"');
+    expect(html).toContain(`title="${s.demo.iframeTitle}"`);
+    expect(html).toContain('href="https://www.youtube.com/watch?v=Y3y9ofrsyFo"');
+    expect(html).not.toContain('www.youtube.com/embed');
+  });
+
+  it('no longer says the extension is unpublished and keeps the Firefox path', async () => {
+    const ja = renderLanding({ lang: 'ja', base: '/', s: await load('ja') });
+    expect(ja).not.toContain('ストアには公開していません');
+    expect(ja).toContain('Firefox');
+    const en = renderLanding({ lang: 'en', base: '/', s: await load('en') });
+    expect(en).not.toContain('not on the stores');
+    expect(en).toContain('Firefox');
+  });
+
   it('adds the interface-language note only on the English page', async () => {
     const ja = renderLanding({ lang: 'ja', base: '/', s: await load('ja') });
     const en = renderLanding({ lang: 'en', base: '/', s: await load('en') });
@@ -53,6 +80,9 @@ describe('renderLanding', () => {
       (s) => { s.features.items[0]!.body = '<b>x</b>'; },
       (s) => { s.faq.items[0]!.a = '<b>x</b>'; },
       (s) => { s.install.steps[0] = '<b>x</b>'; },
+      (s) => { s.install.store = '<b>x</b>'; },
+      (s) => { s.demo.lead = '<b>x</b>'; },
+      (s) => { s.demo.iframeTitle = '<b>x</b>'; },
       (s) => { s.providers.items[0]!.body = '<b>x</b>'; },
       (s) => { s.privacy.items[0]!.body = '<b>x</b>'; },
     ];
@@ -73,7 +103,7 @@ describe('renderLanding', () => {
 
   it.each(['ja', 'en'] as const)('has each section id exactly once for %s', async (lang) => {
     const html = renderLanding({ lang, base: '/', s: await load(lang) });
-    for (const id of ['features', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
+    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
       expect(html.split(`id="${id}"`).length - 1).toBe(1);
     }
   });

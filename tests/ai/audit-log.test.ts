@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
-  appendEntry, auditFileName, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
+  AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_PAGE_URL_MAX_BYTES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
+  appendEntry, auditFileName, capAuditPageUrl, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
 } from '../../src/ai/audit-log';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
@@ -41,8 +41,29 @@ describe('appendEntry', () => {
     expect(s.nextId).toBe(3);
   });
 
+  it('re-measures at most the retained entries once per append', () => {
+    const entries = Array.from({ length: AUDIT_MAX_ENTRIES }, (_, i) => ({
+      ...draft(), id: i + 1, createdAt: 1000,
+    }));
+    const state = { nextId: AUDIT_MAX_ENTRIES + 1, entries };
+    const stringify = vi.spyOn(JSON, 'stringify');
+    try {
+      stringify.mockClear();
+      const s = appendEntry(state, draft(), 2000);
+      expect(s.entries).toHaveLength(AUDIT_MAX_ENTRIES);
+      // Retained entries are re-measured once each, plus the new entry.
+      expect(stringify.mock.calls.length).toBeLessThanOrEqual(AUDIT_MAX_ENTRIES + 1);
+    } finally {
+      stringify.mockRestore();
+    }
+  });
+
   it('keeps entries exactly at the byte budget', () => {
-    const exact = draft({ request: 'x'.repeat(AUDIT_MAX_BYTES - 256 - 3) });
+    // Whole-record JSON accounting: an entry with an empty request serializes
+    // to 285 bytes (id=1, createdAt=1, default draft with response 'RAW'), plus
+    // 2 bytes of array structure for a single entry, so this request length
+    // fills the budget exactly.
+    const exact = draft({ request: 'x'.repeat(AUDIT_MAX_BYTES - 285 - 2) });
     const s = appendEntry(EMPTY_AUDIT_STATE, exact, 1);
     expect(s.entries).toHaveLength(1);
   });
@@ -59,6 +80,39 @@ describe('appendEntry', () => {
       'provider', 'purpose', 'request', 'response', 'result', 'retried',
     ]);
     expect(s.entries).toHaveLength(1);
+  });
+});
+
+describe('capAuditPageUrl', () => {
+  const bytes = (s: string) => new TextEncoder().encode(s).length;
+
+  it('keeps a within-limit pageUrl unchanged', () => {
+    const url = 'https://example.com/' + 'a'.repeat(100);
+    expect(capAuditPageUrl(url)).toBe(url);
+  });
+
+  it('caps an over-long pageUrl at 1024 UTF-8 bytes keeping the origin', () => {
+    const url = 'https://example.com/' + 'a'.repeat(5000);
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    expect(capped.startsWith('https://example.com/')).toBe(true);
+  });
+
+  it('cuts on a character boundary without breaking multibyte text', () => {
+    const url = 'https://example.com/' + 'a'.repeat(1023) + 'あ';
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    expect(capped.endsWith('a')).toBe(true);
+  });
+
+  it('never splits a surrogate pair', () => {
+    const url = 'https://example.com/' + 'a'.repeat(1022) + '𩸽';
+    const capped = capAuditPageUrl(url);
+    expect(bytes(capped)).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
+    // 20 + 1004 = 1024 bytes exactly; the 4-byte pair does not fit, so it is
+    // dropped whole instead of split.
+    expect(capped).toBe('https://example.com/' + 'a'.repeat(1004));
+    expect(/[\ud800-\udbff](?![\udc00-\udfff])/.test(capped)).toBe(false);
   });
 });
 
@@ -83,16 +137,24 @@ describe('byte budget accounting (UTF-8)', () => {
   });
 
   it('holds an entry exactly at the byte budget and drops it 1 byte over', () => {
-    const exact = draft({ request: 'あ'.repeat(1_333_247) });
+    // Whole-record JSON accounting: empty-request overhead is 285 bytes,
+    // 1,333,237 CJK chars cost 3,999,711 bytes, and the single-entry array
+    // structure adds 2 bytes, so two ASCII chars fill the budget exactly
+    // (285 + 3,999,711 + 2 + 2 = 4,000,000) and three exceed it by 1.
+    const exact = draft({ request: 'あ'.repeat(1_333_237) + 'aa' });
     expect(appendEntry(EMPTY_AUDIT_STATE, exact, 1).entries).toHaveLength(1);
-    const over = draft({ request: 'あ'.repeat(1_333_247) + 'a' });
+    const over = draft({ request: 'あ'.repeat(1_333_237) + 'aaa' });
     expect(appendEntry(EMPTY_AUDIT_STATE, over, 1).entries).toHaveLength(0);
   });
 
   it('holds the boundary across mixed ASCII and CJK entries', () => {
-    const exact = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_482) }), 1000);
+    // Whole-record JSON accounting: with 4-digit timestamps each entry's
+    // empty-request overhead is 288 bytes, and the two-entry array structure
+    // adds 3 bytes, so 999,421 + 288 + 3,000,000 + 288 + 3 fills the budget
+    // exactly and one more ASCII byte drops the oldest.
+    const exact = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_421) }), 1000);
     expect(appendEntry(exact, draft({ request: 'あ'.repeat(1_000_000) }), 2000).entries).toHaveLength(2);
-    const under = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_483) }), 1000);
+    const under = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(999_422) }), 1000);
     expect(appendEntry(under, draft({ request: 'あ'.repeat(1_000_000) }), 2000).entries.map((e) => e.id)).toEqual([2]);
   });
 
@@ -103,6 +165,57 @@ describe('byte budget accounting (UTF-8)', () => {
     s = appendEntry(s, big(), 3000);
     expect(s.entries.map((e) => e.id)).toEqual([3]);
     expect(s.nextId).toBe(4);
+  });
+});
+
+describe('pageUrl byte budget accounting (regression: pageUrl counts toward the budget)', () => {
+  const minimal = (over: Partial<AuditDraft> = {}): AuditDraft =>
+    draft({ request: '', response: '', ...over });
+
+  it('counts a long pageUrl toward the byte budget and drops the over-budget entry', () => {
+    const longPageUrl = `https://example.com/${'p'.repeat(4_000_000)}`;
+    const s = appendEntry(EMPTY_AUDIT_STATE, minimal({ pageUrl: longPageUrl }), 1);
+    expect(s.entries).toHaveLength(0);
+  });
+
+  it('drops the oldest entry when a long pageUrl pushes the batch over budget', () => {
+    const heavy = (): AuditDraft => minimal({ pageUrl: `https://example.com/${'q'.repeat(2_500_000)}` });
+    let s = appendEntry(EMPTY_AUDIT_STATE, heavy(), 1000);
+    s = appendEntry(s, heavy(), 2000);
+    expect(s.entries.map((e) => e.id)).toEqual([2]);
+  });
+
+  it('keeps a pageUrl entry within the byte budget', () => {
+    const s = appendEntry(EMPTY_AUDIT_STATE, minimal(), 1);
+    expect(s.entries).toHaveLength(1);
+  });
+
+  it('counts a CJK pageUrl by UTF-8 bytes toward the budget', () => {
+    const cjkPage = minimal({ pageUrl: `https://example.com/${'あ'.repeat(1_400_000)}` });
+    expect(appendEntry(EMPTY_AUDIT_STATE, cjkPage, 1).entries).toHaveLength(0);
+    const fitting = minimal({ pageUrl: `https://example.com/${'あ'.repeat(100)}` });
+    expect(appendEntry(EMPTY_AUDIT_STATE, fitting, 1).entries).toHaveLength(1);
+  });
+
+  it('counts surrogate pairs in pageUrl as 4 UTF-8 bytes toward the budget', () => {
+    const astralPage = minimal({ pageUrl: `https://example.com/${'\u{29E3D}'.repeat(1_100_000)}` });
+    expect(appendEntry(EMPTY_AUDIT_STATE, astralPage, 1).entries).toHaveLength(0);
+  });
+
+  it('counts mixed pageUrl and CJK request bytes together toward the budget', () => {
+    const mixed = minimal({
+      pageUrl: `https://example.com/${'p'.repeat(1_000_000)}`,
+      request: 'あ'.repeat(1_000_000),
+    });
+    expect(appendEntry(EMPTY_AUDIT_STATE, mixed, 1).entries).toHaveLength(0);
+  });
+
+  it('keeps the serialized batch within the byte budget when pageUrl is heavy', () => {
+    const heavy = (): AuditDraft => minimal({ pageUrl: `https://example.com/${'q'.repeat(2_500_000)}` });
+    let s = appendEntry(EMPTY_AUDIT_STATE, heavy(), 1000);
+    s = appendEntry(s, heavy(), 2000);
+    const bytes = new TextEncoder().encode(JSON.stringify(s.entries)).length;
+    expect(bytes).toBeLessThanOrEqual(AUDIT_MAX_BYTES + s.entries.length + 1);
   });
 });
 
@@ -255,6 +368,14 @@ describe('AuditStore', () => {
     const big = (): AuditDraft => draft({ request: 'あ'.repeat(700_000) });
     await s.record(big());
     await s.record(big());
+    expect((await s.list()).map((e) => e.id)).toEqual([2]);
+  });
+
+  it('keeps append and list accounting consistent for pageUrl-heavy records', async () => {
+    const s = new AuditStore(() => 1000);
+    const heavy = (): AuditDraft => draft({ request: '', response: '', pageUrl: `https://example.com/${'q'.repeat(2_500_000)}` });
+    await s.record(heavy());
+    await s.record(heavy());
     expect((await s.list()).map((e) => e.id)).toEqual([2]);
   });
 

@@ -1,4 +1,4 @@
-import { originPatternsFor, requestHostPermission } from '../../ai/permissions';
+import { requiredHostOrigins, requestHostPermission } from '../../ai/permissions';
 import { needsKeyReentry, resolveOpenAiToSave } from '../../ai/key-reentry';
 import { IdbKeyStore } from '../../ai/secret-store';
 import { normalizeAiSettings, validateAiSettings, validateAiSettingsResolved } from '../../ai/settings';
@@ -265,7 +265,9 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
     return;
   }
   // The permission prompt needs the click's user gesture, so it must be the first await.
-  const origins = originPatternsFor(normalized);
+  // The dial-time gate resolves through the pinned DoH origin, so the request covers the
+  // connection origin and the resolver origin (requiredHostOrigins).
+  const origins = requiredHostOrigins(normalized);
   const granted = origins.length === 0 ? true : await requestHostPermission(origins);
   // Save-time parity with the dial-time gate: a name that resolves into a private range
   // must not reach the store. It runs after the prompt for the gesture reason above; a
@@ -298,15 +300,12 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
     env.notify('保存しましたが、保存状態の再読み込みに失敗しました。設定ページを開き直してください。', 'errors');
     return;
   }
-  // An unreachable resolver leaves the settings lexically valid but unverified, so the
-  // save proceeds and the warning rides on the saved notice instead of blocking it.
+  // The save-time gate is fail-closed, so reaching this point means the resolved address
+  // was confirmed public. Only a denied permission leaves AI unusable.
   const saved = granted
     ? '保存しました。'
     : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。';
-  env.notify(
-    resolved.unreachable ? `${saved}接続先のアドレスを解決できなかったため、検証できていません。` : saved,
-    granted && !resolved.unreachable ? 'saved' : 'errors',
-  );
+  env.notify(saved, granted ? 'saved' : 'errors');
 }
 
 async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): Promise<void> {

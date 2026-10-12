@@ -2,6 +2,8 @@
 
 開発者ダッシュボードの各欄に貼り付ける文面。事実は README、`site/content/*/privacy.md`、`wxt.config.ts` に合わせる。
 
+公開状況: 2026-10-10 に Chrome ウェブストアで公開済み（`https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl`）。サイトと README のインストール案内もストア導線に揃えてある。
+
 ## ストア掲載情報
 
 ### 名前

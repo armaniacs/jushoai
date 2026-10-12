@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { hasHostPermission, originPatternsFor, requestHostPermission } from '../../src/ai/permissions';
+import { hasHostPermission, originPatternsFor, requestHostPermission, requiredHostOrigins } from '../../src/ai/permissions';
 import { DEFAULT_AI_SETTINGS, type AiSettings } from '../../src/ai/types';
 
 const openai: AiSettings = {
@@ -18,6 +18,25 @@ describe('originPatternsFor', () => {
 
   it('returns nothing when the base URL is invalid', () => {
     expect(originPatternsFor({ ...openai, openai: { baseUrl: 'http://example.com', model: 'm' } })).toEqual([]);
+  });
+});
+
+describe('requiredHostOrigins', () => {
+  it('asks for the connection origin and the resolver origin for cloud providers', () => {
+    expect(requiredHostOrigins(openai)).toEqual(['https://api.groq.com/*', 'https://dns.google/*']);
+    expect(requiredHostOrigins({ ...openai, provider: 'gemini' })).toEqual([
+      'https://generativelanguage.googleapis.com/*',
+      'https://dns.google/*',
+    ]);
+  });
+
+  it('asks for nothing when the provider uses no network', () => {
+    expect(requiredHostOrigins({ ...openai, provider: 'none' })).toEqual([]);
+    expect(requiredHostOrigins({ ...openai, provider: 'built-in' })).toEqual([]);
+  });
+
+  it('asks for nothing when the base URL is invalid', () => {
+    expect(requiredHostOrigins({ ...openai, openai: { baseUrl: 'http://example.com', model: 'm' } })).toEqual([]);
   });
 });
 

@@ -183,7 +183,7 @@ Entering a new one on the settings page replaces it. Checking `保存済みの A
 
 ### Saving says the address resolves to an internal network address.
 
-The host name of the OpenAI-compatible base URL resolves into an internal network address. With names such as nip.io or sslip.io, the name itself looks public but the resolved address is internal, and such a URL cannot be saved. Use a public endpoint. When saving shows `保存しました。接続先のアドレスを解決できなかったため、検証できていません。` (saved, but the address could not be resolved, so it is unverified) right after saving, the resolver could not be reached or the name could not be resolved, so the verification was skipped. The settings are saved, but the destination is unverified.
+The host name of the OpenAI-compatible base URL resolves into an internal network address. With names such as nip.io or sslip.io, the name itself looks public but the resolved address is internal, and such a URL cannot be saved. Use a public endpoint. When the page shows `接続先のアドレスを解決できなかったため、指定できません` (the address could not be resolved, so it cannot be used), the resolver (dns.google) could not be reached or the name could not be resolved, so the settings are not saved. In a network that blocks dns.google, the destination cannot be verified, so neither the save nor the call happens.
 
 ### I want to make a similar profile efficiently.
 

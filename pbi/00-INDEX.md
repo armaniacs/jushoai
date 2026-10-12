@@ -2,10 +2,15 @@
 
 ## 進行中
 
-- （なし）
+- `2026-10-11-38-fix-button-anchor-placement.md`（フォームボタンの左下配置の是正。対象 URL 2 件の fixture 化を含む）
+- `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
+- `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
 ## 台帳
 
+- `archived/2026-10-11-06-backlog-run2-remediation-round.md`（アーカイブ済み）
+- `archived/2026-10-11-03-backlog-egress-gate-round.md`（アーカイブ済み）
+- `archived/2026-10-11-00-backlog-pages-update.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-action-popup.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-analyze.md`（アーカイブ済み）
 - `archived/2026-10-06-00-backlog-ai-audit-log.md`（アーカイブ済み）
@@ -17,6 +22,42 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-37-backlog-review3-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
+| 2026-10-11-33-fix-pageurl-cap-wiring-test.md | 未コミット fix: 入口制限の統合テスト。`make check` green |
+| 2026-10-11-34-chore-pageurl-truncation-note.md | 未コミット chore: 切詰受容の記録。`make check` green |
+| 2026-10-11-35-chore-test-describe-layout.md | 未コミット chore: describe 分離。`make check` green |
+| 2026-10-11-36-chore-import-merge.md | 未コミット chore: import 結合。`make check` green |
+| 2026-10-11-32-fix-audit-pageurl-cap.md | 未コミット fix: 監査入口で pageUrl を UTF-8 1024 バイトに制限（文字境界・共有 sanitizer 不変）。`make check` green |
+| 2026-10-11-30-feat-chrome-e2e.md | 未コミット feat: Chrome 実ブラウザ E2E（BiDi 導入・ID 解決・3 ケース）。Chrome 実機 3/3 green、`make check` green |
+| 2026-10-11-29-fix-hit-test-own-shadow-node.md | 未コミット fix: ゲートがパネル host を掴むよう修正＋ヒット判定の内側ノード受容。単体・E2E・`make check` green |
+| 2026-10-11-23-backlog-review-suggestions-round.md | ラウンド完結（順位 1〜6・8 をアーカイブ済み、順位 7 は将来候補。未コミット、`make check` / `make site` green） |
+| 2026-10-11-28-backlog-review2-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
+| 2026-10-11-24-fix-consent-point-throw-guard.md | 未コミット（レビュー第2ラウンド順位 1）fix: ボタン点取得の例外安全化。`make check` green |
+| 2026-10-11-25-chore-test-spy-restore.md | 未コミット（同順位 2）chore: スパイ復元の try/finally 化。`make check` green |
+| 2026-10-11-26-chore-apply-point-null-removal.md | 未コミット（同順位 3）chore: ApplyPoint の null 除去。`make check` green |
+| 2026-10-11-27-fix-consent-real-dom-coverage.md | 未コミット（同順位 4）fix: 同意検証の DOM 問合せ注入化。`make check` green |
+| 2026-10-11-15-fix-apply-point-reason.md | 未コミット（レビュー対応ラウンド順位 1）fix: ゼロ矩形と画面外の理由分離。`make check` green |
+| 2026-10-11-16-fix-opacity-compare.md | 未コミット（同順位 2）fix: opacity フォールバックの数値化。`make check` green |
+| 2026-10-11-17-fix-consent-button-point.md | 未コミット（同順位 3）fix: 検証点を承認ボタン矩形に厳密化。`make check` green |
+| 2026-10-11-18-fix-audit-budget-overhead.md | 未コミット（同順位 4）fix: 配列構造分を予算計上に加算。`make check` green |
+| 2026-10-11-19-chore-audit-remeasure-bound.md | 未コミット（同順位 5）chore: 再計測上限の記録と回数テスト。`make check` green |
+| 2026-10-11-20-chore-doh-budget-accepted.md | 未コミット（同順位 6）chore: 解決回数上限の記録。`make check` green |
+| 2026-10-11-22-chore-test-reason-assertion.md | 未コミット（同順位 8）chore: テスト断言の整理。`make check` green |
+| 2026-10-11-03-backlog-egress-gate-round.md | ラウンド完結（子 PBI 04・05 をアーカイブ済み。未コミット、`make check` green。再監査での確認はユーザー作業） |
+| 2026-10-11-04-fix-egress-resolver-origin-and-fail-closed.md | b709b35 fix: リゾルバ origin を許可要求に含め、解決不能時は fail-closed に倒す（コードレビューはユーザー作業） |
+| 2026-10-11-05-feat-declaration-request-use-check.md | e8754c5 feat: 宣言・要求・使用の一致検査を make check に入れ、egress の方針を定数の単一ソースにする（コードレビューはユーザー作業） |
+| 2026-10-11-06-backlog-run2-remediation-round.md | ラウンド完結（子 PBI 07〜14 をアーカイブ済み。未コミット、`make check` / `make site` green。実機確認・再監査はユーザー作業） |
+| 2026-10-11-07-fix-consent-ui-isolation.md | 未コミット（タスククローザの並列実装）fix: 同意 UI の important 化と適用直前検証。`make check` green。実機確認・レビューはユーザー作業 |
+| 2026-10-11-08-fix-audit-entry-bytes.md | 未コミット（同上）fix: 監査ログの計上を記録全体に拡大。(b) 不採。`make check` green。レビュー・(b) の起票判断はユーザー作業 |
+| 2026-10-11-09-fix-egress-verdict-cache-ttl.md | 未コミット（同上）fix: egress 検証を per-call 化しキャッシュを廃止。`make check` green。レビューはユーザー作業 |
+| 2026-10-11-10-backlog-resolve-and-pin.md | 未コミット（同上）判断 (c) 受容を記録（API リファレンス根拠つき）。実装なし。レビューはユーザー作業 |
+| 2026-10-11-11-docs-host-permission-port-granularity.md | 未コミット（同上）docs: 許可のホスト単位と送信先限定の記録。`make site` / `make check` green。レビューはユーザー作業 |
+| 2026-10-11-12-fix-gemini-egress-consistency.md | 未コミット（同上）docs: Gemini の egress 不通過を受容として 1 か所に記録。`make check` green。レビューはユーザー作業 |
+| 2026-10-11-13-feat-release-pipeline-hardening.md | 未コミット（同上）feat: リリース workflow の最小権限化と承認経路。`v*` タグの ruleset 保護は作成・実証済み。残りは environment `release` の作成と required reviewers、署名タグ実行、レビュー |
+| 2026-10-11-14-chore-stale-source-comments.md | 未コミット（同上）chore: コメント 2 か所の是正（host.ts は 07 に吸収、audit-log.ts のみ）。`make check` green。レビューはユーザー作業 |
+| 2026-10-11-00-backlog-pages-update.md | ラウンド完結（子 PBI 11-01・11-02 をアーカイブ済み。未コミット、`make check` / `make site` green） |
+| 2026-10-11-01-feat-store-announcement.md | 未コミット（11a）feat: Pages と README に Chrome ウェブストアの導線を足す |
+| 2026-10-11-02-feat-landing-video-embed.md | 未コミット（11a）feat: ランディングに紹介動画の埋め込みセクションを足す |
 | 2026-10-10-00-backlog-vulnhunt-remediation.md | ラウンド完結（子 PBI 10-10-01〜07 全件アーカイブ済み） |
 | 2026-10-10-07-backlog-dev-toolchain-cves.md | 未コミット（1009a）shell-quote を overrides 1.12.0 で解消、node-forge は修正版リリースなしで追跡継続。make check green |
 | 2026-10-10-06-fix-audit-cross-context-race.md | 未コミット（1009a）fix: 監査ログの削除を単一コンテキストに集約する |

@@ -32,6 +32,11 @@ export function mountButton(
   onBadgeClick: (info: AiStatusInfo) => void = () => {},
 ): ButtonHandle {
   const { host, root } = createShadowHost();
+  // Viewport-anchored (fixed): the written top/left must always equal the
+  // rendered rect, so a stale or mismatched document position can never
+  // strand the button. Anchor tracking is preserved by re-resolving on scroll,
+  // resize and geometry changes (wired in content.ts).
+  host.style.setProperty('position', 'fixed', 'important');
   const style = document.createElement('style');
   style.textContent = CSS;
   const wrap = document.createElement('div');
@@ -76,16 +81,30 @@ export function mountButton(
       handle.reposition();
     },
     reposition() {
+      // A detached or not-yet-laid-out anchor reports a zero rect; writing a
+      // position from it would fling the button to a viewport corner, so keep
+      // the last good position until the anchor is measurable again.
+      if (!anchor.isConnected) return;
+      const anchorRect = anchor.getBoundingClientRect();
+      if (anchorRect.width === 0 && anchorRect.height === 0) return;
       const hostRect = host.getBoundingClientRect();
       const clientWidth = document.documentElement.clientWidth;
+      // The host is fixed, so the whole computation runs in viewport space:
+      // the anchor rect is already viewport-relative and passing zero scroll
+      // keeps computeButtonPosition's "is there room above" test honest
+      // (document-space math would report room that is off-screen).
       const pos = computeButtonPosition({
-        anchor: anchor.getBoundingClientRect(),
+        anchor: anchorRect,
         size: { width: hostRect.width || 220, height: hostRect.height || 32 },
         viewport: { width: clientWidth > 0 ? Math.min(window.innerWidth, clientWidth) : window.innerWidth },
-        scroll: { x: window.scrollX, y: window.scrollY },
+        scroll: { x: 0, y: 0 },
       });
-      host.style.top = `${pos.top}px`;
-      host.style.left = `${pos.left}px`;
+      // The host reset uses `all: initial !important`, which expands to
+      // `top: initial !important` / `left: initial !important`. Plain inline
+      // writes lose to it, so the coordinates must be written important too
+      // (same-priority important declarations resolve by source order).
+      host.style.setProperty('top', `${pos.top}px`, 'important');
+      host.style.setProperty('left', `${pos.left}px`, 'important');
     },
     destroy() {
       host.remove();

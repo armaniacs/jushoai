@@ -78,6 +78,11 @@ describe('showPreview', () => {
     expect(button(root, '入力する')!.disabled).toBe(false);
     expect(button(root, 'キャンセル')!.disabled).toBe(false);
   });
+
+  it('reports no apply point when the button has no box (jsdom has no layout)', () => {
+    const { handle } = open({ rows: [row('ok')] });
+    expect(handle.getApplyPoint()).toBeNull();
+  });
 });
 
 const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });

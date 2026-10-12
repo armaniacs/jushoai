@@ -197,7 +197,7 @@ export class HttpClassifier implements FieldClassifier {
       const verdict = await this.deps.egress(target);
       // Blocked targets must look like ordinary request failures to callers.
       if (!verdict.ok) {
-        throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: unverified address');
+        throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: could not verify the address');
       }
     }
     const controller = new AbortController();
@@ -265,5 +265,10 @@ export const createOpenAiClassifier = (
   retry,
 );
 
+// The dial-time egress gate is intentionally not wired for gemini: the destination is a
+// compile-time constant (GEMINI_BASE_URL) with a validated apiVersion and an encoded
+// model, so there is no attacker-controlled destination to verify. Wiring the gate would
+// add a DoH round trip to every classify for no defensive gain. handle-message.ts passes
+// fetch only for the same recorded reason; the user-facing note lives in the Gemini guides.
 export const createGeminiClassifier = (cfg: GeminiSettings, apiKey: string, deps: HttpDeps) =>
   new HttpClassifier((f) => buildGeminiRequest(cfg, apiKey, f), extractGeminiText, deps);

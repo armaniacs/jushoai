@@ -88,5 +88,60 @@ describe('mountButton', () => {
       handle.setStatus({ status: 'available', provider: 'built-in' });
       expect(host.style.left).toBe('50px');
     });
+
+    it('keeps the last position when the anchor is detached or has no box yet', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(0);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      anchor.getBoundingClientRect = () => rect(100, 50, 250, 124);
+      const handle = mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+      anchor.getBoundingClientRect = () => rect(0, 0, 0, 0);
+      handle.reposition();
+      expect(host.style.left).toBe('258px');
+      expect(host.style.top).toBe(`${100 + (24 - 32) / 2}px`);
+      anchor.remove();
+      handle.reposition();
+      expect(host.style.left).toBe('258px');
+    });
+
+    it('pins the host fixed and writes viewport coordinates even when scrolled', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(window, 'scrollX', 'get').mockReturnValue(0);
+      vi.spyOn(window, 'scrollY', 'get').mockReturnValue(200);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(0);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      anchor.getBoundingClientRect = () => rect(100, 50, 250, 124);
+      mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.getPropertyPriority('position')).toBe('important');
+      expect(host.style.getPropertyValue('position')).toBe('fixed');
+      // The host reset uses `all: initial !important`, so the coordinates must
+      // also carry important priority to survive it.
+      expect(host.style.getPropertyPriority('top')).toBe('important');
+      expect(host.style.getPropertyPriority('left')).toBe('important');
+      // Viewport space: the scroll offset is not folded in, so the written
+      // value is exactly what the browser renders.
+      expect(host.style.left).toBe('258px');
+      expect(host.style.top).toBe(`${100 + (24 - 32) / 2}px`);
+    });
+
+    it('keeps the button on screen when a narrow viewport leaves no room above', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(500);
+      vi.spyOn(window, 'scrollY', 'get').mockReturnValue(400);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(0);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      // Anchor wide enough that the right side cannot fit (250 + 8 + 220 > 492)
+      // and near the top of the viewport, so there is no room above it either.
+      anchor.getBoundingClientRect = () => rect(10, 50, 400, 34);
+      mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      // Falls below the anchor (34 + 8) instead of writing a negative top.
+      expect(host.style.top).toBe('42px');
+    });
   });
 });

@@ -6,6 +6,10 @@ import { renderMarkdown, type Heading } from './markdown.ts';
 export type Lang = 'ja' | 'en';
 export const LANGS: readonly Lang[] = ['ja', 'en'];
 export const SITE_ORIGIN = 'https://armaniacs.github.io';
+// Chrome Web Store listing. The extension's own links carry utm_source=ext_sidebar;
+// links from the site must not, or site traffic is counted as coming from the sidebar.
+export const STORE_URL = 'https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl';
+export const storeUrl = (lang: Lang) => `${STORE_URL}?hl=${lang}`;
 export const GUIDE_SLUGS = [
   'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'supported-fields',
   'ai-providers', 'privacy', 'how-it-works', 'troubleshooting', 'license', 'glossary',

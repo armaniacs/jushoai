@@ -12,13 +12,15 @@ The extension screens are in Japanese only. This guide quotes each label exactly
 
 ## Install
 
-The extension is not published in a store. Use the zip from GitHub Releases.
+In Chrome and Edge, install from the Chrome Web Store.
 
-Download the zip from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and unzip it.
+[Open JushoAI in the Chrome Web Store](https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=en)
 
-Then open the extensions page of your browser: `chrome://extensions` in Chrome, or `edge://extensions` in Edge. In Firefox, unzip `jushoai-<version>-firefox.zip`, open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
+Firefox is not on a store. Unzip `jushoai-<version>-firefox.zip` from [GitHub Releases](https://github.com/armaniacs/jushoai/releases), open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
 
-1. Turn on developer mode.
+To load the zip in Chrome or Edge instead, unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and follow these steps.
+
+1. Turn on developer mode (`chrome://extensions` in Chrome, `edge://extensions` in Edge).
 2. Choose "Load unpacked". The button label can differ by browser and language.
 3. Select the unzipped folder.
 

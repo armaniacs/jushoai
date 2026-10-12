@@ -1,7 +1,7 @@
 import { AuditedClassifier } from '../ai/audited-classifier';
-import type { AuditPurpose, AuditRecorder } from '../ai/audit-log';
+import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
-import { originPatternsFor } from '../ai/permissions';
+import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
@@ -23,8 +23,9 @@ export interface HandlerDeps {
   // Providers that need the OpenAI-compatible fallback request; same lifetime as authFailed.
   compat: Set<ProviderKind>;
   // Dial-time egress gate owned by the caller (the background builds one per SW
-  // lifetime, so its DoH TTL cache spans classify messages); the classifier factory
-  // wires a DoH default when absent.
+  // lifetime for wiring; it holds no cache, so every dial resolves again);
+  // the classifier factory wires a DoH default when absent. Gemini omits the gate
+  // on purpose; see createGeminiClassifier for the recorded reason.
   egress?: EgressCheck;
   audit: AuditRecorder;
 }
@@ -54,7 +55,7 @@ async function statusOf(
     status: computeCloudStatus({
       settings: s,
       hasKey,
-      permitted: await deps.hasPermission(originPatternsFor(s)),
+      permitted: await deps.hasPermission(requiredHostOrigins(s)),
       authFailed: deps.authFailed.has(s.provider),
     }),
     provider: s.provider,
@@ -115,6 +116,7 @@ async function selectRaw(
       }) };
   }
   if (s.provider === 'gemini' && secrets.gemini) {
+    // No egress gate: the reason is recorded at createGeminiClassifier, not here.
     return { ok: true, classifier: createGeminiClassifier(s.gemini, secrets.gemini, { fetch: deps.fetch }) };
   }
   return { ok: false, reason: 'not-configured' };
@@ -160,7 +162,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
     case 'ai-classify': {
       const sel = await selectClassifier(deps, settings, {
         purpose: 'classify',
-        pageUrl: ctx.pageUrl ? sanitizePageUrl(ctx.pageUrl) : '',
+        pageUrl: ctx.pageUrl ? capAuditPageUrl(sanitizePageUrl(ctx.pageUrl)) : '',
       });
       // The caller chooses its error display from the reason, so never drop it.
       if (!sel.ok) return { ok: false, reason: sel.reason };
