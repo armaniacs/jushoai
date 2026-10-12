@@ -115,7 +115,7 @@ describe('detectForms anchor', () => {
     expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
   });
 
-  it('reads each field\'s box exactly once when picking the anchor', () => {
+  it('reads each field\'s box exactly once when picking the anchor under jsdom', () => {
     document.body.innerHTML = `
 <form id="f">
 <input name="last_name"><input name="first_name"><input name="email" type="email">
@@ -135,5 +135,43 @@ describe('detectForms anchor', () => {
     // The box test and the sort key read the same box: one rect read per field,
     // not one per sort comparison.
     expect(form!.fields.map((f) => reads.get(f.el) ?? 0)).toEqual(form!.fields.map(() => 1));
+  });
+
+  it('shares one box read between the hidden check and the sort under real-browser conditions', () => {
+    document.body.innerHTML = `
+<form id="f">
+<input name="honey" type="text"><input name="flat" type="text">
+<input name="last_name"><input name="first_name"><input name="email" type="email">
+<input name="zip"><input name="prefecture"><input name="address1">
+<input name="tel" type="tel"><input name="memo"><input name="note">
+</form>`;
+    const zero = { top: 0, left: 0, right: 0, bottom: 0, width: 0, height: 0, x: 0, y: 0, toJSON() {} } as DOMRect;
+    const reads = new Map<Element, number>();
+    let top = 100;
+    for (const el of Array.from(document.querySelectorAll('input'))) {
+      // Real-browser stand-in: checkVisibility exists, so isHidden takes the
+      // rect-reading path that jsdom never reaches. Visual order matches
+      // document order so the anchor must stay the first text input.
+      el.checkVisibility = () => el.getAttribute('name') !== 'honey';
+      const box = el.getAttribute('name') === 'flat'
+        ? zero
+        : { top, left: 50, right: 250, bottom: top + 24, width: 200, height: 24, x: 50, y: top, toJSON() {} } as DOMRect;
+      top += 30;
+      el.getBoundingClientRect = () => {
+        reads.set(el, (reads.get(el) ?? 0) + 1);
+        return box;
+      };
+    }
+    const [form] = detectForms(document);
+    // The honeypot (checkVisibility false) and the unlaid-out box (zero
+    // area) stay out of the fields and never win the anchor.
+    expect(form!.fields.map((f) => f.meta.name)).not.toContain('honey');
+    expect(form!.fields.map((f) => f.meta.name)).not.toContain('flat');
+    expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+    // Budget: 1 read from scanFields/isHidden plus 1 memoized read from
+    // pickAnchor shared by its hidden check, box test, and visual sort.
+    // Without the sharing pickAnchor alone costs 2 (isHidden DOMRect read +
+    // rectOf read), i.e. 3 total, so this bound pins the fix.
+    expect(Math.max(...Array.from(document.querySelectorAll('input')).map((el) => reads.get(el) ?? 0))).toBeLessThanOrEqual(2);
   });
 });

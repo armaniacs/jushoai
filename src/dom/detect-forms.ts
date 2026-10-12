@@ -17,10 +17,10 @@ const TEXT_INPUT_TYPES = new Set(['text', 'email', 'tel', 'search']);
 // quantity picker or a plan chooser is not where a person starts filling in.
 function pickAnchor(fields: ScannedField[]): ScannedField {
   const isTextInput = (f: ScannedField) => f.el instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(f.el.type);
-  // One rect read per element for the whole pick: the box test and the sort key
-  // read the same box, and the sort comparator re-reads its keys O(n log n)
-  // times, so the reads are memoized per call. No write happens inside the
-  // pick, so a cached rect cannot go stale within it.
+  // One rect read per element for the whole pick: the hidden check, the box
+  // test and the sort key read the same box, and the sort comparator
+  // re-reads its keys O(n log n) times, so the reads are memoized per call.
+  // No write happens inside the pick, so a cached rect cannot go stale within it.
   const rects = new Map<Element, DOMRect>();
   const rectOf = (el: Element): DOMRect => {
     let r = rects.get(el);
@@ -47,8 +47,8 @@ function pickAnchor(fields: ScannedField[]): ScannedField {
     const r = rectOf(f.el);
     return r.width > 0 || r.height > 0;
   };
-  const boxed = fields.filter((f) => !isHidden(f.el) && hasBox(f));
-  const pool = boxed.length > 0 ? boxed : fields.filter((f) => !isHidden(f.el));
+  const boxed = fields.filter((f) => !isHidden(f.el, rectOf(f.el)) && hasBox(f));
+  const pool = boxed.length > 0 ? boxed : fields.filter((f) => !isHidden(f.el, rectOf(f.el)));
   const candidates = pool.length > 0 ? pool : fields;
   // Document order and visual order can disagree (checkbox groups first in the
   // DOM on some builders); read from the top so a narrow leading box does not
