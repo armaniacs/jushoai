@@ -2,6 +2,7 @@
 
 ## 進行中
 
+- `2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md`（0.1.14 レビュー提案 #1・#2。内部スクロールへの追従と、同意ゲートの host 解決の厳格化。0.1.15 として進める）
 - `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
 - `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
