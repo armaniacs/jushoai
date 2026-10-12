@@ -116,15 +116,26 @@ const entryBytes = (e: AuditEntry): number => {
   return size;
 };
 
+// UTF-8 length of the stored entries array: the bracket pair and the ASCII
+// separators between entries count too — 2 + max(0, n - 1) bytes, all ASCII —
+// plus every entry's serialized body. The budget check and the removal loop
+// share this one estimate, so the accounting never disagrees with itself
+// about what the stored batch costs.
+export function batchBytes(entries: AuditEntry[]): number {
+  return 2 + Math.max(0, entries.length - 1) + entries.reduce((sum, e) => sum + entryBytes(e), 0);
+}
+
 function withinByteBudget(entries: AuditEntry[]): AuditEntry[] {
   const sizes = entries.map(entryBytes);
-  // The stored batch is a JSON array, so the bracket pair and the separators
-  // between entries count too: 2 + max(0, n - 1) bytes, all ASCII.
-  let total = 2 + Math.max(0, entries.length - 1);
-  for (const size of sizes) total += size;
+  let total = batchBytes(entries);
   let i = 0;
   while (i < entries.length && total > AUDIT_MAX_BYTES) {
-    total -= sizes[i]!;
+    // Dropping an entry removes its body and the separator before it: the
+    // remainder keeps one separator per remaining pair, so subtracting both
+    // keeps the estimate equal to the true serialized size while entries
+    // remain. When the last entry is dropped the loop exits and the empty
+    // array costs 2 bytes.
+    total -= sizes[i]! + 1;
     i++;
   }
   return i === 0 ? entries : entries.slice(i);
