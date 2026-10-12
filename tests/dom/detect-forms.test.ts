@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { detectForms, scanContainer } from '../../src/dom/detect-forms';
 
 beforeEach(() => {
@@ -113,5 +113,27 @@ describe('detectForms anchor', () => {
     }
     const [form] = detectForms(document);
     expect(form!.anchor.el.getAttribute('name')).toBe('last_name');
+  });
+
+  it('reads each field\'s box exactly once when picking the anchor', () => {
+    document.body.innerHTML = `
+<form id="f">
+<input name="last_name"><input name="first_name"><input name="email" type="email">
+<input name="zip"><input name="prefecture"><input name="address1">
+<input name="tel" type="tel"><input name="memo"><input name="note">
+</form>`;
+    const reads = new Map<Element, number>();
+    for (const el of Array.from(document.querySelectorAll('input'))) {
+      const real = el.getBoundingClientRect.bind(el);
+      el.getBoundingClientRect = () => {
+        reads.set(el, (reads.get(el) ?? 0) + 1);
+        return real();
+      };
+    }
+    const [form] = detectForms(document);
+    expect(form!.fields.length).toBeGreaterThanOrEqual(8);
+    // The box test and the sort key read the same box: one rect read per field,
+    // not one per sort comparison.
+    expect(form!.fields.map((f) => reads.get(f.el) ?? 0)).toEqual(form!.fields.map(() => 1));
   });
 });
