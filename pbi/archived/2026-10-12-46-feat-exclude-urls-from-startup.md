@@ -57,7 +57,7 @@ Scenario: 不正な入力は保存できない
 - [x] 除外されたページでは、ボタンの表示だけでなく、フォームの走査と監視も行わない
 - [x] 設定の保存後、開いているタブにも反映される（除外されたらボタンが消え、除外が外れたら再び表示される）
 - [x] 同一タブ内で URL が変わったとき（履歴 API を使うページ）も、除外の判定がやり直される
-- [ ] Chrome / Firefox の両方で動く（Chrome は実機 E2E で確認済み。Firefox は未実行）
+- [x] Chrome / Firefox の両方で動く（実機 E2E が両方で緑）
 - [x] 既存の `make check` が緑のまま
 
 ## テスト戦略（t_wadaスタイル）
@@ -131,7 +131,7 @@ grep -rniE "除外|exclude|denylist|blocklist|allowlist|skipHosts" src/ --includ
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
 - [x] テストカバレッジが基準を満たす（E2E/統合/単体すべて。Firefox の実機 E2E のみ未実行）
-- [ ] Chrome / Firefox の E2E が緑（Chrome 5/5 緑。Firefox は権限の都合で未実行 → ユーザー作業）
+- [x] Chrome / Firefox の E2E が緑（Chrome 5/5、Firefox 5/5）
 - [x] `make check` が通る
 - [ ] コードレビュー完了（ユーザー作業）
 - [x] リファクタリング完了（グリーン後）
@@ -143,7 +143,7 @@ grep -rniE "除外|exclude|denylist|blocklist|allowlist|skipHosts" src/ --includ
 - 設計上の判断: 即時反映は `chrome.storage.onChanged` で行う。`chrome.runtime.sendMessage` はコンテンツスクリプトに届かないことを実測で確認した（プローブで `before=1, after=1`）。storage の変更通知は全コンテンツスクリプトに届き、メッセージ型も `tabs` 権限も要らない
 - 起動抑止の範囲: `stop()` が MutationObserver・保留中の同期・表示中のボタン・開いているパネルをすべて破棄する。`start()` が同じものを再構築するため、除外のオン/オフが再読み込みなしで往復する
 - SPA の URL 変更: `sync()` の先頭で毎回 `location.href` を判定し直す。除外パスから出る方向は、設定変更か再読み込みで回復する（停止中はオブザーバを持たない設計のため。コード側にコメントで明記）
-- 検証: `make check` exit 0（typecheck・87 ファイル / 1152 passed・両ブラウザ build・manifest 検査・web-ext lint）、`make site` green、**Chrome E2E 5/5**（除外 URL で起動しない／開いているタブからボタンが消える の 2 件を追加）
+- 検証: `make check` exit 0（typecheck・87 ファイル / 1152 passed・両ブラウザ build・manifest 検査・web-ext lint）、`make site` green、**Chrome E2E 5/5**、**Firefox E2E 5/5**（除外 URL で起動しない／開いているタブからボタンが消える の 2 件を含む。Firefox は権限のある環境でユーザーが実行）
 - テスト: `tests/core/exclusions.test.ts`（20 件）、`tests/exclusions-store.test.ts`（4 件）、`tests/entrypoints/content-exclusions.test.ts`（8 件）、`tests/options/exclusion-section.test.ts`（7 件）、E2E 2 件
 - 追加: `README.md` / `README.en.md` に設定方法、`CHANGELOG.md` の `[Unreleased]` に機能を追記
-- ユーザー作業として残るもの: Firefox の実機 E2E（実行にプロファイル領域へのアクセス権限が必要で、権限昇格が却下されたため未実行）、コードレビュー
+- ユーザー作業として残るもの: コードレビュー（Firefox の実機 E2E は 2026-10-12 に実行して 5/5 緑を確認）
