@@ -20,6 +20,17 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-13-47-fix-anchor-rect-sharing.md | c124902 fix: アンカー選択の矩形読みを isHidden と共有（rect 注入＋共有。コードレビューはユーザー作業） |
+| 2026-10-13-48-fix-chrome-flags-empty-env.md | 0b33737 fix: chrome-flags の空文字判定を厳格化（truthy／厳密比較。コードレビューはユーザー作業） |
+| 2026-10-13-49-chore-chrome-flags-env-explicit.md | 0b33737 chore: 既定 process.env を廃止して呼び出し側で明示（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-50-chore-anchor-real-browser-test.md | c124902 chore: 実ブラウザ相当テスト追加＋under jsdom 改名（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-51-chore-chrome-flags-order-assertion.md | 0b33737 chore: 複合 env の断言を順序非依存の集合検査に緩和（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-52-fix-audit-empty-accounting.md | 4e18cd3 fix: 空配列会計の誤差を方向Bで明示（コメントのみ。コードレビューはユーザー作業） |
+| 2026-10-13-53-chore-audit-sizecache-premise.md | 4e18cd3 chore: sizeCache 変異前提を 1 行で文書化（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-54-chore-host-position-guard.md | 02564fb chore: host 配置を必須引数化（型で検出。コードレビューはユーザー作業） |
+| 2026-10-13-55-chore-overlay-comment-dedup.md | 02564fb chore: overlay 重複コメントを 1 行参照化（同上コミット。コードレビューはユーザー作業） |
+|---|---|
 | 2026-10-12-45-backlog-review4-suggestions-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green、Chrome E2E 5/5。Firefox E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
 | 2026-10-12-40-fix-e2e-chrome-sandbox-flag.md | 2a35d9a fix: E2E の Chrome 起動フラグを CI に限定する（chrome-flags 純粋関数化＋単体 6 件。Chrome E2E 5/5 は `E2E_NO_SANDBOX=1`。既定の sandbox 有効起動は実行コンテキストの制約で未実証。コードレビューと通常ターミナルでの既定実行確認はユーザー作業） |
 | 2026-10-12-41-chore-host-position-default.md | bc2a1d6 chore: host のデッドな position 既定を削除する（host.test を実態に合わせ更新。コードレビューはユーザー作業） |
