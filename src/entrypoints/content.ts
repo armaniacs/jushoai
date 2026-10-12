@@ -127,8 +127,11 @@ export function defaultConsentCheckDeps(
   getPreviewHost?: () => Element | null,
 ): ConsentCheckDeps {
   // The document holds several JushoAI hosts; the gate must verify the panel
-  // host, never the first match (which is usually the form button host).
-  const getHost = (): Element | null => getPreviewHost?.() ?? env.queryHost();
+  // host, never the first match (which is usually the form button host). When a
+  // provider is supplied its answer is authoritative: falling back to
+  // queryHost() on null would verify the wrong element (usually the button
+  // host) and let the gate pass on it, so a missing panel host blocks instead.
+  const getHost = (): Element | null => (getPreviewHost ? getPreviewHost() : env.queryHost());
   const hostCenter = (): ApplyPoint => {
     const host = getHost();
     if (host === null) return { offscreen: true };
@@ -183,6 +186,54 @@ export function applyIfConsented(
   }
   apply();
   return true;
+}
+
+export interface RepositionTrackingDeps {
+  doc: Document;
+  win: Window;
+  reposition: () => void;
+  // Frame scheduler; injectable so tests drive the coalescing branch without
+  // waiting on a real animation frame.
+  schedule?: (cb: () => void) => void;
+}
+
+// Keeps the fixed button on its anchor when the layout under it changes:
+// fonts and images landing, viewport changes (DevTools docking), and scrolling.
+// Two details matter:
+// - scroll does not bubble and inner scroll containers (multi-step wizards,
+//   modals) move the anchor without a window scroll, so the listener sits in
+//   the capture phase on the document and sees every element's scroll as well
+//   as the page scroll (whose target is the document).
+// - scrolling our own panel moves no anchor, so it is skipped.
+// Repositioning is rAF-coalesced; reposition() itself skips zero-area anchors,
+// so this converges instead of oscillating.
+export function attachRepositionTracking(deps: RepositionTrackingDeps): () => void {
+  const { doc, win, reposition } = deps;
+  const runFrame = deps.schedule ?? ((cb: () => void) => win.requestAnimationFrame(cb));
+  let pending = false;
+  const request = (): void => {
+    if (pending) return;
+    pending = true;
+    runFrame(() => {
+      pending = false;
+      reposition();
+    });
+  };
+  const onScroll = (e: Event): void => {
+    if (e.target instanceof Element && e.target.hasAttribute('data-jushoai')) return;
+    request();
+  };
+  doc.addEventListener('scroll', onScroll, { capture: true, passive: true });
+  win.addEventListener('resize', request);
+  const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(request) : null;
+  observer?.observe(doc.documentElement);
+  win.addEventListener('load', reposition);
+  return () => {
+    doc.removeEventListener('scroll', onScroll, { capture: true });
+    win.removeEventListener('resize', request);
+    observer?.disconnect();
+    win.removeEventListener('load', reposition);
+  };
 }
 
 export default defineContentScript({
@@ -406,24 +457,6 @@ export default defineContentScript({
     schedule();
     new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
     const repositionAll = () => mounted.forEach((m) => m.handle.reposition());
-    // Absolute positioning does not follow layout shifts by itself: fonts,
-    // images and viewport changes (DevTools docking) move the anchor after
-    // the position was written. Re-resolve on scroll and geometry changes,
-    // rAF-throttled; reposition() itself skips zero-area anchors, so this
-    // converges instead of oscillating.
-    let raf = 0;
-    const requestReposition = () => {
-      if (raf) return;
-      raf = window.requestAnimationFrame(() => {
-        raf = 0;
-        repositionAll();
-      });
-    };
-    window.addEventListener('scroll', requestReposition, { passive: true });
-    window.addEventListener('resize', requestReposition);
-    if (typeof ResizeObserver !== 'undefined') {
-      new ResizeObserver(requestReposition).observe(document.documentElement);
-    }
-    window.addEventListener('load', repositionAll);
+    attachRepositionTracking({ doc: document, win: window, reposition: repositionAll });
   },
 });

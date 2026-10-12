@@ -204,4 +204,15 @@ describe('defaultConsentCheckDeps with an injected env', () => {
     }, () => panelHost);
     expect(verifyApplyConsent(fixed)).toEqual({ ok: true });
   });
+
+  it('blocks when the panel host provider yields null instead of validating another host', () => {
+    const formHost = stubHost();
+    // The provider is authoritative: a null panel host must not fall back to
+    // the document's first [data-jushoai], which is the form button host and
+    // would let the gate pass on the wrong element.
+    const env = fakeEnv(formHost, { elementFromPoint: () => formHost });
+    const deps = defaultConsentCheckDeps(undefined, env, () => null);
+    expect(deps.isHostConnected()).toBe(false);
+    expect(verifyApplyConsent(deps).ok).toBe(false);
+  });
 });

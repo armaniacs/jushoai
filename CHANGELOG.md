@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [0.1.15] - 2026-10-12
+
+### Fixed
+
+- ボタンの位置が、ページのスクロールだけでなく**内部スクロール容器（ステップ式フォームやモーダルのように `overflow` で中身がスクロールする領域）のスクロールにも追従する**ようにする。scroll はバブリングしないため `window` のリスナーでは子要素のスクロールを捕捉できず、固定配置のボタンがアンカーから外れていた。document の capture 相で受けるようにし、自前のパネル内のスクロールでは再計算しない
+- プレビューの承認時に、パネルの host を解決できないときは**他の host で代用せず注入を中止する**。従来は文書内の最初の host（通常はフォームボタンの host）に落ちるため、確認の対象が別の要素になり得た
+
 ## [0.1.14] - 2026-10-12
 
 ### Fixed
@@ -228,6 +235,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.15]: https://github.com/armaniacs/jushoai/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/armaniacs/jushoai/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/armaniacs/jushoai/compare/v0.1.12...v0.1.13
 [0.1.12]: https://github.com/armaniacs/jushoai/compare/v0.1.11...v0.1.12
