@@ -4,15 +4,23 @@ import { createOverlayHost } from '../../src/ui/overlay';
 
 afterEach(() => { document.body.innerHTML = ''; });
 
+// Compile-time guard: omitting position must be a type error so a new
+// consumer cannot silently strand a static host. Checked by tsc --noEmit;
+// the branch never runs.
+if (false) {
+  // @ts-expect-error - position is required to prevent static stranded hosts
+  createShadowHost();
+}
+
 describe('createShadowHost', () => {
   it('marks critical declarations important so page stylesheets cannot override them', () => {
-    const { host } = createShadowHost();
+    const { host } = createShadowHost({ position: 'fixed' });
     expect(host.getAttribute('data-jushoai')).toBe('');
-    for (const prop of ['all', 'z-index']) {
+    for (const prop of ['all', 'z-index', 'position']) {
       expect(host.style.getPropertyPriority(prop)).toBe('important');
     }
     expect(host.style.getPropertyValue('all')).toBe('initial');
-    expect(host.style.getPropertyValue('position')).toBe('');
+    expect(host.style.getPropertyValue('position')).toBe('fixed');
     expect(host.style.getPropertyValue('z-index')).toBe('2147483647');
   });
 });

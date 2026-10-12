@@ -31,12 +31,11 @@ export function mountButton(
   onClick: () => void,
   onBadgeClick: (info: AiStatusInfo) => void = () => {},
 ): ButtonHandle {
-  const { host, root } = createShadowHost();
+  const { host, root } = createShadowHost({ position: 'fixed' });
   // Viewport-anchored (fixed): the written top/left must always equal the
   // rendered rect, so a stale or mismatched document position can never
   // strand the button. Anchor tracking is preserved by re-resolving on scroll,
   // resize and geometry changes (wired in content.ts).
-  host.style.setProperty('position', 'fixed', 'important');
   const style = document.createElement('style');
   style.textContent = CSS;
   const wrap = document.createElement('div');
