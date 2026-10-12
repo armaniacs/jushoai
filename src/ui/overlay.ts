@@ -5,6 +5,15 @@ import { createShadowHost } from './host';
 // only here; module-specific styles stay in each panel module.
 export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
   const { host, root } = createShadowHost();
+  // The overlay pins to the top-right corner. Under `position: fixed` and
+  // `right: 16px`, `left: auto` places the box from the right edge and grows it
+  // leftward by its width (.panel in OVERLAY_CSS, 360px), so right-origin
+  // placement needs `left` to stay `auto`. `createShadowHost`'s
+  // `all: initial !important` already resets `left` to `auto` at important
+  // priority, and a plain (non-important) `left` write loses to that reset.
+  // Writing `left` with important instead would over-constrain the fixed-width
+  // box (left + right + width; LTR drops right) and flip the pin toward the
+  // left edge, so `left` is intentionally left unset.
   host.style.setProperty('position', 'fixed', 'important');
   host.style.setProperty('top', '16px', 'important');
   host.style.setProperty('right', '16px', 'important');
