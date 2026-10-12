@@ -46,6 +46,32 @@ jobs:
           make zip
           make zip-firefox
 
+      - name: Submit to stores
+        # wxt submit は publish-extension の別名で、CHROME_*/EDGE_*/FIREFOX_*
+        # の env が揃ったストアに提出する。ZIP 系の env が無いストアは対象外になる。
+        # 3ストアは Promise.allSettled で並行提出されるため、1件の失敗が他を止めない。
+        # Release 作成より前に置く: 提出失敗時に半端な Release を残さないため。
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          CHROME_ZIP="dist/jushoai-${version}-chrome.zip" \
+          EDGE_ZIP="dist/jushoai-${version}-chrome.zip" \
+          FIREFOX_ZIP="dist/jushoai-${version}-firefox.zip" \
+          FIREFOX_SOURCES_ZIP="dist/jushoai-${version}-sources.zip" \
+          npx wxt submit
+        env:
+          CHROME_API_VERSION: "v2"
+          CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
+          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
+          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
+          EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
+          EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}
+          FIREFOX_CHANNEL: "listed"
+          FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
+          FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
+          FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
+
       - name: Extract release notes
         run: node scripts/release-notes.mjs "${GITHUB_REF_NAME}" > release-notes.md
 
