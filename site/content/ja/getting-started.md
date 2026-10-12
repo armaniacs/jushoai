@@ -6,15 +6,19 @@ order: 1
 
 # はじめに
 
-JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録した情報を入力する Chromium 系ブラウザと Firefox 128 以上向けの拡張機能です。Edge で動作を確認しています。Firefox（128 以上）は、フォームへの入力の流れを自動テストで確認しています（クラウド AI の通信は未確認です）。
+JushoAI は、氏名・住所などの入力欄が並ぶフォームに、登録した情報を入力する Chromium 系ブラウザと Firefox 128 以上向けの拡張機能です。Edge は Edge アドオンで、Firefox は Firefox アドオン（AMO）で公開しています。Firefox（128 以上）では、フォームへの入力の流れを自動テストで確認しています（クラウド AI の通信は未確認です）。
 
 ## インストール
 
-Chrome と Edge は、Chrome ウェブストアからインストールできます。
+Chrome は Chrome ウェブストアから、Edge は Edge アドオンから、Firefox は Firefox アドオン（AMO）からインストールできます。
 
 [Chrome ウェブストアで JushoAI を開く](https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=ja)
 
-Firefox はストアにないため、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の `jushoai-<バージョン>-firefox.zip` を展開してから `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で展開したフォルダ内の `manifest.json` を選びます。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われます。使うたびに読み込み直して、登録し直します。
+[Edge アドオンで JushoAI を開く](https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi?hl=ja)
+
+[Firefox アドオンで JushoAI を開く](https://addons.mozilla.org/ja/firefox/addon/jushoai/)
+
+Firefox に zip を読み込む場合は、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の `jushoai-<バージョン>-firefox.zip` を展開してから `about:debugging#/runtime/this-firefox` を開き、「一時的なアドオンを読み込む」で展開したフォルダ内の `manifest.json` を選びます。一時的なアドオンは Firefox を終了すると外れ、登録したプロファイル・住所と暗号化キーも一緒に失われます。使うたびに読み込み直して、登録し直します。
 
 Chrome や Edge で zip から読み込む場合は、[GitHub Releases](https://github.com/armaniacs/jushoai/releases) の zip を展開し、次の手順で読み込みます。
 

@@ -1,8 +1,13 @@
-# Chrome Web Store 掲載情報
+# ストア掲載情報
 
 開発者ダッシュボードの各欄に貼り付ける文面。事実は README、`site/content/*/privacy.md`、`wxt.config.ts` に合わせる。
 
-公開状況: 2026-10-10 に Chrome ウェブストアで公開済み（`https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl`）。サイトと README のインストール案内もストア導線に揃えてある。
+公開状況:
+- 2026-10-10 に Chrome ウェブストアで公開済み（`https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl`）
+- 2026-10-12 に Microsoft Edge Add-ons でも公開（`https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi`）
+- 2026-10-12 に Firefox アドオン（AMO）でも公開（`https://addons.mozilla.org/ja/firefox/addon/jushoai/`）
+
+サイトと README のインストール案内は、Chrome・Edge・Firefox でそれぞれのストア導線に揃えてある。
 
 ## ストア掲載情報
 
@@ -83,6 +88,14 @@ The source code is published on GitHub (GPL).
 - ホームページ: `https://armaniacs.github.io/jushoai/`
 - サポート: `https://github.com/armaniacs/jushoai/issues`
 - プライバシーポリシー: `https://armaniacs.github.io/jushoai/guides/privacy/`
+
+## Edge アドオン
+
+`https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi` で公開している（2026-10-12）。Edge は Chromium 系のため、Chrome 向けのパッケージ（`dist/jushoai-<バージョン>-chrome.zip`）をそのまま提出できる。名前・概要・詳細な説明は上の文面を流用し、ホームページ・サポート・プライバシーポリシーの URL も Chrome ウェブストアと同じものを登録する。
+
+## Firefox アドオン（AMO）
+
+`https://addons.mozilla.org/ja/firefox/addon/jushoai/`（英語は `https://addons.mozilla.org/en-US/firefox/addon/jushoai/`）で公開している（2026-10-12）。提出物は `make zip-firefox` が作る `dist/jushoai-<バージョン>-firefox.zip` と、AMO 審査用の `-sources.zip`。詳細な説明は上の文面から、AI プロバイダの行を「AI プロバイダは「使わない」「OpenAI 互換」「Gemini」から 1 つ選びます（Firefox ではブラウザ内蔵 AI は使えません）」に置き換えたものを使う。ホームページ・サポートの URL は Chrome ウェブストアと同じものを登録する。
 
 ## プライバシーへの取り組みタブ
 

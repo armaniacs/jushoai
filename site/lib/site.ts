@@ -6,10 +6,15 @@ import { renderMarkdown, type Heading } from './markdown.ts';
 export type Lang = 'ja' | 'en';
 export const LANGS: readonly Lang[] = ['ja', 'en'];
 export const SITE_ORIGIN = 'https://armaniacs.github.io';
-// Chrome Web Store listing. The extension's own links carry utm_source=ext_sidebar;
+// Store listings. The extension's own links carry utm_source=ext_sidebar;
 // links from the site must not, or site traffic is counted as coming from the sidebar.
 export const STORE_URL = 'https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl';
 export const storeUrl = (lang: Lang) => `${STORE_URL}?hl=${lang}`;
+export const EDGE_STORE_URL = 'https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi';
+export const edgeStoreUrl = (lang: Lang) => `${EDGE_STORE_URL}?hl=${lang}`;
+// Firefox Add-ons (AMO). AMO picks the locale from the URL path (ja / en-US), not a query parameter.
+export const AMO_STORE_URL = 'https://addons.mozilla.org/firefox/addon/jushoai/';
+export const amoStoreUrl = (lang: Lang) => `https://addons.mozilla.org/${lang === 'en' ? 'en-US' : 'ja'}/firefox/addon/jushoai/`;
 export const GUIDE_SLUGS = [
   'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'supported-fields',
   'ai-providers', 'privacy', 'how-it-works', 'troubleshooting', 'license', 'glossary',

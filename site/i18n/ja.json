@@ -8,7 +8,7 @@
     "footer": { "tagline": "日本式フォームの入力を、正しい形で。", "guides": "ガイド", "privacy": "プライバシー", "license": "ライセンス", "feedback": "要望を送る", "source": "ソース" }
   },
   "hero": {
-    "eyebrow": "Chrome ウェブストアで公開中（Edge でも動作確認）",
+    "eyebrow": "Chrome・Edge・Firefox の各ストアで公開中",
     "titleBefore": "日本式フォームの氏名・フリガナ・住所を、",
     "titleEmphasis": "正しい欄に、正しい形で",
     "tagline": "姓と名、フリガナ、都道府県から番地まで細かく分かれた入力欄を、1 回のクリックで埋めます。入力する前に、プレビューで確認できます。",
@@ -82,13 +82,17 @@
   "install": {
     "title": "インストール",
     "steps": [
-      "Chrome と Edge は、Chrome ウェブストアからインストールします。",
-      "Firefox はストアにないため、GitHub Releases の zip を展開し、about:debugging から一時的なアドオンとして読み込みます。",
+      "Chrome は Chrome ウェブストアから、Edge は Edge アドオンから、Firefox は Firefox アドオン（AMO）からインストールします。",
+      "ストアを使わず zip から読み込む場合は、GitHub Releases の zip を展開します。Firefox は about:debugging から一時的なアドオンとして読み込みます（Firefox を終了すると外れます）。",
       "Chrome や Edge で zip から読み込む場合は、chrome://extensions か edge://extensions でデベロッパーモードを有効にし、「パッケージ化されていない拡張機能を読み込む」で展開したフォルダを選びます（表記はブラウザによって異なる場合があります）。",
       "拡張機能の設定ページで、プロファイルと住所を登録します。"
     ],
     "store": "Chrome ウェブストアでインストール",
-    "storeNote": "Chrome・Edge 向け",
+    "storeNote": "Chrome 向け",
+    "edgeStore": "Edge アドオンでインストール",
+    "edgeStoreNote": "Edge 向け",
+    "amoStore": "Firefox アドオンでインストール",
+    "amoStoreNote": "Firefox 向け",
     "releases": "GitHub Releases からダウンロード",
     "more": "詳しくはガイド「はじめに」を参照してください。"
   },

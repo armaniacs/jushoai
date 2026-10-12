@@ -47,6 +47,20 @@ describe('renderLanding', () => {
     expect(html).not.toContain('utm_source');
   });
 
+  it.each(['ja', 'en'] as const)('links to Edge Add-ons once with the %s language hint', async (lang) => {
+    const html = renderLanding({ lang, base: '/', s: await load(lang) });
+    const url = `https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi?hl=${lang}`;
+    expect(html.split(`href="${url}"`).length - 1).toBe(1);
+    expect(html).toContain('rel="noopener noreferrer"');
+  });
+
+  it.each([['ja', 'ja'], ['en', 'en-US']] as const)('links to Firefox Add-ons once with the %s locale path', async (lang, amoLocale) => {
+    const html = renderLanding({ lang, base: '/', s: await load(lang) });
+    const url = `https://addons.mozilla.org/${amoLocale}/firefox/addon/jushoai/`;
+    expect(html.split(`href="${url}"`).length - 1).toBe(1);
+    expect(html).toContain('rel="noopener noreferrer"');
+  });
+
   it.each(['ja', 'en'] as const)('embeds the demo video without cookies for %s', async (lang) => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });

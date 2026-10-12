@@ -2,7 +2,7 @@ import { escapeHtml } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
 import { issueUrl, REPO_URL, renderFeedbackSection, type FeedbackStrings } from './feedback.ts';
-import { pageUrl, storeUrl, type Lang } from './site.ts';
+import { pageUrl, amoStoreUrl, edgeStoreUrl, storeUrl, type Lang } from './site.ts';
 
 interface Titled { title: string; body: string }
 
@@ -20,7 +20,7 @@ export interface Strings {
   fields: { title: string; items: Titled[] };
   providers: { title: string; lead: string; items: { name: string; body: string }[] };
   privacy: { title: string; items: Titled[]; link: string };
-  install: { title: string; steps: string[]; store: string; storeNote: string; more: string; releases: string };
+  install: { title: string; steps: string[]; store: string; storeNote: string; edgeStore: string; edgeStoreNote: string; amoStore: string; amoStoreNote: string; more: string; releases: string };
   faq: { title: string; items: { q: string; a: string }[]; more: string };
   feedback: FeedbackStrings;
   license: { title: string; body: string; link: string };
@@ -96,6 +96,8 @@ ${cards(s.privacy.items)}
 <h2 class="section-title">${e(s.install.title)}</h2>
 <ol>${s.install.steps.map((t) => `<li>${e(t)}</li>`).join('')}</ol>
 <p><a class="btn primary" href="${e(storeUrl(p.lang))}" target="_blank" rel="noopener noreferrer">${e(s.install.store)}</a> <span class="note">${e(s.install.storeNote)}</span></p>
+<p><a class="btn" href="${e(edgeStoreUrl(p.lang))}" target="_blank" rel="noopener noreferrer">${e(s.install.edgeStore)}</a> <span class="note">${e(s.install.edgeStoreNote)}</span></p>
+<p><a class="btn" href="${e(amoStoreUrl(p.lang))}" target="_blank" rel="noopener noreferrer">${e(s.install.amoStore)}</a> <span class="note">${e(s.install.amoStoreNote)}</span></p>
 <p><a class="btn" href="${e(REPO_URL)}/releases/latest" target="_blank" rel="noopener noreferrer">${e(s.install.releases)}</a></p>
 <p><a href="${u('guides/getting-started/')}">${e(s.install.more)}</a></p>
 </div></section>

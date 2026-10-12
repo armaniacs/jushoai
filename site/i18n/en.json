@@ -8,7 +8,7 @@
     "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "license": "License", "feedback": "Send feedback", "source": "Source" }
   },
   "hero": {
-    "eyebrow": "Available on the Chrome Web Store (also verified in Edge)",
+    "eyebrow": "Available on the Chrome Web Store, Edge Add-ons and Firefox Add-ons",
     "titleBefore": "Names, furigana and addresses on Japanese forms, ",
     "titleEmphasis": "in the right fields and the right format",
     "tagline": "Forms split into family name, given name, furigana and prefecture-to-street fields get filled in one click. You review everything in a preview first.",
@@ -82,13 +82,17 @@
   "install": {
     "title": "Install",
     "steps": [
-      "In Chrome and Edge, install from the Chrome Web Store.",
-      "Firefox is not on a store: unzip the release from GitHub Releases and load it as a temporary add-on from about:debugging.",
+      "In Chrome, install from the Chrome Web Store. In Edge, install from Edge Add-ons. In Firefox, install from Firefox Add-ons (AMO).",
+      "To load a zip instead, unzip the release from GitHub Releases. In Firefox, load it as a temporary add-on from about:debugging (it is removed when Firefox quits).",
       "To load the zip in Chrome or Edge instead, open chrome://extensions or edge://extensions, turn on Developer mode, and choose \"Load unpacked\" to select the unzipped folder (the label may differ by browser).",
       "In the extension's settings page, register your profile and addresses."
     ],
     "store": "Install from the Chrome Web Store",
-    "storeNote": "For Chrome and Edge",
+    "storeNote": "For Chrome",
+    "edgeStore": "Install from Edge Add-ons",
+    "edgeStoreNote": "For Edge",
+    "amoStore": "Install from Firefox Add-ons",
+    "amoStoreNote": "For Firefox",
     "releases": "Download from GitHub Releases",
     "more": "See the \"Getting started\" guide for details."
   },

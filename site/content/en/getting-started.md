@@ -6,17 +6,21 @@ order: 1
 
 # Getting started
 
-JushoAI is a browser extension for Chromium-based browsers and Firefox 128 or later. It fills forms that ask for a name and an address with the information you registered. It has been verified in Edge. In Firefox (128 or later), the flow of filling a form is checked by automated tests; communication with cloud AI has not been verified.
+JushoAI is a browser extension for Chromium-based browsers and Firefox 128 or later. It fills forms that ask for a name and an address with the information you registered. It is published on Edge Add-ons and Firefox Add-ons (AMO). In Firefox (128 or later), the flow of filling a form is checked by automated tests; communication with cloud AI has not been verified.
 
 The extension screens are in Japanese only. This guide quotes each label exactly as it appears, with a short English gloss on first use.
 
 ## Install
 
-In Chrome and Edge, install from the Chrome Web Store.
+In Chrome, install from the Chrome Web Store. In Edge, install from Edge Add-ons. In Firefox, install from Firefox Add-ons (AMO).
 
 [Open JushoAI in the Chrome Web Store](https://chromewebstore.google.com/detail/jushoai/ijlccdbapahelcgpcopgkhdjhkkicbpl?hl=en)
 
-Firefox is not on a store. Unzip `jushoai-<version>-firefox.zip` from [GitHub Releases](https://github.com/armaniacs/jushoai/releases), open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
+[Open JushoAI in Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/jushoai/oobgmceceepjapoplehjkkbbpabbddhi?hl=en)
+
+[Open JushoAI in Firefox Add-ons](https://addons.mozilla.org/en-US/firefox/addon/jushoai/)
+
+To load a zip in Firefox instead, unzip `jushoai-<version>-firefox.zip` from [GitHub Releases](https://github.com/armaniacs/jushoai/releases), open `about:debugging#/runtime/this-firefox`, choose "Load Temporary Add-on", and select `manifest.json` in the unzipped folder. A temporary add-on is removed when Firefox quits, and the profiles, addresses and encryption key registered in it are lost with it, so you load it and register again each time.
 
 To load the zip in Chrome or Edge instead, unzip the release from [GitHub Releases](https://github.com/armaniacs/jushoai/releases) and follow these steps.
 

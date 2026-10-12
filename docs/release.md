@@ -55,3 +55,4 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 
 - 必要な画像: スクリーンショット（1280x800 または 640x400）、小プロモタイル（440x280）
 - プライバシーポリシー: ドキュメントサイトの `guides/privacy/`（日英）
+- 掲載状況: Chrome ウェブストア（2026-10-10）、Edge アドオン（2026-10-12）、Firefox アドオン（AMO、2026-10-12）。どの URL も `docs/store-listing.md` にある。Edge は Chromium 系のため、Chrome 向けの zip をそのまま提出する。Firefox アドオンへの提出は `make zip-firefox` の zip と sources.zip を使う
