@@ -27,7 +27,7 @@
 
 | PBI | 完了コミット |
 |---|---|
-| 2026-10-12-46-feat-exclude-urls-from-startup.md | 6e0c689 feat: 起動しないURLを設定画面から登録できるようにする（`make check` green、Chrome E2E 5/5、Firefox E2E 5/5。コードレビューはユーザー作業） |
+| 2026-10-12-46-feat-exclude-urls-from-startup.md | 6e0c689 feat: 起動しないURLを設定画面から登録できるようにする（PR #5 → ac9485b、`make check` green、Chrome E2E 5/5、Firefox E2E 5/5。0.1.16 としてリリース済み） |
 | 2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md | 7f49af3 fix: ボタンの追従を内部スクロールにも広げ、同意ゲートのhost解決を厳格にする（PR #4 → 1341725、0.1.15 としてリリース済み） |
 | 2026-10-11-38-fix-button-anchor-placement.md | 0889bce fix: 入力ボタンの配置をビューポート基準にし、左下に張り付く問題を直す（Chrome / Firefox の E2E と実ブラウザでの座標実測で確認。0.1.14 としてリリース済み。コードレビューはユーザー作業） |
 | 2026-10-11-37-backlog-review3-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |

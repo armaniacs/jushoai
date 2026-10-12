@@ -133,7 +133,7 @@ grep -rniE "除外|exclude|denylist|blocklist|allowlist|skipHosts" src/ --includ
 - [x] テストカバレッジが基準を満たす（E2E/統合/単体すべて。Firefox の実機 E2E のみ未実行）
 - [x] Chrome / Firefox の E2E が緑（Chrome 5/5、Firefox 5/5）
 - [x] `make check` が通る
-- [ ] コードレビュー完了（ユーザー作業）
+- [x] コードレビュー完了（PR #5 としてマージ）
 - [x] リファクタリング完了（グリーン後）
 - [x] 利用者向けドキュメント（README またはガイド）に除外URLの設定方法を追記（README.md / README.en.md）
 
@@ -146,4 +146,5 @@ grep -rniE "除外|exclude|denylist|blocklist|allowlist|skipHosts" src/ --includ
 - 検証: `make check` exit 0（typecheck・87 ファイル / 1152 passed・両ブラウザ build・manifest 検査・web-ext lint）、`make site` green、**Chrome E2E 5/5**、**Firefox E2E 5/5**（除外 URL で起動しない／開いているタブからボタンが消える の 2 件を含む。Firefox は権限のある環境でユーザーが実行）
 - テスト: `tests/core/exclusions.test.ts`（20 件）、`tests/exclusions-store.test.ts`（4 件）、`tests/entrypoints/content-exclusions.test.ts`（8 件）、`tests/options/exclusion-section.test.ts`（7 件）、E2E 2 件
 - 追加: `README.md` / `README.en.md` に設定方法、`CHANGELOG.md` の `[Unreleased]` に機能を追記
-- ユーザー作業として残るもの: コードレビュー（Firefox の実機 E2E は 2026-10-12 に実行して 5/5 緑を確認）
+- リリース: PR #5 を main にマージ（`ac9485b`）→ バージョン更新（`427db2a`）→ タグ `v0.1.16` を push。environment `release` の承認を経て Release を作成（chrome / firefox / sources の zip 3 点）
+- 残る作業: なし
