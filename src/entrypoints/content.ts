@@ -1,7 +1,9 @@
 import { classifyAll } from '../core/analyze';
+import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import type { PlanItem } from '../core/planner';
 import { buildFeedbackInput, replanItems, snapshotItems } from '../content-run';
+import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
@@ -236,10 +238,58 @@ export function attachRepositionTracking(deps: RepositionTrackingDeps): () => vo
   };
 }
 
+export interface ExclusionGateDeps {
+  loadExcluded(): Promise<string[]>;
+  href(): string;
+  start(): void;
+  stop(): void;
+}
+
+export interface ExclusionGate {
+  init(): Promise<void>;
+  refresh(): Promise<void>;
+  recheck(): void;
+  entries(): string[];
+  isExcluded(): boolean;
+}
+
+// Keeps the content script off excluded URLs. `start`/`stop` own the observers
+// and the mounted buttons, so a list that changes at runtime takes effect
+// without a reload. The state starts unknown, so the first evaluation always
+// applies even when the page is not excluded. A store that cannot be read fails
+// open: a broken list must not silently disable the extension everywhere.
+export function createExclusionGate(deps: ExclusionGateDeps): ExclusionGate {
+  let list: string[] = [];
+  let state: 'unknown' | 'running' | 'stopped' = 'unknown';
+  const apply = (excluded: boolean): void => {
+    const want = excluded ? 'stopped' : 'running';
+    if (state === want) return;
+    state = want;
+    if (excluded) deps.stop();
+    else deps.start();
+  };
+  const evaluate = (): void => apply(isExcludedUrl(deps.href(), list));
+  const read = async (): Promise<void> => {
+    try {
+      list = await deps.loadExcluded();
+    } catch {
+      list = [];
+    }
+    evaluate();
+  };
+  return {
+    entries: () => list,
+    isExcluded: () => state === 'stopped',
+    init: read,
+    refresh: read,
+    recheck: evaluate,
+  };
+}
+
 export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
-  main() {
+  async main() {
     const mounted = new Map<Element, { handle: ButtonHandle; anchor: Element }>();
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
@@ -335,6 +385,9 @@ export default defineContentScript({
       openPreview = null;
       openGuide?.close();
       openGuide = null;
+      // Classification takes long enough for the settings to change under it; an
+      // exclusion that landed meanwhile must not open a panel on this page.
+      if (gate.isExcluded()) return;
       const preview = showPreview({
         rows: replan(),
         addresses: data.addresses,
@@ -392,6 +445,14 @@ export default defineContentScript({
 
     let lastScan = '';
     function sync() {
+      // A history-API route can move into an excluded path without a reload, so
+      // the URL is re-evaluated on every scan. Leaving an excluded path is
+      // handled by the settings message or by a reload: the script is stopped by
+      // design while the exclusion holds.
+      if (isExcludedUrl(window.location.href, gate.entries())) {
+        gate.recheck();
+        return;
+      }
       // childList changes on heavy pages fire this at ~2Hz; skip the full rescan when the
       // control set and mounted anchors are unchanged.
       const sig = Array.from(document.querySelectorAll('input, select'), (el) => {
@@ -436,6 +497,12 @@ export default defineContentScript({
       if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
         return false;
       }
+      // An excluded page is out of scope for the popup too; "no form" is what
+      // the user sees there (no button to press either).
+      if (gate.isExcluded()) {
+        sendResponse({ ok: false, reason: 'no-form' });
+        return false;
+      }
       const first = detectForms(document)[0];
       const entry = first ? mounted.get(first.container) : undefined;
       if (!first || !entry) {
@@ -449,14 +516,63 @@ export default defineContentScript({
       return true;
     });
 
+    let observer: MutationObserver | null = null;
     let timer: number | undefined;
+    let detachTracking: (() => void) | null = null;
     const schedule = () => {
       window.clearTimeout(timer);
       timer = window.setTimeout(sync, 500);
     };
-    schedule();
-    new MutationObserver(schedule).observe(document.body, { childList: true, subtree: true });
-    const repositionAll = () => mounted.forEach((m) => m.handle.reposition());
-    attachRepositionTracking({ doc: document, win: window, reposition: repositionAll });
+
+    // Everything the page can observe about JushoAI is created in start() and
+    // torn down in stop(), so an exclusion can turn the whole thing off (and
+    // back on) without a reload: observers, pending syncs, mounted buttons and
+    // any open panel.
+    const stop = () => {
+      window.clearTimeout(timer);
+      timer = undefined;
+      observer?.disconnect();
+      observer = null;
+      detachTracking?.();
+      detachTracking = null;
+      for (const m of mounted.values()) m.handle.destroy();
+      mounted.clear();
+      running.clear();
+      lastScan = '';
+      openPreview?.close();
+      openPreview = null;
+      openGuide?.close();
+      openGuide = null;
+    };
+
+    const start = () => {
+      if (observer) return;
+      schedule();
+      observer = new MutationObserver(schedule);
+      observer.observe(document.body, { childList: true, subtree: true });
+      detachTracking = attachRepositionTracking({
+        doc: document,
+        win: window,
+        reposition: () => mounted.forEach((m) => m.handle.reposition()),
+      });
+    };
+
+    const gate = createExclusionGate({
+      loadExcluded: loadExcludedUrls,
+      href: () => window.location.href,
+      start,
+      stop,
+    });
+
+    // The settings page writes the list and every content script learns about it
+    // through storage.onChanged: runtime.sendMessage does not reach content
+    // scripts, and this needs no message type or per-tab send. Registered before
+    // the first evaluation, so a change still arrives while this script is
+    // stopped for an excluded page.
+    chrome.storage.onChanged.addListener((changes, area) => {
+      if (area === 'local' && EXCLUDED_URLS_KEY in changes) void gate.refresh();
+    });
+
+    await gate.init();
   },
 });

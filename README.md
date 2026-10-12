@@ -31,6 +31,14 @@ Chrome と Edge は、[Chrome ウェブストア](https://chromewebstore.google.
 
 ツールバーのアイコンから、登録内容と使用中のプロファイルを確認できる。入力済みの欄は上書きせず、最大文字数を超える値は入力せずに警告する。
 
+### 起動しないURL
+
+設定ページの「起動しないURL」で URL を登録すると、その URL で始まるページでは「JushoAI で入力」を出さない。表計算やメールなど、入力の補完が無関係なページでボタンが出なくなる。
+
+- 例: `https://docs.google.com/spreadsheets/` を登録すると、その配下のスプレッドシートでは起動しない。同じホストの `https://docs.google.com/document/` は対象外
+- 一致は登録した文字列で始まるかどうかで判定する（大文字小文字は区別しない）
+- 登録した URL を開いたままでも、保存すると反映される（ボタンが消える）
+
 ## 要望・不具合の連絡
 
 GitHub の Issue で受け付けている。[Issue を作成する](https://github.com/armaniacs/jushoai/issues/new/choose)から、種類に合うフォームを選ぶ。Issue は公開されるため、氏名・住所・電話番号などの個人情報は書かない。
