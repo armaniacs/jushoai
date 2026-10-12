@@ -2,6 +2,12 @@
 // declarations use important priority. The closed shadow root keeps page
 // scripts from reading the UI inside.
 //
+// Placement belongs to the consumers: mountButton and createOverlayHost
+// write `position: fixed` with important priority right after this call. No
+// default position is declared here on purpose. Without a position
+// declaration, writing only coordinates would leave the host static and
+// inert, which is why every consumer declares its own position.
+//
 // `all: initial !important` also resets top/left to initial with important
 // priority, so any later coordinate write must use
 // setProperty(name, value, 'important') too; a plain inline write loses and
@@ -12,7 +18,6 @@ export function createShadowHost(): { host: HTMLElement; root: ShadowRoot } {
   const host = document.createElement('div');
   host.setAttribute('data-jushoai', '');
   host.style.setProperty('all', 'initial', 'important');
-  host.style.setProperty('position', 'absolute', 'important');
   host.style.setProperty('z-index', '2147483647', 'important');
   const root = host.attachShadow({ mode: 'closed' });
   return { host, root };
