@@ -23,6 +23,12 @@
 
 ## Definition of Done
 
-- [ ] 順位 1〜5 が完了し、アーカイブされる
-- [ ] `make check` が緑
-- [ ] 両ブラウザの E2E が緑
+- [x] 順位 1〜5 が完了し、アーカイブされる
+- [x] `make check` が緑
+- [ ] 両ブラウザの E2E が緑（Chrome 5/5 緑。Firefox はこの実行コンテキストではプロファイルアクセスが実行サンドボックスにブロックされ実行不可。通常ターミナルでの実行はユーザー作業。実施記録参照）
+
+## 実施記録（2026-10-12、タスククローザによるラウンド完結）
+
+- 順位 1〜5（PBI 40〜44）を実装してアーカイブ済み。ラウンド全体の検証: `make check` exit 0（typecheck、テスト 88 ファイル 1166 passed + 2 期待失敗、両ブラウザ build、manifest 検査 17 件、lint 0 エラー）、`make site` exit 0
+- E2E: Chrome 5/5 緑（`E2E_NO_SANDBOX=1 HEADLESS=1 make e2e-chrome`。実行コンテキストは Chrome にとって制限環境のため明示環境変数を使用。PBI-40 の実施記録参照）。Firefox はこのコンテキストでは実行不可（`~/Library/Application Support/Firefox` へのアクセスが `Operation not permitted` でブロック。フルディスクアクセスが必要なのは CLAUDE.md 記載のとおり）で、コード変更との因果ではない
+- ユーザーの作業として残る項目: コードレビュー、通常ターミナルでの `make e2e-firefox` と `make e2e-chrome`（sandbox 有効）の実行確認

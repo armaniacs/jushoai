@@ -29,9 +29,9 @@ Scenario: 選ばれるアンカーは変わらない
 
 ## 受け入れ基準
 
-- [ ] 各欄の矩形読み取りが 1 回に収まっている（読み取り回数を数えるテストで断言する）
-- [ ] 既存の `tests/dom/detect-forms.test.ts` と `tests/integration/samples.test.ts` が緑のまま（選択結果が変わらない）
-- [ ] `make check` が通る
+- [x] 各欄の矩形読み取りが 1 回に収まっている（読み取り回数を数えるテストで断言する）
+- [x] 既存の `tests/dom/detect-forms.test.ts` と `tests/integration/samples.test.ts` が緑のまま（選択結果が変わらない）
+- [x] `make check` が通る
 
 ## テスト戦略
 
@@ -44,6 +44,13 @@ Scenario: 選ばれるアンカーは変わらない
 
 ## Definition of Done
 
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] `make check` が通る
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] `make check` が通る
+- [ ] コードレビュー完了（ユーザー作業）
+
+## 実施記録（2026-10-12、タスククローザによる実装。並列サブエージェントが 2 回中断したため本体で実施）
+
+- 実装コミット `049968d`: `src/dom/detect-forms.ts` の `pickAnchor` 内に pick スコープの rect メモ化（`Map<Element, DOMRect>`）を置き、`hasBox` とソートキーの両方を `rectOf` から導出。モジュールレベルの `visualTop` / `hasBox`（`grep` で pickAnchor 専用と確認済み）をローカルクロージャに移設し、既存コメント（ゼロ面積が最後尾、jsdom で安定、boxless を落とす理由）は移動先に保持。フィルタ順・ソートキー・フォールバックのセマンティクスは完全に不変
+- テスト: `tests/dom/detect-forms.test.ts` にカウントテスト 1 件追加（9 欄のフォームで `detectForms` 走行中の各欄の `getBoundingClientRect` がちょうど 1 回。旧実装はソート比較子が再読みして欄あたり 2〜3 回で Red）
+- 検証: Red → Green（detect-forms 12/12、samples 23/23）。`make check` exit 0
+- ユーザーの作業として残る項目: コードレビュー

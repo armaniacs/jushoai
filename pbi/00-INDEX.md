@@ -2,12 +2,7 @@
 
 ## 進行中
 
-- `2026-10-12-45-backlog-review4-suggestions-round.md`（0.1.14 レビューの残る提案 #3〜#7 のラウンド。順位 1〜5 は 40〜44。同点はリスク軽減で順序付け）
-- `2026-10-12-40-fix-e2e-chrome-sandbox-flag.md`（順位 1。E2E の `--no-sandbox` を CI 限定に）
-- `2026-10-12-41-chore-host-position-default.md`（順位 2。host のデッドな既定の解消）
-- `2026-10-12-42-chore-overlay-left-auto-note.md`（順位 3。`left: auto` 依存の記録）
-- `2026-10-12-43-fix-audit-separator-accounting.md`（順位 4。予算計上の区切り文字）
-- `2026-10-12-44-chore-anchor-rect-single-read.md`（順位 5。矩形読み取りの O(n log n) → O(n)）
+（なし）
 
 ## 台帳
 
@@ -25,6 +20,12 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-12-45-backlog-review4-suggestions-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green、Chrome E2E 5/5。Firefox E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-12-40-fix-e2e-chrome-sandbox-flag.md | 2a35d9a fix: E2E の Chrome 起動フラグを CI に限定する（chrome-flags 純粋関数化＋単体 6 件。Chrome E2E 5/5 は `E2E_NO_SANDBOX=1`。既定の sandbox 有効起動は実行コンテキストの制約で未実証。コードレビューと通常ターミナルでの既定実行確認はユーザー作業） |
+| 2026-10-12-41-chore-host-position-default.md | bc2a1d6 chore: host のデッドな position 既定を削除する（host.test を実態に合わせ更新。コードレビューはユーザー作業） |
+| 2026-10-12-42-chore-overlay-left-auto-note.md | 63be9b9 chore: overlay の left auto 依存をコメントに残す（コメントのみ。コードレビューはユーザー作業） |
+| 2026-10-12-43-fix-audit-separator-accounting.md | 54af782 fix: 監査ログの予算計上から区切り文字の分を引く（batchBytes 一元化＋境界テスト 3 件。コードレビューはユーザー作業） |
+| 2026-10-12-44-chore-anchor-rect-single-read.md | 049968d chore: アンカー選択の矩形読み取りを1回にまとめる（rect メモ化＋カウントテスト。コードレビューはユーザー作業） |
 | 2026-10-11-21-backlog-release-assertion-parser.md | 将来候補としての記録で完結（受け入れ基準・DoD 全項目済み。着手条件はアーカイブ済みファイルに記録のまま。実装なし。`make check` green） |
 | 2026-10-11-31-backlog-edge-e2e.md | 将来候補としての記録で完結（同上。着手までは Chrome・Firefox の E2E で代用） |
 | 2026-10-12-46-feat-exclude-urls-from-startup.md | 6e0c689 feat: 起動しないURLを設定画面から登録できるようにする（PR #5 → ac9485b、`make check` green、Chrome E2E 5/5、Firefox E2E 5/5。0.1.16 としてリリース済み） |
