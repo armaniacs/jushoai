@@ -8,8 +8,6 @@
 - `2026-10-12-42-chore-overlay-left-auto-note.md`（順位 3。`left: auto` 依存の記録）
 - `2026-10-12-43-fix-audit-separator-accounting.md`（順位 4。予算計上の区切り文字）
 - `2026-10-12-44-chore-anchor-rect-single-read.md`（順位 5。矩形読み取りの O(n log n) → O(n)）
-- `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
-- `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
 ## 台帳
 
@@ -27,6 +25,8 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-21-backlog-release-assertion-parser.md | 将来候補としての記録で完結（受け入れ基準・DoD 全項目済み。着手条件はアーカイブ済みファイルに記録のまま。実装なし。`make check` green） |
+| 2026-10-11-31-backlog-edge-e2e.md | 将来候補としての記録で完結（同上。着手までは Chrome・Firefox の E2E で代用） |
 | 2026-10-12-46-feat-exclude-urls-from-startup.md | 6e0c689 feat: 起動しないURLを設定画面から登録できるようにする（PR #5 → ac9485b、`make check` green、Chrome E2E 5/5、Firefox E2E 5/5。0.1.16 としてリリース済み） |
 | 2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md | 7f49af3 fix: ボタンの追従を内部スクロールにも広げ、同意ゲートのhost解決を厳格にする（PR #4 → 1341725、0.1.15 としてリリース済み） |
 | 2026-10-11-38-fix-button-anchor-placement.md | 0889bce fix: 入力ボタンの配置をビューポート基準にし、左下に張り付く問題を直す（Chrome / Firefox の E2E と実ブラウザでの座標実測で確認。0.1.14 としてリリース済み。コードレビューはユーザー作業） |
