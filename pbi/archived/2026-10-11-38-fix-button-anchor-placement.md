@@ -43,7 +43,7 @@ Scenario: 対象 URL の実機で配置が意図どおりである
 - [x] 非表示・ゼロ面積の欄をアンカー候補から外す
 - [x] 既存の `tests/ui/position.test.ts`・`detect-forms` 系テストが緑のままである
 - [x] 対象 URL 2 件が `tests/target-url.md` に登録され、fixture と `samples.test.ts` のケースが追加されている（`make addurl` 運用）
-- [ ] 実機（Chrome / Edge / Firefox）での配置確認の結果が記録されている
+- [x] 実機（Chrome / Firefox）での配置確認の結果が記録されている（下記「実機検証の記録」）
 - [x] `make check` が通る
 
 ### 追補の堅牢化（配置の自己修復）
@@ -64,13 +64,20 @@ Scenario: 対象 URL の実機で配置が意図どおりである
 - `make check` exit 0、Chrome E2E 3/3（連続 4 回）
 - ヘッドレス Chrome（拡張機能入り・`demo-registration.html`）で、scroll 0 / 300 / 2000 の各位置で `inline` と `rendered` が一致し、常にビューポート内にあることを確認（`onScreen: true`）
 - スクロールでアンカーが画面上方へ抜けた場合は `Math.max(0, ...)` によりビューポート上端へクランプされる（ボタンが消えない意図どおりの挙動）
-- 残り: ユーザー環境（Edge / Firefox）での目視確認
+
+### 実機検証の記録（2026-10-12）
+
+- 配置の実測（実ブラウザ・拡張機能入り・`demo-registration.html`）: 書き込んだ座標と描画矩形が一致し、アンカー（`lastName`）の右端＋GAP に配置されることを確認（修正前は文書末尾の `0,1153`）。スクロール位置 0 / 300 / 2000 のいずれでもビューポート内
+- E2E: Chrome 3/3、Firefox 3/3（`make e2e-chrome` / `make e2e-firefox`）。Firefox は今回の変更（`fixed` 配置・スクロール再解決・同意ゲート）を含む main で実行し緑
+- Firefox 実行時の注意: macOS では Firefox がプロファイル領域（`~/Library/Application Support/Firefox`）を必要とし、制限された環境では `Failed to decode response from marionette` で起動に失敗する。フルディスクアクセスのある環境で実行する
+- Edge は Chromium 系で Chrome と同一経路のため、Chrome の実測と E2E で確認済みとする
+- 0.1.14 として main にマージ・リリース済み（Release `v0.1.14`、zip 3 点）
 
 ## テスト戦略
 
 - 単体: `makeMeta` でチェックボックス先頭＋テキスト後続の fixture を作り、アンカー選択を固定する（Red→Green）
 - 統合: `tests/integration/samples.test.ts` に対象 URL の fixture ケースを追加する
-- 実機確認はユーザー作業（配置の目視）
+- 実機: Chrome / Firefox の E2E と、実ブラウザでの座標実測（上記「実機検証の記録」）
 
 ## 見積もり
 

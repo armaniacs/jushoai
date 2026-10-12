@@ -2,7 +2,6 @@
 
 ## 進行中
 
-- `2026-10-11-38-fix-button-anchor-placement.md`（フォームボタンの左下配置の是正。対象 URL 2 件の fixture 化を含む）
 - `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
 - `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
 
@@ -22,6 +21,7 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-11-38-fix-button-anchor-placement.md | 0889bce fix: 入力ボタンの配置をビューポート基準にし、左下に張り付く問題を直す（Chrome / Firefox の E2E と実ブラウザでの座標実測で確認。0.1.14 としてリリース済み。コードレビューはユーザー作業） |
 | 2026-10-11-37-backlog-review3-suggestions-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。未コミット、`make check` green） |
 | 2026-10-11-33-fix-pageurl-cap-wiring-test.md | 未コミット fix: 入口制限の統合テスト。`make check` green |
 | 2026-10-11-34-chore-pageurl-truncation-note.md | 未コミット chore: 切詰受容の記録。`make check` green |
