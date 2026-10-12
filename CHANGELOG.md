@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.16] - 2026-10-12
+
 ### Added
 
 - 設定ページに「起動しないURL」を追加する。登録した文字列で始まる URL では、ボタンの表示だけでなくフォームの走査と監視も行わない。登録した URL を開いたままでも、保存すると反映される（ボタンが消える）。一致は前置一致で、大文字小文字は区別しない
@@ -239,6 +241,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.16]: https://github.com/armaniacs/jushoai/compare/v0.1.15...v0.1.16
 [0.1.15]: https://github.com/armaniacs/jushoai/compare/v0.1.14...v0.1.15
 [0.1.14]: https://github.com/armaniacs/jushoai/compare/v0.1.13...v0.1.14
 [0.1.13]: https://github.com/armaniacs/jushoai/compare/v0.1.12...v0.1.13
