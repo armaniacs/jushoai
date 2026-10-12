@@ -43,7 +43,11 @@ vi.mock('../../src/entrypoints/options/ai-section', () => ({
   mountAiSection: vi.fn(),
 }));
 
-document.body.innerHTML = '<div id="side"></div><main id="app"></main><main id="ai-app"></main><main id="audit-app"></main>';
+vi.mock('../../src/entrypoints/options/exclusion-section', () => ({
+  mountExclusionSection: vi.fn(),
+}));
+
+document.body.innerHTML = '<div id="side"></div><main id="app"></main><main id="ai-app"></main><main id="exclusion-app"></main><main id="audit-app"></main>';
 
 const { prefectureSelect, genderSelect, ownerSelect } = await import(
   '../../src/entrypoints/options/main'

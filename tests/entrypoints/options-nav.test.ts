@@ -1,7 +1,7 @@
 import { describe, it, expect, afterEach } from 'vitest';
 import {
   OPTION_SECTIONS, buildNav, getActivePage, setActivePage, applyActivePage,
-  PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, AUDIT_SECTION_ID,
+  PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, EXCLUSION_SECTION_ID, AUDIT_SECTION_ID,
 } from '../../src/entrypoints/options/nav';
 import { buildSettingsReportUrl } from '../../src/feedback/issue-url';
 
@@ -12,13 +12,13 @@ afterEach(() => {
 });
 
 describe('OPTION_SECTIONS', () => {
-  it('has profile, address, AI and audit entries', () => {
-    expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(['profiles', 'addresses', 'ai', 'audit']);
+  it('has profile, address, AI, exclusion and audit entries', () => {
+    expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(['profiles', 'addresses', 'ai', 'exclusions', 'audit']);
   });
 
   it('shares one id source with the rendered headings', () => {
     expect(OPTION_SECTIONS.map((s) => s.id)).toEqual(
-      [PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, AUDIT_SECTION_ID],
+      [PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AI_SECTION_ID, EXCLUSION_SECTION_ID, AUDIT_SECTION_ID],
     );
   });
 });
@@ -28,8 +28,8 @@ describe('buildNav', () => {
     const root = document.createElement('div');
     const nav = buildNav(root);
     const links = [...nav.querySelectorAll('a[data-section]')];
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#profiles', '#addresses', '#ai', '#audit']);
-    expect(links.map((a) => a.textContent)).toEqual(['プロファイル', '住所', 'AI 判定', '通信の監査ログ']);
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['#profiles', '#addresses', '#ai', '#exclusions', '#audit']);
+    expect(links.map((a) => a.textContent)).toEqual(['プロファイル', '住所', 'AI 判定', '起動しないURL', '通信の監査ログ']);
     const report = root.querySelector('.report a');
     expect(report?.textContent).toBe('不具合報告');
     expect(report?.getAttribute('target')).toBe('_blank');
@@ -79,12 +79,17 @@ describe('page switching', () => {
     const ai = document.createElement('div');
     ai.id = 'ai';
     aiApp.append(ai);
+    const exclusionApp = document.createElement('main');
+    exclusionApp.id = 'exclusion-app';
+    const exclusions = document.createElement('div');
+    exclusions.id = 'exclusions';
+    exclusionApp.append(exclusions);
     const auditApp = document.createElement('main');
     auditApp.id = 'audit-app';
     const audit = document.createElement('div');
     audit.id = 'audit';
     auditApp.append(audit);
-    content.append(app, aiApp, auditApp);
+    content.append(app, aiApp, exclusionApp, auditApp);
     document.body.append(side, content);
     return side;
   }

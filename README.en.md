@@ -31,6 +31,14 @@ In Chrome and Edge, install from the [Chrome Web Store](https://chromewebstore.g
 
 The toolbar icon shows what is registered and which profile is in use. Fields that already have a value are not overwritten, and values longer than a field's maximum length are flagged instead of entered.
 
+### URLs where JushoAI does not start
+
+Register a URL under "起動しないURL" (URLs where it does not start) in the settings page, and the `JushoAI で入力` button is not shown on any page whose URL starts with it. The button stays out of the way on spreadsheets, mail and other pages where filling forms is not the task.
+
+- Example: registering `https://docs.google.com/spreadsheets/` keeps JushoAI out of every spreadsheet under it. `https://docs.google.com/document/` on the same host is unaffected
+- A URL matches when it starts with the registered text (case-insensitive)
+- Saving takes effect on already open tabs too: the button disappears without a reload
+
 ## AI provider (optional)
 
 AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini; not available in Firefox). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).

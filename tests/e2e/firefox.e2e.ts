@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { WebDriver } from 'selenium-webdriver';
 import {
-  By, OPTIONS_URL, clickInShadow, closeExtensionPage, openExtensionPage, seedProfile, startDriver, startPageServer, valueOf, type PageServer,
+  By, OPTIONS_URL, clickInShadow, closeExtensionPage, openExtensionPage, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -53,5 +53,58 @@ describe('firefox: settings page', () => {
     } finally {
       await closeExtensionPage(driver, home);
     }
+  });
+});
+
+const hosts = async (): Promise<number> => (await driver.findElements(By.css('div[data-jushoai]'))).length;
+
+// The options page is only reachable through the browser chrome context, so every
+// interaction opens it in its own tab and returns to the calling tab.
+const withExclusionPage = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, `${OPTIONS_URL}#exclusions`);
+  try {
+    await driver.wait(until.elementLocated(By.css('#exclusion-app input')), 10_000);
+    return await fn();
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+const addExclusion = (value: string): Promise<void> => withExclusionPage(async () => {
+  const input = await driver.findElement(By.css('#exclusion-app input'));
+  await input.sendKeys(value);
+  await driver.findElement(By.xpath("//*[@id='exclusion-app']//button[text()='追加']")).click();
+  await driver.findElement(By.css('#exclusion-app button.primary')).click();
+  await driver.wait(until.elementLocated(By.css('#exclusion-app .saved')), 10_000);
+});
+
+const removeFirstExclusion = (): Promise<void> => withExclusionPage(async () => {
+  await driver.findElement(By.css('#exclusion-app .exclusion-list button')).click();
+  await driver.findElement(By.css('#exclusion-app button.primary')).click();
+  await driver.wait(until.elementLocated(By.css('#exclusion-app .saved')), 10_000);
+});
+
+describe('firefox: excluded pages', () => {
+  it('does not start on a registered URL and starts again once it is removed', async () => {
+    await addExclusion(`${pages.origin}/split-form.html`);
+    try {
+      await driver.get(`${pages.origin}/split-form.html`);
+      await driver.findElement(By.id('ln'));
+      await driver.sleep(1500);
+      expect(await hosts()).toBe(0);
+    } finally {
+      await removeFirstExclusion();
+    }
+    await driver.get(`${pages.origin}/split-form.html`);
+    await driver.wait(async () => (await hosts()) > 0, 10_000);
+  });
+
+  it('removes the button from a tab that is already open', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    await driver.wait(async () => (await hosts()) > 0, 10_000);
+    await addExclusion(`${pages.origin}/split-form.html`);
+    await driver.wait(async () => (await hosts()) === 0, 10_000);
+    await removeFirstExclusion();
   });
 });
