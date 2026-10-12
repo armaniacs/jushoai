@@ -39,6 +39,8 @@ Register a URL under "起動しないURL" (URLs where it does not start) in the 
 - A URL matches when it starts with the registered text (case-insensitive)
 - Saving takes effect on already open tabs too: the button disappears without a reload
 
+The steps and the settings screen are described in [Toolbar and filling a form](https://armaniacs.github.io/jushoai/en/guides/popup-and-fill/).
+
 ## AI provider (optional)
 
 AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini; not available in Firefox). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).

@@ -35,6 +35,21 @@ A `JushoAI で入力` (fill with JushoAI) button appears near a form that has se
 
 Fields classified by AI are marked `AI判定` (decided by AI). Close the preview with the Esc key or `キャンセル` (cancel).
 
+## URLs where JushoAI does not start
+
+On pages where filling forms is not the task, such as spreadsheets and mail, the button only gets in the way. Register a URL under `起動しないURL` (URLs where it does not start) in the settings page, and JushoAI stays out of any page whose URL starts with it.
+
+1. Open `起動しないURL` in the settings page.
+2. Type a URL and click `追加` (add).
+3. Click `保存` (save).
+
+- Example: registering `https://docs.google.com/spreadsheets/` keeps JushoAI out of every spreadsheet under it. `https://docs.google.com/document/` on the same host is unaffected
+- A URL matches when it starts with the registered text (case-insensitive)
+- Saving takes effect on already open pages: the button disappears there
+- Up to 100 URLs can be registered, and only URLs starting with `http://` or `https://` are accepted
+
+Removing an entry from the list and saving brings the button back.
+
 ## Analyze with AI
 
 If some fields could not be classified by the rules, use `AI で分析` (analyze with AI) in the preview to have the AI you configured classify them again. Once configured, fields the rules could not identify can also be classified by AI. See [Setting up an AI provider](/en/guides/ai-providers/) for the AI settings.

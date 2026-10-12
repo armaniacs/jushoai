@@ -39,6 +39,8 @@ Chrome と Edge は、[Chrome ウェブストア](https://chromewebstore.google.
 - 一致は登録した文字列で始まるかどうかで判定する（大文字小文字は区別しない）
 - 登録した URL を開いたままでも、保存すると反映される（ボタンが消える）
 
+手順と画面の説明は[ツールバーとフォームへの入力](https://armaniacs.github.io/jushoai/guides/popup-and-fill/)にある。
+
 ## 要望・不具合の連絡
 
 GitHub の Issue で受け付けている。[Issue を作成する](https://github.com/armaniacs/jushoai/issues/new/choose)から、種類に合うフォームを選ぶ。Issue は公開されるため、氏名・住所・電話番号などの個人情報は書かない。
