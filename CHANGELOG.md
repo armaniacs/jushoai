@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.1.17] - 2026-10-13
+
+### Added
+
+- タグ push を起点に Chrome・Edge・Firefox の 3 ストアへ自動で審査提出する（`npx wxt submit`）。審査通過後は自動公開する。提出に失敗したときは GitHub Release を作らずに失敗する
+- ストア自動提出の運用ガイドを `docs/store-submit.md` に追加する
+
+### Fixed
+
+- AMO 審査用の sources.zip に VulnHunter の残骸（使い捨てテスト鍵を含む）と promo 画像が混入していたため、除外リストに追加する
+
 ## [0.1.16] - 2026-10-12
 
 ### Added
