@@ -47,7 +47,7 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 | `CHROME_EXTENSION_ID` | 拡張 ID（ストア URL 末尾の32文字） |
 | `CHROME_PUBLISHER_ID` | 開発者ダッシュボードの URL（`devconsole/<ID>`）に表示される公開者 ID |
 | `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | GCP（プロジェクト `jushoai-store`）のサービスアカウントの client email |
-| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | 同 private key（JSON の値をそのまま。`\n` は変換しない） |
+| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | 同 private key。JSON 内の `\n` 表記ではなく**実際の改行入り**で登録する（手順は store-submit.md） |
 | `EDGE_PRODUCT_ID` | Partner Center のダッシュボードに表示される Product ID |
 | `EDGE_CLIENT_ID` | Partner Center の「API を公開する」で発行した Client ID |
 | `EDGE_API_KEY` | 同時に発行した API キー |

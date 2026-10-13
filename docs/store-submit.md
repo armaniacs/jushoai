@@ -50,7 +50,16 @@ gh secret list --env release
 4. 登録する Secrets（4 個）：`CHROME_EXTENSION_ID`（`ijlccdbapahelcgpcopgkhdjhkkicbpl`）、
    `CHROME_PUBLISHER_ID`（ダッシュボード URL `devconsole/<ID>` の ID）、
    `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`（JSON の `client_email`）、
-   `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`（JSON の `private_key` の値をそのまま。`\n` は変換しない）。
+   `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`。
+   private key の注意：JSON 内は `\n` 表記だが、ツールは提出時に変換しない。
+   GitHub Secret には**実際の改行入り**で登録すること。ダウンロードした JSON から直接入れる：
+   ```bash
+   node -e "process.stdout.write(JSON.parse(require('fs').readFileSync(process.argv[1],'utf8')).private_key)" ~/Downloads/XXXXXXXX.json | gh secret set --env release CHROME_SERVICE_ACCOUNT_PRIVATE_KEY
+   ```
+   （`XXXXXXXX.json` はダウンロードした鍵ファイル名に置き換える）。
+   手で貼る場合は、複数行のまま貼って最後に Ctrl+D。
+   `.env.submit`（ローカル確認用）では逆に、値を**ダブルクォートで囲んで `\n` 表記のまま**書く
+   （dotenv が展開して改行に戻す。クォート無しだと `DECODER routines::unsupported` で落ちる）。
 
 経緯のメモ：一時は API v1.1＋OAuth（クライアント＋Playground の
 リフレッシュトークン）に切り替えていたが、v1.1 が 2026-10-15 で停止するため v2 に戻した。
