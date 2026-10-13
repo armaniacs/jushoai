@@ -21,12 +21,63 @@ release job は environment `release` に束ねられており、Release の生�
 3. ワークフローの実行が environment `release` の承認待ちで止まる。GitHub の Actions
    実行画面で内容を確認し、承認する（却下した場合は Release を作らずに終了する）
 4. 承認後、ワークフローがタグと `package.json` の version の一致を確かめ、`make check`、
-   `make zip`、`make zip-firefox` を実行する。CHANGELOG の該当節を本文にして、
+   `make zip`、`make zip-firefox` を実行する。続いて `npx wxt submit` で Chrome・Edge・
+   Firefox の 3 ストアへ審査提出する（詳細は下の「ストア自動提出」）。提出が成功したら
+   CHANGELOG の該当節を本文にして、
    `dist/jushoai-X.Y.Z-chrome.zip`、`-firefox.zip`、`-sources.zip`（AMO 提出用）を添付した
-   Release を作る
+   Release を作る。提出に失敗したときは Release を作らずに失敗する（半端な Release を残さない順序）
 5. main への push で、GitHub Pages のワークフローがサイトをデプロイする。`https://armaniacs.github.io/jushoai/` を開き、日英のトップとライセンスのページ、Issue ボタンのリンク先を確認する
 
 CHANGELOG に該当節がない、またはタグと version が違うときは、Release を作らずに失敗する。ローカルで本文を確認するには `node scripts/release-notes.mjs X.Y.Z`。
+
+## ストア自動提出（wxt submit）
+
+運用手順の全体は [store-submit.md](store-submit.md) にある（初回セットアップ・通常リリース・
+ストアごとの違い・失敗時の対処）。ここは仕組みの要点だけを残す。
+
+`release.yml` の Submit to stores が `npx wxt submit`（publish-extension 6.2.0 の別名）で
+3 ストアへ並行提出する。3 ストアは `Promise.allSettled` で提出されるため、1 件の失敗が
+他の提出を止めない。失敗したストアはログで判別できる。いずれも審査通過後は自動公開する
+（下書き止めの `skip-submit-review` 系は付けていない）。
+
+### Secrets（environment `release` に登録）
+
+| 変数 | 用途・取り方 |
+|---|---|
+| `CHROME_EXTENSION_ID` | 拡張 ID（ストア URL 末尾の32文字） |
+| `CHROME_PUBLISHER_ID` | 開発者ダッシュボードの URL（`devconsole/<ID>`）に表示される公開者 ID |
+| `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | GCP（プロジェクト `jushoai-store`）のサービスアカウントの client email |
+| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | 同 private key。JSON 内の `\n` 表記ではなく**実際の改行入り**で登録する（手順は store-submit.md） |
+| `EDGE_PRODUCT_ID` | Partner Center のダッシュボードに表示される Product ID |
+| `EDGE_CLIENT_ID` | Partner Center の「API を公開する」で発行した Client ID |
+| `EDGE_API_KEY` | 同時に発行した API キー |
+| `FIREFOX_EXTENSION_ID` | `jushoai@armaniacs.github.io`（`wxt.config.ts` の gecko id と同じ） |
+| `FIREFOX_JWT_ISSUER` | AMO の API キー発行画面の JWT issuer |
+| `FIREFOX_JWT_SECRET` | 同 JWT secret |
+
+Chrome は API v2＋サービスアカウントを使う（`CHROME_API_VERSION=v2`）。
+組織ポリシー（iam.disableServiceAccountKeyCreation）はプロジェクト `jushoai-store`
+に限ってオーバーライドで無効化済み。API v1.1＋OAuth は 2026-10-15 で Google が
+停止するため使わない（経緯は store-submit.md）。
+`FIREFOX_CHANNEL` は `listed` 固定。Edge は Chromium 系のため Chrome 向け zip をそのまま使う。
+
+### ローカル確認（dry-run）
+
+`.env.submit` は git 管理外（`.gitignore` 済み）。テンプレートは `.env.submit.example`。
+
+```bash
+cp .env.submit.example .env.submit  # 値を埋める。ZIP の版数も合わせる
+make zip && make zip-firefox
+npx wxt submit --dry-run  # 認証のみ確認し、zip は送らない
+```
+
+### 再実行手順
+
+- 提出失敗時は Release が作られていないため、原因（Secrets 不足・審査リジェクト・保留中審査との競合等）を
+  解消してワークフローを再実行する（タグの打ち直しは不要）。
+- Chrome で保留中の審査と競合するときは、次回リリースで `--chrome-cancel-pending` の要否を判断する。
+- 成功済みストアへの二重提出を避けたいときは、Actions のログで成功分を確認してから再実行する
+  （失敗分だけ直して全体を回し直す運用）。
 
 ## リポジトリ設定（GitHub の設定画面での手作業）
 

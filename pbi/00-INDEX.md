@@ -2,14 +2,7 @@
 
 ## 進行中
 
-- `2026-10-12-45-backlog-review4-suggestions-round.md`（0.1.14 レビューの残る提案 #3〜#7 のラウンド。順位 1〜5 は 40〜44。同点はリスク軽減で順序付け）
-- `2026-10-12-40-fix-e2e-chrome-sandbox-flag.md`（順位 1。E2E の `--no-sandbox` を CI 限定に）
-- `2026-10-12-41-chore-host-position-default.md`（順位 2。host のデッドな既定の解消）
-- `2026-10-12-42-chore-overlay-left-auto-note.md`（順位 3。`left: auto` 依存の記録）
-- `2026-10-12-43-fix-audit-separator-accounting.md`（順位 4。予算計上の区切り文字）
-- `2026-10-12-44-chore-anchor-rect-single-read.md`（順位 5。矩形読み取りの O(n log n) → O(n)）
-- `2026-10-11-21-backlog-release-assertion-parser.md`（将来候補。着手条件を記録済み、現行のテキスト断言を維持）
-- `2026-10-11-31-backlog-edge-e2e.md`（将来候補。Chrome とエンジン同一のため Edge 固有事由まで待機）
+（なし）
 
 ## 台帳
 
@@ -27,6 +20,25 @@
 
 | PBI | 完了コミット |
 |---|---|
+| 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-13-47-fix-anchor-rect-sharing.md | c124902 fix: アンカー選択の矩形読みを isHidden と共有（rect 注入＋共有。コードレビューはユーザー作業） |
+| 2026-10-13-48-fix-chrome-flags-empty-env.md | 0b33737 fix: chrome-flags の空文字判定を厳格化（truthy／厳密比較。コードレビューはユーザー作業） |
+| 2026-10-13-49-chore-chrome-flags-env-explicit.md | 0b33737 chore: 既定 process.env を廃止して呼び出し側で明示（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-50-chore-anchor-real-browser-test.md | c124902 chore: 実ブラウザ相当テスト追加＋under jsdom 改名（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-51-chore-chrome-flags-order-assertion.md | 0b33737 chore: 複合 env の断言を順序非依存の集合検査に緩和（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-52-fix-audit-empty-accounting.md | 4e18cd3 fix: 空配列会計の誤差を方向Bで明示（コメントのみ。コードレビューはユーザー作業） |
+| 2026-10-13-53-chore-audit-sizecache-premise.md | 4e18cd3 chore: sizeCache 変異前提を 1 行で文書化（同上コミット。コードレビューはユーザー作業） |
+| 2026-10-13-54-chore-host-position-guard.md | 02564fb chore: host 配置を必須引数化（型で検出。コードレビューはユーザー作業） |
+| 2026-10-13-55-chore-overlay-comment-dedup.md | 02564fb chore: overlay 重複コメントを 1 行参照化（同上コミット。コードレビューはユーザー作業） |
+|---|---|
+| 2026-10-12-45-backlog-review4-suggestions-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green、Chrome E2E 5/5。Firefox E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-12-40-fix-e2e-chrome-sandbox-flag.md | 2a35d9a fix: E2E の Chrome 起動フラグを CI に限定する（chrome-flags 純粋関数化＋単体 6 件。Chrome E2E 5/5 は `E2E_NO_SANDBOX=1`。既定の sandbox 有効起動は実行コンテキストの制約で未実証。コードレビューと通常ターミナルでの既定実行確認はユーザー作業） |
+| 2026-10-12-41-chore-host-position-default.md | bc2a1d6 chore: host のデッドな position 既定を削除する（host.test を実態に合わせ更新。コードレビューはユーザー作業） |
+| 2026-10-12-42-chore-overlay-left-auto-note.md | 63be9b9 chore: overlay の left auto 依存をコメントに残す（コメントのみ。コードレビューはユーザー作業） |
+| 2026-10-12-43-fix-audit-separator-accounting.md | 54af782 fix: 監査ログの予算計上から区切り文字の分を引く（batchBytes 一元化＋境界テスト 3 件。コードレビューはユーザー作業） |
+| 2026-10-12-44-chore-anchor-rect-single-read.md | 049968d chore: アンカー選択の矩形読み取りを1回にまとめる（rect メモ化＋カウントテスト。コードレビューはユーザー作業） |
+| 2026-10-11-21-backlog-release-assertion-parser.md | 将来候補としての記録で完結（受け入れ基準・DoD 全項目済み。着手条件はアーカイブ済みファイルに記録のまま。実装なし。`make check` green） |
+| 2026-10-11-31-backlog-edge-e2e.md | 将来候補としての記録で完結（同上。着手までは Chrome・Firefox の E2E で代用） |
 | 2026-10-12-46-feat-exclude-urls-from-startup.md | 6e0c689 feat: 起動しないURLを設定画面から登録できるようにする（PR #5 → ac9485b、`make check` green、Chrome E2E 5/5、Firefox E2E 5/5。0.1.16 としてリリース済み） |
 | 2026-10-12-39-fix-reposition-inner-scroll-and-gate-host.md | 7f49af3 fix: ボタンの追従を内部スクロールにも広げ、同意ゲートのhost解決を厳格にする（PR #4 → 1341725、0.1.15 としてリリース済み） |
 | 2026-10-11-38-fix-button-anchor-placement.md | 0889bce fix: 入力ボタンの配置をビューポート基準にし、左下に張り付く問題を直す（Chrome / Firefox の E2E と実ブラウザでの座標実測で確認。0.1.14 としてリリース済み。コードレビューはユーザー作業） |

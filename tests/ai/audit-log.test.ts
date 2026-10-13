@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_PAGE_URL_MAX_BYTES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
-  appendEntry, auditFileName, capAuditPageUrl, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
+  appendEntry, auditFileName, batchBytes, capAuditPageUrl, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
 } from '../../src/ai/audit-log';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
@@ -166,6 +166,35 @@ describe('byte budget accounting (UTF-8)', () => {
     expect(s.entries.map((e) => e.id)).toEqual([3]);
     expect(s.nextId).toBe(4);
   });
+
+  it('stops dropping once the true remainder fits the budget', () => {
+    // Separator accounting: dropping an entry removes its body and the 1-byte
+    // separator, so once the oldest entry is dropped the estimate equals the
+    // remainder's true size. With id=2/createdAt=2000 the empty-request
+    // overhead is 288 bytes and the two-entry array adds 3, so this padding
+    // leaves the retained batch at exactly the budget; counting the separators
+    // up front but never subtracting them on removal would estimate 1 byte
+    // over and drop the newest entry too.
+    const first = appendEntry(EMPTY_AUDIT_STATE, draft({ request: 'a'.repeat(100) }), 1000);
+    const s = appendEntry(first, draft({ request: 'a'.repeat(3_999_710) }), 2000);
+    expect(s.entries.map((e) => e.id)).toEqual([2]);
+  });
+
+  it('matches the estimate to the real JSON bytes of the retained batch', () => {
+    // The estimate the budget checks must equal the retained batch's real
+    // serialized length, CJK included; otherwise the loop and the check would
+    // disagree about what the stored batch costs.
+    const heavy = (): AuditDraft => draft({ request: 'あ'.repeat(700_000) });
+    let s = appendEntry(EMPTY_AUDIT_STATE, heavy(), 1000);
+    s = appendEntry(s, heavy(), 2000);
+    s = appendEntry(s, heavy(), 3000);
+    expect(batchBytes(s.entries)).toBe(new TextEncoder().encode(JSON.stringify(s.entries)).length);
+    expect(batchBytes(s.entries)).toBeLessThanOrEqual(AUDIT_MAX_BYTES);
+  });
+
+  it('estimates the empty batch at its real 2 bytes', () => {
+    expect(batchBytes([])).toBe(2);
+  });
 });
 
 describe('pageUrl byte budget accounting (regression: pageUrl counts toward the budget)', () => {
@@ -214,8 +243,10 @@ describe('pageUrl byte budget accounting (regression: pageUrl counts toward the 
     const heavy = (): AuditDraft => minimal({ pageUrl: `https://example.com/${'q'.repeat(2_500_000)}` });
     let s = appendEntry(EMPTY_AUDIT_STATE, heavy(), 1000);
     s = appendEntry(s, heavy(), 2000);
+    // Separator accounting: the estimate the loop checks equals the retained
+    // batch's real length, so the true bytes fit the budget with no slack.
     const bytes = new TextEncoder().encode(JSON.stringify(s.entries)).length;
-    expect(bytes).toBeLessThanOrEqual(AUDIT_MAX_BYTES + s.entries.length + 1);
+    expect(bytes).toBeLessThanOrEqual(AUDIT_MAX_BYTES);
   });
 });
 

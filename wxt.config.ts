@@ -9,6 +9,11 @@ export default defineConfig({
       'video/**', 'site/**', 'site-dist/**', 'docs/**', 'samples/**', 'tests/**', 'tmp/**',
       'graphify-out/**', 'pbi/**', 'plans/**', 'scripts/**', 'CLAUDE.md', 'CHANGELOG.md',
       'vitest*.config.ts', '.superpowers/**', '.github/**',
+      // AMO reviewers must not receive throwaway scan artifacts (incl. test keys) or promo material.
+      'JushoAI_VULNHUNT_*/**', 'promo/**',
+      // Belt and braces: local submit credentials must never enter the sources zip
+      // (dotfiles are already skipped by default, but an explicit rule survives config changes).
+      '.env*',
     ],
   },
   manifest: ({ browser }) => ({

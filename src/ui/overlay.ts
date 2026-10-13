@@ -4,8 +4,8 @@ import { createShadowHost } from './host';
 // for the same reason (overlay look and Escape behavior), so they are defined
 // only here; module-specific styles stay in each panel module.
 export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
-  const { host, root } = createShadowHost();
-  host.style.setProperty('position', 'fixed', 'important');
+  const { host, root } = createShadowHost({ position: 'fixed' });
+  // Top-right pin: `left` stays unset on purpose, see createShadowHost.
   host.style.setProperty('top', '16px', 'important');
   host.style.setProperty('right', '16px', 'important');
   return { host, root };

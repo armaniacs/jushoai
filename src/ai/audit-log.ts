@@ -107,6 +107,7 @@ const utf8Bytes = (s: string): number => textEncoder.encode(s).length;
 // storage round-trip and the retained log is re-measured on the next append.
 // That re-measurement is bounded: at most the retained entries
 // (AUDIT_MAX_ENTRIES) are encoded once each per append.
+// Cached sizes go stale if an entry is mutated after measuring; callers must not mutate measured entries (re-measure after any mutation).
 const sizeCache = new WeakMap<AuditEntry, number>();
 const entryBytes = (e: AuditEntry): number => {
   const cached = sizeCache.get(e);
@@ -116,15 +117,28 @@ const entryBytes = (e: AuditEntry): number => {
   return size;
 };
 
+// UTF-8 length of the stored entries array: the bracket pair and the ASCII
+// separators between entries count too — 2 + max(0, n - 1) bytes, all ASCII —
+// plus every entry's serialized body. The budget check and the removal loop
+// share this one estimate, so the accounting never disagrees with itself
+// about what the stored batch costs.
+export function batchBytes(entries: AuditEntry[]): number {
+  return 2 + Math.max(0, entries.length - 1) + entries.reduce((sum, e) => sum + entryBytes(e), 0);
+}
+
 function withinByteBudget(entries: AuditEntry[]): AuditEntry[] {
   const sizes = entries.map(entryBytes);
-  // The stored batch is a JSON array, so the bracket pair and the separators
-  // between entries count too: 2 + max(0, n - 1) bytes, all ASCII.
-  let total = 2 + Math.max(0, entries.length - 1);
-  for (const size of sizes) total += size;
+  let total = batchBytes(entries);
   let i = 0;
   while (i < entries.length && total > AUDIT_MAX_BYTES) {
-    total -= sizes[i]!;
+    // Dropping an entry removes its body and the separator before it: the
+    // remainder keeps one separator per remaining pair, so subtracting both
+    // keeps the estimate equal to the true serialized size while entries
+    // remain. When the last entry is dropped the loop exits and the empty
+    // array costs 2 bytes: the subtraction above leaves total at 1 instead,
+    // but total is discarded with the loop exit so the 1-byte underestimate
+    // never affects the return value or the stored data.
+    total -= sizes[i]! + 1;
     i++;
   }
   return i === 0 ? entries : entries.slice(i);

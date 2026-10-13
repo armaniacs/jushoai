@@ -11,6 +11,7 @@ site-dist/
 .claude/
 .agents
 .env
+.env.submit
 tmp/
 graphify-out/
 .checking-team-tmp/
