@@ -38,42 +38,24 @@ gh secret list --env release
 10 個すべて揃っていれば初回セットアップは不要で、「通常リリース」へ進む。
 足りないものがあれば、ストアごとに以下で発行して `gh secret set --env release <名前>` で登録する。
 
-### Chrome（API v1.1・OAuth 方式）
+### Chrome（API v2・サービスアカウント方式）
 
-サービスアカウント方式（API v2）は使わない。組織 `araki.net` のポリシー
-（`iam.disableServiceAccountKeyCreation`）で鍵作成が禁止されており、
-組織なしプロジェクトも作れないため。ポリシーが解除できたら v2 への移行を検討する。
-そのときはサービスアカウント＋JSON鍵を作り、Secrets を `CHROME_PUBLISHER_ID`／
-`CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`／`CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` に替え、
-ワークフローの `CHROME_API_VERSION` を `v2` にする。
+1. GCP プロジェクト `jushoai-store` で Chrome Web Store API を有効にする。
+2. 同プロジェクトにサービスアカウント（例 `jushoai-submit`）を作り、JSON 鍵を取得する。
+   組織 `araki.net` のポリシー（`iam.disableServiceAccountKeyCreation`）で鍵作成が
+   禁止されているため、事前にプロジェクト単位でオーバーライドして無効化する
+   （組織のポリシー一覧→当該ポリシー→対象プロジェクトで「親のポリシーをオーバーライドする」→オフ）。
+3. 開発者ダッシュボードの「設定」→「サービス アカウント」欄に、
+   サービスアカウントのメールアドレスを入力して「サービス アカウントを追加」する。
+4. 登録する Secrets（4 個）：`CHROME_EXTENSION_ID`（`ijlccdbapahelcgpcopgkhdjhkkicbpl`）、
+   `CHROME_PUBLISHER_ID`（ダッシュボード URL `devconsole/<ID>` の ID）、
+   `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`（JSON の `client_email`）、
+   `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`（JSON の `private_key` の値をそのまま。`\n` は変換しない）。
 
-別アプリ（chrome-webstore-upload プロジェクト）と同じ Google アカウントで
-JushoAI の掲載も管理しているため、OAuth の仕組みに相乗りする。
-新規の同意画面やプロジェクトは不要で、必要なのは3点セットの取り直しだけ
-（紛失した旧キーは回復不要。取り直した後は古いクライアントを消してよい）。
-
-1. GCPコンソールでプロジェクト `chrome-webstore-upload` を選ぶ。
-2. ハンバーガー（≡）→「APIとサービス」→「認証情報」を開く。
-3. 上部の「＋認証情報を作成」→「OAuth クライアント ID」を押す。
-4. アプリケーションの種類で「デスクトップアプリ」を選び、名前は
-   `jushoai-submit-desktop` などにして「作成」。
-5. 表示されたクライアント ID とクライアントシークレットを控える
-   （シークレットはこの場でしか表示されない。JSON のダウンロードでもよい）。
-   チャットには貼らず、この後の Secrets 登録で直接使う。
-6. OAuth Playground（`https://developers.google.com/oauthplayground/`）を開く。
-7. 右上の歯車→「Use your own OAuth credentials」にチェックし、
-   手順5の ID とシークレットを入力して閉じる。
-8. 左の API 一覧で「Chrome Web Store API v1.1」を探し、
-   `https://www.googleapis.com/auth/chromewebstore` にチェック→「Authorize APIs」。
-9. ダッシュボード所有者の Google アカウントでログインし、アクセスを許可する。
-10. Step 2 の「Exchange authorization code for tokens」を押す。
-    出てきた `Refresh token` が `CHROME_REFRESH_TOKEN` の値。
-
-登録する Secrets（4 個）：`CHROME_EXTENSION_ID`（`ijlccdbapahelcgpcopgkhdjhkkicbpl`）、
-`CHROME_CLIENT_ID`、`CHROME_CLIENT_SECRET`、`CHROME_REFRESH_TOKEN`。
-
-注意：テスト中の OAuth アプリのリフレッシュトークンは約7日で失効することがある。
-提出が急に認証失敗するようになったら、この手順6〜10で取り直す（2分でできる）。
+経緯のメモ：一時は API v1.1＋OAuth（クライアント＋Playground の
+リフレッシュトークン）に切り替えていたが、v1.1 が 2026-10-15 で停止するため v2 に戻した。
+v1.1 用の Secrets（`CHROME_CLIENT_ID` 等）が environment `release` に残っていても無害だが、
+紛らわしければ消してよい。
 
 ### Edge（Partner Center の API キー）
 
