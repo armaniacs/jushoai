@@ -45,9 +45,9 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 | 変数 | 用途・取り方 |
 |---|---|
 | `CHROME_EXTENSION_ID` | 拡張 ID（ストア URL 末尾の32文字） |
-| `CHROME_PUBLISHER_ID` | Chrome Web Store API v2 の Publisher ID（開発者ダッシュボード） |
-| `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL` | API v2 用サービスアカウントの client email（GCP） |
-| `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` | 同 private key（改行入り複数行のまま登録） |
+| `CHROME_CLIENT_ID` | OAuth クライアント ID（デスクトップアプリ。GCP の認証情報画面） |
+| `CHROME_CLIENT_SECRET` | 同クライアントシークレット |
+| `CHROME_REFRESH_TOKEN` | OAuth Playground で取得したリフレッシュトークン |
 | `EDGE_PRODUCT_ID` | Partner Center のダッシュボードに表示される Product ID |
 | `EDGE_CLIENT_ID` | Partner Center の「API を公開する」で発行した Client ID |
 | `EDGE_API_KEY` | 同時に発行した API キー |
@@ -55,8 +55,9 @@ CHANGELOG に該当節がない、またはタグと version が違うときは�
 | `FIREFOX_JWT_ISSUER` | AMO の API キー発行画面の JWT issuer |
 | `FIREFOX_JWT_SECRET` | 同 JWT secret |
 
-Chrome は API v2 を使う（`CHROME_API_VERSION=v2`）。旧 OAuth 方式（CLIENT_ID／
-CLIENT_SECRET／REFRESH_TOKEN）は publish-extension で Deprecated のため使わない。
+Chrome は API v1.1＋OAuth を使う（`CHROME_API_VERSION=v1.1`）。サービスアカウント方式
+（v2）は組織ポリシー（iam.disableServiceAccountKeyCreation）で鍵作成が禁止されているため
+使わない。ポリシーが解除できたら v2 に戻すことを検討する（store-submit.md 参照）。
 `FIREFOX_CHANNEL` は `listed` 固定。Edge は Chromium 系のため Chrome 向け zip をそのまま使う。
 
 ### ローカル確認（dry-run）

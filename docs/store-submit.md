@@ -38,20 +38,42 @@ gh secret list --env release
 10 個すべて揃っていれば初回セットアップは不要で、「通常リリース」へ進む。
 足りないものがあれば、ストアごとに以下で発行して `gh secret set --env release <名前>` で登録する。
 
-### Chrome（API v2・サービスアカウント方式）
+### Chrome（API v1.1・OAuth 方式）
 
-旧 OAuth 方式（CLIENT_ID／CLIENT_SECRET／REFRESH_TOKEN）は使わない。
-publish-extension で Deprecated のため。新規は API v2 のサービスアカウント方式。
+サービスアカウント方式（API v2）は使わない。組織 `araki.net` のポリシー
+（`iam.disableServiceAccountKeyCreation`）で鍵作成が禁止されており、
+組織なしプロジェクトも作れないため。ポリシーが解除できたら v2 への移行を検討する。
+そのときはサービスアカウント＋JSON鍵を作り、Secrets を `CHROME_PUBLISHER_ID`／
+`CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`／`CHROME_SERVICE_ACCOUNT_PRIVATE_KEY` に替え、
+ワークフローの `CHROME_API_VERSION` を `v2` にする。
 
-1. Google Cloud のプロジェクトを用意し、Chrome Web Store API を有効にする。
-2. サービスアカウントを作り、client email と private key（JSON）を取得する。
-3. Chrome Web Store 開発者ダッシュボードと上の GCP プロジェクトを連携させる
-   （ダッシュボード側の API 設定。クリック場所は変わりやすいので画面の案内に従う）。
-4. 登録する Secrets（4 個）：
-   - `CHROME_EXTENSION_ID`（上の表の値）
-   - `CHROME_PUBLISHER_ID`（開発者ダッシュボードのアカウント設定に表示されるもの）
-   - `CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL`
-   - `CHROME_SERVICE_ACCOUNT_PRIVATE_KEY`（改行入り複数行のまま登録する。1 行化しないこと）
+別アプリ（chrome-webstore-upload プロジェクト）と同じ Google アカウントで
+JushoAI の掲載も管理しているため、OAuth の仕組みに相乗りする。
+新規の同意画面やプロジェクトは不要で、必要なのは3点セットの取り直しだけ
+（紛失した旧キーは回復不要。取り直した後は古いクライアントを消してよい）。
+
+1. GCPコンソールでプロジェクト `chrome-webstore-upload` を選ぶ。
+2. ハンバーガー（≡）→「APIとサービス」→「認証情報」を開く。
+3. 上部の「＋認証情報を作成」→「OAuth クライアント ID」を押す。
+4. アプリケーションの種類で「デスクトップアプリ」を選び、名前は
+   `jushoai-submit-desktop` などにして「作成」。
+5. 表示されたクライアント ID とクライアントシークレットを控える
+   （シークレットはこの場でしか表示されない。JSON のダウンロードでもよい）。
+   チャットには貼らず、この後の Secrets 登録で直接使う。
+6. OAuth Playground（`https://developers.google.com/oauthplayground/`）を開く。
+7. 右上の歯車→「Use your own OAuth credentials」にチェックし、
+   手順5の ID とシークレットを入力して閉じる。
+8. 左の API 一覧で「Chrome Web Store API v1.1」を探し、
+   `https://www.googleapis.com/auth/chromewebstore` にチェック→「Authorize APIs」。
+9. ダッシュボード所有者の Google アカウントでログインし、アクセスを許可する。
+10. Step 2 の「Exchange authorization code for tokens」を押す。
+    出てきた `Refresh token` が `CHROME_REFRESH_TOKEN` の値。
+
+登録する Secrets（4 個）：`CHROME_EXTENSION_ID`（`ijlccdbapahelcgpcopgkhdjhkkicbpl`）、
+`CHROME_CLIENT_ID`、`CHROME_CLIENT_SECRET`、`CHROME_REFRESH_TOKEN`。
+
+注意：テスト中の OAuth アプリのリフレッシュトークンは約7日で失効することがある。
+提出が急に認証失敗するようになったら、この手順6〜10で取り直す（2分でできる）。
 
 ### Edge（Partner Center の API キー）
 
@@ -126,7 +148,8 @@ npx wxt submit --dry-run  # 認証だけ確認し、zip は送らない
   Release 作成の前にあるのは「提出失敗時に半端な Release を残さない」ため。
 - `wxt submit` は `wxt` の submit エイリアスで、実体は publish-extension。
   `CHROME_ZIP` 等の env があるストアだけ提出対象になる。
-- `CHROME_API_VERSION=v2` 固定。`FIREFOX_CHANNEL=listed` 固定。
+- `CHROME_API_VERSION=v1.1` 固定（サービスアカウント方式の v2 は組織ポリシーで不可のため）。
+  `FIREFOX_CHANNEL=listed` 固定。
   自動公開のため `skip-submit-review` 系は付けていない。
 - Edge 用に別ビルドはしない。`EDGE_ZIP` に chrome zip を渡している。
 - 日英のサイト（`site/content`）とは無関係の手順書なので、日本語だけでよい。

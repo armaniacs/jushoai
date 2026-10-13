@@ -51,6 +51,10 @@ jobs:
         # の env が揃ったストアに提出する。ZIP 系の env が無いストアは対象外になる。
         # 3ストアは Promise.allSettled で並行提出されるため、1件の失敗が他を止めない。
         # Release 作成より前に置く: 提出失敗時に半端な Release を残さないため。
+        # Chrome は API v1.1＋OAuth（CLIENT_ID/SECRET/REFRESH_TOKEN）を使う。
+        # 本来は v2＋サービスアカウントが望ましいが、組織ポリシー
+        # （iam.disableServiceAccountKeyCreation）で鍵作成が禁止されているため v1.1。
+        # ポリシーが解除できたら v2 に戻すことを検討する（docs/store-submit.md）。
         run: |
           version="$(node -p "require('./package.json').version")"
           CHROME_ZIP="dist/jushoai-${version}-chrome.zip" \
@@ -59,11 +63,11 @@ jobs:
           FIREFOX_SOURCES_ZIP="dist/jushoai-${version}-sources.zip" \
           npx wxt submit
         env:
-          CHROME_API_VERSION: "v2"
+          CHROME_API_VERSION: "v1.1"
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
-          CHROME_PUBLISHER_ID: ${{ secrets.CHROME_PUBLISHER_ID }}
-          CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL: ${{ secrets.CHROME_SERVICE_ACCOUNT_CLIENT_EMAIL }}
-          CHROME_SERVICE_ACCOUNT_PRIVATE_KEY: ${{ secrets.CHROME_SERVICE_ACCOUNT_PRIVATE_KEY }}
+          CHROME_CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CHROME_CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          CHROME_REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
           EDGE_PRODUCT_ID: ${{ secrets.EDGE_PRODUCT_ID }}
           EDGE_CLIENT_ID: ${{ secrets.EDGE_CLIENT_ID }}
           EDGE_API_KEY: ${{ secrets.EDGE_API_KEY }}

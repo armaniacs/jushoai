@@ -81,6 +81,15 @@ grep -rn "EXTENSION_ID\|CLIENT_ID\|REFRESH_TOKEN" .github/
 - 保留中の審査がある状態での再提出は `--chrome-cancel-pending` の要否を判断する
 - Edge と Chrome で同じ zip を使い回せるが、本PBIでは Chrome のみ配線し Edge 流用は PBI-02 に残す
 
+## 変更記録（2026-10-13・実装時）
+
+- Chrome は API v2＋サービスアカウントの予定だったが、組織ポリシー
+  （`iam.disableServiceAccountKeyCreation`）で鍵作成が禁止され、
+  組織なしプロジェクトも作れないため、API v1.1＋OAuth
+  （CLIENT_ID／CLIENT_SECRET／REFRESH_TOKEN）に変更した。
+  別アプリと同一アカウントのダッシュボードのため OAuth 方式に相乗りできる。
+  ポリシー解除ができたら v2 への移行を検討する。
+
 ## Definition of Done
 - [ ] 全BDDシナリオが確認できる（dry-run ログ＋本番手順のレビュー）
 - [ ] E2E/統合/単体の各確認が実行され結果が記録される
