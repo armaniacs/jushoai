@@ -2,7 +2,12 @@
 
 ## 進行中
 
-（なし）
+- `2026-10-14-59-refactor-kana-module.md`（順位 1、RICE 240）
+- `2026-10-14-60-refactor-fill-session.md`（順位 2、RICE 160）
+- `2026-10-14-61-refactor-provider-registry.md`（順位 3、RICE 53）
+- `2026-10-14-62-refactor-classifier-trace.md`（順位 4、RICE 27。61 の後）
+- `2026-10-14-63-refactor-settings-save.md`（順位 5、RICE 6）
+- `2026-10-14-64-backlog-arch-review-round.md`（本ラウンド台帳）
 
 ## 台帳
 
