@@ -1,20 +1,18 @@
 import { classifyAll } from '../core/analyze';
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
-import type { PlanItem } from '../core/planner';
-import { buildFeedbackInput, replanItems, snapshotItems } from '../content-run';
+import { createFillSession } from '../content-session';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { applyPlan } from '../dom/apply-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
-import { buildFeedbackIssueUrl, FEEDBACK_REPO, type FeedbackSnapshot } from '../feedback/issue-url';
-import { isReady, loadData, loadLastUsed, resolveAddressId, resolveLastId, saveLastUsed } from '../storage';
+import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
-import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
+import { showPreview, type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
 
 // Consent verification for the preview apply path. The preview host lives in
@@ -352,33 +350,46 @@ export default defineContentScript({
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const metas = fields.map((f) => f.meta);
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
-      let items = await classifyAll(metas, classifier, { englishPage });
+      const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
+      const session = createFillSession(
+        {
+          profiles: data.profiles,
+          addresses: data.addresses,
+          lastProfileId: last.profileId,
+          lastAddressId: last.addressId,
+          metas,
+          metasById,
+          englishPage,
+          canReanalyze: classifier !== null,
+        },
+        {
+          classify: (ms, opts) => classifyAll(ms, classifier, opts),
+          checkConsent: (p) => {
+            let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
+            // applyIfConsented reports through callbacks; the no-op apply keeps the
+            // check side-effect free while reusing the single consent vocabulary.
+            applyIfConsented(
+              defaultConsentCheckDeps(() => p.getApplyPoint(), undefined, () => p.getHost()),
+              () => { verdict = { ok: true }; },
+              (reason) => { verdict = { ok: false, reason }; },
+            );
+            return verdict;
+          },
+          injectPlan: (plan) => applyPlan(plan, byId, fillField),
+          persistSelection: (sel) => { void saveLastUsed(sel); },
+          openUrl: (url) => { window.open(url, '_blank', 'noopener'); },
+          feedbackContext: () => ({
+            pageHref: location.href,
+            provider: info.provider,
+            version: chrome.runtime.getManifest().version,
+          }),
+          isExcluded: () => gate.isExcluded(),
+        },
+      );
+      const started = await session.start();
       const reason = classifier?.lastFailureReason;
       if (reason) button.showError(AI_FAILURE_HINT[reason]);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
-      const beforeItems = snapshotItems(items);
-      let afterItems: Map<string, FeedbackSnapshot> | null = null;
-
-      let profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id)) ?? data.profiles[0]!.id;
-      let addressId = resolveAddressId(data.addresses, profileId, last.addressId) ?? data.addresses[0]!.id;
-      let plan: PlanItem[] = [];
-      const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
-      const replan = (): PreviewRow[] => {
-        const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
-        const address = data.addresses.find((a) => a.id === addressId) ?? null;
-        const out = replanItems(items, profile, address, metasById);
-        plan = out.plan;
-        return out.rows;
-      };
-
-      async function reanalyze() {
-        if (!classifier) return;
-        items = await classifyAll(metas, classifier, { force: true, englishPage });
-        const reason = classifier.lastFailureReason;
-        if (reason) button.showError(AI_FAILURE_HINT[reason]);
-        afterItems = snapshotItems(items);
-        preview.setRows(replan());
-      }
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
       openPreview?.close();
@@ -387,53 +398,40 @@ export default defineContentScript({
       openGuide = null;
       // Classification takes long enough for the settings to change under it; an
       // exclusion that landed meanwhile must not open a panel on this page.
-      if (gate.isExcluded()) return;
+      if (started.excluded) return;
       const preview = showPreview({
-        rows: replan(),
+        rows: started.rows,
         addresses: data.addresses,
-        selectedAddressId: addressId,
-        onReanalyze: classifier ? reanalyze : undefined,
+        selectedAddressId: session.selectedAddressId,
+        onReanalyze: classifier ? () => {
+          void session.reanalyze().then((rows) => {
+            const rereason = classifier.lastFailureReason;
+            if (rereason) button.showError(AI_FAILURE_HINT[rereason]);
+            if (rows) preview.setRows(rows);
+          });
+        } : undefined,
         profiles: data.profiles,
-        selectedProfileId: profileId,
+        selectedProfileId: session.selectedProfileId,
         onProfileChange: (id) => {
-          profileId = id;
-          addressId = resolveAddressId(data.addresses, id, addressId) ?? data.addresses[0]!.id;
-          preview.setAddressId(addressId);
-          preview.setRows(replan());
+          const rows = session.selectProfile(id);
+          preview.setAddressId(session.selectedAddressId);
+          preview.setRows(rows);
         },
         onAddressChange: (id) => {
-          addressId = id;
-          preview.setRows(replan());
+          preview.setRows(session.selectAddress(id));
         },
         onApply: (sendFeedback) => {
-          // Last trust point: the host may have been hidden, moved, or covered
-          // since the panel opened. The aim point comes from the apply button
-          // through the preview handle; abort before injecting anything. The
-          // panel stays open for cancel or retry, and the reason goes to the
-          // form button, which stays visible even when the panel is hidden.
-          applyIfConsented(
-            defaultConsentCheckDeps(() => preview.getApplyPoint(), undefined, () => preview.getHost()),
-            () => {
-              void saveLastUsed({ profileId, addressId });
-              applyPlan(plan, byId, fillField);
-              preview.close();
-              openPreview = null;
-              const feedbackInput = buildFeedbackInput({
-                pageHref: location.href,
-                provider: info.provider,
-                version: chrome.runtime.getManifest().version,
-                before: beforeItems,
-                after: afterItems,
-                fields: metas,
-                sendFeedback,
-              });
-              if (feedbackInput) {
-                const url = buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput);
-                window.open(url, '_blank', 'noopener');
-              }
-            },
-            (reason) => button.showError(reason),
-          );
+          // Last trust point: the session aborts before injecting anything when
+          // the panel was hidden, moved, or covered. The panel stays open for
+          // cancel or retry, and the reason goes to the form button, which stays
+          // visible even when the panel is hidden.
+          const result = session.apply(sendFeedback, preview);
+          if (!result.applied) {
+            button.showError(result.reason);
+            return;
+          }
+          preview.close();
+          openPreview = null;
         },
         onCancel: () => {
           preview.close();
