@@ -3,6 +3,7 @@ import type { ProviderKind } from '../../src/ai/types';
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence } from '../../src/ai/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
+import { ProviderRegistry } from '../../src/llm/provider-registry';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
 import { parseClassifyResult } from '../../src/messages';
 import { makeMeta } from '../helpers';
@@ -30,15 +31,19 @@ function makeDeps(o: Opts = {}) {
   const fetchMock = o.fetch ?? vi.fn();
   const authFailed = o.authFailed ?? new Set<ProviderKind>();
   const settings = { ...DEFAULT_AI_SETTINGS, ...o.settings, hasKey: o.hasKey ?? { openai: false, gemini: false } };
+  const registry = new ProviderRegistry(
+    {
+      getLanguageModel: () => o.lm ?? null,
+      hasPermission: async () => o.permitted ?? true,
+      fetch: fetchMock as unknown as typeof fetch,
+      audit: { record: async () => {} },
+    },
+    { authFailed, compat: new Set<ProviderKind>() },
+  );
   const deps: HandlerDeps = {
-    lm: o.lm ?? null,
+    registry,
     loadSettings: async () => settings,
     loadSecrets: async () => o.secrets ?? {},
-    hasPermission: async () => o.permitted ?? true,
-    fetch: fetchMock as unknown as typeof fetch,
-    authFailed,
-    compat: new Set<ProviderKind>(),
-    audit: { record: async () => {} },
   };
   return { deps, fetchMock, authFailed };
 }

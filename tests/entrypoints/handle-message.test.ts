@@ -6,6 +6,7 @@ import type { LanguageModelStatic } from '../../src/llm/availability';
 import { buildPrompt } from '../../src/llm/classifier';
 import { parseTestResponse } from '../../src/messages';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
+import { ProviderRegistry } from '../../src/llm/provider-registry';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({
   id, type: 'text', name: '', htmlId: '', label: '', placeholder: '', nearby: '', maxLength: null, ...extra,
@@ -31,15 +32,19 @@ function makeDeps(o: Opts = {}) {
   const compat = o.compat ?? new Set<ProviderKind>();
   const audits: AuditDraft[] = [];
   const settings = { ...DEFAULT_AI_SETTINGS, ...o.settings, hasKey: o.hasKey ?? { openai: false, gemini: false } };
+  const registry = new ProviderRegistry(
+    {
+      getLanguageModel: () => o.lm ?? null,
+      hasPermission: async () => o.permitted ?? true,
+      fetch: fetchMock as unknown as typeof fetch,
+      audit: { record: async (d) => { audits.push(d); } },
+    },
+    { authFailed, compat },
+  );
   const deps: HandlerDeps = {
-    lm: o.lm ?? null,
+    registry,
     loadSettings: async () => settings,
     loadSecrets: async () => o.secrets ?? {},
-    hasPermission: async () => o.permitted ?? true,
-    fetch: fetchMock as unknown as typeof fetch,
-    authFailed,
-    compat,
-    audit: { record: async (d) => { audits.push(d); } },
   };
   return { deps, fetchMock, authFailed, compat, audits };
 }

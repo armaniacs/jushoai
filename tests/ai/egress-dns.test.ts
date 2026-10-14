@@ -11,6 +11,7 @@ import {
 } from '../../src/ai/settings';
 import { autoEgress, createOpenAiClassifier, HttpRequestError } from '../../src/ai/http-classifiers';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
+import { ProviderRegistry } from '../../src/llm/provider-registry';
 import { makeMeta } from '../helpers';
 
 const field = makeMeta({ id: 'f', label: '姓' });
@@ -54,16 +55,20 @@ function makeDeps(o: {
   hasKey?: { openai: boolean; gemini: boolean };
   secrets?: { openai?: string; gemini?: string };
 }): HandlerDeps {
+  const registry = new ProviderRegistry(
+    {
+      getLanguageModel: () => null,
+      hasPermission: async () => true,
+      fetch: o.fetch,
+      egress: o.egress,
+      audit: { record: async () => {} },
+    },
+    { authFailed: new Set(), compat: new Set() },
+  );
   return {
-    lm: null,
+    registry,
     loadSettings: async () => ({ ...o.settings, hasKey: o.hasKey ?? { openai: true, gemini: false } }),
     loadSecrets: async () => o.secrets ?? { openai: 'sk-test' },
-    hasPermission: async () => true,
-    fetch: o.fetch,
-    authFailed: new Set(),
-    compat: new Set(),
-    audit: { record: async () => {} },
-    egress: o.egress,
   };
 }
 
