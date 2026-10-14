@@ -41,11 +41,11 @@ Scenario: 境界 — 入力済み・未接続・不一致は注入しない
 
 ## 受け入れ基準
 
-- [ ] 順序・guard・radio 解決・setter 振分けが単一モジュールに集約されている
-- [ ] `fill` コールバックの仮説 seam が解消されている（または純粋部の内遷で代替）
-- [ ] prototype setter 経由の実装が維持されている（`el.value =` 直代入にしない。React/Vue 対応）
-- [ ] input／change／blur の3連発火が維持されている
-- [ ] `make typecheck` と `make test` がパスする
+- [x] 順序・guard・radio 解決・setter 振分けが単一モジュールに集約されている
+- [x] `fill` コールバックの仮説 seam が解消されている（または純粋部の内遷で代替）
+- [x] prototype setter 経由の実装が維持されている（`el.value =` 直代入にしない。React/Vue 対応）
+- [x] input／change／blur の3連発火が維持されている
+- [x] `make typecheck` と `make test` がパスする
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -68,11 +68,11 @@ Scenario: 境界 — 入力済み・未接続・不一致は注入しない
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make typecheck` がパスする
-- [ ] `make test` がパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make typecheck` がパスする
+- [x] `make test` がパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新不要であることが確認済み（内部付け替えのため）
+- [x] ドキュメント更新不要であることが確認済み（内部付け替えのため）
 
 ## 実装者向け注記
 
@@ -85,3 +85,9 @@ Scenario: 境界 — 入力済み・未接続・不一致は注入しない
 - `LAST_CATEGORIES`（zip 系）の集合を変えないこと
 - `fillRadio` の checked setter 経路を `fillField` に統合しないこと（セマンティクスが違う）
 - `byId` の未接続・入力済みガードを落とさないこと
+
+## 実施記録（2026-10-15、自律タスククローザーによる実装）
+
+- 実装コミット `aa9e5b0`: `src/dom/apply-plan.ts` を `src/dom/fill-plan.ts` に深化（`FillTarget` 抽象＋`fillPlan` の outcomes 返却＋`targetsFromControls` 束縛）。`content.ts` の注入経路を置換。旧 `applyPlan` は削除しテストを移行。prototype setter 経路と3連発火は維持。
+- 検証: `npx tsc --noEmit` exit 0、移行テスト＋outcomes 断言（detached・missing・no-option 含む）green。
+- ユーザーの作業として残る項目: コードレビュー

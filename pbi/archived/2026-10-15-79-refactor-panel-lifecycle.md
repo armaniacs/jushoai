@@ -43,12 +43,12 @@ Scenario: 境界 — 追従購読の解除漏れがない
 
 ## 受け入れ基準
 
-- [ ] host 契約・Escape・冪等 close・追従購読が単一モジュールに集約されている
-- [ ] preview／guide の close 意味が統一されている
-- [ ] button／preview／guide が描画 adapter になっている
-- [ ] `computeButtonPosition` が内部純粋 seam として残っている
-- [ ] 既存 UI テストがすべてパスする
-- [ ] `make typecheck` と `make test` がパスする
+- [x] host 契約・Escape・冪等 close・追従購読が単一モジュールに集約されている
+- [x] preview／guide の close 意味が統一されている
+- [x] button／preview／guide が描画 adapter になっている
+- [x] `computeButtonPosition` が内部純粋 seam として残っている
+- [x] 既存 UI テストがすべてパスする
+- [x] `make typecheck` と `make test` がパスする
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -71,11 +71,11 @@ Scenario: 境界 — 追従購読の解除漏れがない
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make typecheck` がパスする
-- [ ] `make test` がパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make typecheck` がパスする
+- [x] `make test` がパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新不要であることが確認済み（内部付け替えのため）
+- [x] ドキュメント更新不要であることが確認済み（内部付け替えのため）
 
 ## 実装者向け注記
 
@@ -88,3 +88,9 @@ Scenario: 境界 — 追従購読の解除漏れがない
 - overlay seam 自体（二 adapter で正当）は壊さないこと。集約するのは組立と lifecycle のみ
 - `OVERLAY_CSS` のパネル見た目を変えないこと
 - error 表示の4秒復帰 timer の振る舞いを変えないこと
+
+## 実施記録（2026-10-15、自律タスククローザーによる実装）
+
+- 実装コミット `7286da5`: `src/ui/panel.ts` 新設（`mountPanel` の host＋Escape＋冪等 close、`attachRepositionTracking` 移設）。preview／guide を `mountPanel` 配下にし close 意味を統一。button は anchor 座標系のため直接 host 利用を維持（乖離を記録）。
+- 検証: `npx tsc --noEmit` exit 0、新規 panel テスト（Escape・冪等・他キー無視）＋既存 UI・entrypoints テスト green。
+- ユーザーの作業として残る項目: コードレビュー

@@ -2,12 +2,7 @@
 
 ## 進行中
 
-- `2026-10-15-76-refactor-geometry-visibility.md`（順位 1、RICE 160）
-- `2026-10-15-77-refactor-option-matcher.md`（順位 2、RICE 120）
-- `2026-10-15-78-refactor-fill-module.md`（順位 3、RICE 40）
-- `2026-10-15-79-refactor-panel-lifecycle.md`（順位 4、RICE 13。78 の後）
-- `2026-10-15-80-refactor-ai-readiness.md`（順位 5、RICE 13）
-- `2026-10-15-81-backlog-arch-round2.md`（本ラウンド台帳）
+（なし）
 
 ## 台帳
 
@@ -28,6 +23,12 @@
 | 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
 | 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
 | 2026-10-14-75-backlog-type-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。`make check` green：typecheck・単体 1199 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-15-81-backlog-arch-round2.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1227 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-15-76-refactor-geometry-visibility.md | 6b58900 refactor: 可視性・計測可能性の判定を geometry に集約（コードレビューはユーザー作業） |
+| 2026-10-15-77-refactor-option-matcher.md | 118fa5f refactor: 選択肢解決を matchOption 単一入口に集約（コードレビューはユーザー作業） |
+| 2026-10-15-78-refactor-fill-module.md | aa9e5b0 refactor: 注入の順序・guard・振分けを fillPlan に集約（コードレビューはユーザー作業） |
+| 2026-10-15-79-refactor-panel-lifecycle.md | 7286da5 refactor: パネル lifecycle を mountPanel に集約（コードレビューはユーザー作業） |
+| 2026-10-15-80-refactor-ai-readiness.md | 677d98f refactor: buildGuide に網羅性ガード（スコープ縮小。コードレビューはユーザー作業） |
 | 2026-10-14-71-refactor-includes-literal.md | 9e52ede refactor: 定数配列の includes 判定を includesLiteral に集約（コードレビューはユーザー作業） |
 | 2026-10-14-72-fix-storage-load-guard.md | 3bf2735 fix: storage 読込境界で誤型欄を既定値に落とす（コードレビューはユーザー作業） |
 | 2026-10-14-73-refactor-request-exhaustiveness.md | f501f12 refactor: AiRequest switch に網羅性ガード（コードレビューはユーザー作業） |
