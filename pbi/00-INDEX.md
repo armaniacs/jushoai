@@ -2,7 +2,11 @@
 
 ## 進行中
 
-（なし）
+- `2026-10-14-71-refactor-includes-literal.md`（順位 1、RICE 80）
+- `2026-10-14-72-fix-storage-load-guard.md`（順位 2、RICE 40）
+- `2026-10-14-73-refactor-request-exhaustiveness.md`（順位 3、RICE 40）
+- `2026-10-14-74-chore-type-premise-comments.md`（順位 4、RICE 12）
+- `2026-10-14-75-backlog-type-round.md`（本ラウンド台帳）
 
 ## 台帳
 
