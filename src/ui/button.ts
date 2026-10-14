@@ -1,4 +1,5 @@
 import type { AiStatusInfo } from '../ai/types';
+import { isMeasurable } from '../dom/geometry';
 import { createShadowHost } from './host';
 import { computeButtonPosition } from './position';
 import { badgeLabel } from './status-label';
@@ -85,7 +86,7 @@ export function mountButton(
       // the last good position until the anchor is measurable again.
       if (!anchor.isConnected) return;
       const anchorRect = anchor.getBoundingClientRect();
-      if (anchorRect.width === 0 && anchorRect.height === 0) return;
+      if (!isMeasurable(anchorRect)) return;
       const hostRect = host.getBoundingClientRect();
       const clientWidth = document.documentElement.clientWidth;
       // The host is fixed, so the whole computation runs in viewport space:

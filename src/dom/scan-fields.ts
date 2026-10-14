@@ -1,5 +1,6 @@
 import type { FieldMeta } from '../core/types';
 import { MAX_TEXT_LENGTH } from '../messages';
+import { isHidden } from './geometry';
 
 export type Control = HTMLInputElement | HTMLSelectElement;
 
@@ -59,21 +60,6 @@ function nearbyOf(el: Control): string {
   if (sib) return textWithoutControls(sib).slice(0, 60);
   const legend = el.closest('fieldset')?.querySelector('legend');
   return legend ? textWithoutControls(legend).slice(0, 60) : '';
-}
-
-// jsdom has no checkVisibility and reports empty rects for everything, so the rect test is
-// gated on the same capability check to stay inert there. Shared with
-// detect-forms.ts so anchor selection skips the same hidden boxes.
-// The optional rect lets a caller that already holds the box (e.g. the
-// memoized pickAnchor read) reuse it for the zero-area check instead of
-// paying for a second layout read. Callers without a box omit it and keep
-// the single internal read.
-export function isHidden(el: Control, rect?: DOMRect): boolean {
-  if (el.closest('[hidden]')) return true;
-  if (typeof el.checkVisibility !== 'function') return false;
-  if (!el.checkVisibility({ opacityProperty: true, visibilityProperty: true })) return true;
-  const r = rect ?? el.getBoundingClientRect();
-  return r.width === 0 && r.height === 0;
 }
 
 export const containerOf = (el: Control, doc: Document): Element =>

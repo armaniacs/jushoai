@@ -1,5 +1,6 @@
 import type { PlanStatus } from '../core/planner';
 import type { Address, Profile } from '../core/types';
+import { isMeasurable } from '../dom/geometry';
 import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
 
 export interface PreviewRow {
@@ -215,7 +216,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   };
   const getApplyPoint = (): { x: number; y: number } | null => {
     const rect = apply.getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) return null;
+    if (!isMeasurable(rect)) return null;
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   };
   return { setRows, setReanalyzing, setAddressId, close, getApplyPoint, getHost: () => host };
