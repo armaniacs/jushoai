@@ -72,6 +72,9 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   };
 
   const resolveSelection = (): void => {
+    // The caller (content.ts run()) only creates a session for ready data, so
+    // both lists are non-empty here; the `!` only satisfies
+    // noUncheckedIndexedAccess.
     profileId = resolveLastId(input.lastProfileId, input.profiles.map((p) => p.id))
       ?? input.profiles[0]!.id;
     addressId = resolveAddressId(input.addresses, profileId, input.lastAddressId)
@@ -94,6 +97,7 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
 
     selectProfile(id: string): PreviewRow[] {
       profileId = id;
+      // Same non-empty premise as resolveSelection above.
       addressId = resolveAddressId(input.addresses, id, addressId) ?? input.addresses[0]!.id;
       return replan();
     },

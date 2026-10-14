@@ -26,6 +26,9 @@ export function toEraDate(iso: string): EraDate | null {
 export function toDecade(iso: string, today: Date = new Date()): string | null {
   const parts = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-').map(Number) : null;
   if (!parts) return null;
+  // The regex above guarantees exactly 3 numeric parts, so the tuple cast and
+  // the indexed reads below cannot fail; the `!` only satisfies
+  // noUncheckedIndexedAccess.
   const [y, m, d] = parts as [number, number, number];
   let age = today.getFullYear() - y!;
   if (today.getMonth() + 1 < m! || (today.getMonth() + 1 === m! && today.getDate() < d!)) age -= 1;
