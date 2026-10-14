@@ -2,7 +2,12 @@
 
 ## 進行中
 
-（なし）
+- `2026-10-14-65-refactor-failure-mapping.md`（順位 1、RICE 320）
+- `2026-10-14-66-refactor-split-groups.md`（順位 2、RICE 240）
+- `2026-10-14-67-refactor-gateway-attempt.md`（順位 3、RICE 20。65 の後）
+- `2026-10-14-68-refactor-gateway-call.md`（順位 4、RICE 80。67 の後）
+- `2026-10-14-69-refactor-options-render.md`（順位 5、RICE 17）
+- `2026-10-14-70-backlog-holistic-round.md`（本ラウンド台帳）
 
 ## 台帳
 
