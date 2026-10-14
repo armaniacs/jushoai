@@ -1,5 +1,4 @@
-import { AuditedClassifier } from '../ai/audited-classifier';
-import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
+import { AuditedClassifier, type TracedClassifier } from '../ai/audited-classifier';import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
@@ -41,7 +40,7 @@ export interface RegistrySecrets {
 }
 
 type Selection =
-  | { ok: true; classifier: FieldClassifier }
+  | { ok: true; classifier: TracedClassifier }
   | { ok: false; reason: 'not-configured' | 'permission' | 'auth' | 'unavailable' };
 
 const TEST_FIELD: FieldMeta = {

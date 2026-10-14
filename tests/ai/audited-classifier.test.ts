@@ -1,11 +1,23 @@
 import { describe, it, expect } from 'vitest';
-import { AuditedClassifier, resultOf, type TracedClassifier } from '../../src/ai/audited-classifier';
+import { AuditedClassifier, resultOf, type AttemptTrace, type TracedClassifier } from '../../src/ai/audited-classifier';
 import { AUDIT_RESPONSE_CLIP_LENGTH, type AuditDraft } from '../../src/ai/audit-log';
 import { HttpAuthError, HttpRequestError } from '../../src/ai/http-classifiers';
 import { makeMeta } from '../helpers';
 
 const ctx = { provider: 'openai', host: 'h', model: 'm', purpose: 'classify', pageUrl: 'https://e.com/p' } as const;
 const fields = [makeMeta({ id: 'a' }), makeMeta({ id: 'b' })];
+
+const emptyTrace = (): AttemptTrace => ({ status: null, retried: false, request: '', response: '' });
+
+function traced(trace: Partial<AttemptTrace> = {}, map = new Map(), error?: unknown): TracedClassifier {
+  return {
+    attempt: async () => ({ map, trace: { ...emptyTrace(), ...trace }, ...(error === undefined ? {} : { error }) }),
+    classify: async () => {
+      if (error !== undefined) throw error;
+      return map;
+    },
+  };
+}
 
 function setup(inner: TracedClassifier, failRecord = false) {
   const drafts: AuditDraft[] = [];
@@ -14,13 +26,8 @@ function setup(inner: TracedClassifier, failRecord = false) {
 }
 
 describe('AuditedClassifier', () => {
-  it('records one success entry with the field count, trace and exchange', async () => {
-    const inner: TracedClassifier = {
-      lastTrace: { status: 200, retried: true },
-      lastExchange: { request: 'P', response: 'R' },
-      classify: async () => new Map(),
-    };
-    const { drafts, wrapped } = setup(inner);
+  it('records one success entry with the field count and the returned trace', async () => {
+    const { drafts, wrapped } = setup(traced({ status: 200, retried: true, request: 'P', response: 'R' }));
     await wrapped.classify(fields);
     expect(drafts).toEqual([{
       ...ctx, fieldCount: 2, request: 'P', response: 'R', chunkIndex: null, chunkCount: null,
@@ -29,24 +36,19 @@ describe('AuditedClassifier', () => {
   });
 
   it('records the chunk schedule passed by the caller', async () => {
-    const inner: TracedClassifier = { lastExchange: { request: 'P', response: 'R' }, classify: async () => new Map() };
-    const { drafts, wrapped } = setup(inner);
+    const { drafts, wrapped } = setup(traced({ request: 'P', response: 'R' }));
     await wrapped.classify(fields, { index: 2, count: 3 });
     expect(drafts[0]).toMatchObject({ chunkIndex: 2, chunkCount: 3 });
   });
 
-  it('records an empty exchange and null schedule when the inner traces nothing', async () => {
-    const { drafts, wrapped } = setup({ classify: async () => new Map() });
+  it('records an empty exchange and null schedule when the attempt traces nothing', async () => {
+    const { drafts, wrapped } = setup(traced());
     await wrapped.classify(fields);
     expect(drafts[0]).toMatchObject({ request: '', response: '', chunkIndex: null, chunkCount: null });
   });
 
   it('clips the recorded response past the storage cap', async () => {
-    const inner: TracedClassifier = {
-      lastExchange: { request: 'P', response: 'x'.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 5) },
-      classify: async () => new Map(),
-    };
-    const { drafts, wrapped } = setup(inner);
+    const { drafts, wrapped } = setup(traced({ request: 'P', response: 'x'.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 5) }));
     await wrapped.classify(fields);
     expect(drafts[0]!.response).toHaveLength(AUDIT_RESPONSE_CLIP_LENGTH + 1);
     expect(drafts[0]!.response.endsWith('…')).toBe(true);
@@ -59,7 +61,7 @@ describe('AuditedClassifier', () => {
     [new HttpRequestError(200, 'x'), 'invalid-response'],
     [new Error('boom'), 'error'],
   ])('records %s as %s and rethrows', async (err, result) => {
-    const { drafts, wrapped } = setup({ classify: async () => { throw err; } });
+    const { drafts, wrapped } = setup(traced({}, new Map(), err));
     await expect(wrapped.classify(fields)).rejects.toBe(err);
     expect(drafts).toHaveLength(1);
     expect(drafts[0]!.result).toBe(result);
@@ -68,10 +70,10 @@ describe('AuditedClassifier', () => {
   });
 
   it('does not change the outcome when the recorder fails', async () => {
-    const ok = setup({ classify: async () => new Map([['a', 'lastName' as const]]) }, true);
+    const ok = setup(traced({}, new Map([['a', 'lastName' as const]])), true);
     expect((await ok.wrapped.classify(fields)).get('a')).toBe('lastName');
     const err = new HttpAuthError();
-    const bad = setup({ classify: async () => { throw err; } }, true);
+    const bad = setup(traced({}, new Map(), err), true);
     await expect(bad.wrapped.classify(fields)).rejects.toBe(err);
   });
 });

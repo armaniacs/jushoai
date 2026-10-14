@@ -4,15 +4,25 @@ import type { AuditDraft, AuditRecorder, AuditResult } from './audit-log';
 import { clipAuditResponse } from './audit-log';
 import { HttpAuthError, HttpRequestError } from './http-classifiers';
 
-export interface ClassifyTrace {
+// Prompt text sent and raw output of one classify attempt, carried on the
+// return value instead of a mutable out-param.
+export interface AttemptTrace {
   status: number | null;
   retried: boolean;
+  request: string;
+  response: string;
+}
+
+export interface ClassifyAttempt {
+  map: Map<string, Category>;
+  trace: AttemptTrace;
+  // Set when the attempt failed; classify() rethrows it so the throwing
+  // contract of FieldClassifier is preserved.
+  error?: unknown;
 }
 
 export interface TracedClassifier extends FieldClassifier {
-  lastTrace?: ClassifyTrace;
-  // Prompt text sent and raw output from the latest classify call, read by the audit wrapper.
-  lastExchange?: { request: string; response: string };
+  attempt(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<ClassifyAttempt>;
 }
 
 export type AuditContext = Pick<AuditDraft, 'provider' | 'host' | 'model' | 'purpose' | 'pageUrl'>;
@@ -28,7 +38,7 @@ export function resultOf(e: unknown): AuditResult {
 
 // Records exactly one entry per call to the wrapped classifier, including failures.
 // A failing recorder never changes the outcome of the call.
-export class AuditedClassifier implements FieldClassifier {
+export class AuditedClassifier implements TracedClassifier {
   constructor(
     private readonly inner: TracedClassifier,
     private readonly ctx: AuditContext,
@@ -39,21 +49,20 @@ export class AuditedClassifier implements FieldClassifier {
     fields: FieldMeta[],
     result: AuditResult,
     startedAt: number,
+    trace: AttemptTrace,
     schedule?: ClassifySchedule,
   ): Promise<void> {
-    const trace = this.inner.lastTrace;
-    const exchange = this.inner.lastExchange;
     try {
       await this.recorder.record({
         ...this.ctx,
         fieldCount: fields.length,
-        request: exchange?.request ?? '',
-        response: clipAuditResponse(exchange?.response ?? ''),
+        request: trace.request,
+        response: clipAuditResponse(trace.response),
         chunkIndex: schedule?.index ?? null,
         chunkCount: schedule?.count ?? null,
         result,
-        httpStatus: trace?.status ?? null,
-        retried: trace?.retried ?? false,
+        httpStatus: trace.status,
+        retried: trace.retried,
         durationMs: Date.now() - startedAt,
       });
     } catch {
@@ -61,15 +70,17 @@ export class AuditedClassifier implements FieldClassifier {
     }
   }
 
-  async classify(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<Map<string, Category>> {
+  async attempt(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<ClassifyAttempt> {
     const startedAt = Date.now();
-    try {
-      const out = await this.inner.classify(fields, schedule);
-      await this.log(fields, 'success', startedAt, schedule);
-      return out;
-    } catch (e) {
-      await this.log(fields, resultOf(e), startedAt, schedule);
-      throw e;
-    }
+    const outcome = await this.inner.attempt(fields, schedule);
+    const result = outcome.error === undefined ? 'success' as const : resultOf(outcome.error);
+    await this.log(fields, result, startedAt, outcome.trace, schedule);
+    return outcome;
+  }
+
+  async classify(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<Map<string, Category>> {
+    const outcome = await this.attempt(fields, schedule);
+    if (outcome.error !== undefined) throw outcome.error;
+    return outcome.map;
   }
 }

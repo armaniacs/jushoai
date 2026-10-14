@@ -2,6 +2,7 @@ import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
 import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/classifier';
 import { clipAuditResponse } from './audit-log';
+import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from './audited-classifier';
 import { createEgressCheck, type EgressCheck } from './settings';
 import { GEMINI_BASE_URL, type GeminiSettings, type OpenAiSettings } from './types';
 
@@ -124,27 +125,6 @@ export interface RetryOptions {
 export const isRejectedStatus = (status: number | null): boolean =>
   status === 400 || status === 422;
 
-// The user prompt text actually embedded in the request body, so the audit trace
-// cannot drift from what was sent when the prompt builders change.
-const promptInRequest = (init: RequestInit): string => {
-  try {
-    const body = JSON.parse(String(init.body)) as {
-      messages?: { content?: unknown }[];
-      contents?: { parts?: { text?: unknown }[] }[];
-    };
-    const message = body.messages?.[1]?.content;
-    if (typeof message === 'string') return message;
-    const parts = body.contents?.[0]?.parts;
-    if (Array.isArray(parts)) {
-      const texts = parts.map((p) => p?.text).filter((t): t is string => typeof t === 'string');
-      return texts.join('');
-    }
-  } catch {
-    // fall through: the trace keeps its empty request
-  }
-  return '';
-};
-
 // Bounded response read: the Content-Length check rejects an oversized body
 // before a single byte is consumed, and the stream reader caps bodies that
 // arrive without a usable Content-Length. Falls back to res.json() when no
@@ -173,12 +153,7 @@ const readJsonBounded = async (res: Response): Promise<unknown> => {
   return JSON.parse(text + decoder.decode());
 };
 
-export class HttpClassifier implements FieldClassifier {
-  // Outcome of the latest classify call, read by the audit wrapper.
-  lastTrace: { status: number | null; retried: boolean } = { status: null, retried: false };
-  // Prompt text sent and raw output from the latest classify call, read by the audit wrapper.
-  lastExchange?: { request: string; response: string };
-
+export class HttpClassifier implements TracedClassifier {
   constructor(
     private readonly build: (fields: FieldMeta[], compat: boolean) => HttpRequest,
     private readonly extract: (json: unknown) => string | null,
@@ -186,20 +161,24 @@ export class HttpClassifier implements FieldClassifier {
     private readonly retry?: RetryOptions,
   ) {}
 
-  private async send({ url, init }: HttpRequest): Promise<Response> {
-    if (this.deps.egress) {
-      let target: URL;
-      try {
-        target = new URL(url);
-      } catch {
-        throw new HttpRequestError(null, 'request failed');
-      }
-      const verdict = await this.deps.egress(target);
-      // Blocked targets must look like ordinary request failures to callers.
-      if (!verdict.ok) {
-        throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: could not verify the address');
-      }
+  // Dial-time resolved-address gate over the caller's egress check. Internal
+  // seam (one adapter means a hypothetical seam): blocked targets look like
+  // ordinary request failures to callers.
+  private async checkEgress(url: string): Promise<void> {
+    if (!this.deps.egress) return;
+    let target: URL;
+    try {
+      target = new URL(url);
+    } catch {
+      throw new HttpRequestError(null, 'request failed');
     }
+    const verdict = await this.deps.egress(target);
+    if (!verdict.ok) {
+      throw new HttpRequestError(null, verdict.internal ? 'blocked: internal address' : 'blocked: could not verify the address');
+    }
+  }
+
+  private async fetchWithTimeout(url: string, init: RequestInit): Promise<Response> {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), this.deps.timeoutMs ?? HTTP_TIMEOUT_MS);
     try {
@@ -211,37 +190,52 @@ export class HttpClassifier implements FieldClassifier {
     }
   }
 
-  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
-    if (fields.length === 0) return new Map();
+  // The trace rides the return value: prompt text comes straight from the
+  // builder (no body re-parse), and failures carry their partial trace in the
+  // same shape so the audit entry matches the old out-param record exactly.
+  async attempt(fields: FieldMeta[]): Promise<ClassifyAttempt> {
+    const trace: AttemptTrace = { status: null, retried: false, request: buildPrompt(fields), response: '' };
+    if (fields.length === 0) return { map: new Map(), trace };
     const compat = this.retry?.compat ?? false;
-    this.lastTrace = { status: null, retried: false };
-    const built = this.build(fields, compat);
-    const exchange: { request: string; response: string } = { request: promptInRequest(built.init), response: '' };
-    this.lastExchange = exchange;
-    let res = await this.send(built);
-    this.lastTrace.status = res.status;
-    if (this.retry && !compat && isRejectedStatus(res.status)) {
-      this.lastTrace = { status: null, retried: true };
-      res = await this.send(this.build(fields, true));
-      this.lastTrace.status = res.status;
-      if (res.ok) this.retry.onCompat?.();
-    }
-    if (res.status === 401 || res.status === 403) throw new HttpAuthError();
-    if (!res.ok) throw new HttpRequestError(res.status, `http ${res.status}`);
-    let json: unknown;
     try {
-      json = await readJsonBounded(res);
-    } catch (e) {
-      // Size rejections keep their specific error instead of a body-parse one.
-      if (e instanceof HttpRequestError) throw e;
-      throw new HttpRequestError(res.status, 'invalid response body');
+      const built = this.build(fields, compat);
+      await this.checkEgress(built.url);
+      let res = await this.fetchWithTimeout(built.url, built.init);
+      trace.status = res.status;
+      if (this.retry && !compat && isRejectedStatus(res.status)) {
+        trace.status = null;
+        trace.retried = true;
+        const retryBuilt = this.build(fields, true);
+        await this.checkEgress(retryBuilt.url);
+        res = await this.fetchWithTimeout(retryBuilt.url, retryBuilt.init);
+        trace.status = res.status;
+        if (res.ok) this.retry.onCompat?.();
+      }
+      if (res.status === 401 || res.status === 403) throw new HttpAuthError();
+      if (!res.ok) throw new HttpRequestError(res.status, `http ${res.status}`);
+      let json: unknown;
+      try {
+        json = await readJsonBounded(res);
+      } catch (e) {
+        // Size rejections keep their specific error instead of a body-parse one.
+        if (e instanceof HttpRequestError) throw e;
+        throw new HttpRequestError(res.status, 'invalid response body');
+      }
+      const text = this.extract(json);
+      // Same clip the audit entry applies, so the retained trace string itself
+      // stays bounded instead of holding a full-size response.
+      trace.response = clipAuditResponse(text ?? JSON.stringify(json));
+      if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
+      return { map: parseLlmOutput(text, fields), trace };
+    } catch (error) {
+      return { map: new Map(), trace, error };
     }
-    const text = this.extract(json);
-    // Same clip the audit entry applies, so the retained trace string itself
-    // stays bounded instead of holding a full-size response.
-    exchange.response = clipAuditResponse(text ?? JSON.stringify(json));
-    if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
-    return parseLlmOutput(text, fields);
+  }
+
+  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
+    const attempt = await this.attempt(fields);
+    if (attempt.error !== undefined) throw attempt.error;
+    return attempt.map;
   }
 }
 

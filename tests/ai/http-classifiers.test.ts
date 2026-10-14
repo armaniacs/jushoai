@@ -95,22 +95,22 @@ describe('HttpClassifier', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
-  it('captures the trace prompt from the actual request body', async () => {
+  it('returns the trace prompt from the builder, matching the request body', async () => {
     const fetch = vi.fn().mockResolvedValue(
       jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] }),
     );
     const c = createOpenAiClassifier(openai, 'sk-test', { fetch });
-    await c.classify(fields);
+    const attempt = await c.attempt(fields);
     const body = JSON.parse((fetch.mock.calls[0]![1] as RequestInit).body as string);
-    expect(c.lastExchange?.request).toBe(body.messages[1].content);
+    expect(attempt.trace.request).toBe(body.messages[1].content);
 
     const gFetch = vi.fn().mockResolvedValue(
       jsonResponse(200, { candidates: [{ content: { parts: [{ text: '{"b":"email"}' }] } }] }),
     );
     const g = createGeminiClassifier(gemini, 'g-key', { fetch: gFetch });
-    await g.classify(fields);
+    const gAttempt = await g.attempt(fields);
     const gBody = JSON.parse((gFetch.mock.calls[0]![1] as RequestInit).body as string);
-    expect(g.lastExchange?.request).toBe(gBody.contents[0].parts[0].text);
+    expect(gAttempt.trace.request).toBe(gBody.contents[0].parts[0].text);
   });
 
   it('works for Gemini responses too', async () => {
@@ -304,13 +304,15 @@ describe('bounded response reading', () => {
 
   it('rejects an oversized Content-Length before reading the body', async () => {
     const { res, fake } = streamResponse(200, bytesOf(envelope(content)), { 'content-length': String(MAX_RESPONSE_BYTES + 1) });
-    const { c, out } = await classifyWith(res);
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch: vi.fn().mockResolvedValue(res) });
+    const attempt = await c.attempt(fields);
+    const out = attempt.error;
     expect(out).toBeInstanceOf(HttpRequestError);
-    expect(out.message).toBe('response too large');
-    expect(out.status).toBe(200);
+    expect((out as HttpRequestError).message).toBe('response too large');
+    expect((out as HttpRequestError).status).toBe(200);
     expect(fake.reads).toBe(0);
     expect(fake.jsonCalls).toBe(0);
-    expect(c.lastTrace.status).toBe(200);
+    expect(attempt.trace.status).toBe(200);
   });
 
   it('accepts a Content-Length exactly at the cap', async () => {
@@ -340,21 +342,23 @@ describe('bounded response reading', () => {
     expect([...out]).toEqual([['a', 'lastName']]);
   });
 
-  it('clips an oversized raw response in lastExchange.response', async () => {
+  it('returns a clipped oversized raw response in the attempt trace', async () => {
     const big = JSON.stringify({ unexpected: 'x'.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 100) });
     const { res } = streamResponse(200, bytesOf(big));
-    const { c, out } = await classifyWith(res);
-    expect(out).toBeInstanceOf(HttpRequestError);
-    expect(c.lastExchange?.response.length).toBe(AUDIT_RESPONSE_CLIP_LENGTH + 1);
-    expect(c.lastExchange?.response.endsWith('…')).toBe(true);
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch: vi.fn().mockResolvedValue(res) });
+    const attempt = await c.attempt(fields);
+    expect(attempt.error).toBeInstanceOf(HttpRequestError);
+    expect(attempt.trace.response.length).toBe(AUDIT_RESPONSE_CLIP_LENGTH + 1);
+    expect(attempt.trace.response.endsWith('…')).toBe(true);
   });
 
-  it('clips a long extracted text in lastExchange.response too', async () => {
+  it('returns a clipped long extracted text in the attempt trace too', async () => {
     const long = '{"a":"lastName"' + ' '.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 100) + '}';
     const { res } = streamResponse(200, bytesOf(envelope(long)));
-    const { c, out } = await classifyWith(res);
-    expect([...out]).toEqual([['a', 'lastName']]);
-    expect(c.lastExchange?.response.length).toBe(AUDIT_RESPONSE_CLIP_LENGTH + 1);
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch: vi.fn().mockResolvedValue(res) });
+    const attempt = await c.attempt(fields);
+    expect([...attempt.map]).toEqual([['a', 'lastName']]);
+    expect(attempt.trace.response.length).toBe(AUDIT_RESPONSE_CLIP_LENGTH + 1);
   });
 
   it('reads the body after the fetch timeout is disarmed', async () => {

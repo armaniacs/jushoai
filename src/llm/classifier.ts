@@ -1,6 +1,7 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
+import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from '../ai/audited-classifier';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
 
 export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄を分類するアシスタントです。
@@ -81,29 +82,40 @@ export function parseLlmOutput(raw: string, fields: FieldMeta[]): Map<string, Ca
   return out;
 }
 
-export class PromptApiClassifier implements FieldClassifier {
-  // Prompt text sent and raw output from the latest classify call, read by the audit wrapper.
-  lastExchange?: { request: string; response: string };
-
+export class PromptApiClassifier implements TracedClassifier {
   constructor(private readonly lm: LanguageModelStatic) {}
 
-  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
-    if (fields.length === 0) return new Map();
+  // The trace rides the return value, matching HttpClassifier.attempt: the
+  // prompt is kept from construction (even when create() fails), and failures
+  // carry their partial trace in the same shape.
+  async attempt(fields: FieldMeta[]): Promise<ClassifyAttempt> {
+    const trace: AttemptTrace = { status: null, retried: false, request: '', response: '' };
+    if (fields.length === 0) return { map: new Map(), trace };
     const prompt = buildPrompt(fields);
     // Set before create() so a failed session still leaves the request on record.
-    this.lastExchange = { request: prompt, response: '' };
-    const session = await this.lm.create({
-      ...LM_OPTIONS,
-      initialPrompts: [{ role: 'system', content: SYSTEM_PROMPT }],
-    });
+    trace.request = prompt;
     try {
-      const raw = await session.prompt(prompt, {
-        responseConstraint: buildSchema(fields),
+      const session = await this.lm.create({
+        ...LM_OPTIONS,
+        initialPrompts: [{ role: 'system', content: SYSTEM_PROMPT }],
       });
-      this.lastExchange = { request: prompt, response: raw };
-      return parseLlmOutput(raw, fields);
-    } finally {
-      session.destroy();
+      try {
+        const raw = await session.prompt(prompt, {
+          responseConstraint: buildSchema(fields),
+        });
+        trace.response = raw;
+        return { map: parseLlmOutput(raw, fields), trace };
+      } finally {
+        session.destroy();
+      }
+    } catch (error) {
+      return { map: new Map(), trace, error };
     }
+  }
+
+  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
+    const attempt = await this.attempt(fields);
+    if (attempt.error !== undefined) throw attempt.error;
+    return attempt.map;
   }
 }
