@@ -1,3 +1,4 @@
+import { includesLiteral } from './literals';
 import type { SelectOption } from './types';
 
 // Array index + 1 equals the JIS X 0401 prefecture code, which many select values use.
@@ -21,7 +22,7 @@ export function matchPrefectureOption(
   if (!target) return null;
   const byText = options.find((o) => strip(o.text) === target);
   if (byText) return byText;
-  const code = PREFECTURES.indexOf(prefecture as (typeof PREFECTURES)[number]) + 1;
+  const code = includesLiteral(PREFECTURES, prefecture) ? PREFECTURES.indexOf(prefecture) + 1 : 0;
   return (
     options.find(
       (o) => strip(o.value) === target || (code > 0 && /^\d+$/.test(o.value) && Number(o.value) === code),

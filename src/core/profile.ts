@@ -1,5 +1,6 @@
 import { toKatakana } from './formatters';
 import { GENDERS } from './genders';
+import { includesLiteral } from './literals';
 import { PREFECTURES } from './prefectures';
 import type { Address, Profile } from './types';
 
@@ -64,7 +65,7 @@ export function validateProfile(p: Profile): string[] {
   if (!/^[ァ-ヶー]+$/.test(p.firstNameKana)) errors.push('メイは全角カナで入力してください');
   if (p.lastNameRomaji && !ROMAJI.test(p.lastNameRomaji)) errors.push('ローマ字姓は半角英字で入力してください');
   if (p.firstNameRomaji && !ROMAJI.test(p.firstNameRomaji)) errors.push('ローマ字名は半角英字で入力してください');
-  if (p.gender && !(GENDERS as readonly string[]).includes(p.gender)) {
+  if (p.gender && !includesLiteral(GENDERS, p.gender)) {
     errors.push('性別は「男性」「女性」「その他」「回答しない」から選んでください');
   }
   if (p.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(p.email)) {
@@ -109,7 +110,7 @@ export function validateAddress(a: Address): string[] {
   }
   if (!a.country) {
     if (!/^\d{7}$/.test(a.zip)) errors.push('郵便番号は7桁の数字で入力してください');
-    if (!(PREFECTURES as readonly string[]).includes(a.prefecture)) {
+    if (!includesLiteral(PREFECTURES, a.prefecture)) {
       errors.push('都道府県は「東京都」のように正式名称で入力してください');
     }
     if (!a.city) errors.push('市区町村を入力してください');

@@ -1,5 +1,6 @@
 import { CATEGORIES, type Category, type FieldMeta } from './core/types';
 import type { ClassifySchedule } from './core/classifier';
+import { includesLiteral } from './core/literals';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
 
@@ -47,8 +48,7 @@ export const ANALYZE_MESSAGE_TYPE = 'jushoai-analyze';
 // and the consumer (action popup) across the runtime-message seam.
 export const ANALYZE_REASONS = ['no-form', 'no-tab', 'error'] as const;
 export type AnalyzeReason = (typeof ANALYZE_REASONS)[number];
-export const isAnalyzeReason = (v: unknown): v is AnalyzeReason =>
-  typeof v === 'string' && (ANALYZE_REASONS as readonly string[]).includes(v);
+export const isAnalyzeReason = (v: unknown): v is AnalyzeReason => includesLiteral(ANALYZE_REASONS, v);
 export type AnalyzeResponse = { ok: true } | { ok: false; reason: AnalyzeReason };
 
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
@@ -147,16 +147,15 @@ export function isLegacyClassifyFailure(res: unknown): boolean {
 export function parseClassifyResult(res: unknown): { ok: true; map: Map<string, Category> } | { ok: false; reason: ClassifyFailure } | null {
   if (!isRecord(res)) return null;
   if (res.ok === false) {
-    return typeof res.reason === 'string' && (CLASSIFY_FAILURES as readonly string[]).includes(res.reason)
-      ? { ok: false, reason: res.reason as ClassifyFailure }
+    return includesLiteral(CLASSIFY_FAILURES, res.reason)
+      ? { ok: false, reason: res.reason }
       : null;
   }
   if (res.ok !== true || !Array.isArray(res.entries)) return null;
-  const valid = new Set<string>(CATEGORIES);
   const out = new Map<string, Category>();
   for (const e of res.entries) {
-    if (Array.isArray(e) && e.length === 2 && typeof e[0] === 'string' && typeof e[1] === 'string' && valid.has(e[1])) {
-      out.set(e[0], e[1] as Category);
+    if (Array.isArray(e) && e.length === 2 && typeof e[0] === 'string' && includesLiteral(CATEGORIES, e[1])) {
+      out.set(e[0], e[1]);
     }
   }
   return { ok: true, map: out };
@@ -165,17 +164,17 @@ export function parseClassifyResult(res: unknown): { ok: true; map: Map<string, 
 export function parseStatusResponse(res: unknown): AiStatusInfo | null {
   if (!isRecord(res) || !isAiState(res.status)) return null;
   const provider = res.provider;
-  if (typeof provider !== 'string' || !(PROVIDER_KINDS as readonly string[]).includes(provider)) return null;
-  return { status: res.status, provider: provider as AiStatusInfo['provider'] };
+  if (!includesLiteral(PROVIDER_KINDS, provider)) return null;
+  return { status: res.status, provider };
 }
 
 export function parseTestResponse(res: unknown): TestResponse | null {
   if (!isRecord(res)) return null;
-  if (res.ok === true && typeof res.category === 'string' && (CATEGORIES as readonly string[]).includes(res.category)) {
-    return { ok: true, category: res.category as Category };
+  if (res.ok === true && includesLiteral(CATEGORIES, res.category)) {
+    return { ok: true, category: res.category };
   }
-  if (res.ok === false && typeof res.reason === 'string' && (TEST_FAILURES as readonly string[]).includes(res.reason)) {
-    return { ok: false, reason: res.reason as TestFailure };
+  if (res.ok === false && includesLiteral(TEST_FAILURES, res.reason)) {
+    return { ok: false, reason: res.reason };
   }
   return null;
 }
