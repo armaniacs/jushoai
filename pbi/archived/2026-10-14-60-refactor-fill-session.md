@@ -61,7 +61,7 @@ Scenario: 境界 — 覆われた適用ボタンでは注入せず理由を返�
 
 ### E2Eテスト
 
-- 既存の Chrome / Firefox 実ブラウザ E2E（`make e2e-chrome` / `make e2e-firefox`）で回帰確認。実行コンテキストの制約で未実行の場合はユーザー作業として残す。
+- 既存の Chrome / Firefox 実ブラウザ E2E（`make e2e-chrome` / `make e2e-firefox`）で回帰確認。ユーザー実行で緑を確認（2026-10-15）。
 
 ### 統合テスト
 
@@ -108,4 +108,4 @@ Scenario: 境界 — 覆われた適用ボタンでは注入せず理由を返�
 - 実装コミット `e9ffbf5`: `src/content-session.ts` 新設（`createFillSession`: 選択状態・再計画・再分析・同意 gate 位置・フィードバック組立を所有、DOM/Chrome 副作用は `SessionEnv` 注入）、`content.ts` の `run()` を mounter 化（分類→session→表示→委譲の順序は厳密に維持。除外時のパネル close 順序も保存）。
 - 検証: `npx tsc --noEmit` exit 0、フル単体 89 ファイル・1179 件 green（新規 session テスト 8 件）、両ブラウザ build green、`make check` exit 0。
 - ポップアップ経路は `guardedRun → run → session` のまま同一 interface を共有する（session への直結ではなく run 経由の共有として受容）。
-- ユーザーの作業として残る項目: コードレビュー、実ブラウザ E2E（Chrome・Firefox）の通常ターミナルでの確認
+- ユーザーの作業として残る項目: コードレビュー

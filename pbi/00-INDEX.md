@@ -21,9 +21,9 @@
 | PBI | 完了コミット |
 |---|---|
 | 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
-| 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
-| 2026-10-14-75-backlog-type-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。`make check` green：typecheck・単体 1199 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
-| 2026-10-15-81-backlog-arch-round2.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1227 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
+| 2026-10-14-75-backlog-type-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。`make check` green：typecheck・単体 1199 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
+| 2026-10-15-81-backlog-arch-round2.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1227 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
 | 2026-10-15-76-refactor-geometry-visibility.md | 6b58900 refactor: 可視性・計測可能性の判定を geometry に集約（コードレビューはユーザー作業） |
 | 2026-10-15-77-refactor-option-matcher.md | 118fa5f refactor: 選択肢解決を matchOption 単一入口に集約（コードレビューはユーザー作業） |
 | 2026-10-15-78-refactor-fill-module.md | aa9e5b0 refactor: 注入の順序・guard・振分けを fillPlan に集約（コードレビューはユーザー作業） |
@@ -38,7 +38,7 @@
 | 2026-10-14-67-refactor-gateway-attempt.md | 8b61670 refactor: gateway 失敗理由を attempt 返り値に載せ替え（コードレビューはユーザー作業） |
 | 2026-10-14-68-refactor-gateway-call.md | 9d49761 refactor: gateway 呼び出し定型を callBackground に一本化（コードレビューはユーザー作業） |
 | 2026-10-14-69-refactor-options-render.md | 8d916b9 refactor: 設定画面の描画分割と上限集約（コードレビューはユーザー作業） |
-| 2026-10-14-64-backlog-arch-review-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1191 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-64-backlog-arch-review-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1191 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
 | 2026-10-14-59-refactor-kana-module.md | bfda8b9 refactor: かな判定を core/kana に集約（コードレビューはユーザー作業） |
 | 2026-10-14-60-refactor-fill-session.md | e9ffbf5 refactor: Fill Session 集約＋content mounter 化（コードレビュー・実機 E2E はユーザー作業） |
 | 2026-10-14-61-refactor-provider-registry.md | 5601552 refactor: Provider Registry 集約（コードレビューはユーザー作業） |
