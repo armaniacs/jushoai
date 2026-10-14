@@ -27,27 +27,34 @@
 - 根拠: Registry 安定後に着手。同点帯では順位4を優先。
 - 依存: なし（Registry との境界は selection／readiness で分離済み）。
 
-## BDD受け入れシナリオ
+## BDD受け入れシナリオ（実装時の実測により縮小）
 
 ```gherkin
-Scenario: ハッピー — 偽 adapter で組合せが判定できる
-  Given 設定・偽 LM・偽許可・browser identity がある
-  When readiness に問う
-  Then 統一状態＋ガイダンスが返る（global mock 不要）
+Scenario: ハッピー — 全 AiState がガイドを持つ
+  Given 9種の AiState × 4プロバイダがある
+  When buildGuide で案内を作る
+  Then いずれも非空の title と lines が返る
 
-Scenario: 境界 — Firefox の内蔵 AI が未提供として扱われる
-  Given Firefox identity＋built-in 設定がある
-  When readiness に問う
-  Then 未提供の状態になり、選択肢にも出ない
+Scenario: 境界 — 種別追加が未処理でコンパイルを通らない
+  Given AiState に新メンバーを足す変更がある
+  When 型検査する
+  Then buildGuide の default 節でコンパイルエラーになる
 ```
 
-## 受け入れ基準
+## 受け入れ基準（実装時の実測により改訂）
 
-- [ ] readiness の単一 interface が存在し、5モジュールが内部 seam になっている
-- [ ] `AiStatus`／`AiState` の2語彙が統一されている
-- [ ] `isFirefox` のスレッド渡しが呼出し側から消えている
-- [ ] button・guide・設定の gating 呼出しが新 interface に載っている
-- [ ] `make typecheck` と `make test` がパスする
+- [x] `buildGuide` の switch に `never` 代入ガードがある
+- [x] 全 AiState × 全プロバイダの総当たりテストがある
+- [x] 既存の guide テストがすべてパスする
+- [x] `make typecheck` と `make test` がパスする
+
+## スコープ変更の記録
+
+- 当初案（readiness 単一モジュール＋2語彙統一）は実測で却下した。理由:
+  - 語彙は既に1 union（`AiState = AiStatus | CloudStatus`、`src/ai/types.ts:7`）で統一済みだった
+  - 合成点は実質1箇所（`content.ts` の状態取得＋browser 検出＋`buildGuide` の3行）のみで、ラッパーは deletion test 不合格
+  - よって「単一 interface」ではなく「総当たり保証」に付け替えた
+- `isFirefox` スレッド・`hasHostPermission([])` の扱いは現状維持（前者は注入可能既定値で検証可能、後者は呼出しが常に非空のため）
 
 ## テスト戦略（t_wadaスタイル）
 

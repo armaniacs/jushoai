@@ -1,11 +1,22 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { buildGuide, showAiGuide } from '../../src/ui/ai-guide';
-import type { AiState, AiStatusInfo } from '../../src/ai/types';
+import { AI_STATUSES } from '../../src/llm/availability';
+import { CLOUD_STATUSES, type AiState, type AiStatusInfo } from '../../src/ai/types';
 
 const RULE = 'ルールによる入力は AI なしでも使えます';
 const all = (s: AiState, b: 'chrome' | 'edge' | 'unknown') => buildGuide({ status: s, provider: 'built-in' }, b).lines.join('\n');
 
 describe('buildGuide', () => {
+  it('covers every AiState with a non-empty guide (pins the never-guard totality)', () => {
+    for (const status of [...AI_STATUSES, ...CLOUD_STATUSES] as const) {
+      for (const provider of ['none', 'built-in', 'openai', 'gemini'] as const) {
+        const guide = buildGuide({ status, provider }, 'chrome');
+        expect(guide.title).not.toBe('');
+        expect(guide.lines.length).toBeGreaterThan(0);
+      }
+    }
+  });
+
   it('always mentions that rule-based filling works', () => {
     for (const s of ['available', 'downloadable', 'downloading', 'unavailable', 'unsupported'] as const) {
       expect(all(s, 'chrome')).toContain(RULE);

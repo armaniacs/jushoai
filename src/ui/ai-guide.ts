@@ -116,6 +116,13 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
             ],
           }
         : { title: 'AI 判定を利用できます', lines: ['AI の準備ができています。', RULE_LINE] };
+    default: {
+      // Unreachable while every AiState has a case above: adding a status
+      // without guidance here turns into a compile error instead of an
+      // undefined guide crashing the panel render.
+      const exhaustive: never = info.status;
+      return exhaustive;
+    }
   }
 }
 
