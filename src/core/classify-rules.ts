@@ -3,6 +3,7 @@ import type {
 } from './types';
 import { stripExample } from './formatters';
 import { KANA, wantsKana } from './kana';
+import { norm } from './literals';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -46,8 +47,6 @@ const NAME_EXCLUDE =
 const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
 const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［\[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
 const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
-
-const norm = (s: string) => s.normalize('NFKC').toLowerCase();
 
 // Priority-ordered dispatch table for classifyField: definition order is the
 // match priority. A new field kind is one entry inserted at the right place;

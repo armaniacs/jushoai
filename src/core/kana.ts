@@ -1,5 +1,6 @@
 import type { Category, FieldMeta, KanaKind } from './types';
 import { stripExample } from './formatters';
+import { norm } from './literals';
 import type { Item } from './classify-rules';
 
 // Kana vocabulary: the single source of truth for kana signals. classify-rules.ts
@@ -49,8 +50,6 @@ export function detectKanaKind(m: FieldMeta): KanaKind {
   if (/ひらがな|ふりがな/.test(text)) return 'hiragana';
   return 'katakana';
 }
-
-const norm = (s: string) => s.normalize('NFKC').toLowerCase();
 
 const KANA_CATEGORY: Partial<Record<Category, Category>> = {
   lastName: 'lastNameKana',
