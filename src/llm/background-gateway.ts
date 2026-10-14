@@ -23,39 +23,34 @@ function sendWithTimeout(msg: unknown, ms: number): Promise<unknown> {
   });
 }
 
-export async function getAiStatusViaBackground(timeoutMs = STATUS_TIMEOUT_MS): Promise<AiStatusInfo> {
+// Single backbone for the background calls: public signatures (timeout
+// argument, null fallback) stay put while timeout/parse additions land here.
+// Thin wrappers above keep their types and defaults untouched.
+async function callBackground<T>(msg: unknown, ms: number, parse: (v: unknown) => T | null): Promise<T | null> {
   try {
-    return parseStatusResponse(await sendWithTimeout({ type: 'ai-status' }, timeoutMs)) ?? UNKNOWN_STATUS;
-  } catch {
-    return UNKNOWN_STATUS;
-  }
-}
-
-export async function testAiViaBackground(timeoutMs = TEST_TIMEOUT_MS): Promise<TestResponse | null> {
-  try {
-    return parseTestResponse(await sendWithTimeout({ type: 'ai-test' }, timeoutMs));
+    return parse(await sendWithTimeout(msg, ms));
   } catch {
     return null;
   }
 }
 
+export async function getAiStatusViaBackground(timeoutMs = STATUS_TIMEOUT_MS): Promise<AiStatusInfo> {
+  return (await callBackground({ type: 'ai-status' }, timeoutMs, parseStatusResponse)) ?? UNKNOWN_STATUS;
+}
+
+export async function testAiViaBackground(timeoutMs = TEST_TIMEOUT_MS): Promise<TestResponse | null> {
+  return callBackground({ type: 'ai-test' }, timeoutMs, parseTestResponse);
+}
+
 export async function requestDownloadViaBackground(timeoutMs = DOWNLOAD_TIMEOUT_MS): Promise<boolean> {
-  try {
-    const res = await sendWithTimeout({ type: 'ai-download' }, timeoutMs);
-    return (res as { started?: unknown } | null | undefined)?.started === true;
-  } catch {
-    return false;
-  }
+  const res = await callBackground({ type: 'ai-download' }, timeoutMs, (v) => v);
+  return (res as { started?: unknown } | null | undefined)?.started === true;
 }
 
 // Delegates the settings-page delete to the background AuditStore so record and
 // clear share one write queue; ok:false and a stalled reply both report failure.
 export async function clearAuditViaBackground(timeoutMs = CLEAR_TIMEOUT_MS): Promise<boolean> {
-  try {
-    return parseAuditClearResponse(await sendWithTimeout({ type: 'audit-clear' }, timeoutMs))?.ok === true;
-  } catch {
-    return false;
-  }
+  return (await callBackground({ type: 'audit-clear' }, timeoutMs, parseAuditClearResponse))?.ok === true;
 }
 
 export class BackgroundClassifier implements FieldClassifier {
