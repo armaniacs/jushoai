@@ -252,8 +252,7 @@ describe('refineClassifications', () => {
     expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
   });
 
-  it('keeps part-labeled fields unsplit when a part repeats', () => {
-    const items = ['a', 'b', 'c'].map((id, i) => ({
+  it('keeps part-labeled fields unsplit when a part repeats', () => {    const items = ['a', 'b', 'c'].map((id, i) => ({
       ...item('tel', id),
       meta: makeMeta({
         id,
@@ -262,6 +261,17 @@ describe('refineClassifications', () => {
       }),
     }));
     expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+  });
+
+  it('keeps part-labeled tel fields unsplit when another field breaks consecutiveness', () => {
+    const labels = ['電話番号の市外局番', '電話番号の市内局番', '電話番号の加入者番号'];
+    const items = [
+      { ...item('tel', 'a'), meta: makeMeta({ id: 'a', label: labels[0]!, nearby: '電話番号' }) },
+      { ...item('email', 'x'), meta: makeMeta({ id: 'x', label: 'メールアドレス', nearby: '電話番号' }) },
+      { ...item('tel', 'b'), meta: makeMeta({ id: 'b', label: labels[1]!, nearby: '電話番号' }) },
+      { ...item('tel', 'c'), meta: makeMeta({ id: 'c', label: labels[2]!, nearby: '電話番号' }) },
+    ];
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'email', 'tel', 'tel']);
   });
 
   it('drops ambiguous groups of more than two identical fullName fields', () => {
