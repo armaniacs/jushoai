@@ -68,26 +68,43 @@ export function newId(): string {
   return `fallback-${time}-${count}-${rand}`;
 }
 
+// Load-boundary hardening: hand edits, corruption, or version skew must never
+// break startup nor inject mistyped values into fields. Wrong-typed string
+// fields fall back to the template default; non-object entries are dropped.
+// The key set itself is left alone (whitelisting is out of scope).
+const isObject = (v: unknown): v is Record<string, unknown> =>
+  typeof v === 'object' && v !== null && !Array.isArray(v);
+
+function coerceStrings<T extends object>(template: T, value: unknown): T {
+  const out = { ...template, ...(isObject(value) ? value : {}) } as T;
+  for (const k of Object.keys(template) as (keyof T)[]) {
+    if (typeof out[k] !== 'string') out[k] = template[k];
+  }
+  return out;
+}
+
 // Normalizes any stored shape to the current one: a legacy single profile becomes the
 // first entry labeled メイン, and every entry gets defaults for missing keys.
 // Addresses linked to a deleted profile become shared instead of dangling.
 export function migrateData(stored: LegacyStoredData | undefined): StoredData {
-  const fromList = !!stored?.profiles && stored.profiles.length > 0;
-  const legacy = !fromList && stored?.profile ? [{ ...stored.profile }] : [];
-  const list = fromList ? stored.profiles! : legacy;
-  const profiles = list.map((p) => ({
-    ...EMPTY_PROFILE,
-    ...p,
-    id: p.id || newId(),
-    label: p.label || (fromList ? '' : 'メイン'),
-  }));
+  const rawList = Array.isArray(stored?.profiles) ? stored.profiles : [];
+  const fromList = rawList.length > 0;
+  const legacy = !fromList && isObject(stored?.profile) ? [stored.profile] : [];
+  const list = (fromList ? rawList : legacy).filter(isObject);
+  const profiles = list.map((p) => {
+    const clean = coerceStrings(EMPTY_PROFILE, p);
+    return { ...clean, id: clean.id || newId(), label: clean.label || (fromList ? '' : 'メイン') };
+  });
   const profileIds = new Set(profiles.map((p) => p.id));
-  const addresses = ((stored?.addresses ?? []) as Partial<Address>[]).map((a) => ({
-    ...EMPTY_ADDRESS,
-    ...a,
-    id: a.id || newId(),
-    profileId: a.profileId && profileIds.has(a.profileId) ? a.profileId : '',
-  }));
+  const rawAddresses = Array.isArray(stored?.addresses) ? stored.addresses : [];
+  const addresses = rawAddresses.filter(isObject).map((a) => {
+    const clean = coerceStrings(EMPTY_ADDRESS, a);
+    return {
+      ...clean,
+      id: clean.id || newId(),
+      profileId: clean.profileId && profileIds.has(clean.profileId) ? clean.profileId : '',
+    };
+  });
   return { profiles, addresses };
 }
 

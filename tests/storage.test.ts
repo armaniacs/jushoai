@@ -48,6 +48,24 @@ describe('migrateData', () => {
     expect(migrateData(undefined)).toEqual({ profiles: [], addresses: [] });
   });
 
+  it('falls back mistyped string fields to defaults instead of injecting them', () => {
+    const corrupted = JSON.parse(
+      '{"profiles":[{"id":"p1","label":"自宅","lastName":42,"tel":["09012345678"],"email":null}],"addresses":[{"id":"a1","label":{},"zip":1000001}]}',
+    );
+    const out = migrateData(corrupted);
+    expect(out.profiles).toEqual([{ ...EMPTY_PROFILE, id: 'p1', label: '自宅' }]);
+    expect(out.addresses).toEqual([{ ...EMPTY_ADDRESS, id: 'a1' }]);
+  });
+
+  it('reads malformed containers as empty lists without throwing', () => {
+    expect(migrateData(JSON.parse('{"profiles":"oops","addresses":{"a":1}}')))
+      .toEqual({ profiles: [], addresses: [] });
+    expect(migrateData(JSON.parse('{"profile":"oops","addresses":[]}')))
+      .toEqual({ profiles: [], addresses: [] });
+    expect(migrateData(JSON.parse('{"profiles":[null,42],"addresses":[]}')))
+      .toEqual({ profiles: [], addresses: [] });
+  });
+
   it('fills overseas defaults for legacy addresses', () => {
     const out = migrateData({
       addresses: [{
