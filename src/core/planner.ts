@@ -1,12 +1,11 @@
 import type { Item } from './classify-rules';
 import {
-  matchDecadeOption, matchEraOption, matchNumberOption, splitBirthday, toDecade, toEraDate,
+  splitBirthday, toDecade, toEraDate,
 } from './eras';
 import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
 } from './formatters';
-import { matchGenderOption } from './genders';
-import { matchPrefectureOption } from './prefectures';
+import { matchOption } from './match-option';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 
 export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option';
@@ -126,15 +125,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
           plan.push({ ...base, value: '', display: raw, status: 'filled' });
           continue;
         }
-        const option = cls.category === 'prefecture'
-          ? matchPrefectureOption(meta.options, raw)
-          : cls.category === 'birthEra'
-            ? matchEraOption(meta.options, raw)
-            : cls.category === 'gender'
-              ? matchGenderOption(meta.options, raw)
-              : cls.category === 'ageDecade'
-                ? matchDecadeOption(meta.options, raw)
-                : matchNumberOption(meta.options, Number(raw));
+        const option = matchOption(cls.category, meta.options, raw);
         plan.push(
           option && !(meta.tag === 'radio' && option.disabled)
             ? { ...base, value: option.value, display: option.text, status: 'ok' }
