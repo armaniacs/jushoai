@@ -46,5 +46,16 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
       const secrets = await deps.loadSecrets();
       return deps.registry.test(settings, secrets);
     }
+    case 'open-options':
+    case 'audit-clear':
+      // Owned by the background listener, which branches before delegating
+      // here; reaching this point means a wiring change upstream.
+      return undefined;
+    default: {
+      // Unreachable while every AiRequest variant has a case above: adding a
+      // request type without handling it here turns into a compile error.
+      const exhaustive: never = req;
+      return exhaustive;
+    }
   }
 }
