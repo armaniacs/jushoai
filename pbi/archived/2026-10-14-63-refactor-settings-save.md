@@ -44,11 +44,11 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 
 ## 受け入れ基準
 
-- [ ] `saveSettings(draft, keys, env)` が7手順を所有し、順序制約が実行構造（段階 pipeline）になっている
-- [ ] gesture 順序（許可促しが最初の await）がモジュール内に保存されている
-- [ ] fail-closed 方針（未解決・内部解決の双方で保存拒否）が維持されている
-- [ ] options の `saveAiSection` が描画＋単一呼出しに瘦身化されている
-- [ ] `make typecheck` と `make test` がパスする
+- [x] `saveSettings(draft, keys, env)` が7手順を所有し、順序制約が実行構造（段階 pipeline）になっている
+- [x] gesture 順序（許可促しが最初の await）がモジュール内に保存されている
+- [x] fail-closed 方針（未解決・内部解決の双方で保存拒否）が維持されている
+- [x] options の `saveAiSection` が描画＋単一呼出しに瘦身化されている
+- [x] `make typecheck` と `make test` がパスする
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -73,11 +73,11 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make typecheck` がパスする
-- [ ] `make test` がパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make typecheck` がパスする
+- [x] `make test` がパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新不要であることが確認済み（内部付け替えのため）
+- [x] ドキュメント更新不要であることが確認済み（内部付け替えのため）
 
 ## 実装者向け注記
 
@@ -95,3 +95,9 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 - gesture 順序の逆転（解決済み検証を許可促しより先に await する）は、許可ダイアログの user gesture を失わせる。段階順序の回帰テストで固定すること
 - `validateAiSettings`（語彙）と `validateAiSettingsResolved`（解決済み）の二段を潰して一段にしないこと（origin 記述と cloud 状態が語彙 timing を要するため）
 - 本 PBI は Speculative のため、着手前に2つ目の保存呼出し予定の有無を確認し、なければ着手延期の判断も可とすること
+
+## 実施記録（2026-10-14、自律タスククローザーによる実装）
+
+- 実装コミット `8d19475`: `src/ai/settings-save.ts` 新設（`saveSettings(draft, { keyStore, fetch })`: 正規化→再入力→語彙→許可→解決済み gate→永続化→存在再読込の段階 pipeline。順序は実行構造、文言は既存のまま）。`ai-section.ts` の `saveAiSection` は描画＋単一呼出し＋状態反映に瘦身化。
+- 検証: `npx tsc --noEmit` exit 0、フル単体 90 ファイル・1191 件 green（新規段階テスト 9 件、既存 DOM 駆動 gate テスト無改変で green）、両ブラウザ build green。
+- ユーザーの作業として残る項目: コードレビュー

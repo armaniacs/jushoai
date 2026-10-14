@@ -2,12 +2,7 @@
 
 ## 進行中
 
-- `2026-10-14-59-refactor-kana-module.md`（順位 1、RICE 240）
-- `2026-10-14-60-refactor-fill-session.md`（順位 2、RICE 160）
-- `2026-10-14-61-refactor-provider-registry.md`（順位 3、RICE 53）
-- `2026-10-14-62-refactor-classifier-trace.md`（順位 4、RICE 27。61 の後）
-- `2026-10-14-63-refactor-settings-save.md`（順位 5、RICE 6）
-- `2026-10-14-64-backlog-arch-review-round.md`（本ラウンド台帳）
+（なし）
 
 ## 台帳
 
@@ -26,6 +21,12 @@
 | PBI | 完了コミット |
 |---|---|
 | 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-64-backlog-arch-review-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1191 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-59-refactor-kana-module.md | bfda8b9 refactor: かな判定を core/kana に集約（コードレビューはユーザー作業） |
+| 2026-10-14-60-refactor-fill-session.md | e9ffbf5 refactor: Fill Session 集約＋content mounter 化（コードレビュー・実機 E2E はユーザー作業） |
+| 2026-10-14-61-refactor-provider-registry.md | 5601552 refactor: Provider Registry 集約（コードレビューはユーザー作業） |
+| 2026-10-14-62-refactor-classifier-trace.md | 28402ba refactor: trace 返り値化（コードレビューはユーザー作業） |
+| 2026-10-14-63-refactor-settings-save.md | 8d19475 refactor: settings-save 集約（コードレビューはユーザー作業） |
 | 2026-10-13-47-fix-anchor-rect-sharing.md | c124902 fix: アンカー選択の矩形読みを isHidden と共有（rect 注入＋共有。コードレビューはユーザー作業） |
 | 2026-10-13-48-fix-chrome-flags-empty-env.md | 0b33737 fix: chrome-flags の空文字判定を厳格化（truthy／厳密比較。コードレビューはユーザー作業） |
 | 2026-10-13-49-chore-chrome-flags-env-explicit.md | 0b33737 chore: 既定 process.env を廃止して呼び出し側で明示（同上コミット。コードレビューはユーザー作業） |
