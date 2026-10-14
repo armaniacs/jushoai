@@ -2,11 +2,7 @@
 
 ## 進行中
 
-- `2026-10-14-71-refactor-includes-literal.md`（順位 1、RICE 80）
-- `2026-10-14-72-fix-storage-load-guard.md`（順位 2、RICE 40）
-- `2026-10-14-73-refactor-request-exhaustiveness.md`（順位 3、RICE 40）
-- `2026-10-14-74-chore-type-premise-comments.md`（順位 4、RICE 12）
-- `2026-10-14-75-backlog-type-round.md`（本ラウンド台帳）
+（なし）
 
 ## 台帳
 
@@ -26,6 +22,11 @@
 |---|---|
 | 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
 | 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-75-backlog-type-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。`make check` green：typecheck・単体 1199 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-71-refactor-includes-literal.md | 9e52ede refactor: 定数配列の includes 判定を includesLiteral に集約（コードレビューはユーザー作業） |
+| 2026-10-14-72-fix-storage-load-guard.md | 3bf2735 fix: storage 読込境界で誤型欄を既定値に落とす（コードレビューはユーザー作業） |
+| 2026-10-14-73-refactor-request-exhaustiveness.md | f501f12 refactor: AiRequest switch に網羅性ガード（コードレビューはユーザー作業） |
+| 2026-10-14-74-chore-type-premise-comments.md | 816d52c chore: 型前提の根拠コメント2件（コードレビューはユーザー作業） |
 | 2026-10-14-65-refactor-failure-mapping.md | 5864f29 refactor: 失敗対応マッピングを mapFailure に一本化（コードレビューはユーザー作業） |
 | 2026-10-14-66-refactor-split-groups.md | c40080a refactor: 分割グルーピングを単一骨格に統合（コードレビューはユーザー作業） |
 | 2026-10-14-67-refactor-gateway-attempt.md | 8b61670 refactor: gateway 失敗理由を attempt 返り値に載せ替え（コードレビューはユーザー作業） |
