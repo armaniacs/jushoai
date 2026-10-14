@@ -1,4 +1,5 @@
-import { AuditedClassifier, type TracedClassifier } from '../ai/audited-classifier';import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
+import { AuditedClassifier, type TracedClassifier } from '../ai/audited-classifier';
+import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
@@ -9,7 +10,7 @@ import type { ClassifySchedule, FieldClassifier } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
 import { PromptApiClassifier } from './classifier';
-import type { ClassifyResponse, TestResponse } from '../messages';
+import type { ClassifyResponse, TestFailure, TestResponse } from '../messages';
 
 // Narrow environment: values and capabilities only, no loaders. The background
 // owns the loaders and their caches; every method below takes already-loaded
@@ -156,6 +157,20 @@ export class ProviderRegistry {
     return { ok: false, reason: 'not-configured' };
   }
 
+  // Single source of the failure vocabulary: classify() and test() share this
+  // mapping so a new reason (or a status-code rule change) lands in one place.
+  // Success-path bookkeeping (authFailed add/delete) stays with each caller.
+  // ClassifyFailure and TestFailure are the same literal set under two names,
+  // so this return type satisfies both wire shapes.
+  private mapFailure(e: unknown): TestFailure {
+    if (e instanceof HttpAuthError) return 'auth';
+    if (e instanceof HttpRequestError && isRejectedStatus(e.status)) return 'rejected';
+    if (e instanceof HttpRequestError) return 'network';
+    // classify() keeps 'bad-response' for unknown errors; test() maps them to
+    // 'network' at its own call site (historical asymmetry, preserved here).
+    return 'bad-response';
+  }
+
   async classify(
     s: PublicAiSettings,
     secrets: RegistrySecrets | undefined,
@@ -176,11 +191,7 @@ export class ProviderRegistry {
         this.memory.authFailed.add(s.provider);
         return { ok: false, reason: 'auth' };
       }
-      if (e instanceof HttpRequestError && isRejectedStatus(e.status)) {
-        return { ok: false, reason: 'rejected' };
-      }
-      if (e instanceof HttpRequestError) return { ok: false, reason: 'network' };
-      return { ok: false, reason: 'bad-response' };
+      return { ok: false, reason: this.mapFailure(e) };
     }
   }
 
@@ -197,10 +208,10 @@ export class ProviderRegistry {
         this.memory.authFailed.add(s.provider);
         return { ok: false, reason: 'auth' };
       }
-      if (e instanceof HttpRequestError && isRejectedStatus(e.status)) {
-        return { ok: false, reason: 'rejected' };
-      }
-      return { ok: false, reason: 'network' };
+      const reason = this.mapFailure(e);
+      // Historical asymmetry, preserved: the connection test reports unknown
+      // errors as 'network' while classify() reports 'bad-response'.
+      return { ok: false, reason: reason === 'bad-response' ? 'network' : reason };
     }
   }
 }
