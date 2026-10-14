@@ -2,7 +2,12 @@
 
 ## 進行中
 
-（なし）
+- `2026-10-15-76-refactor-geometry-visibility.md`（順位 1、RICE 160）
+- `2026-10-15-77-refactor-option-matcher.md`（順位 2、RICE 120）
+- `2026-10-15-78-refactor-fill-module.md`（順位 3、RICE 40）
+- `2026-10-15-79-refactor-panel-lifecycle.md`（順位 4、RICE 13。78 の後）
+- `2026-10-15-80-refactor-ai-readiness.md`（順位 5、RICE 13）
+- `2026-10-15-81-backlog-arch-round2.md`（本ラウンド台帳）
 
 ## 台帳
 
