@@ -2,12 +2,7 @@
 
 ## 進行中
 
-- `2026-10-14-65-refactor-failure-mapping.md`（順位 1、RICE 320）
-- `2026-10-14-66-refactor-split-groups.md`（順位 2、RICE 240）
-- `2026-10-14-67-refactor-gateway-attempt.md`（順位 3、RICE 20。65 の後）
-- `2026-10-14-68-refactor-gateway-call.md`（順位 4、RICE 80。67 の後）
-- `2026-10-14-69-refactor-options-render.md`（順位 5、RICE 17）
-- `2026-10-14-70-backlog-holistic-round.md`（本ラウンド台帳）
+（なし）
 
 ## 台帳
 
@@ -26,6 +21,12 @@
 | PBI | 完了コミット |
 |---|---|
 | 2026-10-13-56-backlog-review5-suggestions-round.md | ラウンド完結（順位 1〜9 をアーカイブ済み。`make check` 相当 green：typecheck・単体 1168 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
+| 2026-10-14-65-refactor-failure-mapping.md | 5864f29 refactor: 失敗対応マッピングを mapFailure に一本化（コードレビューはユーザー作業） |
+| 2026-10-14-66-refactor-split-groups.md | c40080a refactor: 分割グルーピングを単一骨格に統合（コードレビューはユーザー作業） |
+| 2026-10-14-67-refactor-gateway-attempt.md | 8b61670 refactor: gateway 失敗理由を attempt 返り値に載せ替え（コードレビューはユーザー作業） |
+| 2026-10-14-68-refactor-gateway-call.md | 9d49761 refactor: gateway 呼び出し定型を callBackground に一本化（コードレビューはユーザー作業） |
+| 2026-10-14-69-refactor-options-render.md | 8d916b9 refactor: 設定画面の描画分割と上限集約（コードレビューはユーザー作業） |
 | 2026-10-14-64-backlog-arch-review-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1191 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E は実行コンテキストの制約で未実行、通常ターミナルでの確認はユーザー作業） |
 | 2026-10-14-59-refactor-kana-module.md | bfda8b9 refactor: かな判定を core/kana に集約（コードレビューはユーザー作業） |
 | 2026-10-14-60-refactor-fill-session.md | e9ffbf5 refactor: Fill Session 集約＋content mounter 化（コードレビュー・実機 E2E はユーザー作業） |

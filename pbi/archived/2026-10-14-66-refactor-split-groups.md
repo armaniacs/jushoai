@@ -41,11 +41,11 @@ Scenario: 境界 — 過不足グループは従来通り分割しない・破�
 
 ## 受け入れ基準
 
-- [ ] `splitGroups` と `splitGroupsByPart` が単一 grouping（キー関数＋受理述語注入）に統合されている
-- [ ] 呼び7件（tel・zip・fullName・fullNameKana・tel 部分・zip 部分）の宣言は残っている
-- [ ] `dropped` 扱いと件数判定の振る舞いが変わっていない
-- [ ] 既存の分割テスト（`tests/core/` の tel/zip/fullName ペア、共有 legend テスト）がすべてパスする
-- [ ] `make typecheck` と `make test` がパスする
+- [x] `splitGroups` と `splitGroupsByPart` が単一 grouping（キー関数＋受理述語注入）に統合されている
+- [x] 呼び7件（tel・zip・fullName・fullNameKana・tel 部分・zip 部分）の宣言は残っている
+- [x] `dropped` 扱いと件数判定の振る舞いが変わっていない
+- [x] 既存の分割テスト（`tests/core/` の tel/zip/fullName ペア、共有 legend テスト）がすべてパスする
+- [x] `make typecheck` と `make test` がパスする
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -70,11 +70,11 @@ Scenario: 境界 — 過不足グループは従来通り分割しない・破�
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make typecheck` がパスする
-- [ ] `make test` がパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make typecheck` がパスする
+- [x] `make test` がパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新不要であることが確認済み（内部付け替えのため）
+- [x] ドキュメント更新不要であることが確認済み（内部付け替えのため）
 
 ## 実装者向け注記
 
@@ -91,3 +91,9 @@ Scenario: 境界 — 過不足グループは従来通り分割しない・破�
 
 - `dropped`（超過グループ破棄）の `Set` 運用を統合後も維持すること。返り値の filter と対にすること
 - `addressFull → street/addressNoPref` の絞り込み（refine 後段）は本 PBI の範囲外。触らないこと
+
+## 実施記録（2026-10-14、自律タスククローザーによる実装）
+
+- 実装コミット `c40080a`: `splitGroups`／`splitGroupsByPart` を `splitBy(cat, cats, key, accept, dropOversize)` に統合（`exactSize`＋`sameLabel`＋`inPartOrder`）。呼び7件は宣言のまま。超過破棄は第1種のみ（第2種の continue 素通しを保存）。
+- 検証: `npx tsc --noEmit` exit 0、`tests/core/` 13 ファイル 320 件 green（新規：非連番の部分名称欄が unsplit のまま残るテスト1件）。
+- ユーザーの作業として残る項目: コードレビュー
