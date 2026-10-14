@@ -1,6 +1,7 @@
 import type { AiStatusInfo } from '../ai/types';
 import { getFlagGuidance, type BrowserKind } from '../llm/browser-support';
-import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
+import { OVERLAY_CSS } from './overlay';
+import { mountPanel, type PanelHandle } from './panel';
 import { PROVIDER_LABEL } from './status-label';
 
 export interface Guide {
@@ -131,8 +132,6 @@ export function showAiGuide(
   onClose: () => void = () => {},
   onOpenSettings: () => void = () => {},
 ): GuideHandle {
-  const { host, root } = createOverlayHost();
-
   const style = document.createElement('style');
   style.textContent = OVERLAY_CSS + CSS;
   const panel = document.createElement('div');
@@ -150,6 +149,11 @@ export function showAiGuide(
   closeButton.textContent = '閉じる';
   const actions = document.createElement('div');
   actions.className = 'actions';
+  // mountPanel owns host creation, Escape handling, and idempotent close;
+  // the rendering above is unchanged. Button handlers run after the mount
+  // below, so the lazy close reference is always bound by click time.
+  let mounted!: PanelHandle;
+  const close = () => mounted.close();
   if (guide.openSettings) {
     const settingsButton = document.createElement('button');
     settingsButton.type = 'button';
@@ -164,18 +168,8 @@ export function showAiGuide(
   actions.append(closeButton);
   panel.append(actions);
 
-  let closed = false;
-  const close = () => {
-    if (closed) return;
-    closed = true;
-    detachEscape();
-    host.remove();
-    onClose();
-  };
-  const detachEscape = attachEscapeClose(() => close());
   closeButton.addEventListener('click', close);
 
-  root.append(style, panel);
-  document.body.append(host);
+  mounted = mountPanel((_host, root) => { root.append(style, panel); }, onClose);
   return { close };
 }

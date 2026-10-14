@@ -13,6 +13,7 @@ import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
+import { attachRepositionTracking } from '../ui/panel';
 import { showPreview, type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
 
@@ -187,54 +188,6 @@ export function applyIfConsented(
   }
   apply();
   return true;
-}
-
-export interface RepositionTrackingDeps {
-  doc: Document;
-  win: Window;
-  reposition: () => void;
-  // Frame scheduler; injectable so tests drive the coalescing branch without
-  // waiting on a real animation frame.
-  schedule?: (cb: () => void) => void;
-}
-
-// Keeps the fixed button on its anchor when the layout under it changes:
-// fonts and images landing, viewport changes (DevTools docking), and scrolling.
-// Two details matter:
-// - scroll does not bubble and inner scroll containers (multi-step wizards,
-//   modals) move the anchor without a window scroll, so the listener sits in
-//   the capture phase on the document and sees every element's scroll as well
-//   as the page scroll (whose target is the document).
-// - scrolling our own panel moves no anchor, so it is skipped.
-// Repositioning is rAF-coalesced; reposition() itself skips zero-area anchors,
-// so this converges instead of oscillating.
-export function attachRepositionTracking(deps: RepositionTrackingDeps): () => void {
-  const { doc, win, reposition } = deps;
-  const runFrame = deps.schedule ?? ((cb: () => void) => win.requestAnimationFrame(cb));
-  let pending = false;
-  const request = (): void => {
-    if (pending) return;
-    pending = true;
-    runFrame(() => {
-      pending = false;
-      reposition();
-    });
-  };
-  const onScroll = (e: Event): void => {
-    if (e.target instanceof Element && e.target.hasAttribute('data-jushoai')) return;
-    request();
-  };
-  doc.addEventListener('scroll', onScroll, { capture: true, passive: true });
-  win.addEventListener('resize', request);
-  const observer = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(request) : null;
-  observer?.observe(doc.documentElement);
-  win.addEventListener('load', reposition);
-  return () => {
-    doc.removeEventListener('scroll', onScroll, { capture: true });
-    win.removeEventListener('resize', request);
-    observer?.disconnect();
-    win.removeEventListener('load', reposition);
-  };
 }
 
 export interface ExclusionGateDeps {

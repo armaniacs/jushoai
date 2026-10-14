@@ -1,9 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 
-// Same stub-then-import seam the other content tests use: the module only
-// registers the content script factory, main() never runs.
-vi.stubGlobal('defineContentScript', (opts: unknown) => opts);
-const { attachRepositionTracking } = await import('../../src/entrypoints/content');
+// Same stub-then-import seam the other content tests use.
+import { attachRepositionTracking } from '../../src/ui/panel';
 
 const detachers: Array<() => void> = [];
 

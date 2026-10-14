@@ -1,7 +1,8 @@
 import type { PlanStatus } from '../core/planner';
 import type { Address, Profile } from '../core/types';
 import { isMeasurable } from '../dom/geometry';
-import { attachEscapeClose, createOverlayHost, OVERLAY_CSS } from './overlay';
+import { OVERLAY_CSS } from './overlay';
+import { mountPanel, type PanelHandle } from './panel';
 
 export interface PreviewRow {
   label: string;
@@ -65,8 +66,6 @@ const CSS = `
 `;
 
 export function showPreview(opts: PreviewOptions): PreviewHandle {
-  const { host, root } = createOverlayHost();
-
   const style = document.createElement('style');
   style.textContent = OVERLAY_CSS + CSS;
   const panel = document.createElement('div');
@@ -200,17 +199,14 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     });
   }
 
-  const close = () => {
-    detachEscape();
-    host.remove();
-  };
-  const detachEscape = attachEscapeClose(() => opts.onCancel());
   apply.addEventListener('click', () => opts.onApply(feedbackBox.checked && !feedback.hidden));
   cancel.addEventListener('click', () => opts.onCancel());
 
   setRows(opts.rows);
-  root.append(style, panel);
-  document.body.append(host);
+  // Host creation, Escape handling, and idempotent close live in the panel
+  // module; the rendering above is unchanged.
+  let mounted!: PanelHandle;
+  mounted = mountPanel((_host, root) => { root.append(style, panel); }, () => opts.onCancel());
   const setAddressId = (id: string): void => {
     if (addressSelect) addressSelect.value = id;
   };
@@ -219,5 +215,5 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     if (!isMeasurable(rect)) return null;
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   };
-  return { setRows, setReanalyzing, setAddressId, close, getApplyPoint, getHost: () => host };
+  return { setRows, setReanalyzing, setAddressId, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
 }
