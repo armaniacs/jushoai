@@ -102,16 +102,16 @@ describe('dispatch parity: romaji', () => {
 });
 
 describe('dispatch parity: kana sources, tel fallback, null', () => {
-  it('keeps the 0.8/0.7/0.65 source gradient', () => {
-    expect(full({ name: 'kana_sei' })).toMatchObject({ category: 'lastNameKana', confidence: 0.8, source: 'rule', kanaKind: 'katakana' });
-    expect(full({ label: 'フリガナ' })).toMatchObject({ category: 'fullNameKana', confidence: 0.7, source: 'rule', kanaKind: 'katakana' });
+  it('keeps the 0.8/0.7/0.65 source gradient with blind bases', () => {
+    expect(full({ name: 'kana_sei' })).toMatchObject({ category: 'lastName', confidence: 0.8, source: 'rule' });
+    expect(full({ label: 'フリガナ' })).toMatchObject({ category: 'fullName', confidence: 0.7, source: 'rule' });
     expect(full({ label: '備考', nearby: 'お名前' })).toMatchObject({ category: 'fullName', confidence: 0.65, source: 'rule' });
     expect(full({ label: '備考', nearby: 'お名前' })?.kanaKind).toBeUndefined();
   });
 
-  it('attaches kanaKind only to kana categories', () => {
-    expect(full({ label: 'フリガナ', placeholder: 'ヤマダ' })?.kanaKind).toBe('katakana');
-    expect(full({ label: 'ふりがな', placeholder: 'やまだ' })?.kanaKind).toBe('hiragana');
+  it('never attaches kanaKind at the classifyField level (resolveKana owns it)', () => {
+    expect(full({ label: 'フリガナ', placeholder: 'ヤマダ' })?.kanaKind).toBeUndefined();
+    expect(full({ label: 'ふりがな', placeholder: 'やまだ' })?.kanaKind).toBeUndefined();
     expect(full({ label: 'お名前' })?.kanaKind).toBeUndefined();
   });
 

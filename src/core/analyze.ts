@@ -1,35 +1,10 @@
 import {
-  classifyField, detectKanaKind, isConfident, refineClassifications, wantsKana,
-  wantsKanaOwnMeta, type Item,
+  classifyField, isConfident, refineClassifications, type Item,
 } from './classify-rules';
+import { detectKanaKind, resolveKana } from './kana';
 import type { Category, FieldMeta } from './types';
 import type { FieldClassifier } from './classifier';
 import { applyEnglishPage } from './page-language';
-
-const KANA_CATEGORY: Partial<Record<Category, Category>> = {
-  lastName: 'lastNameKana',
-  firstName: 'firstNameKana',
-  fullName: 'fullNameKana',
-};
-
-// The kana decision cannot ride any single classification route: autocomplete reports
-// family-name for both the kanji and the furigana pair, so it is applied once here,
-// after rules and the LLM, before refinement groups the pairs.
-function applyKanaOverlay(items: Item[]): void {
-  // A legend shared with a sibling that claims kana through its own attributes describes
-  // the section, not each row: heading evidence alone must not flip plain-name rows
-  // (e.g. a kanji 姓 row inside a お名前（フリガナ）fieldset).
-  const kanaByOwnMeta = new Set(
-    items.filter((i) => wantsKanaOwnMeta(i.meta)).map((i) => i.meta.nearby),
-  );
-  for (const item of items) {
-    const target = KANA_CATEGORY[item.cls.category];
-    if (!target || !wantsKana(item.meta)) continue;
-    if (!wantsKanaOwnMeta(item.meta) && kanaByOwnMeta.has(item.meta.nearby)) continue;
-    item.cls.category = target;
-    item.cls.kanaKind = detectKanaKind(item.meta);
-  }
-}
 
 export async function classifyAll(
   metas: FieldMeta[],
@@ -70,7 +45,7 @@ export async function classifyAll(
     }
     if (force && cls) items.push({ meta, cls });
   }
-  applyKanaOverlay(items);
+  resolveKana(items);
   const refined = refineClassifications(items);
   return opts.englishPage ? applyEnglishPage(refined) : refined;
 }

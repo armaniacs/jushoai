@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, detectKanaKind, isConfident, refineClassifications, wantsKana,
+  ACCEPT_THRESHOLD, classifyField, isConfident, refineClassifications,
 } from '../../src/core/classify-rules';
+import { detectKanaKind, resolveKana, wantsKana } from '../../src/core/kana';
 import type { Category, Classification } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -77,12 +78,12 @@ describe('classifyField: names', () => {
     expect(cat({ name: 'firstname' })).toBe('firstName');
   });
 
-  it('classifies kana fields', () => {
-    expect(cat({ label: 'フリガナ' })).toBe('fullNameKana');
-    expect(cat({ label: 'セイ', placeholder: 'ヤマダ' })).toBe('lastNameKana');
-    expect(cat({ label: 'メイ', placeholder: 'タロウ' })).toBe('firstNameKana');
-    expect(cat({ name: 'kana_sei' })).toBe('lastNameKana');
-    expect(cat({ placeholder: 'ヤマダ タロウ', label: 'お名前（フリガナ）' })).toBe('fullNameKana');
+  it('classifies kana fields to blind bases (resolveKana decides kana)', () => {
+    expect(cat({ label: 'フリガナ' })).toBe('fullName');
+    expect(cat({ label: 'セイ', placeholder: 'ヤマダ' })).toBe('lastName');
+    expect(cat({ label: 'メイ', placeholder: 'タロウ' })).toBe('firstName');
+    expect(cat({ name: 'kana_sei' })).toBe('lastName');
+    expect(cat({ placeholder: 'ヤマダ タロウ', label: 'お名前（フリガナ）' })).toBe('fullName');
   });
 });
 
@@ -126,8 +127,8 @@ describe('detectKanaKind', () => {
     expect(detectKanaKind(makeMeta({ pattern: '^[\\u2015\\u3000\\u30A1-\\u30F6\\u30FB-\\u30FE]+$' }))).toBe('katakana');
   });
 
-  it('attaches kanaKind only to kana categories', () => {
-    expect(classifyField(makeMeta({ label: 'フリガナ', placeholder: 'ヤマダ' }))?.kanaKind).toBe('katakana');
+  it('never attaches kanaKind at the classifyField level (resolveKana owns it)', () => {
+    expect(classifyField(makeMeta({ label: 'フリガナ', placeholder: 'ヤマダ' }))?.kanaKind).toBeUndefined();
     expect(classifyField(makeMeta({ label: 'お名前' }))?.kanaKind).toBeUndefined();
   });
 });
@@ -311,10 +312,10 @@ describe('classifyField: Japanese labels', () => {
     [{ label: '名' }, 'firstName'],
     [{ label: '名 *' }, 'firstName'],
     [{ label: '（名）' }, 'firstName'],
-    [{ label: 'セイ' }, 'lastNameKana'],
-    [{ label: 'メイ' }, 'firstNameKana'],
-    [{ label: 'フリガナ' }, 'fullNameKana'],
-    [{ label: 'ふりがな' }, 'fullNameKana'],
+    [{ label: 'セイ' }, 'lastName'],
+    [{ label: 'メイ' }, 'firstName'],
+    [{ label: 'フリガナ' }, 'fullName'],
+    [{ label: 'ふりがな' }, 'fullName'],
     [{ label: '郵便番号' }, 'zip'],
     [{ label: '〒' }, 'zip'],
     [{ label: '都道府県' }, 'prefecture'],
@@ -341,6 +342,11 @@ describe('classifyField: Japanese labels', () => {
   ];
   it.each(negatives)('leaves %j unclassified', (p) => {
     expect(cat(p)).toBeNull();
+  });
+
+  it('keeps contradictory kana signals unclassified (kanji/latin placeholder wins)', () => {
+    expect(cat({ label: 'フリガナ', placeholder: '山田' })).toBeNull();
+    expect(cat({ label: 'フリガナ', placeholder: 'John' })).toBeNull();
   });
 });
 
@@ -436,7 +442,7 @@ describe('classifyField: kana source', () => {
     makeMeta({ id: 'd', placeholder: 'タロウ', nearby: 'お名前・フリガナ' }),
   ];
   it('does not let a shared legend turn kanji fields into kana', () => {
-    const items = four.map((meta) => ({ meta, cls: classifyField(meta)! }));
+    const items = resolveKana(four.map((meta) => ({ meta, cls: classifyField(meta)! })));
     expect(refineClassifications(items).map((i) => i.cls.category)).toEqual([
       'lastName', 'firstName', 'lastNameKana', 'firstNameKana',
     ]);
@@ -445,13 +451,13 @@ describe('classifyField: kana source', () => {
 
 describe('classifyField: kana label with generic name', () => {
   const cases: [Parameters<typeof makeMeta>[0], string][] = [
-    [{ name: 'name', label: 'フリガナ' }, 'fullNameKana'],
-    [{ name: 'name1', label: 'フリガナ' }, 'fullNameKana'],
-    [{ name: 'sei', label: 'セイ' }, 'lastNameKana'],
-    [{ name: 'last_name', label: 'セイ' }, 'lastNameKana'],
-    [{ name: 'last_name', label: '姓（フリガナ）' }, 'lastNameKana'],
-    [{ name: 'lastname', label: '姓（カナ）' }, 'lastNameKana'],
-    [{ name: 'name', nearby: 'お名前（フリガナ）', label: 'セイ' }, 'fullNameKana'],
+    [{ name: 'name', label: 'フリガナ' }, 'fullName'],
+    [{ name: 'name1', label: 'フリガナ' }, 'fullName'],
+    [{ name: 'sei', label: 'セイ' }, 'lastName'],
+    [{ name: 'last_name', label: 'セイ' }, 'lastName'],
+    [{ name: 'last_name', label: '姓（フリガナ）' }, 'lastName'],
+    [{ name: 'lastname', label: '姓（カナ）' }, 'lastName'],
+    [{ name: 'name', nearby: 'お名前（フリガナ）', label: 'セイ' }, 'fullName'],
   ];
   it.each(cases)('classifies %j as %s', (p, expected) => {
     expect(cat(p)).toBe(expected);
@@ -498,7 +504,7 @@ describe('classifyField: bounded input after scan cap', () => {
   it('classifies short real-world labels the same as before the cap', () => {
     expect(cat({ label: '市区町村・番地' })).toBe('addressNoPref');
     expect(cat({ label: '市区町村' })).toBe('city');
-    expect(cat({ label: 'フリガナ', placeholder: 'ヤマダ' })).toBe('fullNameKana');
+    expect(cat({ label: 'フリガナ', placeholder: 'ヤマダ' })).toBe('fullName');
   });
 });
 

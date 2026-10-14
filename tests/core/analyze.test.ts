@@ -78,6 +78,18 @@ describe('classifyAll', () => {
 });
 
 describe('kana overlay', () => {
+  it('locks end-to-end kana attribution for bare kana labels', async () => {
+    const items = await classifyAll([
+      makeMeta({ id: 'a', label: 'セイ' }),
+      makeMeta({ id: 'b', label: 'メイ' }),
+      makeMeta({ id: 'c', label: 'フリガナ' }),
+      makeMeta({ id: 'd', label: 'ふりがな' }),
+    ], null);
+    expect(items.map((i) => i.cls.category)).toEqual([
+      'lastNameKana', 'firstNameKana', 'fullNameKana', 'fullNameKana',
+    ]);
+  });
+
   it('converts an autocomplete name hit when the field wants kana', async () => {
     const items = await classifyAll([makeMeta({
       id: 'a', name: 'field_4371037_sei', autocomplete: 'family-name',
@@ -129,6 +141,11 @@ describe('kana overlay', () => {
       makeMeta({ id: 'b', autocomplete: 'name', label: 'フリガナ' }),
     ], null);
     expect(items.map((i) => i.cls.category)).toEqual(['lastNameKana', 'firstNameKana']);
+  });
+
+  it('fills a pattern-only kana field as kana (pattern is per-field evidence)', async () => {
+    const items = await classifyAll([makeMeta({ id: 'a', name: 'f1', label: '連絡先', pattern: '^[ァ-ヶ]+$' })], null);
+    expect(items.map((i) => i.cls.category)).toEqual(['fullNameKana']);
   });
 
   it('applies to LLM answers too', async () => {

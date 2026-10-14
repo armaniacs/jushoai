@@ -1,7 +1,8 @@
 import type {
-  Category, Classification, FieldMeta, KanaKind, SelectOption,
+  Category, Classification, FieldMeta, SelectOption,
 } from './types';
 import { stripExample } from './formatters';
+import { KANA, wantsKana } from './kana';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -42,7 +43,6 @@ const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業
 // Applied only to the person-name step so e.g. a user_email field stays an email.
 const NAME_EXCLUDE =
   /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
-const KANA = /kana|furigana|yomi|フリガナ|ふりがな|フリカナ|カナ|ひらがな|読み|セイ|メイ|せい|めい/;
 const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
 const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［\[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
 const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
@@ -233,7 +233,11 @@ const DISPATCH: readonly MatcherEntry[] = [
   },
 ];
 
-function classifyText(raw: string, kana: boolean, bareKana: boolean): Category | null {
+// Kana-blind name step: returns plain name bases only. Whether a base wants kana
+// is decided once in kana.ts (resolveKana), which also owns wantsKana — the gate
+// below keeps the old null-vs-fullName distinction (a kanji/latin placeholder
+// still beats a bare kana signal) without re-implementing the kana decision here.
+function classifyText(raw: string, bareKana: boolean, meta: FieldMeta): Category | null {
   const t = norm(raw);
   if (!t.trim() || EXCLUDE.test(t)) return null;
   if (/e-?mail|メール/.test(t)) return 'email';
@@ -249,64 +253,19 @@ function classifyText(raw: string, kana: boolean, bareKana: boolean): Category |
   if (NAME_EXCLUDE.test(t)) return null;
   const last = LAST.test(t);
   const first = FIRST.test(t);
-  if (last && !first) return kana ? 'lastNameKana' : 'lastName';
-  if (first && !last) return kana ? 'firstNameKana' : 'firstName';
-  if (last || first || FULL_NAME.test(t) || (kana && (bareKana || KANA.test(t)))) return kana ? 'fullNameKana' : 'fullName';
+  if (last && !first) return 'lastName';
+  if (first && !last) return 'firstName';
+  if (last || first || FULL_NAME.test(t) || ((bareKana || KANA.test(t)) && wantsKana(meta))) return 'fullName';
   if (/address|住所|addr/.test(t)) return 'addressFull';
   return null;
 }
 
-// Decodes the literal \uXXXX escapes an HTML pattern attribute holds as text; only
-// the regex engine interprets them, so kana-range checks on the raw string see none.
-const decodePattern = (p: string) =>
-  p.replace(/\\u([0-9a-fA-F]{4})/g, (_, h: string) => String.fromCharCode(parseInt(h, 16)));
-
-// True when the field asks for kana rather than kanji: a kana-only placeholder,
-// kana vocabulary in name/id/label/legend, or a kana-only pattern. A kanji or
-// latin placeholder means the field wants a plain name, whatever the heading says.
-export function wantsKana(m: FieldMeta): boolean {
-  const ph = stripExample(norm(m.placeholder));
-  if (ph !== '' && /[一-龠a-z]/.test(ph)) return false;
-  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
-  if (KANA.test(norm([m.name, m.htmlId, m.label, m.nearby].join(' ')))) return true;
-  const pat = decodePattern(m.pattern);
-  return /[ぁ-ゖァ-ヶ]/.test(pat) || /[ｦ-ﾟ]/.test(pat);
-}
-
-// True when the field itself claims kana through placeholder, name/id/label, or pattern —
-// evidence that belongs to this field, unlike a legend shared with sibling rows.
-export function wantsKanaOwnMeta(m: FieldMeta): boolean {
-  const ph = stripExample(norm(m.placeholder));
-  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
-  if (KANA.test(norm([m.name, m.htmlId, m.label].join(' ')))) return true;
-  const pat = decodePattern(m.pattern);
-  return /[ぁ-ゖァ-ヶ]/.test(pat) || /[ｦ-ﾟ]/.test(pat);
-}
-
-export function detectKanaKind(m: FieldMeta): KanaKind {
-  const ph = stripExample(m.placeholder);
-  if (/^[ｦ-ﾟ\s]+$/.test(ph)) return 'halfKatakana';
-  if (/^[ぁ-ゖー\s　]+$/.test(ph)) return 'hiragana';
-  if (/^[ァ-ヶー\s　]+$/.test(ph)) return 'katakana';
-  const pat = decodePattern(m.pattern);
-  if (/[ｦ-ﾟ]/.test(pat)) return 'halfKatakana';
-  if (/ぁ|ぃ|ん/.test(pat)) return 'hiragana';
-  if (/ァ|ア|ン/.test(pat)) return 'katakana';
-  const text = [m.label, m.nearby, m.placeholder].join(' ');
-  if (/半角カナ|半角カタカナ|ﾊﾝｶｸ/.test(text)) return 'halfKatakana';
-  if (/カタカナ/.test(text)) return 'katakana';
-  if (/ひらがな|ふりがな/.test(text)) return 'hiragana';
-  return 'katakana';
-}
-
 export function classifyField(m: FieldMeta): Classification | null {
   const ac = m.autocomplete.trim().toLowerCase().split(/\s+/).pop() ?? '';
-  const kanaKind = detectKanaKind(m);
   const make = (category: Category, confidence: number): Classification => ({
     category,
     confidence,
     source: 'rule',
-    ...(category.endsWith('Kana') ? { kanaKind } : {}),
   });
 
   const acCategory = AUTOCOMPLETE.get(ac);
@@ -340,24 +299,16 @@ export function classifyField(m: FieldMeta): Classification | null {
     }
   }
 
-  const ph = stripExample(norm(m.placeholder));
-  const placeholderIsKana = ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
-  // A kanji or latin placeholder (山田) means the field wants a plain name even if a shared heading says フリガナ.
-  const placeholderIsPlain = ph !== '' && /[一-龠a-z]/.test(ph);
-  const own = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
-  // The heading counts only when it is the source that produced the category.
-  const kanaFor = (heading: string) =>
-    placeholderIsKana || (!placeholderIsPlain && KANA.test(`${own} ${norm(heading)}`));
-
-  // Only the label/placeholder source may infer kana from the placeholder alone; name/id and
-  // heading text need their own kana signal.
+  // Only the label/placeholder source may infer a name from the placeholder alone;
+  // name/id and heading text need their own name signal. Kana attribution is not
+  // decided here (see kana.ts resolveKana): the bare flag only widens the base.
   const sources: [string, number, boolean][] = [
     [`${m.name} ${m.htmlId}`, 0.8, false],
     [`${m.label} ${m.placeholder}`, 0.7, true],
     [m.nearby, 0.65, false],
   ];
   for (const [text, confidence, bare] of sources) {
-    const category = classifyText(text, kanaFor(text === m.nearby ? m.nearby : ''), bare);
+    const category = classifyText(text, bare, m);
     if (category) return make(category, confidence);
   }
   if (m.type === 'tel') return make('tel', 0.5);
