@@ -103,5 +103,6 @@ Scenario: 境界 — 互換再試行で2件の trace が保全される
 
 - 実装コミット `28402ba`: `attempt()` を返り値化（`{ map, trace, error? }`）。`promptInRequest` 削除（prompt は `buildPrompt` から直接）、`send()` を `checkEgress`＋`fetchWithTimeout` に分離（内部 seam）、`TracedClassifier` は `attempt` 必須に、`AuditedClassifier` は解決値を読み単一エントリ記録（`ClassifyTrace` は死に輸出のため削除）。
 - 適用注記: `classify()` の返り型は `FieldClassifier` seam 安定のため不変とし、各 adapter の `attempt()` が trace を運び `classify()` が unwrap する（PBI 提案の代替形。監査の失敗時 trace（401 の httpStatus 等）は outcome 同梱で保存）。
+- 監査差分の注記（コードレビュー指摘の反映）: 空欄 `classify([])` の監査エントリの `request` が、旧 `''` から prompt スケルトン文字列に変わっている（旧コードは空欄早期返却が trace 設定より先だった）。無害かつ情報量は増えているが、将来の監査差分調査のための記録として残す。
 - 検証: `npx tsc --noEmit` exit 0、フル単体 90 ファイル・1182 件 green、両ブラウザ build green。
 - ユーザーの作業として残る項目: コードレビュー
