@@ -6,7 +6,7 @@ import type { PreviewRow } from './ui/preview';
 
 // Pure slices of the content-script `run()` flow. DOM / Chrome API side
 // effects (scanContainer, showPreview, button.setStatus, window.open,
-// applyPlan wiring) stay in `content.ts`; only the data transforms live here
+// fillPlan wiring) stay in `content.ts`; only the data transforms live here
 // so they are unit-testable without a DOM. No profile or address values flow
 // into feedback inputs: only FieldMeta plus classification snapshots.
 

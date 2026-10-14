@@ -48,7 +48,7 @@ export type SessionStart =
   | { excluded: false; rows: PreviewRow[] };
 
 // One classify → preview → apply flow. DOM / Chrome side effects (scan,
-// showPreview, button status, window.open, applyPlan wiring) stay in the
+// showPreview, button status, window.open, fillPlan wiring) stay in the
 // caller (`content.ts`); the selection state, the replan order, the consent
 // gate position, and the feedback assembly live here so they are testable
 // without a DOM.

@@ -4,7 +4,7 @@ import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import { createFillSession } from '../content-session';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
-import { applyPlan } from '../dom/apply-plan';
+import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
@@ -387,7 +387,7 @@ export default defineContentScript({
             );
             return verdict;
           },
-          injectPlan: (plan) => applyPlan(plan, byId, fillField),
+          injectPlan: (plan) => { fillPlan(plan, targetsFromControls(byId, fillField)); },
           persistSelection: (sel) => { void saveLastUsed(sel); },
           openUrl: (url) => { window.open(url, '_blank', 'noopener'); },
           feedbackContext: () => ({
