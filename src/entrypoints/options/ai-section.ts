@@ -1,8 +1,6 @@
-import { requiredHostOrigins, requestHostPermission } from '../../ai/permissions';
-import { needsKeyReentry, resolveOpenAiToSave } from '../../ai/key-reentry';
 import { IdbKeyStore } from '../../ai/secret-store';
-import { normalizeAiSettings, validateAiSettings, validateAiSettingsResolved } from '../../ai/settings';
-import { loadPublicAiSettings, saveAiSettings, type KeyUpdate } from '../../ai/settings-store';
+import { loadPublicAiSettings } from '../../ai/settings-store';
+import { saveSettings } from '../../ai/settings-save';
 import {
   OPENAI_PRESETS, type AiSettings, type KeyPresence, type ProviderKind,
 } from '../../ai/types';
@@ -233,79 +231,35 @@ function renderAiSection(root: HTMLElement, state: AiSectionState, hooks: AiSect
 }
 
 async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore } & AiSectionEffectHooks): Promise<void> {
-  const update: KeyUpdate = {};
-  for (const p of KEYED) {
-    if (state.removeKey[p]) update[p] = '';
-    else if (state.keyInput[p] !== '') update[p] = state.keyInput[p];
-  }
-  const effective: KeyPresence = {
-    openai: !state.removeKey.openai && (state.hasKey.openai || state.keyInput.openai !== ''),
-    gemini: !state.removeKey.gemini && (state.hasKey.gemini || state.keyInput.gemini !== ''),
-  };
-  const normalized = normalizeAiSettings({
-    ...state.settings,
-    openai: resolveOpenAiToSave(state.settings.provider, state.settings.openai, state.savedOpenAi),
-  });
-  if (
-    normalized.provider === 'openai' &&
-    needsKeyReentry({
-      savedBaseUrl: state.savedOpenAi.baseUrl,
-      newBaseUrl: normalized.openai.baseUrl,
-      hadKey: state.hasKey.openai,
-      typedKey: state.keyInput.openai,
-      removing: state.removeKey.openai,
-    })
-  ) {
-    env.notify('ベース URL を変更したため、API キーを入力し直してください（保存済みのキーは別のホストに送られません）。', 'errors');
-    return;
-  }
-  const errors = validateAiSettings(normalized, effective);
-  if (errors.length > 0) {
-    env.notify(errors.join(' / '), 'errors');
-    return;
-  }
-  // The permission prompt needs the click's user gesture, so it must be the first await.
-  // The dial-time gate resolves through the pinned DoH origin, so the request covers the
-  // connection origin and the resolver origin (requiredHostOrigins).
-  const origins = requiredHostOrigins(normalized);
-  const granted = origins.length === 0 ? true : await requestHostPermission(origins);
-  // Save-time parity with the dial-time gate: a name that resolves into a private range
-  // must not reach the store. It runs after the prompt for the gesture reason above; a
-  // granted origin is harmless because send() re-checks the resolved address anyway.
-  const resolved = await validateAiSettingsResolved(
-    normalized,
-    effective,
-    { fetch: globalThis.fetch.bind(globalThis) },
+  const result = await saveSettings(
+    {
+      settings: state.settings,
+      hasKey: state.hasKey,
+      keyInput: state.keyInput,
+      removeKey: state.removeKey,
+      savedOpenAi: state.savedOpenAi,
+    },
+    { keyStore: env.keyStore, fetch: globalThis.fetch.bind(globalThis) },
   );
-  if (resolved.errors.length > 0) {
-    env.notify(resolved.errors.join(' / '), 'errors');
+  if (!result.ok) {
+    env.notify(result.message, 'errors');
     return;
   }
-  try {
-    await saveAiSettings(normalized, update, env.keyStore);
-  } catch {
-    env.notify('保存に失敗しました。もう一度お試しください。', 'errors');
-    return;
-  }
-  state.settings = normalized;
-  state.savedOpenAi = { ...normalized.openai };
+  state.settings = result.settings;
+  state.savedOpenAi = result.savedOpenAi;
   state.keyInput.openai = '';
   state.keyInput.gemini = '';
   state.removeKey.openai = false;
   state.removeKey.gemini = false;
-  // The store drops a kept key when the origin changed, so presence is re-read instead of assumed.
-  try {
-    state.hasKey = (await loadPublicAiSettings()).hasKey;
-  } catch {
-    env.notify('保存しましたが、保存状態の再読み込みに失敗しました。設定ページを開き直してください。', 'errors');
-    return;
-  }
+  state.hasKey = result.hasKey;
   // The save-time gate is fail-closed, so reaching this point means the resolved address
   // was confirmed public. Only a denied permission leaves AI unusable.
-  const saved = granted
-    ? '保存しました。'
-    : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。';
-  env.notify(saved, granted ? 'saved' : 'errors');
+  env.notify(
+    result.permissionGranted
+      ? '保存しました。'
+      : '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
+    result.permissionGranted ? 'saved' : 'errors',
+  );
 }
 
 async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): Promise<void> {
