@@ -6,7 +6,7 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
-import { labeled, textInput, kanaHiraganaHint } from './dom';
+import { labeled, textInput, kanaHiraganaHint, isAtLimit } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
@@ -165,43 +165,46 @@ function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
   return ul;
 }
 
-function render(notice?: HTMLElement) {
-  const title = document.createElement('h1');
-  title.textContent = 'JushoAI 設定';
-
-  const profileHeading = document.createElement('h2');
-  profileHeading.textContent = 'プロファイル';
-
-  const profileCards = state.profiles.map((p, i) => {
+function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLElement {
+  const page = document.createElement('div');
+  page.id = PROFILES_SECTION_ID;
+  const heading = document.createElement('h2');
+  heading.textContent = 'プロファイル';
+  const cards = profiles.map((p, i) => {
     const set = cardFieldset(`プロファイル ${i + 1}`);
     appendPlainField(set, '名前（個人用・家族用など）', '個人用', p.label, (v) => { p.label = v; });
     for (const f of PROFILE_FIELDS) {
       appendProfileField(set, f, p[f.key], (v) => { p[f.key] = v; });
     }
     set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
-    const copy = actionButton('このプロファイルを複製', state.profiles.length >= 10, () => {
-      state.profiles.push({ ...p, id: newId(), label: `${p.label} のコピー` });
-      render();
+    const copy = actionButton('このプロファイルを複製', isAtLimit(profiles.length), () => {
+      profiles.push({ ...p, id: newId(), label: `${p.label} のコピー` });
+      rerender();
     });
-    const remove = actionButton('このプロファイルを削除', state.profiles.length <= 1, () => {
-      state.profiles.splice(i, 1);
-      render();
+    const remove = actionButton('このプロファイルを削除', profiles.length <= 1, () => {
+      profiles.splice(i, 1);
+      rerender();
     });
     set.append(copy, remove);
     return set;
   });
-
-  const addProfile = actionButton('プロファイルを新規追加', state.profiles.length >= 10, () => {
-    state.profiles.push({ ...EMPTY_PROFILE, id: newId() });
-    render();
+  const addProfile = actionButton('プロファイルを新規追加', isAtLimit(profiles.length), () => {
+    profiles.push({ ...EMPTY_PROFILE, id: newId() });
+    rerender();
   });
-  const limitNote = buildLimitNote('プロファイルは10件まで登録できます', state.profiles.length >= 10);
+  const limitNote = buildLimitNote('プロファイルは10件まで登録できます', isAtLimit(profiles.length));
+  page.append(heading, ...cards, addProfile, ...(limitNote.textContent ? [limitNote] : []));
+  return page;
+}
 
-  const addressHeading = document.createElement('h2');
-  addressHeading.textContent = '住所';
-  const addressCards = state.addresses.map((a, i) => {
+function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: () => void): HTMLElement {
+  const page = document.createElement('div');
+  page.id = ADDRESSES_SECTION_ID;
+  const heading = document.createElement('h2');
+  heading.textContent = '住所';
+  const cards = addresses.map((a, i) => {
     const set = cardFieldset();
-    set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; }, state.profiles)));
+    set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; }, profiles)));
     for (const f of ADDRESS_FIELDS.slice(0, 2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
@@ -216,18 +219,28 @@ function render(notice?: HTMLElement) {
       appendPlainField(set, f.label, f.placeholder, a[f.key] ?? '', (v) => { a[f.key] = v; });
     }
     const remove = actionButton('この住所を削除', false, () => {
-      state.addresses.splice(i, 1);
-      render();
+      addresses.splice(i, 1);
+      rerender();
     });
     set.append(remove);
     return set;
   });
-
-  const add = actionButton('住所を追加', state.addresses.length >= 10, () => {
-    state.addresses.push({ ...EMPTY_ADDRESS, id: newId() });
-    render();
+  const add = actionButton('住所を追加', isAtLimit(addresses.length), () => {
+    addresses.push({ ...EMPTY_ADDRESS, id: newId() });
+    rerender();
   });
-  const addressLimitNote = buildLimitNote('住所は10件まで登録できます', state.addresses.length >= 10);
+  const limitNote = buildLimitNote('住所は10件まで登録できます', isAtLimit(addresses.length));
+  page.append(heading, ...cards, add, ...(limitNote.textContent ? [limitNote] : []));
+  return page;
+}
+
+function render(notice?: HTMLElement) {
+  const title = document.createElement('h1');
+  title.textContent = 'JushoAI 設定';
+
+  const rerender = () => render();
+  const profilePage = renderProfilePage(state.profiles, rerender);
+  const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
 
   const save = document.createElement('button');
   save.type = 'button';
@@ -238,19 +251,6 @@ function render(notice?: HTMLElement) {
   const footer = document.createElement('div');
   footer.className = 'row';
   footer.append(save);
-
-  const profilePage = document.createElement('div');
-  profilePage.id = PROFILES_SECTION_ID;
-  profilePage.append(
-    profileHeading, ...profileCards, addProfile,
-    ...(limitNote.textContent ? [limitNote] : []),
-  );
-  const addressPage = document.createElement('div');
-  addressPage.id = ADDRESSES_SECTION_ID;
-  addressPage.append(
-    addressHeading, ...addressCards, add,
-    ...(addressLimitNote.textContent ? [addressLimitNote] : []),
-  );
 
   app.replaceChildren(
     title, profilePage, addressPage, footer, ...(notice ? [notice] : []),

@@ -4,6 +4,11 @@ import { formatKana } from '../../core/formatters';
 import { normalizeProfile } from '../../core/profile';
 import { EMPTY_PROFILE } from '../../core/types';
 
+// Single source of the collection cap: profiles and addresses share the
+// limit, only the notice wording differs per collection.
+export const MAX_ITEMS = 10;
+export const isAtLimit = (count: number): boolean => count >= MAX_ITEMS;
+
 export function el<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
   if (text !== undefined) node.textContent = text;
