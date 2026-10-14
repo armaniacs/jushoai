@@ -59,15 +59,14 @@ export async function clearAuditViaBackground(timeoutMs = CLEAR_TIMEOUT_MS): Pro
 }
 
 export class BackgroundClassifier implements FieldClassifier {
-  // Reason for the chunk that stopped the run; null when every chunk succeeded.
-  // Partial results from earlier chunks are still returned.
-  lastFailureReason: ClassifyFailure | null = null;
-
   constructor(private readonly timeoutMs = CLASSIFY_TIMEOUT_MS) {}
 
-  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
+  // The failure reason rides the return value: partial results from earlier
+  // chunks stay bound to the reason of the chunk that stopped the run, with no
+  // shared mutable read after the call.
+  async attempt(fields: FieldMeta[]): Promise<{ map: Map<string, Category>; failureReason: ClassifyFailure | null }> {
     const out = new Map<string, Category>();
-    this.lastFailureReason = null;
+    let failureReason: ClassifyFailure | null = null;
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
     const chunkCount = Math.ceil(capped.length / MAX_CLASSIFY_CHUNK);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
@@ -84,21 +83,25 @@ export class BackgroundClassifier implements FieldClassifier {
         );
         parsed = parseClassifyResult(raw);
       } catch {
-        this.lastFailureReason = 'network';
+        failureReason = 'network';
         break;
       }
       if (!parsed) {
         // A legacy reply carries no reason; record unknown instead of crying wolf.
-        this.lastFailureReason = isLegacyClassifyFailure(raw) ? null : 'bad-response';
+        failureReason = isLegacyClassifyFailure(raw) ? null : 'bad-response';
         break;
       }
       if (parsed.ok === false) {
         // A failing provider (401, 429, timeout) would fail every later chunk too.
-        this.lastFailureReason = parsed.reason;
+        failureReason = parsed.reason;
         break;
       }
       for (const [id, c] of parsed.map) out.set(id, c);
     }
-    return out;
+    return { map: out, failureReason };
+  }
+
+  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
+    return (await this.attempt(fields)).map;
   }
 }

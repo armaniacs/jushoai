@@ -27,41 +27,41 @@ describe('parseClassifyResult legacy shape (Legacy Bridge Medium)', () => {
 describe('BackgroundClassifier legacy failure fidelity (Legacy Bridge Medium)', () => {
   const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
 
-  it('records null (unknown) for a reason-less {ok:false} reply while keeping earlier chunks', async () => {
+  it('reports null (unknown) for a reason-less {ok:false} reply while keeping earlier chunks', async () => {
     const c = new BackgroundClassifier();
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
       .mockResolvedValueOnce({ ok: false });
-    const out = await c.classify(metas(30));
-    expect([...out]).toEqual([['f0', 'tel']]);
-    expect(c.lastFailureReason).toBeNull();
+    const attempt = await c.attempt(metas(30));
+    expect([...attempt.map]).toEqual([['f0', 'tel']]);
+    expect(attempt.failureReason).toBeNull();
   });
 
-  it('still records bad-response for a genuinely malformed reply', async () => {
+  it('still reports bad-response for a genuinely malformed reply', async () => {
     const c = new BackgroundClassifier();
     send.mockResolvedValueOnce({ ok: false, reason: 42 });
-    const out = await c.classify(metas(5));
-    expect(out.size).toBe(0);
-    expect(c.lastFailureReason).toBe('bad-response');
+    const attempt = await c.attempt(metas(5));
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.failureReason).toBe('bad-response');
   });
 
-  it('records the reasoned failure verbatim instead of bad-response', async () => {
+  it('reports the reasoned failure verbatim instead of bad-response', async () => {
     const c = new BackgroundClassifier();
     send.mockResolvedValueOnce({ ok: false, reason: 'auth' });
-    const out = await c.classify(metas(5));
-    expect(out.size).toBe(0);
-    expect(c.lastFailureReason).toBe('auth');
+    const attempt = await c.attempt(metas(5));
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.failureReason).toBe('auth');
   });
 
-  it('resets lastFailureReason to null on a fully successful run', async () => {
+  it('binds each attempt to its own reason with no shared mutable', async () => {
     const c = new BackgroundClassifier();
     send.mockResolvedValueOnce({ ok: false, reason: 'network' });
-    await c.classify(metas(5));
-    expect(c.lastFailureReason).toBe('network');
+    expect((await c.attempt(metas(5))).failureReason).toBe('network');
     send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
       ok: true, entries: m.fields.map((f) => [f.id, 'email']),
     }));
-    await c.classify(metas(5));
-    expect(c.lastFailureReason).toBeNull();
+    const second = await c.attempt(metas(5));
+    expect(second.failureReason).toBeNull();
+    expect(second.map.size).toBe(5);
   });
 });

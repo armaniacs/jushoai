@@ -1,4 +1,5 @@
 import { classifyAll } from '../core/analyze';
+import type { FieldClassifier } from '../core/classifier';
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import { createFillSession } from '../content-session';
@@ -345,6 +346,17 @@ export default defineContentScript({
           .then((s) => button.setStatus(s));
       }
       const classifier = info.status === 'available' ? new BackgroundClassifier() : null;
+      // Per-run failure capture: the gateway reports the reason of each attempt
+      // on the return value, and this adapter binds it to the run scope instead
+      // of a shared classifier field (concurrent runs keep separate reasons).
+      let failureReason: ClassifyFailure | null = null;
+      const reportingClassifier: FieldClassifier | null = classifier ? {
+        classify: async (fields) => {
+          const outcome = await classifier.attempt(fields);
+          failureReason = outcome.failureReason;
+          return outcome.map;
+        },
+      } : null;
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
@@ -363,7 +375,7 @@ export default defineContentScript({
           canReanalyze: classifier !== null,
         },
         {
-          classify: (ms, opts) => classifyAll(ms, classifier, opts),
+          classify: (ms, opts) => classifyAll(ms, reportingClassifier, opts),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -387,8 +399,7 @@ export default defineContentScript({
         },
       );
       const started = await session.start();
-      const reason = classifier?.lastFailureReason;
-      if (reason) button.showError(AI_FAILURE_HINT[reason]);
+      if (failureReason) button.showError(AI_FAILURE_HINT[failureReason]);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -405,8 +416,7 @@ export default defineContentScript({
         selectedAddressId: session.selectedAddressId,
         onReanalyze: classifier ? () => {
           void session.reanalyze().then((rows) => {
-            const rereason = classifier.lastFailureReason;
-            if (rereason) button.showError(AI_FAILURE_HINT[rereason]);
+            if (failureReason) button.showError(AI_FAILURE_HINT[failureReason]);
             if (rows) preview.setRows(rows);
           });
         } : undefined,

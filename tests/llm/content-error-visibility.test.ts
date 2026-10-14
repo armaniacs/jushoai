@@ -150,36 +150,39 @@ afterEach(() => send.mockReset());
 describe('BackgroundClassifier failure reasons', () => {
   const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, value: 'SECRET' }));
 
-  it('keeps earlier chunks and records the reason after a reasoned failure', async () => {
+  it('keeps earlier chunks and reports the reason on the return value after a reasoned failure', async () => {
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
       .mockResolvedValueOnce({ ok: false, reason: 'auth' });
     const classifier = new BackgroundClassifier();
-    const out = await classifier.classify(metas(30));
-    expect([...out]).toEqual([['f0', 'tel']]);
+    const attempt = await classifier.attempt(metas(30));
+    expect([...attempt.map]).toEqual([['f0', 'tel']]);
     expect(send).toHaveBeenCalledTimes(2);
-    expect(classifier.lastFailureReason).toBe('auth');
+    expect(attempt.failureReason).toBe('auth');
   });
 
-  it('records bad-response for a malformed reply', async () => {
+  it('reports bad-response for a malformed reply', async () => {
     send.mockResolvedValueOnce('junk');
     const classifier = new BackgroundClassifier();
-    expect((await classifier.classify(metas(1))).size).toBe(0);
-    expect(classifier.lastFailureReason).toBe('bad-response');
+    const attempt = await classifier.attempt(metas(1));
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.failureReason).toBe('bad-response');
   });
 
-  it('records network when the send itself fails', async () => {
+  it('reports network when the send itself fails', async () => {
     send.mockRejectedValueOnce(new Error('Extension context invalidated'));
     const classifier = new BackgroundClassifier();
-    expect((await classifier.classify(metas(1))).size).toBe(0);
-    expect(classifier.lastFailureReason).toBe('network');
+    const attempt = await classifier.attempt(metas(1));
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.failureReason).toBe('network');
   });
 
   it('reports no failure reason on success', async () => {
     send.mockResolvedValue({ ok: true, entries: [['f0', 'tel']] });
     const classifier = new BackgroundClassifier();
-    expect((await classifier.classify(metas(1))).size).toBe(1);
-    expect(classifier.lastFailureReason).toBeNull();
+    const attempt = await classifier.attempt(metas(1));
+    expect(attempt.map.size).toBe(1);
+    expect(attempt.failureReason).toBeNull();
   });
 
   it('does not send field values on the failure path', async () => {
