@@ -248,6 +248,16 @@ export default defineContentScript({
     let openGuide: GuideHandle | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
+    // Single place that tears down open panels: closing one panel must never
+    // leave the other behind (they occupy the same fixed corner). Idempotent
+    // closes make repeated calls safe.
+    const closeOpenPanels = (): void => {
+      openPreview?.close();
+      openPreview = null;
+      openGuide?.close();
+      openGuide = null;
+    };
+
     // Only a dead extension context calls for a reload. Every other failure
     // (classification, network, bad response) is retryable on the classify side.
     const isContextInvalidated = (e: unknown): boolean => {
@@ -356,10 +366,7 @@ export default defineContentScript({
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
-      openPreview?.close();
-      openPreview = null;
-      openGuide?.close();
-      openGuide = null;
+      closeOpenPanels();
       // Classification takes long enough for the settings to change under it; an
       // exclusion that landed meanwhile must not open a panel on this page.
       if (started.excluded) return;
@@ -396,6 +403,10 @@ export default defineContentScript({
           preview.close();
           openPreview = null;
         },
+        // Re-entrant by design: preview.close() fires the panel onClose, which
+        // is this onCancel, which calls preview.close() again. The chain always
+        // stops at the second close because the panel close is idempotent — do
+        // not remove that guard without unwinding this cycle first.
         onCancel: () => {
           preview.close();
           openPreview = null;
@@ -433,9 +444,7 @@ export default defineContentScript({
           form.anchor.el,
           () => void guardedRun(form.container, handle),
           (info) => {
-            openPreview?.close();
-            openPreview = null;
-            openGuide?.close();
+            closeOpenPanels();
             openGuide = showAiGuide(
               buildGuide(info, browser),
               () => {
@@ -500,10 +509,7 @@ export default defineContentScript({
       mounted.clear();
       running.clear();
       lastScan = '';
-      openPreview?.close();
-      openPreview = null;
-      openGuide?.close();
-      openGuide = null;
+      closeOpenPanels();
     };
 
     const start = () => {

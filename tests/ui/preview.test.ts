@@ -83,6 +83,18 @@ describe('showPreview', () => {
     const { handle } = open({ rows: [row('ok')] });
     expect(handle.getApplyPoint()).toBeNull();
   });
+
+  it('stops the cancel→close→cancel cycle instead of recursing', () => {
+    const onCancel = vi.fn();
+    let handle!: ReturnType<typeof showPreview>;
+    // Same wiring as content.ts: onCancel closes the preview it came from, and
+    // the panel close fires onCancel again. The chain must stop at the second
+    // close (panel idempotency), so onCancel runs exactly twice, not forever.
+    const opened = open({ onCancel: () => { handle.close(); onCancel(); } });
+    handle = opened.handle;
+    button(opened.root, 'キャンセル')!.click();
+    expect(onCancel).toHaveBeenCalledTimes(2);
+  });
 });
 
 const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });
