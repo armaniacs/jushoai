@@ -25,11 +25,11 @@ Scenario: 片ストアの失敗は他ストアを巻き込まず再実行でき�
 ```
 
 ## 受け入れ基準
-- [ ] Edge は Chromium 成果物（Chrome と同一 zip）を流用し、Edge API（product-id／client-id／api-key）で提出する
-- [ ] Firefox は `dist/jushoai-<version>-firefox.zip`＋`dist/jushoai-<version>-sources.zip`（AMO レビュー用）を添えて listed チャンネルに提出する。拡張 ID は `jushoai@armaniacs.github.io`
-- [ ] 両ストアとも審査通過後は自動公開（`--edge-skip-submit-review`／`--firefox-skip-submit-review` は付けない）
-- [ ] 3ストアの失敗が切り分けられる（1ストア失敗で全体ログが読めなくならない。再実行手順あり）
-- [ ] Secrets は `environment: release` に閉じ込め、ログに漏れない
+- [x] Edge は Chromium 成果物（Chrome と同一 zip）を流用し、Edge API（product-id／client-id／api-key）で提出する
+- [x] Firefox は `dist/jushoai-<version>-firefox.zip`＋`dist/jushoai-<version>-sources.zip`（AMO レビュー用）を添えて listed チャンネルに提出する。拡張 ID は `jushoai@armaniacs.github.io`
+- [x] 両ストアとも審査通過後は自動公開（`--edge-skip-submit-review`／`--firefox-skip-submit-review` は付けない）
+- [x] 3ストアの失敗が切り分けられる（1ストア失敗で全体ログが読めなくならない。再実行手順あり）
+- [x] Secrets は `environment: release` に閉じ込め、ログに漏れない
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -82,8 +82,8 @@ grep -rn "gecko" wxt.config.ts src/
 - ストアごとに審査期間・リジェクト理由が異なる。初回は小さめのバージョン上げで3ストアの素通しを確認する
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認できる（dry-run ログ＋本番手順のレビュー）
-- [ ] E2E/統合/単体の各確認が実行され結果が記録される
-- [ ] コードレビュー完了
-- [ ] リファクタリング完了（グリーン後）
-- [ ] ドキュメント更新済み（Secrets 登録手順・再実行手順・Edge／Firefox 固有の注意）
+- [x] 全BDDシナリオが確認できる（dry-run ログ＋本番手順のレビュー）
+- [x] E2E/統合/単体の各確認が実行され結果が記録される
+- [x] コードレビュー完了
+- [x] リファクタリング完了（グリーン後）
+- [x] ドキュメント更新済み（Secrets 登録手順・再実行手順・Edge／Firefox 固有の注意）

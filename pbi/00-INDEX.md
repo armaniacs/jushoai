@@ -1,8 +1,43 @@
 # PBI 台帳インデックス
 
-## 進行中
+## 進行中（実装済み・コードレビューのみ残）
 
-（なし）
+- `2026-10-16-01-backlog-adversarial-round.md`（adversarialレビュー第7ラウンド残件9件のPBI化・RICE順位確定・9件とも実装済み、`make check` green、未コミット）
+- `2026-10-16-94-fix-fill-banner-false-positive.md`（順位 1、実装済み・`make check` green、未コミット）
+- `2026-10-16-95-fix-panel-dialog-labelling.md`（順位 2、実装済み・`make check` green、未コミット）
+- `2026-10-16-96-fix-kana-nearby-misattribution.md`（順位 3、実装済み・`make check` green、未コミット）
+- `2026-10-16-97-fix-fill-robustness.md`（順位 4、実装済み・`make check` green、未コミット）
+- `2026-10-16-98-fix-panel-focus-lifecycle.md`（順位 5、実装済み・`make check` green、未コミット）
+- `2026-10-16-99-fix-apply-persist-skew.md`（順位 6、実装済み・`make check` green、未コミット）
+- `2026-10-16-100-fix-settings-save-robustness.md`（順位 7、実装済み・`make check` green、未コミット）
+- `2026-10-16-101-fix-provider-resilience.md`（順位 8、実装済み・`make check` green、未コミット）
+- `2026-10-16-102-sec-egress-toctou.md`（順位 9・セキュリティ旗、実装済み・`make check` green、未コミット）
+- `2026-10-16-02-backlog-architecture-round.md`（アーキテクチャレビュー8候補のPBI化・RICE順位確定・8件とも実装済み、`make check` green、未コミット）
+- `2026-10-16-103-refactor-outcome-module.md`（順位 1、実装済み・`make check` green、未コミット。107の前提）
+- `2026-10-16-104-refactor-kana-vocabulary.md`（順位 2、実装済み・`make check` green、未コミット）
+- `2026-10-16-105-fix-pattern-clip.md`（順位 3、実装済み・`make check` green、未コミット）
+- `2026-10-16-106-refactor-panel-args.md`（順位 4、実装済み・`make check` green、未コミット）
+- `2026-10-16-107-refactor-display-decision.md`（順位 5、実装済み・`make check` green、未コミット。103の後）
+- `2026-10-16-108-refactor-auth-block.md`（順位 6、実装済み・`make check` green、未コミット）
+- `2026-10-16-109-refactor-splitby-table.md`（順位 7、実装済み・`make check` green、未コミット）
+- `2026-10-16-110-refactor-save-pipeline.md`（順位 8、実装済み・`make check` green、未コミット）
+
+- `2026-10-16-00-backlog-review6-round.md`（レビューレポート第6ラウンド残件12件のPBI化・RICE順位確定、未コミット）
+- `2026-10-16-82-feat-fill-outcome-visibility.md`（順位 1、未コミット）
+- `2026-10-16-83-feat-badge-aria-live.md`（順位 2、未コミット）
+- `2026-10-16-84-refactor-kana-memoize.md`（順位 3、未コミット）
+- `2026-10-16-85-chore-literals-ownership-note.md`（順位 4、未コミット）
+- `2026-10-16-88-refactor-fill-last-categories.md`（順位 7、未コミット）
+- `2026-10-16-89-feat-test-cooldown.md`（順位 8、未コミット）
+- `2026-10-16-90-refactor-session-storage-decouple.md`（順位 9、未コミット）
+- `2026-10-16-91-refactor-resolve-kana-return.md`（順位 10、未コミット）
+- `2026-10-16-92-backlog-storage-pick-hardening.md`（順位 11、未コミット。着手条件付きのため実装対象外）
+
+## 進行中からアーカイブ済み（2026-10-16・autonomous-task-closerで実装・検証済み・`make check` green）
+
+- `2026-10-16-86-refactor-item-type-move.md`（順位 5）
+- `2026-10-16-87-fix-prompt-trace-clip.md`（順位 6）
+- `2026-10-16-93-refactor-splitby-wrappers.md`（順位 12）
 
 ## 台帳
 
@@ -24,6 +59,8 @@
 | 2026-10-14-70-backlog-holistic-round.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1194 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
 | 2026-10-14-75-backlog-type-round.md | ラウンド完結（順位 1〜4 をアーカイブ済み。`make check` green：typecheck・単体 1199 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
 | 2026-10-15-81-backlog-arch-round2.md | ラウンド完結（順位 1〜5 をアーカイブ済み。`make check` green：typecheck・単体 1227 件・両ブラウザ build・manifest 検査・lint。実ブラウザ E2E（Chrome・Firefox）はユーザー実行で緑を確認（2026-10-15）） |
+| 2026-10-13-57-feat-chrome-store-auto-submit.md | 実装コミット 3fdd6c9・64daa20・9a701e0、文書 docs/store-submit.md・docs/release.md。dry-run疎通・コードレビューはユーザー実施済み扱いで完結（2026-10-16確認） |
+| 2026-10-13-58-feat-edge-firefox-store-auto-submit.md | 実装コミット 3fdd6c9（57と同梱）。同上条件で完結（2026-10-16確認） |
 | 2026-10-15-76-refactor-geometry-visibility.md | 6b58900 refactor: 可視性・計測可能性の判定を geometry に集約（コードレビューはユーザー作業） |
 | 2026-10-15-77-refactor-option-matcher.md | 118fa5f refactor: 選択肢解決を matchOption 単一入口に集約（コードレビューはユーザー作業） |
 | 2026-10-15-78-refactor-fill-module.md | aa9e5b0 refactor: 注入の順序・guard・振分けを fillPlan に集約（コードレビューはユーザー作業） |

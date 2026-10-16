@@ -25,11 +25,11 @@ Scenario: バージョン不一致やSecrets不足では提出せず失敗を明
 ```
 
 ## 受け入れ基準
-- [ ] `v*` タグ push で `release.yml` が Chrome 提出ステップまで到達する
-- [ ] Chrome API v2（サービスアカウント方式）で提出する。v1.1（CLIENT_ID/SECRET/REFRESH_TOKEN）は `--help` 上 Deprecated のため採用しない
-- [ ] 審査通過後は自動公開（STAGED_PUBLISH にしない）
-- [ ] 現行フロー（tag v*＋package.json 一致検査・make check・make zip・GitHub Release）は維持する。記事の daily-version-action（Y.M.D 自動採番）は導入しない
-- [ ] Secrets は `environment: release` に閉じ込め、ログに漏れない（マスク・`persist-credentials: false` 維持）
+- [x] `v*` タグ push で `release.yml` が Chrome 提出ステップまで到達する
+- [x] Chrome API v2（サービスアカウント方式）で提出する。v1.1（CLIENT_ID/SECRET/REFRESH_TOKEN）は `--help` 上 Deprecated のため採用しない
+- [x] 審査通過後は自動公開（STAGED_PUBLISH にしない）
+- [x] 現行フロー（tag v*＋package.json 一致検査・make check・make zip・GitHub Release）は維持する。記事の daily-version-action（Y.M.D 自動採番）は導入しない
+- [x] Secrets は `environment: release` に閉じ込め、ログに漏れない（マスク・`persist-credentials: false` 維持）
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -95,8 +95,8 @@ grep -rn "EXTENSION_ID\|CLIENT_ID\|REFRESH_TOKEN" .github/
   ダッシュボード設定の「サービス アカウント」欄に SA を追加する方式。
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認できる（dry-run ログ＋本番手順のレビュー）
-- [ ] E2E/統合/単体の各確認が実行され結果が記録される
-- [ ] コードレビュー完了
-- [ ] リファクタリング完了（グリーン後）
-- [ ] ドキュメント更新済み（Secrets 登録手順・再実行手順）
+- [x] 全BDDシナリオが確認できる（dry-run ログ＋本番手順のレビュー）
+- [x] E2E/統合/単体の各確認が実行され結果が記録される
+- [x] コードレビュー完了
+- [x] リファクタリング完了（グリーン後）
+- [x] ドキュメント更新済み（Secrets 登録手順・再実行手順）
