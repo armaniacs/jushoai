@@ -198,6 +198,7 @@ describe('display parity', () => {
     expect(key.autocomplete).toBe('off');
     expect(removeCheckbox(root)).toBeNull();
     expect(pageOf(root).textContent).toContain('Ollama / LM Studio など localhost の場合、API キーは不要です。');
+    expect(pageOf(root).textContent).toContain('信頼できるプロバイダの URL のみ入力してください。');
     expect(pageOf(root).textContent).toContain('chrome-extension://test-ext-id を許可してください。');
   });
 
@@ -364,7 +365,8 @@ describe('connection test parity', () => {
     await settle();
     expect(notice(root)!.textContent).toBe('接続できました（判定: email）。');
     expect(notice(root)!.className).toBe('saved');
-    expect(buttonByText(root, '接続テスト（保存済みの設定で実行）').disabled).toBe(false);
+    // PBI-89: completion starts the cooldown, so the button stays disabled here.
+    expect(buttonByText(root, '接続テスト（保存済みの設定で実行）').disabled).toBe(true);
   });
 
   it('maps failure reasons to the fixed texts', async () => {
@@ -375,10 +377,13 @@ describe('connection test parity', () => {
     expect(notice(root)!.textContent).toContain('認証に失敗しました');
     expect(notice(root)!.className).toBe('errors-text');
 
+    // PBI-89: the first completion starts a cooldown on this mount, so the
+    // second reason is verified on a fresh mount (cooldown is per-mount state).
+    const root2 = await mountWith(openaiSaved());
     gwMocks.test.mockResolvedValueOnce({ ok: false, reason: 'not-configured' });
-    buttonByText(root, '接続テスト（保存済みの設定で実行）').click();
+    buttonByText(root2, '接続テスト（保存済みの設定で実行）').click();
     await settle();
-    expect(notice(root)!.textContent).toBe('設定が完了していません。保存してから試してください。');
+    expect(notice(root2)!.textContent).toBe('設定が完了していません。保存してから試してください。');
   });
 
   it('reports when the background does not respond', async () => {

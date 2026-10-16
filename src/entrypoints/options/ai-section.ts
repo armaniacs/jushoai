@@ -41,6 +41,19 @@ const FAILURE_TEXT: Record<TestFailure, string> = {
 const KEYED = ['openai', 'gemini'] as const;
 type KeyedProvider = (typeof KEYED)[number];
 
+// Connection-test cooldown (anti double-charge on rapid clicks).
+// Lower bound of the 3-5s acceptance window: short enough to keep single-test
+// UX intact, long enough to swallow follow-up clicks.
+export const TEST_COOLDOWN_MS = 3000;
+
+export function isTestCoolingDown(state: { cooldownUntil: number }, now: number = Date.now()): boolean {
+  return now < state.cooldownUntil;
+}
+
+export function testCooldownRemainingSec(state: { cooldownUntil: number }, now: number = Date.now()): number {
+  return Math.max(1, Math.ceil((state.cooldownUntil - now) / 1000));
+}
+
 // The mutable state formerly closed over by mountAiSection. Every extracted
 // function below takes this explicitly, so display builders and the save/test
 // side effects meet only through arguments. Only presence (KeyPresence) ever
@@ -52,6 +65,8 @@ interface AiSectionState {
   removeKey: Record<KeyedProvider, boolean>;
   savedOpenAi: { baseUrl: string; model: string };
   testing: boolean;
+  cooldownUntil: number;
+  cooldownTimer: ReturnType<typeof setTimeout> | null;
   notice: HTMLElement | null;
 }
 
@@ -66,11 +81,14 @@ interface AiSectionEffectHooks {
   notify: (text: string, kind: 'saved' | 'errors') => void;
 }
 
-export function mountAiSection(root: HTMLElement): void {
+export function mountAiSection(root: HTMLElement): () => void {
   const keyStore = new IdbKeyStore();
   // State is assembled only once the stored settings arrive, so settings is
   // never a lie: every render below works on a complete initial value.
   root.append(el('p', '読み込み中…'));
+  // Owns the assembled state once it arrives, so dispose() below can drop a
+  // pending test-cooldown timer instead of rerendering a detached tree.
+  const slot: { state?: AiSectionState; disposed: boolean } = { disposed: false };
 
   const rerender = (state: AiSectionState) =>
     renderAiSection(root, state, {
@@ -83,16 +101,31 @@ export function mountAiSection(root: HTMLElement): void {
     });
 
   void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
-    rerender({
+    // A load resolving after dispose() must neither render into a detached
+    // root nor leave state behind for a later teardown to trip over.
+    if (slot.disposed) return;
+    const state: AiSectionState = {
       settings: loaded,
       hasKey: keys,
       keyInput: { openai: '', gemini: '' },
       removeKey: { openai: false, gemini: false },
       savedOpenAi: { ...loaded.openai },
       testing: false,
+      cooldownUntil: 0,
+      cooldownTimer: null,
       notice: null,
-    });
+    };
+    slot.state = state;
+    rerender(state);
   });
+  // Drop a pending test-cooldown timer when the section is torn down, and
+  // clear the slot so a late-arriving load cannot reattach state to a
+  // disposed section.
+  return () => {
+    if (slot.state?.cooldownTimer) clearTimeout(slot.state.cooldownTimer);
+    slot.state = undefined;
+    slot.disposed = true;
+  };
 }
 
 function setAiNotice(
@@ -165,6 +198,7 @@ function buildOpenAiFieldset(state: AiSectionState, rerender: () => void): HTMLF
     labeled('モデル名', textInput(state.settings.openai.model, 'プロバイダのモデル名', (v) => { state.settings.openai.model = v; })),
     buildKeyField(state, 'openai'),
     el('p', 'Ollama / LM Studio など localhost の場合、API キーは不要です。'),
+    el('p', '信頼できるプロバイダの URL のみ入力してください。'),
     el('p', extensionOriginHint(chrome.runtime.getURL('').replace(/\/$/, ''))),
   );
   return set;
@@ -188,7 +222,13 @@ function buildActionRow(state: AiSectionState, onSave: () => void, onTest: () =>
   save.addEventListener('click', onSave);
   const test = el('button', '接続テスト（保存済みの設定で実行）');
   test.type = 'button';
-  test.disabled = state.testing;
+  const cooling = isTestCoolingDown(state);
+  test.disabled = state.testing || cooling;
+  if (cooling) {
+    test.title = `連打防止のため、あと${testCooldownRemainingSec(state)}秒お待ちください。`;
+  } else {
+    test.removeAttribute('title');
+  }
   test.addEventListener('click', onTest);
   const actions = el('div');
   actions.className = 'row';
@@ -262,19 +302,34 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
   );
 }
 
+function beginTestCooldown(state: AiSectionState, env: AiSectionEffectHooks): void {
+  state.cooldownUntil = Date.now() + TEST_COOLDOWN_MS;
+  if (state.cooldownTimer) clearTimeout(state.cooldownTimer);
+  state.cooldownTimer = setTimeout(() => {
+    state.cooldownTimer = null;
+    env.rerender();
+  }, TEST_COOLDOWN_MS);
+}
+
 async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): Promise<void> {
-  if (state.testing) return;
+  if (state.testing || isTestCoolingDown(state)) return;
   state.testing = true;
   env.notify('接続テスト中…', 'saved');
   try {
     const result = await testAiViaBackground();
     state.testing = false;
+    // Enter cooldown before notifying so the rerender inside notify already
+    // shows the disabled button; the expiry timer re-enables it.
+    beginTestCooldown(state, env);
     if (!result) env.notify('バックグラウンドが応答しませんでした。', 'errors');
     else if (result.ok) env.notify(`接続できました（判定: ${result.category}）。`, 'saved');
     else env.notify(FAILURE_TEXT[result.reason], 'errors');
   } finally {
     if (state.testing) {
+      // testAiViaBackground threw: keep the pre-existing behavior (no result
+      // notice) but still enter cooldown so a retry storm cannot bill more.
       state.testing = false;
+      beginTestCooldown(state, env);
       env.rerender();
     }
   }

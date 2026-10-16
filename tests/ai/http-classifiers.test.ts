@@ -197,6 +197,35 @@ describe('OpenAI-compatible compatibility retry', () => {
     expect(onCompat).not.toHaveBeenCalled();
   });
 
+  it.each([400, 422])('keeps the first %i in trace.firstStatus after a successful compat retry', async (first) => {
+    const fetch = vi.fn().mockResolvedValueOnce(jsonResponse(first, {})).mockResolvedValueOnce(okBody());
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false });
+    const attempt = await c.attempt(fields);
+    expect(attempt.error).toBeUndefined();
+    expect(attempt.trace.retried).toBe(true);
+    expect(attempt.trace.firstStatus).toBe(first);
+    expect(attempt.trace.status).toBe(200);
+  });
+
+  it('keeps the first 400 in trace.firstStatus when the retry is rejected too', async () => {
+    const fetch = vi.fn().mockResolvedValue(jsonResponse(400, {}));
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false });
+    const attempt = await c.attempt(fields);
+    expect(attempt.error).toBeInstanceOf(HttpRequestError);
+    expect(attempt.trace.retried).toBe(true);
+    expect(attempt.trace.firstStatus).toBe(400);
+    expect(attempt.trace.status).toBe(400);
+  });
+
+  it('leaves trace.firstStatus unset when no retry happens', async () => {
+    const fetch = vi.fn().mockResolvedValue(okBody());
+    const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false });
+    const attempt = await c.attempt(fields);
+    expect(attempt.trace.retried).toBe(false);
+    expect(attempt.trace.firstStatus).toBeUndefined();
+    expect(attempt.trace.status).toBe(200);
+  });
+
   it.each([401, 403, 429, 500])('does not retry %i', async (status) => {
     const fetch = vi.fn().mockResolvedValue(jsonResponse(status, {}));
     const c = createOpenAiClassifier(openai, 'sk', { fetch }, { compat: false });

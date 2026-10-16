@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildPlan } from '../../src/core/planner';
-import type { Item } from '../../src/core/classify-rules';
-import type { Address, Category, FieldMeta, KanaKind, Profile } from '../../src/core/types';
+import type { Address, Category, FieldMeta, Item, KanaKind, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
 const profile: Profile = {

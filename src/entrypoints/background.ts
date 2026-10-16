@@ -19,6 +19,9 @@ export default defineBackground(() => {
     })(),
   };
   const audit = new AuditStore();
+  // Volatile by design: a service-worker restart drops authFailed/compat, and
+  // the next run re-learns them (one compat retry, one auth retry at most).
+  // Settings changes clear them eagerly via invalidate() below.
   const authFailed = new Set<ProviderKind>();
   const compat = new Set<ProviderKind>();
   // One gate per SW lifetime for wiring; it holds no cache, so every dial resolves

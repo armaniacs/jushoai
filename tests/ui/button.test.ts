@@ -53,6 +53,63 @@ describe('mountButton', () => {
     expect(onBadgeClick).toHaveBeenCalledWith({ status: 'downloadable', provider: 'built-in' });
   });
 
+  describe('error announcement (PBI-83)', () => {
+    it('announces a consent-gate failure reason politely without changing the wording', () => {
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('同意が確認できなかったため注入しませんでした');
+      expect(badge().textContent).toBe('同意が確認できなかったため注入しませんでした');
+      expect(badge().getAttribute('aria-live')).toBe('polite');
+      expect(badge().getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('announces an AI failure reason politely', () => {
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('AI通信に失敗したためルールのみで表示: 再試行できます');
+      expect(badge().textContent).toBe('AI通信に失敗したためルールのみで表示: 再試行できます');
+      expect(badge().getAttribute('aria-live')).toBe('polite');
+      expect(badge().getAttribute('aria-atomic')).toBe('true');
+    });
+
+    it('does not announce ordinary status changes', () => {
+      const { handle, badge } = mount();
+      expect(badge().hasAttribute('aria-live')).toBe(false);
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      expect(badge().textContent).toBe('AI 有効');
+      expect(badge().hasAttribute('aria-live')).toBe(false);
+      expect(badge().hasAttribute('aria-atomic')).toBe(false);
+    });
+
+    it('stops announcing once the error display restores the ordinary status', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('エラー: 分類に失敗、再試行してください');
+      expect(badge().getAttribute('aria-live')).toBe('polite');
+      vi.advanceTimersByTime(4000);
+      expect(badge().textContent).toBe('AI 有効');
+      expect(badge().hasAttribute('aria-live')).toBe(false);
+      expect(badge().hasAttribute('aria-atomic')).toBe(false);
+    });
+
+    it('drops the error-restore timer on destroy', () => {
+      vi.useFakeTimers();
+      const { handle } = mount();
+      handle.showError('エラー: 分類に失敗、再試行してください');
+      expect(vi.getTimerCount()).toBe(1);
+      handle.destroy();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('keeps the badge a button with no role override', () => {
+      const { handle, badge } = mount();
+      handle.showError('エラー: 分類に失敗、再試行してください');
+      expect(badge().tagName).toBe('BUTTON');
+      expect(badge().getAttribute('role')).toBeNull();
+    });
+  });
+
   describe('placement', () => {
     function rect(top: number, left: number, right: number, bottom: number) {
       return { top, left, right, bottom, width: right - left, height: bottom - top, x: left, y: top, toJSON() {} } as DOMRect;

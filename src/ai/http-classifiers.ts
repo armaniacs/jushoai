@@ -199,17 +199,24 @@ export class HttpClassifier implements TracedClassifier {
     const compat = this.retry?.compat ?? false;
     try {
       const built = this.build(fields, compat);
+      // Immediately before its fetch with nothing awaited in between: this
+      // adjacency is the only available narrowing of the check-to-use window
+      // (see the residual-risk note on createEgressCheck). Do not insert work
+      // here without re-examining that window.
       await this.checkEgress(built.url);
       let res = await this.fetchWithTimeout(built.url, built.init);
       trace.status = res.status;
       if (this.retry && !compat && isRejectedStatus(res.status)) {
+        trace.firstStatus = res.status;
         trace.status = null;
         trace.retried = true;
         const retryBuilt = this.build(fields, true);
         await this.checkEgress(retryBuilt.url);
         res = await this.fetchWithTimeout(retryBuilt.url, retryBuilt.init);
         trace.status = res.status;
-        if (res.ok) this.retry.onCompat?.();
+        // compat is recorded below, only for a fully usable response: a
+        // 200 whose body still fails extraction must not pin all future
+        // requests to the degraded mode.
       }
       if (res.status === 401 || res.status === 403) throw new HttpAuthError();
       if (!res.ok) throw new HttpRequestError(res.status, `http ${res.status}`);
@@ -226,7 +233,12 @@ export class HttpClassifier implements TracedClassifier {
       // stays bounded instead of holding a full-size response.
       trace.response = clipAuditResponse(text ?? JSON.stringify(json));
       if (text === null) throw new HttpRequestError(res.status, 'unexpected response shape');
-      return { map: parseLlmOutput(text, fields), trace };
+      const map = parseLlmOutput(text, fields);
+      // "Usable" means extracted (the mode answered in the expected shape);
+      // an empty map still counts: the mode proved itself, the content was
+      // merely unhelpful. Only extraction failures skip the pinning above.
+      if (trace.retried) this.retry?.onCompat?.();
+      return { map, trace };
     } catch (error) {
       return { map: new Map(), trace, error };
     }

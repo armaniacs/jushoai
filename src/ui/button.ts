@@ -69,12 +69,21 @@ export function mountButton(
       lastInfo = info;
       statusKnown = true;
       window.clearTimeout(errorTimer);
+      // The error announcement is scoped to the error display: ordinary
+      // status changes must not trigger unsolicited live-region speech.
+      badge.removeAttribute('aria-live');
+      badge.removeAttribute('aria-atomic');
       badge.textContent = badgeLabel(info);
       badge.dataset.status = info.status;
       handle.reposition();
     },
     showError(text) {
       window.clearTimeout(errorTimer);
+      // Expose the error reason to assistive technology: the badge keeps its
+      // button semantics (no role override) and its text/style untouched, so
+      // only the announcement behavior is added, politely (no interruption).
+      badge.setAttribute('aria-live', 'polite');
+      badge.setAttribute('aria-atomic', 'true');
       badge.textContent = text;
       badge.dataset.status = 'error';
       errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
@@ -107,6 +116,10 @@ export function mountButton(
       host.style.setProperty('left', `${pos.left}px`, 'important');
     },
     destroy() {
+      // Drop a pending error-restore timer: without this, a destroyed badge
+      // would still flip text and reposition after the timeout, extending the
+      // handle's closure past teardown.
+      window.clearTimeout(errorTimer);
       host.remove();
     },
   };

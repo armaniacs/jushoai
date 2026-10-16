@@ -350,7 +350,14 @@ export default defineContentScript({
             );
             return verdict;
           },
-          injectPlan: (plan) => { fillPlan(plan, targetsFromControls(byId, fillField)); },
+          injectPlan: (plan) => {
+            const report = fillPlan(plan, targetsFromControls(byId, fillField));
+            // Developer record (PBI-82/94): countable breakdown by reason.
+            // Display decisions stay with onApply so the partial banner cannot
+            // clobber the AI failure hint; the happy path stays silent.
+            console.debug('[JushoAI] fill outcomes', report.summary);
+            return report.summary;
+          },
           persistSelection: (sel) => { void saveLastUsed(sel); },
           openUrl: (url) => { window.open(url, '_blank', 'noopener'); },
           feedbackContext: () => ({
@@ -395,11 +402,13 @@ export default defineContentScript({
           // the panel was hidden, moved, or covered. The panel stays open for
           // cancel or retry, and the reason goes to the form button, which stays
           // visible even when the panel is hidden.
-          const result = session.apply(sendFeedback, preview);
+          const result = session.apply(sendFeedback, preview, failureReason ? AI_FAILURE_HINT[failureReason] : undefined);
           if (!result.applied) {
             button.showError(result.reason);
             return;
           }
+          // The banner text arrives composed; this side only displays it.
+          if (result.display.banner) button.showError(result.display.banner);
           preview.close();
           openPreview = null;
         },

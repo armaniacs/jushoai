@@ -143,7 +143,7 @@ export function scanFields(root: ParentNode): ScannedField[] {
         placeholder: clipRaw(input?.placeholder),
         nearby: nearbyOf(el),
         maxLength: input && input.maxLength > 0 ? input.maxLength : null,
-        pattern: input?.pattern ?? '',
+        pattern: clipRaw(input?.pattern),
         options: select
           ? Array.from(select.options).map((o) => ({ value: o.value, text: clip(o.text) }))
           : [],

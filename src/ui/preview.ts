@@ -206,7 +206,11 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   // Host creation, Escape handling, and idempotent close live in the panel
   // module; the rendering above is unchanged.
   let mounted!: PanelHandle;
-  mounted = mountPanel((_host, root) => { root.append(style, panel); }, () => opts.onCancel());
+  mounted = mountPanel(
+    (_host, root) => { root.append(style, panel); },
+    () => opts.onCancel(),
+    { accessibleName: '入力内容の確認', focus: 'primary' },
+  );
   const setAddressId = (id: string): void => {
     if (addressSelect) addressSelect.value = id;
   };

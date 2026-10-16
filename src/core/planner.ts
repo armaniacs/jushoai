@@ -1,4 +1,4 @@
-import type { Item } from './classify-rules';
+import type { Item } from './types';
 import {
   splitBirthday, toDecade, toEraDate,
 } from './eras';

@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, isConfident, refineClassifications,
+  ACCEPT_THRESHOLD, classifyField, isConfident, refineClassifications, refineWithDrops,
 } from '../../src/core/classify-rules';
-import { detectKanaKind, resolveKana, wantsKana } from '../../src/core/kana';
+import { detectKanaKind, matchFieldOwned, matchLegend, resolveKana, wantsKana } from '../../src/core/kana';
 import type { Category, Classification } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -279,6 +279,18 @@ describe('refineClassifications', () => {
     expect(refineClassifications([...four, item('email', 'e')]).map((i) => i.meta.id)).toEqual(['e']);
   });
 
+  it('reports why oversized groups were dropped', () => {
+    const four = ['a', 'b', 'c', 'd'].map((id) => item('fullName', id));
+    const { items, dropped } = refineWithDrops([...four, item('email', 'e')]);
+    expect(items.map((i) => i.meta.id)).toEqual(['e']);
+    expect(dropped).toEqual([
+      { fieldId: 'a', from: 'fullName', reason: 'oversized-group' },
+      { fieldId: 'b', from: 'fullName', reason: 'oversized-group' },
+      { fieldId: 'c', from: 'fullName', reason: 'oversized-group' },
+      { fieldId: 'd', from: 'fullName', reason: 'oversized-group' },
+    ]);
+  });
+
   it('splits two fullName fields sharing the same nearby heading', () => {
     const mk = (id: string) => ({ ...item('fullName', id), meta: makeMeta({ id, nearby: 'お名前' }) });
     expect(cats(refineClassifications([mk('a'), mk('b')]))).toEqual(['lastName', 'firstName']);
@@ -474,6 +486,19 @@ describe('classifyField: kana label with generic name', () => {
   });
 });
 
+describe('kana vocabulary queries', () => {
+  it('shares the genuine legends but keeps short readings field-owned', () => {
+    for (const token of ['フリガナ', 'ふりがな', 'カナ', 'ひらがな', 'yomi']) {
+      expect(matchFieldOwned(token)).toBe(true);
+      expect(matchLegend(token)).toBe(true);
+    }
+    for (const token of ['読み', 'セイ', 'メイ', 'せい', 'めい']) {
+      expect(matchFieldOwned(token)).toBe(true);
+      expect(matchLegend(token)).toBe(false);
+    }
+  });
+});
+
 describe('wantsKana', () => {
   it('accepts a kana-only placeholder', () => {
     expect(wantsKana(makeMeta({ placeholder: '例：みらい' }))).toBe(true);
@@ -490,6 +515,31 @@ describe('wantsKana', () => {
     expect(wantsKana(makeMeta({ label: 'お名前（カタカナ）' }))).toBe(true);
     expect(wantsKana(makeMeta({ htmlId: 'furigana_sei' }))).toBe(true);
     expect(wantsKana(makeMeta({ name: 'field_1_sei', htmlId: 'field_1_sei' }))).toBe(false);
+  });
+
+  it('ignores bare 読み in a shared legend (notice boilerplate)', () => {
+    expect(wantsKana(makeMeta({ nearby: '最後までお読みください' }))).toBe(false);
+    expect(wantsKana(makeMeta({ nearby: '内容をよくお読みのうえご記入ください' }))).toBe(false);
+    // Field-owned 読み still signals kana.
+    expect(wantsKana(makeMeta({ label: 'お名前（読み）' }))).toBe(true);
+    // Genuine kana legends still match.
+    expect(wantsKana(makeMeta({ nearby: 'お名前（フリガナ）' }))).toBe(true);
+  });
+
+  it('ignores short readings in a shared legend (notice boilerplate)', () => {
+    expect(wantsKana(makeMeta({ nearby: '作成してください' }))).toBe(false);
+    expect(wantsKana(makeMeta({ nearby: '制度のご案内' }))).toBe(false);
+    // Field-owned short readings still signal kana.
+    expect(wantsKana(makeMeta({ label: 'セイ' }))).toBe(true);
+    expect(wantsKana(makeMeta({ label: 'メイ' }))).toBe(true);
+  });
+
+  it('keeps a kanji name field with notice boilerplate out of kana attribution', () => {
+    const meta = makeMeta({ name: 'your_name', label: '氏名', placeholder: '', nearby: '最後までお読みください' });
+    const cls = classifyField(meta);
+    expect(cls).not.toBeNull();
+    const [item] = resolveKana([{ meta, cls: cls! }]);
+    expect(item!.cls.category).not.toMatch(/Kana$/);
   });
 
   it('detects kana ranges in a pattern written with \\uXXXX escapes', () => {

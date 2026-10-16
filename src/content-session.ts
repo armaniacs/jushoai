@@ -1,4 +1,4 @@
-import type { Item } from './core/classify-rules';
+import type { Item } from './core/types';
 import type { PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackSnapshot } from './feedback/issue-url';
@@ -6,7 +6,8 @@ import {
   buildFeedbackInput, replanItems, snapshotItems,
 } from './content-run';
 import { buildFeedbackIssueUrl, FEEDBACK_REPO } from './feedback/issue-url';
-import { resolveAddressId, resolveLastId } from './storage';
+import { resolveAddressId, resolveLastId } from './core/selection';
+import { shouldWarn, type FillSummary } from './dom/fill-plan';
 import type { PreviewRow } from './ui/preview';
 
 // Fill-session inputs that never touch the DOM: the stored profiles/addresses,
@@ -30,7 +31,9 @@ export interface SessionEnv {
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };
-  injectPlan(plan: PlanItem[]): void;
+  // Returns the fill summary so the caller can display failures and decide
+  // retries; never throws for per-field outcomes (fillPlan isolates those).
+  injectPlan(plan: PlanItem[]): FillSummary;
   persistSelection(sel: { profileId: string; addressId: string }): void;
   openUrl(url: string): void;
   feedbackContext(): { pageHref: string; provider: string; version: string };
@@ -46,6 +49,13 @@ export interface SessionPanel {
 export type SessionStart =
   | { excluded: true }
   | { excluded: false; rows: PreviewRow[] };
+
+// What the caller shows after an application: silence (just close the panel)
+// or one composed banner. The composition lives here so new entrypoints
+// inherit the same wording instead of re-synthesizing summary + hint.
+export interface DisplayDecision {
+  banner: string | null;
+}
 
 // One classify → preview → apply flow. DOM / Chrome side effects (scan,
 // showPreview, button status, window.open, fillPlan wiring) stay in the
@@ -114,13 +124,19 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       return replan();
     },
 
-    apply(sendFeedback: boolean, panel: SessionPanel): { applied: true } | { applied: false; reason: string } {
+    apply(
+      sendFeedback: boolean,
+      panel: SessionPanel,
+      failureHint?: string,
+    ): { applied: true; summary: FillSummary; display: DisplayDecision } | { applied: false; reason: string } {
       // Last trust point: abort before injecting anything when the panel was
       // hidden, moved, or covered. The panel stays open for cancel or retry.
       const consent = env.checkConsent(panel);
       if (!consent.ok) return { applied: false, reason: consent.reason };
+      // Inject before persisting so the saved selection reflects an attempted
+      // application; the outcomes ride the return value for display and retry.
+      const summary = env.injectPlan(plan);
       env.persistSelection({ profileId, addressId });
-      env.injectPlan(plan);
       const ctx = env.feedbackContext();
       const feedbackInput = buildFeedbackInput({
         pageHref: ctx.pageHref,
@@ -134,9 +150,18 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       if (feedbackInput) {
         env.openUrl(buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput));
       }
-      return { applied: true };
+      return { applied: true, summary, display: decideDisplay(summary, failureHint) };
     },
   };
+}
+
+// Banner composition in one place: silence on full application, otherwise the
+// partial-application note composed with the AI failure hint (if any) so the
+// two never clobber each other on the shared error channel.
+export function decideDisplay(summary: FillSummary, failureHint?: string): DisplayDecision {
+  if (!shouldWarn(summary)) return { banner: null };
+  const partial = `一部のみ適用（${summary.filled}/${summary.total}件）`;
+  return { banner: failureHint ? `${failureHint}。${partial}` : partial };
 }
 
 export type FillSession = ReturnType<typeof createFillSession>;

@@ -18,6 +18,28 @@ export interface CallContext {
 const needsSecrets = (s: PublicAiSettings): boolean =>
   (s.provider === 'openai' || s.provider === 'gemini') && s.hasKey[s.provider];
 
+// A corrupt key envelope must not collapse into an undistinguishable silence
+// (the background would answer undefined and the gateway read null): report
+// it as an auth failure in the same vocabulary the gateway already parses.
+async function secretsOrAuthFailure(
+  deps: HandlerDeps,
+): Promise<{ secrets: RegistrySecrets } | { failure: 'auth' }> {
+  try {
+    return { secrets: await deps.loadSecrets() };
+  } catch {
+    return { failure: 'auth' };
+  }
+}
+
+async function loadNeededSecrets(
+  settings: PublicAiSettings,
+  deps: HandlerDeps,
+): Promise<{ secrets: RegistrySecrets | undefined } | { failure: 'auth' }> {
+  if (!needsSecrets(settings)) return { secrets: undefined };
+  const r = await secretsOrAuthFailure(deps);
+  return 'failure' in r ? r : { secrets: r.secrets };
+}
+
 // Thin message dispatch over the provider registry: shape parsing lives here,
 // provider resolution, memory, audit wrap, and error vocabulary live behind
 // the registry seam. Returns undefined for anything that is not exactly one of
@@ -29,22 +51,28 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
 
   switch (req.type) {
     case 'ai-status': {
-      const secrets = needsSecrets(settings) ? await deps.loadSecrets() : undefined;
-      return deps.registry.status(settings, secrets);
+      const r = await loadNeededSecrets(settings, deps);
+      if ('failure' in r) return { status: 'auth-error', provider: settings.provider };
+      return deps.registry.status(settings, r.secrets);
     }
     case 'ai-download':
       return deps.registry.download(settings);
     case 'ai-classify': {
-      const secrets = await deps.loadSecrets();
-      return deps.registry.classify(settings, secrets, req.fields, {
+      // Keyless providers (none / built-in) classify without touching the key
+      // store: decrypting here would load key material for no reason and fail
+      // closed paths (e.g. a corrupt envelope) would take built-in down too.
+      const r = await loadNeededSecrets(settings, deps);
+      if ('failure' in r) return { ok: false, reason: 'auth' };
+      return deps.registry.classify(settings, r.secrets, req.fields, {
         purpose: 'classify',
         pageUrl: ctx.pageUrl,
         ...(req.chunk ? { chunk: req.chunk } : {}),
       });
     }
     case 'ai-test': {
-      const secrets = await deps.loadSecrets();
-      return deps.registry.test(settings, secrets);
+      const r = await loadNeededSecrets(settings, deps);
+      if ('failure' in r) return { ok: false, reason: 'auth' };
+      return deps.registry.test(settings, r.secrets);
     }
     case 'open-options':
     case 'audit-clear':

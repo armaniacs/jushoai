@@ -25,7 +25,7 @@ A `JushoAI で入力` (fill with JushoAI) button appears near a form that has se
 1. Click `JushoAI で入力`. A preview opens.
 2. At the top, choose the profile and address to use.
 3. Review the list of fields and values. Fields with a note are not filled.
-4. Click `入力する` (fill in).
+4. Click `入力する` (fill in). When some fields could not be applied, the button shows `一部のみ適用` (partially applied, x/y fields).
 
 | Note | Meaning |
 |---|---|

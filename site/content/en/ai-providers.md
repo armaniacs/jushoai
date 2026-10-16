@@ -27,6 +27,7 @@ The base URL has these rules.
 - A URL that contains credentials, a query or a fragment is rejected.
 - Internal network addresses and IPv6 addresses are rejected. When you save the URL, the host name is resolved with DNS, and the URL is rejected when it resolves into an internal address (private, loopback or link-local) or when the resolution cannot be confirmed. Names that resolve into internal addresses, such as nip.io or sslip.io, cannot be saved either.
 - The resolved address is re-checked right before each classify and connection-test call. When the address resolves into an internal one or the resolution cannot be confirmed, that call is not made and the rest of the run continues with the rules only; the lexical checks on the host name still apply. The host is resolved again on every call (per-call); a previous result is never carried into the next call.
+- Enter only the URL of a provider you trust as the base URL.
 
 If you change the origin of the base URL (scheme, host or port), the saved API key is not carried over. Enter the key again. To delete a saved key, tick `保存済みの API キーを削除する` (delete the saved API key) and save.
 
@@ -65,7 +66,7 @@ The extension tries to download the model when you click `JushoAI で入力` (fi
 
 ## Connection test and badge meanings
 
-`接続テスト（保存済みの設定で実行）` (connection test, run with the saved settings) classifies one synthetic field using your saved settings. Save first, then test.
+`接続テスト（保存済みの設定で実行）` (connection test, run with the saved settings) classifies one synthetic field using your saved settings. Save first, then test. For about 3 seconds after a connection test, the button is disabled; extra clicks send no additional requests.
 
 The result is `接続できました` (connected) or one of these.
 

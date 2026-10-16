@@ -202,6 +202,13 @@ function verdictOf(addresses: string[]): EgressVerdict {
 // one check instance for wiring, but it holds no cache. One dial costs one resolution
 // round trip (A + AAAA queries); a compat retry resolves again, so one classify costs
 // at most two round trips. This cost is accepted: there is no cache to reintroduce.
+//
+// Residual risk (accepted, documented): the check resolves through the pinned DoH
+// origin while fetch uses the platform resolver, and fetch cannot pin an IP, so a
+// check-to-use gap remains within one attempt. An operator of the configured base
+// URL who answers differently per resolver can slip through. Mitigations in place:
+// the check runs immediately before its fetch with nothing awaited in between, and
+// the settings page asks for trustworthy provider URLs only. Do not weaken either.
 export function createEgressCheck(deps: ResolveDeps): EgressCheck {
   return async (url: URL): Promise<EgressVerdict> => {
     const host = normalizeHost(url.hostname);

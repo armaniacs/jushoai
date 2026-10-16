@@ -1,8 +1,8 @@
 import {
-  classifyField, isConfident, refineClassifications, type Item,
+  classifyField, isConfident, refineClassifications,
 } from './classify-rules';
 import { detectKanaKind, resolveKana } from './kana';
-import type { Category, FieldMeta } from './types';
+import type { Category, FieldMeta, Item } from './types';
 import type { FieldClassifier } from './classifier';
 import { applyEnglishPage } from './page-language';
 
@@ -45,7 +45,7 @@ export async function classifyAll(
     }
     if (force && cls) items.push({ meta, cls });
   }
-  resolveKana(items);
-  const refined = refineClassifications(items);
+  const resolved = resolveKana(items);
+  const refined = refineClassifications(resolved);
   return opts.englishPage ? applyEnglishPage(refined) : refined;
 }

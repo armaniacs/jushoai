@@ -83,6 +83,11 @@ describe('scanFields: label and placeholder cap', () => {
     expect(metas()[0]!.placeholder).toBe('例'.repeat(200));
   });
 
+  it('clips a long pattern to 200 characters', () => {
+    document.body.innerHTML = `<input name="a" pattern="${'ぁ'.repeat(300)}">`;
+    expect(metas()[0]!.pattern).toBe('ぁ'.repeat(200));
+  });
+
   it('clips radio group labels and option text that fall back to labelOf', () => {
     document.body.innerHTML = `<label><input name="g" type="radio" value="0">${'え'.repeat(300)}</label>`;
     const m = metas()[0]!;

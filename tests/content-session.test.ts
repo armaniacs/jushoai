@@ -1,8 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Item } from '../src/core/classify-rules';
-import type { Address, FieldMeta, Profile } from '../src/core/types';
+import type { Address, FieldMeta, Item, Profile } from '../src/core/types';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../src/core/types';
-import { createFillSession, type SessionEnv } from '../src/content-session';
+import { createFillSession, decideDisplay, type SessionEnv } from '../src/content-session';
+import type { FillSummary } from '../src/dom/fill-plan';
 import { makeMeta } from './helpers';
 
 const profile1: Profile = {
@@ -33,11 +33,20 @@ function metasById(list: FieldMeta[]): Map<string, FieldMeta> {
   return new Map(list.map((m) => [m.id, m]));
 }
 
+const fullSummary = (filled: number, unapplied: number): FillSummary => ({
+  filled,
+  unapplied,
+  total: filled + unapplied,
+  byResult: {
+    filled, 'skipped-status': 0, 'missing-target': 0, detached: 0, 'already-filled': 0, 'no-option': 0, error: 0,
+  },
+});
+
 const panel = { getApplyPoint: () => ({ x: 1, y: 2 }), getHost: () => ({}) as Element };
 
 function setup(opts: {
   excluded?: boolean; consent?: boolean; reItems?: Item[]; canReanalyze?: boolean;
-  lastProfileId?: string; lastAddressId?: string;
+  lastProfileId?: string; lastAddressId?: string; summary?: { filled: number; unapplied: number };
 } = {}) {
   const ms = metas();
   const classify = vi.fn(async (_m: FieldMeta[], o?: { force?: boolean }) =>
@@ -47,7 +56,7 @@ function setup(opts: {
     checkConsent: () => (opts.consent === false
       ? { ok: false as const, reason: '覆われているため中止' }
       : { ok: true as const }),
-    injectPlan: vi.fn(),
+    injectPlan: vi.fn((): FillSummary => fullSummary(opts.summary?.filled ?? 2, opts.summary?.unapplied ?? 0)),
     persistSelection: vi.fn(),
     openUrl: vi.fn(),
     feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
@@ -107,10 +116,38 @@ describe('fill session: apply', () => {
     const { session, env } = setup();
     await session.start();
     const result = session.apply(false, panel);
-    expect(result).toEqual({ applied: true });
+    expect(result).toMatchObject({ applied: true });
     expect(env.persistSelection).toHaveBeenCalledWith({ profileId: 'p1', addressId: 'a1' });
     expect(env.injectPlan).toHaveBeenCalledOnce();
     expect(env.openUrl).not.toHaveBeenCalled();
+  });
+
+  it('injects before persisting and returns the fill summary', async () => {
+    const { session, env } = setup({ summary: { filled: 1, unapplied: 1 } });
+    await session.start();
+    const order: string[] = [];
+    vi.mocked(env.injectPlan).mockImplementation(() => { order.push('inject'); return fullSummary(1, 1); });
+    vi.mocked(env.persistSelection).mockImplementation(() => { order.push('persist'); });
+    const result = session.apply(false, panel);
+    expect(order).toEqual(['inject', 'persist']);
+    expect(result).toMatchObject({ applied: true, summary: { filled: 1, unapplied: 1, total: 2 } });
+  });
+
+  it('composes the display decision with and without a failure hint', async () => {
+    const { session } = setup({ summary: { filled: 1, unapplied: 1 } });
+    await session.start();
+    expect(session.apply(false, panel)).toMatchObject({
+      applied: true,
+      display: { banner: '一部のみ適用（1/2件）' },
+    });
+    expect(session.apply(false, panel, 'AI通信に失敗したためルールのみで表示: 再試行できます')).toMatchObject({
+      applied: true,
+      display: { banner: 'AI通信に失敗したためルールのみで表示: 再試行できます。一部のみ適用（1/2件）' },
+    });
+  });
+
+  it('stays silent on full application', () => {
+    expect(decideDisplay(fullSummary(2, 0))).toEqual({ banner: null });
   });
 
   it('leaves the session open for retry when consent fails', async () => {

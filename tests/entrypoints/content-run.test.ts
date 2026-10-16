@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { Item } from '../../src/core/classify-rules';
 import { buildPlan, type PlanItem } from '../../src/core/planner';
-import type { Address, FieldMeta, Profile } from '../../src/core/types';
+import type { Address, FieldMeta, Item, Profile } from '../../src/core/types';
 import type { FeedbackSnapshot } from '../../src/feedback/issue-url';
 import type { PreviewRow } from '../../src/ui/preview';
 import {

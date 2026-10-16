@@ -2,6 +2,7 @@ import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from '../ai/audited-classifier';
+import { clipAuditResponse } from '../ai/audit-log';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
 
 export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄を分類するアシスタントです。
@@ -103,7 +104,9 @@ export class PromptApiClassifier implements TracedClassifier {
         const raw = await session.prompt(prompt, {
           responseConstraint: buildSchema(fields),
         });
-        trace.response = raw;
+        // Same clip the audit entry applies, so the retained trace string itself
+        // stays bounded instead of holding a full-size response (mirrors HttpClassifier.attempt).
+        trace.response = clipAuditResponse(raw);
         return { map: parseLlmOutput(raw, fields), trace };
       } finally {
         session.destroy();

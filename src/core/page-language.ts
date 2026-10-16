@@ -1,5 +1,4 @@
-import type { Category } from './types';
-import type { Item } from './classify-rules';
+import type { Category, Item } from './types';
 
 const JAPANESE = /[぀-ゟ゠-ヿ一-龠]/g;
 const LATIN = /[a-z]/gi;

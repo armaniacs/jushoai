@@ -9,6 +9,11 @@ import { HttpAuthError, HttpRequestError } from './http-classifiers';
 export interface AttemptTrace {
   status: number | null;
   retried: boolean;
+  // The first attempt's status when a compat retry fired (e.g. the initial
+  // 400/422); stays undefined when no retry happened. Audit entries keep the
+  // final status in httpStatus, so this is the only place the rejected first
+  // status survives for diagnosis.
+  firstStatus?: number | null;
   request: string;
   response: string;
 }

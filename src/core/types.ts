@@ -43,6 +43,15 @@ export interface Classification {
   kanaKind?: KanaKind;
 }
 
+// The shared pair flowing through classify → kana-resolve → refine → plan.
+// Lives here (not in classify-rules) so kana.ts never imports classify-rules:
+// value flows classify-rules → kana, type flows types → both, and no future
+// value import on the kana side can turn this into a runtime cycle.
+export interface Item {
+  meta: FieldMeta;
+  cls: Classification;
+}
+
 export interface Profile {
   id: string;
   label: string;

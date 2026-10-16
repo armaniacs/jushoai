@@ -173,6 +173,24 @@ describe('handleMessage: ai-classify', () => {
     expect(authFailed.size).toBe(0);
   });
 
+  it('retries the network after the auth-failure window passes', async () => {
+    const now = vi.spyOn(Date, 'now');
+    try {
+      now.mockReturnValue(1_000_000);
+      const fetchMock = vi.fn().mockResolvedValue(statusJson(401));
+      const { deps, authFailed } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+      expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'auth' });
+      expect(authFailed.has('openai')).toBe(true);
+      await handleMessage(msg, deps);
+      expect(fetchMock).toHaveBeenCalledOnce();
+      now.mockReturnValue(1_000_000 + 6 * 60 * 1000);
+      await handleMessage(msg, deps);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    } finally {
+      now.mockRestore();
+    }
+  });
+
   it('does not leak the API key into any response', async () => {
     const { deps } = makeDeps({ settings: openai, ...configured, fetch: vi.fn().mockResolvedValue(statusJson(500)) });
     expect(JSON.stringify(await handleMessage(msg, deps))).not.toContain('sk-test');
@@ -274,6 +292,26 @@ describe('handleMessage: decrypted-key accuracy', () => {
   });
 });
 
+describe('handleMessage: corrupt key envelope', () => {
+  const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+  const broken = (o: Opts = {}) => {
+    const { deps, fetchMock } = makeDeps({ settings: openai, ...configured, ...o });
+    return { deps: { ...deps, loadSecrets: async (): Promise<{ openai?: string; gemini?: string }> => { throw new Error('corrupt envelope'); } }, fetchMock };
+  };
+
+  it('reports auth-error instead of silence for status, classify and test', async () => {
+    expect(await handleMessage({ type: 'ai-status' }, broken().deps)).toEqual({ status: 'auth-error', provider: 'openai' });
+    expect(await handleMessage(msg, broken().deps)).toEqual({ ok: false, reason: 'auth' });
+    expect(await handleMessage({ type: 'ai-test' }, broken().deps)).toEqual({ ok: false, reason: 'auth' });
+  });
+
+  it('never touches the network with an unreadable key', async () => {
+    const { deps, fetchMock } = broken();
+    await handleMessage(msg, deps);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
 describe('handleMessage: compatibility retry', () => {
   const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
 
@@ -296,6 +334,15 @@ describe('handleMessage: compatibility retry', () => {
     const { deps } = makeDeps({ settings: openai, ...configured, fetch: fetchMock, compat: new Set<ProviderKind>(['openai']) });
     await handleMessage(msg, deps);
     expect(fetchMock).toHaveBeenCalledOnce();
+  });
+
+  it('does not pin compat mode when the retry response is unusable', async () => {
+    const fetchMock = vi.fn()
+      .mockResolvedValueOnce(statusJson(400))
+      .mockResolvedValueOnce(okJson({}));
+    const { deps, compat } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'network' });
+    expect(compat.has('openai')).toBe(false);
   });
 
   it('maps a rejected connection test to "rejected" and keeps network errors as "network"', async () => {
@@ -403,5 +450,47 @@ describe('handleMessage: audit log', () => {
     await handleMessage(msg, noPerm.deps);
     expect(none.audits).toEqual([]);
     expect(noPerm.audits).toEqual([]);
+  });
+});
+
+describe('handleMessage: keyless providers skip decryption', () => {
+  const classifyMsg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+
+  it.each([
+    ['none', { provider: 'none' } as const],
+    ['built-in', { provider: 'built-in' } as const],
+  ])('does not loadSecrets for ai-classify with provider %s', async (_name, settings) => {
+    const { deps } = makeDeps({ settings, lm: builtInLm('available') });
+    const loadSecrets = vi.fn(async () => ({}));
+    await handleMessage(classifyMsg, { ...deps, loadSecrets });
+    expect(loadSecrets).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['none', { provider: 'none' } as const],
+    ['built-in', { provider: 'built-in' } as const],
+  ])('does not loadSecrets for ai-test with provider %s', async (_name, settings) => {
+    const { deps } = makeDeps({ settings, lm: builtInLm('available') });
+    const loadSecrets = vi.fn(async () => ({}));
+    await handleMessage({ type: 'ai-test' }, { ...deps, loadSecrets });
+    expect(loadSecrets).not.toHaveBeenCalled();
+  });
+
+  it('still classifies built-in without secrets', async () => {
+    const { deps } = makeDeps({ settings: { provider: 'built-in' }, lm: builtInLm('available') });
+    const loadSecrets = vi.fn(async () => ({}));
+    expect(await handleMessage(classifyMsg, { ...deps, loadSecrets })).toEqual({
+      ok: true, entries: [['a', 'lastName']],
+    });
+  });
+
+  it('still loads secrets for a keyed cloud classify', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
+    const { deps } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
+    const loadSecrets = vi.fn(async () => ({ openai: 'sk-test' }));
+    expect(await handleMessage(classifyMsg, { ...deps, loadSecrets })).toEqual({
+      ok: true, entries: [['a', 'lastName']],
+    });
+    expect(loadSecrets).toHaveBeenCalledOnce();
   });
 });

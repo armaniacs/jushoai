@@ -3,12 +3,10 @@ import { buildPreviewRows } from '../../src/content-run';
 import type { PlanItem } from '../../src/core/planner';
 import { makeMeta } from '../helpers';
 
-// Blue / System Architect / Domain Logic (Low): `buildPreviewRows` uses a
-// non-null assertion on `metasById.get(p.fieldId)`. When a stale plan meets a
-// fresh field map (e.g. a leftover plan after `reanalyze()`), the preview
-// update throws instead of degrading. `it.fails` encodes the DESIRED guard
-// (`if (!m) continue`) without touching production code — Phase 5 adds the
-// guard and drops the `.fails` marker.
+// Blue / System Architect / Domain Logic (Low): `buildPreviewRows` must not
+// throw when a stale plan meets a fresh field map (e.g. a leftover plan after
+// `reanalyze()`). Missing entries degrade to a fallback row keyed by fieldId
+// instead of killing the whole preview.
 
 const row = (fieldId: string): PlanItem => ({
   fieldId, category: 'lastName', source: 'rule', value: '山田', display: '山田', status: 'ok',
@@ -21,12 +19,13 @@ describe('buildPreviewRows stale-plan guard (Blue/System/Domain Low)', () => {
     expect(rows[0]?.label).toBe('氏名');
   });
 
-  it.fails('skips plan entries whose fieldId is missing from the map', () => {
+  it('degrades plan entries missing from the map to fallback rows', () => {
     const rows = buildPreviewRows(
       [row('f'), row('gone')],
       new Map([['f', makeMeta({ id: 'f', label: '氏名' })]]),
     );
-    expect(rows).toHaveLength(1);
+    expect(rows).toHaveLength(2);
     expect(rows[0]?.label).toBe('氏名');
+    expect(rows[1]).toMatchObject({ label: 'gone', display: '山田', status: 'ok', source: 'rule' });
   });
 });

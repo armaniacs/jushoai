@@ -1,8 +1,8 @@
 import type {
-  Category, Classification, FieldMeta, SelectOption,
+  Category, Classification, FieldMeta, Item, SelectOption,
 } from './types';
 import { stripExample } from './formatters';
-import { KANA, wantsKana } from './kana';
+import { matchFieldOwned, matchLegend, wantsKana } from './kana';
 import { norm } from './literals';
 
 export const ACCEPT_THRESHOLD = 0.6;
@@ -11,11 +11,6 @@ export const ACCEPT_THRESHOLD = 0.6;
 // analyze.ts (LLM fallback) and detect-forms.ts (anchor selection) must not drift on this.
 export const isConfident = (cls: Classification | null): cls is Classification =>
   cls !== null && cls.confidence >= ACCEPT_THRESHOLD;
-
-export interface Item {
-  meta: FieldMeta;
-  cls: Classification;
-}
 
 // A Map lookup stays on own entries: a plain-object subscript walks the prototype
 // chain, so a page-set autocomplete="constructor" (or "__proto__") resolved an
@@ -236,7 +231,16 @@ const DISPATCH: readonly MatcherEntry[] = [
 // is decided once in kana.ts (resolveKana), which also owns wantsKana — the gate
 // below keeps the old null-vs-fullName distinction (a kanji/latin placeholder
 // still beats a bare kana signal) without re-implementing the kana decision here.
-function classifyText(raw: string, bareKana: boolean, meta: FieldMeta): Category | null {
+// wantsKanaField is a per-field memoized thunk: the three text sources share one
+// lazy evaluation so a kana-worded field pays the kana regexes at most once.
+// kanaTest is the vocabulary query for the source at hand: field-owned strings
+// use the full set, the shared legend the narrower one.
+function classifyText(
+  raw: string,
+  bareKana: boolean,
+  wantsKanaField: () => boolean,
+  kanaTest: (normalized: string) => boolean,
+): Category | null {
   const t = norm(raw);
   if (!t.trim() || EXCLUDE.test(t)) return null;
   if (/e-?mail|メール/.test(t)) return 'email';
@@ -254,11 +258,14 @@ function classifyText(raw: string, bareKana: boolean, meta: FieldMeta): Category
   const first = FIRST.test(t);
   if (last && !first) return 'lastName';
   if (first && !last) return 'firstName';
-  if (last || first || FULL_NAME.test(t) || ((bareKana || KANA.test(t)) && wantsKana(meta))) return 'fullName';
+  if (last || first || FULL_NAME.test(t) || ((bareKana || kanaTest(t)) && wantsKanaField())) return 'fullName';
   if (/address|住所|addr/.test(t)) return 'addressFull';
   return null;
 }
 
+/**
+ * 欄単体から素名のみを返す（カナ帰属は解決せず `resolveKana` が行う）。単体直呼びの結果を planner に渡さず `classifyAll` 経由で使うこと。
+ */
 export function classifyField(m: FieldMeta): Classification | null {
   const ac = m.autocomplete.trim().toLowerCase().split(/\s+/).pop() ?? '';
   const make = (category: Category, confidence: number): Classification => ({
@@ -301,20 +308,55 @@ export function classifyField(m: FieldMeta): Classification | null {
   // Only the label/placeholder source may infer a name from the placeholder alone;
   // name/id and heading text need their own name signal. Kana attribution is not
   // decided here (see kana.ts resolveKana): the bare flag only widens the base.
-  const sources: [string, number, boolean][] = [
-    [`${m.name} ${m.htmlId}`, 0.8, false],
-    [`${m.label} ${m.placeholder}`, 0.7, true],
-    [m.nearby, 0.65, false],
+  // The kana gate is lazy and memoized per field, so text sources that never
+  // reach the kana branch still pay nothing.
+  let kanaWant: boolean | undefined;
+  const wantsKanaField = (): boolean => (kanaWant ??= wantsKana(m));
+  const sources: [string, number, boolean, (normalized: string) => boolean][] = [
+    [`${m.name} ${m.htmlId}`, 0.8, false, matchFieldOwned],
+    [`${m.label} ${m.placeholder}`, 0.7, true, matchFieldOwned],
+    [m.nearby, 0.65, false, matchLegend],
   ];
-  for (const [text, confidence, bare] of sources) {
-    const category = classifyText(text, bare, m);
+  for (const [text, confidence, bare, kanaTest] of sources) {
+    const category = classifyText(text, bare, wantsKanaField, kanaTest);
     if (category) return make(category, confidence);
   }
   if (m.type === 'tel') return make('tel', 0.5);
   return null;
 }
 
-export function refineClassifications(items: Item[]): Item[] {
+export interface SplitDrop {
+  fieldId: string;
+  from: Category;
+  reason: 'oversized-group';
+}
+
+// Split policies, one table: adding a split kind is one row (source category,
+// targets, grouping), not a new wrapper. Label grouping splits fields sharing
+// label and heading by exact size; part-order grouping splits fields sharing
+// only a heading by consecutiveness and part-order labels.
+type SplitGrouping = 'label' | 'partOrder';
+
+interface SplitPolicy {
+  from: Category;
+  to: Category[];
+  grouping: SplitGrouping;
+  parts?: RegExp[];
+}
+
+const TEL_PARTS = [/市外/, /市内/, /加入者/];
+const ZIP_PARTS = [/上.{0,2}3桁/, /下.{0,2}4桁/];
+
+const SPLIT_POLICIES: SplitPolicy[] = [
+  { from: 'tel', to: ['tel1', 'tel2', 'tel3'], grouping: 'label' },
+  { from: 'zip', to: ['zip1', 'zip2'], grouping: 'label' },
+  { from: 'fullName', to: ['lastName', 'firstName'], grouping: 'label' },
+  { from: 'fullNameKana', to: ['lastNameKana', 'firstNameKana'], grouping: 'label' },
+  { from: 'tel', to: ['tel1', 'tel2', 'tel3'], grouping: 'partOrder', parts: TEL_PARTS },
+  { from: 'zip', to: ['zip1', 'zip2'], grouping: 'partOrder', parts: ZIP_PARTS },
+];
+
+export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   const indices = (c: Category) =>
     out.flatMap((it, i) => (it.cls.category === c ? [i] : []));
@@ -325,14 +367,11 @@ export function refineClassifications(items: Item[]): Item[] {
       if (target && cat) target.cls.category = cat;
     });
 
-  const dropped = new Set<number>();
+  const dropped: SplitDrop[] = [];
   // Fields only split when they share label and heading; otherwise they may belong to
   // different people or address blocks (e.g. orderer vs. recipient). Oversized ambiguous
-  // groups are dropped instead of being filled with fragments of one value.
-  // Single grouping backbone: callers inject the key function and the acceptance
-  // predicate. Split parts whose labels spell the part out (市外局番/市内局番/加入者番号,
-  // 上3桁/下4桁) share a heading but not a label, so they use the nearby-only key
-  // with consecutiveness and part-order acceptance instead.
+  // groups are dropped instead of being filled with fragments of one value, and each
+  // drop carries its reason so callers can trace why a field vanished.
   const splitBy = (
     cat: Category,
     cats: Category[],
@@ -347,20 +386,15 @@ export function refineClassifications(items: Item[]): Item[] {
     }
     for (const idx of groups.values()) {
       if (accept(idx, cats.length)) retag(idx, cats);
-      else if (dropOversize && idx.length > cats.length) idx.forEach((i) => dropped.add(i));
+      else if (dropOversize && idx.length > cats.length) {
+        for (const i of idx) dropped.push({ fieldId: out[i]!.meta.id, from: cat, reason: 'oversized-group' });
+      }
     }
   };
   const exactSize = (idx: number[], size: number): boolean => idx.length === size;
   const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby}`;
-  splitBy('tel', ['tel1', 'tel2', 'tel3'], sameLabel, exactSize, true);
-  splitBy('zip', ['zip1', 'zip2'], sameLabel, exactSize, true);
-  splitBy('fullName', ['lastName', 'firstName'], sameLabel, exactSize, true);
-  splitBy('fullNameKana', ['lastNameKana', 'firstNameKana'], sameLabel, exactSize, true);
-
   // Only consecutive fields under one heading whose labels arrive in part order
   // qualify; anything else keeps the current unsplit protection.
-  const TEL_PARTS = [/市外/, /市内/, /加入者/];
-  const ZIP_PARTS = [/上.{0,2}3桁/, /下.{0,2}4桁/];
   const partRank = (label: string, parts: RegExp[]): number => {
     const t = norm(label);
     for (let i = 0; i < parts.length; i++) {
@@ -372,8 +406,13 @@ export function refineClassifications(items: Item[]): Item[] {
     idx.length === size &&
     idx.every((v, k) => k === 0 || v === idx[k - 1]! + 1) &&
     idx.every((v, k) => partRank(out[v]!.meta.label, parts) === k);
-  splitBy('tel', ['tel1', 'tel2', 'tel3'], (meta) => meta.nearby, inPartOrder(TEL_PARTS), false);
-  splitBy('zip', ['zip1', 'zip2'], (meta) => meta.nearby, inPartOrder(ZIP_PARTS), false);
+  for (const policy of SPLIT_POLICIES) {
+    if (policy.grouping === 'label') {
+      splitBy(policy.from, policy.to, sameLabel, exactSize, true);
+    } else {
+      splitBy(policy.from, policy.to, (meta) => meta.nearby, inPartOrder(policy.parts ?? []), false);
+    }
+  }
 
   const hasCity = out.some((it) => it.cls.category === 'city');
   const hasPref = out.some((it) => it.cls.category === 'prefecture');
@@ -382,5 +421,11 @@ export function refineClassifications(items: Item[]): Item[] {
     if (hasCity) it.cls.category = 'street';
     else if (hasPref) it.cls.category = 'addressNoPref';
   }
-  return out.filter((_, i) => !dropped.has(i));
+  const keptIds = new Set(out.map((it) => it.meta.id));
+  for (const d of dropped) keptIds.delete(d.fieldId);
+  return { items: out.filter((it) => keptIds.has(it.meta.id)), dropped };
+}
+
+export function refineClassifications(items: Item[]): Item[] {
+  return refineWithDrops(items).items;
 }

@@ -1,4 +1,4 @@
-import type { Item } from './core/classify-rules';
+import type { Item } from './core/types';
 import { buildPlan, type PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackInput, FeedbackSnapshot } from './feedback/issue-url';
@@ -16,7 +16,13 @@ export function snapshotItems(list: Item[]): Map<string, FeedbackSnapshot> {
 
 export function buildPreviewRows(plan: PlanItem[], metasById: Map<string, FieldMeta>): PreviewRow[] {
   return plan.map((p) => {
-    const m = metasById.get(p.fieldId)!;
+    const m = metasById.get(p.fieldId);
+    // A plan/map mismatch (stale preview after rescan) must not kill the whole
+    // preview: fall back to the field id as the label and keep the plan's own
+    // display/status/source, which stay truthful without the meta.
+    if (!m) {
+      return { label: p.fieldId, display: p.display, status: p.status, source: p.source };
+    }
     return {
       label: m.label || m.nearby || m.placeholder || m.name || m.htmlId,
       display: p.display,

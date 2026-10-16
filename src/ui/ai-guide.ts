@@ -177,6 +177,10 @@ export function showAiGuide(
 
   closeButton.addEventListener('click', close);
 
-  mounted = mountPanel((_host, root) => { root.append(style, panel); }, onClose);
+  mounted = mountPanel(
+    (_host, root) => { root.append(style, panel); },
+    onClose,
+    { accessibleName: guide.title, focus: 'primary' },
+  );
   return { close };
 }

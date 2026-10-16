@@ -10,6 +10,9 @@ export interface PermissionsQuery {
 export interface PermissionsApi {
   contains(query: PermissionsQuery): Promise<boolean>;
   request(query: PermissionsQuery): Promise<boolean>;
+  // Optional so existing fakes (contains/request only) keep typechecking;
+  // removeHostPermission treats a missing implementation as a no-op.
+  remove?(query: PermissionsQuery): Promise<boolean>;
 }
 
 // Firefox MV3 grants the content-script hosts at install, so the origin prompt alone may never show;
@@ -58,6 +61,23 @@ export async function requestHostPermission(
   if (origins.length === 0) return false;
   try {
     return await api.request(queryFor(origins, isFirefox));
+  } catch {
+    return false;
+  }
+}
+
+// Best-effort rollback for origins granted during a save that was then
+// rejected (resolved-address gate, persist failure). A missing remove
+// implementation or a denied removal is a silent no-op; the save already
+// failed, so this must never change its outcome.
+export async function removeHostPermission(
+  origins: string[],
+  api: PermissionsApi = chrome.permissions as PermissionsApi,
+  isFirefox: boolean = IS_FIREFOX,
+): Promise<boolean> {
+  if (origins.length === 0) return false;
+  try {
+    return (await api.remove?.(queryFor(origins, isFirefox))) ?? false;
   } catch {
     return false;
   }

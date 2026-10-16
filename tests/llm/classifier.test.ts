@@ -4,6 +4,7 @@ import {
   PromptApiClassifier, buildPrompt, buildSchema, parseLlmOutput,
 } from '../../src/llm/classifier';
 import type { LanguageModelStatic } from '../../src/llm/availability';
+import { AUDIT_RESPONSE_CLIP_LENGTH, clipAuditResponse } from '../../src/ai/audit-log';
 import { makeMeta } from '../helpers';
 
 const fields = [makeMeta({ id: 'a', label: '姓' }), makeMeta({ id: 'b', name: 'x' })];
@@ -74,5 +75,31 @@ describe('PromptApiClassifier', () => {
     const { lm, create } = makeLm(async () => '{}');
     expect((await new PromptApiClassifier(lm).classify([])).size).toBe(0);
     expect(create).not.toHaveBeenCalled();
+  });
+
+  it('clips a huge raw response in the attempt trace but parses the full raw', async () => {
+    const raw = `{"a":"lastName","b":"email"}${' '.repeat(AUDIT_RESPONSE_CLIP_LENGTH + 100)}`;
+    const { lm } = makeLm(async () => raw);
+    const attempt = await new PromptApiClassifier(lm).attempt(fields);
+    expect(attempt.trace.response).toBe(clipAuditResponse(raw));
+    expect(attempt.trace.response.length).toBe(AUDIT_RESPONSE_CLIP_LENGTH + 1);
+    expect(attempt.trace.response.endsWith('…')).toBe(true);
+    expect([...attempt.map]).toEqual([...parseLlmOutput(raw, fields)]);
+  });
+
+  it('keeps a normal-size response unchanged in the attempt trace', async () => {
+    const raw = '{"a":"lastName","b":"email"}';
+    const { lm } = makeLm(async () => raw);
+    const attempt = await new PromptApiClassifier(lm).attempt(fields);
+    expect(attempt.trace.response).toBe(raw);
+    expect([...attempt.map]).toEqual([['a', 'lastName'], ['b', 'email']]);
+  });
+
+  it('keeps the request on a create() failure with an error in the attempt', async () => {
+    const lm = { create: vi.fn().mockRejectedValue(new Error('no session')) } as unknown as LanguageModelStatic;
+    const attempt = await new PromptApiClassifier(lm).attempt(fields);
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.error).toBeInstanceOf(Error);
+    expect(attempt.trace.request).toBe(buildPrompt(fields));
   });
 });

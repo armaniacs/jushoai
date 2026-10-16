@@ -11,11 +11,28 @@ export interface PanelHandle {
 // top-right; anchor-following buttons position from rects), and app-level
 // bookkeeping (openPreview = null etc.) stays with the caller through onClose,
 // which runs exactly once per panel.
+// Explicit presence: the dialog name and the initial focus target travel as
+// arguments, never scraped from markup. A scraped heading couples the
+// accessible name to render text (and could mirror caller-controlled PII into
+// a page-readable attribute); a scanned `.primary` class couples focus to DOM
+// order. Both are caller intent and belong in the call.
+export interface PanelPresence {
+  accessibleName?: string;
+  // 'first' (default): the first enabled button, regardless of marking.
+  // 'primary': prefer the `.primary`-marked action, falling back to first.
+  // The default stays dumb on purpose: future panels get predictable focus
+  // unless they opt into the primary convention explicitly at the call site.
+  focus?: 'primary' | 'first';
+}
+
 export function mountPanel(
   render: (host: HTMLElement, root: ShadowRoot) => void,
   onClose: () => void = () => {},
+  presence: PanelPresence = {},
 ): PanelHandle {
   const { host, root } = createOverlayHost();
+  // Focus restore target: the element that had focus before the panel opens.
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   let closed = false;
   const detachEscape = attachEscapeClose(() => handle.close());
   const handle: PanelHandle = {
@@ -26,11 +43,37 @@ export function mountPanel(
       closed = true;
       detachEscape();
       host.remove();
+      // Return focus to the opener when it is still in the document.
+      if (opener && opener.isConnected) opener.focus();
       onClose();
     },
   };
-  render(host, root);
+  // A throwing render must not strand the Escape listener or an unreturned
+  // handle: tear down and let the caller see the exception. onClose does not
+  // run because the panel never opened.
+  try {
+    render(host, root);
+  } catch (e) {
+    detachEscape();
+    host.remove();
+    throw e;
+  }
+  // Dialog semantics (a11y-only): the host is the dialog, named explicitly by
+  // the caller. Never scrape the shadow heading here: the host attribute is
+  // page-readable, so only caller-vetted static strings may land on it.
+  host.setAttribute('role', 'dialog');
+  const name = (presence.accessibleName ?? '').trim();
+  if (name) host.setAttribute('aria-label', name);
+  else host.removeAttribute('aria-label');
   document.body.append(host);
+  // Initial focus follows the explicit target: 'first' (default) takes the
+  // first enabled button; 'primary' prefers the marked action. Callers opt in
+  // at the call site instead of relying on markup order or class scanning.
+  const buttons = [...root.querySelectorAll<HTMLButtonElement>('button')];
+  const enabled = buttons.filter((b) => !b.disabled);
+  const primary = enabled.find((b) => b.classList.contains('primary'));
+  const target = (presence.focus === 'primary' ? (primary ?? enabled[0]) : enabled[0]) ?? buttons[0];
+  target?.focus();
   return handle;
 }
 

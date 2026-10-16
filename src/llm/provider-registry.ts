@@ -9,6 +9,7 @@ import { sanitizePageUrl } from '../feedback/issue-url';
 import type { ClassifySchedule, FieldClassifier } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
+import { createAuthBlock, type AuthBlock } from './auth-block';
 import { PromptApiClassifier } from './classifier';
 import type { ClassifyResponse, TestFailure, TestResponse } from '../messages';
 
@@ -30,6 +31,8 @@ export interface RegistryEnv {
 // through the selection below, cleared as one unit by invalidate() when the
 // settings change. The containers may be injected (background, tests) so
 // long-lived observers keep working; the lifecycle decisions live here.
+// NOTE: entries seeded from outside (injected pre-filled sets) carry no
+// timestamp and never expire; only failures recorded here self-heal.
 export interface RegistryMemory {
   authFailed: Set<ProviderKind>;
   compat: Set<ProviderKind>;
@@ -58,7 +61,11 @@ export class ProviderRegistry {
   constructor(
     private readonly env: RegistryEnv,
     private readonly memory: RegistryMemory = { authFailed: new Set(), compat: new Set() },
-  ) {}
+  ) {
+    this.authBlock = createAuthBlock(memory.authFailed);
+  }
+
+  private readonly authBlock: AuthBlock;
 
   // Changing the settings (a new key, another provider) gives a failed or
   // compat-mode provider a fresh start. The background calls this on the same
@@ -66,6 +73,7 @@ export class ProviderRegistry {
   invalidate(): void {
     this.memory.authFailed.clear();
     this.memory.compat.clear();
+    this.authBlock.clearAll();
   }
 
   private async statusOf(s: PublicAiSettings, secrets?: RegistrySecrets): Promise<AiStatusInfo> {
@@ -82,7 +90,7 @@ export class ProviderRegistry {
         settings: s,
         hasKey,
         permitted: await this.env.hasPermission(requiredHostOrigins(s)),
-        authFailed: this.memory.authFailed.has(s.provider),
+        authFailed: this.authBlock.isBlocked(s.provider),
       }),
       provider: s.provider,
     };
@@ -188,7 +196,7 @@ export class ProviderRegistry {
       return { ok: true, entries: [...(await sel.classifier.classify(fields, opts.chunk))] };
     } catch (e) {
       if (e instanceof HttpAuthError) {
-        this.memory.authFailed.add(s.provider);
+        this.authBlock.record(s.provider);
         return { ok: false, reason: 'auth' };
       }
       return { ok: false, reason: this.mapFailure(e) };
@@ -201,11 +209,11 @@ export class ProviderRegistry {
     try {
       const category = (await sel.classifier.classify([TEST_FIELD])).get('t');
       if (!category) return { ok: false, reason: 'bad-response' };
-      this.memory.authFailed.delete(s.provider);
+      this.authBlock.clear(s.provider);
       return { ok: true, category };
     } catch (e) {
       if (e instanceof HttpAuthError) {
-        this.memory.authFailed.add(s.provider);
+        this.authBlock.record(s.provider);
         return { ok: false, reason: 'auth' };
       }
       const reason = this.mapFailure(e);
