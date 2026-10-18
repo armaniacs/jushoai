@@ -68,6 +68,9 @@ export type MetaWire = Pick<FieldMeta, (typeof META_WIRE_KEYS)[number]>;
 export const META_CLIP_LENGTH = 80;
 
 export function toWireMeta(f: FieldMeta): MetaWire {
+  // LLM 送信用ペイロードはこの関数経由の wire 型（allow-list キー）のみで構築する。
+  // FieldMeta.value（fill 判定専用のページ既存値）はここで落とす。以後の送信側変更でも
+  // value を wire に載せない（受信側 sanitizeField が value:'' に戻すのと対になる保証）。
   return {
     id: f.id,
     type: f.type,
@@ -81,6 +84,9 @@ export function toWireMeta(f: FieldMeta): MetaWire {
 }
 
 // Rebuilds a FieldMeta from the metadata allow-list only; page-controlled values never pass through.
+// FieldMeta.value（fill 判定専用）は常に '' に戻す。fill 判定の既存値参照は planner の
+// meta.value スナップショットと fill-plan の live DOM 読み（isStillEmpty / targetsFromControls）の
+// 別経路で維持し、この受信形状では復元しない。
 function sanitizeField(v: unknown): FieldMeta | null {
   if (!isRecord(v)) return null;
   const id = v.id;

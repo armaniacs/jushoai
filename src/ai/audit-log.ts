@@ -10,10 +10,11 @@ export const AUDIT_MAX_ENTRIES = 1000;
 // 10 MB in Chrome) so a full batch cannot wedge every future write.
 export const AUDIT_MAX_BYTES = 4_000_000;
 
-// Upper bound for the page URL kept in an audit record. sanitizePageUrl has no
-// length limit and history.pushState can stretch the pathname, so the audit
-// ingest caps it here instead of in the shared sanitizer (which also feeds the
-// feedback report URL). 1024 bytes keeps any realistic origin (~<300 bytes)
+// Upper bound for the page URL kept in an audit record. The ingest boundary
+// minimizes to the origin first (minimizeAuditPageUrl), so a pathname
+// stretched by history.pushState never reaches storage; the cap stays here as
+// a safety net for direct drafts. 1024 bytes keeps any realistic origin
+// (~<300 bytes)
 // with room for a path prefix. The cut is on a code-point boundary, so no
 // broken encoding or split surrogate pair is ever stored. A stored pageUrl at
 // exactly the bound may be a truncated prefix; this is accepted (the audit
@@ -36,6 +37,21 @@ export function capAuditPageUrl(url: string): string {
   let end = lo;
   if (end > 0 && isHighSurrogate(url.charCodeAt(end - 1))) end -= 1;
   return url.slice(0, end);
+}
+
+// Privacy floor for the audit log: only the page origin is kept, so path
+// tokens, query strings and fragments never reach the 7-day plaintext store
+// or the TSV export. The host column already carries the destination host, so
+// dropping the path removes no identity the log needs (no duplicate host
+// bookkeeping elsewhere). Invalid or opaque-origin URLs (about:blank,
+// chrome://) yield '' instead of the literal 'null' origin.
+export function minimizeAuditPageUrl(href: string): string {
+  try {
+    const origin = new URL(href).origin;
+    return origin === 'null' ? '' : origin;
+  } catch {
+    return '';
+  }
 }
 
 export const AUDIT_RESULTS = ['success', 'auth-error', 'http-error', 'network-error', 'invalid-response', 'error'] as const;
@@ -200,11 +216,12 @@ function escapeTsvField(value: string): string {
   return s;
 }
 
-// Newest first.
+// Newest first. The page_url column carries the minimized origin (legacy
+// full-path entries are rounded here, so pre-fix rows export safely too).
 export function toTsv(entries: AuditEntry[]): string {
   const rows = [...entries].sort((a, b) => b.id - a.id).map((e) =>
     [
-      String(e.id), new Date(e.createdAt).toISOString(), e.provider, e.host, e.model, e.purpose, e.pageUrl,
+      String(e.id), new Date(e.createdAt).toISOString(), e.provider, e.host, e.model, e.purpose, minimizeAuditPageUrl(e.pageUrl),
       String(e.fieldCount),
       e.chunkIndex === null ? '' : String(e.chunkIndex), e.chunkCount === null ? '' : String(e.chunkCount),
       e.result, e.httpStatus === null ? '' : String(e.httpStatus), String(e.retried),

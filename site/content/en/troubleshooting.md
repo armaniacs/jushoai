@@ -20,7 +20,7 @@ Click the badge to open guidance for its state. When setup is needed, the guidan
 | `AI 有効` (AI enabled) | The built-in browser AI is available. | Nothing. |
 | `AI 未準備` (AI not ready) | The built-in AI model is not downloaded yet. | Click `JushoAI で入力` (fill with JushoAI) and the extension tries to download it. |
 | `AI 準備中` (AI preparing) | The built-in AI model is downloading. | Wait for it to finish. |
-| `AI 無効` (AI disabled) | The built-in AI cannot be used (flag, device requirements, unsupported browser and so on). | Click the badge to see the guidance. Check the flag. |
+| `AI 無効` (AI disabled) | The built-in AI cannot be used (flag, device requirements, unsupported browser and so on). A temporary key-storage failure also shows this. | Click the badge to see the guidance. Check the flag. For a temporary failure, trying again later usually fixes it. |
 
 ## When the AI does not work
 
@@ -68,6 +68,12 @@ Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_OR
 ### What do I check in the preview?
 
 The list of fields and values. At the top you can choose the profile and address to use. Fields classified by AI are marked `AI判定` (decided by AI). Fields with a note are not filled. Close the preview with the Esc key or `キャンセル` (cancel).
+
+### Filling does not start / the consent check blocks it
+
+Pressing `入力する` (fill in) in the preview may fill nothing while the button next to the form shows a `パネルが…のため入力を中止しました` (filling stopped because of the panel...) message. At that moment the extension judged that the preview panel was removed from the page, off-screen, hidden, or covered by another element, and stops before injecting anything to stay safe. No half-filled input is left behind.
+
+The panel stays open, so bring it fully on screen, uncover it from other elements, and press `入力する` again. Scrolling or zooming, or moving aside an overlapping window or another extension's UI, often fixes it.
 
 ### What does `AI で分析` do?
 

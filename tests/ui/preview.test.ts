@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { showPreview } from '../../src/ui/preview';
 import type { PreviewOptions, PreviewRow } from '../../src/ui/preview';
-import { EMPTY_PROFILE, type Profile } from '../../src/core/types';
+import { EMPTY_PROFILE, EMPTY_ADDRESS, type Address, type Profile } from '../../src/core/types';
 
 const row = (status: PreviewRow['status']): PreviewRow => ({
   label: '姓', display: '山田', status, source: 'rule',
@@ -98,6 +98,16 @@ describe('showPreview', () => {
 });
 
 const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });
+const addr = (id: string, label: string): Address => ({ ...EMPTY_ADDRESS, id, label });
+
+const twoProfiles = {
+  profiles: [prof('p1', 'メイン'), prof('p2', '仕事用')],
+  selectedProfileId: 'p1', onProfileChange: () => {},
+};
+const twoAddresses = {
+  addresses: [addr('a1', '自宅'), addr('a2', '実家')],
+  selectedAddressId: 'a1', onAddressChange: () => {},
+};
 
 describe('showPreview profile select', () => {
   it('renders the profile select only when multiple profiles exist', () => {
@@ -122,5 +132,33 @@ describe('showPreview profile select', () => {
     select.value = 'p2';
     select.dispatchEvent(new Event('change', { bubbles: true }));
     expect(onProfileChange).toHaveBeenCalledWith('p2');
+  });
+});
+
+describe('showPreview select labels', () => {
+  it('marks the profile and address selects with distinguishable captions', () => {
+    const { root } = open({ ...twoProfiles, ...twoAddresses });
+    const selects = [...root.querySelectorAll('select')];
+    expect(selects).toHaveLength(2);
+    const captions = selects.map((s) => s.closest('label')?.querySelector('span')?.textContent);
+    expect(captions).toEqual(['プロファイル', '住所']);
+  });
+
+  it('gives each select an associated label for screen readers', () => {
+    const { root } = open({ ...twoProfiles, ...twoAddresses });
+    for (const select of root.querySelectorAll('select')) {
+      // A wrapping <label> associates the caption as the accessible name.
+      const label = select.closest('label');
+      expect(label).not.toBeNull();
+      expect(label!.textContent).toContain(select === root.querySelectorAll('select')[0] ? 'プロファイル' : '住所');
+    }
+  });
+
+  it('renders no select when only one profile and one address exist', () => {
+    const { root } = open({
+      profiles: [prof('p1', 'メイン')], selectedProfileId: 'p1', onProfileChange: () => {},
+      addresses: [addr('a1', '自宅')], selectedAddressId: 'a1', onAddressChange: () => {},
+    });
+    expect(root.querySelectorAll('select')).toHaveLength(0);
   });
 });

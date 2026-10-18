@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   AUDIT_KEY, AUDIT_MAX_BYTES, AUDIT_MAX_ENTRIES, AUDIT_PAGE_URL_MAX_BYTES, AUDIT_RESPONSE_CLIP_LENGTH, AUDIT_RETENTION_MS, AuditStore,
-  appendEntry, auditFileName, batchBytes, capAuditPageUrl, clipAuditResponse, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
+  appendEntry, auditFileName, batchBytes, capAuditPageUrl, clipAuditResponse, minimizeAuditPageUrl, normalizeAuditState, toTsv, EMPTY_AUDIT_STATE, type AuditDraft,
 } from '../../src/ai/audit-log';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
@@ -113,6 +113,29 @@ describe('capAuditPageUrl', () => {
     // dropped whole instead of split.
     expect(capped).toBe('https://example.com/' + 'a'.repeat(1004));
     expect(/[\ud800-\udbff](?![\udc00-\udfff])/.test(capped)).toBe(false);
+  });
+});
+
+describe('minimizeAuditPageUrl', () => {
+  it('keeps only the origin, dropping path, query and fragment', () => {
+    expect(minimizeAuditPageUrl('https://example.com/form?email=a@b.c#x')).toBe('https://example.com');
+    expect(minimizeAuditPageUrl('https://example.com/a/b/c?token=secret')).toBe('https://example.com');
+  });
+
+  it('leaves an already-minimal origin unchanged (idempotent)', () => {
+    expect(minimizeAuditPageUrl('https://example.com')).toBe('https://example.com');
+    expect(minimizeAuditPageUrl(minimizeAuditPageUrl('https://example.com/a/b?c=d'))).toBe('https://example.com');
+  });
+
+  it('keeps a non-default port but strips credentials', () => {
+    expect(minimizeAuditPageUrl('https://example.com:8443/a')).toBe('https://example.com:8443');
+    expect(minimizeAuditPageUrl('https://u:p@example.com/a')).toBe('https://example.com');
+  });
+
+  it('falls back to empty for invalid or opaque-origin URLs', () => {
+    expect(minimizeAuditPageUrl('')).toBe('');
+    expect(minimizeAuditPageUrl('not a url')).toBe('');
+    expect(minimizeAuditPageUrl('about:blank')).toBe('');
   });
 });
 
@@ -286,23 +309,25 @@ describe('toTsv', () => {
       'id\tcreated_at\tprovider\thost\tmodel\tpurpose\tpage_url\tfield_count\tchunk_index\tchunk_count\tresult\thttp_status\tretried\tduration_ms\trequest\tresponse',
     );
     expect(lines[1]).toBe(
-      '2\t2026-10-07T00:00:00.000Z\topenai\tapi.openai.com\tm\tclassify\thttps://example.com/form\t3\t2\t3\tsuccess\t200\tfalse\t12\tPROMPT\tRAW',
+      '2\t2026-10-07T00:00:00.000Z\topenai\tapi.openai.com\tm\tclassify\thttps://example.com\t3\t2\t3\tsuccess\t200\tfalse\t12\tPROMPT\tRAW',
     );
     expect(lines[2]!.split('\t')[11]).toBe('');
     expect(lines[3]).toBe('');
   });
 
   it('prefixes formula triggers and quotes tabs, newlines and quotes', () => {
-    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: '=HYPERLINK(x)', model: 'a\tb', host: '+1', provider: '@x' }), 1);
+    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: 'https://example.com/form?x=1', model: 'a\tb', host: '+1', provider: '@x' }), 1);
     const row = toTsv(s.entries).split('\n')[1]!;
-    expect(row).toContain("\t'=HYPERLINK(x)\t");
+    // The page_url column carries only the origin: the path never reaches the
+    // export and the host stays in the host column (no duplicate path data).
+    expect(row).toContain('\thttps://example.com\t');
     expect(row).toContain('\t"a\tb"\t');
     expect(row).toContain("\t'+1\t");
     expect(row).toContain("\t'@x\t");
   });
 
   it('quotes embedded double quotes after the formula prefix', () => {
-    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: '=A("x")' }), 1);
+    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ model: '=A("x")' }), 1);
     expect(toTsv(s.entries)).toContain('\t"\'=A(""x"")"\t');
   });
 
@@ -317,6 +342,39 @@ describe('toTsv', () => {
     expect(toTsv([])).toBe(
       'id\tcreated_at\tprovider\thost\tmodel\tpurpose\tpage_url\tfield_count\tchunk_index\tchunk_count\tresult\thttp_status\tretried\tduration_ms\trequest\tresponse\n',
     );
+  });
+});
+
+describe('page_url origin rounding (PBI-04)', () => {
+  it('rounds a legacy full-path entry to the origin while keeping the host column', () => {
+    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: 'https://example.com/form?token=secret#frag' }), 1);
+    const cols = toTsv(s.entries).split('\n')[1]!.split('\t');
+    expect(cols[6]).toBe('https://example.com');
+    expect(cols[3]).toBe('api.openai.com');
+  });
+
+  it('keeps record-list-TSV free of path, query and fragment end to end', () => {
+    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: 'https://example.com/entry/abc123?token=secret#x' }), 1);
+    const out = toTsv(s.entries);
+    expect(out).toContain('https://example.com');
+    expect(out).not.toContain('abc123');
+    expect(out).not.toContain('token=secret');
+  });
+
+  it('emits an empty page_url cell for an unparseable stored pageUrl', () => {
+    const s = appendEntry(EMPTY_AUDIT_STATE, draft({ pageUrl: '=HYPERLINK(x)' }), 1);
+    const cols = toTsv(s.entries).split('\n')[1]!.split('\t');
+    expect(cols[6]).toBe('');
+  });
+
+  it('still loads legacy full-path entries instead of dropping them', () => {
+    const legacy = {
+      id: 1, createdAt: 5, provider: 'openai', host: 'api.openai.com', model: 'm', purpose: 'classify',
+      pageUrl: 'https://example.com/form?token=secret', fieldCount: 1, result: 'success', httpStatus: 200, retried: false,
+    };
+    const s = normalizeAuditState({ nextId: 2, entries: [legacy] });
+    expect(s.entries).toHaveLength(1);
+    expect(toTsv(s.entries)).toContain('\thttps://example.com\t');
   });
 });
 

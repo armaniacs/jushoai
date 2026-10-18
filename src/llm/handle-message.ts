@@ -1,4 +1,5 @@
 import type { PublicAiSettings } from '../ai/types';
+import { isSecretAuthError } from '../ai/secret-store';
 import { parseRequest } from '../messages';
 import type { ProviderRegistry, RegistrySecrets } from './provider-registry';
 
@@ -21,20 +22,23 @@ const needsSecrets = (s: PublicAiSettings): boolean =>
 // A corrupt key envelope must not collapse into an undistinguishable silence
 // (the background would answer undefined and the gateway read null): report
 // it as an auth failure in the same vocabulary the gateway already parses.
+// Only the envelope shape means the key itself is bad; an IDB blocked open or
+// an aborted transaction is an operational hiccup, so it travels as a
+// transient failure and never as a rejected key.
 async function secretsOrAuthFailure(
   deps: HandlerDeps,
-): Promise<{ secrets: RegistrySecrets } | { failure: 'auth' }> {
+): Promise<{ secrets: RegistrySecrets } | { failure: 'auth' | 'transient' }> {
   try {
     return { secrets: await deps.loadSecrets() };
-  } catch {
-    return { failure: 'auth' };
+  } catch (e) {
+    return { failure: isSecretAuthError(e) ? 'auth' : 'transient' };
   }
 }
 
 async function loadNeededSecrets(
   settings: PublicAiSettings,
   deps: HandlerDeps,
-): Promise<{ secrets: RegistrySecrets | undefined } | { failure: 'auth' }> {
+): Promise<{ secrets: RegistrySecrets | undefined } | { failure: 'auth' | 'transient' }> {
   if (!needsSecrets(settings)) return { secrets: undefined };
   const r = await secretsOrAuthFailure(deps);
   return 'failure' in r ? r : { secrets: r.secrets };
@@ -52,7 +56,11 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
   switch (req.type) {
     case 'ai-status': {
       const r = await loadNeededSecrets(settings, deps);
-      if ('failure' in r) return { status: 'auth-error', provider: settings.provider };
+      if ('failure' in r) {
+        return r.failure === 'auth'
+          ? { status: 'auth-error', provider: settings.provider }
+          : { status: 'unavailable', provider: settings.provider };
+      }
       return deps.registry.status(settings, r.secrets);
     }
     case 'ai-download':
@@ -62,7 +70,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
       // store: decrypting here would load key material for no reason and fail
       // closed paths (e.g. a corrupt envelope) would take built-in down too.
       const r = await loadNeededSecrets(settings, deps);
-      if ('failure' in r) return { ok: false, reason: 'auth' };
+      if ('failure' in r) return { ok: false, reason: r.failure === 'auth' ? 'auth' : 'unavailable' };
       return deps.registry.classify(settings, r.secrets, req.fields, {
         purpose: 'classify',
         pageUrl: ctx.pageUrl,
@@ -71,7 +79,7 @@ export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallCo
     }
     case 'ai-test': {
       const r = await loadNeededSecrets(settings, deps);
-      if ('failure' in r) return { ok: false, reason: 'auth' };
+      if ('failure' in r) return { ok: false, reason: r.failure === 'auth' ? 'auth' : 'unavailable' };
       return deps.registry.test(settings, r.secrets);
     }
     case 'open-options':

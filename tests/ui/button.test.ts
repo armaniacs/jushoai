@@ -7,6 +7,16 @@ afterEach(() => {
   document.body.innerHTML = '';
 });
 
+interface FakeClick {
+  isTrusted: boolean;
+  preventDefault(): void;
+  stopPropagation(): void;
+}
+
+function fakeClick(isTrusted: boolean): FakeClick {
+  return { isTrusted, preventDefault() {}, stopPropagation() {} };
+}
+
 function mount() {
   let root!: ShadowRoot;
   const attach = HTMLElement.prototype.attachShadow;
@@ -14,11 +24,35 @@ function mount() {
     root = attach.call(this, { mode: 'open' });
     return root;
   });
+  // jsdom の Event は isTrusted が own・non-configurable の getter で常に false
+  // のため、実クリック相当はハンドラ捕捉＋偽イベントで再現する。
+  // 捕捉順: [0]=button, [1]=badge（button.ts の登録順）。
+  const clickHandlers: Array<(e: FakeClick) => void> = [];
+  const origAdd = EventTarget.prototype.addEventListener;
+  vi.spyOn(EventTarget.prototype, 'addEventListener').mockImplementation(function (
+    this: EventTarget,
+    ...args: [string, EventListenerOrEventListenerObject | null, ...unknown[]]
+  ) {
+    const [type, listener] = args;
+    if (type === 'click' && typeof listener === 'function' && this instanceof HTMLButtonElement) {
+      clickHandlers.push(listener as (e: FakeClick) => void);
+    }
+    return Reflect.apply(origAdd as (...a: unknown[]) => void, this, args);
+  });
   const anchor = document.body.appendChild(document.createElement('input'));
   const onClick = vi.fn();
   const onBadgeClick = vi.fn();
   const handle = mountButton(anchor, onClick, onBadgeClick);
-  return { handle, onClick, onBadgeClick, badge: () => root.querySelector('.badge')! };
+  return {
+    handle,
+    onClick,
+    onBadgeClick,
+    badge: () => root.querySelector('.badge')!,
+    button: () => root.querySelector('button:not(.badge)') as HTMLButtonElement,
+    /** trusted=true が実クリック相当、false が el.click() 等の合成イベント相当 */
+    fireButton: (trusted = true) => clickHandlers[0]?.(fakeClick(trusted)),
+    fireBadge: (trusted = true) => clickHandlers[1]?.(fakeClick(trusted)),
+  };
 }
 
 describe('mountButton', () => {
@@ -34,23 +68,49 @@ describe('mountButton', () => {
   });
 
   it('renders the badge as its own button and opens the guide with the current status', () => {
-    const { handle, badge, onClick, onBadgeClick } = mount();
+    const { handle, badge, onClick, onBadgeClick, fireBadge } = mount();
     expect(badge().tagName).toBe('BUTTON');
     expect(badge().closest('button:not(.badge)')).toBeNull();
     handle.setStatus({ status: 'unsupported', provider: 'built-in' });
     expect(badge().textContent).toBe('AI 無効');
-    (badge() as HTMLButtonElement).click();
+    fireBadge();
     expect(onBadgeClick).toHaveBeenCalledWith({ status: 'unsupported', provider: 'built-in' });
     expect(onClick).not.toHaveBeenCalled();
   });
 
   it('ignores badge clicks until a status has been set', () => {
-    const { handle, badge, onBadgeClick } = mount();
-    (badge() as HTMLButtonElement).click();
+    const { handle, onBadgeClick, fireBadge } = mount();
+    fireBadge();
     expect(onBadgeClick).not.toHaveBeenCalled();
     handle.setStatus({ status: 'downloadable', provider: 'built-in' });
-    (badge() as HTMLButtonElement).click();
+    fireBadge();
     expect(onBadgeClick).toHaveBeenCalledWith({ status: 'downloadable', provider: 'built-in' });
+  });
+
+  describe('isTrusted guard (PBI-02)', () => {
+    it('starts the analyze flow on a trusted button click', () => {
+      const { onClick, fireButton } = mount();
+      fireButton(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('ignores a synthetic click on the button', () => {
+      const { button, onClick, fireButton } = mount();
+      fireButton(false);
+      expect(onClick).not.toHaveBeenCalled();
+      // 合成イベントは preventDefault まで届かず、デフォルト動作も抑止しない
+      (button() as HTMLButtonElement).click();
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('ignores a synthetic click on the badge', () => {
+      const { handle, badge, onBadgeClick, fireBadge } = mount();
+      handle.setStatus({ status: 'unsupported', provider: 'built-in' });
+      fireBadge(false);
+      expect(onBadgeClick).not.toHaveBeenCalled();
+      (badge() as HTMLButtonElement).click();
+      expect(onBadgeClick).not.toHaveBeenCalled();
+    });
   });
 
   describe('error announcement (PBI-83)', () => {
@@ -107,6 +167,73 @@ describe('mountButton', () => {
       handle.showError('エラー: 分類に失敗、再試行してください');
       expect(badge().tagName).toBe('BUTTON');
       expect(badge().getAttribute('role')).toBeNull();
+    });
+  });
+
+  describe('partial banner persistence (PBI-08)', () => {
+    it('keeps a residual 要確認表示 after 4s instead of restoring', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('一部のみ適用（3/5件）');
+      expect(badge().textContent).toBe('一部のみ適用（3/5件）');
+      vi.advanceTimersByTime(4000);
+      expect(badge().textContent).toContain('一部のみ適用');
+      expect(badge().textContent).toContain('要確認');
+      expect(badge().textContent).not.toBe('AI 有効');
+    });
+
+    it('holds the residual without a second auto-restore', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('一部のみ適用（3/5件）');
+      vi.advanceTimersByTime(4000);
+      const residual = badge().textContent;
+      expect(residual).toContain('要確認');
+      vi.advanceTimersByTime(10000);
+      expect(badge().textContent).toBe(residual);
+    });
+
+    it('keeps the residual for a composed hint + partial banner', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('AI通信に失敗したためルールのみで表示: 再試行できます。一部のみ適用（3/5件）');
+      vi.advanceTimersByTime(4000);
+      expect(badge().textContent).toBe('一部のみ適用（3/5件） 要確認');
+    });
+
+    it('returns to the conventional display on the next status update', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('一部のみ適用（3/5件）');
+      vi.advanceTimersByTime(4000);
+      expect(badge().textContent).toContain('要確認');
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      expect(badge().textContent).toBe('AI 有効');
+    });
+
+    it('still restores ordinary errors after 4s', () => {
+      vi.useFakeTimers();
+      const { handle, badge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('エラー: 分類に失敗、再試行してください');
+      vi.advanceTimersByTime(4000);
+      expect(badge().textContent).toBe('AI 有効');
+    });
+
+    it('keeps the badge reapply導線 on trusted clicks after a partial banner', () => {
+      vi.useFakeTimers();
+      const { handle, onBadgeClick, fireBadge } = mount();
+      handle.setStatus({ status: 'available', provider: 'built-in' });
+      handle.showError('一部のみ適用（3/5件）');
+      vi.advanceTimersByTime(4000);
+      fireBadge(true);
+      expect(onBadgeClick).toHaveBeenCalledWith({ status: 'available', provider: 'built-in' });
+      fireBadge(false);
+      expect(onBadgeClick).toHaveBeenCalledTimes(1);
     });
   });
 

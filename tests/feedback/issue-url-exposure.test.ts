@@ -60,7 +60,7 @@ describe('feedback JSON block clipping gap (Red Medium)', () => {
 });
 
 describe('public Page line carries origin + first segment only (Governance Low)', () => {
-  it('strips query and hash (sanitizePageUrl keeps full path for the local audit log)', () => {
+  it('strips query and hash (the audit log keeps only the origin via minimizeAuditPageUrl)', () => {
     expect(sanitizePageUrl('https://example.com/form?a=1#top')).toBe('https://example.com/form');
   });
 

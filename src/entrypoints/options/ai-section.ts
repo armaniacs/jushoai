@@ -5,7 +5,7 @@ import {
   OPENAI_PRESETS, type AiSettings, type KeyPresence, type ProviderKind,
 } from '../../ai/types';
 import { testAiViaBackground } from '../../llm/background-gateway';
-import type { TestFailure } from '../../messages';
+import { noticeForTest } from '../../ai/failure-text';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
 import { el, labeled, textInput } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
@@ -27,16 +27,6 @@ export function extensionOriginHint(origin: string, isFirefox: boolean = IS_FIRE
   const base = `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に ${origin} を許可してください。`;
   return isFirefox ? `${base}Firefox ではこのオリジンがインストールごとに変わるため、再インストール後は設定し直してください。` : base;
 }
-
-const FAILURE_TEXT: Record<TestFailure, string> = {
-  'not-configured': '設定が完了していません。保存してから試してください。',
-  permission: '通信が許可されていません。保存し直して許可してください。',
-  auth: '認証に失敗しました。まず API キーを確認してください。Ollama などローカルのサーバーの場合は、OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
-  network: '接続に失敗しました。URL・モデル名・ネットワークを確認してください。',
-  rejected: 'サーバーがリクエストを拒否しました。モデル名と、モデルが JSON 形式の出力に対応しているかを確認してください。',
-  'bad-response': '応答を解釈できませんでした。モデルが JSON 形式の出力に対応しているか確認してください。',
-  unavailable: 'ブラウザ内蔵 AI がまだ使えません。モデルのダウンロード状況を確認してください。',
-};
 
 const KEYED = ['openai', 'gemini'] as const;
 type KeyedProvider = (typeof KEYED)[number];
@@ -323,7 +313,7 @@ async function testAiSection(state: AiSectionState, env: AiSectionEffectHooks): 
     beginTestCooldown(state, env);
     if (!result) env.notify('バックグラウンドが応答しませんでした。', 'errors');
     else if (result.ok) env.notify(`接続できました（判定: ${result.category}）。`, 'saved');
-    else env.notify(FAILURE_TEXT[result.reason], 'errors');
+    else env.notify(noticeForTest(result.reason), 'errors');
   } finally {
     if (state.testing) {
       // testAiViaBackground threw: keep the pre-existing behavior (no result

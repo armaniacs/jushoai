@@ -53,10 +53,12 @@ describe('names', () => {
     expect(values([item('fullNameRomaji')])).toEqual(['Taro Yamada']);
   });
 
-  it('skips romaji fields when no romaji is registered', () => {
+  it('keeps romaji fields as warn-no-value when no romaji is registered', () => {
     const bare = { ...profile, lastNameRomaji: '', firstNameRomaji: '' };
     const plan = buildPlan([item('fullNameRomaji')], { profile: bare, address });
-    expect(plan).toEqual([]);
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
   });
 });
 
@@ -79,7 +81,7 @@ describe('gender select', () => {
     expect(p).toMatchObject({ value: '1', status: 'ok' });
   });
 
-  it('warns when no option matches and skips when gender is empty', () => {
+  it('warns when no option matches and when gender is empty', () => {
     const other = { ...profile, gender: '回答しない' };
     const warn = buildPlan(
       [item('gender', { tag: 'select', options: [{ value: '', text: '-' }, { value: 'x', text: '男性' }] })],
@@ -87,7 +89,9 @@ describe('gender select', () => {
     )[0]!;
     expect(warn.status).toBe('warn-no-option');
     const bare = { ...profile, gender: '' };
-    expect(buildPlan([item('gender', { tag: 'select', options })], { profile: bare, address })).toEqual([]);
+    expect(buildPlan([item('gender', { tag: 'select', options })], { profile: bare, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
   });
 });
 
@@ -121,8 +125,12 @@ describe('address composition', () => {
     expect(plan).toEqual(['東京都', '千代田区', '千代田1-1', '千代田ビル101']);
   });
 
-  it('omits address fields when no address is selected', () => {
-    expect(values([item('prefecture'), item('lastName')], null)).toEqual(['山田']);
+  it('marks address fields warn-no-value when no address is selected', () => {
+    const plan = buildPlan([item('prefecture'), item('lastName')], { profile, address: null });
+    expect(plan.map((p) => [p.category, p.value, p.status])).toEqual([
+      ['prefecture', '', 'warn-no-value'],
+      ['lastName', '山田', 'ok'],
+    ]);
   });
 });
 
@@ -190,14 +198,16 @@ describe('age decade select', () => {
     expect(p).toMatchObject({ value: '1', display: '30代', status: 'ok' });
   });
 
-  it('warns when the decade option is missing and skips when birthday is empty', () => {
+  it('warns when the decade option is missing and when birthday is empty', () => {
     const missing = buildPlan(
       [item('ageDecade', { tag: 'select', options: [{ value: '', text: '-' }, { value: '0', text: '20代' }] })],
       { profile, address, today },
     )[0]!;
     expect(missing.status).toBe('warn-no-option');
     const bare = { ...profile, birthday: '' };
-    expect(buildPlan([item('ageDecade', { tag: 'select', options })], { profile: bare, address, today })).toEqual([]);
+    expect(buildPlan([item('ageDecade', { tag: 'select', options })], { profile: bare, address, today })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
   });
 });
 
@@ -215,8 +225,13 @@ describe('overseas address', () => {
     ]);
   });
 
-  it('skips overseas fields when nothing is registered', () => {
-    expect(values([item('country'), item('address1'), item('postalCode')])).toEqual([]);
+  it('marks overseas fields warn-no-value when nothing is registered', () => {
+    const plan = buildPlan([item('country'), item('address1'), item('postalCode')], { profile, address });
+    expect(plan.map((p) => [p.category, p.value, p.status])).toEqual([
+      ['country', '', 'warn-no-value'],
+      ['address1', '', 'warn-no-value'],
+      ['postalCode', '', 'warn-no-value'],
+    ]);
   });
 });
 
@@ -234,19 +249,25 @@ describe('birthday', () => {
     expect(plan.map((p) => p.value)).toEqual(['平成', '2']);
   });
 
-  it('skips birth fields when the birthday is empty or malformed', () => {
-    expect(buildPlan([item('birthYear')], { profile: { ...profile, birthday: '' }, address })).toEqual([]);
-    expect(buildPlan([item('birthYear')], { profile: { ...dated, birthday: '1990/5/7' }, address })).toEqual([]);
+  it('marks birth fields warn-no-value when the birthday is empty or malformed', () => {
+    for (const birthday of ['', '1990/5/7']) {
+      const plan = buildPlan([item('birthYear')], { profile: { ...profile, birthday }, address });
+      expect(plan).toEqual([
+        expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+      ]);
+    }
   });
 });
 
 describe('school', () => {
   const schooled = { ...profile, school: '都立日比谷高校', department: '普通科' };
 
-  it('fills school and department, skips when blank', () => {
+  it('fills school and department, marks warn-no-value when blank', () => {
     const vals = buildPlan([item('school'), item('department')], { profile: schooled, address }).map((p) => p.value);
     expect(vals).toEqual(['都立日比谷高校', '普通科']);
-    expect(buildPlan([item('school')], { profile: { ...profile, school: '' }, address })).toEqual([]);
+    expect(buildPlan([item('school')], { profile: { ...profile, school: '' }, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
   });
 });
 
@@ -317,5 +338,37 @@ describe('radio groups', () => {
       { profile, address, today: new Date('2026-10-05') },
     );
     expect(disabled[0]!.status).toBe('warn-no-option');
+  });
+});
+
+describe('warn-no-value (PBI-10)', () => {
+  it('keeps a missing-value row with the reason while normal values apply as before', () => {
+    const bare = { ...profile, firstName: '' };
+    const plan = buildPlan([item('firstName'), item('lastName')], { profile: bare, address });
+    expect(plan.map((p) => [p.category, p.value, p.display, p.status])).toEqual([
+      ['firstName', '', '', 'warn-no-value'],
+      ['lastName', '山田', '山田', 'ok'],
+    ]);
+  });
+
+  it('keeps a missing-value select row instead of dropping it', () => {
+    const options = [
+      { value: '', text: '選択してください' },
+      { value: '男性', text: '男性' },
+      { value: '女性', text: '女性' },
+    ];
+    const bare = { ...profile, gender: '' };
+    const plan = buildPlan([item('gender', { tag: 'select', options })], { profile: bare, address });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('still drops unknown categories without a row, so classification failure stays distinct', () => {
+    const plan = buildPlan(
+      [{ meta: makeMeta({ id: 'u' }), cls: { category: 'unknown', confidence: 0.1, source: 'rule' } }],
+      { profile, address },
+    );
+    expect(plan).toEqual([]);
   });
 });

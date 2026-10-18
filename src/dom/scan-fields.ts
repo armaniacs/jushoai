@@ -114,6 +114,8 @@ function scanRadioGroups(root: ParentNode, nextId: () => string): ScannedField[]
         })),
         readOnly: false,
         disabled: inputs.every((r) => r.disabled),
+        // fill 判定専用の既存値スナップショット。LLM 送信時は toWireMeta（messages.ts）で
+        // wire 型に落とすため混入しない。fill 適用時の真値は fill-plan が live DOM から読む。
         value: checked?.value ?? '',
       },
     };
@@ -149,6 +151,8 @@ export function scanFields(root: ParentNode): ScannedField[] {
           : [],
         readOnly: input?.readOnly ?? false,
         disabled: el.disabled,
+        // fill 判定専用の既存値スナップショット。LLM 送信時は toWireMeta（messages.ts）で
+        // wire 型に落とすため混入しない。fill 適用時の真値は fill-plan が live DOM から読む。
         value: el.value,
       },
     });

@@ -109,3 +109,130 @@ describe('mountPanel dialog testability', () => {
     expect(document.body.querySelector('[data-jushoai]')).toBeNull();
   });
 });
+
+describe('mountPanel focus trap (PBI-15)', () => {
+  const renderTwoButtons = (_host: HTMLElement, root: ShadowRoot) => {
+    const first = document.createElement('button');
+    first.textContent = 'キャンセル';
+    const last = document.createElement('button');
+    last.textContent = '適用する';
+    root.append(first, last);
+  };
+
+  const pressTab = (shiftKey: boolean): KeyboardEvent => {
+    const event = new KeyboardEvent('keydown', {
+      key: 'Tab',
+      bubbles: true,
+      cancelable: true,
+      shiftKey,
+    });
+    document.dispatchEvent(event);
+    return event;
+  };
+
+  it('marks the host as modal', () => {
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      expect(panel.host.getAttribute('aria-modal')).toBe('true');
+    } finally {
+      panel.close();
+    }
+  });
+
+  it('wraps Tab on the last button back to the first', () => {
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      const buttons = [...panel.root.querySelectorAll('button')];
+      buttons[buttons.length - 1]!.focus();
+      const event = pressTab(false);
+      expect(event.defaultPrevented).toBe(true);
+      expect(panel.root.activeElement?.textContent).toBe('キャンセル');
+    } finally {
+      panel.close();
+    }
+  });
+
+  it('wraps Shift+Tab on the first button to the last', () => {
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      const buttons = [...panel.root.querySelectorAll('button')];
+      buttons[0]!.focus();
+      const event = pressTab(true);
+      expect(event.defaultPrevented).toBe(true);
+      expect(panel.root.activeElement?.textContent).toBe('適用する');
+    } finally {
+      panel.close();
+    }
+  });
+
+  it('lets Tab move forward inside the panel without leaving it', () => {
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      const buttons = [...panel.root.querySelectorAll('button')];
+      buttons[0]!.focus();
+      const event = pressTab(false);
+      expect(event.defaultPrevented).toBe(false);
+      // Focus stays on the shadow's first button until the test advances it;
+      // the key point is the keystroke was not hijacked for an escape.
+      expect(panel.root.activeElement?.textContent).toBe('キャンセル');
+    } finally {
+      panel.close();
+    }
+  });
+
+  it('pulls focus back inside when it somehow left the shadow', () => {
+    const opener = document.createElement('button');
+    opener.textContent = 'opener';
+    document.body.append(opener);
+    opener.focus();
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      opener.focus();
+      expect(panel.root.activeElement).toBeNull();
+      pressTab(false);
+      expect(panel.root.activeElement?.textContent).toBe('キャンセル');
+    } finally {
+      panel.close();
+      opener.remove();
+    }
+  });
+
+  it('keeps initial focus and opener restore with the trap active', () => {
+    const opener = document.createElement('button');
+    opener.textContent = 'opener';
+    document.body.append(opener);
+    opener.focus();
+    const panel = mountPanel(renderTwoButtons);
+    try {
+      expect(panel.root.activeElement?.textContent).toBe('キャンセル');
+      panel.close();
+      expect(document.activeElement).toBe(opener);
+    } finally {
+      if (document.body.contains(panel.host)) panel.close();
+      opener.remove();
+    }
+  });
+
+  it('stops trapping after close', () => {
+    const panel = mountPanel(renderTwoButtons);
+    const buttons = [...panel.root.querySelectorAll('button')];
+    panel.close();
+    const event = pressTab(false);
+    expect(event.defaultPrevented).toBe(false);
+    expect(buttons[0]!.isConnected).toBe(false);
+  });
+
+  it('swallows Tab with no tabbable control but stays closable', () => {
+    const panel = mountPanel(() => {});
+    try {
+      const tab = pressTab(false);
+      expect(tab.defaultPrevented).toBe(true);
+      panel.close();
+      expect(document.body.contains(panel.host)).toBe(false);
+      const after = pressTab(false);
+      expect(after.defaultPrevented).toBe(false);
+    } finally {
+      if (document.body.contains(panel.host)) panel.close();
+    }
+  });
+});

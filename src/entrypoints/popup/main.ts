@@ -129,7 +129,7 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
       notice.hidden = false;
     });
   });
-  header.append(el('h1', '入力内容の確認'), analyze, gear);
+  header.append(el('h1', '登録内容の確認'), analyze, gear);
 
   const profileTitle = el('h2', 'プロファイル');
   const profileList = el('ul');

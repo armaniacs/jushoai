@@ -3,7 +3,8 @@ import {
   ACCEPT_THRESHOLD, classifyField, isConfident, refineClassifications, refineWithDrops,
 } from '../../src/core/classify-rules';
 import { detectKanaKind, matchFieldOwned, matchLegend, resolveKana, wantsKana } from '../../src/core/kana';
-import type { Category, Classification } from '../../src/core/types';
+import { buildPlan } from '../../src/core/planner';
+import type { Address, Category, Classification, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
 const cat = (p: Parameters<typeof makeMeta>[0]) => classifyField(makeMeta(p))?.category ?? null;
@@ -260,7 +261,8 @@ describe('refineClassifications', () => {
         nearby: '電話番号',
       }),
     }));
-    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel', 'tel']);
+    // PBI-09: 同ラベル重複ペア（市外×2）はunknown化され、完全値の複製対象にならない。
+    expect(cats(refineClassifications(items))).toEqual(['unknown', 'unknown', 'tel']);
   });
 
   it('keeps part-labeled tel fields unsplit when another field breaks consecutiveness', () => {
@@ -304,10 +306,127 @@ describe('refineClassifications', () => {
     expect(cats(refineClassifications([item('addressFull', 'a')]))).toEqual(['addressFull']);
   });
 
+  it('narrows addressFull within the same nearby block only (PBI-12)', () => {
+    const scoped = (category: Category, id: string, nearby: string) => ({
+      meta: makeMeta({ id, nearby }),
+      cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+    });
+    // 注文者ブロックにprefecture/cityがあっても、届け先ブロックのaddressFullは維持される
+    const twoBlocks = [
+      scoped('prefecture', 'op', '注文者住所'),
+      scoped('city', 'oc', '注文者住所'),
+      scoped('addressFull', 'oa', '注文者住所'),
+      scoped('addressFull', 'da', 'お届け先住所'),
+    ];
+    expect(cats(refineClassifications(twoBlocks))).toEqual([
+      'prefecture', 'city', 'street', 'addressFull',
+    ]);
+  });
+
+  it('keeps single-block narrowing (PBI-12 regression guard)', () => {
+    const scoped = (category: Category, id: string, nearby: string) => ({
+      meta: makeMeta({ id, nearby }),
+      cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+    });
+    expect(cats(refineClassifications([
+      scoped('prefecture', 'p', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ]))).toEqual(['prefecture', 'addressNoPref']);
+    expect(cats(refineClassifications([
+      scoped('city', 'c', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ]))).toEqual(['city', 'street']);
+  });
+
   it('does not mutate the input', () => {
     const input = [item('tel', 'a'), item('tel', 'b'), item('tel', 'c')];
     refineClassifications(input);
     expect(input[0]!.cls.category).toBe('tel');
+  });
+});
+
+describe('refineClassifications: PBI-09 split-mismatchは複製しない', () => {
+  const item = (category: Category, id: string) => ({
+    meta: makeMeta({ id }),
+    cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+  });
+  const cats = (items: ReturnType<typeof refineClassifications>) => items.map((i) => i.cls.category);
+  const profile: Profile = {
+    id: 'p1', label: 'メイン',
+    lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+    lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
+    gender: '', birthday: '', school: '', department: '', email: '', tel: '09012345678',
+  };
+  const address: Address = {
+    id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',
+    city: '千代田区', street: '千代田1-1', building: '',
+    country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
+  };
+
+  it('同ラベルtel 2欄（3分割不一致）はunknown化される', () => {
+    const items = ['a', 'b'].map((id) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
+    }));
+    expect(cats(refineClassifications(items))).toEqual(['unknown', 'unknown']);
+  });
+
+  it('同ラベルzip 3欄（2分割不一致）はdroppedされ注入されない', () => {
+    const items = ['a', 'b', 'c'].map((id) => ({
+      ...item('zip', id),
+      meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
+    }));
+    const { items: refined, dropped } = refineWithDrops(items);
+    expect(refined).toEqual([]);
+    expect(dropped).toEqual([
+      { fieldId: 'a', from: 'zip', reason: 'oversized-group' },
+      { fieldId: 'b', from: 'zip', reason: 'oversized-group' },
+      { fieldId: 'c', from: 'zip', reason: 'oversized-group' },
+    ]);
+    expect(buildPlan(refined, { profile, address })).toEqual([]);
+  });
+
+  it('単独tel・単独zipはunknown化されない', () => {
+    expect(cats(refineClassifications([item('tel', 'a')]))).toEqual(['tel']);
+    expect(cats(refineClassifications([item('zip', 'z')]))).toEqual(['zip']);
+  });
+
+  it('classify〜plan経由で不一致群に完全値が複製されない', () => {
+    const metas = [
+      makeMeta({ id: 'a', label: '電話番号', nearby: '連絡先' }),
+      makeMeta({ id: 'b', label: '電話番号', nearby: '連絡先' }),
+      makeMeta({ id: 'c', label: '郵便番号', nearby: 'ご住所' }),
+      makeMeta({ id: 'd', label: '郵便番号', nearby: 'ご住所' }),
+      makeMeta({ id: 'e', label: '郵便番号', nearby: 'ご住所' }),
+    ];
+    const classified = metas.map((meta) => ({ meta, cls: classifyField(meta)! }));
+    expect(classified.every(({ cls }) => cls !== null)).toBe(true);
+    const { items: refined, dropped } = refineWithDrops(classified);
+    // tel 2欄はunknown化、zip 3欄はoversizedでdropped：いずれも注入対象外
+    expect(refined.map((i) => i.cls.category)).toEqual(['unknown', 'unknown']);
+    expect(dropped.map((d) => d.fieldId)).toEqual(['c', 'd', 'e']);
+    expect(buildPlan(refined, { profile, address })).toEqual([]);
+  });
+
+  it('正常分割は従来通り分割値が注入される', () => {
+    const telItems = ['a', 'b', 'c'].map((id) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
+    }));
+    const zipItems = ['d', 'e'].map((id) => ({
+      ...item('zip', id),
+      meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
+    }));
+    const refined = refineClassifications([...telItems, ...zipItems]);
+    expect(refined.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3', 'zip1', 'zip2']);
+    expect(buildPlan(refined, { profile, address }).map((p) => p.value))
+      .toEqual(['090', '1234', '5678', '100', '0001']);
+  });
+
+  it('空キー群（label・nearbyとも空）も安全側でunknown化される', () => {
+    // ブロック帰属を判定できないため、複製注入より不注入を選ぶ仕様の固定。
+    const items = ['a', 'b'].map((id) => item('tel', id));
+    expect(cats(refineClassifications(items))).toEqual(['unknown', 'unknown']);
   });
 });
 
@@ -386,6 +505,22 @@ describe('classifyField: gender', () => {
     { label: '件名' }, { label: '会社名' }, { label: 'お問い合わせ内容' },
   ] as Parameters<typeof makeMeta>[0][])('does not misread %j as gender', (p) => {
     expect(cat(p)).not.toBe('gender');
+  });
+
+  it.each([
+    { name: 'essex' }, { name: 'essex_county' }, { label: 'Essex' },
+    { label: 'Essex address' }, { name: 'sussex' }, { nearby: 'Essex' },
+  ] as Parameters<typeof makeMeta>[0][])('does not misread %j as gender (PBI-20 word boundary)', (p) => {
+    expect(cat(p)).not.toBe('gender');
+  });
+
+  it.each([
+    [{ label: 'sex' }, 'gender'],
+    [{ name: 'sex' }, 'gender'],
+    [{ label: 'Sex' }, 'gender'],
+    [{ label: 'gender' }, 'gender'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('keeps %j as %s (PBI-20 standalone)', (p, expected) => {
+    expect(cat(p)).toBe(expected);
   });
 });
 

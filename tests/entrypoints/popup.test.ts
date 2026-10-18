@@ -23,7 +23,7 @@ describe('renderPopup', () => {
   it('lists profiles and addresses with the last-used entry marked', () => {
     const root = document.createElement('div');
     renderPopup(root, data(), { profileId: 'p2', addressId: 'a1' });
-    expect(root.textContent).toContain('入力内容の確認');
+    expect(root.querySelector('h1')?.textContent).toBe('登録内容の確認');
     expect(root.textContent).toContain('自宅用: 山田 太郎');
     expect(root.textContent).toContain('会社用: 鈴木 花子');
     expect(root.textContent).toContain('千代田区千代田1-1');

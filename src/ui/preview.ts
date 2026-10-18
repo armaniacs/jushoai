@@ -44,6 +44,7 @@ const STATUS_NOTE: Record<PlanStatus, string> = {
   filled: '入力済みのため上書きしません',
   'warn-maxlength': '文字数を超えるため入力しません',
   'warn-no-option': '一致する選択肢がないため入力しません',
+  'warn-no-value': 'プロファイルに値がないため入力しません',
 };
 
 const CSS = `
@@ -85,7 +86,13 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       select.append(o);
     }
     select.addEventListener('change', () => opts.onProfileChange(select.value));
-    panel.append(select);
+    // Same shape as options labeled(): a wrapping label with a span caption,
+    // so the visible text doubles as the accessible name (textContent only).
+    const label = document.createElement('label');
+    const caption = document.createElement('span');
+    caption.textContent = 'プロファイル';
+    label.append(caption, select);
+    panel.append(label);
   }
 
   let addressSelect: HTMLSelectElement | null = null;
@@ -99,7 +106,13 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       select.append(o);
     }
     select.addEventListener('change', () => opts.onAddressChange(select.value));
-    panel.append(select);
+    // Same shape as options labeled(): a wrapping label with a span caption,
+    // so the visible text doubles as the accessible name (textContent only).
+    const label = document.createElement('label');
+    const caption = document.createElement('span');
+    caption.textContent = '住所';
+    label.append(caption, select);
+    panel.append(label);
     addressSelect = select;
   }
 

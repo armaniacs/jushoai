@@ -259,4 +259,34 @@ describe('saveSettings: permission rollback', () => {
       warn.mockRestore();
     }
   });
+
+  it('removes only the newly granted origin, keeping a pre-existing DoH permission', async () => {
+    // PBI-18: connection origin ungranted + DoH origin pre-granted. The combined
+    // contains is false, but rollback must delete only the false→true transition.
+    permMocks.contains.mockImplementation(async (origins: string[]) => {
+      if (origins.length !== 1) return false;
+      return origins[0] === 'https://dns.google/*';
+    });
+    gateMocks.validate.mockResolvedValue({ errors: ['接続先のアドレスを解決できなかったため、指定できません'] });
+    permMocks.remove.mockResolvedValue(true);
+    const result = await saveSettings(draft(), deps);
+    expect(result).toEqual({ ok: false, message: '接続先のアドレスを解決できなかったため、指定できません', rolledBack: true });
+    expect(permMocks.remove).toHaveBeenCalledOnce();
+    expect(permMocks.remove.mock.calls[0]![0]).toEqual(['https://api.openai.com/*']);
+  });
+
+  it('removes nothing when every origin was already granted per-origin', async () => {
+    // PBI-18: all origins pre-granted — the per-origin snapshot has no
+    // false→true transition, so a failed save keeps the working setup intact.
+    permMocks.contains.mockImplementation(async (origins: string[]) => {
+      expect(origins.length).toBeGreaterThan(0);
+      return true;
+    });
+    gateMocks.validate.mockResolvedValue({ errors: ['接続先のアドレスを解決できなかったため、指定できません'] });
+    const result = await saveSettings(draft(), deps);
+    expect(result).toEqual({ ok: false, message: '接続先のアドレスを解決できなかったため、指定できません', rolledBack: false });
+    expect(permMocks.remove).not.toHaveBeenCalled();
+    // The snapshot covers each origin individually, not just the combined array.
+    expect(permMocks.contains.mock.calls.some((c) => (c[0] as string[]).length === 1)).toBe(true);
+  });
 });

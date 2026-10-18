@@ -1,11 +1,10 @@
 import { AuditedClassifier, type TracedClassifier } from '../ai/audited-classifier';
-import { capAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
+import { capAuditPageUrl, minimizeAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
 import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
-import { sanitizePageUrl } from '../feedback/issue-url';
 import type { ClassifySchedule, FieldClassifier } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
@@ -188,7 +187,9 @@ export class ProviderRegistry {
     const sel = await this.select(s, secrets, {
       purpose: opts.purpose,
       // Where the page that triggered the call lives; taken from the sender, never from the message.
-      pageUrl: opts.pageUrl ? capAuditPageUrl(sanitizePageUrl(opts.pageUrl)) : '',
+      // Only the origin is kept: path/query/fragment can carry tokens and the
+      // audit host column already identifies the destination.
+      pageUrl: opts.pageUrl ? capAuditPageUrl(minimizeAuditPageUrl(opts.pageUrl)) : '',
     });
     // The caller chooses its error display from the reason, so never drop it.
     if (!sel.ok) return { ok: false, reason: sel.reason };

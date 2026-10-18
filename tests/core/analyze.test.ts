@@ -1,6 +1,8 @@
 import { describe, it, expect, vi } from 'vitest';
 import { classifyAll } from '../../src/core/analyze';
+import { buildPlan } from '../../src/core/planner';
 import type { Category, FieldMeta } from '../../src/core/types';
+import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import type { FieldClassifier } from '../../src/core/classifier';
 import { makeMeta } from '../helpers';
 
@@ -29,10 +31,31 @@ describe('classifyAll', () => {
     ]);
   });
 
-  it('drops unresolved fields when the LLM is unavailable or answers unknown', async () => {
+  it('keeps unresolved fields as unknown when the LLM is unavailable or answers unknown', async () => {
     const metas = [makeMeta({ id: 'b', name: 'xyz' })];
-    expect(await classifyAll(metas, null)).toEqual([]);
-    expect(await classifyAll(metas, llm({ b: 'unknown' }).classifier)).toEqual([]);
+    for (const classifier of [null, llm({ b: 'unknown' }).classifier]) {
+      const items = await classifyAll(metas, classifier);
+      expect(items.map((i) => [i.cls.category, i.cls.source])).toEqual([['unknown', 'rule']]);
+    }
+  });
+
+  it('keeps a weak rule tel hit when the classifier is null', async () => {
+    const items = await classifyAll([makeMeta({ id: 'a', type: 'tel' })], null);
+    expect(items.map((i) => [i.cls.category, i.cls.confidence, i.cls.source])).toEqual([
+      ['tel', 0.5, 'rule'],
+    ]);
+  });
+
+  it('refines three weak tel fields into tel1/2/3 without the LLM', async () => {
+    const metas = ['a', 'b', 'c'].map((id) => makeMeta({ id, type: 'tel' }));
+    const items = await classifyAll(metas, null);
+    expect(items.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+
+  it('excludes unknown fields from the plan so nothing is misfilled', async () => {
+    const items = await classifyAll([makeMeta({ id: 'b', name: 'xyz' })], null);
+    expect(items.map((i) => i.cls.category)).toEqual(['unknown']);
+    expect(buildPlan(items, { profile: EMPTY_PROFILE, address: EMPTY_ADDRESS })).toEqual([]);
   });
 
   it('falls back to rules when the LLM throws', async () => {
@@ -41,7 +64,7 @@ describe('classifyAll', () => {
       [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', name: 'xyz' })],
       classifier,
     );
-    expect(items.map((i) => i.cls.category)).toEqual(['lastName']);
+    expect(items.map((i) => i.cls.category)).toEqual(['lastName', 'unknown']);
   });
 
   it('attaches kanaKind to LLM kana answers', async () => {
@@ -72,8 +95,35 @@ describe('classifyAll', () => {
       makeMeta({ id: 'd', name: 'last_name' }),
     ];
     const items = await classifyAll(metas, classifier);
-    expect(items.map((i) => [i.meta.id, i.cls.category])).toEqual([['d', 'lastName']]);
+    expect(items.map((i) => [i.meta.id, i.cls.category])).toEqual([
+      ['a', 'unknown'], ['b', 'unknown'], ['c', 'unknown'], ['d', 'lastName'],
+    ]);
     expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('drops LLM misclassifications of non-gender radio groups to unknown', async () => {
+    const { classifier } = llm({ pay: 'lastName', mail: 'email' });
+    const metas = [
+      makeMeta({ id: 'pay', tag: 'radio', name: 'payment_method', label: 'お支払い方法' }),
+      makeMeta({ id: 'mail', tag: 'radio', name: 'contact_method', label: '連絡方法' }),
+    ];
+    const items = await classifyAll(metas, classifier);
+    expect(items.map((i) => [i.meta.id, i.cls.category])).toEqual([
+      ['pay', 'unknown'], ['mail', 'unknown'],
+    ]);
+    expect(buildPlan(items, { profile: EMPTY_PROFILE, address: EMPTY_ADDRESS })).toEqual([]);
+  });
+
+  it('keeps gender/ageDecade LLM answers for radio groups', async () => {
+    const { classifier } = llm({ g: 'gender', a: 'ageDecade' });
+    const metas = [
+      makeMeta({ id: 'g', tag: 'radio', name: 'q1', label: '問1' }),
+      makeMeta({ id: 'a', tag: 'radio', name: 'q2', label: '問2' }),
+    ];
+    const items = await classifyAll(metas, classifier);
+    expect(items.map((i) => [i.meta.id, i.cls.category, i.cls.source])).toEqual([
+      ['g', 'gender', 'llm'], ['a', 'ageDecade', 'llm'],
+    ]);
   });
 });
 
@@ -178,7 +228,7 @@ describe('classifyAll: force', () => {
       { force: true },
     );
     expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['a', 'b']);
-    expect(items.map((i) => i.cls.category)).toEqual(['lastName']);
+    expect(items.map((i) => i.cls.category)).toEqual(['lastName', 'unknown']);
   });
 
   it('falls back to weak rule hits when the LLM throws', async () => {

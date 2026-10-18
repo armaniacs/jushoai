@@ -196,6 +196,14 @@ export class HttpClassifier implements TracedClassifier {
   async attempt(fields: FieldMeta[]): Promise<ClassifyAttempt> {
     const trace: AttemptTrace = { status: null, retried: false, request: buildPrompt(fields), response: '' };
     if (fields.length === 0) return { map: new Map(), trace };
+    // Offline fast path: skip the DoH egress check and fetch entirely so an
+    // offline client continues with rule-only classification immediately
+    // instead of burning battery on a doomed 20s timeout. The typeof guard
+    // keeps background/ServiceWorker contexts without navigator on the
+    // normal online path.
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+      return { map: new Map(), trace };
+    }
     const compat = this.retry?.compat ?? false;
     try {
       const built = this.build(fields, compat);

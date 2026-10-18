@@ -55,7 +55,7 @@ const ERA_NAME = /元号|年号|和暦|令和|平成|昭和|大正|明治/;
 const SCHOOL = /学校|school|univ|college|高校|大学/;
 const DEPT = /学部|学科|専攻|department|major|faculty/;
 const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
-const GENDER = /性別|せいべつ|ジェンダー|gender|sex/;
+const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 const COUNTRY = /country/i;
 const ADDR_LINE = /address[_-]?([1-4])/i;
 const POSTAL_CODE = /postal[-_ ]?code/i;
@@ -235,13 +235,16 @@ const DISPATCH: readonly MatcherEntry[] = [
 // lazy evaluation so a kana-worded field pays the kana regexes at most once.
 // kanaTest is the vocabulary query for the source at hand: field-owned strings
 // use the full set, the shared legend the narrower one.
+// normalized is the caller's NFKC view (built once per field before the sources
+// loop): classifyText never normalizes itself, so the same raw string is normed
+// exactly once per field and kanaTest keeps its normalized-input contract.
 function classifyText(
-  raw: string,
+  normalized: string,
   bareKana: boolean,
   wantsKanaField: () => boolean,
   kanaTest: (normalized: string) => boolean,
 ): Category | null {
-  const t = norm(raw);
+  const t = normalized;
   if (!t.trim() || EXCLUDE.test(t)) return null;
   if (/e-?mail|メール/.test(t)) return 'email';
   if (/(^|[^a-z])tel|phone|mobile|電話|携帯/.test(t)) return 'tel';
@@ -309,16 +312,27 @@ export function classifyField(m: FieldMeta): Classification | null {
   // name/id and heading text need their own name signal. Kana attribution is not
   // decided here (see kana.ts resolveKana): the bare flag only widens the base.
   // The kana gate is lazy and memoized per field, so text sources that never
-  // reach the kana branch still pay nothing.
+  // reach the kana branch still pay nothing. Each view below is one norm call:
+  // the sources loop and wantsKana share them instead of re-normalizing the
+  // same raw string (nearby doubles as the dispatch legendText).
+  const normNameId = norm(`${m.name} ${m.htmlId}`);
+  const normLabelPlaceholder = norm(`${m.label} ${m.placeholder}`);
+  const normPlaceholder = norm(m.placeholder);
+  const normNameIdLabel = norm([m.name, m.htmlId, m.label].join(' '));
   let kanaWant: boolean | undefined;
-  const wantsKanaField = (): boolean => (kanaWant ??= wantsKana(m));
+  const wantsKanaField = (): boolean =>
+    (kanaWant ??= wantsKana(m, {
+      placeholder: normPlaceholder,
+      nameIdLabel: normNameIdLabel,
+      nearby: legendText,
+    }));
   const sources: [string, number, boolean, (normalized: string) => boolean][] = [
-    [`${m.name} ${m.htmlId}`, 0.8, false, matchFieldOwned],
-    [`${m.label} ${m.placeholder}`, 0.7, true, matchFieldOwned],
-    [m.nearby, 0.65, false, matchLegend],
+    [normNameId, 0.8, false, matchFieldOwned],
+    [normLabelPlaceholder, 0.7, true, matchFieldOwned],
+    [legendText, 0.65, false, matchLegend],
   ];
-  for (const [text, confidence, bare, kanaTest] of sources) {
-    const category = classifyText(text, bare, wantsKanaField, kanaTest);
+  for (const [normalized, confidence, bare, kanaTest] of sources) {
+    const category = classifyText(normalized, bare, wantsKanaField, kanaTest);
     if (category) return make(category, confidence);
   }
   if (m.type === 'tel') return make('tel', 0.5);
@@ -414,12 +428,40 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
     }
   }
 
-  const hasCity = out.some((it) => it.cls.category === 'city');
-  const hasPref = out.some((it) => it.cls.category === 'prefecture');
+  // PBI-09: exact不一致で残った同ラベル系tel/zip群は、plannerが欄ごとに
+  // 完全値を複製しないようunknown化する。単独欄・正常分割済み・droppedは対象外。
+  // 空キー群（label・nearbyとも空）もunknown化する：ブロック帰属を判定できず、
+  // 複製注入（誤注入）と不注入（手入力）の二択では後者を選ぶのが本プロジェクトの
+  // 方針のため。tests/core/classify-rules.test.ts の空キー回帰で固定。
+  const droppedIds = new Set(dropped.map((d) => d.fieldId));
+  for (const leftover of ['tel', 'zip'] as const) {
+    const groups = new Map<string, number[]>();
+    out.forEach((it, i) => {
+      if (it.cls.category !== leftover || droppedIds.has(it.meta.id)) return;
+      const k = sameLabel(it.meta);
+      groups.set(k, [...(groups.get(k) ?? []), i]);
+    });
+    for (const idx of groups.values()) {
+      if (idx.length >= 2) for (const i of idx) out[i]!.cls.category = 'unknown';
+    }
+  }
+
+  // PBI-12: 住所絞り込みはnearby単位（ブロック単位）で判定する。全体判定だと
+  // 別ブロックのprefecture/cityを理由に届け先addressFullがstreet化されるため。
+  // nearbyが空の欄はすべて同一スコープに畳まれる（単一ブロック挙動は不変・回帰済み）。
+  // 見出しを持たない複数ブロックでは従来の全体判定と等価になる制限がある。
+  const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
+  for (const it of out) {
+    const g = scopeOf.get(it.meta.nearby) ?? { hasCity: false, hasPref: false };
+    if (it.cls.category === 'city') g.hasCity = true;
+    if (it.cls.category === 'prefecture') g.hasPref = true;
+    scopeOf.set(it.meta.nearby, g);
+  }
   for (const it of out) {
     if (it.cls.category !== 'addressFull') continue;
-    if (hasCity) it.cls.category = 'street';
-    else if (hasPref) it.cls.category = 'addressNoPref';
+    const g = scopeOf.get(it.meta.nearby)!;
+    if (g.hasCity) it.cls.category = 'street';
+    else if (g.hasPref) it.cls.category = 'addressNoPref';
   }
   const keptIds = new Set(out.map((it) => it.meta.id));
   for (const d of dropped) keptIds.delete(d.fieldId);

@@ -35,6 +35,12 @@ export function mountPanel(
   const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
   let closed = false;
   const detachEscape = attachEscapeClose(() => handle.close());
+  // Modal focus trap: while this panel is open, Tab / Shift+Tab cycles among
+  // the focusable controls inside the shadow root and never escapes to the
+  // page behind. This panel is intentionally modal (aria-modal="true" below):
+  // a future non-modal panel must not reuse this trap without removing it and
+  // documenting the non-modal intent at the call site.
+  const detachTrap = attachFocusTrap(root, () => closed);
   const handle: PanelHandle = {
     host,
     root,
@@ -42,6 +48,7 @@ export function mountPanel(
       if (closed) return;
       closed = true;
       detachEscape();
+      detachTrap();
       host.remove();
       // Return focus to the opener when it is still in the document.
       if (opener && opener.isConnected) opener.focus();
@@ -55,13 +62,17 @@ export function mountPanel(
     render(host, root);
   } catch (e) {
     detachEscape();
+    detachTrap();
     host.remove();
     throw e;
   }
   // Dialog semantics (a11y-only): the host is the dialog, named explicitly by
   // the caller. Never scrape the shadow heading here: the host attribute is
   // page-readable, so only caller-vetted static strings may land on it.
+  // The dialog is modal: focus is trapped inside (see attachFocusTrap) so
+  // aria-modal="true" tells SR users the page behind is inert.
   host.setAttribute('role', 'dialog');
+  host.setAttribute('aria-modal', 'true');
   const name = (presence.accessibleName ?? '').trim();
   if (name) host.setAttribute('aria-label', name);
   else host.removeAttribute('aria-label');
@@ -75,6 +86,54 @@ export function mountPanel(
   const target = (presence.focus === 'primary' ? (primary ?? enabled[0]) : enabled[0]) ?? buttons[0];
   target?.focus();
   return handle;
+}
+
+// Cycles Tab / Shift+Tab among the shadow's focusable controls. Buttons are
+// the only controls rendered today, but links/inputs are included so a future
+// render adding one cannot silently punch a hole in the trap.
+function collectTrapTargets(root: ShadowRoot): HTMLElement[] {
+  const nodes = [...root.querySelectorAll<HTMLElement>('button, a[href], input, select, textarea, [tabindex]')];
+  return nodes.filter((el) => {
+    if (el.hasAttribute('disabled')) return false;
+    if (el.getAttribute('aria-disabled') === 'true') return false;
+    if (el.getAttribute('tabindex') === '-1') return false;
+    return true;
+  });
+}
+
+function attachFocusTrap(root: ShadowRoot, isClosed: () => boolean): () => void {
+  const onKey = (e: KeyboardEvent): void => {
+    if (isClosed() || e.key !== 'Tab') return;
+    const targets = collectTrapTargets(root);
+    if (targets.length === 0) {
+      // No tabbable control: keep the Tab keystroke from reaching the page.
+      // Focus has nowhere to go inside, so the keyboard exit stays Escape
+      // (attachEscapeClose); a button-less panel must keep that Esc path.
+      e.preventDefault();
+      return;
+    }
+    const first = targets[0]!;
+    const last = targets[targets.length - 1]!;
+    const active = root.activeElement as HTMLElement | null;
+    const inside = active !== null && targets.includes(active);
+    if (!inside) {
+      // Focus somehow left the shadow (programmatic move, click on the page):
+      // a modal dialog pulls it back instead of letting Tab walk the page.
+      e.preventDefault();
+      (e.shiftKey ? last : first).focus();
+      return;
+    }
+    if (e.shiftKey && active === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && active === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+  // Capture phase so a page-level keydown stopPropagation cannot break the trap.
+  document.addEventListener('keydown', onKey, true);
+  return () => document.removeEventListener('keydown', onKey, true);
 }
 
 export interface RepositionTrackingDeps {
