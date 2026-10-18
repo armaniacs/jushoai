@@ -45,5 +45,5 @@ Scenario: プレビュー側の文言は不変である
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする（h1文言はtests/entrypoints/popup.test.tsで検証しパス。プレビュー不変はpreview.ts untouched＋関連テスト緑で担保）
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る（2026-10-18最終検証でEXIT:0を確認。作成時の一過性失敗は解消済み）

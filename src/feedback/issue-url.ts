@@ -1,5 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
-import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
+import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
 
@@ -41,7 +41,7 @@ export function publicPageLabel(href: string): string {
 }
 
 function clippedMeta(m: FieldMeta): MetaWire {
-  const w = toWireMeta(m);
+  const w = encodeFieldMeta(m);
   const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
   return {
     ...w,

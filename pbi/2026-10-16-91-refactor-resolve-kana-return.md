@@ -73,4 +73,4 @@ Scenario: 振る舞い不変（いずれの選択でも）
 - [x] `tests/core/kana-blind-contract.test.ts` が緑
 - [x] `make typecheck` が通る
 - [x] 差分が `src/core/kana.ts` と `src/core/analyze.ts` の契約統一に必要な最小限に収まる
-- [ ] コードレビュー完了
+- [x] コードレビュー完了

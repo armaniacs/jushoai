@@ -46,5 +46,5 @@ Scenario: 本文の最小表示は維持される
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

@@ -3,7 +3,7 @@ import { classifyAll } from '../../src/core/analyze';
 import type { FieldClassifier } from '../../src/core/classifier';
 import type { Category } from '../../src/core/types';
 import { buildPlan } from '../../src/core/planner';
-import type { Address, Profile } from '../../src/core/types';
+import type { Address, FieldMeta, Profile } from '../../src/core/types';
 import { detectForms } from '../../src/dom/detect-forms';
 import { scanFields } from '../../src/dom/scan-fields';
 import furigana from '../../samples/furigana-fieldset-form.html?raw';
@@ -119,8 +119,14 @@ describe('sample forms end to end', () => {
       f1: 'lastName', f2: 'firstName', f3: 'lastNameKana', f4: 'firstNameKana', f5: 'zip',
       f6: 'prefecture', f7: 'addressNoPref', f8: 'building', f9: 'tel', f10: 'email',
     };
+    const classify = async (metas: FieldMeta[]): Promise<Map<string, Category>> =>
+      new Map<string, Category>(
+        metas.map((m): [string, Category] => [m.id, byHtmlId[m.htmlId] ?? 'unknown']),
+      );
     const llm: FieldClassifier = {
-      classify: async (metas) => new Map(metas.map((m) => [m.id, byHtmlId[m.htmlId] ?? 'unknown'])),
+      classify,
+      // PBI-42: fakes speak the unified seam too.
+      attempt: async (metas) => ({ map: await classify(metas), failureReason: null }),
     };
     expect(await planFor('demo-ai-ambiguous.html', undefined, llm)).toEqual({
       f1: '山田', f2: '太郎', f3: 'ヤマダ', f4: 'タロウ', f5: '100-0001', f6: '13',

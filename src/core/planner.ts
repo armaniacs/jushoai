@@ -6,6 +6,7 @@ import {
   detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
 } from './formatters';
 import { matchOption } from './match-option';
+import { isAllowedRadioCategory } from './radio-policy';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 
 export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option' | 'warn-no-value';
@@ -123,10 +124,13 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     // has no placeholder first option, so only an empty value counts as untouched.
     const isUntouchedOption = meta.tag === 'select' ? isUntouchedSelect(meta) : meta.value === '';
     if (meta.tag === 'select' || meta.tag === 'radio') {
+      // PBI-41: the gender/ageDecade half of this branch is owned by
+      // isAllowedRadioCategory (shared with the analyze LLM post-filter);
+      // the remaining categories are select-only extras.
       if (
         cls.category === 'prefecture' || cls.category === 'birthMonth' ||
         cls.category === 'birthDay' || cls.category === 'birthEra' ||
-        cls.category === 'gender' || cls.category === 'ageDecade'
+        isAllowedRadioCategory(cls.category)
       ) {
         if (!isUntouchedOption) {
           plan.push({ ...base, value: '', display: raw, status: 'filled' });

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { WebDriver } from 'selenium-webdriver';
 import {
-  By, clickInShadow, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
+  By, badgeNotice, clickInShadow, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -39,6 +39,34 @@ describe('chrome: fill flow', () => {
     expect(await valueOf(driver, 'ln')).toBe('佐藤');
     expect(await valueOf(driver, 'fn')).toBe('');
     expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+  });
+});
+
+describe('chrome: partial fill notice (PBI-82)', () => {
+  it('guards unfillable fields and stays silent for by-design skips', async () => {
+    await driver.get(`${pages.origin}/partial-notice.html`);
+    await clickInShadow(driver, 'button:not(.badge)');
+    await clickInShadow(driver, 'button.primary');
+    // Filled input is kept, maxlength-guarded input is skipped, email applies.
+    expect(await valueOf(driver, 'ln')).toBe('佐藤');
+    expect(await valueOf(driver, 'fn')).toBe('');
+    expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+    // Designed behavior (fill-plan BY_DESIGN_RESULTS + PBI-08 residual):
+    // planner-level skips (filled / maxlength / no-value) never raise the
+    // partial banner; only unexpected runtime failures do. So the badge keeps
+    // its normal status here. A user-visible notice for by-design skips needs
+    // a product decision first (PBI-82 BDD box stays open for exactly that).
+    const notice = await badgeNotice(driver);
+    expect(notice?.status).not.toBe('error');
+  });
+
+  it('shows no error notice when everything applies', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    await clickInShadow(driver, 'button:not(.badge)');
+    await clickInShadow(driver, 'button.primary');
+    expect(await valueOf(driver, 'ln')).toBe('山田');
+    // BDD scenario 1: a complete run raises no failure notice.
+    expect((await badgeNotice(driver))?.status).not.toBe('error');
   });
 });
 

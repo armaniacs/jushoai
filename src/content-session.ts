@@ -2,6 +2,11 @@ import type { Item } from './core/types';
 import type { PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackSnapshot } from './feedback/issue-url';
+import { classifyAll } from './core/analyze';
+import type { FieldClassifier } from './core/classifier';
+import type { ClassifyFailure } from './messages';
+import { asClassifyFailure } from './messages';
+import { hintForButton } from './ai/failure-text';
 import {
   buildFeedbackInput, replanItems, snapshotItems,
 } from './content-run';
@@ -23,11 +28,59 @@ export interface SessionInput {
   canReanalyze: boolean;
 }
 
+// One classification run through the unified attempt seam (PBI-42/45). The
+// pending split (ACCEPT_THRESHOLD: confident fields never reach the LLM) stays
+// inside classifyAll: this adapter only binds the attempt's failureReason to
+// the run's return value, so no caller closure needs to catch the reason on
+// the side. A null classifier (or no pending fields) means rule-only:
+// classifyAll emits its single aggregated trace line and the reason stays
+// null — no second audit record is produced here because the audited adapters
+// log once per attempt call either way.
+export interface SessionClassifyResult {
+  items: Item[];
+  failureReason: ClassifyFailure | null;
+}
+
+export async function classifyWithReason(
+  classifier: FieldClassifier | null,
+  metas: FieldMeta[],
+  opts: { force?: boolean; englishPage?: boolean } = {},
+): Promise<SessionClassifyResult> {
+  if (!classifier) {
+    return { items: await classifyAll(metas, null, opts), failureReason: null };
+  }
+  // Session-local binding (not a run-closure escape): classifyAll only calls
+  // classify(), so both seam members record the same attempt reason here and
+  // it leaves on the return value below.
+  let failureReason: ClassifyFailure | null = null;
+  const seam: FieldClassifier = {
+    // PBI-48: non-throwing by contract — the partial map is returned WITHOUT
+    // rethrowing outcome.error (unlike a raw classifier's classify(), which
+    // throws). A failed chunk's partial results still reach classifyAll, which
+    // keeps rule results for the missing fields (fail-safe: analyze's own
+    // try/catch stays as the backstop for a throwing classify).
+    classify: async (fields, schedule) => {
+      const outcome = await classifier.attempt(fields, schedule);
+      failureReason = asClassifyFailure(outcome.failureReason);
+      return outcome.map;
+    },
+    attempt: async (fields, schedule) => {
+      const outcome = await classifier.attempt(fields, schedule);
+      failureReason = asClassifyFailure(outcome.failureReason);
+      return { ...outcome, failureReason };
+    },
+  };
+  return { items: await classifyAll(metas, seam, opts), failureReason };
+}
+
 // Every DOM / Chrome side effect the session needs, injected so the ordering is
 // unit-testable with fakes. Rendering (showPreview) and status display stay with
 // the caller; only the data flow and its order live here.
 export interface SessionEnv {
-  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean }): Promise<Item[]>;
+  // Seam-shaped: the failure reason travels on the return value (never into a
+  // caller closure). The caller passes intent (which classifier) via
+  // classifyWithReason; the apply ordering below owns the reason from there.
+  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean }): Promise<SessionClassifyResult>;
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };
@@ -47,8 +100,8 @@ export interface SessionPanel {
 }
 
 export type SessionStart =
-  | { excluded: true }
-  | { excluded: false; rows: PreviewRow[] };
+  | { excluded: true; failureReason: ClassifyFailure | null }
+  | { excluded: false; rows: PreviewRow[]; failureReason: ClassifyFailure | null };
 
 // What the caller shows after an application: silence (just close the panel)
 // or one composed banner. The composition lives here so new entrypoints
@@ -69,6 +122,12 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   let after: Map<string, FeedbackSnapshot> | null = null;
   let profileId = '';
   let addressId = '';
+  // The latest classification run's failure reason, owned by the session
+  // (PBI-45): start()/reanalyze() set it from the seam return value, apply()
+  // reads it for the banner composition. It is never cleared by display or
+  // by apply(), so a retry shows the same hint until a newer run overwrites
+  // it — the single place the failureReason-overwrite order is expressed.
+  let lastFailureReason: ClassifyFailure | null = null;
 
   const currentProfile = (): Profile =>
     input.profiles.find((p) => p.id === profileId) ?? input.profiles[0]!;
@@ -96,13 +155,15 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
     get selectedAddressId(): string { return addressId; },
 
     async start(): Promise<SessionStart> {
-      items = await env.classify(input.metas, { englishPage: input.englishPage });
+      const result = await env.classify(input.metas, { englishPage: input.englishPage });
+      items = result.items;
+      lastFailureReason = result.failureReason;
       before = snapshotItems(items);
       resolveSelection();
       // Classification takes long enough for the settings to change under it; an
       // exclusion that landed meanwhile must not open a panel on this page.
-      if (env.isExcluded()) return { excluded: true };
-      return { excluded: false, rows: replan() };
+      if (env.isExcluded()) return { excluded: true, failureReason: lastFailureReason };
+      return { excluded: false, rows: replan(), failureReason: lastFailureReason };
     },
 
     selectProfile(id: string): PreviewRow[] {
@@ -117,17 +178,18 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       return replan();
     },
 
-    async reanalyze(): Promise<PreviewRow[] | null> {
+    async reanalyze(): Promise<{ rows: PreviewRow[]; failureReason: ClassifyFailure | null } | null> {
       if (!input.canReanalyze) return null;
-      items = await env.classify(input.metas, { force: true, englishPage: input.englishPage });
+      const result = await env.classify(input.metas, { force: true, englishPage: input.englishPage });
+      items = result.items;
+      lastFailureReason = result.failureReason;
       after = snapshotItems(items);
-      return replan();
+      return { rows: replan(), failureReason: lastFailureReason };
     },
 
     apply(
       sendFeedback: boolean,
       panel: SessionPanel,
-      failureHint?: string,
     ): { applied: true; summary: FillSummary; display: DisplayDecision } | { applied: false; reason: string } {
       // Last trust point: abort before injecting anything when the panel was
       // hidden, moved, or covered. The panel stays open for cancel or retry.
@@ -150,6 +212,11 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       if (feedbackInput) {
         env.openUrl(buildFeedbackIssueUrl(FEEDBACK_REPO, feedbackInput));
       }
+      // The banner composes the partial-application note with the stored AI
+      // failure hint (if any) so the two never clobber each other on the
+      // shared error channel. The hint comes from the session-owned reason —
+      // callers no longer thread it through.
+      const failureHint = lastFailureReason ? hintForButton(lastFailureReason) : undefined;
       return { applied: true, summary, display: decideDisplay(summary, failureHint) };
     },
   };

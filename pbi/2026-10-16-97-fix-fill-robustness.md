@@ -51,5 +51,5 @@ Scenario: planとmap不整合でもプレビュー全体が死なない
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

@@ -1,6 +1,6 @@
 import type { PublicAiSettings } from '../ai/types';
 import { isSecretAuthError } from '../ai/secret-store';
-import { parseRequest } from '../messages';
+import { decodeRequest } from '../messages';
 import type { ProviderRegistry, RegistrySecrets } from './provider-registry';
 
 export interface HandlerDeps {
@@ -49,7 +49,7 @@ async function loadNeededSecrets(
 // the registry seam. Returns undefined for anything that is not exactly one of
 // the AI request shapes.
 export async function handleMessage(msg: unknown, deps: HandlerDeps, ctx: CallContext = {}): Promise<unknown> {
-  const req = parseRequest(msg);
+  const req = decodeRequest(msg);
   if (!req) return undefined;
   const settings = await deps.loadSettings();
 

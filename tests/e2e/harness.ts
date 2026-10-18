@@ -210,4 +210,27 @@ export async function valueOf(driver: WebDriver, id: string): Promise<string> {
   return (await driver.findElement(By.id(id)).getAttribute('value')) ?? '';
 }
 
+// Reads the form button badge (status + text) out of the shadow DOM. The
+// partial-application banner (PBI-82) lands here via showError as
+// data-status="error"; a clean run leaves a non-error status.
+export async function badgeNotice(driver: WebDriver): Promise<{ status: string | null; text: string } | null> {
+  const read = async (): Promise<{ status: string | null; text: string } | null> => {
+    for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+      const badge = await shadowButton(host, '.badge');
+      if (badge) {
+        return {
+          status: await badge.getAttribute('data-status'),
+          text: (await badge.getText()) ?? '',
+        };
+      }
+    }
+    return null;
+  };
+  try {
+    return await driver.wait(read, 15_000, 'no [data-jushoai] badge found');
+  } catch {
+    return null;
+  }
+}
+
 export { By, until };

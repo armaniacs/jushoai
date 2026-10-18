@@ -46,5 +46,5 @@ Scenario: host列との重複排除と既存エントリ互換
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

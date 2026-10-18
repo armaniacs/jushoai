@@ -1,5 +1,6 @@
 import type { Category, FieldMeta, Item, KanaKind } from './types';
 import { stripExample } from './formatters';
+import type { FieldNormViews } from './literals';
 import { norm } from './literals';
 
 // Token table, the single source of kana vocabulary. Shared tokens fire on
@@ -29,6 +30,13 @@ export interface KanaNorm {
   nameIdLabel: string;
   /** norm(m.nearby), shared with the classifyField legend view. */
   nearby: string;
+}
+
+// PBI-44: KanaNormはFieldNormViewsからの派生ビュー（第1段階の使い回し）。
+// 同一rawの再normはなく、placeholder・nameIdLabel・nearbyは入口ビューと
+// 同一文字列になる。wantsKana(m, pre)に渡すpreはここから作ること。
+export function kanaNormFromViews(v: FieldNormViews): KanaNorm {
+  return { placeholder: v.placeholder, nameIdLabel: v.nameIdLabel, nearby: v.legendText };
 }
 
 // Vocabulary queries over already-normalized text (callers pass the norm
