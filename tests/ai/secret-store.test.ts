@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { describe, it, expect } from 'vitest';
-import { decryptSecret, encryptSecret, isEnvelope, MemoryKeyStore } from '../../src/ai/secret-store';
+import { decryptSecret, encryptSecret, isEnvelope, isSecretAuthError, MemoryKeyStore, SecretAuthError, SecretTransientError } from '../../src/ai/secret-store';
 
 describe('secret-store', () => {
   it('round-trips a secret', async () => {
@@ -43,5 +43,35 @@ describe('secret-store', () => {
   it('keeps one key per MemoryKeyStore', async () => {
     const ks = new MemoryKeyStore();
     expect(await ks.getKey()).toBe(await ks.getKey());
+  });
+
+  it('marks a non-envelope value as an auth failure, not a transient one', async () => {
+    const ks = new MemoryKeyStore();
+    const err = await decryptSecret('plain', ks).then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).toBeInstanceOf(SecretAuthError);
+    expect(isSecretAuthError(err)).toBe(true);
+  });
+
+  it('does not mark operational failures as auth failures', () => {
+    expect(isSecretAuthError(new SecretTransientError('IndexedDB open blocked'))).toBe(false);
+    expect(isSecretAuthError(new Error('IndexedDB transaction aborted'))).toBe(false);
+    expect(isSecretAuthError(null)).toBe(false);
+  });
+
+  it('does not mark a tampered ciphertext as a shape failure', async () => {
+    const ks = new MemoryKeyStore();
+    const env = await encryptSecret('sk-test-123', ks);
+    const bytes = Uint8Array.from(atob(env.ct), (c) => c.charCodeAt(0));
+    bytes[0] = (bytes[0] ?? 0) ^ 0xff;
+    const tampered = { ...env, ct: btoa(String.fromCharCode(...bytes)) };
+    const err = await decryptSecret(tampered, ks).then(
+      () => null,
+      (e: unknown) => e,
+    );
+    expect(err).not.toBeNull();
+    expect(isSecretAuthError(err)).toBe(false);
   });
 });

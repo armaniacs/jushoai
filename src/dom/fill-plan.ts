@@ -69,6 +69,7 @@ const PLAN_STATUS_RESULT: Record<Exclude<PlanStatus, 'ok'>, FillResult> = {
   filled: 'skipped-status',
   'warn-maxlength': 'skipped-status',
   'warn-no-option': 'skipped-status',
+  'warn-no-value': 'skipped-status',
 };
 
 // By-design outcomes that must not raise the partial-application warning:

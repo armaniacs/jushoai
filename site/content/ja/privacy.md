@@ -43,7 +43,7 @@ AI を呼び出すたびに、記録を端末内に残します。設定ペー�
 | `host` | 送信先のホスト。ブラウザ内蔵 AI は空 |
 | `model` | モデル名。ブラウザ内蔵 AI は空 |
 | `purpose` | `classify`（入力時の分類）または `connection-test`（接続テスト） |
-| `page_url` | 入力したページのアドレスとパス。クエリとフラグメントは含みません。接続テストは空 |
+| `page_url` | 入力したページのオリジン（スキーム・ホスト・ポート）のみ。パス・クエリ・フラグメントは含みません。接続テストは空 |
 | `field_count` | 送った欄の数 |
 | `chunk_index` / `chunk_count` | 20 欄ずつに分割して送ったときの位置。分割しないときは空 |
 | `result` | `success`、`auth-error`、`http-error`、`network-error`、`invalid-response`、`error` |

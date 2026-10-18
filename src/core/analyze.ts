@@ -32,18 +32,27 @@ export async function classifyAll(
     }
     const category = fromLlm.get(meta.id);
     if (category && category !== 'unknown') {
-      items.push({
-        meta,
-        cls: {
-          category,
-          confidence: 0.5,
-          source: 'llm',
-          ...(category.endsWith('Kana') ? { kanaKind: detectKanaKind(meta) } : {}),
-        },
-      });
-      continue;
+      // PBI-05: radio groups are only fillable as gender/ageDecade (see
+      // buildPlan). An LLM answer classifying a radio as anything else would
+      // bypass that policy, so drop it here and fall through to the rule-keep
+      // path below (PBI-03), which leaves such fields as unknown.
+      if (meta.tag !== 'radio' || category === 'gender' || category === 'ageDecade') {
+        items.push({
+          meta,
+          cls: {
+            category,
+            confidence: 0.5,
+            source: 'llm',
+            ...(category.endsWith('Kana') ? { kanaKind: detectKanaKind(meta) } : {}),
+          },
+        });
+        continue;
+      }
     }
-    if (force && cls) items.push({ meta, cls });
+    // Without an LLM answer, keep the rule result (even a weak one) so
+    // rule-only filling still works; fields the rules cannot classify stay
+    // visible as unknown so buildPlan can exclude them instead of misfilling.
+    items.push({ meta, cls: cls ?? { category: 'unknown', confidence: 0, source: 'rule' } });
   }
   const resolved = resolveKana(items);
   const refined = refineClassifications(resolved);

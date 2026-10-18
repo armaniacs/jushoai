@@ -15,6 +15,22 @@ const escapeRegExp = (s: string): string => s.replace(/[.*+?^${}()|[\]\\]/g, '\\
 const KANA = new RegExp([...KANA_SHARED, ...KANA_FIELD_ONLY].map(escapeRegExp).join('|'));
 const KANA_HEADING = new RegExp(KANA_SHARED.map(escapeRegExp).join('|'));
 
+// Pre-normalized views for one field, built once per field before the
+// classifyField sources loop so the same raw string is never
+// normalize('NFKC')d twice for a field.
+// matchFieldOwned / matchLegend keep their normalized-input contract: callers
+// pass these views, never raw strings. The pattern attribute stays raw-owned:
+// hasKanaPattern normalizes its own decoded view (a distinct source), and
+// half-width checks must read the pre-normalization text.
+export interface KanaNorm {
+  /** norm(m.placeholder). */
+  placeholder: string;
+  /** norm([m.name, m.htmlId, m.label].join(' ')). */
+  nameIdLabel: string;
+  /** norm(m.nearby), shared with the classifyField legend view. */
+  nearby: string;
+}
+
 // Vocabulary queries over already-normalized text (callers pass the norm
 // view): field-owned matches for name/id/label, legend matches for nearby.
 export function matchFieldOwned(normalized: string): boolean {
@@ -51,12 +67,14 @@ const hasKatakanaPattern = (m: FieldMeta): boolean => /[ァ-ヶ]/.test(norm(deco
 // True when the field asks for kana rather than kanji: a kana-only placeholder,
 // kana vocabulary in name/id/label/legend, or a kana-only pattern. A kanji or
 // latin placeholder means the field wants a plain name, whatever the heading says.
-export function wantsKana(m: FieldMeta): boolean {
-  const ph = stripExample(norm(m.placeholder));
+// pre carries the classifyField entrance views so the same raw string is not
+// normalized twice; without it each source is normed here (resolveKana path).
+export function wantsKana(m: FieldMeta, pre?: KanaNorm): boolean {
+  const ph = stripExample(pre?.placeholder ?? norm(m.placeholder));
   if (ph !== '' && /[一-龠a-z]/.test(ph)) return false;
   if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
-  if (matchFieldOwned(norm([m.name, m.htmlId, m.label].join(' ')))) return true;
-  if (matchLegend(norm(m.nearby))) return true;
+  if (matchFieldOwned(pre?.nameIdLabel ?? norm([m.name, m.htmlId, m.label].join(' ')))) return true;
+  if (matchLegend(pre?.nearby ?? norm(m.nearby))) return true;
   return hasKanaPattern(m);
 }
 

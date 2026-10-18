@@ -95,6 +95,10 @@ export interface PermissionGrant {
   readonly origins: string[];
   readonly granted: boolean;
   readonly alreadyGranted: boolean;
+  // Per-origin diff: origins that were ungranted before the prompt (false→true
+  // candidates). Rollback removes only these, so a pre-existing permission
+  // (e.g. the DoH resolver origin) is never stripped by a failed save.
+  readonly newlyGrantedOrigins: string[];
   readonly [grantBrand]: true;
 }
 
@@ -105,27 +109,37 @@ export async function requestSavePermission(plan: SavePlan): Promise<PermissionG
   // connection origin and the resolver origin (requiredHostOrigins).
   const origins = requiredHostOrigins(plan.normalized);
   const alreadyGranted = await hasHostPermission(origins);
+  // Per-origin snapshot before the prompt: the combined contains above is an
+  // AND over the whole array, so it cannot tell which origin was already
+  // granted. Each single-origin contains is recorded here for the rollback diff.
+  const preGranted: boolean[] = [];
+  for (const origin of origins) {
+    preGranted.push(await hasHostPermission([origin]));
+  }
   const granted = origins.length === 0 ? true : await requestHostPermission(origins);
-  return { origins, granted, alreadyGranted, [grantBrand]: true as const };
+  // Only origins that transitioned false→true are rollback candidates. When the
+  // prompt was denied nothing was granted, so there is nothing to take back.
+  const newlyGrantedOrigins = granted ? origins.filter((_, i) => !preGranted[i]) : [];
+  return { origins, granted, alreadyGranted, newlyGrantedOrigins, [grantBrand]: true as const };
 }
 
 // Completion stage: resolved-address gate → persist → presence re-read.
 // Rolls back only what this save granted and reports it on failure.
 export async function completeSave(plan: SavePlan, grant: PermissionGrant, deps: SaveDeps): Promise<SaveResult> {
   const { normalized, update, effective } = plan;
-  const { origins, granted, alreadyGranted } = grant;
+  const { granted, newlyGrantedOrigins } = grant;
   // Only roll back what this save granted: a failed save must never strip a
   // working setup's pre-existing permission. The outcome rides the failure
   // result; a failed removal is additionally warned, so a lingering rejected
   // origin stays detectable instead of silent.
   const rollback = async (): Promise<boolean> => {
-    // Nothing was ever requested, so there is nothing to take back (and no
-    // warning to raise).
-    if (origins.length === 0 || alreadyGranted) return false;
+    // Nothing transitioned false→true (no origins, all pre-granted, or the
+    // prompt was denied), so there is nothing to take back (and no warning).
+    if (newlyGrantedOrigins.length === 0) return false;
     try {
-      if (await removeHostPermission(origins)) return true;
+      if (await removeHostPermission(newlyGrantedOrigins)) return true;
     } catch { /* a hostile permissions api must not change the rejected outcome */ }
-    console.warn('[JushoAI] permission rollback failed for', origins);
+    console.warn('[JushoAI] permission rollback failed for', newlyGrantedOrigins);
     return false;
   };
   // Save-time parity with the dial-time gate: a name that resolves into a private range

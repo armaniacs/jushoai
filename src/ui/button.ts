@@ -49,11 +49,13 @@ export function mountButton(
   badge.className = 'badge';
   wrap.append(button, badge);
   button.addEventListener('click', (e) => {
+    if (!e.isTrusted) return;
     e.preventDefault();
     e.stopPropagation();
     onClick();
   });
   badge.addEventListener('click', (e) => {
+    if (!e.isTrusted) return;
     e.preventDefault();
     e.stopPropagation();
     if (statusKnown) onBadgeClick(lastInfo);
@@ -86,7 +88,20 @@ export function mountButton(
       badge.setAttribute('aria-atomic', 'true');
       badge.textContent = text;
       badge.dataset.status = 'error';
-      errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
+      if (text.includes('一部のみ適用')) {
+        // PBI-08: 部分適用バナーは4秒で消さない。4秒後に残存表示へ畳み、
+        // 次の setStatus（通常時）まで永続させる。badge クリックの再適用
+        // 導線（onBadgeClick）はそのまま残る。通常エラーは従来どおり復帰。
+        const m = text.match(/一部のみ適用（[^）]*）/);
+        const residual = `${m ? m[0] : '一部のみ適用'} 要確認`;
+        errorTimer = window.setTimeout(() => {
+          badge.textContent = residual;
+          badge.dataset.status = 'error';
+          handle.reposition();
+        }, 4000);
+      } else {
+        errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
+      }
       handle.reposition();
     },
     reposition() {

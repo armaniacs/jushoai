@@ -6,6 +6,7 @@ import type { LanguageModelStatic } from '../../src/llm/availability';
 import { buildPrompt } from '../../src/llm/classifier';
 import { parseTestResponse } from '../../src/messages';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
+import { SecretAuthError, SecretTransientError } from '../../src/ai/secret-store';
 import { ProviderRegistry } from '../../src/llm/provider-registry';
 
 const field = (id: string, extra: Record<string, unknown> = {}) => ({
@@ -296,7 +297,7 @@ describe('handleMessage: corrupt key envelope', () => {
   const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
   const broken = (o: Opts = {}) => {
     const { deps, fetchMock } = makeDeps({ settings: openai, ...configured, ...o });
-    return { deps: { ...deps, loadSecrets: async (): Promise<{ openai?: string; gemini?: string }> => { throw new Error('corrupt envelope'); } }, fetchMock };
+    return { deps: { ...deps, loadSecrets: async (): Promise<{ openai?: string; gemini?: string }> => { throw new SecretAuthError('invalid secret envelope'); } }, fetchMock };
   };
 
   it('reports auth-error instead of silence for status, classify and test', async () => {
@@ -309,6 +310,39 @@ describe('handleMessage: corrupt key envelope', () => {
     const { deps, fetchMock } = broken();
     await handleMessage(msg, deps);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+});
+
+describe('handleMessage: transient keystore failure', () => {
+  const msg = { type: 'ai-classify', fields: [field('a', { label: '姓' })] };
+  // IDB blocked / transaction abort surface as operational errors, not as a
+  // broken envelope: even an untyped operational error must never read as a
+  // rejected key.
+  const transient = (error: unknown) => {
+    const { deps, fetchMock } = makeDeps({ settings: openai, ...configured });
+    return { deps: { ...deps, loadSecrets: async (): Promise<{ openai?: string; gemini?: string }> => { throw error; } }, fetchMock };
+  };
+
+  it.each([
+    ['typed transient error', new SecretTransientError('IndexedDB open blocked')],
+    ['untyped operational error', new Error('IndexedDB transaction aborted')],
+  ])('reports unavailable instead of auth for %s across status, classify and test', async (_name, error) => {
+    expect(await handleMessage({ type: 'ai-status' }, transient(error).deps)).toEqual({ status: 'unavailable', provider: 'openai' });
+    expect(await handleMessage(msg, transient(error).deps)).toEqual({ ok: false, reason: 'unavailable' });
+    expect(await handleMessage({ type: 'ai-test' }, transient(error).deps)).toEqual({ ok: false, reason: 'unavailable' });
+  });
+
+  it('never touches the network on a transient keystore failure', async () => {
+    const { deps, fetchMock } = transient(new SecretTransientError('IndexedDB open blocked'));
+    await handleMessage(msg, deps);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps a broken envelope on the auth vocabulary', async () => {
+    const { deps } = transient(new SecretAuthError('invalid secret envelope'));
+    expect(await handleMessage({ type: 'ai-status' }, deps)).toEqual({ status: 'auth-error', provider: 'openai' });
+    expect(await handleMessage(msg, deps)).toEqual({ ok: false, reason: 'auth' });
+    expect(await handleMessage({ type: 'ai-test' }, deps)).toEqual({ ok: false, reason: 'auth' });
   });
 });
 
@@ -381,7 +415,7 @@ describe('handleMessage: audit log', () => {
     await handleMessage(msg, deps, { pageUrl: 'https://example.com/form?email=a@b.c#x' });
     expect(audits).toEqual([{
       provider: 'openai', host: 'api.openai.com', model: 'm', purpose: 'classify',
-      pageUrl: 'https://example.com/form', fieldCount: 1, request: buildPrompt([sentField]),
+      pageUrl: 'https://example.com', fieldCount: 1, request: buildPrompt([sentField]),
       response: '{"a":"lastName"}', chunkIndex: null, chunkCount: null,
       result: 'success', httpStatus: 200, retried: false, durationMs: expect.any(Number),
     }]);
@@ -389,13 +423,13 @@ describe('handleMessage: audit log', () => {
     expect(JSON.stringify(audits)).not.toContain('sk-test');
   });
 
-  it('records a capped page url when the sender url exceeds the audit bound', async () => {
+  it('records only the origin when the sender url exceeds the audit bound', async () => {
     const fetchMock = vi.fn().mockResolvedValue(openaiBody('{"a":"lastName"}'));
     const { deps, audits } = makeDeps({ settings: openai, ...configured, fetch: fetchMock });
     await handleMessage(msg, deps, { pageUrl: 'https://example.com/' + 'p'.repeat(5000) });
     const recorded = audits[0]!.pageUrl;
+    expect(recorded).toBe('https://example.com');
     expect(new TextEncoder().encode(recorded).length).toBeLessThanOrEqual(AUDIT_PAGE_URL_MAX_BYTES);
-    expect(recorded.startsWith('https://example.com/')).toBe(true);
   });
 
   it('records the sent prompt without field values or the API key', async () => {

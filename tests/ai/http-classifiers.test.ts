@@ -1,4 +1,4 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 import {
   buildGeminiRequest, buildOpenAiRequest, createGeminiClassifier, createOpenAiClassifier,
   extractGeminiText, extractOpenAiText, HttpAuthError, HttpRequestError, isRejectedStatus,
@@ -154,6 +154,49 @@ describe('HttpClassifier', () => {
       }));
     const c = createOpenAiClassifier(openai, 'k', { fetch: fetch as unknown as typeof globalThis.fetch, timeoutMs: 20 });
     await expect(c.classify(fields)).rejects.toBeInstanceOf(HttpRequestError);
+  });
+});
+
+describe('offline early return', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('returns an empty map without fetch or egress when offline', async () => {
+    vi.stubGlobal('navigator', { onLine: false });
+    const fetch = vi.fn();
+    const egress = vi.fn();
+    const attempt = await createOpenAiClassifier(openai, 'sk-test', { fetch, egress }).attempt(fields);
+    expect(attempt.map.size).toBe(0);
+    expect(attempt.error).toBeUndefined();
+    expect(fetch).not.toHaveBeenCalled();
+    expect(egress).not.toHaveBeenCalled();
+
+    const gFetch = vi.fn();
+    const gAttempt = await createGeminiClassifier(gemini, 'g-key', { fetch: gFetch }).attempt(fields);
+    expect(gAttempt.map.size).toBe(0);
+    expect(gAttempt.error).toBeUndefined();
+    expect(gFetch).not.toHaveBeenCalled();
+  });
+
+  it('classifies normally when online', async () => {
+    vi.stubGlobal('navigator', { onLine: true });
+    const fetch = vi.fn().mockResolvedValue(
+      jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] }),
+    );
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch });
+    expect([...(await c.classify(fields))]).toEqual([['a', 'lastName']]);
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it('classifies normally when navigator is absent (ServiceWorker)', async () => {
+    vi.stubGlobal('navigator', undefined);
+    const fetch = vi.fn().mockResolvedValue(
+      jsonResponse(200, { choices: [{ message: { content: '{"a":"lastName"}' } }] }),
+    );
+    const c = createOpenAiClassifier(openai, 'sk-test', { fetch });
+    expect([...(await c.classify(fields))]).toEqual([['a', 'lastName']]);
+    expect(fetch).toHaveBeenCalledOnce();
   });
 });
 

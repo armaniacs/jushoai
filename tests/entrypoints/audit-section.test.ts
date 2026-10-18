@@ -3,7 +3,7 @@ import { AUDIT_KEY, appendEntry, EMPTY_AUDIT_STATE, type AuditDraft, type AuditE
 import { mountAuditSection, type AuditSectionDeps } from '../../src/entrypoints/options/audit-section';
 
 const draft = (over: Partial<AuditDraft> = {}): AuditDraft => ({
-  provider: 'openai', host: 'h', model: 'm', purpose: 'classify', pageUrl: 'https://e.com/p',
+  provider: 'openai', host: 'h', model: 'm', purpose: 'classify', pageUrl: 'https://e.com',
   fieldCount: 2, request: 'PROMPT', response: 'RAW', chunkIndex: null, chunkCount: null,
   result: 'success', httpStatus: 200, retried: false, durationMs: 12, ...over,
 });
@@ -48,7 +48,18 @@ describe('audit section', () => {
     const [name, content] = (deps.save as ReturnType<typeof vi.fn>).mock.calls[0] as [string, string];
     expect(name).toBe('jushoai-audit-log-2026-10-06.tsv');
     expect(content.split('\n')[0]).toContain('id\tcreated_at');
-    expect(content).toContain('https://e.com/p');
+    expect(content).toContain('\thttps://e.com\t');
+  });
+
+  it('loads a legacy full-path entry and exports its page_url as the origin', async () => {
+    const { root, deps, buttons, details } = mount([entry({ pageUrl: 'https://e.com/form?token=secret' })]);
+    await flush();
+    expect(root.textContent).toContain('ログは 1 件あります。');
+    expect(details()).toHaveLength(1);
+    buttons()[0]!.click();
+    const [, content] = (deps.save as ReturnType<typeof vi.fn>).mock.calls[0] as [string, string];
+    expect(content).toContain('\thttps://e.com\t');
+    expect(content).not.toContain('token=secret');
   });
 
   it('states the retention period and the personal-information caution', async () => {
@@ -81,7 +92,7 @@ describe('audit section', () => {
     expect(details()[1]!.textContent).toContain('#1');
     expect(details()[0]!.querySelector('summary')!.textContent).toContain('openai');
     // The target page URL is visible without opening the entry.
-    expect(details()[0]!.querySelector('summary')!.textContent).toContain('https://e.com/p');
+    expect(details()[0]!.querySelector('summary')!.textContent).toContain('https://e.com');
     details()[0]!.open = true;
     details()[0]!.dispatchEvent(new Event('toggle'));
     expect(details()[0]!.textContent).toContain('PROMPT');

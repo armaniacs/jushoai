@@ -43,7 +43,7 @@ Every time an AI is called, JushoAI keeps a record on your device. On the settin
 | `host` | The host the request went to. Empty for the built-in AI |
 | `model` | The model name. Empty for the built-in AI |
 | `purpose` | `classify` (classification when filling) or `connection-test` |
-| `page_url` | The address and path of the page you filled. No query or fragment. Empty for connection tests |
+| `page_url` | Only the origin (scheme, host and port) of the page you filled. No path, query or fragment. Empty for connection tests |
 | `field_count` | How many fields were sent |
 | `chunk_index` / `chunk_count` | The position within a run split into 20-field pieces. Empty when the run was not split |
 | `result` | `success`, `auth-error`, `http-error`, `network-error`, `invalid-response` or `error` |

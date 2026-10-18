@@ -18,6 +18,10 @@ export type KanaKind = 'katakana' | 'hiragana' | 'halfKatakana';
 
 export interface SelectOption { value: string; text: string; disabled?: boolean }
 
+// FieldMeta は走査〜分類〜計画で共有する定義側の唯一形状。
+// value は fill 判定専用（入力済み上書き抑止のためのページ既存値スナップショット）で、
+// LLM 送信には含めない。送信形状は MetaWire（src/messages.ts の META_WIRE_KEYS /
+// toWireMeta のみ）で構築する。fill 適用時の真値は fill-plan 側が live DOM から読み直す。
 export interface FieldMeta {
   id: string;
   tag: 'input' | 'select' | 'radio';
@@ -33,6 +37,8 @@ export interface FieldMeta {
   options: SelectOption[];
   readOnly: boolean;
   disabled: boolean;
+  // fill 判定専用のページ既存値。LLM 送信用ペイロード（MetaWire）には含めず、
+  // toWireMeta / sanitizeField が落とす前提。将来の送信側変更でもここを wire に載せない。
   value: string;
 }
 

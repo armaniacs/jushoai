@@ -8,7 +8,7 @@ import {
 import { matchOption } from './match-option';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 
-export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option';
+export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option' | 'warn-no-value';
 
 export interface PlanItem {
   fieldId: string;
@@ -108,9 +108,16 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
 
   for (const { meta, cls } of items) {
     if (meta.readOnly || meta.disabled || cls.category === 'unknown') continue;
-    const raw = valueFor(cls, meta, ctx, present);
-    if (!raw) continue;
     const base = { fieldId: meta.id, category: cls.category, source: cls.source };
+    const raw = valueFor(cls, meta, ctx, present);
+    // A missing profile value keeps its row with the reason attached instead
+    // of vanishing: vanishing is indistinguishable from a classification
+    // failure (unknown skips noiselessly above), so the preview could never
+    // explain the cause.
+    if (!raw) {
+      plan.push({ ...base, value: '', display: '', status: 'warn-no-value' });
+      continue;
+    }
 
     // A radio group resting with nothing checked is untouched; unlike a select it
     // has no placeholder first option, so only an empty value counts as untouched.

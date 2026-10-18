@@ -9,6 +9,7 @@ import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
+import { hintForButton } from '../ai/failure-text';
 import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
@@ -283,17 +284,8 @@ export default defineContentScript({
 
     // The classifier keeps working rule-only when AI fails, so surface WHY it
     // failed (set-up vs retryable) instead of leaving the user to guess.
-    // Raw statuses never leave this map; only these coarse guidance lines do.
-    const AI_FAILURE_HINT: Record<ClassifyFailure, string> = {
-      'not-configured': 'AI未設定のためルールのみで表示',
-      permission: 'AI通信が未許可のためルールのみで表示: 設定で許可してください',
-      auth: 'AI認証に失敗したためルールのみで表示: APIキーを確認してください',
-      unavailable: '内蔵AIが未準備のためルールのみで表示',
-      network: 'AI通信に失敗したためルールのみで表示: 再試行できます',
-      rejected: 'AIが要求を拒否したためルールのみで表示: モデル設定を確認してください',
-      'bad-response': 'AI応答を解釈できずルールのみで表示',
-    };
-
+    // Raw statuses never leave the single table in ../ai/failure-text;
+    // only these coarse guidance lines do.
     async function run(container: Element, button: ButtonHandle) {
       const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
       if (!isReady(data)) {
@@ -369,7 +361,7 @@ export default defineContentScript({
         },
       );
       const started = await session.start();
-      if (failureReason) button.showError(AI_FAILURE_HINT[failureReason]);
+      if (failureReason) button.showError(hintForButton(failureReason));
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -383,7 +375,7 @@ export default defineContentScript({
         selectedAddressId: session.selectedAddressId,
         onReanalyze: classifier ? () => {
           void session.reanalyze().then((rows) => {
-            if (failureReason) button.showError(AI_FAILURE_HINT[failureReason]);
+            if (failureReason) button.showError(hintForButton(failureReason));
             if (rows) preview.setRows(rows);
           });
         } : undefined,
@@ -402,7 +394,7 @@ export default defineContentScript({
           // the panel was hidden, moved, or covered. The panel stays open for
           // cancel or retry, and the reason goes to the form button, which stays
           // visible even when the panel is hidden.
-          const result = session.apply(sendFeedback, preview, failureReason ? AI_FAILURE_HINT[failureReason] : undefined);
+          const result = session.apply(sendFeedback, preview, failureReason ? hintForButton(failureReason) : undefined);
           if (!result.applied) {
             button.showError(result.reason);
             return;

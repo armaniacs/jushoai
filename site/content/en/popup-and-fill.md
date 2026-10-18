@@ -8,7 +8,7 @@ order: 4
 
 ## The toolbar icon
 
-Click the JushoAI icon in the browser toolbar to open `入力内容の確認` (review of registered data).
+Click the JushoAI icon in the browser toolbar to open `登録内容の確認` (review of registered data).
 
 - A list of registered profiles and addresses
 - Which profile and address are in use
@@ -25,13 +25,14 @@ A `JushoAI で入力` (fill with JushoAI) button appears near a form that has se
 1. Click `JushoAI で入力`. A preview opens.
 2. At the top, choose the profile and address to use.
 3. Review the list of fields and values. Fields with a note are not filled.
-4. Click `入力する` (fill in). When some fields could not be applied, the button shows `一部のみ適用` (partially applied, x/y fields).
+4. Click `入力する` (fill in). When some fields could not be applied, the button shows `一部のみ適用` (partially applied, x/y fields), followed by a persistent `一部のみ適用 (x/y fields) 要確認` (needs checking) reminder.
 
 | Note | Meaning |
 |---|---|
 | 入力済みのため上書きしません | The field already has a value. |
 | 文字数を超えるため入力しません | The value is longer than the maximum length. It is not truncated and not entered. |
 | 一致する選択肢がないため入力しません | The dropdown has no matching option. |
+| プロファイルに値がないため入力しません | The profile has no value registered for that field. |
 
 Fields classified by AI are marked `AI判定` (decided by AI). Close the preview with the Esc key or `キャンセル` (cancel).
 

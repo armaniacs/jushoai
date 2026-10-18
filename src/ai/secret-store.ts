@@ -1,3 +1,21 @@
+// A broken envelope means the stored key itself is unusable (re-enter it),
+// while an IDB operational failure means the store hiccuped (retry later).
+// Callers must not report the latter as a rejected key, so the two travel as
+// distinct error types instead of an indistinguishable Error.
+export class SecretAuthError extends Error {
+  override name = 'SecretAuthError';
+}
+
+export class SecretTransientError extends Error {
+  override name = 'SecretTransientError';
+}
+
+// instanceof does not reliably survive realms (extension iframes, VM-based
+// test pools), so the name check keeps the classification working there too.
+export const isSecretAuthError = (e: unknown): e is SecretAuthError =>
+  e instanceof SecretAuthError ||
+  (typeof e === 'object' && e !== null && (e as { name?: unknown }).name === 'SecretAuthError');
+
 export interface KeyStore {
   getKey(): Promise<CryptoKey>;
 }
@@ -36,7 +54,7 @@ export class IdbKeyStore implements KeyStore {
       req.onupgradeneeded = () => req.result.createObjectStore(this.storeName);
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
-      req.onblocked = () => reject(new Error('IndexedDB open blocked'));
+      req.onblocked = () => reject(new SecretTransientError('IndexedDB open blocked'));
     });
   }
 
@@ -46,7 +64,7 @@ export class IdbKeyStore implements KeyStore {
       const req = run(tx.objectStore(this.storeName));
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
-      tx.onabort = () => reject(new Error('IndexedDB transaction aborted'));
+      tx.onabort = () => reject(new SecretTransientError('IndexedDB transaction aborted'));
     });
   }
 
@@ -95,7 +113,7 @@ export async function encryptSecret(plain: string, ks: KeyStore): Promise<Envelo
 }
 
 export async function decryptSecret(env: unknown, ks: KeyStore): Promise<string> {
-  if (!isEnvelope(env)) throw new Error('invalid secret envelope');
+  if (!isEnvelope(env)) throw new SecretAuthError('invalid secret envelope');
   const plain = await crypto.subtle.decrypt(
     { name: 'AES-GCM', iv: fromBase64(env.iv) },
     await ks.getKey(),

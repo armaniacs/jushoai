@@ -59,15 +59,66 @@ function fieldLine(meta: FieldMeta, snap: FeedbackSnapshot | undefined): string 
   return `- ${meta.id}: ${hint} -> ${cat}`;
 }
 
+// Best-effort eTLD+1 without an external PSL: for 2-letter ccTLDs with a
+// short second level (e.g. co.jp), keep 3 labels; otherwise keep 2.
+function etldPlusOne(hostname: string): string {
+  const labels = hostname.split('.');
+  if (labels.length <= 2) return hostname;
+  const tld = labels.at(-1) ?? '';
+  const sld = labels.at(-2) ?? '';
+  if (tld.length === 2 && sld.length <= 3) return labels.slice(-3).join('.');
+  return labels.slice(-2).join('.');
+}
+
+// FNV-1a (32-bit) hex: deterministic, non-reversible short label for host
+// names that have no meaningful eTLD+1 (intranet single labels, .local,
+// literal IPs). Port-independent: callers pass URL.hostname, never .host.
+function hashedHost(hostname: string): string {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < hostname.length; i++) {
+    h ^= hostname.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return `hash-${(h >>> 0).toString(16).padStart(8, '0')}`;
+}
+
+const NO_ETLD_SUFFIXES = new Set([
+  'local',
+  'internal',
+  'intranet',
+  'lan',
+  'localdomain',
+  'home',
+  'corp',
+  'test',
+  'example',
+  'invalid',
+]);
+
+// Minimized host label for the public issue title: eTLD+1 when it carries
+// meaning, otherwise a short hash. Never includes the port (URL.hostname
+// is used, not .host) and never returns the full hostname for subdomains.
+export function titleHostLabel(href: string): string {
+  let hostname: string;
+  try {
+    hostname = new URL(href).hostname.toLowerCase();
+  } catch {
+    return 'unknown';
+  }
+  if (hostname.endsWith('.')) hostname = hostname.slice(0, -1);
+  if (!hostname) return 'unknown';
+  const isIpv4 = /^\d{1,3}(\.\d{1,3}){3}$/.test(hostname);
+  const isIpv6 = hostname.includes(':');
+  if (isIpv4 || isIpv6) return hashedHost(hostname);
+  const labels = hostname.split('.');
+  if (labels.length < 2) return hashedHost(hostname);
+  if (NO_ETLD_SUFFIXES.has(labels.at(-1) ?? '')) return hashedHost(hostname);
+  return etldPlusOne(hostname);
+}
+
 export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): string {
   const page = publicPageLabel(input.pageHref);
-  const host = (() => {
-    try {
-      return new URL(input.pageHref).host;
-    } catch {
-      return 'unknown';
-    }
-  })();
+  const host = titleHostLabel(input.pageHref);
   const title = `開発に報告: 初回NG→AIで分析OK (${host})`;
   const lines: string[] = [
     '初回では入力できなかったが、AIで分析したら成功した。「開発に報告する」から送る報告です。',
