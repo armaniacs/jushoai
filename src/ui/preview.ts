@@ -117,6 +117,11 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   }
 
   const list = document.createElement('ul');
+  list.setAttribute('aria-busy', 'false');
+  const status = document.createElement('div');
+  status.setAttribute('role', 'status');
+  // Visually hidden live region: no visual/copy change, announces politely once.
+  status.setAttribute('style', 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;');
   const empty = document.createElement('p');
   empty.className = 'empty';
   empty.textContent = '入力できる欄が見つかりませんでした';
@@ -136,6 +141,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   let hasOk = false;
   let busy = false;
   let reanalyzed = false;
+  let announcedBusy = false;
   const feedback = document.createElement('label');
   feedback.className = 'feedback';
   feedback.hidden = true;
@@ -154,11 +160,18 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     apply.disabled = busy || !hasOk;
     feedbackBox.disabled = busy;
     feedback.hidden = !(reanalyze && reanalyzed);
+    list.setAttribute('aria-busy', busy ? 'true' : 'false');
+    // Announce only on busy transitions: setRows() also calls syncButtons,
+    // so rewriting the live region every time would re-announce mid-analysis.
+    if (busy !== announcedBusy) {
+      announcedBusy = busy;
+      status.textContent = busy ? '分析中…' : '';
+    }
   };
   const actions = document.createElement('div');
   actions.className = 'actions';
   actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
-  panel.append(list, empty, actions);
+  panel.append(list, empty, actions, status);
 
   const setRows = (rows: PreviewRow[]) => {
     list.replaceChildren(

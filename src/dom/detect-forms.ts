@@ -1,4 +1,5 @@
 import { classifyField, isConfident } from '../core/classify-rules';
+import type { Classification, FieldMeta } from '../core/types';
 import { containerOf, scanFields, type ScannedField } from './scan-fields';
 import { createRectCache, isHidden, isMeasurable, visualTop } from './geometry';
 
@@ -11,6 +12,48 @@ export interface FormCandidate {
 const MIN_CONTROLS = 3;
 const MIN_CLASSIFIED = 2;
 const TEXT_INPUT_TYPES = new Set(['text', 'email', 'tel', 'search']);
+
+// classifyField is pure over the meta snapshot (it never reads meta.value),
+// so verdicts are memoized by a key of every classification-relevant field.
+// meta.id is the per-scan index (`jai-${n}`) and meta.value is the live fill
+// snapshot: both churn on every sync (typing busts value, inserts shift ids)
+// without affecting the verdict, so both stay out of the key. Unchanged fields
+// on a resync therefore skip the matcher work entirely; results are identical
+// because the key covers every input the rules read.
+const classifyCache = new Map<string, Classification | null>();
+const CLASSIFY_CACHE_LIMIT = 1000;
+
+function metaKey(m: FieldMeta): string {
+  return [
+    m.tag,
+    m.type,
+    m.name,
+    m.htmlId,
+    m.autocomplete,
+    m.label,
+    m.placeholder,
+    m.nearby,
+    m.maxLength,
+    m.pattern,
+    m.readOnly,
+    m.disabled,
+    JSON.stringify(m.options),
+  ].join('');
+}
+
+function classifyCached(meta: FieldMeta): Classification | null {
+  const key = metaKey(meta);
+  if (classifyCache.has(key)) return classifyCache.get(key) ?? null;
+  const result = classifyField(meta);
+  if (classifyCache.size >= CLASSIFY_CACHE_LIMIT) classifyCache.clear();
+  classifyCache.set(key, result);
+  return result;
+}
+
+/** Test hook: drops memoized verdicts so cases start from a cold cache. */
+export function clearClassifyCache(): void {
+  classifyCache.clear();
+}
 
 // The button sits beside the first text box of the form, because a form full of inputs reads from the top.
 // Only the rule-classified count qualifies a form, so labels the rules cannot read (left for the LLM) must
@@ -38,7 +81,7 @@ function pickAnchor(fields: ScannedField[]): ScannedField {
   // pin the button to the left edge.
   const byVisual = [...candidates].sort((a, b) => visualTopOf(a.el) - visualTopOf(b.el));
   return byVisual.find(isTextInput)
-    ?? byVisual.find((f) => isConfident(classifyField(f.meta)))
+    ?? byVisual.find((f) => isConfident(classifyCached(f.meta)))
     ?? candidates[0]!;
 }
 
@@ -57,7 +100,7 @@ export function detectForms(doc: Document): FormCandidate[] {
 
   const forms: FormCandidate[] = [];
   for (const [container, fields] of groups) {
-    const classified = fields.filter((f) => isConfident(classifyField(f.meta)));
+    const classified = fields.filter((f) => isConfident(classifyCached(f.meta)));
     if (fields.length >= MIN_CONTROLS && classified.length >= MIN_CLASSIFIED) {
       forms.push({ container, fields, anchor: pickAnchor(fields) });
     }

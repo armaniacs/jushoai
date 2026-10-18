@@ -25,6 +25,16 @@ export function normalizeAiSettings(raw: unknown, isFirefox: boolean = IS_FIREFO
   };
 }
 
+// Firefox has no Prompt API, so a stored built-in choice is normalized to none.
+// Returns true only for the normalize before/after gap (built-in -> none) on
+// Firefox, which is the case the options page must surface as a notice.
+export function detectBuiltInFallback(raw: unknown, isFirefox: boolean = IS_FIREFOX): boolean {
+  if (!isFirefox) return false;
+  const r = isRecord(raw) ? raw : {};
+  if (r.provider !== 'built-in') return false;
+  return normalizeAiSettings(raw, isFirefox).provider === 'none';
+}
+
 export function normalizeHost(hostname: string): string {
   return hostname.toLowerCase().replace(/\.+$/, '');
 }

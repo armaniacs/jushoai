@@ -11,10 +11,16 @@ export async function classifyAll(
   classifier: FieldClassifier | null,
   opts: { force?: boolean; englishPage?: boolean } = {},
 ): Promise<Item[]> {
+  const startedAt = Date.now();
   const force = opts.force === true;
   const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
   const pending = (force ? ruled : ruled.filter((r) => !isConfident(r.cls))).map((r) => r.meta);
 
+  // PBI-27: the rule-only trace fires only when no LLM attempt happens
+  // (classifier off, or nothing pending). When the LLM is attempted, the AI
+  // path's own audit point (AuditedClassifier.log) is the record — including
+  // on failure — so emitting here too would double-count that run.
+  const llmAttempted = classifier !== null && pending.length > 0;
   let fromLlm = new Map<string, Category>();
   if (classifier && pending.length > 0) {
     try {
@@ -56,5 +62,16 @@ export async function classifyAll(
   }
   const resolved = resolveKana(items);
   const refined = refineClassifications(resolved);
-  return opts.englishPage ? applyEnglishPage(refined) : refined;
+  const out = opts.englishPage ? applyEnglishPage(refined) : refined;
+  if (!llmAttempted) {
+    // PBI-27: one aggregated line per rule-only run — field count and elapsed
+    // time only. No meta contents (label/placeholder/value/ids) ever enter the
+    // line, so no profile values or field PII can leak. The line is a console
+    // trace, not a stored entry: it holds no retained batch, so it cannot
+    // exceed the audit byte budget (AUDIT_MAX_BYTES) and leaves nothing for
+    // retention (AUDIT_RETENTION_MS) to expire. Fixed short format (~dozens of
+    // bytes) keeps each line far under any budget by construction.
+    console.debug(`[JushoAI] rule-only classify fields=${metas.length} durationMs=${Date.now() - startedAt}`);
+  }
+  return out;
 }

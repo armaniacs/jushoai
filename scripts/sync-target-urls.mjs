@@ -29,25 +29,111 @@ export function stampRegistry(md, url, file) {
   return next.join('\n');
 }
 
-// CLI: node scripts/sync-target-urls.mjs
+// One fetch must never block the whole sync: unresponsive hosts are cut off
+// after FETCH_TIMEOUT_MS and skipped so the next URL can proceed.
+export const FETCH_TIMEOUT_MS = 15_000;
+
+export function parseSyncArgs(argv) {
+  let only = null;
+  let all = false;
+  let check = false;
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === '--only') {
+      only = argv[++i] ?? null;
+    } else if (arg.startsWith('--only=')) {
+      only = arg.slice('--only='.length) || null;
+    } else if (arg === '--all') {
+      all = true;
+    } else if (arg === '--check') {
+      check = true;
+    }
+  }
+  return { only, all, check };
+}
+
+// Narrow the sync targets: --only syncs just the given URL (used by
+// `make addurl URL=...`), --all syncs every entry. Bulk sync of all unwired
+// URLs happens only when explicitly requested; with neither flag there is
+// nothing to do (avoids hanging on unrelated unresponsive hosts).
+export function selectTargets(entries, { only = null, all = false } = {}) {
+  if (only) return entries.filter((e) => e.url === only);
+  if (all) return entries.slice();
+  return [];
+}
+
+// Fetch a page with a timeout; never throws. A non-ok result means "skip this
+// URL and continue with the next one" for the caller.
+export async function fetchPage(url, fetchFn = fetch) {
+  try {
+    const res = await fetchFn(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
+    if (!res.ok) return { ok: false, status: res.status };
+    return { ok: true, text: await res.text() };
+  } catch (err) {
+    return { ok: false, error: err };
+  }
+}
+
+// Unfilled scaffold expectations: `renderTestStub` writes `'<expected>'`
+// placeholders that stay red until a human fills them. The check below
+// lists them per file so the remaining work is visible without hunting
+// failures backwards.
+export const EXPECTED_PLACEHOLDER = "'<expected>'";
+
+export function countExpectedPlaceholders(source) {
+  if (!source) return 0;
+  return source.split(EXPECTED_PLACEHOLDER).length - 1;
+}
+
+export function collectExpectedRemnants(files) {
+  const remnants = [];
+  for (const [file, source] of Object.entries(files)) {
+    const count = countExpectedPlaceholders(source);
+    if (count > 0) remnants.push({ file, count });
+  }
+  remnants.sort((a, b) => (a.file < b.file ? -1 : a.file > b.file ? 1 : 0));
+  return remnants;
+}
+
+export function formatExpectedRemnants(remnants) {
+  if (remnants.length === 0) return `addurl-check: no ${EXPECTED_PLACEHOLDER} remnants.`;
+  const lines = remnants.map(({ file, count }) => `${file}: ${count}`);
+  const total = remnants.reduce((sum, r) => sum + r.count, 0);
+  return [...lines, `total: ${total} in ${remnants.length} file(s)`].join('\n');
+}
+
+// CLI: node scripts/sync-target-urls.mjs --only <url> | --all | --check
 if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
+  const { only, all, check } = parseSyncArgs(process.argv.slice(2));
+  if (check) {
+    const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
+    const testSource = readFileSync(testPath, 'utf8');
+    const remnants = collectExpectedRemnants({ 'tests/integration/samples.test.ts': testSource });
+    console.log(formatExpectedRemnants(remnants));
+    process.exit(0);
+  }
+  if (!only && !all) {
+    console.error('usage: node scripts/sync-target-urls.mjs --only <url> | --all | --check');
+    process.exit(2);
+  }
   const mdPath = new URL('../tests/target-url.md', import.meta.url);
   const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
   const md = readFileSync(mdPath, 'utf8');
   let testSource = readFileSync(testPath, 'utf8');
   let updated = md;
-  for (const { url, file } of parseRegistry(md)) {
+  for (const { url, file } of selectTargets(parseRegistry(md), { only, all })) {
     if (file && testSource.includes(`'${file}'`)) {
       console.log(`skip ${url} (already wired)`);
       continue;
     }
-    const res = await fetch(url);
-    if (!res.ok) {
-      console.error(`fetch failed: ${url}: ${res.status}`);
+    const page = await fetchPage(url);
+    if (!page.ok) {
+      const reason = page.status ?? page.error?.name ?? 'error';
+      console.error(`fetch failed: ${url}: ${reason}`);
       continue;
     }
     const name = file ?? fixtureNameFromUrl(url);
-    const wiring = buildWiring(await res.text(), url, name);
+    const wiring = buildWiring(page.text, url, name);
     writeFileSync(new URL(`../samples/${name}`, import.meta.url), wiring.fixture);
     testSource = wiring.applyTest(testSource);
     updated = stampRegistry(updated, url, name);

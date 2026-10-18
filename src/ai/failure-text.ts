@@ -5,7 +5,7 @@ import type { ClassifyFailure, TestFailure } from '../messages';
 // 別々の Record を二重所有していたドリフトをなくし、reason ごとの文言を
 // 1エントリに隣接させた。両画面は必ず下の用途別ラッパー経由で参照する。
 // ClassifyFailure と TestFailure は同一リテラル集合の別名なので、
-// キーは両者の和集合（現状は同一の7キー）で受ける。
+// キーは両者の和集合（共有の7キー＋classify-only の truncated）で受ける。
 export interface AiFailureText {
   /** content.ts のボタン表示用（短いヒント。ルールのみ動作の旨を添える） */
   hint: string;
@@ -43,6 +43,12 @@ export const AI_FAILURE_TEXT: Record<ClassifyFailure | TestFailure, AiFailureTex
   'bad-response': {
     hint: 'AI応答を解釈できずルールのみで表示',
     notice: '応答を解釈できませんでした。モデルが JSON 形式の出力に対応しているか確認してください。',
+  },
+  // PBI-25: classify-only (TestFailure には含まれない)。60件打ち切りを
+  // failureReason→showError 経路に乗せるための文言。接続テストでは出ない。
+  truncated: {
+    hint: '入力欄が60件を超えたため61件目以降はルールのみで表示',
+    notice: '入力欄が60件を超えています。61件目以降はAI分類の対象外となり、ルールのみで分類されます。',
   },
 };
 

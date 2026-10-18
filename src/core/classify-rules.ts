@@ -90,10 +90,19 @@ const matchAs = (category: Category, confidence: number): Classification => ({
 
 // The field itself (0.7) outranks a shared heading (0.65): one data row
 // expands to the ordered pair, so the gradient lives in a single place.
-function ownLegend(re: RegExp, category: Category): [MatcherEntry, MatcherEntry] {
+// extra gates both sides (e.g. decade options); legendExtra overrides the
+// legend side when its evidence lives elsewhere (e.g. FOREIGN_MARK may sit
+// in the field or its heading, so the legend side reads overseasCtx).
+function ownLegend(
+  re: RegExp,
+  category: Category,
+  extra?: (ctx: DispatchCtx) => boolean,
+  legendExtra?: (ctx: DispatchCtx) => boolean,
+): [MatcherEntry, MatcherEntry] {
+  const legendGate = legendExtra ?? extra;
   return [
-    { name: `${category}-own`, match: (ctx) => (re.test(ctx.ownText) ? matchAs(category, 0.7) : null) },
-    { name: `${category}-legend`, match: (ctx) => (re.test(ctx.legendText) ? matchAs(category, 0.65) : null) },
+    { name: `${category}-own`, match: (ctx) => (re.test(ctx.ownText) && (!extra || extra(ctx)) ? matchAs(category, 0.7) : null) },
+    { name: `${category}-legend`, match: (ctx) => (re.test(ctx.legendText) && (!legendGate || legendGate(ctx)) ? matchAs(category, 0.65) : null) },
   ];
 }
 
@@ -172,33 +181,16 @@ const DISPATCH: readonly MatcherEntry[] = [
         : null;
     },
   },
-  {
-    name: 'postal-code-own',
-    match: (ctx) =>
-      POSTAL_CODE.test(ctx.ownText) && FOREIGN_MARK.test(ctx.ownText) ? matchAs('postalCode', 0.7) : null,
-  },
-  {
-    name: 'postal-code-legend',
-    match: (ctx) =>
-      POSTAL_CODE.test(ctx.legendText) && FOREIGN_MARK.test(ctx.overseasCtx)
-        ? matchAs('postalCode', 0.65)
-        : null,
-  },
+  // postal-code: half-width/foreign note gates both sides; the legend side
+  // reads the combined field+heading context.
+  ...ownLegend(
+    POSTAL_CODE,
+    'postalCode',
+    (ctx) => FOREIGN_MARK.test(ctx.ownText),
+    (ctx) => FOREIGN_MARK.test(ctx.overseasCtx),
+  ),
   // age: option fields with decade readings only.
-  {
-    name: 'age-decade-own',
-    match: (ctx) =>
-      AGE.test(ctx.ownText) && ctx.isOptionField && hasDecadeOptions(ctx.m.options)
-        ? matchAs('ageDecade', 0.7)
-        : null,
-  },
-  {
-    name: 'age-decade-legend',
-    match: (ctx) =>
-      AGE.test(ctx.legendText) && ctx.isOptionField && hasDecadeOptions(ctx.m.options)
-        ? matchAs('ageDecade', 0.65)
-        : null,
-  },
+  ...ownLegend(AGE, 'ageDecade', (ctx) => ctx.isOptionField && hasDecadeOptions(ctx.m.options)),
   {
     name: 'romaji-full-name',
     match: (ctx) =>
@@ -372,6 +364,13 @@ const SPLIT_POLICIES: SplitPolicy[] = [
 
 export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  // outはmapで作ったdenseな実体配列であり、indices()産の添字は常に有効。
+  // 個別の!ではなくこのat()に集約してundefinedを一箇所で narrowing する。
+  const at = (i: number): Item => {
+    const it = out[i];
+    if (!it) throw new Error(`refineWithDrops: out-of-range index ${i}`);
+    return it;
+  };
   const indices = (c: Category) =>
     out.flatMap((it, i) => (it.cls.category === c ? [i] : []));
   const retag = (idx: number[], cats: Category[]) =>
@@ -395,13 +394,13 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
   ) => {
     const groups = new Map<string, number[]>();
     for (const i of indices(cat)) {
-      const k = key(out[i]!.meta);
+      const k = key(at(i).meta);
       groups.set(k, [...(groups.get(k) ?? []), i]);
     }
     for (const idx of groups.values()) {
       if (accept(idx, cats.length)) retag(idx, cats);
       else if (dropOversize && idx.length > cats.length) {
-        for (const i of idx) dropped.push({ fieldId: out[i]!.meta.id, from: cat, reason: 'oversized-group' });
+        for (const i of idx) dropped.push({ fieldId: at(i).meta.id, from: cat, reason: 'oversized-group' });
       }
     }
   };
@@ -411,15 +410,20 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
   // qualify; anything else keeps the current unsplit protection.
   const partRank = (label: string, parts: RegExp[]): number => {
     const t = norm(label);
-    for (let i = 0; i < parts.length; i++) {
-      if (parts[i]!.test(t)) return i;
+    for (const [i, re] of parts.entries()) {
+      if (re.test(t)) return i;
     }
     return -1;
   };
-  const inPartOrder = (parts: RegExp[]) => (idx: number[], size: number): boolean =>
-    idx.length === size &&
-    idx.every((v, k) => k === 0 || v === idx[k - 1]! + 1) &&
-    idx.every((v, k) => partRank(out[v]!.meta.label, parts) === k);
+  const inPartOrder = (parts: RegExp[]) => (idx: number[], size: number): boolean => {
+    if (idx.length !== size) return false;
+    const first = idx[0];
+    if (first === undefined) return size === 0;
+    return (
+      idx.every((v, k) => v === first + k) &&
+      idx.every((v, k) => partRank(at(v).meta.label, parts) === k)
+    );
+  };
   for (const policy of SPLIT_POLICIES) {
     if (policy.grouping === 'label') {
       splitBy(policy.from, policy.to, sameLabel, exactSize, true);
@@ -442,7 +446,12 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
       groups.set(k, [...(groups.get(k) ?? []), i]);
     });
     for (const idx of groups.values()) {
-      if (idx.length >= 2) for (const i of idx) out[i]!.cls.category = 'unknown';
+      if (idx.length >= 2) {
+        for (const i of idx) {
+          const it = out[i];
+          if (it) it.cls.category = 'unknown';
+        }
+      }
     }
   }
 
@@ -459,9 +468,9 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
   }
   for (const it of out) {
     if (it.cls.category !== 'addressFull') continue;
-    const g = scopeOf.get(it.meta.nearby)!;
-    if (g.hasCity) it.cls.category = 'street';
-    else if (g.hasPref) it.cls.category = 'addressNoPref';
+    const g = scopeOf.get(it.meta.nearby);
+    if (g?.hasCity) it.cls.category = 'street';
+    else if (g?.hasPref) it.cls.category = 'addressNoPref';
   }
   const keptIds = new Set(out.map((it) => it.meta.id));
   for (const d of dropped) keptIds.delete(d.fieldId);

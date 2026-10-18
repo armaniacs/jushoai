@@ -95,6 +95,45 @@ describe('BackgroundClassifier', () => {
   });
 });
 
+describe('BackgroundClassifier truncation signal (PBI-25)', () => {
+  const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
+
+  it('reports truncated with the dropped count when fields exceed the cap', async () => {
+    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
+      ok: true,
+      entries: m.fields.map((f) => [f.id, 'email']),
+    }));
+    const attempt = await new BackgroundClassifier().attempt(metas(61));
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(attempt.map.size).toBe(60);
+    expect(attempt.failureReason).toBe('truncated');
+    expect(attempt.truncatedCount).toBe(1);
+  });
+
+  it('reports no truncation at or below the cap', async () => {
+    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
+      ok: true,
+      entries: m.fields.map((f) => [f.id, 'email']),
+    }));
+    for (const n of [1, 60]) {
+      const attempt = await new BackgroundClassifier().attempt(metas(n));
+      expect(attempt.map.size).toBe(n);
+      expect(attempt.failureReason).toBeNull();
+      expect(attempt.truncatedCount).toBe(0);
+    }
+  });
+
+  it('keeps a chunk failure ahead of the truncation notice', async () => {
+    send
+      .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
+      .mockResolvedValueOnce({ ok: false, reason: 'auth' });
+    const attempt = await new BackgroundClassifier().attempt(metas(61));
+    expect(attempt.failureReason).toBe('auth');
+    expect(attempt.truncatedCount).toBe(1);
+    expect(attempt.map.size).toBe(1);
+  });
+});
+
 describe('timeouts', () => {
   afterEach(() => vi.useRealTimers());
   const never = () => new Promise(() => {});
@@ -131,6 +170,65 @@ describe('timeouts', () => {
     send.mockResolvedValueOnce({ status: 'available', provider: 'built-in' });
     await getAiStatusViaBackground(5000);
     expect(vi.getTimerCount()).toBe(0);
+  });
+});
+
+describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
+  const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
+  const hang = () => new Promise(() => {});
+
+  it('cuts remaining chunks past the total budget and keeps earlier results with a reason', async () => {
+    send
+      .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
+      .mockImplementationOnce(hang);
+    const res = await new BackgroundClassifier(5_000, 60).attempt(metas(60));
+    expect(send).toHaveBeenCalledTimes(2);
+    expect([...res.map]).toEqual([['f0', 'tel']]);
+    expect(res.failureReason).toBe('network');
+  });
+
+  it('sends nothing when already aborted and reports a reason for rule-only continuation', async () => {
+    const c = new AbortController();
+    c.abort();
+    const res = await new BackgroundClassifier().attempt(metas(30), { signal: c.signal });
+    expect(send).not.toHaveBeenCalled();
+    expect(res.map.size).toBe(0);
+    expect(res.failureReason).toBe('network');
+  });
+
+  it('links an abort to the in-flight chunk and skips unsent chunks', async () => {
+    send
+      .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
+      .mockImplementationOnce(hang);
+    const c = new AbortController();
+    const p = new BackgroundClassifier().attempt(metas(60), { signal: c.signal });
+    await new Promise((r) => setTimeout(r, 10));
+    c.abort();
+    const res = await p;
+    expect(send).toHaveBeenCalledTimes(2);
+    expect([...res.map]).toEqual([['f0', 'tel']]);
+    expect(res.failureReason).toBe('network');
+  });
+
+  it('keeps a cutoff ahead of the truncation notice', async () => {
+    const c = new AbortController();
+    c.abort();
+    const res = await new BackgroundClassifier().attempt(metas(61), { signal: c.signal });
+    expect(send).not.toHaveBeenCalled();
+    expect(res.failureReason).toBe('network');
+    expect(res.truncatedCount).toBe(1);
+  });
+
+  it('leaves fast runs within budget unchanged', async () => {
+    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
+      ok: true,
+      entries: m.fields.map((f) => [f.id, 'email']),
+    }));
+    const res = await new BackgroundClassifier().attempt(metas(45), {});
+    expect(send).toHaveBeenCalledTimes(3);
+    expect(res.map.size).toBe(45);
+    expect(res.failureReason).toBeNull();
+    expect(res.truncatedCount).toBe(0);
   });
 });
 

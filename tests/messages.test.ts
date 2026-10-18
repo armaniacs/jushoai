@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, parseAuditClearResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS } from '../src/messages';
+import { describe, it, expect, vi } from 'vitest';
+import { parseRequest, parseClassifyResponse, parseStatusResponse, parseTestResponse, parseAuditClearResponse, MAX_CLASSIFY_FIELDS, toWireMeta, META_WIRE_KEYS, isAnalyzeReason, ANALYZE_REASONS, AI_REQUEST_VERSION, aiStatusRequest, aiClassifyRequest, aiDownloadRequest, aiTestRequest, openOptionsRequest, auditClearRequest } from '../src/messages';
 import { MAX_CLASSIFY_TOTAL } from '../src/llm/background-gateway';
 import { makeMeta } from './helpers';
 
@@ -7,8 +7,8 @@ const field = (id: string, extra: Record<string, unknown> = {}) => ({ id, name: 
 
 describe('parseRequest', () => {
   it('accepts the three exact shapes', () => {
-    expect(parseRequest({ type: 'ai-status' })).toEqual({ type: 'ai-status' });
-    expect(parseRequest({ type: 'ai-download' })).toEqual({ type: 'ai-download' });
+    expect(parseRequest({ type: 'ai-status' })).toEqual({ type: 'ai-status', v: 1 });
+    expect(parseRequest({ type: 'ai-download' })).toEqual({ type: 'ai-download', v: 1 });
     const r = parseRequest({ type: 'ai-classify', fields: [field('a', { label: 'L', maxLength: 5 })] });
     expect(r?.type).toBe('ai-classify');
   });
@@ -21,7 +21,7 @@ describe('parseRequest', () => {
   });
 
   it('accepts open-options with a single key and rejects extra keys', () => {
-    expect(parseRequest({ type: 'open-options' })).toEqual({ type: 'open-options' });
+    expect(parseRequest({ type: 'open-options' })).toEqual({ type: 'open-options', v: 1 });
     expect(parseRequest({ type: 'open-options', extra: 1 })).toBeNull();
   });
 
@@ -118,15 +118,96 @@ describe('parseClassifyResponse', () => {
 
 describe('ai-test request', () => {
   it('accepts exactly { type: "ai-test" }', () => {
-    expect(parseRequest({ type: 'ai-test' })).toEqual({ type: 'ai-test' });
+    expect(parseRequest({ type: 'ai-test' })).toEqual({ type: 'ai-test', v: 1 });
     expect(parseRequest({ type: 'ai-test', extra: 1 })).toBeNull();
   });
 });
 
 describe('audit-clear request', () => {
   it('accepts exactly { type: "audit-clear" } and rejects extra keys', () => {
-    expect(parseRequest({ type: 'audit-clear' })).toEqual({ type: 'audit-clear' });
+    expect(parseRequest({ type: 'audit-clear' })).toEqual({ type: 'audit-clear', v: 1 });
     expect(parseRequest({ type: 'audit-clear', extra: 1 })).toBeNull();
+  });
+});
+
+describe('AiRequest message versioning (PBI-34)', () => {
+  it('stamps v:1 on every variant via the builders', () => {
+    expect(aiStatusRequest()).toEqual({ type: 'ai-status', v: 1 });
+    expect(aiDownloadRequest()).toEqual({ type: 'ai-download', v: 1 });
+    expect(aiTestRequest()).toEqual({ type: 'ai-test', v: 1 });
+    expect(openOptionsRequest()).toEqual({ type: 'open-options', v: 1 });
+    expect(auditClearRequest()).toEqual({ type: 'audit-clear', v: 1 });
+    const fields = [makeMeta({ id: 'a' })];
+    expect(aiClassifyRequest(fields)).toEqual({ type: 'ai-classify', v: 1, fields });
+    expect(aiClassifyRequest(fields, { index: 1, count: 2 })).toEqual({
+      type: 'ai-classify', v: 1, fields, chunk: { index: 1, count: 2 },
+    });
+    expect(AI_REQUEST_VERSION).toBe(1);
+  });
+
+  it('parses every version-stamped variant back with v:1', () => {
+    for (const req of [aiStatusRequest(), aiDownloadRequest(), aiTestRequest(), openOptionsRequest(), auditClearRequest()]) {
+      expect(parseRequest(req)).toEqual(req);
+    }
+    // ai-classify fields are sanitized on receipt, so compare the envelope only.
+    const classify = aiClassifyRequest([makeMeta({ id: 'a' })], { index: 2, count: 3 });
+    const parsed = parseRequest(classify);
+    expect(parsed?.type).toBe('ai-classify');
+    if (parsed?.type !== 'ai-classify') return;
+    expect(parsed.v).toBe(1);
+    expect(parsed.chunk).toEqual({ index: 2, count: 3 });
+    expect(parsed.fields).toHaveLength(1);
+  });
+
+  it('accepts legacy version-less shapes without warning and normalizes them to v:1', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      expect(parseRequest({ type: 'ai-status' })).toEqual({ type: 'ai-status', v: 1 });
+      expect(parseRequest({ type: 'ai-download' })).toEqual({ type: 'ai-download', v: 1 });
+      expect(parseRequest({ type: 'ai-test' })).toEqual({ type: 'ai-test', v: 1 });
+      expect(parseRequest({ type: 'open-options' })).toEqual({ type: 'open-options', v: 1 });
+      expect(parseRequest({ type: 'audit-clear' })).toEqual({ type: 'audit-clear', v: 1 });
+      const r = parseRequest({ type: 'ai-classify', fields: [field('a')] });
+      expect(r).toEqual({ type: 'ai-classify', v: 1, fields: expect.any(Array) });
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('warns on unknown versions and refuses to treat them as known shapes', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      for (const v of [0, 2, 99, '1', null, true, {}]) {
+        expect(parseRequest({ type: 'ai-status', v })).toBeNull();
+        expect(parseRequest({ type: 'ai-test', v })).toBeNull();
+        expect(parseRequest({ type: 'ai-classify', fields: [field('a')], v })).toBeNull();
+      }
+      // One warn per rejected message: 7 versions x 3 shapes.
+      expect(warn).toHaveBeenCalledTimes(21);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('keeps the strict key check with v present: other extra keys are still rejected', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      expect(parseRequest({ type: 'ai-status', v: 1, extra: 1 })).toBeNull();
+      expect(parseRequest({ type: 'ai-test', v: 1, extra: 1 })).toBeNull();
+      expect(parseRequest({ type: 'ai-classify', fields: [field('a')], v: 1, extra: 1 })).toBeNull();
+      expect(parseRequest({ type: 'ai-classify', fields: [field('a')], v: 1, chunk: { index: 1, count: 1 }, extra: 1 })).toBeNull();
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('accepts v:1 alongside an optional chunk schedule', () => {
+    const fields = [field('a')];
+    const ok = parseRequest({ type: 'ai-classify', fields, v: 1, chunk: { index: 2, count: 3 } });
+    expect(ok).toEqual({ type: 'ai-classify', v: 1, fields: expect.any(Array), chunk: { index: 2, count: 3 } });
+    expect(parseRequest({ type: 'ai-classify', fields, v: 1, chunk: { index: 4, count: 3 } })).toBeNull();
   });
 });
 

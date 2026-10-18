@@ -28,7 +28,7 @@ const settings: AiSettings = {
 
 describe('ai settings store', () => {
   it('returns defaults without keys when nothing is stored', async () => {
-    expect(await loadPublicAiSettings()).toEqual({ ...DEFAULT_AI_SETTINGS, hasKey: { openai: false, gemini: false } });
+    expect(await loadPublicAiSettings()).toEqual({ ...DEFAULT_AI_SETTINGS, hasKey: { openai: false, gemini: false }, builtInDisabled: false });
     expect(await loadAiSecrets(new MemoryKeyStore())).toEqual({});
   });
 
@@ -137,5 +137,37 @@ describe('ai settings store', () => {
       expect(pub.openai).toEqual({ baseUrl: '', model: '' });
       expect(await loadAiSecrets(new MemoryKeyStore())).toEqual({});
     }
+  });
+
+  describe('built-in fallback notice (Firefox)', () => {
+    it('flags a stored built-in as disabled and serves none on Firefox', async () => {
+      store[AI_SETTINGS_KEY] = { provider: 'built-in' };
+      const pub = await loadPublicAiSettings(true);
+      expect(pub.provider).toBe('none');
+      expect(pub.builtInDisabled).toBe(true);
+    });
+
+    it('keeps built-in without a flag outside Firefox', async () => {
+      store[AI_SETTINGS_KEY] = { provider: 'built-in' };
+      const pub = await loadPublicAiSettings(false);
+      expect(pub.provider).toBe('built-in');
+      expect(pub.builtInDisabled).toBe(false);
+    });
+
+    it('reports no fallback for cloud providers on Firefox', async () => {
+      store[AI_SETTINGS_KEY] = { provider: 'openai', openai: { baseUrl: 'https://api.openai.com/v1', model: 'm' } };
+      const pub = await loadPublicAiSettings(true);
+      expect(pub.provider).toBe('openai');
+      expect(pub.builtInDisabled).toBe(false);
+    });
+
+    it('clears the flag after switching to a cloud provider (no write-back to built-in)', async () => {
+      const ks = new MemoryKeyStore();
+      store[AI_SETTINGS_KEY] = { provider: 'built-in' };
+      await saveAiSettings({ ...settings, provider: 'openai' }, {}, ks, true);
+      const pub = await loadPublicAiSettings(true);
+      expect(pub.provider).toBe('openai');
+      expect(pub.builtInDisabled).toBe(false);
+    });
   });
 });

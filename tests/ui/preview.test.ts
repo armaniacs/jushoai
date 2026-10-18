@@ -95,6 +95,43 @@ describe('showPreview', () => {
     button(opened.root, 'キャンセル')!.click();
     expect(onCancel).toHaveBeenCalledTimes(2);
   });
+
+  it('exposes busy state to screen readers without visual change', async () => {
+    let resolve!: () => void;
+    const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
+    const { root } = open({ rows: [row('ok')], onReanalyze });
+    const list = root.querySelector('ul')!;
+    const status = root.querySelector('[role="status"]')!;
+    expect(list.getAttribute('aria-busy')).toBe('false');
+    expect(status.textContent).toBe('');
+    button(root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
+    expect(list.getAttribute('aria-busy')).toBe('true');
+    expect(status.textContent).toBe('分析中…');
+    // Visible copy is unchanged apart from the pre-existing button label swap.
+    expect(button(root, '分析中…')!.textContent).toBe('分析中…');
+    resolve();
+    await vi.waitFor(() => expect(button(root, 'AI で分析')!.disabled).toBe(false));
+    expect(list.getAttribute('aria-busy')).toBe('false');
+    expect(status.textContent).toBe('');
+  });
+
+  it('does not re-announce while busy (setRows keeps the live region stable)', () => {
+    const { handle, root } = open({ rows: [row('ok')], onReanalyze: () => {} });
+    const list = root.querySelector('ul')!;
+    const status = root.querySelector('[role="status"]') as HTMLElement;
+    expect(status.getAttribute('role')).toBe('status');
+    handle.setReanalyzing(true);
+    expect(list.getAttribute('aria-busy')).toBe('true');
+    expect(status.textContent).toBe('分析中…');
+    // Mid-analysis row updates must not touch the live region again.
+    handle.setRows([row('ok')]);
+    expect(list.getAttribute('aria-busy')).toBe('true');
+    expect(status.textContent).toBe('分析中…');
+    handle.setReanalyzing(false);
+    expect(list.getAttribute('aria-busy')).toBe('false');
+    expect(status.textContent).toBe('');
+  });
 });
 
 const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });

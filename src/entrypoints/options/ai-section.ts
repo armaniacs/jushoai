@@ -7,7 +7,7 @@ import {
 import { testAiViaBackground } from '../../llm/background-gateway';
 import { noticeForTest } from '../../ai/failure-text';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
-import { el, labeled, textInput } from './dom';
+import { el, labeled, textInput, buildSelect } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
 const ALL_PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
@@ -27,6 +27,12 @@ export function extensionOriginHint(origin: string, isFirefox: boolean = IS_FIRE
   const base = `Ollama を使う場合は、Ollama 側の OLLAMA_ORIGINS に ${origin} を許可してください。`;
   return isFirefox ? `${base}Firefox ではこのオリジンがインストールごとに変わるため、再インストール後は設定し直してください。` : base;
 }
+
+// Firefox has no Prompt API, so a stored built-in choice is normalized to none.
+// The store reports this gap as builtInDisabled; the page surfaces it here so
+// the setting does not look like it silently reverted.
+export const BUILT_IN_FALLBACK_NOTICE =
+  'このブラウザではブラウザ内蔵AIは使えないため、ルールのみで動作しています（Prompt APIがありません）。OpenAI互換APIかGeminiを選んで保存すると切り替えられます。';
 
 const KEYED = ['openai', 'gemini'] as const;
 type KeyedProvider = (typeof KEYED)[number];
@@ -90,10 +96,12 @@ export function mountAiSection(root: HTMLElement): () => void {
       }),
     });
 
-  void loadPublicAiSettings().then(({ hasKey: keys, ...loaded }) => {
+  void loadPublicAiSettings().then(({ hasKey: keys, builtInDisabled, ...loaded }) => {
     // A load resolving after dispose() must neither render into a detached
     // root nor leave state behind for a later teardown to trip over.
     if (slot.disposed) return;
+    const fallbackNotice = builtInDisabled ? el('p', BUILT_IN_FALLBACK_NOTICE) : null;
+    if (fallbackNotice) fallbackNotice.className = 'errors-text';
     const state: AiSectionState = {
       settings: loaded,
       hasKey: keys,
@@ -103,7 +111,7 @@ export function mountAiSection(root: HTMLElement): () => void {
       testing: false,
       cooldownUntil: 0,
       cooldownTimer: null,
-      notice: null,
+      notice: fallbackNotice,
     };
     slot.state = state;
     rerender(state);
@@ -151,17 +159,14 @@ function buildKeyField(state: AiSectionState, provider: KeyedProvider): HTMLElem
 }
 
 function buildProviderSelect(state: AiSectionState, onProviderChange: (next: ProviderKind) => void): HTMLSelectElement {
-  const select = el('select');
-  for (const o of providerOptions()) {
-    const opt = el('option', o.label);
-    opt.value = o.value;
-    opt.selected = state.settings.provider === o.value;
-    select.append(opt);
-  }
-  select.addEventListener('change', () => {
-    onProviderChange(select.value as ProviderKind);
-  });
-  return select;
+  return buildSelect(
+    (v) => onProviderChange(v as ProviderKind),
+    providerOptions().map((o) => ({
+      value: o.value,
+      text: o.label,
+      selected: state.settings.provider === o.value,
+    })),
+  );
 }
 
 function buildOpenAiFieldset(state: AiSectionState, rerender: () => void): HTMLFieldSetElement {

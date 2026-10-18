@@ -3,7 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 // Same stub-then-import seam the other content tests use: the module only
 // registers the content script factory, main() never runs.
 vi.stubGlobal('defineContentScript', (opts: unknown) => opts);
-const { createExclusionGate } = await import('../../src/entrypoints/content');
+const { createExclusionGate } = await import('../../src/content/exclusion-gate');
 
 const entry = 'https://docs.google.com/spreadsheets/';
 

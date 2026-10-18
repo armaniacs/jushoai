@@ -74,4 +74,26 @@ describe('secret-store', () => {
     expect(err).not.toBeNull();
     expect(isSecretAuthError(err)).toBe(false);
   });
+
+  it('round-trips an empty secret (empty base64 boundary)', async () => {
+    const ks = new MemoryKeyStore();
+    const env = await encryptSecret('', ks);
+    expect(await decryptSecret(env, ks)).toBe('');
+  });
+
+  it('round-trips secrets around the 0x8000-byte chunk boundary', async () => {
+    const ks = new MemoryKeyStore();
+    for (const len of [0x7fff, 0x8000, 0x8001, 0x18000]) {
+      const plain = 'x'.repeat(len);
+      const env = await encryptSecret(plain, ks);
+      expect(await decryptSecret(env, ks)).toBe(plain);
+    }
+  });
+
+  it('round-trips a 1MiB secret without RangeError', async () => {
+    const ks = new MemoryKeyStore();
+    const plain = 'x'.repeat(1024 * 1024);
+    const env = await encryptSecret(plain, ks);
+    expect(await decryptSecret(env, ks)).toBe(plain);
+  });
 });
