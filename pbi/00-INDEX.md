@@ -1,5 +1,29 @@
 # PBI 台帳インデックス
 
+## 進行中（1018aラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-18-00-backlog-1018a-round.md`（checking-team全21観点の指摘をPBI化・RICE順位確定・20件を個別PBI化・20件とも実装済み、`make check` green、未コミット）
+- `2026-10-18-01-fix-preview-select-label.md`（順位 1、実装済み・`make check` green、未コミット）
+- `2026-10-18-02-fix-button-istrusted.md`（順位 2、実装済み・`make check` green、未コミット）
+- `2026-10-18-03-fix-analyze-lowconf-keep.md`（順位 3、実装済み・`make check` green、未コミット。05の前提）
+- `2026-10-18-04-fix-audit-pageurl-min.md`（順位 4、実装済み・`make check` green、未コミット）
+- `2026-10-18-05-fix-radio-llm-filter.md`（順位 5、実装済み・`make check` green、未コミット。03の後）
+- `2026-10-18-06-docs-consent-gate.md`（順位 6、実装済み・site check green、未コミット）
+- `2026-10-18-07-refactor-nfkc-once.md`（順位 7、実装済み・`make check` green、未コミット）
+- `2026-10-18-08-fix-banner-persist.md`（順位 8、実装済み・`make check` green、未コミット）
+- `2026-10-18-09-fix-split-dup-inject.md`（順位 9、実装済み・`make check` green、未コミット）
+- `2026-10-18-10-feat-plan-no-value-warn.md`（順位 10、実装済み・`make check` green、未コミット）
+- `2026-10-18-11-refactor-fieldmeta-novalue.md`（順位 11、実装済み・`make check` green、未コミット）
+- `2026-10-18-12-fix-address-block-scope.md`（順位 12、実装済み・`make check` green、未コミット）
+- `2026-10-18-13-fix-offline-early-return.md`（順位 13、実装済み・`make check` green、未コミット）
+- `2026-10-18-14-fix-keystore-transient.md`（順位 14、実装済み・`make check` green、未コミット）
+- `2026-10-18-15-fix-dialog-focus-trap.md`（順位 15、実装済み・`make check` green、未コミット）
+- `2026-10-18-16-fix-popup-heading.md`（順位 16、実装済み・`make check` green、未コミット）
+- `2026-10-18-17-fix-feedback-host-exposure.md`（順位 17、実装済み・`make check` green、未コミット）
+- `2026-10-18-18-fix-permission-origin-rollback.md`（順位 18、実装済み・`make check` green、未コミット）
+- `2026-10-18-19-refactor-failure-text-single.md`（順位 19、実装済み・`make check` green、未コミット）
+- `2026-10-18-20-fix-gender-regex-boundary.md`（順位 20、実装済み・`make check` green、未コミット）
+
 ## 進行中（実装済み・コードレビューのみ残）
 
 - `2026-10-16-01-backlog-adversarial-round.md`（adversarialレビュー第7ラウンド残件9件のPBI化・RICE順位確定・9件とも実装済み、`make check` green、未コミット）
