@@ -1,6 +1,31 @@
 # PBI 台帳インデックス
 
+## 進行中（1018bラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-18-21-refactor-scan-prefilter.md`（順位 21、実装済み・`make check` green、未コミット）
+- `2026-10-18-22-chore-make-check-once.md`（順位 22、実装済み・`make check` green、未コミット）
+- `2026-10-18-23-fix-storage-save-guard.md`（順位 23、実装済み・`make check` green、未コミット。35・29と同storage.tsのため直列23→35→29。onSave失敗表示の1行配線も本体で補完済み）
+- `2026-10-18-24-fix-addurl-timeout.md`（順位 24、実装済み・`make check` green、未コミット。36と同スクリプトのため直列24→36）
+- `2026-10-18-25-feat-truncation-signal.md`（順位 25、実装済み・`make check` green、未コミット。33と同ファイルのため直列25→33）
+- `2026-10-18-26-feat-busy-announce.md`（順位 26、実装済み・`make check` green、未コミット）
+- `2026-10-18-27-chore-rule-audit-trace.md`（順位 27、実装済み・`make check` green、未コミット）
+- `2026-10-18-28-refactor-ownlegend-helper.md`（順位 28、実装済み・`make check` green、未コミット。40と同ファイルのため直列28→40）
+- `2026-10-18-29-chore-coerce-warn.md`（順位 29、実装済み・`make check` green、未コミット。直列23→35→29の末尾）
+- `2026-10-18-30-chore-bind-direct.md`（順位 30、実装済み・`make check` green、未コミット）
+- `2026-10-18-31-refactor-content-split.md`（順位 31、実装済み・`make check` green、未コミット）
+- `2026-10-18-32-feat-firefox-builtin-notice.md`（順位 32、実装済み・`make check` green、未コミット）
+- `2026-10-18-33-feat-chunk-abort.md`（順位 33、実装済み・`make check` green、未コミット。25の後）
+- `2026-10-18-34-docs-message-versioning.md`（順位 34、実装済み・`make check` green、未コミット）
+- `2026-10-18-35-fix-migrate-id.md`（順位 35、実装済み・`make check` green、未コミット。直列23→35→29の中間）
+- `2026-10-18-36-chore-addurl-check.md`（順位 36、実装済み・`make check` green、未コミット。24の後）
+- `2026-10-18-37-chore-base64-chunk.md`（順位 37、実装済み・`make check` green、未コミット）
+- `2026-10-18-38-docs-i18n-policy.md`（順位 38、実装済み・site check green、未コミット。方針決定済み：日本語専用と明記。README.en.mdにも1行補完）
+- `2026-10-18-39-refactor-options-dom-unify.md`（順位 39、実装済み・`make check` green、未コミット）
+- `2026-10-18-40-chore-nonnull-assertions.md`（順位 40、実装済み・`make check` green、未コミット。28の後。範囲外の残存2件も本体で除去済み）
+
 ## 進行中（1018aラウンド・実装済み・コードレビューのみ残）
+
+（1018aはPR #7でmainにマージ・v0.1.19リリース済み。本セッションの/code-reviewでApprove、Suggestions対応済み）
 
 - `2026-10-18-00-backlog-1018a-round.md`（checking-team全21観点の指摘をPBI化・RICE順位確定・20件を個別PBI化・20件とも実装済み、`make check` green、未コミット）
 - `2026-10-18-01-fix-preview-select-label.md`（順位 1、実装済み・`make check` green、未コミット）
