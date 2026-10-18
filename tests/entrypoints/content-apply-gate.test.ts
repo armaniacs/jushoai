@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import type { ConsentCheckDeps } from '../../src/entrypoints/content';
+import type { ConsentCheckDeps } from '../../src/content/consent-check';
 
 // Same stub-then-import seam as background.test.ts uses for defineBackground:
 // the module only registers the content script factory, main() never runs.
 vi.stubGlobal('defineContentScript', (opts: unknown) => opts);
-const { applyIfConsented, verifyApplyConsent } = await import('../../src/entrypoints/content');
+const { applyIfConsented, verifyApplyConsent } = await import('../../src/content/consent-check');
 
 afterEach(() => { document.body.innerHTML = ''; });
 

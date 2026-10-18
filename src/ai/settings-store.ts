@@ -2,7 +2,8 @@ import {
   decryptSecret, encryptSecret, isEnvelope, type Envelope, type KeyStore,
 } from './secret-store';
 import { originOf } from './key-reentry';
-import { normalizeAiSettings } from './settings';
+import { detectBuiltInFallback, normalizeAiSettings } from './settings';
+import { IS_FIREFOX } from './browser-target';
 import type { AiSettings, PublicAiSettings } from './types';
 
 export const AI_SETTINGS_KEY = 'jushoai:ai-settings';
@@ -16,7 +17,7 @@ export type KeyUpdate = Partial<Record<Keyed, string>>;
 const isRecord = (v: unknown): v is Record<string, unknown> =>
   typeof v === 'object' && v !== null && !Array.isArray(v);
 
-async function readStored(): Promise<{ settings: AiSettings; keys: Partial<Record<Keyed, Envelope>> }> {
+async function readStored(isFirefox: boolean = IS_FIREFOX): Promise<{ settings: AiSettings; keys: Partial<Record<Keyed, Envelope>>; builtInDisabled: boolean }> {
   const result = await chrome.storage.local.get(AI_SETTINGS_KEY);
   const raw = result[AI_SETTINGS_KEY] as unknown;
   const rec = isRecord(raw) ? raw : {};
@@ -25,12 +26,12 @@ async function readStored(): Promise<{ settings: AiSettings; keys: Partial<Recor
     const section = rec[p];
     if (isRecord(section) && isEnvelope(section.apiKey)) keys[p] = section.apiKey;
   }
-  return { settings: normalizeAiSettings(raw), keys };
+  return { settings: normalizeAiSettings(raw, isFirefox), keys, builtInDisabled: detectBuiltInFallback(raw, isFirefox) };
 }
 
-export async function loadPublicAiSettings(): Promise<PublicAiSettings> {
-  const { settings, keys } = await readStored();
-  return { ...settings, hasKey: { openai: keys.openai !== undefined, gemini: keys.gemini !== undefined } };
+export async function loadPublicAiSettings(isFirefox: boolean = IS_FIREFOX): Promise<PublicAiSettings> {
+  const { settings, keys, builtInDisabled } = await readStored(isFirefox);
+  return { ...settings, hasKey: { openai: keys.openai !== undefined, gemini: keys.gemini !== undefined }, builtInDisabled };
 }
 
 export async function loadAiSecrets(ks: KeyStore): Promise<Partial<Record<Keyed, string>>> {
@@ -48,9 +49,9 @@ export async function loadAiSecrets(ks: KeyStore): Promise<Partial<Record<Keyed,
   return out;
 }
 
-export async function saveAiSettings(settings: AiSettings, update: KeyUpdate, ks: KeyStore): Promise<void> {
-  const normalized = normalizeAiSettings(settings);
-  const { keys, settings: stored } = await readStored();
+export async function saveAiSettings(settings: AiSettings, update: KeyUpdate, ks: KeyStore, isFirefox: boolean = IS_FIREFOX): Promise<void> {
+  const normalized = normalizeAiSettings(settings, isFirefox);
+  const { keys, settings: stored } = await readStored(isFirefox);
   const next = { ...keys };
   for (const p of KEYED) {
     const u = update[p];

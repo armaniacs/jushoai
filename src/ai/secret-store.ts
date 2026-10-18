@@ -26,7 +26,16 @@ export interface Envelope {
   ct: string;
 }
 
-const toBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
+// Spread of the whole array into one call overflows the argument/stack limit
+// on huge inputs, so the binary string is built in 0x8000-byte chunks.
+const BASE64_CHUNK_SIZE = 0x8000;
+const toBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i += BASE64_CHUNK_SIZE) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + BASE64_CHUNK_SIZE));
+  }
+  return btoa(binary);
+};
 const fromBase64 = (s: string) => Uint8Array.from(atob(s), (c) => c.charCodeAt(0));
 
 const generateKey = () =>

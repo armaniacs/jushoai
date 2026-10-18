@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
-  isLoopbackHost, normalizeAiSettings, originPattern, validateAiSettings, validateBaseUrl, normalizeHost,
+  isLoopbackHost, normalizeAiSettings, detectBuiltInFallback, originPattern, validateAiSettings, validateBaseUrl, normalizeHost,
 } from '../../src/ai/settings';
 import { DEFAULT_AI_SETTINGS, type AiSettings } from '../../src/ai/types';
 
@@ -30,6 +30,21 @@ describe('normalizeAiSettings', () => {
     expect(normalizeAiSettings({ provider: 'built-in' }, false).provider).toBe('built-in');
     expect(normalizeAiSettings({ provider: 'built-in' }, true).provider).toBe('none');
     expect(normalizeAiSettings({ provider: 'openai' }, true).provider).toBe('openai');
+  });
+});
+
+describe('detectBuiltInFallback', () => {
+  it('detects the built-in -> none gap only on Firefox', () => {
+    expect(detectBuiltInFallback({ provider: 'built-in' }, true)).toBe(true);
+    expect(detectBuiltInFallback({ provider: 'built-in' }, false)).toBe(false);
+  });
+
+  it('reports no fallback for other providers and non-objects', () => {
+    expect(detectBuiltInFallback({ provider: 'openai' }, true)).toBe(false);
+    expect(detectBuiltInFallback({ provider: 'none' }, true)).toBe(false);
+    expect(detectBuiltInFallback({ provider: 'gemini' }, true)).toBe(false);
+    expect(detectBuiltInFallback(undefined, true)).toBe(false);
+    expect(detectBuiltInFallback('built-in', true)).toBe(false);
   });
 });
 

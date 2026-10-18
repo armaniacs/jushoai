@@ -83,8 +83,7 @@ const BY_DESIGN_RESULTS: ReadonlySet<FillResult> = new Set<FillResult>([
 export function summarizeFillOutcomes(outcomes: FillOutcome[]): FillSummary {
   const byResult = Object.fromEntries(FILL_RESULTS.map((r) => [r, 0])) as Record<FillResult, number>;
   for (const o of outcomes) byResult[o.result] += 1;
-  const byDesign = BY_DESIGN_RESULTS.has.bind(BY_DESIGN_RESULTS);
-  const unapplied = outcomes.filter((o) => o.result !== 'filled' && !byDesign(o.result)).length;
+  const unapplied = outcomes.filter((o) => o.result !== 'filled' && !BY_DESIGN_RESULTS.has(o.result)).length;
   return { filled: byResult.filled, unapplied, total: outcomes.length, byResult };
 }
 

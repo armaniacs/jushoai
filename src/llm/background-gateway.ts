@@ -1,10 +1,14 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
 import { parseAuditClearResponse, parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, MAX_CLASSIFY_CHUNK, toWireMeta, type ClassifyFailure, type TestResponse } from '../messages';
-import type { FieldClassifier } from '../core/classifier';
+import type { CappedClassifier, ClassifySchedule } from '../core/classifier';
 
 const STATUS_TIMEOUT_MS = 5_000;
 export const CLASSIFY_TIMEOUT_MS = 45_000;
+// PBI-33: chunk sequential run total cap (1 chunk 45s x 3 chunks = 135s worst
+// case on slow lines). The per-chunk send is additionally clamped to the
+// remaining budget, so the wall clock stays within this bound.
+export const CLASSIFY_TOTAL_TIMEOUT_MS = 60_000;
 export const MAX_CLASSIFY_TOTAL = 60;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 30_000;
@@ -13,12 +17,21 @@ const CLEAR_TIMEOUT_MS = 10_000;
 const UNKNOWN_STATUS: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
 // A stalled Service Worker reply must not leave the caller pending forever.
-function sendWithTimeout(msg: unknown, ms: number): Promise<unknown> {
+// The optional signal links the wait to preview disposal (PBI-33): an abort
+// rejects the in-flight chunk so the loop below stops without sending more.
+function sendWithTimeout(msg: unknown, ms: number, signal?: AbortSignal): Promise<unknown> {
   return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('timeout')), ms);
+    if (signal?.aborted) {
+      reject(new Error('aborted'));
+      return;
+    }
+    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, ms);
+    const onAbort = () => { clearTimeout(timer); cleanup(); reject(new Error('aborted')); };
+    const cleanup = () => signal?.removeEventListener('abort', onAbort);
+    signal?.addEventListener('abort', onAbort, { once: true });
     (chrome.runtime.sendMessage(msg) as Promise<unknown>).then(
-      (v) => { clearTimeout(timer); resolve(v); },
-      (e) => { clearTimeout(timer); reject(e); },
+      (v) => { clearTimeout(timer); cleanup(); resolve(v); },
+      (e) => { clearTimeout(timer); cleanup(); reject(e); },
     );
   });
 }
@@ -53,18 +66,40 @@ export async function clearAuditViaBackground(timeoutMs = CLEAR_TIMEOUT_MS): Pro
   return (await callBackground({ type: 'audit-clear' }, timeoutMs, parseAuditClearResponse))?.ok === true;
 }
 
-export class BackgroundClassifier implements FieldClassifier {
-  constructor(private readonly timeoutMs = CLASSIFY_TIMEOUT_MS) {}
+export class BackgroundClassifier implements CappedClassifier {
+  constructor(
+    private readonly timeoutMs = CLASSIFY_TIMEOUT_MS,
+    private readonly totalTimeoutMs = CLASSIFY_TOTAL_TIMEOUT_MS,
+  ) {}
 
   // The failure reason rides the return value: partial results from earlier
   // chunks stay bound to the reason of the chunk that stopped the run, with no
-  // shared mutable read after the call.
-  async attempt(fields: FieldMeta[]): Promise<{ map: Map<string, Category>; failureReason: ClassifyFailure | null }> {
+  // shared mutable read after the call. A capped run additionally reports the
+  // cut: truncatedCount carries how many trailing fields the cap dropped, and
+  // failureReason becomes 'truncated' when nothing else failed (an actual chunk
+  // failure stays more actionable than the cap notice, so it keeps priority).
+  // PBI-33: the whole sequential run is bounded by totalTimeoutMs (remaining
+  // budget clamps each chunk send), and opts.signal (preview disposal) stops
+  // the run before/during a chunk. Either cutoff keeps earlier chunks and
+  // reports 'network' so the caller safely continues with rules only.
+  async attempt(fields: FieldMeta[], opts?: { signal?: AbortSignal }): Promise<{ map: Map<string, Category>; failureReason: ClassifyFailure | null; truncatedCount: number }> {
+    const signal = opts?.signal;
+    const startedAt = Date.now();
     const out = new Map<string, Category>();
     let failureReason: ClassifyFailure | null = null;
+    const truncatedCount = Math.max(0, fields.length - MAX_CLASSIFY_TOTAL);
     const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
     const chunkCount = Math.ceil(capped.length / MAX_CLASSIFY_CHUNK);
     for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
+      if (signal?.aborted) {
+        failureReason ??= 'network';
+        break;
+      }
+      const remaining = this.totalTimeoutMs - (Date.now() - startedAt);
+      if (remaining <= 0) {
+        failureReason ??= 'network';
+        break;
+      }
       const rows = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(toWireMeta);
       // The chunk position rides along only when the run was actually split, so
       // single-chunk calls stay out of the audit log's scheduling fields.
@@ -74,7 +109,8 @@ export class BackgroundClassifier implements FieldClassifier {
       try {
         raw = await sendWithTimeout(
           { type: 'ai-classify', fields: rows, ...(schedule ? { chunk: schedule } : {}) },
-          this.timeoutMs,
+          Math.min(this.timeoutMs, remaining),
+          signal,
         );
         parsed = parseClassifyResult(raw);
       } catch {
@@ -93,10 +129,13 @@ export class BackgroundClassifier implements FieldClassifier {
       }
       for (const [id, c] of parsed.map) out.set(id, c);
     }
-    return { map: out, failureReason };
+    if (truncatedCount > 0 && failureReason === null) {
+      failureReason = 'truncated';
+    }
+    return { map: out, failureReason, truncatedCount };
   }
 
-  async classify(fields: FieldMeta[]): Promise<Map<string, Category>> {
-    return (await this.attempt(fields)).map;
+  async classify(fields: FieldMeta[], _schedule?: ClassifySchedule, opts?: { signal?: AbortSignal }): Promise<Map<string, Category>> {
+    return (await this.attempt(fields, opts)).map;
   }
 }

@@ -20,6 +20,7 @@ describe('parseClassifyResult legacy shape (Legacy Bridge Medium)', () => {
   it('keeps reasoned failures distinct from null', () => {
     expect(parseClassifyResult({ ok: false, reason: 'auth' })).toEqual({ ok: false, reason: 'auth' });
     expect(parseClassifyResult({ ok: false, reason: 'unavailable' })).toEqual({ ok: false, reason: 'unavailable' });
+    expect(parseClassifyResult({ ok: false, reason: 'truncated' })).toEqual({ ok: false, reason: 'truncated' });
     expect(parseClassifyResult({ ok: false, reason: 'bogus' })).toBeNull();
   });
 });

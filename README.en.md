@@ -2,7 +2,7 @@
 
 A browser extension for Chromium-based browsers (Chrome and Edge) and Firefox 128 or later that fills Japanese web forms (split names, furigana and split addresses) into the right fields in one click. Rules classify the fields, and an AI you choose (an OpenAI-compatible API, Gemini, or the browser's built-in AI) helps only with the fields the rules cannot decide. Values are produced by deterministic code, and your profile values are never sent anywhere. Only field metadata goes to the provider, and only if you turn AI on. You review everything in a preview before it is entered.
 
-If you just want to use it, read up to Usage. To contribute, start with Development.
+If you just want to use it, read up to Usage. To contribute, start with Development. JushoAI is an extension for users of Japanese forms, and its screens are intentionally Japanese-only (they will not be translated into English).
 
 <!-- README-I18N:START -->
 

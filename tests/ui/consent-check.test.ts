@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import type { ConsentCheckDeps, ConsentEnv } from '../../src/entrypoints/content';
+import type { ConsentCheckDeps, ConsentEnv } from '../../src/content/consent-check';
 
 // The content script module only calls the stubbed factory at import time;
 // main() never runs, so no DOM side effects leak into the test.
 vi.stubGlobal('defineContentScript', (opts: unknown) => opts);
-const { verifyApplyConsent, defaultConsentCheckDeps } = await import('../../src/entrypoints/content');
+const { verifyApplyConsent, defaultConsentCheckDeps } = await import('../../src/content/consent-check');
 
 afterEach(() => { document.body.innerHTML = ''; });
 

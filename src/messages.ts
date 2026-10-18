@@ -22,21 +22,48 @@ export type TestFailure = (typeof TEST_FAILURES)[number];
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
 
 // Failure vocabulary for ai-classify: the TestFailure set, which includes
-// 'unavailable' (built-in AI present in settings but not usable right now).
-const CLASSIFY_FAILURES = [...TEST_FAILURES] as const;
+// 'unavailable' (built-in AI present in settings but not usable right now),
+// plus 'truncated' (the gateway capped the run at MAX_CLASSIFY_TOTAL and
+// dropped trailing fields). 'truncated' is classify-only: the gateway sets it
+// locally, so it never arrives over the wire and the connection test never
+// returns it (parseTestResponse still rejects it).
+const CLASSIFY_FAILURES = [...TEST_FAILURES, 'truncated'] as const;
 
 export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
 export type ClassifyResponse =
   | { ok: true; entries: [string, Category][] }
   | { ok: false; reason: ClassifyFailure };
 
+// Runtime-message version contract (PBI-34): sender and receiver ship in
+// lockstep inside the same extension build, so matching versions are the norm.
+// The `v` stamp exists to detect generation skew (e.g. a stale content script
+// talking to an updated service worker across an update restart) instead of
+// degrading silently into a misclassification or a no-response. The receiver
+// stays fail-safe: a missing `v` (legacy sender) is accepted without warning
+// and normalized to the current version, while an unknown `v` is warned about
+// and rejected (null), riding the existing null → undefined → gateway-null
+// fallback path instead of being treated as a known shape.
+export const AI_REQUEST_VERSION = 1 as const;
+export type AiRequestVersion = typeof AI_REQUEST_VERSION;
+
 export type AiRequest =
-  | { type: 'ai-status' }
-  | { type: 'ai-classify'; fields: FieldMeta[]; chunk?: ClassifySchedule }
-  | { type: 'ai-download' }
-  | { type: 'ai-test' }
-  | { type: 'open-options' }
-  | { type: 'audit-clear' };
+  | { type: 'ai-status'; v: AiRequestVersion }
+  | { type: 'ai-classify'; v: AiRequestVersion; fields: FieldMeta[]; chunk?: ClassifySchedule }
+  | { type: 'ai-download'; v: AiRequestVersion }
+  | { type: 'ai-test'; v: AiRequestVersion }
+  | { type: 'open-options'; v: AiRequestVersion }
+  | { type: 'audit-clear'; v: AiRequestVersion };
+
+// Version-stamped builders: senders construct every AiRequest through these so
+// all variants carry v:1 by construction. parseRequest accepts the legacy
+// version-less shape too, so adopting a builder is never a breaking change.
+export const aiStatusRequest = (): AiRequest => ({ type: 'ai-status', v: AI_REQUEST_VERSION });
+export const aiClassifyRequest = (fields: FieldMeta[], chunk?: ClassifySchedule): AiRequest =>
+  chunk ? { type: 'ai-classify', v: AI_REQUEST_VERSION, fields, chunk } : { type: 'ai-classify', v: AI_REQUEST_VERSION, fields };
+export const aiDownloadRequest = (): AiRequest => ({ type: 'ai-download', v: AI_REQUEST_VERSION });
+export const aiTestRequest = (): AiRequest => ({ type: 'ai-test', v: AI_REQUEST_VERSION });
+export const openOptionsRequest = (): AiRequest => ({ type: 'open-options', v: AI_REQUEST_VERSION });
+export const auditClearRequest = (): AiRequest => ({ type: 'audit-clear', v: AI_REQUEST_VERSION });
 
 // Reply to audit-clear; the settings page keeps its delete-failure notice on ok:false.
 export type AuditClearResponse = { ok: true } | { ok: false };
@@ -118,20 +145,32 @@ const parseSchedule = (v: unknown): ClassifySchedule | undefined => {
   return { index, count };
 };
 
+// Unknown versions fail safe: warn once per message and reject (null) so the
+// caller falls back instead of acting on a shape from another generation.
+const checkRequestVersion = (msg: Record<string, unknown>): boolean => {
+  const v = msg.v;
+  if (v === undefined || v === AI_REQUEST_VERSION) return true;
+  console.warn(`[JushoAI] unknown AiRequest version (${String(v)}), ignoring message`);
+  return false;
+};
+
 export function parseRequest(msg: unknown): AiRequest | null {
   if (!isRecord(msg)) return null;
-  const keys = Object.keys(msg);
-  if (msg.type === 'ai-status' && keys.length === 1) return { type: 'ai-status' };
-  if (msg.type === 'ai-download' && keys.length === 1) return { type: 'ai-download' };
-  if (msg.type === 'ai-test' && keys.length === 1) return { type: 'ai-test' };
-  if (msg.type === 'open-options' && keys.length === 1) return { type: 'open-options' };
-  if (msg.type === 'audit-clear' && keys.length === 1) return { type: 'audit-clear' };
+  if (!checkRequestVersion(msg)) return null;
+  // A legacy sender omits `v`; strip it before counting so the strict
+  // closed-vocabulary key check below keeps rejecting every other extra key.
+  const keys = Object.keys(msg).filter((k) => k !== 'v');
+  if (msg.type === 'ai-status' && keys.length === 1) return { type: 'ai-status', v: AI_REQUEST_VERSION };
+  if (msg.type === 'ai-download' && keys.length === 1) return { type: 'ai-download', v: AI_REQUEST_VERSION };
+  if (msg.type === 'ai-test' && keys.length === 1) return { type: 'ai-test', v: AI_REQUEST_VERSION };
+  if (msg.type === 'open-options' && keys.length === 1) return { type: 'open-options', v: AI_REQUEST_VERSION };
+  if (msg.type === 'audit-clear' && keys.length === 1) return { type: 'audit-clear', v: AI_REQUEST_VERSION };
   if (msg.type === 'ai-classify' && Array.isArray(msg.fields) && (keys.length === 2 || keys.length === 3)) {
     if (msg.fields.length > MAX_CLASSIFY_FIELDS) return null;
     const chunk = keys.length === 2 ? undefined : parseSchedule(msg.chunk);
     if (keys.length === 3 && chunk === undefined) return null;
     const fields = msg.fields.map(sanitizeField).filter((f): f is FieldMeta => f !== null);
-    return { type: 'ai-classify', fields, ...(chunk ? { chunk } : {}) };
+    return { type: 'ai-classify', v: AI_REQUEST_VERSION, fields, ...(chunk ? { chunk } : {}) };
   }
   return null;
 }

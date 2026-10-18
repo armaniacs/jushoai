@@ -6,7 +6,7 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
-import { labeled, textInput, kanaHiraganaHint, isAtLimit } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, buildSelect, cardFieldset, actionButton } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
@@ -46,25 +46,6 @@ const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string 
 const app = document.getElementById('app')!;
 let state: StoredData;
 
-interface SelectEntry {
-  value: string;
-  text: string;
-  selected: boolean;
-}
-
-function buildSelect(onChange: (v: string) => void, entries: SelectEntry[]) {
-  const select = document.createElement('select');
-  for (const e of entries) {
-    const o = document.createElement('option');
-    o.value = e.value;
-    o.textContent = e.text;
-    o.selected = e.selected;
-    select.append(o);
-  }
-  select.addEventListener('change', () => onChange(select.value));
-  return select;
-}
-
 export function prefectureSelect(value: string, onChange: (v: string) => void) {
   return buildSelect(onChange, ['', ...PREFECTURES].map((p) => ({
     value: p,
@@ -92,32 +73,10 @@ export function ownerSelect(value: string, onChange: (v: string) => void, profil
   ]);
 }
 
-// Shared card assembly for the profile/address loops below. These move the
-// existing construction code verbatim: same elements, text, placeholders,
-// order, and attributes. Only the select builders above keep their own logic.
-function cardFieldset(legendText?: string): HTMLFieldSetElement {
-  const set = document.createElement('fieldset');
-  if (legendText !== undefined) {
-    const legend = document.createElement('legend');
-    legend.textContent = legendText;
-    set.append(legend);
-  }
-  return set;
-}
-
-function actionButton(label: string, disabled: boolean, onClick: () => void): HTMLButtonElement {
-  const button = document.createElement('button');
-  button.type = 'button';
-  button.textContent = label;
-  button.disabled = disabled;
-  button.addEventListener('click', onClick);
-  return button;
-}
-
+// Card/button assembly lives in dom.ts (el-based single path); the select
+// builders above stay thin wrappers over the generic buildSelect.
 function buildLimitNote(message: string, atLimit: boolean): HTMLParagraphElement {
-  const note = document.createElement('p');
-  note.textContent = atLimit ? message : '';
-  return note;
+  return el('p', atLimit ? message : '');
 }
 
 function appendPlainField(
@@ -138,7 +97,7 @@ function appendProfileField(
   onInput: (v: string) => void,
 ): void {
   const isKana = field.key === 'lastNameKana' || field.key === 'firstNameKana';
-  const hint = isKana ? document.createElement('p') : null;
+  const hint = isKana ? el('p') : null;
   if (hint) hint.className = 'kana-preview';
   const syncHint = (v: string) => {
     if (hint) hint.textContent = v.trim() ? `ひらがな表示: ${kanaHiraganaHint(v)}` : '';
@@ -154,14 +113,13 @@ function appendProfileField(
 
 function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
   if (kind === 'saved') {
-    const p = document.createElement('p');
+    const p = el('p', lines[0] ?? '');
     p.className = 'saved';
-    p.textContent = lines[0] ?? null;
     return p;
   }
-  const ul = document.createElement('ul');
+  const ul = el('ul');
   ul.className = 'errors';
-  ul.append(...lines.map((t) => Object.assign(document.createElement('li'), { textContent: t })));
+  ul.append(...lines.map((t) => el('li', t)));
   return ul;
 }
 
@@ -272,7 +230,15 @@ async function onSave() {
     return;
   }
   state = { profiles, addresses };
-  await saveData(state);
+  try {
+    await saveData(state);
+  } catch (e) {
+    // PBI-23: storage境界は型付きエラーで失敗を伝える。ここで受けて保存失敗を
+    // 表示する（成功誤表示の防止）。詳細はメッセージに出さず件数のみ。
+    console.warn('[JushoAI] save failed', e);
+    render(message('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    return;
+  }
   render(message('saved', ['保存しました']));
 }
 

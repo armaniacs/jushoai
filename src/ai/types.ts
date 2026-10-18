@@ -29,6 +29,10 @@ export interface KeyPresence {
 
 export interface PublicAiSettings extends AiSettings {
   hasKey: KeyPresence;
+  // True when a stored built-in choice was dropped to none by normalization
+  // (Firefox has no Prompt API). The options page shows a notice from this.
+  // Optional so existing mocked fixtures without the flag keep compiling.
+  builtInDisabled?: boolean;
 }
 
 export interface AiStatusInfo {

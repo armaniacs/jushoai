@@ -208,6 +208,82 @@ describe('kana overlay', () => {
   });
 });
 
+describe('classifyAll: rule-only audit trace (PBI-27)', () => {
+  it('emits exactly one debug line with count and duration on rule-only runs', async () => {
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    try {
+      const metas = [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', type: 'tel' })];
+      await classifyAll(metas, null);
+      expect(debug).toHaveBeenCalledTimes(1);
+      const line = String(debug.mock.calls[0]![0]);
+      expect(line).toMatch(/fields=2/);
+      expect(line).toMatch(/durationMs=\d+/);
+    } finally {
+      debug.mockRestore();
+    }
+  });
+
+  it('emits the line when the classifier is present but nothing is pending', async () => {
+    const { classifier, classify } = llm({});
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    try {
+      await classifyAll([makeMeta({ id: 'a', name: 'last_name' })], classifier);
+      expect(classify).not.toHaveBeenCalled();
+      expect(debug).toHaveBeenCalledTimes(1);
+      expect(String(debug.mock.calls[0]![0])).toMatch(/fields=1/);
+    } finally {
+      debug.mockRestore();
+    }
+  });
+
+  it('emits no rule-only line when the LLM path is used', async () => {
+    const { classifier } = llm({ b: 'building' });
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    try {
+      await classifyAll(
+        [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', name: 'xyz' })],
+        classifier,
+      );
+      expect(debug).not.toHaveBeenCalled();
+    } finally {
+      debug.mockRestore();
+    }
+  });
+
+  it('keeps values and PII out of the line and stays within the byte budget', async () => {
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    try {
+      const secret = 'SECRET_PII_山田太郎_' + 'x'.repeat(50);
+      await classifyAll([makeMeta({
+        id: 'a', name: 'last_name', label: secret, placeholder: secret,
+        nearby: secret, value: secret,
+      })], null);
+      expect(debug).toHaveBeenCalledTimes(1);
+      const line = debug.mock.calls.map((c) => String(c[0])).join('\n');
+      expect(line).not.toContain(secret);
+      expect(line).not.toContain('山田太郎');
+      // Fixed short format: far below the audit byte budget (AUDIT_MAX_BYTES).
+      expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(512);
+    } finally {
+      debug.mockRestore();
+    }
+  });
+
+  it('accumulates nothing across runs: one line per run, no retained batch', async () => {
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => undefined);
+    try {
+      const metas = [makeMeta({ id: 'a', name: 'last_name' })];
+      await classifyAll(metas, null);
+      await classifyAll(metas, null);
+      await classifyAll(metas, null);
+      // Ephemeral console trace only — no stored entries for retention to expire.
+      expect(debug).toHaveBeenCalledTimes(3);
+    } finally {
+      debug.mockRestore();
+    }
+  });
+});
+
 describe('classifyAll: force', () => {
   it('sends confident fields to the LLM and adopts the answers', async () => {
     const { classifier, classify } = llm({ a: 'firstName' });

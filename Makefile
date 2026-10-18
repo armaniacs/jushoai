@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check check-all zip clean site site-serve addurl build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
+.PHONY: help install dev build test typecheck check check-all zip clean site site-serve addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -25,7 +25,8 @@ typecheck: ## Run tsc --noEmit (extension and site)
 build-firefox: ## Build the extension into dist/firefox-mv3
 	npm run build:firefox
 
-lint-firefox: build-firefox ## Run web-ext lint on the Firefox build
+lint-firefox: ## Run web-ext lint on the Firefox build (reuses dist/firefox-mv3 if present)
+	@test -d dist/firefox-mv3 || $(MAKE) build-firefox
 	npm run lint:firefox
 
 test-build: build build-firefox ## Verify the built manifests for Chrome and Firefox
@@ -40,7 +41,7 @@ e2e-chrome: build ## Run the E2E suite in a real Chrome (HEADLESS=1 optional)
 zip-firefox: ## Package the Firefox build into dist/*.zip
 	npm run zip:firefox
 
-check: typecheck test build test-build lint-firefox ## Typecheck, test, build both browsers, verify manifests and lint
+check: typecheck test test-build lint-firefox ## Typecheck, test, build both browsers, verify manifests and lint
 
 check-all: check site e2e-firefox e2e-chrome ## Full verification including docs site and both browsers' E2E (needs real Chrome/Firefox; HEADLESS=1 for headless)
 
@@ -61,4 +62,7 @@ ifndef URL
 	$(error Usage: make addurl URL=https://example.com/form [FIXTURE=name.html])
 endif
 	@grep -qF -- "$(URL)" tests/target-url.md || printf -- '- %s%s\n' "$(URL)" "$(if $(FIXTURE), → $(FIXTURE))" >> tests/target-url.md
-	node scripts/sync-target-urls.mjs
+	node scripts/sync-target-urls.mjs --only "$(URL)"
+
+addurl-check: ## List unfilled '<expected>' placeholders per file (count + total, zero message when none)
+	node scripts/sync-target-urls.mjs --check

@@ -17,226 +17,83 @@ import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
 import { showPreview, type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
+import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
+import { createExclusionGate } from '../content/exclusion-gate';
 
-// Consent verification for the preview apply path. The preview host lives in
-// the page light DOM, so page CSS or scripts can hide, move, or cover it after
-// it opens. The apply click is the last trust point: verify the panel is still
-// genuinely visible before injecting anything. Hit-testing and visibility
-// queries are injectable so unit tests can use fakes (jsdom has no layout).
-export interface ConsentPoint {
-  x: number;
-  y: number;
+// --- PBI-21: sync prefilter -------------------------------------------------
+// sync() is debounced off the MutationObserver, but even a skipped sync pays a
+// full-document querySelectorAll to build its signature. This prefilter drops
+// clearly irrelevant batches before they even reset the debounce timer, using
+// only the mutation records (no DOM scan). Anything ambiguous is treated as
+// relevant so detection behavior never changes; the signature check inside
+// sync() stays as the second layer.
+
+// Nodes whose presence can change the scan or the rule verdict: controls
+// themselves plus every label source scan-fields reads (label text,
+// aria-label/ledby targets, fieldset legends, option text).
+const INTERESTING_SELECTOR = 'input, select, label, fieldset, legend, option, textarea';
+
+// Attributes mirrored into the FieldMeta snapshot. Class/style/data churn on
+// unrelated elements (the bulk of heavy-page mutations) matches none of these.
+const RECLASSIFY_ATTRS = new Set([
+  'type', 'name', 'id', 'autocomplete', 'placeholder', 'pattern',
+  'maxlength', 'disabled', 'readonly', 'checked', 'selected',
+  'aria-label', 'aria-labelledby', 'for', 'data-fieldset-label',
+]);
+
+// Minimal structural view of a MutationRecord: real records satisfy it, and
+// unit tests can build fakes without a full DOM.
+export interface PrefilterNode {
+  nodeType: number;
+  matches?: (selector: string) => boolean;
+  querySelector?: (selector: string) => Element | null;
 }
 
-// Where the consent click is aimed: a viewport point, offscreen, or without a
-// box at all (hidden).
-export type ApplyPoint = ConsentPoint | { offscreen: true } | { empty: true };
-
-export interface ConsentCheckDeps {
-  getHost(): Element | null;
-  isHostConnected(): boolean;
-  getApplyPoint(): ApplyPoint;
-  isHostVisible(): boolean;
-  hitTest(x: number, y: number): Element | null;
+export interface PrefilterMutation {
+  type: string;
+  attributeName?: string | null;
+  target: PrefilterNode;
+  addedNodes?: ArrayLike<PrefilterNode>;
+  removedNodes?: ArrayLike<PrefilterNode>;
 }
 
-export type ConsentVerdict = { ok: true } | { ok: false; reason: string };
-
-// Whether the hit-test topmost node is our own UI. elementFromPoint retargets
-// shadow content to the host in some browsers but returns the inner node in
-// others; both mean ours is topmost. host.contains cannot pierce the shadow
-// boundary, so compare through the hit node's root instead (root.host works
-// even for closed roots). A page element covering the button is always a
-// light-DOM node outside the host and stays rejected. Our own panel content
-// cannot be a cover: pages cannot insert nodes into the closed shadow tree.
-function isOwnTopmost(host: Element, hit: Element | null): boolean {
-  if (hit === null) return false;
-  if (host.contains(hit)) return true;
-  const root = hit.getRootNode();
-  return root instanceof ShadowRoot && root.host === host;
+function nodeTouchesControls(node: PrefilterNode): boolean {
+  // A non-element node (e.g. a text node spliced into a label) can still move
+  // the label text the rules read, so only element nodes can be cleared.
+  if (node.nodeType !== 1) return true;
+  if (node.matches?.(INTERESTING_SELECTOR)) return true;
+  return node.querySelector?.(INTERESTING_SELECTOR) != null;
 }
 
-export function verifyApplyConsent(deps: ConsentCheckDeps): ConsentVerdict {
-  const host = deps.getHost();
-  if (host === null || !deps.isHostConnected()) {
-    return { ok: false, reason: 'パネルがページから取り除かれたため入力を中止しました' };
+export function isRelevantMutation(m: PrefilterMutation): boolean {
+  if (m.type === 'childList') {
+    const added = m.addedNodes ? Array.from(m.addedNodes) : [];
+    const removed = m.removedNodes ? Array.from(m.removedNodes) : [];
+    // An empty childList record carries no change; anything else must contain
+    // at least one interesting node to matter.
+    if (added.length === 0 && removed.length === 0) return false;
+    return [...added, ...removed].some(nodeTouchesControls);
   }
-  const point = deps.getApplyPoint();
-  if ('offscreen' in point) {
-    return { ok: false, reason: 'パネルが画面の外にあるため入力を中止しました' };
-  }
-  if ('empty' in point) {
-    return { ok: false, reason: 'パネルが表示されていない疑いがあるため入力を中止しました' };
-  }
-  if (!deps.isHostVisible()) {
-    return { ok: false, reason: 'パネルが表示されていないため入力を中止しました' };
-  }
-  // The topmost node must be our own UI: the host itself, its light-DOM
-  // children, or a node inside our shadow tree (see isOwnTopmost).
-  const hit = deps.hitTest(point.x, point.y);
-  if (!isOwnTopmost(host, hit)) {
-    return { ok: false, reason: 'パネルが他の要素に覆われているため入力を中止しました' };
-  }
-  return { ok: true };
-}
-
-const CONSENT_HOST_SELECTOR = '[data-jushoai]';
-
-export interface ConsentRect {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-// DOM queries behind the default deps. The boundary between testable logic and
-// renderer facts: hostCenter / viewport checks / visibility fallback are pure
-// over this env and unit-testable with fakes; rectOf / elementFromPoint need a
-// real layout engine, so the browser env delegates to the live DOM while tests
-// inject rects and hits.
-export interface ConsentEnv {
-  queryHost(): Element | null;
-  viewport(): { width: number; height: number };
-  rectOf(el: Element): ConsentRect;
-  elementFromPoint(x: number, y: number): Element | null;
-  computedStyle(el: Element): { display: string; visibility: string; opacity: string };
-}
-
-const browserConsentEnv: ConsentEnv = {
-  queryHost: () => document.querySelector(CONSENT_HOST_SELECTOR),
-  viewport: () => ({ width: window.innerWidth, height: window.innerHeight }),
-  rectOf: (el) => {
-    const r = el.getBoundingClientRect();
-    return { left: r.left, top: r.top, width: r.width, height: r.height };
-  },
-  elementFromPoint: (x, y) => document.elementFromPoint(x, y),
-  computedStyle: (el) => {
-    const s = getComputedStyle(el);
-    return { display: s.display, visibility: s.visibility, opacity: s.opacity };
-  },
-};
-
-const inViewport = (env: ConsentEnv, x: number, y: number): boolean => {
-  const v = env.viewport();
-  return x >= 0 && y >= 0 && x < v.width && y < v.height;
-};
-
-// getButtonPoint reads the apply button through the preview handle (the button
-// lives inside the closed shadow root). A null button box means the button is
-// hidden, which blocks the apply; without a provider the host center is used.
-export function defaultConsentCheckDeps(
-  getButtonPoint?: () => ConsentPoint | null,
-  env: ConsentEnv = browserConsentEnv,
-  getPreviewHost?: () => Element | null,
-): ConsentCheckDeps {
-  // The document holds several JushoAI hosts; the gate must verify the panel
-  // host, never the first match (which is usually the form button host). When a
-  // provider is supplied its answer is authoritative: falling back to
-  // queryHost() on null would verify the wrong element (usually the button
-  // host) and let the gate pass on it, so a missing panel host blocks instead.
-  const getHost = (): Element | null => (getPreviewHost ? getPreviewHost() : env.queryHost());
-  const hostCenter = (): ApplyPoint => {
-    const host = getHost();
-    if (host === null) return { offscreen: true };
-    const rect = env.rectOf(host);
-    if (rect.width === 0 && rect.height === 0) return { empty: true };
-    const x = rect.left + rect.width / 2;
-    const y = rect.top + rect.height / 2;
-    if (!inViewport(env, x, y)) return { offscreen: true };
-    return { x, y };
-  };
-  return {
-    getHost,
-    isHostConnected: () => getHost()?.isConnected ?? false,
-    getApplyPoint: () => {
-      if (!getButtonPoint) return hostCenter();
-      // A throwing provider must fail safe: block the apply instead of
-      // leaving the click half-handled.
-      let p: ConsentPoint | null;
-      try {
-        p = getButtonPoint();
-      } catch {
-        return { empty: true };
-      }
-      if (p === null) return { empty: true };
-      if (!inViewport(env, p.x, p.y)) return { offscreen: true };
-      return p;
-    },
-    isHostVisible: () => {
-      const host = getHost();
-      if (host === null) return false;
-      if (typeof host.checkVisibility === 'function') {
-        return host.checkVisibility({ opacityProperty: true, visibilityProperty: true });
-      }
-      const style = env.computedStyle(host);
-      return style.display !== 'none' && style.visibility !== 'hidden' && Number(style.opacity) > 0;
-    },
-    hitTest: (x, y) => env.elementFromPoint(x, y),
-  };
-}
-
-// Runs apply only when consent verification passes; on failure reports the
-// reason through abort and leaves the panel open for cancel or retry.
-export function applyIfConsented(
-  deps: ConsentCheckDeps,
-  apply: () => void,
-  abort: (reason: string) => void,
-): boolean {
-  const verdict = verifyApplyConsent(deps);
-  if (!verdict.ok) {
-    abort(verdict.reason);
+  if (m.type === 'attributes') {
+    const t = m.target;
+    if (t.nodeType !== 1 || !t.matches) return true;
+    if (t.matches('input, select, textarea')) {
+      return m.attributeName == null || RECLASSIFY_ATTRS.has(m.attributeName);
+    }
+    // Label-source edits (a label's `for`, a legend move) feed classification.
+    if (t.matches('label, fieldset, legend, option')) return true;
     return false;
   }
-  apply();
+  // characterData (label text edits) and unknown record kinds stay relevant:
+  // the signature check inside sync() still dedupes them when nothing changed.
   return true;
 }
 
-export interface ExclusionGateDeps {
-  loadExcluded(): Promise<string[]>;
-  href(): string;
-  start(): void;
-  stop(): void;
-}
-
-export interface ExclusionGate {
-  init(): Promise<void>;
-  refresh(): Promise<void>;
-  recheck(): void;
-  entries(): string[];
-  isExcluded(): boolean;
-}
-
-// Keeps the content script off excluded URLs. `start`/`stop` own the observers
-// and the mounted buttons, so a list that changes at runtime takes effect
-// without a reload. The state starts unknown, so the first evaluation always
-// applies even when the page is not excluded. A store that cannot be read fails
-// open: a broken list must not silently disable the extension everywhere.
-export function createExclusionGate(deps: ExclusionGateDeps): ExclusionGate {
-  let list: string[] = [];
-  let state: 'unknown' | 'running' | 'stopped' = 'unknown';
-  const apply = (excluded: boolean): void => {
-    const want = excluded ? 'stopped' : 'running';
-    if (state === want) return;
-    state = want;
-    if (excluded) deps.stop();
-    else deps.start();
-  };
-  const evaluate = (): void => apply(isExcludedUrl(deps.href(), list));
-  const read = async (): Promise<void> => {
-    try {
-      list = await deps.loadExcluded();
-    } catch {
-      list = [];
-    }
-    evaluate();
-  };
-  return {
-    entries: () => list,
-    isExcluded: () => state === 'stopped',
-    init: read,
-    refresh: read,
-    recheck: evaluate,
-  };
+// An empty batch (the initial start() call) always syncs; otherwise at least
+// one record must be relevant. Accepts real MutationRecord[] structurally.
+export function shouldSyncForMutations(records: readonly PrefilterMutation[]): boolean {
+  if (records.length === 0) return true;
+  return records.some(isRelevantMutation);
 }
 
 export default defineContentScript({
@@ -490,7 +347,11 @@ export default defineContentScript({
     let observer: MutationObserver | null = null;
     let timer: number | undefined;
     let detachTracking: (() => void) | null = null;
-    const schedule = () => {
+    const schedule = (records?: readonly PrefilterMutation[]) => {
+      // PBI-21: irrelevant batches (ad churn, text ticks) never reach the scan
+      // or reset the debounce; the signature check in sync() stays the second
+      // layer for ambiguous-but-ineffective batches.
+      if (records && !shouldSyncForMutations(records)) return;
       window.clearTimeout(timer);
       timer = window.setTimeout(sync, 500);
     };
@@ -516,8 +377,18 @@ export default defineContentScript({
     const start = () => {
       if (observer) return;
       schedule();
-      observer = new MutationObserver(schedule);
-      observer.observe(document.body, { childList: true, subtree: true });
+      // attributes + characterData used to bypass sync entirely (childList
+      // only): a renamed input or relabeled field never re-detected. Now the
+      // prefilter admits those while attributeFilter keeps class/style churn
+      // from ever producing a record.
+      observer = new MutationObserver((records) => schedule(records));
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: [...RECLASSIFY_ATTRS],
+        characterData: true,
+      });
       detachTracking = attachRepositionTracking({
         doc: document,
         win: window,

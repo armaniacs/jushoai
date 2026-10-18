@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveLastUsed } from '../src/storage';
+import { StorageSaveError, isQuotaExceededError, isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveLastUsed } from '../src/storage';
 import { EMPTY_ADDRESS, EMPTY_PROFILE, type StoredData } from '../src/core/types';
 
 let store: Record<string, unknown>;
@@ -33,9 +33,14 @@ const ready: StoredData = {
 };
 
 describe('migrateData', () => {
-  it('migrates a legacy single profile to メイン', () => {
+  it('migrates a legacy single profile to メイン with a stable id', () => {
     const out = migrateData({ profile: { lastName: '山田' }, addresses: [] });
-    expect(out.profiles).toEqual([{ ...EMPTY_PROFILE, id: 'uuid-1', label: 'メイン', lastName: '山田' }]);
+    expect(out.profiles).toHaveLength(1);
+    expect(out.profiles[0]).toMatchObject({ label: 'メイン', lastName: '山田' });
+    expect(out.profiles[0]?.id).toMatch(/^mig-profile-[0-9a-f]{8}(-[0-9]+)?$/);
+    // Deterministic: the same input yields the same id without randomUUID.
+    expect(migrateData({ profile: { lastName: '山田' }, addresses: [] }).profiles[0]?.id)
+      .toBe(out.profiles[0]?.id);
     expect(out.addresses).toEqual([]);
   });
 
@@ -99,14 +104,19 @@ describe('migrateData', () => {
     expect(out.addresses[1]?.profileId).toBe('');
   });
 
-  it('assigns UUIDs via randomUUID when available', () => {
-    const out = migrateData({
+  it('derives stable ids for entries missing them instead of random UUIDs (PBI-35)', () => {
+    const input = {
       profile: { lastName: '山田' },
       addresses: [{ label: '自宅' }],
-    });
-    expect(out.profiles[0]?.id).toBe('uuid-1');
-    expect(out.profiles[0]?.label).toBe('メイン');
-    expect(out.addresses[0]?.id).toBe('uuid-2');
+    };
+    const first = migrateData(input);
+    const second = migrateData(input);
+    expect(first.profiles[0]?.label).toBe('メイン');
+    expect(first.profiles[0]?.id).toBe(second.profiles[0]?.id);
+    expect(first.addresses[0]?.id).toBe(second.addresses[0]?.id);
+    expect(first.profiles[0]?.id).not.toBe('uuid-1');
+    expect(first.addresses[0]?.id).not.toBe('uuid-2');
+    expect(first.profiles[0]?.id).not.toBe(first.addresses[0]?.id);
   });
 
   describe('without crypto.randomUUID', () => {
@@ -137,6 +147,42 @@ describe('migrateData', () => {
       expect(out.addresses[1]?.id).toBe('a2');
       expect(out.addresses[1]?.profileId).toBe('');
     });
+  });
+});
+
+describe('migration id stability (PBI-35)', () => {
+  const legacy = {
+    profile: { lastName: '山田', firstName: '太郎' },
+    addresses: [{ label: '自宅', zip: '1000001' }],
+  };
+
+  it('returns the same ids on two consecutive loads without an intermediate save', async () => {
+    store['jushoai:data'] = legacy;
+    const first = await loadData();
+    const second = await loadData();
+    expect(first.profiles[0]?.id).not.toBe('');
+    expect(first.addresses[0]?.id).not.toBe('');
+    expect(second).toEqual(first);
+  });
+
+  it('keeps ids stable across save and reload so the last selection still resolves', async () => {
+    store['jushoai:data'] = legacy;
+    const first = await loadData();
+    await saveData(first);
+    const reloaded = await loadData();
+    expect(reloaded.profiles.map((p) => p.id)).toEqual(first.profiles.map((p) => p.id));
+    expect(reloaded.addresses.map((a) => a.id)).toEqual(first.addresses.map((a) => a.id));
+    const ids = reloaded.profiles.map((p) => p.id);
+    expect(resolveLastId(ids[0], ids)).toBe(ids[0]);
+    // An unknown stored id falls back the same way on every load.
+    expect(resolveLastId('gone', reloaded.profiles.map((p) => p.id))).toBeUndefined();
+    expect(resolveLastId('gone', (await loadData()).profiles.map((p) => p.id))).toBeUndefined();
+  });
+
+  it('leaves existing ids untouched across repeated loads', async () => {
+    await saveData(ready);
+    expect(await loadData()).toEqual(ready);
+    expect(await loadData()).toEqual(ready);
   });
 });
 
@@ -190,6 +236,119 @@ describe('resolveLastId', () => {
   it('returns undefined when the stored profile was deleted', () => {
     expect(resolveLastId('p9', ['p1', 'p2'])).toBeUndefined();
     expect(resolveLastId(undefined, ['p1'])).toBeUndefined();
+  });
+});
+
+describe('saveData guard (PBI-23)', () => {
+  it('propagates QUOTA failures as StorageSaveError instead of succeeding silently', async () => {
+    const quota = new Error('QUOTA_BYTES quota exceeded');
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async () => { throw quota; },
+        },
+      },
+    });
+    const err = await saveData(ready).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(StorageSaveError);
+    expect((err as StorageSaveError).cause).toBe(quota);
+    expect(isQuotaExceededError(err)).toBe(true);
+    expect(isQuotaExceededError(quota)).toBe(true);
+    expect(isQuotaExceededError(new Error('boom'))).toBe(false);
+  });
+
+  it('propagates saveLastUsed failures as StorageSaveError', async () => {
+    const failure = new Error('QUOTA_BYTES quota exceeded');
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async () => { throw failure; },
+        },
+      },
+    });
+    await expect(saveLastUsed({ profileId: 'p1' })).rejects.toBeInstanceOf(StorageSaveError);
+  });
+
+  it('keeps both additions when two contexts save concurrently', async () => {
+    const base = await loadData();
+    const ctxA: StoredData = {
+      ...base,
+      profiles: [...base.profiles, { ...EMPTY_PROFILE, id: 'pA', label: 'A' }],
+    };
+    const ctxB: StoredData = {
+      ...base,
+      profiles: [...base.profiles, { ...EMPTY_PROFILE, id: 'pB', label: 'B' }],
+    };
+    await saveData(ctxA);
+    await saveData(ctxB);
+    const reloaded = await loadData();
+    expect(reloaded.profiles.map((p) => p.id).sort()).toEqual(['pA', 'pB']);
+  });
+
+  it('merges concurrent address additions as well', async () => {
+    const base = await loadData();
+    const addrA = { ...EMPTY_ADDRESS, id: 'aA', label: '実家' };
+    const addrB = { ...EMPTY_ADDRESS, id: 'aB', label: '会社' };
+    await saveData({ ...base, addresses: [...base.addresses, addrA] });
+    await saveData({ ...base, addresses: [...base.addresses, addrB] });
+    const reloaded = await loadData();
+    expect(reloaded.addresses.map((a) => a.id).sort()).toEqual(['aA', 'aB']);
+  });
+
+  it('lets the incoming entry win when both sides edit the same id', async () => {
+    await saveData({ profiles: [{ ...profile, lastName: '旧' }], addresses: [] });
+    await saveData({ profiles: [{ ...profile, lastName: '新' }], addresses: [] });
+    const reloaded = await loadData();
+    expect(reloaded.profiles).toHaveLength(1);
+    expect(reloaded.profiles[0]?.lastName).toBe('新');
+  });
+
+  it('still saves when the pre-write re-read fails', async () => {
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async () => { throw new Error('read failed'); },
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    await saveData(ready);
+    expect(store['jushoai:data']).toEqual(ready);
+  });
+});
+
+describe('coerceStrings warn (PBI-29)', () => {
+  it('warns the coerced keys when mistyped values fall back to defaults', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const corrupted = JSON.parse(
+        '{"profiles":[{"id":"p1","label":"自宅","lastName":42,"tel":["09012345678"],"email":null}],"addresses":[{"id":"a1","label":{},"zip":1000001}]}',
+      );
+      const out = migrateData(corrupted);
+      // 矯正の振る舞いは維持: 既定値に戻り、起動は壊れない。
+      expect(out.profiles).toEqual([{ ...EMPTY_PROFILE, id: 'p1', label: '自宅' }]);
+      expect(out.addresses).toEqual([{ ...EMPTY_ADDRESS, id: 'a1' }]);
+      // 矯正キー一覧がwarnで通知される。
+      expect(warn).toHaveBeenCalled();
+      const messages = warn.mock.calls.map((args) => String(args[0]).length > 0 ? String(args[0]) : '').join('\n');
+      expect(messages).toMatch(/lastName/);
+      expect(messages).toMatch(/zip/);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('stays silent on a clean load without coercion', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      const out = migrateData({ profiles: [{ id: 'p9', label: '仕事用', lastName: '山田' }], addresses: [] });
+      expect(out.profiles).toEqual([{ ...EMPTY_PROFILE, id: 'p9', label: '仕事用', lastName: '山田' }]);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      vi.restoreAllMocks();
+    }
   });
 });
 
