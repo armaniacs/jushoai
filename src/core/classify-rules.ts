@@ -2,8 +2,9 @@ import type {
   Category, Classification, FieldMeta, Item, SelectOption,
 } from './types';
 import { stripExample } from './formatters';
-import { matchFieldOwned, matchLegend, wantsKana } from './kana';
-import { norm } from './literals';
+import { kanaNormFromViews, matchFieldOwned, matchLegend, resolveKana, wantsKana } from './kana';
+import { buildFieldNormViews, norm } from './literals';
+import { applyEnglishPage } from './page-language';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -275,8 +276,12 @@ export function classifyField(m: FieldMeta): Classification | null {
 
   // Birth/school/department signals are field-level: a legend like 生年月日 qualifies
   // 年/月/日 words found on the field itself, and era/school words stand alone.
-  const ownText = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
-  const legendText = norm(m.nearby);
+  // PBI-44: 第1段階の正規化ビューを一段で組み立てる。各rawはここで1回だけ
+  // normされ、DISPATCH・sources・wantsKanaは使い回す（再normなし）。
+  // nearbyはlegendTextに一本化され、kanaNormFromViewsのnearbyと同一物。
+  const views = buildFieldNormViews(m);
+  const ownText = views.ownText;
+  const legendText = views.legendText;
   const officeField = EXCLUDE.test(ownText);
 
   const ownTrimmed = ownText.trim();
@@ -291,7 +296,7 @@ export function classifyField(m: FieldMeta): Classification | null {
       m,
       ownText,
       legendText,
-      overseasCtx: `${ownText} ${legendText}`,
+      overseasCtx: views.overseasCtx,
       isOptionField: m.tag === 'select' || m.tag === 'radio',
     };
     for (const { match } of DISPATCH) {
@@ -307,20 +312,14 @@ export function classifyField(m: FieldMeta): Classification | null {
   // reach the kana branch still pay nothing. Each view below is one norm call:
   // the sources loop and wantsKana share them instead of re-normalizing the
   // same raw string (nearby doubles as the dispatch legendText).
-  const normNameId = norm(`${m.name} ${m.htmlId}`);
-  const normLabelPlaceholder = norm(`${m.label} ${m.placeholder}`);
-  const normPlaceholder = norm(m.placeholder);
-  const normNameIdLabel = norm([m.name, m.htmlId, m.label].join(' '));
+  // PBI-44: preは第1段階ビューの派生（kanaNormFromViews）で、再normなし。
+  const kanaPre = kanaNormFromViews(views);
   let kanaWant: boolean | undefined;
   const wantsKanaField = (): boolean =>
-    (kanaWant ??= wantsKana(m, {
-      placeholder: normPlaceholder,
-      nameIdLabel: normNameIdLabel,
-      nearby: legendText,
-    }));
+    (kanaWant ??= wantsKana(m, kanaPre));
   const sources: [string, number, boolean, (normalized: string) => boolean][] = [
-    [normNameId, 0.8, false, matchFieldOwned],
-    [normLabelPlaceholder, 0.7, true, matchFieldOwned],
+    [views.nameId, 0.8, false, matchFieldOwned],
+    [views.labelPlaceholder, 0.7, true, matchFieldOwned],
     [legendText, 0.65, false, matchLegend],
   ];
   for (const [normalized, confidence, bare, kanaTest] of sources) {
@@ -479,4 +478,47 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
 
 export function refineClassifications(items: Item[]): Item[] {
   return refineWithDrops(items).items;
+}
+
+// PBI-44: text→categoryの入口seam（一段）。欄文言→categoryの理解はここを
+// 開けば足りる。段階別契約は一段で読み取れる:
+//
+//   1 normalize  buildFieldNormViews（literals）— 各raw 1回だけnormし、
+//                後段は使い回す。KanaNormはkanaNormFromViewsの派生。
+//   2 dispatch   DISPATCH定義順＝優先度（本モジュール）。新規種別は挿入のみ。
+//   3 sources    classifyTextの0.8/0.7/0.65源泉＋wantsKana遅延ゲート（kana）。
+//                素名のみを返し、カナ帰属は解決しない（kana-blind）。
+//   4 resolveKana カナ帰属（kana）。refineの前に素名→カナ名へ変換する。
+//   5 refine     refineClassifications（本モジュール）。兄弟欄を見て分割・絞る。
+//   6 englishPage applyEnglishPage後段（page-language）。英語ページのみ適用。
+//
+// analyze.ts classifyAllのルール経路は同順序で呼ぶ（seamを動かし意味は動かさ
+// ない）。ルール優先の意味論は不変：本関数はLLMに触れず、classifyField・
+// resolveKana・refineClassifications・applyEnglishPageの合成に過ぎない。
+export const TEXT_TO_CATEGORY_STAGES = [
+  { name: 'normalize', runs: 'buildFieldNormViews' },
+  { name: 'dispatch', runs: 'DISPATCH' },
+  { name: 'sources', runs: 'classifyText+wantsKana' },
+  { name: 'resolveKana', runs: 'resolveKana' },
+  { name: 'refine', runs: 'refineClassifications' },
+  { name: 'englishPage', runs: 'applyEnglishPage' },
+] as const;
+
+/**
+ * ルール限定の分類パイプライン（入口seam）。classifyAllのルール経路の正準で、
+ * 未分類欄はunknown化する（LLM回答なし時と同一）。PBI-50: classifier不使用時
+ * のclassifyAllはこの関数に委譲する（単一所有）。順序・意味論を変えるときは
+ * ここだけ変えれば両経路に反映される。
+ */
+export function classifyRulePipeline(
+  metas: FieldMeta[],
+  opts: { englishPage?: boolean } = {},
+): Item[] {
+  const started: Item[] = metas.map((meta) => ({
+    meta,
+    cls: classifyField(meta) ?? { category: 'unknown', confidence: 0, source: 'rule' as const },
+  }));
+  const resolved = resolveKana(started);
+  const refined = refineClassifications(resolved);
+  return opts.englishPage === true ? applyEnglishPage(refined) : refined;
 }

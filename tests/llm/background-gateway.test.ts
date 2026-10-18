@@ -89,6 +89,33 @@ describe('BackgroundClassifier', () => {
     expect(JSON.stringify(send.mock.calls[0]![0])).not.toContain('SECRET');
   });
 
+  it('omits the chunk key on single-chunk runs (review #6)', async () => {
+    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
+      ok: true,
+      entries: m.fields.map((f) => [f.id, 'email']),
+    }));
+    await new BackgroundClassifier().classify(metas(5));
+    expect(send).toHaveBeenCalledOnce();
+    const msg = send.mock.calls[0]![0] as Record<string, unknown>;
+    expect(msg.type).toBe('ai-classify');
+    expect('chunk' in msg).toBe(false);
+  });
+
+  it('carries the chunk position only on split runs', async () => {
+    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
+      ok: true,
+      entries: m.fields.map((f) => [f.id, 'email']),
+    }));
+    await new BackgroundClassifier().classify(metas(45));
+    expect(send).toHaveBeenCalledTimes(3);
+    const chunks = send.mock.calls.map((c) => (c[0] as Record<string, unknown>).chunk);
+    expect(chunks).toEqual([
+      { index: 1, count: 3 },
+      { index: 2, count: 3 },
+      { index: 3, count: 3 },
+    ]);
+  });
+
   it('returns an empty map for no fields without messaging', async () => {
     expect((await new BackgroundClassifier().classify([])).size).toBe(0);
     expect(send).not.toHaveBeenCalled();
@@ -190,7 +217,7 @@ describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
   it('sends nothing when already aborted and reports a reason for rule-only continuation', async () => {
     const c = new AbortController();
     c.abort();
-    const res = await new BackgroundClassifier().attempt(metas(30), { signal: c.signal });
+    const res = await new BackgroundClassifier().attempt(metas(30), undefined, { signal: c.signal });
     expect(send).not.toHaveBeenCalled();
     expect(res.map.size).toBe(0);
     expect(res.failureReason).toBe('network');
@@ -201,7 +228,7 @@ describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
       .mockImplementationOnce(hang);
     const c = new AbortController();
-    const p = new BackgroundClassifier().attempt(metas(60), { signal: c.signal });
+    const p = new BackgroundClassifier().attempt(metas(60), undefined, { signal: c.signal });
     await new Promise((r) => setTimeout(r, 10));
     c.abort();
     const res = await p;
@@ -213,7 +240,7 @@ describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
   it('keeps a cutoff ahead of the truncation notice', async () => {
     const c = new AbortController();
     c.abort();
-    const res = await new BackgroundClassifier().attempt(metas(61), { signal: c.signal });
+    const res = await new BackgroundClassifier().attempt(metas(61), undefined, { signal: c.signal });
     expect(send).not.toHaveBeenCalled();
     expect(res.failureReason).toBe('network');
     expect(res.truncatedCount).toBe(1);
@@ -224,7 +251,7 @@ describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
       ok: true,
       entries: m.fields.map((f) => [f.id, 'email']),
     }));
-    const res = await new BackgroundClassifier().attempt(metas(45), {});
+    const res = await new BackgroundClassifier().attempt(metas(45), undefined, {});
     expect(send).toHaveBeenCalledTimes(3);
     expect(res.map.size).toBe(45);
     expect(res.failureReason).toBeNull();

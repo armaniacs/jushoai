@@ -1,8 +1,6 @@
-import { classifyAll } from '../core/analyze';
-import type { FieldClassifier } from '../core/classifier';
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
-import { createFillSession } from '../content-session';
+import { createFillSession, classifyWithReason } from '../content-session';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
@@ -16,7 +14,7 @@ import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
 import { showPreview, type PreviewHandle } from '../ui/preview';
-import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
+import { ANALYZE_MESSAGE_TYPE } from '../messages';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
 
@@ -158,17 +156,14 @@ export default defineContentScript({
           .then((s) => button.setStatus(s));
       }
       const classifier = info.status === 'available' ? new BackgroundClassifier() : null;
-      // Per-run failure capture: the gateway reports the reason of each attempt
-      // on the return value, and this adapter binds it to the run scope instead
-      // of a shared classifier field (concurrent runs keep separate reasons).
-      let failureReason: ClassifyFailure | null = null;
-      const reportingClassifier: FieldClassifier | null = classifier ? {
-        classify: async (fields) => {
-          const outcome = await classifier.attempt(fields);
-          failureReason = outcome.failureReason;
-          return outcome.map;
-        },
-      } : null;
+      // PBI-45: run() passes intent only — which classifier to use. The reason
+      // binding (attempt seam {map, failureReason} → return value) and the
+      // apply ordering (consent→inject→persist→feedback→display) are owned by
+      // the session module via classifyWithReason; no reporting wrapper and no
+      // `let failureReason` closure escape remain here (PBI-42引継ぎの解消).
+      // The pending split (ACCEPT_THRESHOLD) stays inside classifyAll, so only
+      // sub-threshold fields reach the LLM and the audit keeps one record per
+      // attempt.
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
@@ -187,7 +182,7 @@ export default defineContentScript({
           canReanalyze: classifier !== null,
         },
         {
-          classify: (ms, opts) => classifyAll(ms, reportingClassifier, opts),
+          classify: (ms, opts) => classifyWithReason(classifier, ms, opts),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -218,7 +213,7 @@ export default defineContentScript({
         },
       );
       const started = await session.start();
-      if (failureReason) button.showError(hintForButton(failureReason));
+      if (started.failureReason) button.showError(hintForButton(started.failureReason));
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -231,9 +226,9 @@ export default defineContentScript({
         addresses: data.addresses,
         selectedAddressId: session.selectedAddressId,
         onReanalyze: classifier ? () => {
-          void session.reanalyze().then((rows) => {
-            if (failureReason) button.showError(hintForButton(failureReason));
-            if (rows) preview.setRows(rows);
+          void session.reanalyze().then((res) => {
+            if (res?.failureReason) button.showError(hintForButton(res.failureReason));
+            if (res) preview.setRows(res.rows);
           });
         } : undefined,
         profiles: data.profiles,
@@ -251,7 +246,7 @@ export default defineContentScript({
           // the panel was hidden, moved, or covered. The panel stays open for
           // cancel or retry, and the reason goes to the form button, which stays
           // visible even when the panel is hidden.
-          const result = session.apply(sendFeedback, preview, failureReason ? hintForButton(failureReason) : undefined);
+          const result = session.apply(sendFeedback, preview);
           if (!result.applied) {
             button.showError(result.reason);
             return;

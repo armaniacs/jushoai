@@ -1,5 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
+import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
 import type { FieldClassifier } from '../core/classifier';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from '../ai/audited-classifier';
 import { clipAuditResponse } from '../ai/audit-log';
@@ -27,7 +27,7 @@ const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
 
 // Prompt rows carry only the metadata allow-list (MetaWire), with strings clipped for prompt size.
 const toPromptRow = (f: FieldMeta): MetaWire => {
-  const w = toWireMeta(f);
+  const w = encodeFieldMeta(f);
   return {
     ...w,
     name: clip(w.name),
@@ -89,9 +89,12 @@ export class PromptApiClassifier implements TracedClassifier {
   // The trace rides the return value, matching HttpClassifier.attempt: the
   // prompt is kept from construction (even when create() fails), and failures
   // carry their partial trace in the same shape.
+  // PBI-42: the unified seam's failureReason rides along too. A LanguageModel
+  // failure has no wire status to map, so it reports 'bad-response' — the same
+  // reason the provider-registry classify path maps such errors to.
   async attempt(fields: FieldMeta[]): Promise<ClassifyAttempt> {
     const trace: AttemptTrace = { status: null, retried: false, request: '', response: '' };
-    if (fields.length === 0) return { map: new Map(), trace };
+    if (fields.length === 0) return { map: new Map(), failureReason: null, trace };
     const prompt = buildPrompt(fields);
     // Set before create() so a failed session still leaves the request on record.
     trace.request = prompt;
@@ -107,12 +110,12 @@ export class PromptApiClassifier implements TracedClassifier {
         // Same clip the audit entry applies, so the retained trace string itself
         // stays bounded instead of holding a full-size response (mirrors HttpClassifier.attempt).
         trace.response = clipAuditResponse(raw);
-        return { map: parseLlmOutput(raw, fields), trace };
+        return { map: parseLlmOutput(raw, fields), failureReason: null, trace };
       } finally {
         session.destroy();
       }
     } catch (error) {
-      return { map: new Map(), trace, error };
+      return { map: new Map(), failureReason: 'bad-response', trace, error };
     }
   }
 

@@ -1,7 +1,13 @@
 import { describe, expect, it, vi } from 'vitest';
-import type { Address, FieldMeta, Item, Profile } from '../src/core/types';
+import type { Address, Category, FieldMeta, Item, Profile } from '../src/core/types';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../src/core/types';
-import { createFillSession, decideDisplay, type SessionEnv } from '../src/content-session';
+import {
+  classifyWithReason, createFillSession, decideDisplay,
+  type SessionClassifyResult, type SessionEnv,
+} from '../src/content-session';
+import type { FieldClassifier } from '../src/core/classifier';
+import type { ClassifyFailure } from '../src/messages';
+import { hintForButton } from '../src/ai/failure-text';
 import type { FillSummary } from '../src/dom/fill-plan';
 import { makeMeta } from './helpers';
 
@@ -47,10 +53,11 @@ const panel = { getApplyPoint: () => ({ x: 1, y: 2 }), getHost: () => ({}) as El
 function setup(opts: {
   excluded?: boolean; consent?: boolean; reItems?: Item[]; canReanalyze?: boolean;
   lastProfileId?: string; lastAddressId?: string; summary?: { filled: number; unapplied: number };
+  failReason?: ClassifyFailure | null;
 } = {}) {
   const ms = metas();
-  const classify = vi.fn(async (_m: FieldMeta[], o?: { force?: boolean }) =>
-    (o?.force && opts.reItems ? opts.reItems : baseItems()));
+  const classify = vi.fn(async (_m: FieldMeta[], o?: { force?: boolean }): Promise<SessionClassifyResult> =>
+    ({ items: (o?.force && opts.reItems ? opts.reItems : baseItems()), failureReason: opts.failReason ?? null }));
   const env: SessionEnv = {
     classify,
     checkConsent: () => (opts.consent === false
@@ -106,8 +113,14 @@ describe('fill session: start and replan', () => {
     const { session, env, classify } = setup({ excluded: true });
     const started = await session.start();
     expect(classify).toHaveBeenCalledOnce();
-    expect(started).toEqual({ excluded: true });
+    expect(started).toEqual({ excluded: true, failureReason: null });
     expect(env.injectPlan).not.toHaveBeenCalled();
+  });
+
+  it('carries the failure reason even when an exclusion landed mid-classify', async () => {
+    const { session } = setup({ excluded: true, failReason: 'auth' });
+    const started = await session.start();
+    expect(started).toEqual({ excluded: true, failureReason: 'auth' });
   });
 });
 
@@ -140,9 +153,15 @@ describe('fill session: apply', () => {
       applied: true,
       display: { banner: '一部のみ適用（1/2件）' },
     });
-    expect(session.apply(false, panel, 'AI通信に失敗したためルールのみで表示: 再試行できます')).toMatchObject({
+  });
+
+  it('composes the banner from the session-owned reason without caller threading', async () => {
+    const { session } = setup({ summary: { filled: 1, unapplied: 1 }, failReason: 'network' });
+    await session.start();
+    // No hint argument: the session binds the seam reason internally.
+    expect(session.apply(false, panel)).toMatchObject({
       applied: true,
-      display: { banner: 'AI通信に失敗したためルールのみで表示: 再試行できます。一部のみ適用（1/2件）' },
+      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
     });
   });
 
@@ -166,8 +185,8 @@ describe('fill session: apply', () => {
     ];
     const { session, env } = setup({ reItems });
     await session.start();
-    const rows = await session.reanalyze();
-    expect(rows?.length).toBeGreaterThan(0);
+    const res = await session.reanalyze();
+    expect(res?.rows.length).toBeGreaterThan(0);
     session.apply(true, panel);
     expect(env.openUrl).toHaveBeenCalledOnce();
     expect(vi.mocked(env.openUrl).mock.calls[0]![0]).toContain('https://github.com/');
@@ -179,5 +198,164 @@ describe('fill session: apply', () => {
     expect(await session.reanalyze()).toBeNull();
     session.apply(true, panel);
     expect(env.openUrl).not.toHaveBeenCalled();
+  });
+});
+
+describe('classifyWithReason: session-owned seam binding (PBI-42/45)', () => {
+  const stubClassifier = (outcome: { map: Map<string, 'email'>; failureReason: ClassifyFailure | null }): FieldClassifier => ({
+    classify: async () => outcome.map,
+    attempt: async () => ({ map: outcome.map, failureReason: outcome.failureReason }),
+  });
+
+  it('stays rule-only with a null classifier and reports no reason', async () => {
+    const ms = metas();
+    const got = await classifyWithReason(null, ms, {});
+    expect(got.failureReason).toBeNull();
+    expect(got.items).toHaveLength(ms.length);
+    expect(got.items.every((i) => i.cls.source === 'rule')).toBe(true);
+  });
+
+  it('forwards only sub-threshold fields to the attempt seam (ACCEPT_THRESHOLD不変)', async () => {
+    const confident = makeMeta({ id: 'c-conf', label: '氏名（姓）' });
+    const pending = makeMeta({ id: 'p-pend', label: 'xxx-unknown-field-zzz' });
+    const attempt = vi.fn(async (_fields: FieldMeta[]): Promise<{ map: Map<string, Category>; failureReason: null }> => ({ map: new Map(), failureReason: null }));
+    const classifier: FieldClassifier = { classify: async () => new Map(), attempt };
+    const got = await classifyWithReason(classifier, [confident, pending], {});
+    expect(attempt).toHaveBeenCalledOnce();
+    expect(attempt.mock.calls[0]![0].map((m) => m.id).sort()).toEqual(['p-pend']);
+    expect(got.failureReason).toBeNull();
+  });
+
+  it('binds the attempt reason to the return value without a caller closure', async () => {
+    const pending = makeMeta({ id: 'p-pend', label: 'xxx-unknown-field-zzz' });
+    const got = await classifyWithReason(
+      stubClassifier({ map: new Map([['p-pend', 'email']]), failureReason: 'network' }),
+      [pending],
+      {},
+    );
+    expect(got.failureReason).toBe('network');
+    expect(got.items.find((i) => i.meta.id === 'p-pend')?.cls).toMatchObject({ category: 'email', source: 'llm' });
+  });
+
+  it('degrades to rule-only with a null reason when the attempt throws', async () => {
+    const pending = makeMeta({ id: 'p-pend', label: 'xxx-unknown-field-zzz' });
+    const throwing: FieldClassifier = {
+      classify: async () => { throw new Error('down'); },
+      attempt: async () => { throw new Error('down'); },
+    };
+    const got = await classifyWithReason(throwing, [pending], {});
+    expect(got.failureReason).toBeNull();
+    expect(got.items).toHaveLength(1);
+  });
+
+  it('keeps the error-tagged partial map without throwing (PBI-48 non-throwing contract)', async () => {
+    const pending = makeMeta({ id: 'p-pend', label: 'xxx-unknown-field-zzz' });
+    // A traced failure carries both the partial map and the error; the seam's
+    // classify returns the map instead of rethrowing, unlike a raw classifier.
+    const errorTagged: FieldClassifier = {
+      classify: async () => { throw new Error('must not be called through the seam'); },
+      attempt: async () => ({ map: new Map([['p-pend', 'email' as const]]), failureReason: 'network' }),
+    };
+    const got = await classifyWithReason(errorTagged, [pending], {});
+    expect(got.failureReason).toBe('network');
+    expect(got.items.find((i) => i.meta.id === 'p-pend')?.cls).toMatchObject({ category: 'email', source: 'llm' });
+  });
+
+  it('folds an out-of-vocabulary reason to bad-response (review #5)', async () => {
+    const pending = makeMeta({ id: 'p-pend', label: 'xxx-unknown-field-zzz' });
+    // A future adapter handing back a non-vocabulary string must not crash the
+    // hint lookup (AI_FAILURE_TEXT[reason].hint) downstream.
+    const exotic: FieldClassifier = {
+      classify: async () => new Map(),
+      attempt: async () => ({ map: new Map(), failureReason: 'future-reason' }),
+    };
+    const got = await classifyWithReason(exotic, [pending], {});
+    expect(got.failureReason).toBe('bad-response');
+  });
+});
+
+describe('fill session: aggregated apply ordering (PBI-45)', () => {
+  it('runs consent→inject→persist→feedback in one session-owned order', async () => {
+    const order: string[] = [];
+    const ms = metas();
+    const env: SessionEnv = {
+      classify: async () => { order.push('classify'); return { items: baseItems(), failureReason: 'network' }; },
+      checkConsent: () => { order.push('checkConsent'); return { ok: true as const }; },
+      injectPlan: () => { order.push('inject'); return fullSummary(1, 1); },
+      persistSelection: () => { order.push('persist'); },
+      openUrl: () => { order.push('openUrl'); },
+      feedbackContext: () => { order.push('feedbackContext'); return { pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }; },
+      isExcluded: () => false,
+    };
+    const session = createFillSession({
+      profiles: [profile1, profile2], addresses: [address1],
+      metas: ms, metasById: metasById(ms), englishPage: false, canReanalyze: true,
+    }, env);
+    await session.start();
+    await session.reanalyze();
+    order.length = 0;
+    const result = session.apply(true, panel);
+    expect(result).toMatchObject({ applied: true });
+    expect(order).toEqual(['checkConsent', 'inject', 'persist', 'feedbackContext', 'openUrl']);
+  });
+
+  it('sends no feedback and persists nothing when consent fails', async () => {
+    const order: string[] = [];
+    const ms = metas();
+    const env: SessionEnv = {
+      classify: async () => ({ items: baseItems(), failureReason: null }),
+      checkConsent: () => { order.push('checkConsent'); return { ok: false as const, reason: '覆われているため中止' }; },
+      injectPlan: () => { order.push('inject'); return fullSummary(2, 0); },
+      persistSelection: () => { order.push('persist'); },
+      openUrl: () => { order.push('openUrl'); },
+      feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
+      isExcluded: () => false,
+    };
+    const session = createFillSession({
+      profiles: [profile1, profile2], addresses: [address1],
+      metas: ms, metasById: metasById(ms), englishPage: false, canReanalyze: true,
+    }, env);
+    await session.start();
+    expect(session.apply(true, panel)).toEqual({ applied: false, reason: '覆われているため中止' });
+    expect(order).toEqual(['checkConsent']);
+  });
+
+  it('keeps the stored reason across retries until a newer run overwrites it', async () => {
+    const { session } = setup({ summary: { filled: 1, unapplied: 1 }, failReason: 'network' });
+    await session.start();
+    const first = session.apply(false, panel);
+    const second = session.apply(false, panel);
+    // apply() never clears the reason: a retry shows the same hint.
+    expect(second).toEqual(first);
+    expect(second).toMatchObject({
+      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
+    });
+  });
+
+  it('lets the latest run overwrite the stored reason', async () => {
+    let reason: ClassifyFailure | null = 'network';
+    const ms = metas();
+    const env: SessionEnv = {
+      classify: async () => ({ items: baseItems(), failureReason: reason }),
+      checkConsent: () => ({ ok: true as const }),
+      injectPlan: () => fullSummary(1, 1),
+      persistSelection: () => {},
+      openUrl: () => {},
+      feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
+      isExcluded: () => false,
+    };
+    const session = createFillSession({
+      profiles: [profile1, profile2], addresses: [address1],
+      metas: ms, metasById: metasById(ms), englishPage: false, canReanalyze: true,
+    }, env);
+    await session.start();
+    expect((await session.start()).failureReason).toBe('network');
+    reason = null;
+    const res = await session.reanalyze();
+    expect(res?.failureReason).toBeNull();
+    // The newer (successful) run clears the hint from the banner composition.
+    expect(session.apply(false, panel)).toMatchObject({
+      display: { banner: '一部のみ適用（1/2件）' },
+    });
   });
 });

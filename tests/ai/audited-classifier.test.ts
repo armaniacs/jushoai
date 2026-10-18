@@ -11,7 +11,13 @@ const emptyTrace = (): AttemptTrace => ({ status: null, retried: false, request:
 
 function traced(trace: Partial<AttemptTrace> = {}, map = new Map(), error?: unknown): TracedClassifier {
   return {
-    attempt: async () => ({ map, trace: { ...emptyTrace(), ...trace }, ...(error === undefined ? {} : { error }) }),
+    // PBI-42: fakes speak the unified seam too — the reason mirrors the error.
+    attempt: async () => ({
+      map,
+      failureReason: error === undefined ? null : 'network',
+      trace: { ...emptyTrace(), ...trace },
+      ...(error === undefined ? {} : { error }),
+    }),
     classify: async () => {
       if (error !== undefined) throw error;
       return map;
