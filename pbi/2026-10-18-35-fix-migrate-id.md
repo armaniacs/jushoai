@@ -47,5 +47,5 @@ Scenario: resolveLastIdのフォールバックが再起動でぶれず固定さ
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る（2026-10-18最終検証でEXIT:0を確認）

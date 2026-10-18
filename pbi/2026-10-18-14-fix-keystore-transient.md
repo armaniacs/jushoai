@@ -46,5 +46,5 @@ Scenario: ai-status表示で認証失敗と一時的失敗を区別する
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

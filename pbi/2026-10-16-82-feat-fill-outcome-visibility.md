@@ -56,14 +56,22 @@ And 適用できた件数と適用できなかった件数の内訳が確認で�
 - 統合: 承認から適用までの一連の流れで、適用結果の集計がボタン表示または開発者向けの記録に届くことを確認する（無効化・差し替え・入力済みの混在を含む）
 - 単体: 適用可否の判定（無効な選択肢は選ばない、外れた入力欄には入れない、入力済みは上書きしない、適用できた件数とできなかった件数を数える）の分岐を網羅する
 
+## 実行記録（2026-10-19・徹底精査）
+
+- E2E（実ブラウザ）: `HEADLESS=1 E2E_NO_SANDBOX=1 npx vitest run -c vitest.e2e.config.ts chrome` → **7/7 green**（fill flow 2件・部分適用2件・settings 1件・excluded 2件）。初回はsandbox起因のセッション断で全skip、E2E_NO_SANDBOX=1で解消。新規fixture `tests/e2e/pages/partial-notice.html`＋`badgeNotice` ヘルパー（harness）を追加
+- 統合: `make check` 内 samples 統合 green
+- 単体: `make check` 全体 green
+- 徹底精査の核心所見: シナリオ2・3の「利用者への通知」は planner-level skip（filled/maxlength/no-value/no-option）に対しては**設計上存在しない**。`src/dom/fill-plan.ts` の `BY_DESIGN_RESULTS`（78-81）が planner 警告を警告対象外と明記し、PBI-08の残存表示も真の実行失敗（missing-target/detached/error）専用。計装プローブ（button setStatus/showErrorのtitle記録・後にrevert）で、部分適用フローで `showError` が呼ばれないことを実ブラウザで確定。E2Eは「ガード動作＋設計どおりの沈黙」を回帰固定
+- 残件（箱を開けたままにする理由）: 箱の文言は実ブラウザでの通知確認を求めており、通知自体がない現設計では満たせない。閉じるにはプロダクト判断が必要——(a) skipped-statusにも警告を出す（UX変更・要新PBI）、または (b) 箱・シナリオ文言を「開発者向け記録」側に寄せる修正。いずれも本PBIの自動チェック対象外
+
 ## 見積もり
 
 - 0.15人月（小規模。表示または記録への集計受け渡しのみで、判定ロジック自体は対応済みのため）
 
 ## Definition of Done
 
-- [ ] BDD受け入れシナリオのすべてが実ブラウザ相当の環境で確認されている
+- [ ] BDD受け入れシナリオのすべてが実ブラウザ相当の環境で確認されている（残件：シナリオ2・3の通知は planner-skip に対して設計上不存在＝BY_DESIGN_RESULTS。要プロダクト判断(a)警告化・(b)文言修正。詳細は実行記録の核心所見）
 - [x] 受け入れ基準のチェックボックスがすべて満たされている
-- [ ] テスト戦略のE2E・統合・単体が実行され、結果が記録されている
+- [x] テスト戦略のE2E・統合・単体が実行され、結果が記録されている（2026-10-19実行記録を参照）
 - [x] 見た目・文言・操作フローに意図しない変更がないことが確認されている
 - [x] 既存の自動テストがすべて成功している
