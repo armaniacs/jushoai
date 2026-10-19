@@ -2,7 +2,7 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { cp, mkdtemp, readFile, rm, stat, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { buildSite } from '../../site/lib/build-site.ts';
 import { GUIDE_SLUGS } from '../../site/lib/site.ts';
 import { SITE_DIR, writeFixtureContent } from './helpers.ts';

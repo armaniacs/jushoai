@@ -1,5 +1,4 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import type { FieldClassifier } from '../core/classifier';
 import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/classifier';
 import { clipAuditResponse } from './audit-log';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from './audited-classifier';

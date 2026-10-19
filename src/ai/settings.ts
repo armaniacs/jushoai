@@ -1,6 +1,6 @@
 import { IS_FIREFOX, selectableProviders } from './browser-target';
 import {
-  DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind,
+  DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence,
 } from './types';
 import { includesLiteral } from '../core/literals';
 

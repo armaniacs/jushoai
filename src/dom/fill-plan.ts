@@ -62,7 +62,9 @@ export const FILL_RESULT_LABELS: Record<FillResult, string> = {
 
 // Single reader for the table (PBI-61): call sites never cast. Unknown
 // future keys fall back to the raw key so a new reason stays visible
-// instead of crashing the breakdown.
+// instead of crashing the breakdown. The table keys are compile-checked
+// (Record<FillResult, string>), so only a call-site string outside the
+// vocabulary reaches the fallback.
 export function fillResultLabel(result: string): string {
   return (FILL_RESULT_LABELS as Record<string, string>)[result] ?? result;
 }

@@ -1,6 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
-import type { FieldClassifier } from '../core/classifier';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from '../ai/audited-classifier';
 import { clipAuditResponse } from '../ai/audit-log';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';

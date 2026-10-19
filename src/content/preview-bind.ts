@@ -30,6 +30,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
   const { session, button } = input;
   // Single teardown for every close path (cancel, report flow, clean apply):
   // close the panel, then let the caller drop its handle.
+  // teardown reads the `preview` declared below, which stays in the temporal
+  // dead zone until showPreview returns. Safe only because every callback
+  // fires on user interaction, never synchronously during construction.
   const teardown = (): void => {
     preview.close();
     input.onClosed();

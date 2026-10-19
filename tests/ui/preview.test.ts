@@ -13,7 +13,7 @@ const attach = HTMLElement.prototype.attachShadow;
 
 function open(opts: Partial<PreviewOptions> = {}) {
   let root!: ShadowRoot;
-  vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement, init) {
+  vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement) {
     root = attach.call(this, { mode: 'open' });
     return root;
   });
