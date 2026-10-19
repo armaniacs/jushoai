@@ -15,9 +15,9 @@
 
 `src/entrypoints/options/main.ts` の以下3関数が select 生成・option 追加・change 監視の同一パターンを繰り返している。
 
-- `src/entrypoints/options/main.ts:47-58`: `prefectureSelect(value, onChange)` — `['', ...PREFECTURES]` を走査し、`option` の `value` / `textContent` / `selected` を設定して `select.append(o)`、空文字は `'選択してください'` を表示、`change` で `onChange(select.value)` を発火。
-- `src/entrypoints/options/main.ts:60-71`: `genderSelect(value, onChange)` — `['', ...GENDERS]` を走査し、同様に生成。空文字の表示だけ `'選択してください（任意）'` が異なる。
-- `src/entrypoints/options/main.ts:73-89`: `ownerSelect(value, onChange)` — 先頭に `value=''` の共通 option（`'共通（どのプロファイルでも使う）'`）を追加後、`state.profiles` を走査して `p.id` / `p.label || プロファイル ${i + 1}` の option を追加、`change` で `onChange(select.value)` を発火。
+- `src/entrypoints/options/main.ts:47-58`: `prefectureSelect(value, onChange)` ― `['', ...PREFECTURES]` を走査し、`option` の `value` / `textContent` / `selected` を設定して `select.append(o)`、空文字は `'選択してください'` を表示、`change` で `onChange(select.value)` を発火。
+- `src/entrypoints/options/main.ts:60-71`: `genderSelect(value, onChange)` ― `['', ...GENDERS]` を走査し、同様に生成。空文字の表示だけ `'選択してください（任意）'` が異なる。
+- `src/entrypoints/options/main.ts:73-89`: `ownerSelect(value, onChange)` ― 先頭に `value=''` の共通 option（`'共通（どのプロファイルでも使う）'`）を追加後、`state.profiles` を走査して `p.id` / `p.label || プロファイル ${i + 1}` の option を追加、`change` で `onChange(select.value)` を発火。
 
 3兄弟はいずれも `document.createElement('select')` → ループで `document.createElement('option')` → `select.append` → `select.addEventListener('change', ...)` の同一手順であり、placeholder 文言と option リストの作り方だけが違う。
 

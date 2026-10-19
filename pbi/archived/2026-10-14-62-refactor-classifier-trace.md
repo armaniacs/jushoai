@@ -30,14 +30,14 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — trace が返り値で受け取れる
+Scenario: ハッピー ― trace が返り値で受け取れる
   Given 欄メタデータの集合が与えられる
   When 分類器の classify() を呼ぶ
   Then { map, trace } が解決される
   And trace は { status, retried, request, response } を含む
   And 分類器に公開 mutable フィールドが残っていない
 
-Scenario: 境界 — 互換再試行で2件の trace が保全される
+Scenario: 境界 ― 互換再試行で2件の trace が保全される
   Given 互換再試行を要する応答を返す偽 fetch がある
   When classify() を呼ぶ
   Then 再試行前後の trace が混ざらずに記録される

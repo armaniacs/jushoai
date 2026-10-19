@@ -16,17 +16,17 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 重複解消で意味が保存される
+Scenario: ハッピー ― 重複解消で意味が保存される
   Given 保守担当者がオーバーレイの配置仕様を確認している
   When 重複解説が一元化された後のコードコメントを読む
   Then left unset の理由（left+right+width 過剰拘束でLTRは right が落ちる）と all:initial リセットの関係が正しく理解できる
 
-Scenario: 境界 — 将来の片方更新で矛盾しない
+Scenario: 境界 ― 将来の片方更新で矛盾しない
   Given 共通解説が host.ts に寄せられ overlay 側が参照のみになっている
   When 将来 all:initial や配置仕様が変更される
   Then 更新箇所が1か所だけで済み、両ファイルの解説が矛盾しない
 
-Scenario: 境界 — overlay 側の参照が迷子にならない
+Scenario: 境界 ― overlay 側の参照が迷子にならない
   Given overlay 側のコメントが参照のみの1行になっている
   When 新規参加者が overlay.ts を読む
   Then 参照先（host.ts の共通解説）にたどり着ける

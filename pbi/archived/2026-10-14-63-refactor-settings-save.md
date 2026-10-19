@@ -22,20 +22,20 @@
   - Reach = 5（保存経路の変更は低頻度）
   - Impact = 0.5（順序知識の集約。振る舞い不変）
   - Confidence = 50%（Speculative：2つ目の保存呼出しが現れるか未定）
-  - Effort = 0.2 人週（保存モジュール抽出＋段階テスト＋options 瘦身化）
+  - Effort = 0.2 人週（保存モジュール抽出＋段階テスト＋options スリム化）
 - 根拠: 変更頻度が低く、1 adapter＝仮説 seam の原則により最後。将来の保存呼出し追加時に前倒し可。
 - 依存: なし。
 
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 保存が単一呼出しで完結する
+Scenario: ハッピー ― 保存が単一呼出しで完結する
   Given 設定草案と鍵入力が与えられる
   When saveSettings を呼ぶ
   Then 正規化→再入力→語彙→許可→解決済み→永続化→再読込の順で実行される
   And options 側に順序知識が残っていない
 
-Scenario: 境界 — 未確認解決で保存が拒否される
+Scenario: 境界 ― 未確認解決で保存が拒否される
   Given 内部 networks に解決される baseUrl の草案がある
   When saveSettings を呼ぶ
   Then 保存は拒否される
@@ -47,7 +47,7 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 - [x] `saveSettings(draft, keys, env)` が7手順を所有し、順序制約が実行構造（段階 pipeline）になっている
 - [x] gesture 順序（許可促しが最初の await）がモジュール内に保存されている
 - [x] fail-closed 方針（未解決・内部解決の双方で保存拒否）が維持されている
-- [x] options の `saveAiSection` が描画＋単一呼出しに瘦身化されている
+- [x] options の `saveAiSection` が描画＋単一呼出しにスリム化されている
 - [x] `make typecheck` と `make test` がパスする
 
 ## テスト戦略（t_wadaスタイル）
@@ -69,7 +69,7 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 ## 見積もり
 
 - 0.2 人週（ストーリーポイント換算では小。要チームでの見積もり）
-- 内訳想定: 保存モジュール抽出＋段階テスト＋options 瘦身化＋レビュー対応
+- 内訳想定: 保存モジュール抽出＋段階テスト＋options スリム化＋レビュー対応
 
 ## Definition of Done
 
@@ -98,6 +98,6 @@ Scenario: 境界 — 未確認解決で保存が拒否される
 
 ## 実施記録（2026-10-14、自律タスククローザーによる実装）
 
-- 実装コミット `8d19475`: `src/ai/settings-save.ts` 新設（`saveSettings(draft, { keyStore, fetch })`: 正規化→再入力→語彙→許可→解決済み gate→永続化→存在再読込の段階 pipeline。順序は実行構造、文言は既存のまま）。`ai-section.ts` の `saveAiSection` は描画＋単一呼出し＋状態反映に瘦身化。
+- 実装コミット `8d19475`: `src/ai/settings-save.ts` 新設（`saveSettings(draft, { keyStore, fetch })`: 正規化→再入力→語彙→許可→解決済み gate→永続化→存在再読込の段階 pipeline。順序は実行構造、文言は既存のまま）。`ai-section.ts` の `saveAiSection` は描画＋単一呼出し＋状態反映にスリム化。
 - 検証: `npx tsc --noEmit` exit 0、フル単体 90 ファイル・1191 件 green（新規段階テスト 9 件、既存 DOM 駆動 gate テスト無改変で green）、両ブラウザ build green。
 - ユーザーの作業として残る項目: コードレビュー

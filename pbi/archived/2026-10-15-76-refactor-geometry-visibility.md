@@ -30,12 +30,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 偽矩形で全規則が判定できる
+Scenario: ハッピー ― 偽矩形で全規則が判定できる
   Given hidden・ゼロ矩形・通常矩形の偽要素群がある
   When ジオメトリモジュールに問う
   Then isHidden・hasBox・visualTop がレイアウトなしで正答する
 
-Scenario: 境界 — jsdom ゼロと未レイアウトが文書順に落ちる
+Scenario: 境界 ― jsdom ゼロと未レイアウトが文書順に落ちる
   Given 全 rect がゼロの環境がある
   When アンカー選択する
   Then 文書順の先頭が選ばれる（従来通り）

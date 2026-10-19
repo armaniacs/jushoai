@@ -1,4 +1,4 @@
-# PBI: 年代(radio)対応 — radio群の年代解決 (backlog)
+# PBI: 年代(radio)対応 ― radio群の年代解決 (backlog)
 
 ## ユーザーストーリー
 JushoAI利用者として、radio形式の年代欄(例: 20代〜70代以上の6択)にも自動入力したい、なぜなら対象フォーム `https://pro.form-mailer.jp/lp/f9334cf2294970` の年齢欄が radio(`field_4609097`)で作られており select対応だけでは届かないから

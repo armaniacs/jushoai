@@ -29,12 +29,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 全カテゴリが単一入口で解決する
+Scenario: ハッピー ― 全カテゴリが単一入口で解決する
   Given 都道府県・元号・年月日・性別・年代・数値の選択肢群と生値がある
   When 解決モジュールに問う
   Then 従来通りの option または null が返る
 
-Scenario: 境界 — 不一致・未満ガードが保存される
+Scenario: 境界 ― 不一致・未満ガードが保存される
   Given 一致なし・10代未満の年代・数値外がある
   When 解決モジュールに問う
   Then null が返り、`warn-no-option` 経路が保たれる

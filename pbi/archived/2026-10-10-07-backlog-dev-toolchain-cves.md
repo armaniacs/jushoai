@@ -24,8 +24,8 @@
 ## 背景
 - 出典: VulnHunter 監査の README が npm audit での確認を推奨。実際に `npm audit` を実行したところ 6 件（3 high, 3 critical）が報告され、すべて dev チェーン内で出荷コードへの露出はない
 - 主要な 2 件:
-  - node-forge: GHSA-86w9-cpqp-85rv（high）— web-ext / fx-runner 経由の推移依存
-  - shell-quote: GHSA-pqg4-j6r4-53mv（critical）— web-ext / @devicefarmer/adbkit 経由の推移依存
+  - node-forge: GHSA-86w9-cpqp-85rv（high）― web-ext / fx-runner 経由の推移依存
+  - shell-quote: GHSA-pqg4-j6r4-53mv（critical）― web-ext / @devicefarmer/adbkit 経由の推移依存
 - `package.json` の devDependencies は `web-ext ^10.7.0` と `wxt ^0.21.4`。wxt は web-ext に依存しており、両者のバージョン整合がビルドの前提になっている
 - 制約: `npm audit fix --force` は使わない。web-ext を 5.1.0 にダウングレードする破壊的変更で、wxt >= 0.21.1 が要求する web-ext と衝突する
 - 制約: 解消の可否にかかわらず `make check`（typecheck + test + 両ブラウザの build + manifest 検査 + web-ext lint）を green に保つ

@@ -25,12 +25,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 既存4種別の応答が変わらない
+Scenario: ハッピー ― 既存4種別の応答が変わらない
   Given ai-status／ai-download／ai-classify／ai-test の各要求がある
   When handleMessage で処理する
   Then 従来通りの応答になる
 
-Scenario: 境界 — 未知形状は従来通り undefined になる
+Scenario: 境界 ― 未知形状は従来通り undefined になる
   Given AiRequest に合致しないメッセージがある
   When handleMessage で処理する
   Then undefined が返る（parseRequest の早期返却は不変）

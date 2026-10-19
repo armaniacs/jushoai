@@ -16,7 +16,7 @@ architecture-review（HTML報告・7候補）を全件PBI化し、RICEで優先�
 | 4 | 2026-10-18-44-refactor-pipeline-entry.md | 80 | 20/2/50%/0.25 | 7箇所巡回の理解コスト。analyze.ts不触で41と並列可 |
 | 5 | 2026-10-18-45-refactor-session-apply.md | 25 | 10/1/50%/0.20 | 順序バグの居場所を一箇所に。42の後 |
 | 6 | 2026-10-18-46-refactor-wire-codec.md | 21 | 5/1/50%/0.12 | 送信側の組み立て負担をcodecへ。42→43の後 |
-| 7 | 2026-10-18-47-backlog-failure-table-keep.md | — | 対応不要 | Two adapters実在のrealなseam。変更せず維持を宣言 |
+| 7 | 2026-10-18-47-backlog-failure-table-keep.md | ― | 対応不要 | Two adapters実在のrealなseam。変更せず維持を宣言 |
 
 ## 実施順
 

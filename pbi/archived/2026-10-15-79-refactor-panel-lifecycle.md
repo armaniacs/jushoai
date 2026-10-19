@@ -30,12 +30,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 偽アンカーで配置と close が検証できる
+Scenario: ハッピー ― 偽アンカーで配置と close が検証できる
   Given 偽アンカー・偽 rect・偽フレーム scheduler がある
   When mountPanel で配置し close する
   Then top/left が正しく、close が冪等である
 
-Scenario: 境界 — 追従購読の解除漏れがない
+Scenario: 境界 ― 追従購読の解除漏れがない
   Given 購読中のパネルがある
   When destroy する
   Then scroll・resize・observer・timer が全解除される

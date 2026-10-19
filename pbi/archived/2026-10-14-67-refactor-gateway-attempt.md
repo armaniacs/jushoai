@@ -27,13 +27,13 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 失敗理由が返り値で受け取れる
+Scenario: ハッピー ― 失敗理由が返り値で受け取れる
   Given 途中で失敗する chunk 応答の偽 background がある
   When attempt() で分類する
   Then { map, failureReason } が解決される
   And partial 結果と失敗理由が同一呼出しに束縛される
 
-Scenario: 境界 — 旧来の読み替えが残っていない
+Scenario: 境界 ― 旧来の読み替えが残っていない
   Given 全 chunk 成功と全 chunk 失敗の両偽応答がある
   When classify() で分類する
   Then 従来通りの partial map が返る

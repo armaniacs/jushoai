@@ -16,8 +16,8 @@
 
 ## 維持条件
 
-1. 全キー存在テストの緑維持 — `tests/ai/failure-text.test.ts` の全キー存在アサート（共有7キー＋classify-only の truncated）が緑を維持すること
-2. 用途別ラッパー経由の参照維持 — 両画面が `hintForButton`／`noticeForTest` 経由で同一対応表を参照し、直接 `AI_FAILURE_TEXT` への分散参照を増やさないこと
+1. 全キー存在テストの緑維持 ― `tests/ai/failure-text.test.ts` の全キー存在アサート（共有7キー＋classify-only の truncated）が緑を維持すること
+2. 用途別ラッパー経由の参照維持 ― 両画面が `hintForButton`／`noticeForTest` 経由で同一対応表を参照し、直接 `AI_FAILURE_TEXT` への分散参照を増やさないこと
 
 ## 受け入れ基準
 

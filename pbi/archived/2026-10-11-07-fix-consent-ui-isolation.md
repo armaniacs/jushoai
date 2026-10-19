@@ -21,7 +21,7 @@
 
 | 事実 | 根拠 |
 |---|---|
-| `host.ts:1` のコメント前半は不正確 | `src/ui/host.ts:1`「A closed shadow root keeps page CSS out …」— closed root でも page CSS は light DOM の host 要素に効く。後半（page scripts が UI を読めない）は正しい |
+| `host.ts:1` のコメント前半は不正確 | `src/ui/host.ts:1`「A closed shadow root keeps page CSS out …」― closed root でも page CSS は light DOM の host 要素に効く。後半（page scripts が UI を読めない）は正しい |
 | host の inline 宣言に important が無い | `src/ui/host.ts:5`。`all: initial` / `position: absolute` / `z-index: 2147483647` のいずれも important なし。author origin の stylesheet important は非 important の inline 宣言に勝つ |
 | overlay host の上書きも非 important | `src/ui/overlay.ts:8-10`。`position: fixed` / `top` / `right` を通常宣言で上書きする。`OVERLAY_CSS` は `:14-23`、パネル幅 360px は `:15` |
 | host 要素は light DOM に置かれる | `src/ui/preview.ts:204`。page CSS の `[data-jushoai]`（属性は `src/ui/host.ts:4`）が host に一致する |

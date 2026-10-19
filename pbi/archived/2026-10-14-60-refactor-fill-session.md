@@ -29,19 +29,19 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — ボタン押下から注入までが session 経由で完走する
+Scenario: ハッピー ― ボタン押下から注入までが session 経由で完走する
   Given フォームコンテナと偽の分類器・プレビュー・注入器が session に注入されている
   When openFillSession → replan → apply の順に呼ぶ
   Then 分類→再計画→同意検証→注入の順序で実行される
   And 最終利用状態が保存される
 
-Scenario: 境界 — 分類中 diff 中に除外が到着したらパネルを開かない
+Scenario: 境界 ― 分類中 diff 中に除外が到着したらパネルを開かない
   Given 分類が進行中の session がある
   When 分類完了前に除外ゲートが有効になる
   Then パネルは開かれない
   And 注入は一切行われない
 
-Scenario: 境界 — 覆われた適用ボタンでは注入せず理由を返す
+Scenario: 境界 ― 覆われた適用ボタンでは注入せず理由を返す
   Given 適用ボタンのヒットテストが自 UI 以外を返す session がある
   When apply を呼ぶ
   Then 注入は行われない

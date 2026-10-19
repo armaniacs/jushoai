@@ -17,9 +17,9 @@
 
 クラウドに送る 8 項目（設計書 `docs/superpowers/specs/2026-10-04-cloud-llm-providers-design.md` の「送信するデータ」）が 3 箇所で別々に定義されている:
 
-- `src/llm/background-gateway.ts:50-59` — `toWire`（Content Script が送る側）
-- `src/messages.ts:36-58` — `sanitizeField`（background が受け取る側。text 200 文字クランプ・`tag: 'input'` 強制）
-- `src/llm/classifier.ts:22-34` — `buildPrompt`（prompt に載せる側。80 文字 clip）
+- `src/llm/background-gateway.ts:50-59` ― `toWire`（Content Script が送る側）
+- `src/messages.ts:36-58` ― `sanitizeField`（background が受け取る側。text 200 文字クランプ・`tag: 'input'` 強制）
+- `src/llm/classifier.ts:22-34` ― `buildPrompt`（prompt に載せる側。80 文字 clip）
 
 2 画面検証（送信側・受信側）自体は防御の重ね掛けとして正しい。統合するのは項目リストであって、検証の責務ではない。
 

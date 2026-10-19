@@ -6,9 +6,9 @@
 
 ### 現状の事実（着手前確認済み）
 
-- `src/core/kana.ts:85` — `export function resolveKana(items: Item[]): Item[]` はループ内で `item.cls.category = target` / `item.cls.kanaKind = ...` と in-place 更新し、最後に `return items` を返す（破壊的更新＋戻り値ありの二重契約）。
-- `src/core/analyze.ts:48` — 呼び出し側は `resolveKana(items);` と戻り値を捨てている。
-- `plans/2026-10-15-2247-review-1014z.md:69` — 「FillOutcome 破棄・resolveKana の in-place/戻り値不整合（DX。別PBI候補）」として記録。現状バグではなく優先度は低い。
+- `src/core/kana.ts:85` ― `export function resolveKana(items: Item[]): Item[]` はループ内で `item.cls.category = target` / `item.cls.kanaKind = ...` と in-place 更新し、最後に `return items` を返す（破壊的更新＋戻り値ありの二重契約）。
+- `src/core/analyze.ts:48` ― 呼び出し側は `resolveKana(items);` と戻り値を捨てている。
+- `plans/2026-10-15-2247-review-1014z.md:69` ― 「FillOutcome 破棄・resolveKana の in-place/戻り値不整合（DX。別PBI候補）」として記録。現状バグではなく優先度は低い。
 - 既存の契約ロック: `tests/core/kana-blind-contract.test.ts`（4件）が緑であることが制約。
 
 ## 優先度

@@ -26,12 +26,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 誤型欄は既定値に落ちる
+Scenario: ハッピー ― 誤型欄は既定値に落ちる
   Given lastName が数値の破損プロファイルを含む保存データがある
   When loadData で読み込む
   Then 当該欄は既定値（空文字）になり、他欄は保持される
 
-Scenario: 境界 — 壊れたエントリ全体の扱い
+Scenario: 境界 ― 壊れたエントリ全体の扱い
   Given profile 構造自体が配列等の異形の保存データがある
   When loadData で読み込む
   Then 拡張機能の起動を妨げず、空リスト扱いまたは既定エントリになる

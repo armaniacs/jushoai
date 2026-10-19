@@ -17,7 +17,7 @@
 
 | 事実 | 根拠 |
 |---|---|
-| 監査ログの計上は request+response+256 のみで、pageUrl と他 14 フィールドが予算外 | `src/ai/audit-log.ts:30-47`（AuditEntry 16 フィールド）、`:78-84`（entryBytes、合算は :81）。pageUrl は `src/llm/handle-message.ts:163` の `sanitizePageUrl`（origin+pathname、長さ上限なし — `src/feedback/issue-url.ts:20-27`） |
+| 監査ログの計上は request+response+256 のみで、pageUrl と他 14 フィールドが予算外 | `src/ai/audit-log.ts:30-47`（AuditEntry 16 フィールド）、`:78-84`（entryBytes、合算は :81）。pageUrl は `src/llm/handle-message.ts:163` の `sanitizePageUrl`（origin+pathname、長さ上限なし ― `src/feedback/issue-url.ts:20-27`） |
 | egress 検証の解決は 30 秒キャッシュされ、後続 dial は再検証しない | `src/ai/settings.ts:132`（EGRESS_TTL_MS）、`:188-216`（per-instance cache。コメント :188-190、Map :192、cache.set :213）。`src/entrypoints/background.ts:26` が SW 生涯で 1 instance。`tests/ai/egress-dns.test.ts:172`・`:183`・`:320`・`:376` が挙動を固定 |
 | 検証と実際の接続は別々の名前解決 | `site/content/ja/privacy.md:32`（「完全には排除できません」を明記）。resolve-and-pin の follow-up PBI は存在しない（`pbi/archived/2026-10-10-04-fix-egress-dns-validation.md:79`） |
 | 同意 UI の host は非 important の inline CSS のみで、適用前の可視性検証が無い | `src/ui/host.ts:1`（コメントは誤り）、`:5`（cssText）。`src/ui/overlay.ts:8-10`。`src/entrypoints/content.ts:134-152`（onApply、applyPlan は :136） |
@@ -51,7 +51,7 @@
 
 ## 実施順序の制約（順位と実施順は別）
 
-- **着手順の決定（2026-10-11、なぜなぜ分析による）: 既存の子 04 を先に着手し、05 → 07 の順とする。** RICE だけなら 07（23.3）が 04（9.0）に先行するが、順序は次の理由で覆る。①04 は子 05 を Red から解き放つ前提であり、egress 系列（09・10・12）の設計判断（per-call のコスト、受容の記録、Gemini の配線）の根になる依存がある。②04 は 2pt・Confidence 90% で完了時間が読めるのに対し、07 は未決の設計判断 4 件を含み着手から完了までの時間が読めない。③run-2 の 30 のなぜなぜ（`WHY-30-EGRESS-FAIL-CLOSED.md`）が「行動 1: 入力を直す（許可の要求）→ 行動 2: fail-closed → 行動 4: 記録と強制の同期」の行動順を既に導いており、04・05 がまさにそれに相当する。RICE は価値の相対比較であって緊急性の指標ではないため、依存と確実性が順序を覆す。**ただし 07 の未決の設計判断 4 件（top layer の採否、検証の置き場所、中止理由の表示場所、panel を閉じるか）は、04 の実装と並行に先に確定してよい** — 07 が触る `src/ui/` と `src/entrypoints/content.ts` は 04 の `src/ai/` と `src/entrypoints/options/` と完全に分かれているため競合せず、04 完了後の 07 の着手が滞留しない。以下の順序はこの決定を反映する。
+- **着手順の決定（2026-10-11、なぜなぜ分析による）: 既存の子 04 を先に着手し、05 → 07 の順とする。** RICE だけなら 07（23.3）が 04（9.0）に先行するが、順序は次の理由で覆る。①04 は子 05 を Red から解き放つ前提であり、egress 系列（09・10・12）の設計判断（per-call のコスト、受容の記録、Gemini の配線）の根になる依存がある。②04 は 2pt・Confidence 90% で完了時間が読めるのに対し、07 は未決の設計判断 4 件を含み着手から完了までの時間が読めない。③run-2 の 30 のなぜなぜ（`WHY-30-EGRESS-FAIL-CLOSED.md`）が「行動 1: 入力を直す（許可の要求）→ 行動 2: fail-closed → 行動 4: 記録と強制の同期」の行動順を既に導いており、04・05 がまさにそれに相当する。RICE は価値の相対比較であって緊急性の指標ではないため、依存と確実性が順序を覆す。**ただし 07 の未決の設計判断 4 件（top layer の採否、検証の置き場所、中止理由の表示場所、panel を閉じるか）は、04 の実装と並行に先に確定してよい** ― 07 が触る `src/ui/` と `src/entrypoints/content.ts` は 04 の `src/ai/` と `src/entrypoints/options/` と完全に分かれているため競合せず、04 完了後の 07 の着手が滞留しない。以下の順序はこの決定を反映する。
 - **09 → 10 の順。** 10 が恒久対策として成立した場合、09 は窓を閉じる先手になり、10 が per-dial 解決を固有に含めるなら 09 は吸収される。その判断を 10 の設計判断に記録する。
 - **14 は 07 と同じ箇所（host.ts:1）を触る。** 07 を先に実施する場合は 14 が吸収される可能性がある。14 の注記に切り分けを書いた。
 - 07・08・13 は依存なし。

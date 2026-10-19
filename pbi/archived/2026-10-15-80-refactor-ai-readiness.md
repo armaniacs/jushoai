@@ -30,12 +30,12 @@
 ## BDD受け入れシナリオ（実装時の実測により縮小）
 
 ```gherkin
-Scenario: ハッピー — 全 AiState がガイドを持つ
+Scenario: ハッピー ― 全 AiState がガイドを持つ
   Given 9種の AiState × 4プロバイダがある
   When buildGuide で案内を作る
   Then いずれも非空の title と lines が返る
 
-Scenario: 境界 — 種別追加が未処理でコンパイルを通らない
+Scenario: 境界 ― 種別追加が未処理でコンパイルを通らない
   Given AiState に新メンバーを足す変更がある
   When 型検査する
   Then buildGuide の default 節でコンパイルエラーになる

@@ -72,9 +72,9 @@ Scenario: jsdom相当の条件でも従来通り動作する
 
 ### 対象ファイル（読み取り専用調査済み、実装は本PBIで行う）
 
-- `src/dom/detect-forms.ts` — `pickAnchor` 内の `rectOf`（`Map<Element, DOMRect>` によるメモ化）が矩形読み取りの一本化点
-- `src/dom/scan-fields.ts:67-72` — `isHidden(el)` が内部で独自に `getBoundingClientRect()` を呼ぶ箇所（実ブラウザで2回読みの原因）
-- `tests/dom/detect-forms.test.ts` — 「1回読み」テスト（`reads each field's box exactly once when picking the anchor`）が jsdom 条件（`checkVisibility` なしで早期 return）のため偽陽性になっている箇所
+- `src/dom/detect-forms.ts` ― `pickAnchor` 内の `rectOf`（`Map<Element, DOMRect>` によるメモ化）が矩形読み取りの一本化点
+- `src/dom/scan-fields.ts:67-72` ― `isHidden(el)` が内部で独自に `getBoundingClientRect()` を呼ぶ箇所（実ブラウザで2回読みの原因）
+- `tests/dom/detect-forms.test.ts` ― 「1回読み」テスト（`reads each field's box exactly once when picking the anchor`）が jsdom 条件（`checkVisibility` なしで早期 return）のため偽陽性になっている箇所
 
 ### 現状コードの確認（着手前に必ず実行すること）
 
@@ -101,7 +101,7 @@ grep -rn "rectOf\|isHidden\|getBoundingClientRect\|checkVisibility" src/dom/
 ## 実施記録（2026-10-13、自律タスククローザーによる実装）
 
 - 実装コミット `c124902`: `isHidden(el, rect?)` に矩形注入引数を追加（案B）。`pickAnchor` の 2 箇所を `isHidden(f.el, rectOf(f.el))` に変更し、hidden 判定・box 判定・ソートで同一メモ化 rect を共有。`scanFields` / `scanRadioGroups` は引数なしのまま不変。
-- テスト: 既存カウントテストを `... under jsdom` に改名し、`checkVisibility` 付き fake の新テスト（honeypot・ゼロ面積除外＋アンカー維持＋読み取り≤2回＝scan 1＋pick共有 1）を追加。修正前に Red（expected 3 to be ≤ 2）を確認。
+- テスト: 既存カウントテストを `... under jsdom` に改名し、`checkVisibility` 付き fake の新テスト（honeypot・ゼロ面積除外＋アンカー維持＋読み取り≦2回＝scan 1＋pick共有 1）を追加。修正前に Red（expected 3 to be ≦ 2）を確認。
 - 検証: `npx tsc --noEmit` exit 0、`tests/dom/detect-forms.test.ts` 13/13、`tests/dom`＋`tests/integration` 85 件全 pass。フル単体 1168 件 green、両ブラウザ build＋manifest 検査＋lint green。
 - なぜなぜ連鎖: jsdom に `checkVisibility` が無いため早期 return で偽陽性 → 実ブラウザでは `isHidden` 内部が独自に rect を読む → 共有できない真因は `isHidden` の署名（全文は `/tmp/whywhy-anchor.md`）。
 - ユーザーの作業として残る項目: コードレビュー

@@ -25,13 +25,13 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 4呼び出しが単一 helper を通る
+Scenario: ハッピー ― 4呼び出しが単一 helper を通る
   Given 正常応答・異常応答・stall の偽 background がある
   When 4関数を各条件で呼ぶ
   Then 従来通りの parse 結果・フォールバック・timeout 拒否になる
   And try/send/parse の骨格が1実装のみである
 
-Scenario: 境界 — timeout 引数の上書きが保たれる
+Scenario: 境界 ― timeout 引数の上書きが保たれる
   Given 既定外 timeout を指定する呼び出しがある
   When stall 応答に対して呼ぶ
   Then 指定 timeout で拒否される

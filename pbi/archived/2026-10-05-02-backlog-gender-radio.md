@@ -1,4 +1,4 @@
-# PBI: 性別(radio)対応 — radio群の走査・分類・注入基盤 (backlog)
+# PBI: 性別(radio)対応 ― radio群の走査・分類・注入基盤 (backlog)
 
 ## ユーザーストーリー
 JushoAI利用者として、radio形式の性別欄(例: 男性/女性の2択)にも自動入力したい、なぜなら対象フォーム `https://pro.form-mailer.jp/lp/f3553ff3175246` の性別欄が radio で作られており select対応だけでは届かないから
