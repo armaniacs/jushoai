@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildFeedbackIssueUrl, buildPartialIssueUrl, sanitizePageUrl } from '../../src/feedback/issue-url';
+import type { PublicUrl } from '../../src/feedback/issue-url';
 import type { FieldMeta } from '../../src/core/types';
 
 const meta = (id: string): FieldMeta => ({
@@ -84,5 +85,14 @@ describe('buildPartialIssueUrl', () => {
     expect(body).not.toContain('Field metadata');
     expect(body).not.toContain('SECRET');
     expect(body).not.toContain('token=secret');
+  });
+});
+
+describe('PublicUrl (PBI-63)', () => {
+  it('rejects raw hrefs and audit-style strings at compile time', () => {
+    const raw = 'https://example.com/form?token=secret';
+    // @ts-expect-error: raw hrefs must go through publicPageLabel first
+    const _: PublicUrl = raw;
+    expect(_).toBe(raw);
   });
 });

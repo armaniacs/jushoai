@@ -1,5 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
-import { FILL_RESULT_LABELS, type FillResult } from '../dom/fill-plan';
+import { fillResultLabel } from '../dom/fill-plan';
 import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
@@ -27,17 +27,26 @@ export function sanitizePageUrl(href: string): string {
   }
 }
 
+// Branded public URL (PBI-63): the minimized label for issue bodies is a
+// distinct type from raw hrefs and audit-log URLs, so mixing them into a
+// public body is a compile error instead of a silent leak. The minimization
+// functions themselves are intentionally NOT unified (different consumers
+// need different policies); only the handoff is typed.
+declare const publicUrlBrand: unique symbol;
+export type PublicUrl = string & { readonly [publicUrlBrand]: 'PublicUrl' };
+
 // The public issue body carries less than the local audit log: only the
 // origin and the first path segment, so deep path identifiers never leave
 // the machine. nearby/label text can still hold page-rendered personal data,
 // which the consent wording calls out instead of trying to detect.
-export function publicPageLabel(href: string): string {
+export function publicPageLabel(href: string): PublicUrl {
   try {
     const u = new URL(href);
     const first = u.pathname.split('/').filter(Boolean)[0];
-    return first ? `${u.origin}/${first}` : u.origin;
+    const label = first ? `${u.origin}/${first}` : u.origin;
+    return label as PublicUrl;
   } catch {
-    return 'unknown';
+    return 'unknown' as PublicUrl;
   }
 }
 
@@ -118,7 +127,8 @@ export function titleHostLabel(href: string): string {
 }
 
 export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): string {
-  const page = publicPageLabel(input.pageHref);
+  // Typed handoff (PBI-63): only a minimized public label reaches the body.
+  const page: PublicUrl = publicPageLabel(input.pageHref);
   const host = titleHostLabel(input.pageHref);
   const title = `開発に報告: 初回NG→AIで分析OK (${host})`;
   const lines: string[] = [
@@ -192,14 +202,16 @@ export interface PartialReportInput {
 export function buildPartialIssueUrl(repo: string, input: PartialReportInput): string {
   const host = titleHostLabel(input.pageHref);
   const title = `部分適用の内訳報告 (${host})`;
+  // Typed handoff (PBI-63): only a minimized public label reaches the body.
+  const page: PublicUrl = publicPageLabel(input.pageHref);
   const breakdown = Object.entries(input.byResult)
     .filter(([, n]) => n > 0)
-    .map(([result, n]) => `- ${FILL_RESULT_LABELS[result as FillResult] ?? result}: ${n}件`);
+    .map(([result, n]) => `- ${fillResultLabel(result)}: ${n}件`);
   const lines: string[] = [
     '部分適用の内訳報告です。適用後プレビューの「内訳をissueで報告」から送る報告です。',
     '',
     `- Applied: ${input.filled} / ${input.total} (unapplied: ${input.unapplied})`,
-    `- Page: ${publicPageLabel(input.pageHref)}`,
+    `- Page: ${page}`,
     `- Provider: ${input.provider}`,
     `- Extension version: ${input.version}`,
     '',

@@ -1,4 +1,5 @@
 import type { AiStatusInfo } from '../ai/types';
+import { STATUS_TEXT } from '../ai/status-text';
 import { getFlagGuidance, type BrowserKind } from '../llm/browser-support';
 import { OVERLAY_CSS } from './overlay';
 import { mountPanel, type PanelHandle } from './panel';
@@ -32,7 +33,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
   switch (info.status) {
     case 'unsupported':
       return {
-        title: 'このブラウザでは内蔵 AI を使えません',
+        title: STATUS_TEXT.unsupported.guideTitle,
         lines: [
           'この環境には内蔵 AI の API がありません。最近の Chrome（Gemini Nano）または Edge（Phi-mini）が必要です。',
           ...flagLines(browser),
@@ -41,7 +42,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
       };
     case 'unavailable':
       return {
-        title: '内蔵 AI を利用できません',
+        title: STATUS_TEXT.unavailable.guideTitle,
         lines: [
           'フラグが無効になっているか、この端末ではモデルを実行できない可能性があります。ディスクの空き容量不足も原因の一つとして考えられます。',
           ...flagLines(browser),
@@ -50,7 +51,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
       };
     case 'downloadable':
       return {
-        title: 'AI モデルが未ダウンロードです',
+        title: STATUS_TEXT.downloadable.guideTitle,
         lines: [
           '「入力」を押すとモデルのダウンロードを試みます。ブラウザによっては自動で始まらないことがあります。',
           RULE_LINE,
@@ -58,12 +59,12 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
       };
     case 'downloading':
       return {
-        title: 'AI モデルを準備中です',
+        title: STATUS_TEXT.downloading.guideTitle,
         lines: ['モデルをダウンロードしています。完了後に AI 判定が使われます。', RULE_LINE],
       };
     case 'disabled':
       return {
-        title: 'AI 判定はオフです',
+        title: STATUS_TEXT.disabled.guideTitle,
         lines: [
           'ルールで判定できない欄だけ AI で補助できます。設定ページで AI プロバイダを選んでください。',
           RULE_LINE,
@@ -78,7 +79,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
             ? '設定（モデル名と API キー）'
             : '設定';
       return {
-        title: 'AI の設定が未完了です',
+        title: STATUS_TEXT['not-configured'].guideTitle,
         lines: [
           `${providerName} の${missing}を設定ページで確認してください。`,
           'API キーを保存済みなのにこの表示になる場合は、キーを入力し直してください。',
@@ -89,7 +90,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
     }
     case 'permission-missing':
       return {
-        title: 'AI への通信が許可されていません',
+        title: STATUS_TEXT['permission-missing'].guideTitle,
         lines: [
           `${providerName} への通信が許可されていません。設定ページで保存し直し、ブラウザの確認で許可してください。`,
           RULE_LINE,
@@ -98,7 +99,7 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
       };
     case 'auth-error':
       return {
-        title: 'AI の認証に失敗しました',
+        title: STATUS_TEXT['auth-error'].guideTitle,
         lines: [
           `${providerName} が認証を拒否しました。設定ページで API キーを確認してください。`,
           'Ollama などローカルのサーバーの場合は、API キーではなく OLLAMA_ORIGINS の設定（拡張機能のオリジンの許可）を確認してください。',
@@ -109,13 +110,13 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
     case 'available':
       return info.provider === 'openai' || info.provider === 'gemini'
         ? {
-            title: 'AI 判定を利用できます',
+            title: STATUS_TEXT.available.guideTitle,
             lines: [
               `ルールで判定できない欄の分類に ${providerName} を使います。送るのは入力欄のメタデータ（name・label など）だけで、入力する値は送りません。`,
               RULE_LINE,
             ],
           }
-        : { title: 'AI 判定を利用できます', lines: ['AI の準備ができています。', RULE_LINE] };
+        : { title: STATUS_TEXT.available.guideTitle, lines: ['AI の準備ができています。', RULE_LINE] };
     default: {
       // Unreachable while every AiState has a case above: adding a status
       // without guidance here turns into a compile error instead of an

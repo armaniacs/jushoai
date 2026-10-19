@@ -1,5 +1,13 @@
 # PBI 台帳インデックス
 
+## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、未実装・未コミット）
+- `2026-10-19-61-chore-result-label-helper.md`（順位 1、実装済み・`make check` green、未コミット。Quick Win）
+- `2026-10-19-62-refactor-status-text-table.md`（順位 2、実装済み・`make check` green、未コミット）
+- `2026-10-19-63-refactor-public-url-brand.md`（順位 3、実装済み・`make check` green、未コミット）
+- `2026-10-19-64-refactor-preview-binding.md`（順位 4、実装済み・E2E Chrome 7/7 green、未コミット）
+
 ## 進行中（PBI-55レビューラウンド・実装済み・コードレビューのみ残）
 
 - `2026-10-19-00-backlog-pbi55-round.md`（PBI-55レビュー指摘5件のPBI化・RICE順位確定・5件実装、`make check` green・E2E Chrome 7/7 green、未コミット）

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FILL_LAST_CATEGORIES } from '../../src/core/fill-order';
 import type { PlanItem } from '../../src/core/planner';
-import { fillPlan, shouldWarn, summarizeFillOutcomes, targetsFromControls } from '../../src/dom/fill-plan';
+import { fillPlan, fillResultLabel, shouldWarn, summarizeFillOutcomes, targetsFromControls } from '../../src/dom/fill-plan';
 import type { Control } from '../../src/dom/scan-fields';
 
 const item = (fieldId: string, category: PlanItem['category'], value = 'v'): PlanItem => ({
@@ -240,5 +240,16 @@ describe('FILL_LAST_CATEGORIES', () => {
     );
     expect(order).toEqual(['a', 's', 'zip', 'z1']);
     expect(out.every((o) => o.result === 'filled')).toBe(true);
+  });
+});
+
+describe('fillResultLabel (PBI-61)', () => {
+  it('resolves every known reason to its Japanese label', () => {
+    expect(fillResultLabel('filled')).toBe('適用済み');
+    expect(fillResultLabel('error')).toBe('エラー');
+  });
+
+  it('falls back to the raw key for unknown future reasons', () => {
+    expect(fillResultLabel('future-reason')).toBe('future-reason');
   });
 });

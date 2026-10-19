@@ -1,4 +1,5 @@
 import type { AiStatusInfo, ProviderKind } from '../ai/types';
+import { STATUS_TEXT } from '../ai/status-text';
 
 export const PROVIDER_LABEL: Record<ProviderKind, string> = {
   none: 'オフ',
@@ -8,25 +9,12 @@ export const PROVIDER_LABEL: Record<ProviderKind, string> = {
 };
 
 export function badgeLabel(info: AiStatusInfo): string {
-  switch (info.status) {
-    case 'available':
-      return info.provider === 'openai' || info.provider === 'gemini'
-        ? `AI: ${PROVIDER_LABEL[info.provider]}`
-        : 'AI 有効';
-    case 'downloadable':
-      return 'AI 未準備';
-    case 'downloading':
-      return 'AI 準備中';
-    case 'unavailable':
-    case 'unsupported':
-      return 'AI 無効';
-    case 'disabled':
-      return 'AI: オフ';
-    case 'not-configured':
-      return 'AI 未設定';
-    case 'permission-missing':
-      return 'AI 権限なし';
-    case 'auth-error':
-      return 'AI 認証エラー';
+  // Provider-dependent by design (PBI-62 leaves this branch here): the table
+  // covers every other status, so a new status only needs one table row.
+  if (info.status === 'available') {
+    return info.provider === 'openai' || info.provider === 'gemini'
+      ? `AI: ${PROVIDER_LABEL[info.provider]}`
+      : STATUS_TEXT.available.badge;
   }
+  return STATUS_TEXT[info.status].badge;
 }

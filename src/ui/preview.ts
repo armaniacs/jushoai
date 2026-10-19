@@ -1,6 +1,6 @@
 import type { PlanStatus } from '../core/planner';
 import type { Address, Profile } from '../core/types';
-import { FILL_RESULT_LABELS, type FillResult, type FillSummary } from '../dom/fill-plan';
+import { fillResultLabel, type FillSummary } from '../dom/fill-plan';
 import { isMeasurable } from '../dom/geometry';
 import { OVERLAY_CSS } from './overlay';
 import { mountPanel, type PanelHandle } from './panel';
@@ -271,7 +271,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
           const li = document.createElement('li');
           const label = document.createElement('span');
           label.className = 'label';
-          label.textContent = FILL_RESULT_LABELS[result as FillResult] ?? result;
+          label.textContent = fillResultLabel(result);
           const value = document.createElement('span');
           value.className = 'value';
           value.textContent = `${n}件`;

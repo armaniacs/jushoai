@@ -79,6 +79,9 @@ describe('chrome: partial fill notice (PBI-82, PBI-55)', () => {
     // to /login (dropping the prefilled params). Reaching github.com proves
     // the click opened exactly the URL the handler built — its shape
     // (issues/new + labels + title + body) is pinned by unit tests.
+    // NOTE: this assertion needs network access to github.com (an offline
+    // run lands on chrome-error:// and fails here); the rest of the suite
+    // stays hermetic on localhost fixtures.
     expect(`${url.origin}/`).toBe('https://github.com/');
     await driver.close();
     await driver.switchTo().window(home);

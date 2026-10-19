@@ -1,7 +1,7 @@
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import { createFillSession, classifyWithReason } from '../content-session';
-import { buildPartialIssueUrl, FEEDBACK_REPO } from '../feedback/issue-url';
+import { bindPreview } from '../content/preview-bind';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
@@ -14,7 +14,7 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
-import { showPreview, type PreviewHandle } from '../ui/preview';
+import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../messages';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
@@ -226,73 +226,19 @@ export default defineContentScript({
       // Classification takes long enough for the settings to change under it; an
       // exclusion that landed meanwhile must not open a panel on this page.
       if (started.excluded) return;
-      const preview = showPreview({
+      // PBI-64: the preview wiring (reanalyze/switch/apply/cancel) lives in
+      // bindPreview; run() keeps classification, the panel-open decision, and
+      // the exclusion guard above.
+      const preview = bindPreview({
+        session,
+        button,
         rows: started.rows,
         addresses: data.addresses,
-        selectedAddressId: session.selectedAddressId,
-        onReanalyze: classifier ? () => {
-          void session.reanalyze().then((res) => {
-            if (res?.failureReason) button.showError(hintForButton(res.failureReason));
-            if (res) preview.setRows(res.rows);
-          });
-        } : undefined,
         profiles: data.profiles,
-        selectedProfileId: session.selectedProfileId,
-        onProfileChange: (id) => {
-          const rows = session.selectProfile(id);
-          preview.setAddressId(session.selectedAddressId);
-          preview.setRows(rows);
-        },
-        onAddressChange: (id) => {
-          preview.setRows(session.selectAddress(id));
-        },
-        onApply: (sendFeedback) => {
-          // Last trust point: the session aborts before injecting anything when
-          // the panel was hidden, moved, or covered. The panel stays open for
-          // cancel or retry, and the reason goes to the form button, which stays
-          // visible even when the panel is hidden.
-          const result = session.apply(sendFeedback, preview);
-          if (!result.applied) {
-            button.showError(result.reason);
-            return;
-          }
-          // The banner text arrives composed; this side only displays it.
-          if (result.display.banner) button.showError(result.display.banner);
-          // PBI-55: a partial apply (not everything filled) keeps the preview
-          // open in result mode with a one-click breakdown report; a clean
-          // apply closes as before. The banner above still fires for true
-          // runtime failures independently of this view.
-          if (result.summary.filled < result.summary.total) {
-            const ctx = feedbackCtx();
-            preview.showResult(result.summary, () => {
-              openFeedbackUrl(buildPartialIssueUrl(
-                FEEDBACK_REPO,
-                {
-                  pageHref: ctx.pageHref,
-                  provider: ctx.provider,
-                  version: ctx.version,
-                  filled: result.summary.filled,
-                  unapplied: result.summary.unapplied,
-                  total: result.summary.total,
-                  byResult: result.summary.byResult,
-                },
-              ));
-              preview.close();
-              openPreview = null;
-            });
-            return;
-          }
-          preview.close();
-          openPreview = null;
-        },
-        // Re-entrant by design: preview.close() fires the panel onClose, which
-        // is this onCancel, which calls preview.close() again. The chain always
-        // stops at the second close because the panel close is idempotent — do
-        // not remove that guard without unwinding this cycle first.
-        onCancel: () => {
-          preview.close();
-          openPreview = null;
-        },
+        reanalyzable: classifier !== null,
+        feedbackContext: feedbackCtx,
+        openFeedbackUrl,
+        onClosed: () => { openPreview = null; },
       });
       openPreview = preview;
     }
