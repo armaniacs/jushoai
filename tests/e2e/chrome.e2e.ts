@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { WebDriver } from 'selenium-webdriver';
 import {
-  By, badgeNotice, clickInShadow, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
+  By, badgeNotice, clickInShadow, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -42,8 +42,8 @@ describe('chrome: fill flow', () => {
   });
 });
 
-describe('chrome: partial fill notice (PBI-82)', () => {
-  it('guards unfillable fields and stays silent for by-design skips', async () => {
+describe('chrome: partial fill notice (PBI-82, PBI-55)', () => {
+  it('guards unfillable fields and keeps the result with a report button', async () => {
     await driver.get(`${pages.origin}/partial-notice.html`);
     await clickInShadow(driver, 'button:not(.badge)');
     await clickInShadow(driver, 'button.primary');
@@ -51,13 +51,38 @@ describe('chrome: partial fill notice (PBI-82)', () => {
     expect(await valueOf(driver, 'ln')).toBe('佐藤');
     expect(await valueOf(driver, 'fn')).toBe('');
     expect(await valueOf(driver, 'em')).toBe('taro@example.com');
-    // Designed behavior (fill-plan BY_DESIGN_RESULTS + PBI-08 residual):
-    // planner-level skips (filled / maxlength / no-value) never raise the
-    // partial banner; only unexpected runtime failures do. So the badge keeps
-    // its normal status here. A user-visible notice for by-design skips needs
-    // a product decision first (PBI-82 BDD box stays open for exactly that).
-    const notice = await badgeNotice(driver);
-    expect(notice?.status).not.toBe('error');
+    // PBI-55 + PBI-60: the report click must reach the content-script
+    // handler. window.open cannot be stubbed from the page world (content
+    // scripts run isolated), so the click-through is proven by the tab it
+    // opens: the new tab carries the prefilled issue URL, then it is closed
+    // so no external navigation escapes the test run. URL correctness
+    // itself is unit-covered (buildPartialIssueUrl).
+    const report = await reportButton(driver);
+    expect(report).not.toBeNull();
+    const panelText = await resultPanelText(driver);
+    expect(panelText).toContain('入力結果');
+    expect(panelText).toContain('適用済み');
+    expect(panelText).toContain('内訳をissueで報告');
+    const home = await driver.getWindowHandle();
+    await report!.click();
+    let opened: string | null = null;
+    await driver.wait(async () => {
+      const handles = await driver.getAllWindowHandles();
+      const next = handles.find((h) => h !== home);
+      if (!next) return false;
+      await driver.switchTo().window(next);
+      opened = await driver.getCurrentUrl();
+      return true;
+    }, 15_000, 'report click did not open a tab');
+    const url = new URL(opened!);
+    // Headless runs are never authenticated, so GitHub bounces issues/new
+    // to /login (dropping the prefilled params). Reaching github.com proves
+    // the click opened exactly the URL the handler built — its shape
+    // (issues/new + labels + title + body) is pinned by unit tests.
+    expect(`${url.origin}/`).toBe('https://github.com/');
+    await driver.close();
+    await driver.switchTo().window(home);
+    expect(await driver.getCurrentUrl()).toContain('/partial-notice.html');
   });
 
   it('shows no error notice when everything applies', async () => {

@@ -1,6 +1,7 @@
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import { createFillSession, classifyWithReason } from '../content-session';
+import { buildPartialIssueUrl, FEEDBACK_REPO } from '../feedback/issue-url';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
@@ -170,6 +171,14 @@ export default defineContentScript({
       const metas = fields.map((f) => f.meta);
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
       const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
+      // PBI-55: the same context feeds the apply-time feedback and the
+      // post-apply breakdown report, so the report URL cannot drift from it.
+      const feedbackCtx = () => ({
+        pageHref: location.href,
+        provider: info.provider,
+        version: chrome.runtime.getManifest().version,
+      });
+      const openFeedbackUrl = (url: string): void => { window.open(url, '_blank', 'noopener'); };
       const session = createFillSession(
         {
           profiles: data.profiles,
@@ -203,12 +212,8 @@ export default defineContentScript({
             return report.summary;
           },
           persistSelection: (sel) => { void saveLastUsed(sel); },
-          openUrl: (url) => { window.open(url, '_blank', 'noopener'); },
-          feedbackContext: () => ({
-            pageHref: location.href,
-            provider: info.provider,
-            version: chrome.runtime.getManifest().version,
-          }),
+          openUrl: openFeedbackUrl,
+          feedbackContext: feedbackCtx,
           isExcluded: () => gate.isExcluded(),
         },
       );
@@ -253,6 +258,30 @@ export default defineContentScript({
           }
           // The banner text arrives composed; this side only displays it.
           if (result.display.banner) button.showError(result.display.banner);
+          // PBI-55: a partial apply (not everything filled) keeps the preview
+          // open in result mode with a one-click breakdown report; a clean
+          // apply closes as before. The banner above still fires for true
+          // runtime failures independently of this view.
+          if (result.summary.filled < result.summary.total) {
+            const ctx = feedbackCtx();
+            preview.showResult(result.summary, () => {
+              openFeedbackUrl(buildPartialIssueUrl(
+                FEEDBACK_REPO,
+                {
+                  pageHref: ctx.pageHref,
+                  provider: ctx.provider,
+                  version: ctx.version,
+                  filled: result.summary.filled,
+                  unapplied: result.summary.unapplied,
+                  total: result.summary.total,
+                  byResult: result.summary.byResult,
+                },
+              ));
+              preview.close();
+              openPreview = null;
+            });
+            return;
+          }
           preview.close();
           openPreview = null;
         },

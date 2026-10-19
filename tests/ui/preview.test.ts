@@ -199,3 +199,61 @@ describe('showPreview select labels', () => {
     expect(root.querySelectorAll('select')).toHaveLength(0);
   });
 });
+
+describe('showResult (PBI-55)', () => {
+  const summary = {
+    filled: 1,
+    unapplied: 2,
+    total: 3,
+    byResult: {
+      filled: 1,
+      'skipped-status': 1,
+      'missing-target': 0,
+      detached: 0,
+      'already-filled': 1,
+      'no-option': 0,
+      error: 0,
+    },
+  };
+
+  it('swaps the panel to the breakdown with a report button', () => {
+    const onReport = vi.fn();
+    const { handle, root } = open({ rows: [row('ok')] });
+    handle.showResult(summary, onReport);
+    expect(root.querySelector('h2')!.textContent).toBe('入力結果');
+    expect(root.textContent).toContain('適用済み 1 / 3件');
+    expect(root.textContent).toContain('見送り（仕様どおり）');
+    const report = button(root, '内訳をissueで報告')!;
+    expect(report).toBeTruthy();
+    report.click();
+    expect(onReport).toHaveBeenCalledOnce();
+  });
+
+  it('lists only nonzero reasons', () => {
+    const { handle, root } = open({ rows: [row('ok')] });
+    handle.showResult(summary, () => {});
+    expect(root.textContent).not.toContain('選択肢なし');
+  });
+
+  it('moves focus to the report button (PBI-56)', () => {
+    const { handle, root } = open({ rows: [row('ok')] });
+    handle.showResult(summary, () => {});
+    // Focus inside a shadow root surfaces as the shadow root's activeElement.
+    expect(root.activeElement?.textContent).toBe('内訳をissueで報告');
+  });
+
+  it('ignores setRows once in result mode (PBI-59)', () => {
+    const { handle, root } = open({ rows: [row('ok')] });
+    handle.showResult(summary, () => {});
+    handle.setRows([row('filled')]);
+    expect(root.textContent).toContain('入力結果');
+    expect(root.textContent).not.toContain('上書きしません');
+  });
+
+  it('renders labels from the shared fill-plan table (PBI-58)', () => {
+    const { handle, root } = open({ rows: [row('ok')] });
+    handle.showResult(summary, () => {});
+    expect(root.textContent).toContain('適用済み');
+    expect(root.textContent).toContain('見送り（仕様どおり）');
+  });
+});

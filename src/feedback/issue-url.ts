@@ -1,4 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
+import { FILL_RESULT_LABELS, type FillResult } from '../dom/fill-plan';
 import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
@@ -165,6 +166,48 @@ export function buildSettingsReportUrl(repo: string, version: string): string {
   ];
   const params = new URLSearchParams({
     title: '設定画面からの不具合報告',
+    body: lines.join('\n'),
+    labels: 'feedback',
+  });
+  return `${repo.replace(/\/$/, '')}/issues/new?${params.toString()}`;
+}
+
+// Partial-apply breakdown report (PBI-55): opened from the post-apply
+// preview's report button with one click. The body carries the countable
+// breakdown only (FillSummary.byResult) plus minimal context
+// (page/provider/version) — no classification snapshots, no field metadata,
+// and never profile values (counts cannot leak them by construction).
+export interface PartialReportInput {
+  pageHref: string;
+  provider: string;
+  version: string;
+  filled: number;
+  unapplied: number;
+  total: number;
+  // PBI-57: read-only — the report only reads the shared summary, so callers
+  // cannot mutate a reused object through this input.
+  byResult: Readonly<Record<string, number>>;
+}
+
+export function buildPartialIssueUrl(repo: string, input: PartialReportInput): string {
+  const host = titleHostLabel(input.pageHref);
+  const title = `部分適用の内訳報告 (${host})`;
+  const breakdown = Object.entries(input.byResult)
+    .filter(([, n]) => n > 0)
+    .map(([result, n]) => `- ${FILL_RESULT_LABELS[result as FillResult] ?? result}: ${n}件`);
+  const lines: string[] = [
+    '部分適用の内訳報告です。適用後プレビューの「内訳をissueで報告」から送る報告です。',
+    '',
+    `- Applied: ${input.filled} / ${input.total} (unapplied: ${input.unapplied})`,
+    `- Page: ${publicPageLabel(input.pageHref)}`,
+    `- Provider: ${input.provider}`,
+    `- Extension version: ${input.version}`,
+    '',
+    '### Breakdown',
+    ...breakdown,
+  ];
+  const params = new URLSearchParams({
+    title,
     body: lines.join('\n'),
     labels: 'feedback',
   });

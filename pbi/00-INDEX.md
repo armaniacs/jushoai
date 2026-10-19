@@ -1,5 +1,18 @@
 # PBI 台帳インデックス
 
+## 進行中（PBI-55レビューラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-19-00-backlog-pbi55-round.md`（PBI-55レビュー指摘5件のPBI化・RICE順位確定・5件実装、`make check` green・E2E Chrome 7/7 green、未コミット）
+- `2026-10-19-56-fix-result-focus.md`（順位 1、実装済み・`make check` green、未コミット）
+- `2026-10-19-57-chore-readonly-byresult.md`（順位 2、実装済み・`make check` green、未コミット。58と同ファイルで直列57→58）
+- `2026-10-19-58-refactor-result-labels.md`（順位 3、実装済み・`make check` green、未コミット。preview系3件は直列56→58→59）
+- `2026-10-19-59-chore-setrows-guard.md`（順位 4、実装済み・`make check` green、未コミット）
+- `2026-10-19-60-test-report-clickthrough.md`（順位 5、実装済み・E2E Chrome 7/7 green、未コミット。スタブ不可のため実タブURLで結線確認）
+
+## 進行中（PBI-55・部分適用レポート・実装済み・コードレビューのみ残）
+
+- `2026-10-19-55-feat-partial-report.md`（順位 1、実装済み・`make check` green・E2E Chrome 7/7 green、未コミット。PBI-82の開発者ストーリーの直接の続き）
+
 ## 進行中（1018cレビューラウンド・実装済み・コードレビュー完了）
 
 - `2026-10-19-00-backlog-review-round.md`（1018cコードレビュー指摘7件のPBI化・RICE順位確定・7件実装、`make check` green、未コミット）
@@ -98,7 +111,7 @@
 - `2026-10-16-110-refactor-save-pipeline.md`（順位 8、実装済み・`make check` green、未コミット）
 
 - `2026-10-16-00-backlog-review6-round.md`（レビューレポート第6ラウンド残件12件のPBI化・RICE順位確定、未コミット）
-- `2026-10-16-82-feat-fill-outcome-visibility.md`（順位 1、E2E実ブラウザ7/7 green・統合/単体greenを2026-10-19に実行記録。BDD通知箱は残：planner-skip通知は設計上不存在のため要プロダクト判断、未コミット）
+- `2026-10-16-82-feat-fill-outcome-visibility.md`（順位 1、E2E実ブラウザ7/7 green・統合/単体greenを2026-10-19に実行記録。BDD箱はPBI-55の結果ビューとして実ブラウザ確認済み・チェック済み、未コミット）
 - `2026-10-16-83-feat-badge-aria-live.md`（順位 2、未コミット）
 - `2026-10-16-84-refactor-kana-memoize.md`（順位 3、未コミット）
 - `2026-10-16-85-chore-literals-ownership-note.md`（順位 4、レビュアー確認済み・未コミット。所有コメント現存＋parity 6件緑を2026-10-19に実測）

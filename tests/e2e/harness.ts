@@ -210,6 +210,36 @@ export async function valueOf(driver: WebDriver, id: string): Promise<string> {
   return (await driver.findElement(By.id(id)).getAttribute('value')) ?? '';
 }
 
+// Reads the PBI-55 result-mode report button out of the shadow DOM. Resolves
+// null when the preview closed (clean apply) instead of entering result mode.
+export async function reportButton(driver: WebDriver): Promise<WebElement | null> {
+  const read = async (): Promise<WebElement | null> => {
+    for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+      const el = await shadowButton(host, 'button.report');
+      if (el) return el;
+    }
+    return null;
+  };
+  try {
+    return await driver.wait(read, 15_000, 'no [data-jushoai] report button found');
+  } catch {
+    return null;
+  }
+}
+
+// Visible text of the preview panel (result mode included), for asserting the
+// PBI-55 breakdown without following the report link anywhere.
+export async function resultPanelText(driver: WebDriver): Promise<string> {
+  const texts: string[] = [];
+  for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+    const root = await host.getShadowRoot();
+    for (const panel of await root.findElements(By.css('.panel'))) {
+      texts.push((await panel.getText()) ?? '');
+    }
+  }
+  return texts.join('\n');
+}
+
 // Reads the form button badge (status + text) out of the shadow DOM. The
 // partial-application banner (PBI-82) lands here via showError as
 // data-status="error"; a clean run leaves a non-error status.

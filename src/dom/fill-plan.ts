@@ -46,6 +46,20 @@ const FILL_RESULTS = [
 
 export type FillResult = (typeof FILL_RESULTS)[number];
 
+// Single owner of the reason vocabulary's display labels (PBI-58): the panel
+// result view and the issue-report body both read from here, so a wording
+// change touches one table. Unknown future keys fall back to the raw key at
+// each call site, never here.
+export const FILL_RESULT_LABELS: Record<FillResult, string> = {
+  filled: '適用済み',
+  'skipped-status': '見送り（仕様どおり）',
+  'missing-target': '対象欄なし',
+  detached: '欄が外れた',
+  'already-filled': '入力済みのため見送り',
+  'no-option': '選択肢なし',
+  error: 'エラー',
+};
+
 export interface FillOutcome {
   fieldId: string;
   result: FillResult;

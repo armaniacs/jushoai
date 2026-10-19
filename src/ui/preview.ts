@@ -1,5 +1,6 @@
 import type { PlanStatus } from '../core/planner';
 import type { Address, Profile } from '../core/types';
+import { FILL_RESULT_LABELS, type FillResult, type FillSummary } from '../dom/fill-plan';
 import { isMeasurable } from '../dom/geometry';
 import { OVERLAY_CSS } from './overlay';
 import { mountPanel, type PanelHandle } from './panel';
@@ -28,6 +29,10 @@ export interface PreviewHandle {
   setRows(rows: PreviewRow[]): void;
   setReanalyzing(busy: boolean): void;
   setAddressId(id: string): void;
+  // Post-apply result mode (PBI-55): replaces the panel content with the
+  // countable breakdown and a one-click report button. Used instead of
+  // close() when the apply was partial; a clean apply still closes.
+  showResult(summary: FillSummary, onReport: () => void): void;
   close(): void;
   // Center of the apply button in viewport coordinates, or null when it has
   // no box (hidden). The consent gate reads this through the handle because
@@ -173,7 +178,12 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
   panel.append(list, empty, actions, status);
 
+  let resultMode = false;
   const setRows = (rows: PreviewRow[]) => {
+    // PBI-59: result mode replaced the panel content, so re-rendering rows
+    // would only touch a detached list. Ignore silently: reanalyze (the sole
+    // setRows caller after open) has no button in result mode and cannot fire.
+    if (resultMode) return;
     list.replaceChildren(
       ...rows.map((r) => {
         const li = document.createElement('li');
@@ -240,10 +250,60 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const setAddressId = (id: string): void => {
     if (addressSelect) addressSelect.value = id;
   };
+  // PBI-55 result mode. Keeps the same mounted panel (focus trap and Escape
+  // handling stay intact); only the content is swapped. Breakdown rows reuse
+  // the .label/.value grid; the report button carries the one-click issue
+  // action supplied by the caller. Labels come from the fill-plan-owned table
+  // (PBI-58), shared with the issue-report body.
+  const showResult = (summary: FillSummary, onReport: () => void): void => {
+    title.textContent = '入力結果';
+    const head = document.createElement('p');
+    head.className = 'empty';
+    head.textContent = `適用済み ${summary.filled} / ${summary.total}件（未適用 ${summary.unapplied}件）`;
+    const breakdown = document.createElement('ul');
+    breakdown.replaceChildren(
+      ...Object.entries(summary.byResult)
+        .filter(([, n]) => n > 0)
+        // Stable order: applied first, then the rest alphabetically, so the
+        // same summary always renders the same list.
+        .sort(([a], [b]) => (a === 'filled' ? -1 : b === 'filled' ? 1 : a < b ? -1 : 1))
+        .map(([result, n]) => {
+          const li = document.createElement('li');
+          const label = document.createElement('span');
+          label.className = 'label';
+          label.textContent = FILL_RESULT_LABELS[result as FillResult] ?? result;
+          const value = document.createElement('span');
+          value.className = 'value';
+          value.textContent = `${n}件`;
+          li.append(label, value);
+          return li;
+        }),
+    );
+    const report = document.createElement('button');
+    report.type = 'button';
+    report.className = 'report';
+    report.textContent = '内訳をissueで報告';
+    report.title = '件数内訳入りのGitHub issue下書きを開きます（プロファイル値は含みません）';
+    report.addEventListener('click', () => onReport());
+    const done = document.createElement('button');
+    done.type = 'button';
+    done.textContent = '閉じる';
+    // Same teardown as cancel: the panel closes idempotently and the caller
+    // drops its handle, so a later open starts from a clean state.
+    done.addEventListener('click', () => opts.onCancel());
+    const resultActions = document.createElement('div');
+    resultActions.className = 'actions';
+    resultActions.append(report, done);
+    panel.replaceChildren(title, head, breakdown, resultActions);
+    resultMode = true;
+    // PBI-56: the removed apply button keeps DOM focus otherwise, stranding
+    // keyboard users on <body>. Move it to the primary action of this view.
+    report.focus();
+  };
   const getApplyPoint = (): { x: number; y: number } | null => {
     const rect = apply.getBoundingClientRect();
     if (!isMeasurable(rect)) return null;
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   };
-  return { setRows, setReanalyzing, setAddressId, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
+  return { setRows, setReanalyzing, setAddressId, showResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
 }
