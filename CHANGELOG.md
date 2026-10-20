@@ -6,6 +6,17 @@
 
 ## [Unreleased]
 
+## [0.1.21] - 2026-10-20
+
+### Changed
+
+- 大局レビューの改善テーマを2ラウンド実装する: 境界の `as` キャストをヘルパーに寄せ、ステータス文言を1表に集約し、URL最小化を `PublicUrl` ブランド型に、プレビュー結線を `bindPreview` に抽出する
+- 実体のない後方互換シム（deprecated 別名）を削除し、テストの期待値を実装の export からテスト側フィクスチャに移す
+- プレビューテストに重複していた attachShadow のモック定義を `tests/helpers.ts` に集約する
+- `messages.ts` を契約族ごとに `scan-limits.ts`・`analyze-contract.ts` に分割し、共有 prompt 構築を `llm/prompt.ts` に切り出す
+- 依存パッケージを宣言範囲内の最新に更新する
+- ドキュメントの文字種をSHIFT-JIS（CP932）範囲に揃える
+
 ## [0.1.20] - 2026-10-18
 
 ### Added
