@@ -44,5 +44,5 @@ Scenario: 既存の呼び出しが壊れない
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

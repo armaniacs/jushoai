@@ -44,5 +44,5 @@ Scenario: popup 契約が AI 契約から分かれる
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る
