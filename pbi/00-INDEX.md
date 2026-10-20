@@ -1,6 +1,51 @@
 # PBI 台帳インデックス
 
-## 進行中（1018bラウンド・実装済み・コードレビューのみ残）
+## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、未実装・未コミット）
+- `2026-10-19-61-chore-result-label-helper.md`（順位 1、実装済み・`make check` green、未コミット。Quick Win）
+- `2026-10-19-62-refactor-status-text-table.md`（順位 2、実装済み・`make check` green、未コミット）
+- `2026-10-19-63-refactor-public-url-brand.md`（順位 3、実装済み・`make check` green、未コミット）
+- `2026-10-19-64-refactor-preview-binding.md`（順位 4、実装済み・E2E Chrome 7/7 green、未コミット）
+
+## 進行中（PBI-55レビューラウンド・実装済み・コードレビューのみ残）
+
+- `2026-10-19-00-backlog-pbi55-round.md`（PBI-55レビュー指摘5件のPBI化・RICE順位確定・5件実装、`make check` green・E2E Chrome 7/7 green、未コミット）
+- `2026-10-19-56-fix-result-focus.md`（順位 1、実装済み・`make check` green、未コミット）
+- `2026-10-19-57-chore-readonly-byresult.md`（順位 2、実装済み・`make check` green、未コミット。58と同ファイルで直列57→58）
+- `2026-10-19-58-refactor-result-labels.md`（順位 3、実装済み・`make check` green、未コミット。preview系3件は直列56→58→59）
+- `2026-10-19-59-chore-setrows-guard.md`（順位 4、実装済み・`make check` green、未コミット）
+- `2026-10-19-60-test-report-clickthrough.md`（順位 5、実装済み・E2E Chrome 7/7 green、未コミット。スタブ不可のため実タブURLで結線確認）
+
+## 進行中（PBI-55・部分適用レポート・実装済み・コードレビューのみ残）
+
+- `2026-10-19-55-feat-partial-report.md`（順位 1、実装済み・`make check` green・E2E Chrome 7/7 green、未コミット。PBI-82の開発者ストーリーの直接の続き）
+
+## 進行中（1018cレビューラウンド・実装済み・コードレビュー完了）
+
+- `2026-10-19-00-backlog-review-round.md`（1018cコードレビュー指摘7件のPBI化・RICE順位確定・7件実装、`make check` green、未コミット）
+- `2026-10-19-48-refactor-seam-classify-contract.md`（順位 1、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-19-49-refactor-capped-arity.md`（順位 2、実装済み・コードレビュー完了・`make check` green、未コミット。48と同ファイルで直列48→49）
+- `2026-10-19-50-refactor-pipeline-single-source.md`（順位 3、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-19-51-chore-deprecate-wire-aliases.md`（順位 4、実装済み・コードレビュー完了・`make check` green、未コミット。54と同ファイルで直列51→54）
+- `2026-10-19-52-docs-excluded-reason-ac.md`（順位 5、実装済み・コードレビュー完了・`make check` green、未コミット。PBI-45にAC追記）
+- `2026-10-19-53-chore-transfer-contract-note.md`（順位 6、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-19-54-refactor-ai-classify-builder.md`（順位 7、実装済み・コードレビュー完了・`make check` green、未コミット。51の後に実施）
+
+## 進行中（archラウンド・実装済み・コードレビュー完了）
+
+- `2026-10-18-00-backlog-arch-round.md`（アーキテクチャレビュー7候補のPBI化・RICE順位確定・6件実装＋1件対応不要の判断記録、`make check` green、未コミット）
+- `2026-10-18-41-refactor-radio-policy-owner.md`（順位 1、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-18-42-refactor-attempt-seam.md`（順位 2、実装済み・コードレビュー完了・`make check` green、未コミット。run側移設は45に吸収済み）
+- `2026-10-18-43-refactor-transfer-contract.md`（順位 3、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-18-44-refactor-pipeline-entry.md`（順位 4、実装済み・コードレビュー完了・`make check` green、未コミット）
+- `2026-10-18-45-refactor-session-apply.md`（順位 5、実装済み・コードレビュー完了・`make check` green、未コミット。42の残件吸収済み）
+- `2026-10-18-46-refactor-wire-codec.md`（順位 6、実装済み・コードレビュー完了・`make check` green、未コミット。gatewayの3送信をbuilder化、ai-classifyは型契約整理が先のため注記残し）
+- `2026-10-18-47-backlog-failure-table-keep.md`（順位 7、対応不要の判断記録・実装なし、コードレビュー完了）
+
+## 進行中（1018bラウンド・実装済み・コードレビュー完了）
+
+（2026-10-19にPR #8差分の再レビューでApprove、Criticalなし。レビュー箱チェック済み）
 
 - `2026-10-18-21-refactor-scan-prefilter.md`（順位 21、実装済み・`make check` green、未コミット）
 - `2026-10-18-22-chore-make-check-once.md`（順位 22、実装済み・`make check` green、未コミット）
@@ -23,9 +68,9 @@
 - `2026-10-18-39-refactor-options-dom-unify.md`（順位 39、実装済み・`make check` green、未コミット）
 - `2026-10-18-40-chore-nonnull-assertions.md`（順位 40、実装済み・`make check` green、未コミット。28の後。範囲外の残存2件も本体で除去済み）
 
-## 進行中（1018aラウンド・実装済み・コードレビューのみ残）
+## 進行中（1018aラウンド・実装済み・コードレビュー完了）
 
-（1018aはPR #7でmainにマージ・v0.1.19リリース済み。本セッションの/code-reviewでApprove、Suggestions対応済み）
+（1018aはPR #7でmainにマージ・v0.1.19リリース済み。本セッションの/code-reviewでApprove、Suggestions対応済み。2026-10-19にPR #7差分の再レビューでApprove、Criticalなし。レビュー箱チェック済み）
 
 - `2026-10-18-00-backlog-1018a-round.md`（checking-team全21観点の指摘をPBI化・RICE順位確定・20件を個別PBI化・20件とも実装済み、`make check` green、未コミット）
 - `2026-10-18-01-fix-preview-select-label.md`（順位 1、実装済み・`make check` green、未コミット）
@@ -49,7 +94,9 @@
 - `2026-10-18-19-refactor-failure-text-single.md`（順位 19、実装済み・`make check` green、未コミット）
 - `2026-10-18-20-fix-gender-regex-boundary.md`（順位 20、実装済み・`make check` green、未コミット）
 
-## 進行中（実装済み・コードレビューのみ残）
+## 進行中（実装済み・コードレビュー完了／E2E確認・レビュアー確認・意図的backlogを除く）
+
+（2026-10-19に10-16期差分の再レビューでApprove、Criticalなし。82のE2E箱・85/88のレビュアー確認箱・92の意図的backlog箱は人間の作業のため残す）
 
 - `2026-10-16-01-backlog-adversarial-round.md`（adversarialレビュー第7ラウンド残件9件のPBI化・RICE順位確定・9件とも実装済み、`make check` green、未コミット）
 - `2026-10-16-94-fix-fill-banner-false-positive.md`（順位 1、実装済み・`make check` green、未コミット）
@@ -72,15 +119,15 @@
 - `2026-10-16-110-refactor-save-pipeline.md`（順位 8、実装済み・`make check` green、未コミット）
 
 - `2026-10-16-00-backlog-review6-round.md`（レビューレポート第6ラウンド残件12件のPBI化・RICE順位確定、未コミット）
-- `2026-10-16-82-feat-fill-outcome-visibility.md`（順位 1、未コミット）
+- `2026-10-16-82-feat-fill-outcome-visibility.md`（順位 1、E2E実ブラウザ7/7 green・統合/単体greenを2026-10-19に実行記録。BDD箱はPBI-55の結果ビューとして実ブラウザ確認済み・チェック済み、未コミット）
 - `2026-10-16-83-feat-badge-aria-live.md`（順位 2、未コミット）
 - `2026-10-16-84-refactor-kana-memoize.md`（順位 3、未コミット）
-- `2026-10-16-85-chore-literals-ownership-note.md`（順位 4、未コミット）
-- `2026-10-16-88-refactor-fill-last-categories.md`（順位 7、未コミット）
+- `2026-10-16-85-chore-literals-ownership-note.md`（順位 4、レビュアー確認済み・未コミット。所有コメント現存＋parity 6件緑を2026-10-19に実測）
+- `2026-10-16-88-refactor-fill-last-categories.md`（順位 7、レビュー指摘の解消確認済み・未コミット。FILL_LAST_CATEGORIES一本化・LAST_CATEGORIES残存ゼロを2026-10-19に実測）
 - `2026-10-16-89-feat-test-cooldown.md`（順位 8、未コミット）
 - `2026-10-16-90-refactor-session-storage-decouple.md`（順位 9、未コミット）
 - `2026-10-16-91-refactor-resolve-kana-return.md`（順位 10、未コミット）
-- `2026-10-16-92-backlog-storage-pick-hardening.md`（順位 11、未コミット。着手条件付きのため実装対象外）
+- `2026-10-16-92-backlog-storage-pick-hardening.md`（順位 11、記録内容8箱を2026-10-19に検証済み・チェック済み。着手条件（非string型追加）未到来のためbacklogとして残置、未コミット）
 
 ## 進行中からアーカイブ済み（2026-10-16・autonomous-task-closerで実装・検証済み・`make check` green）
 

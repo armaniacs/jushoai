@@ -46,5 +46,5 @@ Scenario: lint-firefoxは成果物を再利用する
 ## Definition of Done
 
 - [x] 全BDDシナリオが手動または自動で確認されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る（2026-10-18最終検証でEXIT:0を確認。作成時の一過性失敗は解消済み）

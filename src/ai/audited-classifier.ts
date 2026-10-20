@@ -1,4 +1,4 @@
-import type { ClassifySchedule, FieldClassifier } from '../core/classifier';
+import type { AttemptOutcome, ClassifySchedule, FieldClassifier } from '../core/classifier';
 import type { Category, FieldMeta } from '../core/types';
 import type { AuditDraft, AuditRecorder, AuditResult } from './audit-log';
 import { clipAuditResponse } from './audit-log';
@@ -18,8 +18,12 @@ export interface AttemptTrace {
   response: string;
 }
 
-export interface ClassifyAttempt {
+export interface ClassifyAttempt extends AttemptOutcome {
   map: Map<string, Category>;
+  // Same reason the seam carries, so trace-carrying adapters stay behind the
+  // unified attempt seam (PBI-42): callers read failureReason without unwrapping
+  // the trace, and classify() still rethrows error to preserve its contract.
+  failureReason: string | null;
   trace: AttemptTrace;
   // Set when the attempt failed; classify() rethrows it so the throwing
   // contract of FieldClassifier is preserved.

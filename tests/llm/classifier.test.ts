@@ -1,8 +1,9 @@
 import { describe, it, expect, vi } from 'vitest';
 import { CATEGORIES } from '../../src/core/types';
 import {
-  PromptApiClassifier, buildPrompt, buildSchema, parseLlmOutput,
+  PromptApiClassifier,
 } from '../../src/llm/classifier';
+import { buildPrompt, buildSchema, parseLlmOutput } from '../../src/llm/prompt';
 import type { LanguageModelStatic } from '../../src/llm/availability';
 import { AUDIT_RESPONSE_CLIP_LENGTH, clipAuditResponse } from '../../src/ai/audit-log';
 import { makeMeta } from '../helpers';

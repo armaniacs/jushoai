@@ -1,6 +1,6 @@
 import { isReady, loadData, loadLastUsed, type LastUsed } from '../../storage';
 import type { Address, Profile, StoredData } from '../../core/types';
-import { ANALYZE_MESSAGE_TYPE, isAnalyzeReason, type AnalyzeReason, type AnalyzeResponse } from '../../messages';
+import { ANALYZE_MESSAGE_TYPE, isAnalyzeReason, type AnalyzeReason, type AnalyzeResponse } from '../../analyze-contract';
 import { el } from '../options/dom';
 
 export function openOptionsPage(): Promise<void> {

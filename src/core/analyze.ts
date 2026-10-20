@@ -1,10 +1,22 @@
 import {
-  classifyField, isConfident, refineClassifications,
+  classifyField, isConfident, refineClassifications, classifyRulePipeline,
 } from './classify-rules';
 import { detectKanaKind, resolveKana } from './kana';
 import type { Category, FieldMeta, Item } from './types';
 import type { FieldClassifier } from './classifier';
 import { applyEnglishPage } from './page-language';
+import { isAllowedRadioCategory } from './radio-policy';
+
+// PBI-27: one aggregated line per rule-only run — field count and elapsed
+// time only. No meta contents (label/placeholder/value/ids) ever enter the
+// line, so no profile values or field PII can leak. The line is a console
+// trace, not a stored entry: it holds no retained batch, so it cannot
+// exceed the audit byte budget (AUDIT_MAX_BYTES) and leaves nothing for
+// retention (AUDIT_RETENTION_MS) to expire. Fixed short format (~dozens of
+// bytes) keeps each line far under any budget by construction.
+function logRuleOnlyRun(fieldCount: number, startedAt: number): void {
+  console.debug(`[JushoAI] rule-only classify fields=${fieldCount} durationMs=${Date.now() - startedAt}`);
+}
 
 export async function classifyAll(
   metas: FieldMeta[],
@@ -20,14 +32,22 @@ export async function classifyAll(
   // (classifier off, or nothing pending). When the LLM is attempted, the AI
   // path's own audit point (AuditedClassifier.log) is the record — including
   // on failure — so emitting here too would double-count that run.
-  const llmAttempted = classifier !== null && pending.length > 0;
+  if (classifier === null || pending.length === 0) {
+    // PBI-50: the rule-only route is owned by classifyRulePipeline (single
+    // source); analyze keeps the LLM branch and the aggregated trace line.
+    // Equivalent to the inline path below when fromLlm is empty: confident
+    // fields keep their rule result either way, the rest keep theirs or fall
+    // back to unknown, then resolveKana→refine→englishPage in the same order.
+    // force has no meaning without an LLM (nothing to force past the rules),
+    // so only the page-language flag is forwarded.
+    logRuleOnlyRun(metas.length, startedAt);
+    return classifyRulePipeline(metas, { englishPage: opts.englishPage });
+  }
   let fromLlm = new Map<string, Category>();
-  if (classifier && pending.length > 0) {
-    try {
-      fromLlm = await classifier.classify(pending);
-    } catch {
-      // An LLM failure must not block rule-based filling.
-    }
+  try {
+    fromLlm = await classifier.classify(pending);
+  } catch {
+    // An LLM failure must not block rule-based filling.
   }
 
   const items: Item[] = [];
@@ -42,7 +62,8 @@ export async function classifyAll(
       // buildPlan). An LLM answer classifying a radio as anything else would
       // bypass that policy, so drop it here and fall through to the rule-keep
       // path below (PBI-03), which leaves such fields as unknown.
-      if (meta.tag !== 'radio' || category === 'gender' || category === 'ageDecade') {
+      // PBI-41: the allowed set is owned by isAllowedRadioCategory.
+      if (meta.tag !== 'radio' || isAllowedRadioCategory(category)) {
         items.push({
           meta,
           cls: {
@@ -62,16 +83,5 @@ export async function classifyAll(
   }
   const resolved = resolveKana(items);
   const refined = refineClassifications(resolved);
-  const out = opts.englishPage ? applyEnglishPage(refined) : refined;
-  if (!llmAttempted) {
-    // PBI-27: one aggregated line per rule-only run — field count and elapsed
-    // time only. No meta contents (label/placeholder/value/ids) ever enter the
-    // line, so no profile values or field PII can leak. The line is a console
-    // trace, not a stored entry: it holds no retained batch, so it cannot
-    // exceed the audit byte budget (AUDIT_MAX_BYTES) and leaves nothing for
-    // retention (AUDIT_RETENTION_MS) to expire. Fixed short format (~dozens of
-    // bytes) keeps each line far under any budget by construction.
-    console.debug(`[JushoAI] rule-only classify fields=${metas.length} durationMs=${Date.now() - startedAt}`);
-  }
-  return out;
+  return opts.englishPage ? applyEnglishPage(refined) : refined;
 }

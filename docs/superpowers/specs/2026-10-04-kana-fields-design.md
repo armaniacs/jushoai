@@ -55,7 +55,7 @@ Content Script（ボタン押下）
 
 1. **placeholder がカナのみ**（既存の `placeholderIsKana`。NFKC・`stripExample` 済み）
 2. **name / htmlId / label / nearby（legend 等）にカナ語**（既存の `KANA` 正規表現: `kana|furigana|yomi|フリガナ|ふりがな|カナ|ひらがな|読み|セイ|メイ` 等）
-3. **`pattern` 属性にカナ範囲** — 属性値は `^[\u2015\u3000\u3041-\u3093...]` のリテラル文字列なので、`\uXXXX` を復号してから範囲判定する。placeholder 空欄のカナ欄を拾う最後の砦
+3. **`pattern` 属性にカナ範囲** ― 属性値は `^[\u2015\u3000\u3041-\u3093...]` のリテラル文字列なので、`\uXXXX` を復号してから範囲判定する。placeholder 空欄のカナ欄を拾う最後の砦
 
 ガード（偽陽性防止）:
 

@@ -27,12 +27,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 両経路が同一 mapping を通る
+Scenario: ハッピー ― 両経路が同一 mapping を通る
   Given 401・400・500・未知例外を返す偽 fetch がある
   When classify() と test() で各失敗を起こす
   Then 両経路とも同一 helper の対応（auth/rejected/network）を返す
 
-Scenario: 境界 — 微差は現状維持される
+Scenario: 境界 ― 微差は現状維持される
   Given 未知例外を投げる偽分類器がある
   When classify() と test() で失敗する
   Then classify() は bad-response、test() は network を返す（変更しない）

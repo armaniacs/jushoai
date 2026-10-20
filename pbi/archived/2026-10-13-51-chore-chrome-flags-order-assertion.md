@@ -27,13 +27,13 @@ E2E 基盤の保守担当者として、Chrome 起動フラグのアサーショ
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 期待フラグを集合として含む
+Scenario: ハッピー ― 期待フラグを集合として含む
   Given HEADLESS と CI が設定された複合環境
   When chromeLaunchArgs で起動引数を組み立てる
   Then 期待されるフラグ集合（--headless=new、--no-sandbox、--disable-dev-shm-usage、--disable-gpu）をすべて含む
   And 順序が変わっても結果は変わらない
 
-Scenario: 境界 — 将来のフラグ追加時に不要な破損をしない
+Scenario: 境界 ― 将来のフラグ追加時に不要な破損をしない
   Given 将来の変更で無関係な新規フラグが1つ追加された起動引数
   When 既存の期待フラグ集合に対する検証を行う
   Then 既存の期待フラグが揃っていればテストは成功する

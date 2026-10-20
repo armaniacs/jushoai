@@ -83,7 +83,8 @@ export function mountPanel(
   const buttons = [...root.querySelectorAll<HTMLButtonElement>('button')];
   const enabled = buttons.filter((b) => !b.disabled);
   const primary = enabled.find((b) => b.classList.contains('primary'));
-  const target = (presence.focus === 'primary' ? (primary ?? enabled[0]) : enabled[0]) ?? buttons[0];
+  const preferred = presence.focus === 'primary' ? primary : undefined;
+  const target = preferred ?? enabled[0] ?? buttons[0];
   target?.focus();
   return handle;
 }

@@ -1,8 +1,7 @@
-import { classifyAll } from '../core/analyze';
-import type { FieldClassifier } from '../core/classifier';
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
-import { createFillSession } from '../content-session';
+import { createFillSession, classifyWithReason } from '../content-session';
+import { bindPreview } from '../content/preview-bind';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
@@ -15,8 +14,8 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
-import { showPreview, type PreviewHandle } from '../ui/preview';
-import { ANALYZE_MESSAGE_TYPE, type ClassifyFailure } from '../messages';
+import { type PreviewHandle } from '../ui/preview';
+import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
 
@@ -158,23 +157,28 @@ export default defineContentScript({
           .then((s) => button.setStatus(s));
       }
       const classifier = info.status === 'available' ? new BackgroundClassifier() : null;
-      // Per-run failure capture: the gateway reports the reason of each attempt
-      // on the return value, and this adapter binds it to the run scope instead
-      // of a shared classifier field (concurrent runs keep separate reasons).
-      let failureReason: ClassifyFailure | null = null;
-      const reportingClassifier: FieldClassifier | null = classifier ? {
-        classify: async (fields) => {
-          const outcome = await classifier.attempt(fields);
-          failureReason = outcome.failureReason;
-          return outcome.map;
-        },
-      } : null;
+      // PBI-45: run() passes intent only — which classifier to use. The reason
+      // binding (attempt seam {map, failureReason} → return value) and the
+      // apply ordering (consent→inject→persist→feedback→display) are owned by
+      // the session module via classifyWithReason; no reporting wrapper and no
+      // `let failureReason` closure escape remain here (PBI-42引継ぎの解消).
+      // The pending split (ACCEPT_THRESHOLD) stays inside classifyAll, so only
+      // sub-threshold fields reach the LLM and the audit keeps one record per
+      // attempt.
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const metas = fields.map((f) => f.meta);
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
       const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
+      // PBI-55: the same context feeds the apply-time feedback and the
+      // post-apply breakdown report, so the report URL cannot drift from it.
+      const feedbackCtx = () => ({
+        pageHref: location.href,
+        provider: info.provider,
+        version: chrome.runtime.getManifest().version,
+      });
+      const openFeedbackUrl = (url: string): void => { window.open(url, '_blank', 'noopener'); };
       const session = createFillSession(
         {
           profiles: data.profiles,
@@ -187,7 +191,7 @@ export default defineContentScript({
           canReanalyze: classifier !== null,
         },
         {
-          classify: (ms, opts) => classifyAll(ms, reportingClassifier, opts),
+          classify: (ms, opts) => classifyWithReason(classifier, ms, opts),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -208,17 +212,13 @@ export default defineContentScript({
             return report.summary;
           },
           persistSelection: (sel) => { void saveLastUsed(sel); },
-          openUrl: (url) => { window.open(url, '_blank', 'noopener'); },
-          feedbackContext: () => ({
-            pageHref: location.href,
-            provider: info.provider,
-            version: chrome.runtime.getManifest().version,
-          }),
+          openUrl: openFeedbackUrl,
+          feedbackContext: feedbackCtx,
           isExcluded: () => gate.isExcluded(),
         },
       );
       const started = await session.start();
-      if (failureReason) button.showError(hintForButton(failureReason));
+      if (started.failureReason) button.showError(hintForButton(started.failureReason));
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -226,49 +226,19 @@ export default defineContentScript({
       // Classification takes long enough for the settings to change under it; an
       // exclusion that landed meanwhile must not open a panel on this page.
       if (started.excluded) return;
-      const preview = showPreview({
+      // PBI-64: the preview wiring (reanalyze/switch/apply/cancel) lives in
+      // bindPreview; run() keeps classification, the panel-open decision, and
+      // the exclusion guard above.
+      const preview = bindPreview({
+        session,
+        button,
         rows: started.rows,
         addresses: data.addresses,
-        selectedAddressId: session.selectedAddressId,
-        onReanalyze: classifier ? () => {
-          void session.reanalyze().then((rows) => {
-            if (failureReason) button.showError(hintForButton(failureReason));
-            if (rows) preview.setRows(rows);
-          });
-        } : undefined,
         profiles: data.profiles,
-        selectedProfileId: session.selectedProfileId,
-        onProfileChange: (id) => {
-          const rows = session.selectProfile(id);
-          preview.setAddressId(session.selectedAddressId);
-          preview.setRows(rows);
-        },
-        onAddressChange: (id) => {
-          preview.setRows(session.selectAddress(id));
-        },
-        onApply: (sendFeedback) => {
-          // Last trust point: the session aborts before injecting anything when
-          // the panel was hidden, moved, or covered. The panel stays open for
-          // cancel or retry, and the reason goes to the form button, which stays
-          // visible even when the panel is hidden.
-          const result = session.apply(sendFeedback, preview, failureReason ? hintForButton(failureReason) : undefined);
-          if (!result.applied) {
-            button.showError(result.reason);
-            return;
-          }
-          // The banner text arrives composed; this side only displays it.
-          if (result.display.banner) button.showError(result.display.banner);
-          preview.close();
-          openPreview = null;
-        },
-        // Re-entrant by design: preview.close() fires the panel onClose, which
-        // is this onCancel, which calls preview.close() again. The chain always
-        // stops at the second close because the panel close is idempotent — do
-        // not remove that guard without unwinding this cycle first.
-        onCancel: () => {
-          preview.close();
-          openPreview = null;
-        },
+        reanalyzable: classifier !== null,
+        feedbackContext: feedbackCtx,
+        openFeedbackUrl,
+        onClosed: () => { openPreview = null; },
       });
       openPreview = preview;
     }

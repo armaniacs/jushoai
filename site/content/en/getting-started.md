@@ -68,9 +68,9 @@ At the top of the preview, you can choose which address to use. The list updates
 
 ## What to read next
 
-- [Profiles](/en/guides/profiles/) and [Addresses](/en/guides/addresses/) — details on what you register
-- [Toolbar and filling a form](/en/guides/popup-and-fill/) — how to fill with the button
-- [Setting up an AI provider](/en/guides/ai-providers/) — setup for using AI
-- [Privacy and what is sent](/en/guides/privacy/) — what is sent
-- [Supported forms and how it works](/en/guides/how-it-works/) — how classification works
-- [Troubleshooting](/en/guides/troubleshooting/) — what to do when stuck
+- [Profiles](/en/guides/profiles/) and [Addresses](/en/guides/addresses/) ― details on what you register
+- [Toolbar and filling a form](/en/guides/popup-and-fill/) ― how to fill with the button
+- [Setting up an AI provider](/en/guides/ai-providers/) ― setup for using AI
+- [Privacy and what is sent](/en/guides/privacy/) ― what is sent
+- [Supported forms and how it works](/en/guides/how-it-works/) ― how classification works
+- [Troubleshooting](/en/guides/troubleshooting/) ― what to do when stuck

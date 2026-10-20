@@ -17,9 +17,9 @@
 
 「ルール分類が `ACCEPT_THRESHOLD`（`src/core/classify-rules.ts:3`、0.6）以上で信頼できる」述語が 3 箇所に散在する:
 
-- `src/analyze.ts:13` — `!r.cls || r.cls.confidence < ACCEPT_THRESHOLD`（LLM 送出 pending の抽出）
-- `src/analyze.ts:27` — `cls.confidence >= ACCEPT_THRESHOLD`（ルール結果の採用）
-- `src/dom/detect-forms.ts:28-31` — `c !== null && c.confidence >= ACCEPT_THRESHOLD`（フォーム判定・anchor 選択）
+- `src/analyze.ts:13` ― `!r.cls || r.cls.confidence < ACCEPT_THRESHOLD`（LLM 送出 pending の抽出）
+- `src/analyze.ts:27` ― `cls.confidence >= ACCEPT_THRESHOLD`（ルール結果の採用）
+- `src/dom/detect-forms.ts:28-31` ― `c !== null && c.confidence >= ACCEPT_THRESHOLD`（フォーム判定・anchor 選択）
 
 閾値運用の変更（source 別の信頼度など）が 3 箇所の同時修正を要求する。
 

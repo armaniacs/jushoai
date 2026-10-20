@@ -21,6 +21,13 @@ function queryFor(origins: string[], isFirefox: boolean): PermissionsQuery {
   return isFirefox ? { origins, data_collection: ['websiteContent'] } : { origins };
 }
 
+// Single owner of the chrome.permissions access (PBI-61): the three callers
+// below take this as their default instead of casting inline, so a future
+// fake or wrapper only changes this one place.
+function permissionsApi(): PermissionsApi {
+  return chrome.permissions as PermissionsApi;
+}
+
 export function originPatternsFor(s: AiSettings): string[] {
   if (s.provider === 'gemini') return [GEMINI_ORIGIN];
   if (s.provider === 'openai') {
@@ -41,7 +48,7 @@ export function requiredHostOrigins(s: AiSettings): string[] {
 
 export async function hasHostPermission(
   origins: string[],
-  api: PermissionsApi = chrome.permissions as PermissionsApi,
+  api: PermissionsApi = permissionsApi(),
   isFirefox: boolean = IS_FIREFOX,
 ): Promise<boolean> {
   if (origins.length === 0) return false;
@@ -55,7 +62,7 @@ export async function hasHostPermission(
 // Must be called from a user gesture (the options page save button).
 export async function requestHostPermission(
   origins: string[],
-  api: PermissionsApi = chrome.permissions as PermissionsApi,
+  api: PermissionsApi = permissionsApi(),
   isFirefox: boolean = IS_FIREFOX,
 ): Promise<boolean> {
   if (origins.length === 0) return false;
@@ -72,7 +79,7 @@ export async function requestHostPermission(
 // failed, so this must never change its outcome.
 export async function removeHostPermission(
   origins: string[],
-  api: PermissionsApi = chrome.permissions as PermissionsApi,
+  api: PermissionsApi = permissionsApi(),
   isFirefox: boolean = IS_FIREFOX,
 ): Promise<boolean> {
   if (origins.length === 0) return false;

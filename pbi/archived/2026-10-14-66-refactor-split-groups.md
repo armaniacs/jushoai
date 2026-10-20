@@ -27,13 +27,13 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 既存の全分割が単一骨格を通る
+Scenario: ハッピー ― 既存の全分割が単一骨格を通る
   Given 電話3欄・郵便2欄・姓名2欄・カナ2欄・部分名称の各 Fixture がある
   When refineClassifications を呼ぶ
   Then 従来通りの分割・破棄結果になる
   And grouping 本体は1実装のみである
 
-Scenario: 境界 — 過不足グループは従来通り分割しない・破棄する
+Scenario: 境界 ― 過不足グループは従来通り分割しない・破棄する
   Given 件数不一致の同名グループと超過グループがある
   When refineClassifications を呼ぶ
   Then 不一致は unsplit のまま残り、超過は破棄される

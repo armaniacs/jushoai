@@ -6,11 +6,11 @@
 ## 背景・現状コードの確認（2026-10-13 調査済み）
 - `src/ui/host.ts` の `createShadowHost()` は意図的に `position` の既定を宣言しない。配置は消費者に委ねる設計で、コメントだけがガード。
 - 現直接消費者 2 件は `position: fixed` を `important` 付きで書いていることを確認:
-  - `src/ui/button.ts:39` — `mountButton` 内で `host.style.setProperty('position', 'fixed', 'important')`
-  - `src/ui/overlay.ts:17` — `createOverlayHost` 内で同等の一行
+  - `src/ui/button.ts:39` ― `mountButton` 内で `host.style.setProperty('position', 'fixed', 'important')`
+  - `src/ui/overlay.ts:17` ― `createOverlayHost` 内で同等の一行
 - 間接消費者 2 件は `overlay.ts` 経由でカバーされることを確認:
-  - `src/ui/preview.ts:67` — `createOverlayHost()` を使用
-  - `src/ui/ai-guide.ts:134` — `createOverlayHost()` を使用
+  - `src/ui/preview.ts:67` ― `createOverlayHost()` を使用
+  - `src/ui/ai-guide.ts:134` ― `createOverlayHost()` を使用
 - `createShadowHost` / `createOverlayHost` の呼び出しは上記以外になし（`grep` にて確認）。
 - すなわち現状は壊れていないが、3 件目の直接消費者が `position` を書き忘れると無音で `static` に落ちる。ガードはコメントのみ。
 
@@ -69,8 +69,8 @@ Scenario: 既存2経路は無変更の見た目で通る（境界）
 ## 実装者向け注記
 
 ### 方向（この二択から選ぶ。両方はやらない）
-- **案A: `createShadowHost` の引数化（推奨寄り）** — 例 `createShadowHost({ position: 'fixed' })` 必須化、またはオプション＋既定 `'fixed'`。呼び忘れが型・lint レベルで見える。既存 2 呼び出し（`button.ts:34`・`overlay.ts:7`）の更新が必要。`all: initial !important` リセットとの順序（`important` 付き後勝ち）に注意。`overlay.ts` の `left: auto` 意図（`left` を書かない制約）を壊さないこと。
-- **案B: dev-time warn アサート** — 例 `if (process.env.NODE_ENV !== 'production' && host.style.position === '') console.warn(...)`、または開発用アサート関数。既存経路の変更が最小で済むが、警告の見落としリスクあり。本番に warn を残さないこと。
+- **案A: `createShadowHost` の引数化（推奨寄り）** ― 例 `createShadowHost({ position: 'fixed' })` 必須化、またはオプション＋既定 `'fixed'`。呼び忘れが型・lint レベルで見える。既存 2 呼び出し（`button.ts:34`・`overlay.ts:7`）の更新が必要。`all: initial !important` リセットとの順序（`important` 付き後勝ち）に注意。`overlay.ts` の `left: auto` 意図（`left` を書かない制約）を壊さないこと。
+- **案B: dev-time warn アサート** ― 例 `if (process.env.NODE_ENV !== 'production' && host.style.position === '') console.warn(...)`、または開発用アサート関数。既存経路の変更が最小で済むが、警告の見落としリスクあり。本番に warn を残さないこと。
 
 ### 現2消費者の確認（着手前に再確認すること）
 ```bash

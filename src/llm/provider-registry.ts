@@ -5,7 +5,7 @@ import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
-import type { ClassifySchedule, FieldClassifier } from '../core/classifier';
+import type { ClassifySchedule } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
 import { createAuthBlock, type AuthBlock } from './auth-block';

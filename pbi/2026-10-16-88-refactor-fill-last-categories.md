@@ -58,4 +58,4 @@
 - [x] `make typecheck` が緑
 - [x] `npx vitest run tests/dom/fill-plan.test.ts` が緑
 - [x] 振る舞い変更がないこと（注入順序不変）がテストで確認されている
-- [ ] レビュー指摘（LAST_CATEGORIES 語彙二重管理）が解消済みとしてクローズできる
+- [x] レビュー指摘（LAST_CATEGORIES 語彙二重管理）が解消済みとしてクローズできる

@@ -6,7 +6,7 @@
 
 ## 背景・事実
 
-- `plans/2026-10-15-2247-review-1014z.md` Low 指摘（System Architect／Maintainability）: `kana.ts ↔ classify-rules.ts` の type-level 相互 import（実行時無害・スコア影響なし・Phase 5 対象外）。
+- `plans/2026-10-15-2247-review-1014z.md` Low 指摘（System Architect／Maintainability）: `kana.ts ⇔ classify-rules.ts` の type-level 相互 import（実行時無害・スコア影響なし・Phase 5 対象外）。
 - `src/core/classify-rules.ts:15-18` で `export interface Item { meta: FieldMeta; cls: Classification; }` を定義。
 - `src/core/classify-rules.ts:5` は `import { KANA, wantsKana } from './kana'` で値を import（kana → classify-rules 方向の値依存）。
 - `src/core/kana.ts:4` は `import type { Item } from './classify-rules'` で型のみ import（逆方向の型依存）。

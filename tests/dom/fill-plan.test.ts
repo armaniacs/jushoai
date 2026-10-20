@@ -1,7 +1,10 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FILL_LAST_CATEGORIES } from '../../src/core/fill-order';
 import type { PlanItem } from '../../src/core/planner';
-import { fillPlan, shouldWarn, summarizeFillOutcomes, targetsFromControls } from '../../src/dom/fill-plan';
+import {
+  FILL_RESULT_LABELS, fillPlan, fillResultLabel, shouldWarn, summarizeFillOutcomes, targetsFromControls,
+} from '../../src/dom/fill-plan';
+import type { FillResult } from '../../src/dom/fill-plan';
 import type { Control } from '../../src/dom/scan-fields';
 
 const item = (fieldId: string, category: PlanItem['category'], value = 'v'): PlanItem => ({
@@ -240,5 +243,24 @@ describe('FILL_LAST_CATEGORIES', () => {
     );
     expect(order).toEqual(['a', 's', 'zip', 'z1']);
     expect(out.every((o) => o.result === 'filled')).toBe(true);
+  });
+});
+
+describe('fillResultLabel (PBI-61)', () => {
+  it('resolves every known reason to its Japanese label', () => {
+    expect(fillResultLabel('filled')).toBe('適用済み');
+    expect(fillResultLabel('error')).toBe('エラー');
+  });
+
+  it('falls back to the raw key for unknown future reasons', () => {
+    expect(fillResultLabel('future-reason')).toBe('future-reason');
+  });
+
+  it('resolves every FillResult through the table, never the fallback', () => {
+    // The table is Record<FillResult, string>, so its keys are exactly the
+    // FillResult union — a new reason lands here automatically.
+    for (const result of Object.keys(FILL_RESULT_LABELS) as FillResult[]) {
+      expect(fillResultLabel(result)).toBe(FILL_RESULT_LABELS[result]);
+    }
   });
 });

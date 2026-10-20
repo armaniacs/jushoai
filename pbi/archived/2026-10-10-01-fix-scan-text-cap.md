@@ -10,8 +10,8 @@
 - 根拠: すべてのスキャン走行（拡張機能の全利用者の全フォーム操作）が対象で Reach は最大。VulnHunter 監査では Informational ハードニング（攻撃駆動ではないため直接的な障害は実証されていない）で Impact は 0.25。変更は scan 側の切り詰め 2〜3 箇所とテストのみで、既存テストの不変性で確実に検証でき Confidence 80%、Effort 0.5pt
 
 ## 背景
-- 出典: VulnHunter 監査 `JushoAI_VULNHUNT_RESULTS_2026-10-10-051858/phase2b_output.md` の候補 #9「Quadratic regex on page-controlled label text (LOG-OBS-1)」— FALSE POSITIVE 判定・Informational ハードニング。ハードニング候補 5 でも「Cap label/placeholder length on the scan path」（`classify-rules.ts:243, 314`）として指摘
-- label・placeholder はページ制御の入力で、cap なしに 19 個の優先順序付き正規表現マッチャ（`src/core/classify-rules.ts`）に渡る。実証済みの二次時間 O(n²) 経路（`classify-rules.ts:243` の `/(市区町村|市町村).*(番地|丁目)/`）がある
+- 出典: VulnHunter 監査 `JushoAI_VULNHUNT_RESULTS_2026-10-10-051858/phase2b_output.md` の候補 #9「Quadratic regex on page-controlled label text (LOG-OBS-1)」― FALSE POSITIVE 判定・Informational ハードニング。ハードニング候補 5 でも「Cap label/placeholder length on the scan path」（`classify-rules.ts:243, 314`）として指摘
+- label・placeholder はページ制御の入力で、cap なしに 19 個の優先順序付き正規表現マッチャ（`src/core/classify-rules.ts`）に渡る。実証済みの二次時間 O(n^2) 経路（`classify-rules.ts:243` の `/(市区町村|市町村).*(番地|丁目)/`）がある
 - 分類はユーザー操作（ボタン click `content.ts:180` / popup `content.ts:213`）でのみ走るため攻撃駆動ではない。ただしページは拡張なしで自己 freeze できる以上、拡張経路は構造的に弱く、cap で増幅を構造的に除去できる
 - 現状の有界化は偏っている: nearby 見出しは 60 文字で cap 済み（`scan-fields.ts:45,48,50` の `.slice(0, 60)`）、AI 送信 wire も `MAX_TEXT_LENGTH = 200` で cap 済み（`messages.ts:13,53`）。label（`scan-fields.ts:32-41`）と placeholder（`scan-fields.ts:141`）だけが scan 側で未 cap
 

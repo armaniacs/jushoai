@@ -1,4 +1,4 @@
-# PBI: 海外住所対応 — Country・Address-1〜4等の半角英数欄 (backlog)
+# PBI: 海外住所対応 ― Country・Address-1〜4等の半角英数欄 (backlog)
 
 ## ユーザーストーリー
 JushoAI利用者として、海外住所(Country・Address-1〜4・Postal code等)も半角英数で自動入力したい、なぜなら対象フォーム `https://www.joshibi.ac.jp/overseas/webform` にはName以外にも半角英数指定の住所欄が7項目あるから

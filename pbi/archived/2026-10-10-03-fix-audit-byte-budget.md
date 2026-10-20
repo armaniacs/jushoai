@@ -11,7 +11,7 @@ CJK を含むフォームで AI 分類を使い、監査ログを長期利用す
 - 根拠: VulnHunter 監査の Code Quality #2 で、機構（文字数 vs UTF-8 バイトの不一致）はソース検証済み。到達はユーザー操作ゲート付きで、被害は監査記録の一時滞留（最大 7 日で自己修復）に限られるため Impact は低い。一方、修正は 1 ファイルの 1 関数とテスト追加で Effort 最小。トレースビューア PBI（実装済み）で 1 レコードが大きくなり、CJK 主体の本拡張では予算到達が現実的なため Confidence は高い
 
 ## 背景
-- VulnHunter 監査（`JushoAI_VULNHUNT_RESULTS_2026-10-10-051858/phase2b_output.md` 候補 #2、VULN-002）で指摘された。Gate 2a/3 でセキュリティ欠陥としては排除され、Code Quality（実欠陥・分類違い）として扱う。機構は検証済み: `entryBytes`（`src/ai/audit-log.ts:65`）は `String.length`（UTF-16 コードユニット数）を合算するが、chrome.storage.local のクォータは直列化後の UTF-8 バイトで課金され、CJK は ≈ 3 バイト/文字
+- VulnHunter 監査（`JushoAI_VULNHUNT_RESULTS_2026-10-10-051858/phase2b_output.md` 候補 #2、VULN-002）で指摘された。Gate 2a/3 でセキュリティ欠陥としては排除され、Code Quality（実欠陥・分類違い）として扱う。機構は検証済み: `entryBytes`（`src/ai/audit-log.ts:65`）は `String.length`（UTF-16 コードユニット数）を合算するが、chrome.storage.local のクォータは直列化後の UTF-8 バイトで課金され、CJK は ≒ 3 バイト/文字
 - Firefox のクォータは 5MB。「4,000,000 文字」の予算は CJK 主体の内容だと実バイトで 12MB に達しうるため、コメント（`src/ai/audit-log.ts:5-9`）が意図する「クォータを下回る」保証が崩れる
 - クォータ超過時の被害: `chrome.storage.local.set` が失敗し続け、記録エラーは `src/ai/audited-classifier.ts:59-61` の catch で握り潰されるため、監査記録が静かに止まる。保持ポリシー（7 日）で最大 7 日間の滞留後に自己修復するが、その間の監査は欠落する
 - トレースビューア PBI（`pbi/2026-10-09-01-feat-audit-trace-viewer.md`、実装済み）で 1 レコードが大きくなった（全文プロンプト + 2,000 文字応答）。本拡張は日本語フォーム向けで request/response に CJK が混ざる確率が高く、予算到達は現実的
@@ -54,12 +54,12 @@ Scenario: 保存に失敗しても入力は止まらない
 - [x] 保存失敗時も入力を止めない既存挙動を維持する
 
 ## テスト戦略（t_wadaスタイル: 単体 / 統合）
-- 単体（`tests/ai/audit-log.test.ts`）: UTF-8 計上の境界 — CJK 文字列でバイト長 > 文字数、ASCII は文字数と等しい、サロゲートペア（絵文字など）は UTF-16 2 ユニット = UTF-8 4 バイト、ASCII/CJK 混在、予算ちょうどで保持・1 バイト超過で最古を落とす、保持期間と 1,000 件上限が不変であること
+- 単体（`tests/ai/audit-log.test.ts`）: UTF-8 計上の境界 ― CJK 文字列でバイト長 > 文字数、ASCII は文字数と等しい、サロゲートペア（絵文字など）は UTF-16 2 ユニット = UTF-8 4 バイト、ASCII/CJK 混在、予算ちょうどで保持・1 バイト超過で最古を落とす、保持期間と 1,000 件上限が不変であること
 - 統合: 既存の `AuditStore` + fake `chrome.storage.local` の方針に合わせ、CJK 主体の記録の追記連鎖で prune が正しく働くこと、append → list で計上が一貫すること
 
 ## 実装者向け注記
 ### 現状コードの確認（着手前に実行済み）
-- `src/ai/audit-log.ts:65`: `const entryBytes = (e: AuditEntry): number => e.request.length + e.response.length + 256;` — `.length` は UTF-16 コードユニット数で、UTF-8 バイトではない
+- `src/ai/audit-log.ts:65`: `const entryBytes = (e: AuditEntry): number => e.request.length + e.response.length + 256;` ― `.length` は UTF-16 コードユニット数で、UTF-8 バイトではない
 - `pruneEntries`（56-60 行目）と `withinByteBudget`（67-76 行目）は `entryBytes` 経由で同じ計上単位。呼び出し経路は `AuditStore.record`（158-177 行目）→ `appendEntry` → `pruneEntries` と、`AuditStore.list`（179-181 行目）
 - `AUDIT_MAX_BYTES = 4_000_000`（9 行目）。コメント（5-8 行目）の意図は「エントリ数だけでは request/response の合計サイズを拘束できないため、chrome.storage.local のクォータ（Firefox 5MB、Chrome 10MB）を下回るバイト予算を設け、満杯でも今後の書き込みが詰まらないようにする」
 - `request` は `buildPrompt` の全文、`response` は `AUDIT_RESPONSE_CLIP_LENGTH`（2,000 文字、16 行目）で切り詰め済み（トレースビューア PBI で追加）

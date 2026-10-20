@@ -85,7 +85,7 @@ describe('audit section', () => {
   it('lists entries newest first with an expandable trace', async () => {
     const first = entry();
     const second = appendEntry({ nextId: 2, entries: [first] }, draft(), Date.UTC(2026, 9, 6)).entries[1]!;
-    const { root, details } = mount([first, second]);
+    const { details } = mount([first, second]);
     await flush();
     expect(details()).toHaveLength(2);
     expect(details()[0]!.textContent).toContain('#2');

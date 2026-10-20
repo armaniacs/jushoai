@@ -7,7 +7,6 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { createEgressCheck, DOH_ORIGIN, EGRESS_UNVERIFIED_POLICY } from '../../src/ai/settings';
 import { originPatternsFor, requiredHostOrigins } from '../../src/ai/permissions';
-import { GEMINI_ORIGIN } from '../../src/ai/types';
 import { DEFAULT_AI_SETTINGS, type AiSettings } from '../../src/ai/types';
 
 const sample = (provider: AiSettings['provider']): AiSettings => ({

@@ -1,5 +1,6 @@
 import type { Category, FieldMeta } from '../core/types';
-import { META_CLIP_LENGTH, toWireMeta, type MetaWire } from '../messages';
+import { fillResultLabel } from '../dom/fill-plan';
+import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
 
@@ -26,22 +27,31 @@ export function sanitizePageUrl(href: string): string {
   }
 }
 
+// Branded public URL (PBI-63): the minimized label for issue bodies is a
+// distinct type from raw hrefs and audit-log URLs, so mixing them into a
+// public body is a compile error instead of a silent leak. The minimization
+// functions themselves are intentionally NOT unified (different consumers
+// need different policies); only the handoff is typed.
+declare const publicUrlBrand: unique symbol;
+export type PublicUrl = string & { readonly [publicUrlBrand]: 'PublicUrl' };
+
 // The public issue body carries less than the local audit log: only the
 // origin and the first path segment, so deep path identifiers never leave
 // the machine. nearby/label text can still hold page-rendered personal data,
 // which the consent wording calls out instead of trying to detect.
-export function publicPageLabel(href: string): string {
+export function publicPageLabel(href: string): PublicUrl {
   try {
     const u = new URL(href);
     const first = u.pathname.split('/').filter(Boolean)[0];
-    return first ? `${u.origin}/${first}` : u.origin;
+    const label = first ? `${u.origin}/${first}` : u.origin;
+    return label as PublicUrl;
   } catch {
-    return 'unknown';
+    return 'unknown' as PublicUrl;
   }
 }
 
 function clippedMeta(m: FieldMeta): MetaWire {
-  const w = toWireMeta(m);
+  const w = encodeFieldMeta(m);
   const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
   return {
     ...w,
@@ -117,7 +127,8 @@ export function titleHostLabel(href: string): string {
 }
 
 export function buildFeedbackIssueUrl(repo: string, input: FeedbackInput): string {
-  const page = publicPageLabel(input.pageHref);
+  // Typed handoff (PBI-63): only a minimized public label reaches the body.
+  const page: PublicUrl = publicPageLabel(input.pageHref);
   const host = titleHostLabel(input.pageHref);
   const title = `開発に報告: 初回NG→AIで分析OK (${host})`;
   const lines: string[] = [
@@ -165,6 +176,50 @@ export function buildSettingsReportUrl(repo: string, version: string): string {
   ];
   const params = new URLSearchParams({
     title: '設定画面からの不具合報告',
+    body: lines.join('\n'),
+    labels: 'feedback',
+  });
+  return `${repo.replace(/\/$/, '')}/issues/new?${params.toString()}`;
+}
+
+// Partial-apply breakdown report (PBI-55): opened from the post-apply
+// preview's report button with one click. The body carries the countable
+// breakdown only (FillSummary.byResult) plus minimal context
+// (page/provider/version) — no classification snapshots, no field metadata,
+// and never profile values (counts cannot leak them by construction).
+export interface PartialReportInput {
+  pageHref: string;
+  provider: string;
+  version: string;
+  filled: number;
+  unapplied: number;
+  total: number;
+  // PBI-57: read-only — the report only reads the shared summary, so callers
+  // cannot mutate a reused object through this input.
+  byResult: Readonly<Record<string, number>>;
+}
+
+export function buildPartialIssueUrl(repo: string, input: PartialReportInput): string {
+  const host = titleHostLabel(input.pageHref);
+  const title = `部分適用の内訳報告 (${host})`;
+  // Typed handoff (PBI-63): only a minimized public label reaches the body.
+  const page: PublicUrl = publicPageLabel(input.pageHref);
+  const breakdown = Object.entries(input.byResult)
+    .filter(([, n]) => n > 0)
+    .map(([result, n]) => `- ${fillResultLabel(result)}: ${n}件`);
+  const lines: string[] = [
+    '部分適用の内訳報告です。適用後プレビューの「内訳をissueで報告」から送る報告です。',
+    '',
+    `- Applied: ${input.filled} / ${input.total} (unapplied: ${input.unapplied})`,
+    `- Page: ${page}`,
+    `- Provider: ${input.provider}`,
+    `- Extension version: ${input.version}`,
+    '',
+    '### Breakdown',
+    ...breakdown,
+  ];
+  const params = new URLSearchParams({
+    title,
     body: lines.join('\n'),
     labels: 'feedback',
   });

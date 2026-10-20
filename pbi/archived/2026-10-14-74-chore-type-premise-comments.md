@@ -27,12 +27,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 前提が読み手に伝わる
+Scenario: ハッピー ― 前提が読み手に伝わる
   Given eras の tuple cast と session の非空参照がある
   When 該当行を読む
   Then なぜ安全か（正規表現の3分割保証／isReady の非空保証）がコメントで分かる
 
-Scenario: 境界 — コードの振る舞いが変わらない
+Scenario: 境界 ― コードの振る舞いが変わらない
   Given 変更前後のテストスイートがある
   When 差分を適用する
   Then テスト結果が同一である（コメントのみの差分）

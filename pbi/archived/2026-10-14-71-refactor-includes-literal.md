@@ -29,13 +29,13 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 全判定が helper を通る
+Scenario: ハッピー ― 全判定が helper を通る
   Given 各語彙の内外値がある
   When includesLiteral で判定する
   Then 内値は true＋リテラル型に narrowing、外値は false になる
   And as キャストが8箇所から消える
 
-Scenario: 境界 — 非文字列入力は例外なく false になる
+Scenario: 境界 ― 非文字列入力は例外なく false になる
   Given 数値・null・undefined・配列がある
   When includesLiteral で判定する
   Then すべて false になる

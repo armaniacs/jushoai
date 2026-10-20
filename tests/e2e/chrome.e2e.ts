@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import type { WebDriver } from 'selenium-webdriver';
 import {
-  By, clickInShadow, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
+  By, badgeNotice, clickInShadow, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -39,6 +39,62 @@ describe('chrome: fill flow', () => {
     expect(await valueOf(driver, 'ln')).toBe('佐藤');
     expect(await valueOf(driver, 'fn')).toBe('');
     expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+  });
+});
+
+describe('chrome: partial fill notice (PBI-82, PBI-55)', () => {
+  it('guards unfillable fields and keeps the result with a report button', async () => {
+    await driver.get(`${pages.origin}/partial-notice.html`);
+    await clickInShadow(driver, 'button:not(.badge)');
+    await clickInShadow(driver, 'button.primary');
+    // Filled input is kept, maxlength-guarded input is skipped, email applies.
+    expect(await valueOf(driver, 'ln')).toBe('佐藤');
+    expect(await valueOf(driver, 'fn')).toBe('');
+    expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+    // PBI-55 + PBI-60: the report click must reach the content-script
+    // handler. window.open cannot be stubbed from the page world (content
+    // scripts run isolated), so the click-through is proven by the tab it
+    // opens: the new tab carries the prefilled issue URL, then it is closed
+    // so no external navigation escapes the test run. URL correctness
+    // itself is unit-covered (buildPartialIssueUrl).
+    const report = await reportButton(driver);
+    expect(report).not.toBeNull();
+    const panelText = await resultPanelText(driver);
+    expect(panelText).toContain('入力結果');
+    expect(panelText).toContain('適用済み');
+    expect(panelText).toContain('内訳をissueで報告');
+    const home = await driver.getWindowHandle();
+    await report!.click();
+    let opened: string | null = null;
+    await driver.wait(async () => {
+      const handles = await driver.getAllWindowHandles();
+      const next = handles.find((h) => h !== home);
+      if (!next) return false;
+      await driver.switchTo().window(next);
+      opened = await driver.getCurrentUrl();
+      return true;
+    }, 15_000, 'report click did not open a tab');
+    const url = new URL(opened!);
+    // Headless runs are never authenticated, so GitHub bounces issues/new
+    // to /login (dropping the prefilled params). Reaching github.com proves
+    // the click opened exactly the URL the handler built — its shape
+    // (issues/new + labels + title + body) is pinned by unit tests.
+    // NOTE: this assertion needs network access to github.com (an offline
+    // run lands on chrome-error:// and fails here); the rest of the suite
+    // stays hermetic on localhost fixtures.
+    expect(`${url.origin}/`).toBe('https://github.com/');
+    await driver.close();
+    await driver.switchTo().window(home);
+    expect(await driver.getCurrentUrl()).toContain('/partial-notice.html');
+  });
+
+  it('shows no error notice when everything applies', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    await clickInShadow(driver, 'button:not(.badge)');
+    await clickInShadow(driver, 'button.primary');
+    expect(await valueOf(driver, 'ln')).toBe('山田');
+    // BDD scenario 1: a complete run raises no failure notice.
+    expect((await badgeNotice(driver))?.status).not.toBe('error');
   });
 });
 

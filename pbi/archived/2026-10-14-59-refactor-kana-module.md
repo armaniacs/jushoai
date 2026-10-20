@@ -29,13 +29,13 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — かな判定が単一入口に集約される
+Scenario: ハッピー ― かな判定が単一入口に集約される
   Given プレースホルダ・label・legend・兄弟欄の組が与えられる
   When かな判定モジュールに問い合わせる
   Then (カテゴリ, kanaKind) が一意に返る
   And classifyField・オーバーレイ・refinement のいずれにも判定ロジックが残っていない
 
-Scenario: 境界 — 共有見出しのフリガナに漢字行が混ざる
+Scenario: 境界 ― 共有見出しのフリガナに漢字行が混ざる
   Given フリガナの共有legendを持つfieldset内に漢字プレースホルダ（山田）の行がある
   When かな判定モジュールに問い合わせる
   Then 漢字行は無印名のまま残る

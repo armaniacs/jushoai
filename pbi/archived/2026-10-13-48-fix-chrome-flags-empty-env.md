@@ -16,20 +16,20 @@ E2E実行者として、空文字の環境変数（`CI=''` / `E2E_NO_SANDBOX=''`
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — CI が空文字なら --no-sandbox を付けない
+Scenario: ハッピー ― CI が空文字なら --no-sandbox を付けない
   Given E2E実行者がローカル環境でテストを実行している
   And 環境変数 CI が空文字（CI=''）に設定されている
   When Chrome 起動フラグを組み立てる
   Then --no-sandbox は含まれない
   And --disable-dev-shm-usage と --disable-gpu は含まれる
 
-Scenario: 境界 — E2E_NO_SANDBOX が空文字でも --no-sandbox を付けない
+Scenario: 境界 ― E2E_NO_SANDBOX が空文字でも --no-sandbox を付けない
   Given E2E実行者がローカル環境でテストを実行している
   And 環境変数 E2E_NO_SANDBOX が空文字（E2E_NO_SANDBOX=''）に設定されている
   When Chrome 起動フラグを組み立てる
   Then --no-sandbox は含まれない
 
-Scenario: 境界 — CI='1' では --no-sandbox を付ける
+Scenario: 境界 ― CI='1' では --no-sandbox を付ける
   Given CI環境でテストを実行している
   And 環境変数 CI が '1' に設定されている
   When Chrome 起動フラグを組み立てる

@@ -66,9 +66,9 @@ Esc キーか「キャンセル」で閉じます。プレビューを開いて�
 
 ## 次に読むもの
 
-- [プロファイル](/guides/profiles/)と[住所](/guides/addresses/) — 登録内容の詳しい説明
-- [ツールバーとフォームへの入力](/guides/popup-and-fill/) — ボタンを使った入力手順
-- [AI プロバイダの設定](/guides/ai-providers/) — AI を使うための設定
-- [プライバシーと送信データ](/guides/privacy/) — 送信データの確認
-- [対応するフォームと仕組み](/guides/how-it-works/) — 判定の仕組み
-- [トラブルシューティング](/guides/troubleshooting/) — 困ったときの対処
+- [プロファイル](/guides/profiles/)と[住所](/guides/addresses/) ― 登録内容の詳しい説明
+- [ツールバーとフォームへの入力](/guides/popup-and-fill/) ― ボタンを使った入力手順
+- [AI プロバイダの設定](/guides/ai-providers/) ― AI を使うための設定
+- [プライバシーと送信データ](/guides/privacy/) ― 送信データの確認
+- [対応するフォームと仕組み](/guides/how-it-works/) ― 判定の仕組み
+- [トラブルシューティング](/guides/troubleshooting/) ― 困ったときの対処

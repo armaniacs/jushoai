@@ -45,5 +45,5 @@ Scenario: AI失敗ヒントが適用バナーで消えない
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

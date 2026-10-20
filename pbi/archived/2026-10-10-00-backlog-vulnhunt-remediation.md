@@ -36,4 +36,4 @@
 | Code Quality #5（二次時間正規表現の増幅） | 01 |
 | README の依存 CVE 推奨（npm audit 6 件） | 07 |
 
-緩和済みで対応不要と判断した項目: TSV 数式インジェクション（CWE-1236 — `escapeTsvField` がシンクをカバー、監査で検証済み）
+緩和済みで対応不要と判断した項目: TSV 数式インジェクション（CWE-1236 ― `escapeTsvField` がシンクをカバー、監査で検証済み）

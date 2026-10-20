@@ -3,7 +3,7 @@ import { AUDIT_PAGE_URL_MAX_BYTES, type AuditDraft } from '../../src/ai/audit-lo
 import { DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence, type ProviderKind } from '../../src/ai/types';
 import type { FieldMeta } from '../../src/core/types';
 import type { LanguageModelStatic } from '../../src/llm/availability';
-import { buildPrompt } from '../../src/llm/classifier';
+import { buildPrompt } from '../../src/llm/prompt';
 import { parseTestResponse } from '../../src/messages';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
 import { SecretAuthError, SecretTransientError } from '../../src/ai/secret-store';

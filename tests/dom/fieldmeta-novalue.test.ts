@@ -2,10 +2,10 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { scanFields } from '../../src/dom/scan-fields';
 import { targetsFromControls } from '../../src/dom/fill-plan';
 import type { Control } from '../../src/dom/scan-fields';
-import { META_WIRE_KEYS, parseRequest, toWireMeta } from '../../src/messages';
+import { encodeFieldMeta, decodeRequest } from '../../src/messages';
 import { buildPlan } from '../../src/core/planner';
 import type { Address, Profile } from '../../src/core/types';
-import { makeMeta } from '../helpers';
+import { makeMeta, WIRE_META_KEYS } from '../helpers';
 
 const profile: Profile = {
   id: 'p1', label: 'メイン',
@@ -25,17 +25,17 @@ beforeEach(() => {
 });
 
 describe('PBI-11: LLM送信用はwire型のみで構築される', () => {
-  it('toWireMeta は value キーを持たず allow-list キーのみを返す', () => {
+  it('encodeFieldMeta は value キーを持たず allow-list キーのみを返す', () => {
     const meta = makeMeta({ id: 'a', value: 'SECRET-INPUT', label: 'メール' });
-    const wire = toWireMeta(meta);
-    expect(Object.keys(wire).sort()).toEqual([...META_WIRE_KEYS].sort());
+    const wire = encodeFieldMeta(meta);
+    expect(Object.keys(wire).sort()).toEqual([...WIRE_META_KEYS].sort());
     expect('value' in wire).toBe(false);
     expect(JSON.stringify(wire)).not.toContain('SECRET-INPUT');
   });
 
-  it('parseRequest（受信側）はページ既存値を復元せず value を空に戻す', () => {
+  it('decodeRequest（受信側）はページ既存値を復元せず value を空に戻す', () => {
     const meta = makeMeta({ id: 'a', value: 'SECRET-INPUT', label: 'メール' });
-    const r = parseRequest({ type: 'ai-classify', fields: [meta] });
+    const r = decodeRequest({ type: 'ai-classify', fields: [meta] });
     if (r?.type !== 'ai-classify') throw new Error('unexpected request shape');
     expect(r.fields[0]!.value).toBe('');
     expect(JSON.stringify(r.fields)).not.toContain('SECRET-INPUT');
@@ -46,7 +46,7 @@ describe('PBI-11: LLM送信用はwire型のみで構築される', () => {
     const scanned = scanFields(document.body);
     // fill 判定用スナップショットとしては保持する（別経路の planner が読む）
     expect(scanned[0]!.meta.value).toBe('user@example.com');
-    const wire = toWireMeta(scanned[0]!.meta);
+    const wire = encodeFieldMeta(scanned[0]!.meta);
     expect('value' in wire).toBe(false);
     expect(JSON.stringify(wire)).not.toContain('user@example.com');
   });

@@ -1,6 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import type { FieldClassifier } from '../core/classifier';
-import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/classifier';
+import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/prompt';
 import { clipAuditResponse } from './audit-log';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from './audited-classifier';
 import { createEgressCheck, type EgressCheck } from './settings';
@@ -125,6 +124,17 @@ export interface RetryOptions {
 export const isRejectedStatus = (status: number | null): boolean =>
   status === 400 || status === 422;
 
+// PBI-42: the unified seam's failureReason for one HTTP attempt, mirroring the
+// classify-branch mapping in ProviderRegistry.mapFailure (which stays the owner
+// of the throw-path vocabulary). Success and offline/empty fast paths report
+// null; auth rejections report 'auth', rejected shapes 'rejected', other HTTP
+// failures 'network', and anything else 'bad-response'.
+const failureReasonOf = (error: unknown): 'auth' | 'rejected' | 'network' | 'bad-response' => {
+  if (error instanceof HttpAuthError) return 'auth';
+  if (error instanceof HttpRequestError) return isRejectedStatus(error.status) ? 'rejected' : 'network';
+  return 'bad-response';
+};
+
 // Bounded response read: the Content-Length check rejects an oversized body
 // before a single byte is consumed, and the stream reader caps bodies that
 // arrive without a usable Content-Length. Falls back to res.json() when no
@@ -193,16 +203,18 @@ export class HttpClassifier implements TracedClassifier {
   // The trace rides the return value: prompt text comes straight from the
   // builder (no body re-parse), and failures carry their partial trace in the
   // same shape so the audit entry matches the old out-param record exactly.
+  // PBI-42: the unified seam's failureReason rides along too (see
+  // failureReasonOf), so callers read the reason off the return value.
   async attempt(fields: FieldMeta[]): Promise<ClassifyAttempt> {
     const trace: AttemptTrace = { status: null, retried: false, request: buildPrompt(fields), response: '' };
-    if (fields.length === 0) return { map: new Map(), trace };
+    if (fields.length === 0) return { map: new Map(), failureReason: null, trace };
     // Offline fast path: skip the DoH egress check and fetch entirely so an
     // offline client continues with rule-only classification immediately
     // instead of burning battery on a doomed 20s timeout. The typeof guard
     // keeps background/ServiceWorker contexts without navigator on the
     // normal online path.
     if (typeof navigator !== 'undefined' && navigator.onLine === false) {
-      return { map: new Map(), trace };
+      return { map: new Map(), failureReason: null, trace };
     }
     const compat = this.retry?.compat ?? false;
     try {
@@ -246,9 +258,9 @@ export class HttpClassifier implements TracedClassifier {
       // an empty map still counts: the mode proved itself, the content was
       // merely unhelpful. Only extraction failures skip the pinning above.
       if (trace.retried) this.retry?.onCompat?.();
-      return { map, trace };
+      return { map, failureReason: null, trace };
     } catch (error) {
-      return { map: new Map(), trace, error };
+      return { map: new Map(), failureReason: failureReasonOf(error), trace, error };
     }
   }
 

@@ -28,12 +28,12 @@
 ## BDD受け入れシナリオ
 
 ```gherkin
-Scenario: ハッピー — 偽ターゲットで順序と結果が検証できる
+Scenario: ハッピー ― 偽ターゲットで順序と結果が検証できる
   Given zip 含みの plan と偽ターゲット群がある
   When fillPlan で注入する
   Then zip が最後に注入され、欄ごとの成否が返る
 
-Scenario: 境界 — 入力済み・未接続・不一致は注入しない
+Scenario: 境界 ― 入力済み・未接続・不一致は注入しない
   Given 入力済み欄・未接続要素・一致 option なしの radio がある
   When fillPlan で注入する
   Then いずれも注入されず理由が分かる

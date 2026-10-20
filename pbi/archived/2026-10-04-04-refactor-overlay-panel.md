@@ -6,7 +6,7 @@
 |---|---|
 | 実行順位 | 4 / 6 |
 | RICE スコア | 3.0（Reach 6 × Impact 1 × Confidence 1.0 / Effort 2） |
-| 根拠 | panel CSS・fixed 配置・Escape close・primary ボタン样式の 2 重定義がコードで確定。「変わる理由が同じ」（オーバーレイの視覚・挙動変更）のため共通化は過剰でない |
+| 根拠 | panel CSS・fixed 配置・Escape close・primary ボタンのスタイルの 2 重定義がコードで確定。「変わる理由が同じ」（オーバーレイの視覚・挙動変更）のため共通化は過剰でない |
 | 依存 | なし（バッチ 1 で並列実装可。PBI 01 の相互排他 fix と担当ファイルが非重複） |
 
 ## ユーザーストーリー
@@ -15,10 +15,10 @@
 
 ## 背景（現状）
 
-- panel CSS が 2 重定義: `src/ui/preview.ts:33-54` と `src/ui/ai-guide.ts:125-135`（`.panel`・`h2`・button の样式がほぼ同一）
+- panel CSS が 2 重定義: `src/ui/preview.ts:33-54` と `src/ui/ai-guide.ts:125-135`（`.panel`・`h2`・button のスタイルがほぼ同一）
 - fixed 配置が 2 重: `src/ui/preview.ts:58-60` と `src/ui/ai-guide.ts:143-145`（ともに `top: 16px; right: 16px`）
 - Escape close が 2 重: `src/ui/preview.ts:130-137` と `src/ui/ai-guide.ts:178-190`（ともに document レベル capture リスナー）
-- primary ボタン样式が 2 重: `src/ui/preview.ts:52` と `src/ui/ai-guide.ts:134`
+- primary ボタンのスタイルが 2 重: `src/ui/preview.ts:52` と `src/ui/ai-guide.ts:134`
 
 ## BDD 受け入れシナリオ
 
@@ -38,7 +38,7 @@ Scenario: AI ガイドの表示と閉じる挙動は変わらない
 
 ## 受け入れ基準
 
-- [x] panel CSS・fixed 配置・Escape close・primary ボタン样式が `ui/` の 1 箇所に集約される
+- [x] panel CSS・fixed 配置・Escape close・primary ボタンのスタイルが `ui/` の 1 箇所に集約される
 - [x] `showPreview` / `showAiGuide` のシグネチャと外部挙動は不変
 - [x] ページ由来の文字列は `textContent` のみで `innerHTML` を使わない（設計保証の維持）
 - [x] 既存の `tests/ui/*` が無修正で green（挙動不変の証拠）
@@ -63,7 +63,7 @@ Scenario: AI ガイドの表示と閉じる挙動は変わらない
 
 ### 実装手順
 
-1. `src/ui/overlay.ts`（仮称）に共通ヘルパを抽出: closed host + panel CSS + `position: fixed; top: 16px; right: 16px` + Escape capture close + primary button 样式
+1. `src/ui/overlay.ts`（仮称）に共通ヘルパを抽出: closed host + panel CSS + `position: fixed; top: 16px; right: 16px` + Escape capture close + primary button のスタイル
 2. `src/ui/preview.ts` と `src/ui/ai-guide.ts` が共通ヘルパを使うよう差し替え（それぞれ固有の CSS・内容は現状維持）
 3. `npx vitest run tests/ui` → `npx tsc --noEmit`
 

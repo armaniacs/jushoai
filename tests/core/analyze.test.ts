@@ -8,7 +8,10 @@ import { makeMeta } from '../helpers';
 
 const llm = (answers: Record<string, Category>) => {
   const classify = vi.fn(async (_fields: FieldMeta[]) => new Map(Object.entries(answers)));
-  return { classifier: { classify } as FieldClassifier, classify };
+  // PBI-42: fakes speak the unified seam too — attempt carries the same map
+  // with no failure reason, mirroring a successful adapter.
+  const attempt = vi.fn(async (fields: FieldMeta[]) => ({ map: await classify(fields), failureReason: null }));
+  return { classifier: { classify, attempt } as FieldClassifier, classify, attempt };
 };
 
 describe('classifyAll', () => {
@@ -59,7 +62,10 @@ describe('classifyAll', () => {
   });
 
   it('falls back to rules when the LLM throws', async () => {
-    const classifier: FieldClassifier = { classify: async () => { throw new Error('x'); } };
+    const classifier: FieldClassifier = {
+      classify: async () => { throw new Error('x'); },
+      attempt: async () => { throw new Error('x'); },
+    };
     const items = await classifyAll(
       [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', name: 'xyz' })],
       classifier,
@@ -308,7 +314,10 @@ describe('classifyAll: force', () => {
   });
 
   it('falls back to weak rule hits when the LLM throws', async () => {
-    const classifier: FieldClassifier = { classify: async () => { throw new Error('x'); } };
+    const classifier: FieldClassifier = {
+      classify: async () => { throw new Error('x'); },
+      attempt: async () => { throw new Error('x'); },
+    };
     const items = await classifyAll([makeMeta({ id: 'a', type: 'tel' })], classifier, { force: true });
     expect(items.map((i) => i.cls.category)).toEqual(['tel']);
   });
