@@ -4,19 +4,15 @@ import { includesLiteral } from './core/literals';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
 import { TRANSFER_BACKSTOP_CAP, TRANSFER_CHUNK_SIZE } from './llm/transfer-contract';
+import { MAX_TEXT_LENGTH } from './scan-limits';
 
 // Send-size contract for ai-classify, shared with background-gateway:
-// the sender ships at most MAX_CLASSIFY_TOTAL fields in MAX_CLASSIFY_CHUNK
-// pieces, and the receiver backstops each message at MAX_CLASSIFY_FIELDS.
+// the sender ships at most TRANSFER_TOTAL_CAP fields in TRANSFER_CHUNK_SIZE
+// pieces, and the receiver backstops each message at TRANSFER_BACKSTOP_CAP.
 // The chunk must stay below the backstop so a well-formed sender never trips it.
-// PBI-43: 数値の所有は転送契約モジュールに集約し、ここでは既存の名前を契約値への
-// 別名として残す (外部 import の振る舞い不変)。
-export const MAX_CLASSIFY_FIELDS = TRANSFER_BACKSTOP_CAP;
-export const MAX_CLASSIFY_CHUNK = TRANSFER_CHUNK_SIZE;
+// The numbers are owned by the transfer contract module (PBI-43): this file
+// imports them instead of holding its own copies.
 const MAX_ID_LENGTH = 100;
-// Shared with the scan side (src/dom/scan-fields.ts) so both ends cap identical
-// page-controlled strings at the same length.
-export const MAX_TEXT_LENGTH = 200;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
 const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable'] as const;
@@ -123,16 +119,6 @@ export const auditClearRequest = (): AiRequest => encodeRequest({ type: 'audit-c
 // Reply to audit-clear; the settings page keeps its delete-failure notice on ok:false.
 export type AuditClearResponse = { ok: true } | { ok: false };
 
-// Popup (action popup) to content script: start the usual classify → preview flow
-// on the active tab. Answered by the content script, not by the background.
-export const ANALYZE_MESSAGE_TYPE = 'jushoai-analyze';
-// Closed vocabulary for analyze failures, shared by the sender (content script)
-// and the consumer (action popup) across the runtime-message seam.
-export const ANALYZE_REASONS = ['no-form', 'no-tab', 'error'] as const;
-export type AnalyzeReason = (typeof ANALYZE_REASONS)[number];
-export const isAnalyzeReason = (v: unknown): v is AnalyzeReason => includesLiteral(ANALYZE_REASONS, v);
-export type AnalyzeResponse = { ok: true } | { ok: false; reason: AnalyzeReason };
-
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
 
 const isRecord = (v: unknown): v is Record<string, unknown> =>
@@ -142,16 +128,11 @@ const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, MAX_TEXT_LENGTH
 
 // PBI-46: metadata allow-list の正準はこの内部 seam が持ち、encodeFieldMeta
 // （送信側の射影）と decodeFieldMeta（受信側の再構築）の両端に供給する。
-// 外部に見える META_WIRE_KEYS は後方互換の別名（同一参照）で、新規コードは
-// encode/decode 経由でキー規律を得ること。
+// キー規律は encode/decode 経由で得ること。
 const WIRE_META_KEYS = ['id', 'type', 'name', 'htmlId', 'label', 'placeholder', 'nearby', 'maxLength'] as const;
 // The metadata allow-list sent to the classifier; the single source shared by the sender
 // (background-gateway), the receiver (decodeFieldMeta) and the prompt builder (buildPrompt).
-// PBI-46: 互換別名。実体は上の WIRE_META_KEYS（codec 内部 seam）。
-// PBI-51: 新規コードは encode/decode 経由でキー規律を得ること。直接参照は非推奨。
-/** @deprecated Use encodeFieldMeta/decodeFieldMeta instead of the key list. */
-export const META_WIRE_KEYS = WIRE_META_KEYS;
-export type MetaWire = Pick<FieldMeta, (typeof META_WIRE_KEYS)[number]>;
+export type MetaWire = Pick<FieldMeta, (typeof WIRE_META_KEYS)[number]>;
 
 // Display width for metadata strings leaving the extension (prompt rows and
 // feedback reports). Distinct from MAX_TEXT_LENGTH, which caps the wire envelope.
@@ -161,7 +142,6 @@ export function encodeFieldMeta(f: FieldMeta): MetaWire {
   // LLM 送信用ペイロードはこの関数経由の wire 型（allow-list キー）のみで構築する。
   // FieldMeta.value（fill 判定専用のページ既存値）はここで落とす。以後の送信側変更でも
   // value を wire に載せない（受信側 decodeFieldMeta が value:'' に戻すのと対になる保証）。
-  // PBI-46: 送信側 codec の正準。toWireMeta は後方互換の別名。
   return {
     id: f.id,
     type: f.type,
@@ -172,13 +152,6 @@ export function encodeFieldMeta(f: FieldMeta): MetaWire {
     nearby: f.nearby,
     maxLength: f.maxLength,
   };
-}
-
-// PBI-46: 互換別名。実体は encodeFieldMeta。
-// PBI-51: 新規コードは encodeFieldMeta を使うこと。
-/** @deprecated Use encodeFieldMeta instead. */
-export function toWireMeta(f: FieldMeta): MetaWire {
-  return encodeFieldMeta(f);
 }
 
 // Rebuilds a FieldMeta from the metadata allow-list only; page-controlled values never pass through.
@@ -214,7 +187,7 @@ const parseSchedule = (v: unknown): ClassifySchedule | undefined => {
   const count = v.count;
   if (typeof index !== 'number' || typeof count !== 'number') return undefined;
   if (!Number.isInteger(index) || !Number.isInteger(count)) return undefined;
-  if (index < 1 || count < 1 || index > count || count > MAX_CLASSIFY_FIELDS) return undefined;
+  if (index < 1 || count < 1 || index > count || count > TRANSFER_BACKSTOP_CAP) return undefined;
   return { index, count };
 };
 
@@ -263,21 +236,13 @@ export function decodeRequest(msg: unknown): DecodedAiRequest | null {
   if (msg.type === 'ai-classify' && Array.isArray(msg.fields)) {
     const withChunk = keys.length === 3;
     if (!hasOnlyKeys(keys, withChunk ? AI_CLASSIFY_CHUNK_KEYS : REQUEST_WIRE_KEYS['ai-classify'])) return null;
-    if (msg.fields.length > MAX_CLASSIFY_FIELDS) return null;
+    if (msg.fields.length > TRANSFER_BACKSTOP_CAP) return null;
     const chunk = withChunk ? parseSchedule(msg.chunk) : undefined;
     if (withChunk && chunk === undefined) return null;
     const fields = msg.fields.map(decodeFieldMeta).filter((f): f is FieldMeta => f !== null);
     return { type: 'ai-classify', v: AI_REQUEST_VERSION, fields, ...(chunk ? { chunk } : {}) };
   }
   return null;
-}
-
-// PBI-46: 互換別名。受信側 codec の正準は decodeRequest で、version 照合・
-// legacy 許容・キー数え・field 消毒のすべてを背後に隠す。
-// PBI-51: 新規コードは decodeRequest を使うこと。
-/** @deprecated Use decodeRequest instead. */
-export function parseRequest(msg: unknown): DecodedAiRequest | null {
-  return decodeRequest(msg);
 }
 
 export function parseClassifyResponse(res: unknown): Map<string, Category> | null {

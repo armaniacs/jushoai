@@ -1,5 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
-import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/classifier';
+import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/prompt';
 import { clipAuditResponse } from './audit-log';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from './audited-classifier';
 import { createEgressCheck, type EgressCheck } from './settings';

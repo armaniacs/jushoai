@@ -15,7 +15,7 @@ import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
 import { type PreviewHandle } from '../ui/preview';
-import { ANALYZE_MESSAGE_TYPE } from '../messages';
+import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
 

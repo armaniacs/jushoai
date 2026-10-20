@@ -12,7 +12,6 @@ import {
   CLASSIFY_TOTAL_TIMEOUT_MS,
   MAX_CLASSIFY_TOTAL,
 } from '../../src/llm/background-gateway';
-import { MAX_CLASSIFY_FIELDS, MAX_CLASSIFY_CHUNK } from '../../src/messages';
 
 describe('transfer contract values (PBI-43)', () => {
   it('owns the agreed numbers in one place', () => {
@@ -34,15 +33,10 @@ describe('transfer contract values (PBI-43)', () => {
   });
 });
 
-describe('both ends reference the single contract module (PBI-43)', () => {
+describe('sender references the single contract module (PBI-43)', () => {
   it('sender caps and timeouts are the contract values', () => {
     expect(MAX_CLASSIFY_TOTAL).toBe(TRANSFER_TOTAL_CAP);
     expect(CLASSIFY_TIMEOUT_MS).toBe(TRANSFER_CHUNK_TIMEOUT_MS);
     expect(CLASSIFY_TOTAL_TIMEOUT_MS).toBe(TRANSFER_TOTAL_TIMEOUT_MS);
-  });
-
-  it('receiver backstop and chunk width are the contract values', () => {
-    expect(MAX_CLASSIFY_FIELDS).toBe(TRANSFER_BACKSTOP_CAP);
-    expect(MAX_CLASSIFY_CHUNK).toBe(TRANSFER_CHUNK_SIZE);
   });
 });

@@ -1,5 +1,5 @@
 import type { FieldMeta } from '../core/types';
-import { MAX_TEXT_LENGTH } from '../messages';
+import { MAX_TEXT_LENGTH } from '../scan-limits';
 import { isHidden } from './geometry';
 
 export type Control = HTMLInputElement | HTMLSelectElement;

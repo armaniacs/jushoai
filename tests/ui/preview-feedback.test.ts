@@ -1,25 +1,16 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { showPreview } from '../../src/ui/preview';
-import type { PreviewOptions, PreviewRow } from '../../src/ui/preview';
-
-const row = (status: PreviewRow['status']): PreviewRow => ({
-  label: '姓', display: '山田', status, source: 'rule',
-});
-
-const attach = HTMLElement.prototype.attachShadow;
+import type { PreviewOptions } from '../../src/ui/preview';
+import { attachOpenShadow, makeRow } from '../helpers';
 
 function open(opts: Partial<PreviewOptions> = {}) {
-  let root!: ShadowRoot;
-  vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement) {
-    root = attach.call(this, { mode: 'open' });
-    return root;
-  });
+  const sh = attachOpenShadow();
   const handle = showPreview({
     rows: [], addresses: [], selectedAddressId: '', onAddressChange: () => {},
     profiles: [], selectedProfileId: '', onProfileChange: () => {},
     onApply: () => {}, onCancel: () => {}, ...opts,
   });
-  return { handle, root };
+  return { handle, root: sh.root };
 }
 
 const feedbackLabel = (root: ShadowRoot) =>
@@ -36,7 +27,7 @@ afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
 describe('preview feedback checkbox', () => {
   it('is hidden before reanalysis and shown after success, right of apply', async () => {
     const onReanalyze = vi.fn(async () => {});
-    const { root } = open({ rows: [row('ok')], onReanalyze });
+    const { root } = open({ rows: [makeRow('ok')], onReanalyze });
     expect(isFeedbackVisible(root)).toBe(false);
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
@@ -47,7 +38,7 @@ describe('preview feedback checkbox', () => {
 
   it('stays hidden when reanalysis fails', async () => {
     const onReanalyze = vi.fn(async () => { throw new Error('x'); });
-    const { root } = open({ rows: [row('ok')], onReanalyze });
+    const { root } = open({ rows: [makeRow('ok')], onReanalyze });
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     await new Promise((r) => setTimeout(r, 20));
@@ -56,7 +47,7 @@ describe('preview feedback checkbox', () => {
 
   it('carries a privacy note that values are never sent', async () => {
     const onReanalyze = vi.fn(async () => {});
-    const { root } = open({ rows: [row('ok')], onReanalyze });
+    const { root } = open({ rows: [makeRow('ok')], onReanalyze });
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     const label = feedbackLabel(root)! as HTMLElement;
@@ -66,7 +57,7 @@ describe('preview feedback checkbox', () => {
   it('passes the checked flag to onApply', async () => {
     const onApply = vi.fn();
     const onReanalyze = vi.fn(async () => {});
-    const { root } = open({ rows: [row('ok')], onReanalyze, onApply });
+    const { root } = open({ rows: [makeRow('ok')], onReanalyze, onApply });
     [...root.querySelectorAll('button')].find((b) => b.textContent === 'AI で分析')!.click();
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     feedbackLabel(root)!.querySelector('input')!.click();

@@ -7,6 +7,7 @@ import type { ButtonHandle } from '../../src/ui/button';
 import type { FillResult, FillSummary } from '../../src/dom/fill-plan';
 import { hintForButton } from '../../src/ai/failure-text';
 import { FEEDBACK_REPO } from '../../src/feedback/issue-url';
+import { attachOpenShadow, buttonIn, makeRow } from '../helpers';
 
 // Wiring test for the preview binding extracted from run() (PBI-64): the real
 // preview mounts in jsdom (same pattern as tests/ui/preview.test.ts) and a
@@ -14,10 +15,6 @@ import { FEEDBACK_REPO } from '../../src/feedback/issue-url';
 // reanalyzable gate, the teardown paths, and the partial-apply result mode.
 type ReanalyzeResult = Awaited<ReturnType<FillSession['reanalyze']>>;
 type ApplyResult = ReturnType<FillSession['apply']>;
-
-const row = (status: PreviewRow['status'], display = '初期値'): PreviewRow => ({
-  label: '姓', display, status, source: 'rule',
-});
 
 const summary = (filled: number, total: number): FillSummary => ({
   filled, unapplied: total - filled, total,
@@ -39,24 +36,15 @@ const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
   ...overrides,
 });
 
-// Captured once at import time (same reason as tests/ui/preview.test.ts):
-// vi.spyOn reuses the same spy object, so a re-captured property would point
-// at the spy itself and recurse forever.
-const attach = HTMLElement.prototype.attachShadow;
-
 function bind(session: FillSession, reanalyzable = true) {
-  let root!: ShadowRoot;
-  vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement) {
-    root = attach.call(this, { mode: 'open' });
-    return root;
-  });
+  const sh = attachOpenShadow();
   const buttonHandle: ButtonHandle = {
     setStatus: vi.fn(), showError: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
   };
   const input = {
     session,
     button: buttonHandle,
-    rows: [row('ok')],
+    rows: [makeRow('ok', '初期値')],
     addresses: [],
     profiles: [],
     reanalyzable,
@@ -65,11 +53,8 @@ function bind(session: FillSession, reanalyzable = true) {
     onClosed: vi.fn(),
   };
   bindPreview(input);
-  return { root, buttonHandle, input };
+  return { root: sh.root, buttonHandle, input };
 }
-
-const buttonIn = (root: ShadowRoot, text: string) =>
-  [...root.querySelectorAll('button')].find((b) => b.textContent === text);
 
 afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
 
@@ -83,7 +68,7 @@ describe('bindPreview (PBI-64 wiring)', () => {
 
   it('routes reanalysis results to the button hint and the rows', async () => {
     const session = fakeSession({
-      reanalyze: vi.fn(async (): Promise<ReanalyzeResult> => ({ rows: [row('ok', '山田')], failureReason: 'network' })),
+      reanalyze: vi.fn(async (): Promise<ReanalyzeResult> => ({ rows: [makeRow('ok', '山田')], failureReason: 'network' })),
     });
     const { root, buttonHandle } = bind(session, true);
     buttonIn(root, 'AI で分析')!.click();

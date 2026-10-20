@@ -1,6 +1,6 @@
 import { AuditStore, auditFileName, toTsv, type AuditEntry } from '../../ai/audit-log';
 import { clearAuditViaBackground } from '../../llm/background-gateway';
-import { SYSTEM_PROMPT } from '../../llm/classifier';
+import { SYSTEM_PROMPT } from '../../llm/prompt';
 import { el } from './dom';
 
 export interface AuditSectionDeps {
