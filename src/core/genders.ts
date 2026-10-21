@@ -1,8 +1,7 @@
+import { clean } from './literals';
 import type { SelectOption } from './types';
 
 export const GENDERS = ['男性', '女性', 'その他', '回答しない'] as const;
-
-const clean = (s: string) => s.normalize('NFKC').trim();
 
 // Exact text/value matches win; single-character options (男/女) resolve by
 // leading character so abbreviated selects still fill. Numeric codes (0/1)

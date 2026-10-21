@@ -1,3 +1,5 @@
+import { unifyDashes } from './dashes';
+
 // Const-array membership with literal narrowing. Replaces the `as readonly
 // string[]` + typeof preamble repeated at every vocabulary check, so a new
 // literal stays covered by the type system instead of by convention.
@@ -7,8 +9,26 @@ export function includesLiteral<T extends readonly string[]>(list: T, value: unk
 
 // NFKC case-folding shared by the rule matchers (classify-rules) and the kana
 // module, so the two never drift on normalization.
-// Trim-bearing normalization stays owned by the matchers (eras/genders/prefectures/profile); only case-fold is shared here.
-export const norm = (s: string): string => s.normalize('NFKC').toLowerCase();
+// WHY clean lives beside norm (PBI-116; replaces the old "trim stays owned by
+// the matchers" note): the matchers kept the identical NFKC+trim as a private
+// copy each (genders.clean, prefectures.strip, profile.romaji/half, and inline
+// normalize('NFKC').trim() across eras), so the two-pillar contract lived in
+// five files. Promoting clean next to norm makes the split visible in one file
+// and stops the per-file copies: norm (case-fold, no trim) owns rule matching;
+// clean (NFKC+trim, case kept) owns option/profile value canonicalization.
+// Never merge the two: a toLowerCase in clean breaks romaji/email case, and a
+// trim in norm shifts rule-matching signal (normalize-parity.test.ts pins both).
+// PBI-121: dash kinds fold through unifyDashes (dashes.ts, shared with the
+// zip/tel formatting) after NFKC: NFKC folds only U+FF0D, so the typographic
+// hyphens (U+2010/2013/2014/2015) survived and dash-kind-only variants of the
+// same word (e-mail / e–mail) classified differently. U+2212 stays out of the
+// fold (numeric meaning) and values are never folded — clean stays untouched.
+export const norm = (s: string): string => unifyDashes(s.normalize('NFKC')).toLowerCase();
+
+// Trim-bearing value canonicalization (NFKC + trim, case preserved) shared by
+// eras/genders/prefectures/profile. It must not absorb norm's toLowerCase, and
+// norm must not absorb this trim; the two pillars stay separate on purpose.
+export const clean = (s: string): string => s.normalize('NFKC').trim();
 
 // PBI-44: text→category入口の段階別正規化契約（第1段階 normalize）。
 // 1欄の各raw文字列はここで1回だけnormされ、後段（DISPATCH・sources・
