@@ -32,10 +32,18 @@ const AUTOCOMPLETE = new Map<string, Category>([
   ['bday-year', 'birthYear'],
   ['bday-month', 'birthMonth'],
   ['bday-day', 'birthDay'],
+  // PBI-118: a full-birthdate token (type=date, or a single-input field) is the
+  // whole date in one box, so it maps to the single birthday category.
+  ['bday', 'birthday'],
+  // PBI-119: the page itself declares the field as an organization name, so the
+  // token outranks the EXCLUDE gate on 会社語 labels.
+  ['organization', 'company'],
 ]);
 
 // 学校 is claimed by the school pre-pass below, so it stays out of this list; the office
-// vocabulary (会社/法人/企業/店舗/部署) must still be excluded for the new categories too.
+// vocabulary (会社/法人/企業/店舗/部署) stays excluded except for the two new
+// categories (PBI-119): officeEligible passes 会社名/法人・団体名/部署 alone through
+// company/companyDepartment.
 const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|店舗/;
 // Applied only to the person-name step so e.g. a user_email field stays an email.
 const NAME_EXCLUDE =
@@ -49,12 +57,45 @@ const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name(
 // existing entries stay untouched. Module-level so no per-field allocation,
 // and every matcher has a name visible in stack traces.
 const BIRTH_CTX = /bday|birth|dob|生年月日|誕生/;
+// PBI-118: 誕生日語そのもの（label 単体）の anchored 完全一致。お も接頭辞の
+// 許可リストに含める（お誕生日 → birthDay への誤落ち防止）。英語欄は Birthday /
+// Date of Birth を受ける。
+const BIRTH_PHRASE = /^(ご|御|お)?(誕生日|生年月日|誕生年月日)$/;
+const BIRTH_PHRASE_EN = /^(birthday|date of birth)$/;
+const isBirthPhrase = (view: string): boolean =>
+  BIRTH_PHRASE.test(view) || BIRTH_PHRASE_EN.test(view);
 const ERA_CTX = /元号|年号|和暦|era|wareki|gengou/;
 // 元号/年号/和暦 alone are era evidence, but romaji hits (generation, operate) and
 // place names sharing era kanji (昭和区) need the ERA_CTX gate above.
 const ERA_NAME = /元号|年号|和暦|令和|平成|昭和|大正|明治/;
 const SCHOOL = /学校|school|univ|college|高校|大学/;
 const DEPT = /学部|学科|専攻|department|major|faculty/;
+// PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す（緩和境界）。
+// カナ文脈（会社名（フリガナ））と誕生文脈（会社の生年月日）は誤注入の恐れが
+// あるため緩和対象外で、従来どおり EXCLUDE のまま。役職・店舗・法人種別など
+// 他の office 語も緩和しない。officeField ゲートと DISPATCH の extra gate が
+// この一箇所の条件を共有する。応募/申込 の団体名（応募団体名・申込団体名）は
+// 応募者側の団体で、会社プロファイルの注入先ではないため否定文脈で除外する
+// （officeEligible と同型の除外を COMPANY_OFFICE 自身に持たせる）。
+const COMPANY_OFFICE = /(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名/;
+const DEPT_OFFICE = /部署(?!名)/;
+const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
+const officeEligible = (own: string): boolean =>
+  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && (COMPANY_OFFICE.test(own) || DEPT_OFFICE.test(own));
+// PBI-119 + レビュー指摘: legend 側の gate。旧 legend gate（officeEligible）は
+// 欄自身の office 語一致を要求したため、「ご記入ください + 共有見出し会社名」の
+// ような shared heading ケースが到達不能だった（own 語が一致すれば own entry
+// 0.7 が既に返る）。ここでは欄自身の文言一致を要求せず、カナ文脈・誕生文脈の
+// 除外だけを課す。ただし own 語が一致する欄では legend に流さない（own matcher
+// 0.7 が DispatchCtx の定義順で先に返る順序の維持 + !COMPANY_OFFICE/!DEPT_OFFICE
+// が「部署欄 + 共有見出し会社名」を company-legend 0.65 で採用する交差ケースを
+// 遮る）。
+// WHY 複合ラベル（会社名・部署名）の分解はしない: 「会社名・部署名」のような
+// 複合欄はどちらにも解釈でき、誤注入より不注入が安全なため officeField が
+// EXCLUDE で落とす従来動作を維持する。
+const officeLegendEligible = (own: string): boolean =>
+  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own)
+  && !COMPANY_OFFICE.test(own) && !DEPT_OFFICE.test(own);
 const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
 const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 const COUNTRY = /country/i;
@@ -156,6 +197,22 @@ const DISPATCH: readonly MatcherEntry[] = [
   // school / department / gender: field itself (0.7) outranks a shared heading (0.65).
   ...ownLegend(SCHOOL, 'school'),
   ...ownLegend(DEPT, 'department'),
+  // PBI-119: 会社名・会社部署は school/department と同一の単独欄パターン
+  // （field 自身 0.7 が shared heading 0.65 に勝る）。own 側の緩和境界は
+  // officeEligible、legend 側は officeLegendEligible（欄自身の office 語一致を
+  // 要求せず、own 語がある欄は legend に流さない）が一箇所で持つ。
+  ...ownLegend(
+    COMPANY_OFFICE,
+    'company',
+    (ctx) => officeEligible(ctx.ownText),
+    (ctx) => officeLegendEligible(ctx.ownText),
+  ),
+  ...ownLegend(
+    DEPT_OFFICE,
+    'companyDepartment',
+    (ctx) => officeEligible(ctx.ownText),
+    (ctx) => officeLegendEligible(ctx.ownText),
+  ),
   ...ownLegend(GENDER, 'gender'),
   // Overseas address fields are named explicitly (country, address_1..4,
   // postal_code), so they classify without sibling refinement. 国名 alone
@@ -270,10 +327,6 @@ export function classifyField(m: FieldMeta): Classification | null {
     source: 'rule',
   });
 
-  const acCategory = AUTOCOMPLETE.get(ac);
-  if (acCategory) return make(acCategory, 0.95);
-  if (m.type === 'email') return make('email', 0.9);
-
   // Birth/school/department signals are field-level: a legend like 生年月日 qualifies
   // 年/月/日 words found on the field itself, and era/school words stand alone.
   // PBI-44: 第1段階の正規化ビューを一段で組み立てる。各rawはここで1回だけ
@@ -282,13 +335,54 @@ export function classifyField(m: FieldMeta): Classification | null {
   const views = buildFieldNormViews(m);
   const ownText = views.ownText;
   const legendText = views.legendText;
-  const officeField = EXCLUDE.test(ownText);
+  // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す。
+  // 緩和境界（カナ文脈・誕生文脈・部署名を除外）は officeEligible が一箇所で持つ。
+  const officeField = EXCLUDE.test(ownText) && !officeEligible(ownText);
 
   const ownTrimmed = ownText.trim();
-  // A field that is only the birth phrase itself (a single full-date field) must not
-  // receive a partial year/month/day value.
-  if (/^(ご|御)?(誕生日|生年月日|誕生年月日)$/.test(ownTrimmed) || /^(birthday|date of birth)$/.test(ownTrimmed)) {
-    return null;
+  // レビュー指摘: the single-birthday anchor reads the LABEL view only.
+  // ownText は name+htmlId+label+placeholder の連結 norm 全体のため、anchored な
+  // 完全一致は name/id がある欄で常に失敗し（'birthday 生年月日' は /^(...)$/ に
+  // 不一致）、同じ欄が DISPATCH で birthYear (0.7) に落ちていた。planner の
+  // birthYear は非 ISO の '1990' を返し、date input は無音で捨てて fill-plan は
+  // 「適用済み」と報告する。label 単体が誕生日語と一致するかで判定する。お を
+  // 接頭辞の許可リストに足し、お誕生日 が birthDay に落ちるのを防ぐ。
+  // label のみのビューは遅延 norm: anchored 一致が成立するには label が誕生日語
+  // そのものである必要があり、それは ownText に誕生語があることと同値なので、
+  // 誕生語のない欄は norm を1回も追加で払わない（1欄の norm 数契約を保つ）。
+  // 共有ビューは literals が持ち、label 単体の anchored 判定は分類だけの関心事
+  // なため本モジュール ローカル。
+  let labelView: string | null = null;
+  const birthOnLabel = (): boolean => {
+    if (!BIRTH_CTX.test(ownTrimmed) && !/^bday/.test(ac)) return false;
+    labelView ??= norm(m.label).trim();
+    return isBirthPhrase(labelView);
+  };
+  const birthOnOwn = isBirthPhrase(ownTrimmed);
+
+  // レビュー指摘: type=date の欄は birthday 以外のカテゴリに到達させない。
+  // 値が常に YYYY-MM-DD の date input に birthYear の '1990' のような部分値は
+  // 無音で捨てられ、fill-plan は「適用済み」と報告する。誕生日語の根拠（label
+  // 一致 or autocomplete が bday で始まる）があれば birthday、なければ null
+  // （unclassified・しきい値未満の欄として LLM 補助に回る）。bday-year →
+  // birthYear (0.95) のような部分カテゴリを date 欄に通さない。
+  if (m.type === 'date') {
+    return birthOnOwn || birthOnLabel() || /^bday/.test(ac) ? make('birthday', 0.7) : null;
+  }
+
+  const acCategory = AUTOCOMPLETE.get(ac);
+  if (acCategory) return make(acCategory, 0.95);
+  if (m.type === 'email') return make('email', 0.9);
+
+  // PBI-118: a field that is only the birth phrase itself (a single full-date
+  // field, text or type=date) is the whole date in one box. It classifies as the
+  // single birthday category instead of staying unclassified, and the planner
+  // fills the profile's ISO value; an uninterpretable stored birthday stays
+  // empty (warn-no-value), so the old no-partial-value guarantee holds.
+  // Legend-only evidence would collide with the 3-split 生年月日 fieldset, so
+  // own wording stays the only signal.
+  if (birthOnOwn || birthOnLabel()) {
+    return make('birthday', 0.7);
   }
 
   if (!officeField) {

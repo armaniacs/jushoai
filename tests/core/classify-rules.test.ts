@@ -34,7 +34,6 @@ describe('classifyField: signals', () => {
 
   it('returns null for unrelated or excluded fields', () => {
     expect(cat({ label: '備考' })).toBeNull();
-    expect(cat({ label: '会社名' })).toBeNull();
     expect(cat({ name: 'hotel' })).toBeNull();
   });
 });
@@ -159,22 +158,111 @@ describe('classifyField: birth, school, department', () => {
     expect(cat({ label: '生年月日の日' })).toBe('birthDay');
   });
 
-  it('keeps company, division, and ward fields out', () => {
-    expect(cat({ label: '会社名' })).toBeNull();
-    expect(cat({ label: '部署' })).toBeNull();
+  // PBI-119: 会社語は company/companyDepartment だけ EXCLUDE から通す。会社名 が
+  // school に、部署 が department にならない既存ガードはこの positive と下の
+  // negatives 拡張（Company Department・昭和区）で維持する。
+  it('classifies company and office-department fields to the new categories', () => {
+    expect(cat({ label: '会社名' })).toBe('company');
+    expect(cat({ label: '法人・団体名（個人の方は不要）' })).toBe('company');
+    expect(cat({ label: '部署' })).toBe('companyDepartment');
+  });
+
+  it('uses the organization autocomplete with highest confidence', () => {
+    expect(classifyField(makeMeta({ autocomplete: 'organization' }))).toMatchObject({ category: 'company', confidence: 0.95 });
+  });
+
+  it('keeps ward fields out', () => {
     expect(cat({ label: '昭和区' })).toBeNull();
   });
 
-  it('leaves bare birth-phrase fields unclassified', () => {
-    expect(cat({ label: '生年月日' })).toBeNull();
-    expect(cat({ label: '誕生日' })).toBeNull();
-    expect(cat({ label: 'Birthday' })).toBeNull();
-    expect(cat({ name: 'birthday' })).toBeNull();
+  // PBI-118: 単一 birthday カテゴリ。1 欄型 text・type=date とも生年月日全体が注入対象になり、
+  // 部分値（birthYear/Month/Day）を注入させない旧ガードの意図は planner の ISO 注入が引き継ぐ。
+  it('classifies bare birth-phrase fields as the single birthday category', () => {
+    expect(cat({ label: '生年月日' })).toBe('birthday');
+    expect(cat({ label: '誕生日' })).toBe('birthday');
+    expect(cat({ label: 'Birthday' })).toBe('birthday');
+    expect(cat({ name: 'birthday' })).toBe('birthday');
+  });
+
+  it('classifies a type=date field with the birth phrase as birthday', () => {
+    expect(cat({ type: 'date', label: '生年月日' })).toBe('birthday');
+  });
+
+  it('uses the bday autocomplete for a full birthdate with highest confidence', () => {
+    expect(classifyField(makeMeta({ autocomplete: 'bday' }))).toMatchObject({ category: 'birthday', confidence: 0.95 });
   });
 
   it('still excludes company fields from the new categories', () => {
     expect(cat({ label: 'Company Department' })).toBeNull();
     expect(cat({ label: 'Department' })).toBe('department');
+  });
+
+  // PBI-119: 緩和境界。ご担当者名（名前系）・会社の生年月日（誕生文脈）・部署名、
+  // そしてカナ欄（会社名（フリガナ））・会社電話・役職・店舗・法人種別は
+  // 従来どおり company/companyDepartment にならない。
+  it.each([
+    { label: 'ご担当者名' },
+    { label: '会社の生年月日' },
+    { label: '部署名' },
+    { label: '会社名（フリガナ）' },
+    { label: '会社電話' },
+    { label: '役職' },
+    { label: '店舗名' },
+    { label: '法人種別' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside the company categories', (p) => {
+    expect(cat(p) ?? '').not.toMatch(/^(company|companyDepartment)$/);
+  });
+});
+
+// レビュー指摘の再現 fixture。fixture 先行（CLAUDE.md）: 先に失敗させてから直す。
+describe('classifyField: single birthday after the label-only anchor (review)', () => {
+  it.each([
+    // name/id 連結で anchored 一致が壊れ、同じ欄が birthYear (0.7) に落ちていた:
+    // planner の birthYear は非 ISO の '1990' を返し、date input は無音で捨てて
+    // fill-plan は「適用済み」と報告する。label のみのビューで判定する。
+    { type: 'date', name: 'birthday', label: '生年月日' },
+    { name: 'birthday', label: '生年月日' },
+    { name: 'birthday', label: '生年月日', placeholder: '例）1990-05-07' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as the single birthday', (p) => {
+    expect(cat(p)).toBe('birthday');
+  });
+
+  it('routes a bday* autocomplete on a date input to the single birthday', () => {
+    expect(classifyField(makeMeta({ type: 'date', autocomplete: 'bday-year', label: '生年' })))
+      .toMatchObject({ category: 'birthday', confidence: 0.7 });
+  });
+
+  it('keeps a partial bday token on a date input from leaking a partial category', () => {
+    // bday-year → birthYear のような部分カテゴリを date 欄に通さない: label が
+    // 誕生日語でなく、autocomplete も bday で始まらない欄は unclassified。
+    expect(cat({ type: 'date', name: 'bday-year', label: '生年' })).toBeNull();
+  });
+
+  it('reads お誕生日 through the widened prefix list', () => {
+    expect(cat({ label: 'お誕生日' })).toBe('birthday');
+  });
+
+  it('keeps a date input away from every non-birthday category', () => {
+    expect(cat({ type: 'date', label: '登録日' })).toBeNull();
+    expect(cat({ type: 'date', name: 'start_date', label: '開始日' })).toBeNull();
+  });
+});
+
+// レビュー指摘の再現 fixture: legend 専用ケースの到達不能と交差ケースの誤分類。
+describe('classifyField: company legend and 応募文脈 (review)', () => {
+  it('reaches the legend-only company case without an own office word', () => {
+    expect(classifyField(makeMeta({ label: 'ご記入ください', nearby: '会社名' })))
+      .toMatchObject({ category: 'company', confidence: 0.65 });
+  });
+
+  it('keeps the own office word above a crossing company legend', () => {
+    expect(cat({ label: '部署', nearby: '会社名' })).toBe('companyDepartment');
+  });
+
+  it('pins 団体名 alone as company and 応募/申込団体名 outside it', () => {
+    expect(cat({ label: '団体名' })).toBe('company');
+    expect(cat({ label: '応募団体名' })).toBeNull();
+    expect(cat({ label: '申込団体名' })).toBeNull();
   });
 });
 
@@ -355,7 +443,8 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     id: 'p1', label: 'メイン',
     lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
     lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
-    gender: '', birthday: '', school: '', department: '', email: '', tel: '09012345678',
+    gender: '', birthday: '', school: '', department: '',
+    companyName: '', companyDepartment: '', email: '', tel: '09012345678',
   };
   const address: Address = {
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',
@@ -476,7 +565,9 @@ describe('classifyField: Japanese labels', () => {
   const negatives: Parameters<typeof makeMeta>[0][] = [
     { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
-    { label: 'ご担当者名' }, { label: '会社名' }, { label: '部署名' }, { label: '備考' },
+    // 会社名は PBI-119 で company に分類されるため negatives から外れ、
+    // 部署名は companyDepartment の緩和境界として negatives に残る。
+    { label: 'ご担当者名' }, { label: '部署名' }, { label: '備考' },
     { label: 'お問い合わせ内容' }, { label: 'パスワード' },
     { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },

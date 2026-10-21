@@ -57,6 +57,7 @@ const profile: Profile = {
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
+  companyName: '株式会社サンプル', companyDepartment: '開発部',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
@@ -261,6 +262,7 @@ describe('sample forms end to end', () => {
   });
   it('12fc22bc297429.html fills the in-scope fields', async () => {
     expect(await planFor('12fc22bc297429.html')).toEqual({
+      'field_4647587': '株式会社サンプル',
       'field_4647576_sei': '山田',
       'field_4647576_mei': '太郎',
       'field_4647577': 'yamada@example.com',
@@ -270,7 +272,7 @@ describe('sample forms end to end', () => {
       'field_4647591_2': '1234',
       'field_4647591_3': '5678',
     });
-//   field_4647587 (法人・団体名): profile has no company value, correctly unfilled
+//   field_4647587 (法人・団体名): PBI-119 で company に分類され profile の会社名が入る
 //   field_4647590 (都道府県 select): only a `--` option, correctly warn-no-option
 //   field_4647582[0] (hidden): empty-submit shim or server state, never a fill target (exclude)
 //   field_4647582[0] (checkbox): out of scope (skip fixed)

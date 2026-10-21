@@ -9,7 +9,10 @@ export const CATEGORIES = [
   'prefecture', 'city', 'street', 'building',
   'addressFull', 'addressNoPref',
   'birthYear', 'birthMonth', 'birthDay', 'birthEra',
+  'birthday',
   'school', 'department',
+  // PBI-119: 会社名・会社の部署。既存 department は学部・学科用のまま。
+  'company', 'companyDepartment',
   'unknown',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -70,6 +73,9 @@ export interface Profile {
   birthday: string;
   school: string;
   department: string;
+  // PBI-119: 会社名・会社の部署（いずれも任意・空可・検証なし）。既存 department は学部・学科用。
+  companyName: string;
+  companyDepartment: string;
   email: string;
   tel: string;
 }
@@ -108,5 +114,6 @@ export const EMPTY_PROFILE: Profile = {
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '',
   birthday: '', school: '', department: '',
+  companyName: '', companyDepartment: '',
   email: '', tel: '',
 };

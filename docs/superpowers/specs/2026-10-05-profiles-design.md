@@ -11,6 +11,8 @@
 
 - `Profile` 型への `birthday`（ISO YYYY-MM-DD）・`school`・`department` 追加（いずれも任意・空可）
 - 新カテゴリ 6 種（`birthYear` / `birthMonth` / `birthDay` / `birthEra` / `school` / `department`）の分類、`AUTOCOMPLETE` の `bday-*` 対応、LLM プロンプトのカテゴリ追加
+- 生年月日 1 欄型・type=date の対応（追補 2026-10-21）: 新カテゴリ `birthday` の分類、`AUTOCOMPLETE` の `bday` 対応、type=date の走査対象化
+- 会社名・部署の対応（追補 2026-10-21）: `Profile` 型への `companyName`・`companyDepartment` 追加（いずれも任意・空可）、新カテゴリ `company` / `companyDepartment` の分類、`AUTOCOMPLETE` の `organization` 対応
 - 和暦（元号 select＋和暦年）の注入。プロファイルは西暦で 1 回だけ保存し、和暦は注入時に計算で導出する
 - 月・日・元号 select への注入（都道府県 select と同一の未選択判定＋option マッチ方式）
 - `StoredData` の `profiles` 配列化（1〜10 件）、旧形式からの自動移行（ラベル「メイン」）
@@ -19,8 +21,6 @@
 
 ### 含めない
 
-- 生年月日 1 欄型（年月日を 1 input に入れる形）
-- 会社名・部署などの新カテゴリ（`会社名` が `school` になることはない。`部署` が `department` になることもない）
 - 住所のプロファイル単位化（住所リストは全プロファイルで共有のまま）
 - プロファイル選択状態の永続化（常に `profiles[0]` から開始。住所の `addresses[0]` と同一方式）
 - プロファイルの並べ替え・インポート/エクスポート
@@ -124,6 +124,48 @@ select への注入を都道府県以外に拡張する:
 - **option マッチ**: 月・日は option の value・text を数値化して比較（`value="01"` / text `1` の表記ゆれに対応）。元号は option text との完全一致を優先、なければ value との一致
 - 年 input の `maxlength` 超過などは既存の `warn-maxlength` ポリシー（切り詰めず警告して注入しない）に準拠
 
+## 追補（2026-10-21）: 生年月日 1 欄型・type=date・会社名・部署
+
+深掘り（2026-10-17）で生年月日 1 欄型・type=date 欄と 会社名・部署欄の実在が確定したため、「含めない」を解除する（PBI-118・PBI-119）。基本設計（分類・注入・承認）は無改変で、この節は解除と設計判断だけを定める。
+
+### 生年月日 1 欄型・type=date（PBI-118）
+
+- **走査**: `dom/scan-fields.ts` の `TEXT_TYPES` に `date` を追加する。type=date は FieldMeta が生成されていなかったため、欄自体が分類・注入の対象外だった
+- **注入値は ISO（YYYY-MM-DD）一択**: type=date は HTML 標準で value が常に YYYY-MM-DD のため、注入値は ISO に限定する。1 欄型 text も ISO 一択とする
+- **placeholder 例示の解析はしない**: 1 欄型 text の placeholder（`1990年5月7日`・`1990/5/7`・和暦表記など）から形式を推定して変換する実装は作らない。誤注入の恐れがあるため、解釈できない値は注入しない、を本設計の判断として記録する
+- **解釈不能な保存値は注入しない**: 保存済み birthday が ISO に解釈できない場合（和暦・年だけ・区切り違いなど）は planner が空扱いし、プレビューに warn-no-value を出して注入しない
+- **分類は欄自身の文言だけ**: `birthday` カテゴリは欄の label・name・id・placeholder が誕生日語そのもの（`生年月日`/`誕生日`/`Birthday` など）のときだけ返す。見出し（legend・nearby）だけでは判定しない（生年月日 fieldset に年/月/日 3 欄が入る既存形と衝突するため）。月/日/年語を持つ従来欄は `birthYear`/`birthMonth`/`birthDay` のまま
+- **AUTOCOMPLETE**: `bday → birthday`（0.95）を追加する。`bday-year`/`bday-month`/`bday-day` は従来どおり
+
+### 会社名・部署（PBI-119）
+
+- **Profile 型**: `companyName`・`companyDepartment` を追加する（いずれも任意・空可・検証なし、保存時の正規化は trim のみ）。既存 `department` は学部・学科用のまま変更しない
+- **新カテゴリ**: `company`（会社名）と `companyDepartment`（会社の部署）。既存 `school`/`department` と同一の単独欄パターン（own 0.7 / legend 0.65）
+- **EXCLUDE の緩和境界**: 会社語の欄は `company`（`会社名`・`法人名`・`団体名`・`社名`）と `companyDepartment`（`部署`。`部署名` は除く）だけを EXCLUDE から通す。`ご担当者名`・`会社の生年月日`・`会社電話`・`役職`・`店舗`・`法人種別`・カナ欄（`会社名（フリガナ）`）は従来どおり除外のまま
+- **既存ガードの維持**: `会社名` が `school` にならないこと、`部署` が `department` にならないことは維持する。英語の複合欄（`Company Department`）は会社・部署のどちらとも解釈できるため除外のまま
+- **AUTOCOMPLETE**: `organization → company`（0.95）を追加する。欄の意味をページ自身が宣言している autocomplete トークンであり、誤注入より不注入の損失が大きいため追加する、を本設計の判断として記録する
+- **走査・フォーマッタ**: text は既に走査対象のため拡大しない。会社用のフォーマッタ（カナ変換など）は新規に作らない
+- **buildSchema**: `llm/prompt.ts` の buildSchema は CATEGORIES 連動（`enum: [...CATEGORIES]`）で自動反映されることを確認済み。`parseLlmOutput` も CATEGORIES 基準のため連動する
+
+### 半角・全角幅強制（PBI-120）
+
+- **判定は pattern 属性のみ**: 幅の要求は欄の `pattern` 属性からだけ読む。placeholder は例示であって強制ではないため読まない（例示の全角数字で半角値を書き換える誤変換を避ける）。quantifier の `{2,10}` は文字数であって要求文字ではないため、判定前に落とす
+- **判定結果**: 全角形（`[０-９]`・`[Ａ-Ｚａ-ｚ]`・カナ範囲）があれば `full`、半角形（`[0-9a-zA-Z]`・`[ｦ-ﾟ]`・`\d`/`\w`）があれば `half`、両方（`[0-9０-９]`）かどちらも無ければ無変換
+- **変換は core/formatters の純粋関数**: `toFullWidth`（ASCII 表示域 0x21-0x7E を 0xFEE0 ずらす＋半角カナ→全角カナ、濁点は NFC で結合）と `toHalfWidth`（全角 ASCII ブロック 0xFF01-0xFF5E を逆方向にずらす）。空白はずらさない（氏名の区切りを書き換えないため）。clean との契約: ここで NFKC を掛け直さない（値は既に profile 形のため、NFKC はずらしを打ち消す）
+- **planner は input 欄のみに適用**: select/radio は option の一致が前提（走査が select/radio の pattern を運ばない）、type=date は ISO が崩れるため対象外。0xFEE0 のずらし自体は長さ不変だが、`toFullWidth` の末尾 NFC は値全体に掛かるため幅と無関係な列（ハングル jamo 結合・孤立 ﾞ→U+3099）も再構成され、code unit 長は変わり得る。maxlength 超過の判定は変換後の値に対して行い、超過時は従来どおり切り詰めず警告して注入しない
+- **新カテゴリは作らない**: 「半角カタカナのみ」「全角英数のみ」の pattern は既存カテゴリの値整形に幅判定を足す形。カナの幅は従来どおり kanaKind（detectKanaKind）が受け持ち、幅変換はカナを二重に書き換えない
+- **走査の拡大はしない**: pattern・placeholder・maxLength は既に FieldMeta が運んでいる
+- **samples**: 対象 URL は未確定。全角強制パターンは既存サンプル（formmailer-raijo-age.html のカナ欄、`^[\u2015\u3000\u30A1-\u30F6\u30FB-\u30FE]+$`）が実在し、既存統合テストの期待値は不変
+
+### 長すぎる建物名の略記（PBI-122）
+
+- **規則は core/abbreviate.ts の決定的な規則表**: LLM は使わない。空白は全角のみ詰める（半角空白は英語表記の語間なので保持）＋住居系接尾語の短縮（マンション・アパート・コーポ・コーポラス・ハイツ・レジデンス→邸、ビルディング→ビル）。置換は末尾に一度だけ（複合名の部分置換で壊さないため）。置換は必ず短くなるものだけ（長くなる置換は収まらないため表に入れない）
+- **適用範囲**: `building` 欄と、建物名を合成する `street`・`addressNoPref`・`addressFull`。合成欄は追加した建物尾部だけを短縮し、市区町村・町名の土台は書き換えない（土台がすでに超過している場合は救えないため従来どおり warn-maxlength）。海外住所の address2 は別カテゴリのため対象外
+- **注入は承認後のみ**: 超過欄の行は warn-maxlength のまま略記候補（略記前 → 略記後）を持ち、プレビューが「略記して入れる」チェックボックスを出す。既定は未承認＝注入しない。承認された行だけが apply で value/status を置き換えて注入される（NOT-TODO 12 との整合）。略記しても収まらない・規則が当てはまらないときは従来どおり警告して注入しない
+- **onApply のシグネチャ**: `onApply(sendFeedback, approvedAbbrevs)` に第 2 引数を追加する。承認セット（fieldId）はプレビューが集めて session.apply に渡し、session が plan を置き換えてから injectPlan する。fill 側の契約（status ok が注入）は不変
+- **幅変換との順序契約**: PBI-120 の幅変換が先（buildPlan が raw を変換してから maxlength 判定）、略記はその後（変換済みの値に対して超過判定→候補生成）。合成欄の建物名側にも同じ幅変換を掛けてから候補を生成する（変換済み raw と未変換 profile 値の比較で候補が消えないため）。略記の出力を幅変換に戻さない。この順で固定する
+- **samples**: 「建物欄+maxlength 超過」の組合せは samples に未収集のため fixture を追加しない。対象 URL の確定と make addurl はユーザー作業として残す
+
 ## UI
 
 ### プレビュー: プロファイル選択
@@ -170,6 +212,5 @@ select への注入を都道府県以外に拡張する:
 ## 要検討（スコープ外として記録）
 
 - **住所のふりがな欄**: kana-fields 設計書の記録を維持。本 spec の対象外
-- **会社名・部署などの新カテゴリ**: 対象外のまま
-- **住所のプロファイル単位化・プロファイルの並べ替え・インポート/エクスポート**: 対象外
+- **住所のプロファイル単位化・プロファイルの並べ替え**: 対象外
 - **フォーム不具合の報告機能**: 別 PBI（`pbi/2026-10-05-form-report.md`）で扱う

@@ -18,10 +18,13 @@ describe('dispatch parity: birth order and guard', () => {
     expect(full({ label: '年の日', nearby: '生年月日' })?.category).toBe('birthDay');
   });
 
-  it('leaves bare birth-phrase fields null', () => {
-    expect(full({ label: '生年月日' })).toBeNull();
-    expect(full({ label: '誕生日' })).toBeNull();
-    expect(full({ label: 'Birthday' })).toBeNull();
+  // PBI-118: the bare birth phrase is now the single birthday category (0.7):
+  // the whole date in one box (text or type=date) instead of staying
+  // unclassified. The old no-partial-value guarantee moves to the planner.
+  it('classifies bare birth-phrase fields as the single birthday category', () => {
+    expect(full({ label: '生年月日' })).toMatchObject({ category: 'birthday', confidence: 0.7, source: 'rule' });
+    expect(full({ label: '誕生日' })).toMatchObject({ category: 'birthday', confidence: 0.7, source: 'rule' });
+    expect(full({ label: 'Birthday' })).toMatchObject({ category: 'birthday', confidence: 0.7, source: 'rule' });
   });
 });
 
@@ -121,9 +124,10 @@ describe('dispatch parity: kana sources, tel fallback, null', () => {
     expect(isConfident(c)).toBe(false);
   });
 
-  it('returns null for unrelated fields', () => {
+  // PBI-119: 会社名 is the new company category (0.7); unrelated fields stay null.
+  it('classifies 会社名 as company and keeps unrelated fields null', () => {
     expect(full({ label: '備考' })).toBeNull();
-    expect(full({ label: '会社名' })).toBeNull();
+    expect(full({ label: '会社名' })).toMatchObject({ category: 'company', confidence: 0.7, source: 'rule' });
   });
 
   it('keeps threshold semantics', () => {

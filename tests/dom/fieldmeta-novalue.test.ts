@@ -12,6 +12,7 @@ const profile: Profile = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '', birthday: '', school: '', department: '',
+  companyName: '', companyDepartment: '',
   email: 'yamada@example.com', tel: '',
 };
 const address: Address = {

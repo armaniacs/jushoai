@@ -1,3 +1,4 @@
+import { clean } from './literals';
 import type { SelectOption } from './types';
 
 export interface EraDate { era: string; year: number }
@@ -41,11 +42,18 @@ export function toDecade(iso: string, today: Date = new Date()): string | null {
 export function splitBirthday(iso: string): { y: string; m: string; d: string } | null {
   const parts = /^\d{4}-\d{2}-\d{2}$/.test(iso) ? iso.split('-') : null;
   if (!parts) return null;
+  // The strict ISO shape alone still admits rollover dates ('1990-02-30' is
+  // Feb 30 and rolls to Mar 2), which would slip an uninterpretable birthday
+  // into the planner's birth cases. The round-trip below rejects any date the
+  // Date constructor normalized, so only real calendar days split.
+  const [y, m, d] = [Number(parts[0]), Number(parts[1]), Number(parts[2])];
+  const date = new Date(y, m - 1, d);
+  if (date.getFullYear() !== y || date.getMonth() !== m - 1 || date.getDate() !== d) return null;
   return { y: parts[0]!, m: parts[1]!, d: parts[2]! };
 }
 
 const leadingDigits = (s: string) => {
-  const m = s.normalize('NFKC').trim().match(/^\d+/);
+  const m = clean(s).match(/^\d+/);
   return m ? Number(m[0]) : NaN;
 };
 
@@ -58,10 +66,10 @@ export function matchNumberOption(options: SelectOption[], n: number): SelectOpt
 // Exact text/value wins; otherwise the leading number absorbs 20歳代/20s style
 // variants. An under-10 decade never falls back to 10代, only exact matches.
 export function matchDecadeOption(options: SelectOption[], decade: string): SelectOption | null {
-  const t = decade.normalize('NFKC').trim();
+  const t = clean(decade);
   if (!t) return null;
-  const exact = options.find((o) => o.text.normalize('NFKC').trim() === t)
-    ?? options.find((o) => o.value.normalize('NFKC').trim() === t);
+  const exact = options.find((o) => clean(o.text) === t)
+    ?? options.find((o) => clean(o.value) === t);
   if (exact) return exact;
   if (/未満/.test(t)) return null;
   const n = leadingDigits(t);
@@ -70,9 +78,9 @@ export function matchDecadeOption(options: SelectOption[], decade: string): Sele
 }
 
 export function matchEraOption(options: SelectOption[], era: string): SelectOption | null {
-  const t = era.normalize('NFKC').trim();
+  const t = clean(era);
   if (!t) return null;
-  return options.find((o) => o.text.normalize('NFKC').trim() === t)
-    ?? options.find((o) => o.value.normalize('NFKC').trim() === t)
+  return options.find((o) => clean(o.text) === t)
+    ?? options.find((o) => clean(o.value) === t)
     ?? null;
 }

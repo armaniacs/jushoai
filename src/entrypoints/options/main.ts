@@ -23,6 +23,8 @@ const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; 
   { key: 'birthday', label: '生年月日', placeholder: '1990-05-07' },
   { key: 'school', label: '学校名', placeholder: '都立日比谷高校' },
   { key: 'department', label: '学部・学科', placeholder: '普通科' },
+  { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル' },
+  { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部' },
   { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email' },
   { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel' },
 ];

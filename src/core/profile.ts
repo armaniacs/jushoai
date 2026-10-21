@@ -1,17 +1,22 @@
 import { toKatakana } from './formatters';
 import { GENDERS } from './genders';
-import { includesLiteral } from './literals';
+import { clean, includesLiteral } from './literals';
 import { PREFECTURES } from './prefectures';
 import type { Address, Profile } from './types';
 
+// digits stays outside clean (WHY): it projects digit runs rather than
+// canonicalizing a value; trim would be a no-op because \D already drops every
+// whitespace character (U+0020/U+3000 included), so routing it through clean
+// would imply a trim-then-extract ordering contract that does not exist.
 const digits = (s: string) => s.normalize('NFKC').replace(/\D/g, '');
-const kana = (s: string) => toKatakana(s.normalize('NFKC').trim());
-// NFKC folds full-width alphabet into half-width, so Ｙａｍａｄａ becomes Yamada
-const romaji = (s: string) => s.normalize('NFKC').trim();
+// Romaji/kana/gender/email/birthday canonicalize through the shared clean
+// (NFKC + trim). clean keeps case on purpose: NFKC folds Ｙａｍａｄａ into Yamada
+// and must not lowercase it (norm would turn it into yamada).
+const kana = (s: string) => toKatakana(clean(s));
 const ROMAJI = /^[A-Za-z][A-Za-z .,'-]*$/;
 // Accepts 1990/5/7 or 1990年5月7日 style input but leaves year-only strings untouched
 const birthday = (s: string) => {
-  const t = s.normalize('NFKC').trim();
+  const t = clean(s);
   const m = t.match(/^(\d{4})\D(\d{1,2})\D(\d{1,2})日?$/);
   if (!m) return t;
   return `${m[1]}-${m[2]!.padStart(2, '0')}-${m[3]!.padStart(2, '0')}`;
@@ -25,18 +30,19 @@ export function normalizeProfile(p: Profile): Profile {
     firstName: p.firstName.trim(),
     lastNameKana: kana(p.lastNameKana),
     firstNameKana: kana(p.firstNameKana),
-    lastNameRomaji: romaji(p.lastNameRomaji),
-    firstNameRomaji: romaji(p.firstNameRomaji),
-    gender: p.gender.normalize('NFKC').trim(),
+    lastNameRomaji: clean(p.lastNameRomaji),
+    firstNameRomaji: clean(p.firstNameRomaji),
+    gender: clean(p.gender),
     birthday: birthday(p.birthday),
     school: p.school.trim(),
     department: p.department.trim(),
-    email: p.email.normalize('NFKC').trim(),
+    // PBI-119: 会社名・会社の部署は trim のみ（検証なし・空許容）。
+    companyName: p.companyName.trim(),
+    companyDepartment: p.companyDepartment.trim(),
+    email: clean(p.email),
     tel: digits(p.tel),
   };
 }
-
-const half = (s: string) => s.normalize('NFKC').trim();
 
 export function normalizeAddress(a: Address): Address {
   return {
@@ -48,12 +54,14 @@ export function normalizeAddress(a: Address): Address {
     city: a.city.trim(),
     street: a.street.trim(),
     building: a.building.trim(),
-    country: half(a.country),
-    address1: half(a.address1),
-    address2: half(a.address2),
-    address3: half(a.address3),
-    address4: half(a.address4),
-    postalCode: half(a.postalCode),
+    // Overseas lines width-fold + trim through clean; case is kept for
+    // half-width-only forms.
+    country: clean(a.country),
+    address1: clean(a.address1),
+    address2: clean(a.address2),
+    address3: clean(a.address3),
+    address4: clean(a.address4),
+    postalCode: clean(a.postalCode),
   };
 }
 
