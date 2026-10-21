@@ -6,10 +6,11 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, buildSelect, cardFieldset, actionButton } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
+import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
@@ -45,6 +46,14 @@ const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string 
 
 const app = document.getElementById('app')!;
 let state: StoredData;
+
+// The export/import section (PBI-117) is mounted once like the audit and
+// exclusion sections; render() re-appends the same holder so the section keeps
+// its element (and its feedback) across the profile/address re-renders. The
+// holder is a div: <main id="app"> already is the page's main element, and a
+// main nested inside it is invalid HTML.
+const transferHolder = document.createElement('div');
+transferHolder.id = 'transfer-app';
 
 export function prefectureSelect(value: string, onChange: (v: string) => void) {
   return buildSelect(onChange, ['', ...PREFECTURES].map((p) => ({
@@ -150,7 +159,7 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
     profiles.push({ ...EMPTY_PROFILE, id: newId() });
     rerender();
   });
-  const limitNote = buildLimitNote('プロファイルは10件まで登録できます', isAtLimit(profiles.length));
+  const limitNote = buildLimitNote(`プロファイルは${MAX_ITEMS}件まで登録できます`, isAtLimit(profiles.length));
   page.append(heading, ...cards, addProfile, ...(limitNote.textContent ? [limitNote] : []));
   return page;
 }
@@ -187,7 +196,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
     addresses.push({ ...EMPTY_ADDRESS, id: newId() });
     rerender();
   });
-  const limitNote = buildLimitNote('住所は10件まで登録できます', isAtLimit(addresses.length));
+  const limitNote = buildLimitNote(`住所は${MAX_ITEMS}件まで登録できます`, isAtLimit(addresses.length));
   page.append(heading, ...cards, add, ...(limitNote.textContent ? [limitNote] : []));
   return page;
 }
@@ -211,7 +220,7 @@ function render(notice?: HTMLElement) {
   footer.append(save);
 
   app.replaceChildren(
-    title, profilePage, addressPage, footer, ...(notice ? [notice] : []),
+    title, profilePage, addressPage, footer, transferHolder, ...(notice ? [notice] : []),
   );
   applyActivePage();
 }
@@ -242,8 +251,11 @@ async function onSave() {
   render(message('saved', ['保存しました']));
 }
 
-void loadData().then((data) => {
-  state = data;
+// Read storage again and redraw. Used at boot and after an import rewrites
+// storage behind the open page; unsaved card edits are discarded, like a
+// manual reload.
+async function reloadState(): Promise<void> {
+  state = await loadData();
   if (state.profiles.length === 0) {
     state.profiles.push({ ...EMPTY_PROFILE, id: newId() });
   }
@@ -251,7 +263,24 @@ void loadData().then((data) => {
     state.addresses.push({ ...EMPTY_ADDRESS, id: newId(), label: '自宅' });
   }
   render();
-});
+}
+
+// Boot and post-import re-reads must not swallow rejections (PBI-117 review):
+// a failed first read used to leave a silently empty page, and a failed
+// post-import re-read used to leave a stale 取り込みました. At boot state
+// cannot come from storage, so the same empty cards reloadState would push
+// are seeded and the failure surfaces as a notice.
+const showReadFailure = (): void => {
+  if (!state) {
+    state = {
+      profiles: [{ ...EMPTY_PROFILE, id: newId() }],
+      addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
+    };
+  }
+  render(message('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
+};
+
+void reloadState().catch(showReadFailure);
 
 mountAiSection(document.getElementById('ai-app')!);
 // Where JushoAI must not start is its own page: the list can grow, and the
@@ -262,4 +291,14 @@ const auditPage = document.createElement('div');
 auditPage.id = AUDIT_SECTION_ID;
 mountAuditSection(auditPage);
 document.getElementById('audit-app')!.replaceChildren(auditPage);
+// The transfer section lives at the bottom of the profile/address pages: the
+// holder is created above and render() keeps re-appending it.
+mountTransferSection(transferHolder, {
+  ...defaultTransferDeps(),
+  // An import writes storage behind the open page: re-read and redraw so the
+  // cards show what was imported. The returned promise is awaited by the
+  // transfer section, which shows the failure instead of leaving a stale
+  // 取り込みました when the re-read rejects (PBI-117 review).
+  onImported: async () => { await reloadState(); },
+});
 mountNav(document.getElementById('side')!);

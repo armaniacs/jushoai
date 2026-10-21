@@ -29,6 +29,20 @@ export class StorageSaveError extends Error {
   }
 }
 
+// Typed read failure for the import seam (PBI-117 review): a failed read
+// inside saveImported must interrupt the import instead of letting the
+// incoming data replace everything in storage. Distinct from StorageSaveError
+// so callers can report 読み取り失敗 and 保存失敗 apart.
+export class StorageReadError extends Error {
+  override readonly cause: unknown;
+
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'StorageReadError';
+    this.cause = cause;
+  }
+}
+
 export function isQuotaExceededError(err: unknown): boolean {
   if (err instanceof StorageSaveError) return isQuotaExceededError(err.cause);
   const text = err instanceof Error ? `${err.name} ${err.message}` : String(err);
@@ -101,6 +115,20 @@ function coerceStrings<T extends object>(template: T, value: unknown): T {
   return out;
 }
 
+// Known-keys-only projection (PBI-117 review): coerceStrings tolerates unknown
+// keys at the load boundary (hand edits and version skew must not break
+// startup), but the unknown keys must not leak into the stable id seed or the
+// export. This keeps only the template's keys, in the template's order.
+export function pickKnown<T extends object>(template: T, value: unknown): T {
+  const source: Record<string, unknown> = isObject(value) ? value : {};
+  const out = {} as T;
+  const target = out as Record<string, unknown>;
+  for (const k of Object.keys(template)) {
+    target[k] = source[k];
+  }
+  return out;
+}
+
 // Deterministic id derivation for migrated entries missing one (PBI-35).
 // migrateData used to call newId() (randomUUID / random), so every load
 // minted different ids and a saved last-selection no longer matched after a
@@ -136,7 +164,15 @@ const rawIdOf = (v: unknown): string | undefined => {
 // Normalizes any stored shape to the current one: a legacy single profile becomes the
 // first entry labeled メイン, and every entry gets defaults for missing keys.
 // Addresses linked to a deleted profile become shared instead of dangling.
-export function migrateData(stored: LegacyStoredData | undefined): StoredData {
+// `profileOwnerIds` optionally overrides the owner set for the address link
+// check (PBI-117 review): the import passes the union of storage and file
+// profile ids so a partial file (addresses only) keeps its link when the owner
+// profile lives in storage. Without it the file's profiles alone decided, and
+// merging the unlinked result over the stored addresses silently dropped valid
+// links. loadData keeps calling without the override.
+export function migrateData(
+  stored: LegacyStoredData | undefined, profileOwnerIds?: Set<string>,
+): StoredData {
   const rawList = Array.isArray(stored?.profiles) ? stored.profiles : [];
   const fromList = rawList.length > 0;
   const legacy = !fromList && isObject(stored?.profile) ? [stored.profile] : [];
@@ -149,11 +185,19 @@ export function migrateData(stored: LegacyStoredData | undefined): StoredData {
   const profiles = list.map((p, index) => {
     const clean = coerceStrings(EMPTY_PROFILE, p);
     const label = clean.label || (fromList ? '' : 'メイン');
+    // The seed carries the template's known keys only (pickKnown): unknown
+    // keys must not change the minted id, or identical no-id content would
+    // resolve to different mig- ids depending on hand-edit junk (PBI-35).
     const id = clean.id
-      || stableMigratedId('profile', JSON.stringify({ ...clean, id: '', label }), index, usedProfileIds);
+      || stableMigratedId(
+        'profile',
+        JSON.stringify({ ...pickKnown(EMPTY_PROFILE, clean), id: '', label }),
+        index,
+        usedProfileIds,
+      );
     return { ...clean, id, label };
   });
-  const profileIds = new Set(profiles.map((p) => p.id));
+  const profileIds = profileOwnerIds ?? new Set(profiles.map((p) => p.id));
   const rawAddresses = Array.isArray(stored?.addresses) ? stored.addresses : [];
   const usedAddressIds = new Set<string>();
   for (const a of rawAddresses) {
@@ -165,7 +209,12 @@ export function migrateData(stored: LegacyStoredData | undefined): StoredData {
     const clean = coerceStrings(EMPTY_ADDRESS, a);
     const profileId = clean.profileId && profileIds.has(clean.profileId) ? clean.profileId : '';
     const id = clean.id
-      || stableMigratedId('address', JSON.stringify({ ...clean, id: '', profileId }), index, usedAddressIds);
+      || stableMigratedId(
+        'address',
+        JSON.stringify({ ...pickKnown(EMPTY_ADDRESS, clean), id: '', profileId }),
+        index,
+        usedAddressIds,
+      );
     return { ...clean, id, profileId };
   });
   return { profiles, addresses };
@@ -188,7 +237,10 @@ function mergeById<T extends { id: string }>(latest: T[], incoming: T[]): T[] {
   return [...merged.values()];
 }
 
-function mergeStoredData(latest: StoredData, incoming: StoredData): StoredData {
+// Exported for the transfer import (PBI-117): the import projects the merged
+// result to check the collection cap before saving. The merge behavior itself
+// (id-unit, incoming wins, additive) is unchanged.
+export function mergeStoredData(latest: StoredData, incoming: StoredData): StoredData {
   return {
     profiles: mergeById(latest.profiles, incoming.profiles),
     addresses: mergeById(latest.addresses, incoming.addresses),
@@ -203,6 +255,33 @@ export async function saveData(data: StoredData): Promise<void> {
     latest = undefined;
   }
   const payload = latest ? mergeStoredData(latest, data) : data;
+  try {
+    await chrome.storage.local.set({ [KEY]: payload });
+  } catch (err) {
+    throw new StorageSaveError('プロファイルの保存に失敗しました', err);
+  }
+}
+
+// Dedicated import seam (PBI-117 review): the plain saveData falls back to a
+// full-replacement payload when its internal re-read fails and has no cap
+// check, so an import through it could wipe the stored data or land an
+// unchecked entry count. This seam keeps read → merge → cap check → write in
+// one place, closed over a single read: a failed read throws instead of
+// degrading to a replacement, and `capCheck` runs on the pre-write merge
+// result right before the write, so nothing uncounted can slip in between
+// check and write. Normal saves keep using saveData.
+export async function saveImported(
+  data: StoredData,
+  capCheck: (payload: StoredData) => void,
+): Promise<void> {
+  let latest: StoredData;
+  try {
+    latest = await loadData();
+  } catch (err) {
+    throw new StorageReadError('プロファイルの読み取りに失敗しました', err);
+  }
+  const payload = mergeStoredData(latest, data);
+  capCheck(payload);
   try {
     await chrome.storage.local.set({ [KEY]: payload });
   } catch (err) {

@@ -5,9 +5,10 @@ import { normalizeProfile } from '../../core/profile';
 import { EMPTY_PROFILE } from '../../core/types';
 
 // Single source of the collection cap: profiles and addresses share the
-// limit, only the notice wording differs per collection.
-export const MAX_ITEMS = 10;
-export const isAtLimit = (count: number): boolean => count >= MAX_ITEMS;
+// limit, only the notice wording differs per collection. The constant lives in
+// core/collection so the transfer import path (src/transfer.ts) checks the
+// same value instead of a drifting copy.
+export { MAX_ITEMS, isAtLimit } from '../../core/collection';
 
 export function el<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string): HTMLElementTagNameMap[K] {
   const node = document.createElement(tag);
