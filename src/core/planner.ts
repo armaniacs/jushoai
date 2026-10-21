@@ -1,9 +1,11 @@
 import type { Item } from './types';
+import { abbreviateBuilding } from './abbreviate';
 import {
   splitBirthday, toDecade, toEraDate,
 } from './eras';
 import {
-  detectNameSeparator, formatKana, joinName, splitTel, splitZip, wantsHyphen,
+  detectNameSeparator, detectWidthKind, formatKana, joinName, splitTel, splitZip,
+  toFullWidth, toHalfWidth, wantsHyphen,
 } from './formatters';
 import { matchOption } from './match-option';
 import { isAllowedRadioCategory } from './radio-policy';
@@ -18,12 +20,34 @@ export interface PlanItem {
   value: string;
   display: string;
   status: PlanStatus;
+  // PBI-122: an abbreviation candidate for an overflowing building-bearing
+  // field. The preview offers it as an opt-in choice; only the user's explicit
+  // approval promotes it into the fill value (applyAbbrevApprovals), so the
+  // fill never truncates silently (NOT-TODO 12).
+  abbrev?: string;
 }
 
 export interface PlanContext {
   profile: Profile;
   address: Address | null;
   today?: Date;
+}
+
+// PBI-120: width-forcing patterns reshape the value's character width before
+// the fill checks. The rewrite rides input fields only: select/radio values
+// must match the page's own option list (the scan never fills their pattern),
+// and a type=date value must stay ISO or it stops being a date. The 0xFEE0
+// shift itself is length-preserving, but the trailing NFC in toFullWidth runs
+// on the whole value and re-composes width-agnostic columns too (a hangul jamo
+// cluster, a lone ﾞ → U+3099), so the converted value can change code-unit
+// length; the maxlength warning in buildPlan therefore sees the converted
+// value and is judged on it (never on the raw).
+function enforceWidth(value: string, meta: FieldMeta): string {
+  if (meta.tag !== 'input' || meta.type === 'date') return value;
+  const kind = detectWidthKind(meta.pattern);
+  if (kind === 'full') return toFullWidth(value);
+  if (kind === 'half') return toHalfWidth(value);
+  return value;
 }
 
 function valueFor(
@@ -85,8 +109,16 @@ function valueFor(
     case 'birthMonth': return bd ? bd.m : '';
     case 'birthDay': return bd ? bd.d : '';
     case 'birthEra': return p.birthday ? (toEraDate(p.birthday)?.era ?? '') : '';
+    // PBI-118: a single full-date field (text or type=date) takes the profile's
+    // ISO birthday as-is. splitBirthday validates the strict ISO shape, so an
+    // uninterpretable stored value (wareki, partial, different separator) stays
+    // empty and the row reports warn-no-value instead of misfilling.
+    case 'birthday': return bd ? p.birthday : '';
     case 'school': return p.school;
     case 'department': return p.department;
+    // PBI-119: 会社名・会社の部署。空は従来どおりスキップ（warn-no-value）。
+    case 'company': return p.companyName;
+    case 'companyDepartment': return p.companyDepartment;
     case 'gender': return p.gender;
     case 'ageDecade': return toDecade(p.birthday, today) ?? '';
     case 'country': return a?.country ?? '';
@@ -103,6 +135,77 @@ function valueFor(
 export const isUntouchedSelect = (m: Pick<FieldMeta, 'value' | 'options'>) =>
   m.value === '' || m.options[0]?.value === m.value;
 
+// PBI-122: categories whose overflow can be rescued by shortening the building
+// name. The composed fields shorten only their appended building tail; the
+// street/city base is never rewritten, because corrupting it would break the
+// address even when the length fits.
+const ABBREVIATABLE: ReadonlySet<Category> = new Set<Category>([
+  'building', 'street', 'addressNoPref', 'addressFull',
+]);
+
+// Fits the shortened building into the budget; null when no rule fired, when
+// the shortening is empty (a whitespace-only building shortens to '' — a
+// candidate that would silently drop the tail or flip a row to an empty value),
+// or when the shortened form still overflows, so the row keeps its plain
+// warn-maxlength.
+function fitting(building: string, shortened: string, budget: number): string | null {
+  if (budget < 1 || shortened === '' || shortened === building || shortened.length > budget) {
+    return null;
+  }
+  return shortened;
+}
+
+// PBI-122: the abbreviation candidate for an overflow row, or null when none
+// applies. Runs after the width conversion (enforceWidth) so the candidate is
+// measured against the same value the preview shows; the abbreviation itself
+// is a truncation-rule pass, never a width rewrite (the order contract lives in
+// the profiles-design 追補 2026-10-21 section).
+function abbreviationFor(
+  category: Category,
+  raw: string,
+  maxLength: number | null,
+  meta: FieldMeta,
+  ctx: PlanContext,
+  present: Set<Category>,
+): string | null {
+  if (maxLength === null || !ABBREVIATABLE.has(category)) return null;
+  const a = ctx.address;
+  if (category === 'building') return fitting(raw, abbreviateBuilding(raw), maxLength);
+  // A composition shortens only when the building was actually appended; a
+  // dedicated building field (or no building) keeps the street intact.
+  // レビュー指摘: raw は幅変換済みなのに対し a.building は未変換の profile 値で
+  // は endsWith が必ず失敗し、full/half 強制下でビル名に変換対象文字があると
+  // 候補が無音に消える。tail にも同じ enforceWidth を掛けてから endsWith/slice
+  // する（最終注入値がページの幅要求に整合し、候補生成が噛み合う）。
+  if (!a?.building) return null;
+  const building = enforceWidth(a.building, meta);
+  if (present.has('building') || !raw.endsWith(` ${building}`)) return null;
+  const base = raw.slice(0, raw.length - building.length);
+  const shortened = fitting(building, abbreviateBuilding(building), maxLength - base.length);
+  return shortened === null ? null : `${base}${shortened}`;
+}
+
+// PBI-122 + レビュー指摘: the single abbrev judgment, shared by the plan
+// builder, the approval seam, and the preview rows: a candidate is present only
+// when a non-empty string rode the row. fitting returns null for an empty
+// shortening (a whitespace-only building name), so planner rows never carry '',
+// but the truthy check keeps an empty candidate from flipping a row even if a
+// future producer regresses (the old three judgments — !== null, truthy,
+// !== undefined — drifted on exactly that case).
+export const hasAbbrev = (abbrev: string | null | undefined): abbrev is string => !!abbrev;
+
+// PBI-122: the single approval seam. Only the preview's explicit approval (the
+// checkbox set handed to apply) promotes a candidate into the fill value; rows
+// without a candidate never flip, and an unapproved id keeps warn-maxlength
+// with an empty value, so nothing injects silently. The candidate presence
+// check is the shared hasAbbrev judgment.
+export function applyAbbrevApprovals(plan: PlanItem[], approved: ReadonlySet<string>): PlanItem[] {
+  if (approved.size === 0) return plan;
+  return plan.map((p) =>
+    hasAbbrev(p.abbrev) && approved.has(p.fieldId) ? { ...p, value: p.abbrev, status: 'ok' } : p,
+  );
+}
+
 export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
   const present = new Set(items.map((i) => i.cls.category));
   const plan: PlanItem[] = [];
@@ -110,7 +213,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
   for (const { meta, cls } of items) {
     if (meta.readOnly || meta.disabled || cls.category === 'unknown') continue;
     const base = { fieldId: meta.id, category: cls.category, source: cls.source };
-    const raw = valueFor(cls, meta, ctx, present);
+    const raw = enforceWidth(valueFor(cls, meta, ctx, present), meta);
     // A missing profile value keeps its row with the reason attached instead
     // of vanishing: vanishing is indistinguishable from a classification
     // failure (unknown skips noiselessly above), so the preview could never
@@ -150,7 +253,19 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     if (meta.value.trim() !== '') {
       plan.push({ ...base, value: '', display: raw, status: 'filled' });
     } else if (meta.maxLength !== null && raw.length > meta.maxLength) {
-      plan.push({ ...base, value: '', display: raw, status: 'warn-maxlength' });
+      // PBI-122: a fitting abbreviation candidate rides the row; the preview
+      // offers it and only the user's approval promotes it into the fill value
+      // (applyAbbrevApprovals). Without a candidate the row keeps its plain
+      // warn-maxlength shape: truncation without approval stays out of scope.
+      // The candidate presence check is the shared hasAbbrev judgment.
+      const abbreviated = abbreviationFor(cls.category, raw, meta.maxLength, meta, ctx, present);
+      plan.push({
+        ...base,
+        value: '',
+        display: abbreviated ? `${raw} → ${abbreviated}` : raw,
+        status: 'warn-maxlength',
+        ...(hasAbbrev(abbreviated) ? { abbrev: abbreviated } : {}),
+      });
     } else {
       plan.push({ ...base, value: raw, display: raw, status: 'ok' });
     }

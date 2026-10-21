@@ -9,6 +9,7 @@ const profile: Profile = {
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
+  companyName: '株式会社サンプル', companyDepartment: '開発部',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
@@ -257,6 +258,25 @@ describe('birthday', () => {
       ]);
     }
   });
+
+  it('fills a single birthday field with ISO and warns on uninterpretable values (PBI-118)', () => {
+    expect(datedValues([item('birthday')])).toEqual(['1990-05-07']);
+    const plan = buildPlan([item('birthday')], { profile: { ...profile, birthday: '1990/5/7' }, address });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  // レビュー指摘の再現 fixture: rollover 日付が birthday case に混入しないこと。
+  it('keeps a rollover birthday out of every birth case (warn-no-value)', () => {
+    const plan = buildPlan(
+      [item('birthday'), item('birthYear'), item('birthMonth'), item('birthDay')],
+      { profile: { ...profile, birthday: '1990-02-30' }, address },
+    );
+    expect(plan.map((p) => p.status)).toEqual([
+      'warn-no-value', 'warn-no-value', 'warn-no-value', 'warn-no-value',
+    ]);
+  });
 });
 
 describe('school', () => {
@@ -266,6 +286,16 @@ describe('school', () => {
     const vals = buildPlan([item('school'), item('department')], { profile: schooled, address }).map((p) => p.value);
     expect(vals).toEqual(['都立日比谷高校', '普通科']);
     expect(buildPlan([item('school')], { profile: { ...profile, school: '' }, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+});
+
+describe('company (PBI-119)', () => {
+  it('fills company name and department, marks warn-no-value when blank', () => {
+    const vals = buildPlan([item('company'), item('companyDepartment')], { profile, address }).map((p) => p.value);
+    expect(vals).toEqual(['株式会社サンプル', '開発部']);
+    expect(buildPlan([item('company')], { profile: { ...profile, companyName: '' }, address })).toEqual([
       expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
     ]);
   });

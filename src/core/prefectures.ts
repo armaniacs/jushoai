@@ -1,4 +1,4 @@
-import { includesLiteral } from './literals';
+import { clean, includesLiteral } from './literals';
 import type { SelectOption } from './types';
 
 // Array index + 1 equals the JIS X 0401 prefecture code, which many select values use.
@@ -12,7 +12,7 @@ export const PREFECTURES = [
   '熊本県', '大分県', '宮崎県', '鹿児島県', '沖縄県',
 ] as const;
 
-const strip = (s: string) => s.normalize('NFKC').trim().replace(/[都道府県]$/, '');
+const strip = (s: string) => clean(s).replace(/[都道府県]$/, '');
 
 export function matchPrefectureOption(
   options: SelectOption[],

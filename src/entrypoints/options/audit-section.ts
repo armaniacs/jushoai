@@ -10,15 +10,18 @@ export interface AuditSectionDeps {
   now(): Date;
 }
 
-export function saveTextFile(fileName: string, content: string): void {
-  const url = URL.createObjectURL(new Blob([content], { type: 'text/tab-separated-values;charset=utf-8' }));
+export function saveTextFile(fileName: string, content: string, mimeType = 'text/tab-separated-values;charset=utf-8'): void {
+  const url = URL.createObjectURL(new Blob([content], { type: mimeType }));
   const a = el('a');
   a.href = url;
   a.download = fileName;
   document.body.append(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  // Revoking synchronously can cut the download off before the browser has
+  // claimed the blob (PII exports ride this path too): revoke on the next
+  // turn instead.
+  setTimeout(() => URL.revokeObjectURL(url), 0);
 }
 
 // Rejecting on failure keeps the existing delete-failure notice path intact.

@@ -36,6 +36,13 @@ describe('splitBirthday', () => {
     expect(splitBirthday('')).toBeNull();
     expect(splitBirthday('1990/5/7')).toBeNull();
   });
+
+  // レビュー指摘の再現 fixture: Date の rollover で実在しない日が通る。
+  it('returns null for rollover dates the ISO regex accepts', () => {
+    expect(splitBirthday('1990-02-30')).toBeNull();
+    expect(splitBirthday('1990-13-01')).toBeNull();
+    expect(splitBirthday('1990-05-00')).toBeNull();
+  });
 });
 
 describe('matchNumberOption', () => {

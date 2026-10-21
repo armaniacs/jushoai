@@ -1,4 +1,5 @@
 import type { AiStatusInfo } from '../ai/types';
+import type { ClassifyFailure } from '../messages';
 import { STATUS_TEXT } from '../ai/status-text';
 import { getFlagGuidance, type BrowserKind } from '../llm/browser-support';
 import { OVERLAY_CSS } from './overlay';
@@ -28,7 +29,28 @@ function flagLines(browser: BrowserKind): string[] {
   ];
 }
 
-export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
+// Failure-linked line for the badge guide: when the last classification
+// failed while the status still reads available (cloud network/auth cases),
+// the status-based guide alone says "available" with no settings shortcut.
+// Appended only in that case; statuses that already guide to settings and
+// the truncated cap (a volume notice, not a setup problem) stay unchanged.
+const FAILURE_GUIDE_LINE: Partial<Record<ClassifyFailure, string>> = {
+  'not-configured':
+    '直前の判定では AI の設定が未完了でした。AI判定画面で設定を保存し、「接続テスト」で確かめてください。',
+  permission:
+    '直前の判定では AI への通信が許可されていませんでした。AI判定画面で保存し直して許可し、「接続テスト」で確かめてください。',
+  auth: '直前の判定では AI の認証に失敗しました。AI判定画面で API キーを確認し、「接続テスト」で確かめてください。',
+  unavailable:
+    '直前の判定では AI が使えませんでした。AI判定画面で「接続テスト」を実行して状態を確認してください。',
+  network:
+    '直前の判定では AI との通信に失敗しました。AI判定画面で「接続テスト」を実行し、URL・モデル名・ネットワークを確認してください。',
+  rejected:
+    '直前の判定では AI が要求を拒否しました。AI判定画面でモデル名を確認し、「接続テスト」で確かめてください。',
+  'bad-response':
+    '直前の判定では AI の応答を解釈できませんでした。AI判定画面でモデルを確認し、「接続テスト」で確かめてください。',
+};
+
+function buildBaseGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
   const providerName = PROVIDER_LABEL[info.provider];
   switch (info.status) {
     case 'unsupported':
@@ -125,6 +147,22 @@ export function buildGuide(info: AiStatusInfo, browser: BrowserKind): Guide {
       return exhaustive;
     }
   }
+}
+
+// Failure-linked wrapper: the status table above stays the single owner of
+// per-status wording; this only appends the connection-test line when the
+// last attempt failed behind an "available" cloud status.
+export function buildGuide(info: AiStatusInfo, browser: BrowserKind, failure: ClassifyFailure | null = null): Guide {
+  const guide = buildBaseGuide(info, browser);
+  if (
+    failure !== null &&
+    info.status === 'available' &&
+    (info.provider === 'openai' || info.provider === 'gemini')
+  ) {
+    const line = FAILURE_GUIDE_LINE[failure];
+    if (line) return { ...guide, lines: [...guide.lines, line], openSettings: true };
+  }
+  return guide;
 }
 
 export interface GuideHandle {

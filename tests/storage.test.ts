@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StorageSaveError, isQuotaExceededError, isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveLastUsed } from '../src/storage';
+import { StorageReadError, StorageSaveError, isQuotaExceededError, isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveImported, saveLastUsed } from '../src/storage';
+import { exportTransferFile, importTransferFile } from '../src/transfer';
 import { EMPTY_ADDRESS, EMPTY_PROFILE, type StoredData } from '../src/core/types';
 
 let store: Record<string, unknown>;
@@ -102,6 +103,14 @@ describe('migrateData', () => {
     });
     expect(out.addresses[0]?.profileId).toBe('p1');
     expect(out.addresses[1]?.profileId).toBe('');
+  });
+
+  it('keeps links when an owner-set override supplies storage profile ids', () => {
+    const out = migrateData(
+      { profiles: [], addresses: [{ id: 'a1', label: '自宅', profileId: 'p1' }] },
+      new Set(['p1']),
+    );
+    expect(out.addresses[0]?.profileId).toBe('p1');
   });
 
   it('derives stable ids for entries missing them instead of random UUIDs (PBI-35)', () => {
@@ -358,5 +367,375 @@ describe('isReady', () => {
     expect(isReady({ ...ready, addresses: [] })).toBe(false);
     expect(isReady({ ...ready, profiles: [EMPTY_PROFILE] })).toBe(false);
     expect(isReady({ ...ready, profiles: [] })).toBe(false);
+  });
+});
+
+const validProfile = (n: number) => ({
+  ...EMPTY_PROFILE, id: `p${n}`, label: `P${n}`,
+  lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+});
+const validAddress = (n: number) => ({
+  ...EMPTY_ADDRESS, id: `a${n}`, label: '自宅', zip: '1000001', prefecture: '東京都',
+  city: '千代田区', street: '千代田1-1',
+});
+
+describe('transfer (PBI-117)', () => {
+  it('round-trips an export into an empty storage', async () => {
+    await saveData(ready);
+    const json = await exportTransferFile();
+    store = {};
+    const result = await importTransferFile(json);
+    expect(result).toEqual({
+      ok: true, profilesAdded: 1, profilesUpdated: 0, addressesAdded: 1, addressesUpdated: 0,
+    });
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('exports profiles and addresses only, without the last-used state', async () => {
+    await saveData(ready);
+    await saveLastUsed({ profileId: 'p1', addressId: '1' });
+    const parsed = JSON.parse(await exportTransferFile()) as Record<string, unknown>;
+    expect(Object.keys(parsed).sort()).toEqual(['addresses', 'profiles']);
+  });
+
+  it('rejects broken JSON without touching storage', async () => {
+    await saveData(ready);
+    const result = await importTransferFile('{broken');
+    expect(result.ok).toBe(false);
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('rejects files without profiles/addresses arrays', async () => {
+    await saveData(ready);
+    const result = await importTransferFile(JSON.stringify({ foo: [1] }));
+    expect(result.ok).toBe(false);
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('rejects a file with no entries', async () => {
+    await saveData(ready);
+    const result = await importTransferFile(JSON.stringify({ profiles: [], addresses: [] }));
+    expect(result.ok).toBe(false);
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('rejects the whole file when one entry fails validation', async () => {
+    await saveData(ready);
+    const json = JSON.stringify({
+      profiles: [validProfile(1), { ...EMPTY_PROFILE, id: 'pX', label: '壊れた' }],
+      addresses: [],
+    });
+    const result = await importTransferFile(json);
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join('\n')).toContain('姓');
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('rejects an import that would exceed the cap of 10', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
+    await saveData({ profiles: ten, addresses: [validAddress(0)] });
+    const result = await importTransferFile(JSON.stringify({ profiles: [validProfile(99)], addresses: [] }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join('\n')).toContain('10');
+    expect((await loadData()).profiles).toHaveLength(10);
+  });
+
+  it('allows an import that updates existing entries at the cap', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
+    await saveData({ profiles: ten, addresses: [validAddress(0)] });
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [{ ...validProfile(3), label: '更新' }],
+      addresses: [],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 0, profilesUpdated: 1, addressesAdded: 0, addressesUpdated: 0,
+    });
+    const reloaded = await loadData();
+    expect(reloaded.profiles).toHaveLength(10);
+    expect(reloaded.profiles.find((p) => p.id === 'p3')?.label).toBe('更新');
+  });
+
+  it('fills missing fields with defaults like the load boundary', async () => {
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [{
+        id: 'pX', label: '最小', lastName: '山田', firstName: '太郎',
+        lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+      }],
+      addresses: [],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 1, profilesUpdated: 0, addressesAdded: 0, addressesUpdated: 0,
+    });
+    expect((await loadData()).profiles[0]).toEqual({
+      ...EMPTY_PROFILE, id: 'pX', label: '最小', lastName: '山田', firstName: '太郎',
+      lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+    });
+  });
+
+  it('falls mistyped fields back to defaults and rejects the entry', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    try {
+      await saveData(ready);
+      const result = await importTransferFile(JSON.stringify({
+        profiles: [{ id: 'pX', label: '矯正', lastName: 42 }],
+        addresses: [],
+      }));
+      expect(result.ok).toBe(false);
+      expect(await loadData()).toEqual(ready);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('assigns deterministic ids to entries missing one and re-imports as an update', async () => {
+    const json = JSON.stringify({
+      profiles: [{ label: 'id なし', lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ' }],
+      addresses: [],
+    });
+    const result = await importTransferFile(json);
+    expect(result).toEqual({
+      ok: true, profilesAdded: 1, profilesUpdated: 0, addressesAdded: 0, addressesUpdated: 0,
+    });
+    const firstId = (await loadData()).profiles[0]?.id;
+    expect(firstId).toMatch(/^mig-profile-[0-9a-f]{8}(-[0-9]+)?$/);
+    await importTransferFile(json);
+    const reloaded = await loadData();
+    expect(reloaded.profiles).toHaveLength(1);
+    expect(reloaded.profiles[0]?.id).toBe(firstId);
+  });
+
+  it('unlinks imported addresses whose owner is not in the file', async () => {
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [],
+      addresses: [{
+        id: 'aX', label: '自宅', profileId: 'gone', zip: '1000001', prefecture: '東京都',
+        city: '千代田区', street: '千代田1-1',
+      }],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 0, profilesUpdated: 0, addressesAdded: 1, addressesUpdated: 0,
+    });
+    expect((await loadData()).addresses[0]?.profileId).toBe('');
+  });
+
+  it('normalizes hand-edited values before validating', async () => {
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [{
+        id: 'pX', label: '整形', lastName: ' 山田 ', firstName: '太郎',
+        lastNameKana: 'やまだ', firstNameKana: 'たろう', birthday: '1990/5/7',
+      }],
+      addresses: [],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 1, profilesUpdated: 0, addressesAdded: 0, addressesUpdated: 0,
+    });
+    const p = (await loadData()).profiles[0];
+    expect(p?.birthday).toBe('1990-05-07');
+    expect(p?.lastNameKana).toBe('ヤマダ');
+    expect(p?.lastName).toBe('山田');
+  });
+
+  it('drops non-object entries like the load boundary', async () => {
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [42, null],
+      addresses: [validAddress(0)],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 0, profilesUpdated: 0, addressesAdded: 1, addressesUpdated: 0,
+    });
+    const reloaded = await loadData();
+    expect(reloaded.profiles).toHaveLength(0);
+    expect(reloaded.addresses).toHaveLength(1);
+  });
+
+  it('ignores stray keys outside profiles/addresses', async () => {
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [], addresses: [validAddress(0)],
+      profile: { lastName: '山田' }, exportedAt: '2026-10-21',
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 0, profilesUpdated: 0, addressesAdded: 1, addressesUpdated: 0,
+    });
+    expect((await loadData()).profiles).toHaveLength(0);
+  });
+
+  it('aborts the import when the stored data cannot be read instead of treating it as empty', async () => {
+    await saveData(ready);
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async () => { throw new Error('read failed'); },
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    const result = await importTransferFile(JSON.stringify({ profiles: [validProfile(1)], addresses: [] }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.errors.join('\n')).toContain('読み込め');
+    // A failed read must never turn the import into a full replacement of
+    // storage: the stored data survives once reads work again.
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('checks the cap against the pre-write merge result when storage grew between reads', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
+    await saveData({ profiles: ten, addresses: [validAddress(0)] });
+    let reads = 0;
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => {
+            reads += 1;
+            // First read (the import's pre-read) still sees the empty
+            // snapshot; by the second read another context has filled the cap.
+            if (reads === 1) return {};
+            return key in store ? { [key]: store[key] } : {};
+          },
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    const result = await importTransferFile(JSON.stringify({ profiles: [validProfile(99)], addresses: [] }));
+    expect(result.ok).toBe(false);
+    // The unchecked merge must not land: storage keeps the other context's 10.
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async () => {},
+        },
+      },
+    });
+    expect((await loadData()).profiles).toHaveLength(10);
+  });
+
+  it('keeps a link to a profile that lives only in storage when importing addresses', async () => {
+    await saveData(ready);
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [],
+      addresses: [{
+        id: 'aX', label: '自宅', profileId: 'p1', zip: '1000001', prefecture: '東京都',
+        city: '千代田区', street: '千代田1-1',
+      }],
+    }));
+    expect(result.ok).toBe(true);
+    const imported = (await loadData()).addresses.find((a) => a.id === 'aX');
+    expect(imported?.profileId).toBe('p1');
+  });
+
+  it('reports capacity shortage only for quota failures', async () => {
+    const readableGet = async (key: string) => (key in store ? { [key]: store[key] } : {});
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: readableGet,
+          set: async () => { throw new Error('QUOTA_BYTES quota exceeded'); },
+        },
+      },
+    });
+    const quota = await importTransferFile(JSON.stringify({
+      profiles: [validProfile(1)], addresses: [validAddress(0)],
+    }));
+    expect(quota.ok).toBe(false);
+    if (!quota.ok) expect(quota.errors.join('\n')).toContain('容量');
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: readableGet,
+          set: async () => { throw new Error('boom'); },
+        },
+      },
+    });
+    const other = await importTransferFile(JSON.stringify({
+      profiles: [validProfile(1)], addresses: [validAddress(0)],
+    }));
+    expect(other.ok).toBe(false);
+    if (!other.ok) {
+      expect(other.errors.join('\n')).toContain('保存に失敗');
+      expect(other.errors.join('\n')).not.toContain('容量');
+    }
+  });
+
+  it('reports the added/updated breakdown against the stored data', async () => {
+    await saveData(ready);
+    const result = await importTransferFile(JSON.stringify({
+      profiles: [validProfile(1), validProfile(2)],
+      addresses: [validAddress(0)],
+    }));
+    expect(result).toEqual({
+      ok: true, profilesAdded: 1, profilesUpdated: 1, addressesAdded: 1, addressesUpdated: 0,
+    });
+  });
+
+  it('drops unknown keys from exported entries', async () => {
+    store['jushoai:data'] = {
+      profiles: [{ ...ready.profiles[0], junk: 'hand-edit' }],
+      addresses: [{ ...ready.addresses[0], exportedAt: '2026-10-21' }],
+    };
+    const parsed = JSON.parse(await exportTransferFile()) as {
+      profiles: Record<string, unknown>[]; addresses: Record<string, unknown>[];
+    };
+    expect(Object.keys(parsed.profiles[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_PROFILE).sort());
+    expect(Object.keys(parsed.addresses[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_ADDRESS).sort());
+  });
+});
+
+describe('saveImported seam (PBI-117)', () => {
+  const noCap = () => {};
+
+  it('merges by id like saveData and writes the merged payload', async () => {
+    await saveData(ready);
+    await saveImported({ profiles: [{ ...profile, lastName: '更新' }], addresses: [] }, noCap);
+    const reloaded = await loadData();
+    expect(reloaded.profiles).toHaveLength(1);
+    expect(reloaded.profiles[0]?.lastName).toBe('更新');
+    expect(reloaded.addresses).toHaveLength(1);
+  });
+
+  it('throws StorageReadError instead of overwriting storage when the pre-write read fails', async () => {
+    await saveData(ready);
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async () => { throw new Error('read failed'); },
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    const err = await saveImported({ profiles: [validProfile(2)], addresses: [] }, noCap).catch((e: unknown) => e);
+    expect(err).toBeInstanceOf(StorageReadError);
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (key: string) => (key in store ? { [key]: store[key] } : {}),
+          set: async (obj: Record<string, unknown>) => { Object.assign(store, obj); },
+        },
+      },
+    });
+    expect(await loadData()).toEqual(ready);
+  });
+
+  it('runs capCheck on the pre-write merge result and writes nothing on violation', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
+    await saveData({ profiles: ten, addresses: [] });
+    const seen: number[] = [];
+    const err = await saveImported(
+      { profiles: [validProfile(99)], addresses: [] },
+      (payload) => {
+        seen.push(payload.profiles.length);
+        if (payload.profiles.length > 10) throw new Error('cap');
+      },
+    ).catch((e: unknown) => e);
+    expect(seen).toEqual([11]);
+    expect(err).toBeInstanceOf(Error);
+    expect((await loadData()).profiles).toHaveLength(10);
   });
 });

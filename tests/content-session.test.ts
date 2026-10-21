@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Address, Category, FieldMeta, Item, Profile } from '../src/core/types';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../src/core/types';
+import type { PlanItem } from '../src/core/planner';
 import {
   classifyWithReason, createFillSession, decideDisplay,
   type SessionClassifyResult, type SessionEnv,
@@ -357,5 +358,72 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     expect(session.apply(false, panel)).toMatchObject({
       display: { banner: '一部のみ適用（1/2件）' },
     });
+  });
+});
+
+// レビュー指摘: apply の第3引数（承認反映）が全テストで未テストだった。
+describe('fill session: apply approval seam (PBI-122 review #9)', () => {
+  const buildingAddress: Address = {
+    ...EMPTY_ADDRESS, id: 'a1', label: '自宅', zip: '1000001',
+    prefecture: '東京都', city: '千代田区', street: '千代田1-1',
+    building: 'サンプルパークマンション',
+  };
+  const buildingItems = (): Item[] => [
+    {
+      meta: makeMeta({ id: 'f-bldg', label: '建物名', maxLength: 10 }),
+      cls: { category: 'building', confidence: 0.8, source: 'rule' },
+    },
+  ];
+  const buildingMetas = (): FieldMeta[] => buildingItems().map((i) => i.meta);
+
+  function buildingSetup(consentOk: () => boolean) {
+    const injected: PlanItem[][] = [];
+    const env: SessionEnv = {
+      classify: async () => ({ items: buildingItems(), failureReason: null }),
+      checkConsent: () => (consentOk()
+        ? { ok: true as const }
+        : { ok: false as const, reason: '覆われているため中止' }),
+      injectPlan: (p: PlanItem[]) => { injected.push(p); return fullSummary(1, 0); },
+      persistSelection: () => {},
+      openUrl: () => {},
+      feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
+      isExcluded: () => false,
+    };
+    const ms = buildingMetas();
+    const session = createFillSession({
+      profiles: [profile1], addresses: [buildingAddress],
+      metas: ms, metasById: metasById(ms), englishPage: false, canReanalyze: false,
+    }, env);
+    return { session, env, injected };
+  }
+
+  it('apply の第3引数（承認）で injectPlan に置換後の plan が渡る', async () => {
+    const { session, injected } = buildingSetup(() => true);
+    await session.start();
+    const result = session.apply(false, panel, new Set(['f-bldg']));
+    expect(result).toMatchObject({ applied: true });
+    expect(injected).toHaveLength(1);
+    expect(injected[0]![0]).toMatchObject({
+      fieldId: 'f-bldg', value: 'サンプルパーク邸', status: 'ok',
+    });
+  });
+
+  it('承認セットが空のままの apply は元の plan（未昇格）を渡す', async () => {
+    const { session, injected } = buildingSetup(() => true);
+    await session.start();
+    session.apply(false, panel);
+    expect(injected[0]![0]).toMatchObject({ fieldId: 'f-bldg', value: '', status: 'warn-maxlength' });
+  });
+
+  it('consent 失敗時は plan を置換しない（承認なしの再 apply で元の plan が注入される）', async () => {
+    let consentOk = false;
+    const { session, injected } = buildingSetup(() => consentOk);
+    await session.start();
+    const blocked = session.apply(false, panel, new Set(['f-bldg']));
+    expect(blocked).toEqual({ applied: false, reason: '覆われているため中止' });
+    expect(injected).toHaveLength(0);
+    consentOk = true;
+    session.apply(false, panel);
+    expect(injected[0]![0]).toMatchObject({ fieldId: 'f-bldg', value: '', status: 'warn-maxlength' });
   });
 });
