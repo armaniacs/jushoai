@@ -76,6 +76,31 @@ describe('bindPreview (PBI-64 wiring)', () => {
     expect(root.textContent).toContain('山田');
   });
 
+  it('reports a reanalysis failure to onFailure for the badge guide', async () => {
+    const onFailure = vi.fn();
+    const sh = attachOpenShadow();
+    const buttonHandle: ButtonHandle = {
+      setStatus: vi.fn(), showError: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
+    };
+    bindPreview({
+      session: fakeSession({
+        reanalyze: vi.fn(async (): Promise<ReanalyzeResult> => ({ rows: [], failureReason: 'auth' })),
+      }),
+      button: buttonHandle,
+      rows: [makeRow('ok', '初期値')],
+      addresses: [],
+      profiles: [],
+      reanalyzable: true,
+      feedbackContext: () => ({ pageHref: 'https://example.com/form', provider: 'none', version: '0.1.20' }),
+      openFeedbackUrl: vi.fn(),
+      onClosed: vi.fn(),
+      onFailure,
+    });
+    expect(sh.root).toBeTruthy();
+    buttonIn(sh.root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(onFailure).toHaveBeenCalledWith('auth'));
+  });
+
   it('surfaces the abort reason on the button and keeps the panel for retry', () => {
     const session = fakeSession({
       apply: vi.fn((): ApplyResult => ({ applied: false, reason: 'パネルが隠れています' })),

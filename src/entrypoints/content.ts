@@ -9,6 +9,7 @@ import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
+import type { ClassifyFailure } from '../messages';
 import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
@@ -103,6 +104,10 @@ export default defineContentScript({
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
+    // Last AI failure behind the current status (cleared on success): the
+    // badge guide reads it so a failed-while-available run still points at
+    // the AI判定画面の接続テスト instead of saying "available" alone.
+    let lastFailure: ClassifyFailure | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
     // Single place that tears down open panels: closing one panel must never
@@ -218,7 +223,12 @@ export default defineContentScript({
         },
       );
       const started = await session.start();
-      if (started.failureReason) button.showError(hintForButton(started.failureReason));
+      if (started.failureReason) {
+        lastFailure = started.failureReason;
+        button.showError(hintForButton(started.failureReason));
+      } else {
+        lastFailure = null;
+      }
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -239,6 +249,7 @@ export default defineContentScript({
         feedbackContext: feedbackCtx,
         openFeedbackUrl,
         onClosed: () => { openPreview = null; },
+        onFailure: (reason) => { lastFailure = reason; },
       });
       openPreview = preview;
     }
@@ -274,7 +285,7 @@ export default defineContentScript({
           (info) => {
             closeOpenPanels();
             openGuide = showAiGuide(
-              buildGuide(info, browser),
+              buildGuide(info, browser, lastFailure),
               () => {
                 openGuide = null;
               },

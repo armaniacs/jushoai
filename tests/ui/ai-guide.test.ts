@@ -146,6 +146,27 @@ describe('buildGuide: cloud providers', () => {
   });
 });
 
+describe('buildGuide: failure-linked connection-test guidance', () => {
+  it('points an available cloud guide at the connection test after a network failure', () => {
+    const g = buildGuide(gi('available', 'gemini'), 'chrome', 'network');
+    expect(g.openSettings).toBe(true);
+    expect(g.lines.join('\n')).toContain('接続テスト');
+  });
+
+  it('does not add settings guidance for truncated', () => {
+    const g = buildGuide(gi('available', 'gemini'), 'chrome', 'truncated');
+    expect(g.openSettings).toBeFalsy();
+    expect(g.lines.join('\n')).not.toContain('接続テスト');
+  });
+
+  it('leaves an already-guided status unchanged', () => {
+    const before = buildGuide(gi('auth-error', 'openai'), 'chrome');
+    const after = buildGuide(gi('auth-error', 'openai'), 'chrome', 'network');
+    expect(after.lines).toEqual(before.lines);
+    expect(after.openSettings).toBe(true);
+  });
+});
+
 describe('showAiGuide: settings shortcut', () => {
   afterEach(() => { document.body.innerHTML = ''; });
 

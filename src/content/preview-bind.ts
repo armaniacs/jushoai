@@ -2,6 +2,7 @@ import type { createFillSession } from '../content-session';
 import { buildPartialIssueUrl, FEEDBACK_REPO } from '../feedback/issue-url';
 import { hintForButton } from '../ai/failure-text';
 import type { Address, Profile } from '../core/types';
+import type { ClassifyFailure } from '../messages';
 import type { ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
 
@@ -19,6 +20,9 @@ export interface PreviewBindInput {
   // Called when the panel closes (cancel button, Escape, or report flow),
   // so the caller drops its panel handle and a later open starts clean.
   onClosed(): void;
+  // Called with the reanalysis failure reason (if any) so the caller can
+  // keep the badge guide failure-aware; the button hint is still shown here.
+  onFailure?(reason: ClassifyFailure | null): void;
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -44,6 +48,7 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     onReanalyze: input.reanalyzable ? () => {
       void session.reanalyze().then((res) => {
         if (res?.failureReason) button.showError(hintForButton(res.failureReason));
+        input.onFailure?.(res?.failureReason ?? null);
         if (res) preview.setRows(res.rows);
       });
     } : undefined,
@@ -57,12 +62,14 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     onAddressChange: (id) => {
       preview.setRows(session.selectAddress(id));
     },
-    onApply: (sendFeedback) => {
+    onApply: (sendFeedback, approvedAbbrevs) => {
       // Last trust point: the session aborts before injecting anything when
       // the panel was hidden, moved, or covered. The panel stays open for
       // cancel or retry, and the reason goes to the form button, which stays
-      // visible even when the panel is hidden.
-      const result = session.apply(sendFeedback, preview);
+      // visible even when the panel is hidden. The abbreviation approvals
+      // (PBI-122) ride the same call: only rows the user explicitly checked
+      // in the preview promote into the fill plan.
+      const result = session.apply(sendFeedback, preview, approvedAbbrevs);
       if (!result.applied) {
         button.showError(result.reason);
         return;
