@@ -62,6 +62,8 @@ describe('preview feedback checkbox', () => {
     await vi.waitFor(() => expect(isFeedbackVisible(root)).toBe(true));
     feedbackLabel(root)!.querySelector('input')!.click();
     applyButton(root)!.click();
-    expect(onApply).toHaveBeenCalledWith(true);
+    // PBI-122: the second argument is the abbreviation approval set, empty
+    // when no candidate row exists. The checked flag contract is unchanged.
+    expect(onApply).toHaveBeenCalledWith(true, new Set());
   });
 });

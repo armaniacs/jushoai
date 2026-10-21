@@ -7,6 +7,7 @@ import type { FieldClassifier } from './core/classifier';
 import type { ClassifyFailure } from './messages';
 import { asClassifyFailure } from './messages';
 import { hintForButton } from './ai/failure-text';
+import { applyAbbrevApprovals } from './core/planner';
 import {
   buildFeedbackInput, replanItems, snapshotItems,
 } from './content-run';
@@ -190,11 +191,19 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
     apply(
       sendFeedback: boolean,
       panel: SessionPanel,
+      approvedAbbrevs?: ReadonlySet<string>,
     ): { applied: true; summary: FillSummary; display: DisplayDecision } | { applied: false; reason: string } {
       // Last trust point: abort before injecting anything when the panel was
       // hidden, moved, or covered. The panel stays open for cancel or retry.
       const consent = env.checkConsent(panel);
       if (!consent.ok) return { applied: false, reason: consent.reason };
+      // PBI-122: only the preview's explicit approval promotes an abbreviation
+      // candidate into the fill plan; without it the row keeps warn-maxlength
+      // and nothing injects (NOT-TODO 12). The flip happens here, once per
+      // apply, so the fill module keeps its single "status ok fills" contract.
+      if (approvedAbbrevs && approvedAbbrevs.size > 0) {
+        plan = applyAbbrevApprovals(plan, approvedAbbrevs);
+      }
       // Inject before persisting so the saved selection reflects an attempted
       // application; the outcomes ride the return value for display and retry.
       const summary = env.injectPlan(plan);

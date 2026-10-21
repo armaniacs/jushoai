@@ -1,5 +1,5 @@
 import type { Item } from './core/types';
-import { buildPlan, type PlanItem } from './core/planner';
+import { buildPlan, hasAbbrev, type PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackInput, FeedbackSnapshot } from './feedback/issue-url';
 import type { PreviewRow } from './ui/preview';
@@ -20,14 +20,16 @@ export function buildPreviewRows(plan: PlanItem[], metasById: Map<string, FieldM
     // A plan/map mismatch (stale preview after rescan) must not kill the whole
     // preview: fall back to the field id as the label and keep the plan's own
     // display/status/source, which stay truthful without the meta.
-    if (!m) {
-      return { label: p.fieldId, display: p.display, status: p.status, source: p.source };
-    }
+    // レビュー指摘: the row object is assembled once — the abbrev spread was
+    // duplicated across the two branches and the presence check is the shared
+    // hasAbbrev judgment, so an empty candidate can never ride a row.
+    const abbrev = hasAbbrev(p.abbrev) ? { fieldId: p.fieldId, abbrev: p.abbrev } : {};
     return {
-      label: m.label || m.nearby || m.placeholder || m.name || m.htmlId,
+      label: m ? (m.label || m.nearby || m.placeholder || m.name || m.htmlId) : p.fieldId,
       display: p.display,
       status: p.status,
       source: p.source,
+      ...abbrev,
     };
   });
 }

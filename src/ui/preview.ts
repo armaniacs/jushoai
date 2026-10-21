@@ -10,6 +10,11 @@ export interface PreviewRow {
   display: string;
   status: PlanStatus;
   source: 'rule' | 'llm';
+  // PBI-122: an abbreviation candidate for an overflowing field. Rendered as
+  // an opt-in checkbox (unchecked = not injected); the checked field ids
+  // travel to the apply callback, which promotes them into the fill plan.
+  fieldId?: string;
+  abbrev?: string;
 }
 
 export interface PreviewOptions {
@@ -20,7 +25,9 @@ export interface PreviewOptions {
   profiles: Profile[];
   selectedProfileId: string;
   onProfileChange(id: string): void;
-  onApply(sendFeedback: boolean): void;
+  // PBI-122: the second argument carries the abbreviation approvals — the
+  // field ids whose candidate the user explicitly checked in the preview.
+  onApply(sendFeedback: boolean, approvedAbbrevs: ReadonlySet<string>): void;
   onCancel(): void;
   onReanalyze?(): void | Promise<void>;
 }
@@ -61,6 +68,9 @@ const CSS = `
   .value { word-break: break-all; }
   .note { grid-column: 2; font-size: 11px; color: #b3261e; }
   .note.muted { color: #5a6270; }
+  .abbrev { grid-column: 2; display: inline-flex; align-items: center; gap: 4px;
+    font-size: 11px; color: #5a6270; cursor: pointer; }
+  .abbrev input { margin: 0; }
   .ai { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; color: #fff;
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
@@ -179,11 +189,27 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   panel.append(list, empty, actions, status);
 
   let resultMode = false;
+  // PBI-122: abbreviation candidates render as opt-in checkboxes. The boxes
+  // reset on every setRows (a replan rebuilds the plan), so an approval is
+  // always bound to the plan the panel currently shows.
+  let currentRows: PreviewRow[] = [];
+  let abbrevBoxes: { id: string; box: HTMLInputElement }[] = [];
+  const approvedAbbrevs = (): ReadonlySet<string> =>
+    new Set(abbrevBoxes.filter((b) => b.box.checked).map((b) => b.id));
+  const syncHasOk = (): void => {
+    // An approved abbreviation unlocks apply even when no plain ok row does:
+    // an overflow-only field would otherwise strand the approval behind a
+    // disabled button.
+    hasOk = currentRows.some((r) => r.status === 'ok') || abbrevBoxes.some((b) => b.box.checked);
+    syncButtons();
+  };
   const setRows = (rows: PreviewRow[]) => {
     // PBI-59: result mode replaced the panel content, so re-rendering rows
     // would only touch a detached list. Ignore silently: reanalyze (the sole
     // setRows caller after open) has no button in result mode and cannot fire.
     if (resultMode) return;
+    currentRows = rows;
+    abbrevBoxes = [];
     list.replaceChildren(
       ...rows.map((r) => {
         const li = document.createElement('li');
@@ -200,18 +226,36 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
           value.append(ai);
         }
         li.append(label, value);
+        // レビュー指摘: the overflow note and its abbreviation checkbox agree —
+        // checking the opt-in abbrev flips the red「入力しません」note to muted
+        // (the row IS about to be entered), unchecking restores it.
+        let note: HTMLSpanElement | null = null;
         if (STATUS_NOTE[r.status]) {
-          const note = document.createElement('span');
+          note = document.createElement('span');
           note.className = r.status === 'filled' ? 'note muted' : 'note';
           note.textContent = STATUS_NOTE[r.status];
           li.append(note);
+        }
+        if (r.abbrev && r.fieldId) {
+          const wrap = document.createElement('label');
+          wrap.className = 'abbrev';
+          const box = document.createElement('input');
+          box.type = 'checkbox';
+          const text = document.createElement('span');
+          text.textContent = '略記して入れる';
+          wrap.append(box, text);
+          box.addEventListener('change', () => {
+            if (note) note.className = box.checked ? 'note muted' : 'note';
+            syncHasOk();
+          });
+          abbrevBoxes.push({ id: r.fieldId, box });
+          li.append(wrap);
         }
         return li;
       }),
     );
     empty.hidden = rows.length > 0;
-    hasOk = rows.some((r) => r.status === 'ok');
-    syncButtons();
+    syncHasOk();
   };
 
   const setReanalyzing = (v: boolean) => {
@@ -235,7 +279,8 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     });
   }
 
-  apply.addEventListener('click', () => opts.onApply(feedbackBox.checked && !feedback.hidden));
+  apply.addEventListener('click', () =>
+    opts.onApply(feedbackBox.checked && !feedback.hidden, approvedAbbrevs()));
   cancel.addEventListener('click', () => opts.onCancel());
 
   setRows(opts.rows);
