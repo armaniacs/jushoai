@@ -1,15 +1,20 @@
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
+import { planOneField, fillOneReasonLabel } from '../core/fill-one';
+import { resolveAddressId, resolveLastId } from '../core/selection';
 import { createFillSession, classifyWithReason } from '../content-session';
 import { bindPreview } from '../content/preview-bind';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
+import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
 import { classifyField, isConfident } from '../core/classify-rules';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
+import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
+import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
 import type { ClassifyFailure } from '../messages';
@@ -129,6 +134,57 @@ export default defineContentScript({
       const msg = e instanceof Error ? e.message : String(e);
       return msg.includes('Extension context invalidated');
     };
+
+    // --- PBI-137: single-field entry -------------------------------------------
+    // The remembered right-click target (capture-phase contextmenu) resolves
+    // the context-menu entry; keyboard entries resolve the focused control.
+    let lastContextTarget: Element | null = null;
+    document.addEventListener('contextmenu', (e) => {
+      lastContextTarget = e.target instanceof Element ? e.target : null;
+    }, true);
+
+    // Rule-only for one field: no LLM, no egress gate. The same planner
+    // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
+    // 警告して注入しない) and the value is always confirmed in a panel first.
+    async function fillOne(target: Element | null): Promise<void> {
+      if (!target) return;
+      const scanned = scanFields(document.body).find(
+        (f) => f.el === target || (f.radioInputs?.some((r) => r === target) ?? false),
+      );
+      if (!scanned) return;
+      const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
+      if (!isReady(data)) {
+        void chrome.runtime.sendMessage({ type: 'open-options' });
+        return;
+      }
+      const profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id))
+        ?? data.profiles[0]!.id;
+      const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
+      const addressId = resolveAddressId(data.addresses, profileId, last.addressId);
+      const address = data.addresses.find((a) => a.id === addressId) ?? null;
+      const resolved = planOneField(scanned.meta, profile, address, new Date());
+      const label = scanned.meta.label || scanned.meta.name || scanned.meta.htmlId || scanned.meta.id;
+      if (!resolved.ok) {
+        await showFillOneBlocked(label, resolved.reason);
+        return;
+      }
+      const decision = await confirmFillOne(`${label}（${scanned.meta.type}）`, resolved.plan.display);
+      if (decision.mode !== 'fill') return;
+      fillField(scanned.el, resolved.plan.value);
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        void fillOne(document.activeElement);
+      }
+    }, true);
+
+    chrome.runtime.onMessage.addListener((msg) => {
+      if ((msg as { type?: string } | null)?.type === FILL_ONE_MESSAGE.type) {
+        void fillOne(lastContextTarget ?? document.activeElement);
+      }
+    });
 
     async function guardedRun(container: Element, button: ButtonHandle): Promise<boolean> {
       if (running.has(container)) return true;

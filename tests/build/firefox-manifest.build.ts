@@ -28,6 +28,10 @@ describe('firefox manifest', () => {
     const c = read('chrome-mv3');
     expect(m.permissions).toEqual(c.permissions);
     expect(m.optional_host_permissions).toEqual(c.optional_host_permissions);
+    // PBI-137: the one-click この欄に入力 entry rides the contextMenus
+    // permission; host permissions stay optional.
+    expect(c.permissions).toContain('contextMenus');
+    expect(m.permissions).toContain('contextMenus');
   });
 });
 

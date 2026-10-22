@@ -19,7 +19,9 @@ export default defineConfig({
   manifest: ({ browser }) => ({
     name: 'JushoAI',
     description: '日本式フォームの住所・氏名・フリガナを補完する',
-    permissions: ['storage'],
+    // contextMenus: the one-click この欄に入力 entry (PBI-137). Host
+    // permissions stay optional; the menu itself needs no host access.
+    permissions: ['storage', 'contextMenus'],
     optional_host_permissions: ['https://*/*', 'http://localhost/*', 'http://127.0.0.1/*'],
     ...(browser === 'firefox' && {
       browser_specific_settings: {
