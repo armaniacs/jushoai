@@ -38,7 +38,7 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - **LLM は分類だけを行い、値は作らない。** 入力欄の分類（姓/名/カナ/郵便番号/住所分割など）はルール（`core/classify-rules.ts`）が先に判定し、信頼度が `ACCEPT_THRESHOLD` 未満の欄だけ LLM に回す。分割・カナ変換・半角化・ハイフン判定は `core/` の決定的なコードで行う。LLM にはフィールドのメタデータだけを渡し、プロファイルの値は渡さない。
 - **`core/` は DOM にも LLM にも依存しない純粋関数。** `dom/` が走査と注入、`llm/prompt.ts` が LLM への prompt 構築と出力解析（組み込み・クラウド両経路で共有）、`llm/classifier.ts` が Prompt API の薄いラッパー。LLM は `FieldClassifier` インターフェースの背後にあり、利用不可・出力不正・例外のいずれでもルール分類のみで動作を続ける（`analyze.ts` の `classifyAll`）。
 - **分類は 2 段階。** `classifyField` が欄単体で分類し、`refineClassifications` が同一フォーム内の兄弟欄を見て補正する（電話 3 欄 → `tel1/2/3`、郵便番号 2 欄 → `zip1/2`、`fullName` が 2 欄 → 姓/名、`addressFull` を都道府県・市区町村欄の有無で `addressNoPref` / `street` に絞る）。
-- **注入は必ずプレビュー経由。** ボタン押下 → 分類 → `planner.buildPlan` → プレビュー承認 → `fillField` の順。入力済み欄は上書きせず、`maxlength` 超過は切り詰めず警告して注入しない。
+- **注入は必ずプレビュー経由。** ボタン押下 → 分類（AI 利用時は送信ゲート）→ `planner.buildPlan` → プレビュー承認 → `fillField` の順。入力済み欄は上書きせず、`maxlength` 超過は切り詰めず警告して注入しない。注入後の undo（`fill-plan.ts` の `undoFill`）は履歴を content script のメモリにだけ置き（送信・永続化なし）、`filled` 行だけを空状態に戻す。ユーザーが追記した欄は snapshot が一致しないため触らない。
 - **値注入はネイティブ setter 経由。** `fillField` は prototype の `value` setter を呼んでから `input` / `change` / `blur` を発火する。React/Vue の値トラッカーを迂回するための実装で、`el.value = ...` に置き換えない。
 - **UI は Shadow DOM（closed）。** ページ由来の文字列（label など）は必ず `textContent` で入れ、`innerHTML` を使わない。
 - **Prompt API は Service Worker（`src/entrypoints/background.ts`）から呼ぶ。** Content Script は runtime メッセージ（`src/llm/background-gateway.ts`、`src/messages.ts`）経由で状態確認・分類・ダウンロードを依頼する。Chrome（Gemini Nano）と Edge（Phi-mini）は同じ `LanguageModel` API 形状。Phi-mini は文脈が小さいため 1 リクエスト 20 欄までに分割する。

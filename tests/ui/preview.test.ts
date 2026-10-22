@@ -243,3 +243,42 @@ describe('showResult (PBI-55)', () => {
     expect(root.textContent).toContain('見送り（仕様どおり）');
   });
 });
+
+describe('showResult: undo (PBI-132)', () => {
+  const summary = {
+    filled: 2,
+    unapplied: 0,
+    total: 2,
+    byResult: {
+      filled: 2, 'skipped-status': 0, 'missing-target': 0, detached: 0, 'already-filled': 0, 'no-option': 0, error: 0,
+    },
+  };
+
+  it('renders the undo button only when the option is given', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {});
+    expect(buttonIn(root, '元に戻す')).toBeUndefined();
+    const withUndo = open({ rows: [makeRow('ok')] });
+    withUndo.handle.showResult(summary, () => {}, { count: 2, onUndo: () => {} });
+    expect(buttonIn(withUndo.root, '元に戻す')).toBeTruthy();
+  });
+
+  it('swaps to the undo confirmation with restored and skipped counts', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, {
+      count: 2,
+      onUndo: () => handle.showUndoResult(1, 1),
+    });
+    buttonIn(root, '元に戻す')!.click();
+    expect(root.querySelector('.empty')?.textContent).toContain('元に戻しました（1件）');
+    expect(root.querySelector('.empty')?.textContent).toContain('追記後の1件はそのままです');
+    expect(buttonIn(root, '内訳をissueで報告')).toBeUndefined();
+  });
+
+  it('omits the skip note when nothing was skipped', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, { count: 2, onUndo: () => handle.showUndoResult(2, 0) });
+    buttonIn(root, '元に戻す')!.click();
+    expect(root.querySelector('.empty')?.textContent).toBe('元に戻しました（2件）');
+  });
+});

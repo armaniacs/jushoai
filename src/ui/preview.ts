@@ -38,8 +38,12 @@ export interface PreviewHandle {
   setAddressId(id: string): void;
   // Post-apply result mode (PBI-55): replaces the panel content with the
   // countable breakdown and a one-click report button. Used instead of
-  // close() when the apply was partial; a clean apply still closes.
-  showResult(summary: FillSummary, onReport: () => void): void;
+  // close() when the apply was partial or when the undo history exists
+  // (PBI-132); the undo option renders the 元に戻す button.
+  showResult(summary: FillSummary, onReport: () => void, undo?: { count: number; onUndo(): void }): void;
+  // Post-undo confirmation (PBI-132): replaces the result content with the
+  // restored/skipped counts and the close button only.
+  showUndoResult(restored: number, skipped: number): void;
   close(): void;
   // Center of the apply button in viewport coordinates, or null when it has
   // no box (hidden). The consent gate reads this through the handle because
@@ -300,7 +304,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   // the .label/.value grid; the report button carries the one-click issue
   // action supplied by the caller. Labels come from the fill-plan-owned table
   // (PBI-58), shared with the issue-report body.
-  const showResult = (summary: FillSummary, onReport: () => void): void => {
+  const showResult = (summary: FillSummary, onReport: () => void, undo?: { count: number; onUndo(): void }): void => {
     title.textContent = '入力結果';
     const head = document.createElement('p');
     head.className = 'empty';
@@ -338,6 +342,18 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     done.addEventListener('click', () => opts.onCancel());
     const resultActions = document.createElement('div');
     resultActions.className = 'actions';
+    // PBI-132: the undo button only when the latest apply recorded history.
+    // The callback resolves through the caller (session.undoLast), and the
+    // view swaps to the undo confirmation from there.
+    if (undo && undo.count > 0) {
+      const undoBtn = document.createElement('button');
+      undoBtn.type = 'button';
+      undoBtn.className = 'report';
+      undoBtn.textContent = '元に戻す';
+      undoBtn.title = 'JushoAIが入れた欄だけ注入前の空状態に戻します（追記した欄は触りません）';
+      undoBtn.addEventListener('click', () => undo.onUndo());
+      resultActions.append(undoBtn);
+    }
     resultActions.append(report, done);
     panel.replaceChildren(title, head, breakdown, resultActions);
     resultMode = true;
@@ -350,5 +366,25 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     if (!isMeasurable(rect)) return null;
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   };
-  return { setRows, setReanalyzing, setAddressId, showResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
+  // PBI-132: post-undo confirmation — the restored/skipped counts and close
+  // only. The breakdown report is gone because the history was consumed.
+  const showUndoResult = (restored: number, skipped: number): void => {
+    title.textContent = '入力結果';
+    const head = document.createElement('p');
+    head.className = 'empty';
+    head.textContent = skipped > 0
+      ? `元に戻しました（${restored}件）。追記後の${skipped}件はそのままです`
+      : `元に戻しました（${restored}件）`;
+    const done = document.createElement('button');
+    done.type = 'button';
+    done.textContent = '閉じる';
+    done.addEventListener('click', () => opts.onCancel());
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.append(done);
+    panel.replaceChildren(title, head, actions);
+    resultMode = true;
+  };
+
+  return { setRows, setReanalyzing, setAddressId, showResult, showUndoResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
 }

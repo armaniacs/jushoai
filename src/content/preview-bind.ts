@@ -77,12 +77,14 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       // The banner text arrives composed; this side only displays it.
       if (result.display.banner) button.showError(result.display.banner);
       // PBI-55: a partial apply (not everything filled) keeps the preview
-      // open in result mode with a one-click breakdown report; a clean
-      // apply closes as before. The banner above still fires for true
-      // runtime failures independently of this view.
-      if (result.summary.filled < result.summary.total) {
+      // open in result mode with a one-click breakdown report; PBI-132: a
+      // clean apply with undo history also keeps it open so 元に戻す is
+      // reachable right after the injection. The banner above still fires
+      // for true runtime failures independently of this view.
+      const undoCount = session.undoCount;
+      if (result.summary.filled < result.summary.total || undoCount > 0) {
         const ctx = input.feedbackContext();
-        preview.showResult(result.summary, () => {
+        const onReport = () => {
           input.openFeedbackUrl(buildPartialIssueUrl(
             FEEDBACK_REPO,
             {
@@ -96,7 +98,22 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
             },
           ));
           teardown();
-        });
+        };
+        preview.showResult(
+          result.summary,
+          onReport,
+          undoCount > 0
+            ? {
+                count: undoCount,
+                onUndo: () => {
+                  // One-shot: the session consumes the entries. The view
+                  // swaps to the undo confirmation from here.
+                  const r = session.undoLast();
+                  preview.showUndoResult(r?.restored.length ?? 0, r?.skipped.length ?? 0);
+                },
+              }
+            : undefined,
+        );
         return;
       }
       teardown();

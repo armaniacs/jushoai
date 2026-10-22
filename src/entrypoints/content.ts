@@ -237,7 +237,7 @@ export default defineContentScript({
             // Display decisions stay with onApply so the partial banner cannot
             // clobber the AI failure hint; the happy path stays silent.
             console.debug('[JushoAI] fill outcomes', report.summary);
-            return report.summary;
+            return report;
           },
           persistSelection: (sel) => { void saveLastUsed(sel); },
           openUrl: openFeedbackUrl,

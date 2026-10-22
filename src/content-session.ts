@@ -13,7 +13,7 @@ import {
 } from './content-run';
 import { buildFeedbackIssueUrl, FEEDBACK_REPO } from './feedback/issue-url';
 import { resolveAddressId, resolveLastId } from './core/selection';
-import { shouldWarn, type FillSummary } from './dom/fill-plan';
+import { shouldWarn, undoFill, type FillReport, type FillSummary, type UndoEntry, type UndoReport } from './dom/fill-plan';
 import type { PreviewRow } from './ui/preview';
 
 // Fill-session inputs that never touch the DOM: the stored profiles/addresses,
@@ -87,9 +87,10 @@ export interface SessionEnv {
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };
-  // Returns the fill summary so the caller can display failures and decide
+  // Returns the fill report so the caller can display failures and decide
   // retries; never throws for per-field outcomes (fillPlan isolates those).
-  injectPlan(plan: PlanItem[]): FillSummary;
+  // The undo entries ride the report (PBI-132) and stay in session memory.
+  injectPlan(plan: PlanItem[]): FillReport;
   persistSelection(sel: { profileId: string; addressId: string }): void;
   openUrl(url: string): void;
   feedbackContext(): { pageHref: string; provider: string; version: string };
@@ -131,6 +132,10 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   // by apply(), so a retry shows the same hint until a newer run overwrites
   // it — the single place the failureReason-overwrite order is expressed.
   let lastFailureReason: ClassifyFailure | null = null;
+  // PBI-132: the latest fill run's undo history, held in this content-script
+  // session's memory only — never persisted, never sent (BDD: 履歴は外部に出ない).
+  // A later apply overwrites it, so undo is always the 直後の注入.
+  let lastUndo: UndoEntry[] = [];
 
   const currentProfile = (): Profile =>
     input.profiles.find((p) => p.id === profileId) ?? input.profiles[0]!;
@@ -208,7 +213,9 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       }
       // Inject before persisting so the saved selection reflects an attempted
       // application; the outcomes ride the return value for display and retry.
-      const summary = env.injectPlan(plan);
+      const report = env.injectPlan(plan);
+      lastUndo = report.undo;
+      const summary = report.summary;
       env.persistSelection({ profileId, addressId });
       const ctx = env.feedbackContext();
       const feedbackInput = buildFeedbackInput({
@@ -229,6 +236,22 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       // callers no longer thread it through.
       const failureHint = lastFailureReason ? hintForButton(lastFailureReason) : undefined;
       return { applied: true, summary, display: decideDisplay(summary, failureHint) };
+    },
+
+    // PBI-132: how many fields the latest apply recorded for undo (0 when
+    // nothing filled yet or everything was a by-design skip). The preview
+    // wiring reads it to decide the undo button's visibility.
+    get undoCount(): number { return lastUndo.length; },
+
+    // One-shot 直後のundo: fields still holding exactly what JushoAI filled go
+    // back to their empty state; user-edited fields are skipped (never wiped).
+    // The entries are consumed, so a second click finds nothing and a later
+    // apply overwrites the history anyway.
+    undoLast(): UndoReport | null {
+      if (lastUndo.length === 0) return null;
+      const report = undoFill(lastUndo);
+      lastUndo = [];
+      return report;
     },
   };
 }

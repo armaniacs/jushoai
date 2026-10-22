@@ -33,6 +33,8 @@ const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
   selectProfile: () => [],
   selectAddress: () => [],
   apply: () => ({ applied: false, reason: 'unused' }),
+  undoCount: 0,
+  undoLast: () => null,
   ...overrides,
 });
 
