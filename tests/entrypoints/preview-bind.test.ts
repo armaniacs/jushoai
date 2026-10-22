@@ -28,10 +28,12 @@ const summary = (filled: number, total: number): FillSummary => ({
 const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
   selectedProfileId: 'p1',
   selectedAddressId: 'a1',
+  categoryFor: () => 'unknown',
   start: async () => ({ excluded: false, rows: [], failureReason: null }),
   reanalyze: async () => null,
   selectProfile: () => [],
   selectAddress: () => [],
+  recategorize: () => [],
   apply: () => ({ applied: false, reason: 'unused' }),
   undoCount: 0,
   undoLast: () => null,

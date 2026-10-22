@@ -12,6 +12,9 @@ import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
 import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
 import { draftFromPage } from '../core/import-draft';
+import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
+import { loadMappings, saveMappings } from '../mapping-store';
+import { chooseMapping } from '../ui/mapping-panel';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress, type GuestValues } from '../core/guest';import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
@@ -226,6 +229,8 @@ export default defineContentScript({
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
+      // PBI-138: the taught correction layer, loaded once per run.
+      const activeMappings = await loadMappings();
 
       const info = await getAiStatusViaBackground();
       button.setStatus(info);
@@ -287,8 +292,7 @@ export default defineContentScript({
       const session = createFillSession(
         {
           profiles: sessionProfiles,
-          addresses: sessionAddresses,
-          lastProfileId: last.profileId,
+          addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
           metas,
           metasById,
@@ -296,7 +300,15 @@ export default defineContentScript({
           canReanalyze: effectiveClassifier !== null,
         },
         {
-          classify: (ms, opts) => classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }),
+          // PBI-138: the taught mapping rides as a correction layer on top of
+          // whatever classification path ran — the learned pair wins over the
+          // rule, and an excluded page never gets here (the session returns
+          // excluded before opening any panel).
+          classify: (ms, opts) =>
+            classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }).then((res) => ({
+              ...res,
+              items: applyMapping(res.items, activeMappings, hostOf(location.href)),
+            })),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -350,6 +362,29 @@ export default defineContentScript({
         openFeedbackUrl,
         onClosed: () => { openPreview = null; },
         onFailure: (reason) => { lastFailure = reason; },
+        // PBI-138: the 分類を直す flow. The correction runs through the session
+        // (rule-only re-plan) and the learned pair persists only when the user
+        // approved remembering it. The stored pair is a field signature →
+        // category, never a profile or correction value.
+        onFix: (fieldId, label, panel) => {
+          void chooseMapping(label, session.categoryFor(fieldId)).then((decision) => {
+            if (!decision) return;
+            panel.setRows(session.recategorize(fieldId, decision.category));
+            if (!decision.remember) return;
+            void (async () => {
+              const meta = metas.find((m) => m.id === fieldId);
+              const fieldKey = meta ? fieldKeyFor(meta) : null;
+              if (!fieldKey) return;
+              const domain = hostOf(location.href);
+              const entries = await loadMappings();
+              const next = [
+                ...entries.filter((e) => !(e.domain === domain && e.fieldKey === fieldKey)),
+                { domain, fieldKey, category: decision.category },
+              ];
+              await saveMappings(next);
+            })();
+          });
+        },
       });
       openPreview = preview;
     }

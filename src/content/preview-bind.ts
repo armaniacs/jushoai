@@ -23,6 +23,9 @@ export interface PreviewBindInput {
   // Called with the reanalysis failure reason (if any) so the caller can
   // keep the badge guide failure-aware; the button hint is still shown here.
   onFailure?(reason: ClassifyFailure | null): void;
+  // PBI-138: the preview's 分類を直す flow. The handler opens the chooser, runs
+  // the correction through the session and decides whether the site learns it.
+  onFix?(fieldId: string, label: string, preview: PreviewHandle): void | Promise<void>;
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -62,6 +65,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     onAddressChange: (id) => {
       preview.setRows(session.selectAddress(id));
     },
+    onFix: input.onFix
+      ? (fieldId, label) => { void input.onFix!(fieldId, label, preview); }
+      : undefined,
     onApply: (sendFeedback, approvedAbbrevs) => {
       // Last trust point: the session aborts before injecting anything when
       // the panel was hidden, moved, or covered. The panel stays open for

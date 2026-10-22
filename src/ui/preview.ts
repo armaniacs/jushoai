@@ -33,6 +33,9 @@ export interface PreviewOptions {
   onApply(sendFeedback: boolean, approvedAbbrevs: ReadonlySet<string>): void;
   onCancel(): void;
   onReanalyze?(): void | Promise<void>;
+  // PBI-138: the preview's 分類を直す entry. The first argument is the field id,
+  // the second the row label the chooser shows.
+  onFix?(fieldId: string, label: string): void | Promise<void>;
 }
 
 export interface PreviewHandle {
@@ -82,6 +85,9 @@ const CSS = `
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
   .actions .reanalyze { margin-right: auto; }
+  .fix { grid-column: 2; justify-self: start; margin-top: 2px; padding: 1px 6px;
+    font-size: 10px; color: #5a6270; background: #f1f3f7; border: 1px solid #dfe3ea;
+    border-radius: 4px; cursor: pointer; }
   .feedback { display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
     color: #5a6270; cursor: pointer; }
   .feedback input { margin: 0; }
@@ -155,6 +161,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   cancel.type = 'button';
   cancel.textContent = 'キャンセル';
   const onReanalyze = opts.onReanalyze;
+  const onFix = opts.onFix;
   const reanalyze = onReanalyze
     ? Object.assign(document.createElement('button'), {
         type: 'button', className: 'reanalyze', textContent: 'AI で分析',
@@ -274,6 +281,17 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
           });
           abbrevBoxes.push({ id: r.fieldId, box });
           li.append(wrap);
+        }
+        // PBI-138: the 分類を直す entry, one per row with a field id. The
+        // chooser (and the remember step) live with the onFix handler.
+        if (r.fieldId && onFix) {
+          const fix = document.createElement('button');
+          fix.type = 'button';
+          fix.className = 'fix';
+          fix.textContent = '直す';
+          fix.setAttribute('aria-label', `${r.label} の分類を直す`);
+          fix.addEventListener('click', () => { void onFix(r.fieldId!, r.label); });
+          li.append(fix);
         }
         return li;
       }),

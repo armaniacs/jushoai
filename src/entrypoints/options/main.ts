@@ -14,6 +14,7 @@ import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import { mountMappingSection } from './mapping-section';
 
 const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
   { key: 'lastName', label: '姓', placeholder: '山田' },
@@ -333,6 +334,9 @@ mountAiSection(document.getElementById('ai-app')!);
 // Where JushoAI must not start is its own page: the list can grow, and the
 // save button belongs with the list it saves.
 mountExclusionSection(document.getElementById('exclusion-app')!);
+// The taught correction layer is its own page: the list grows with each 教えた
+// pair and the remove buttons belong with it.
+mountMappingSection(document.getElementById('mapping-app')!);
 // The audit log is its own page so it can grow without pushing the AI settings down.
 const auditPage = document.createElement('div');
 auditPage.id = AUDIT_SECTION_ID;

@@ -1,4 +1,4 @@
-import type { Item } from './core/types';
+import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackSnapshot } from './feedback/issue-url';
@@ -161,6 +161,10 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   return {
     get selectedProfileId(): string { return profileId; },
     get selectedAddressId(): string { return addressId; },
+    // PBI-138: the current category of a field, for the chooser's default.
+    get categoryFor(): (fieldId: string) => string {
+      return (fieldId) => items.find((i) => i.meta.id === fieldId)?.cls.category ?? 'unknown';
+    },
 
     async start(): Promise<SessionStart> {
       const result = await env.classify(input.metas, { englishPage: input.englishPage });
@@ -183,6 +187,20 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
 
     selectAddress(id: string): PreviewRow[] {
       addressId = id;
+      return replan();
+    },
+
+    // PBI-138: the preview's 分類を直す entry. A correction overrides one
+    // field's classification and re-plans synchronously (rule-only, no LLM):
+    // the corrected plan is what the next apply injects, and the feedback
+    // snapshot follows the correction.
+    recategorize(fieldId: string, category: Category): PreviewRow[] {
+      items = items.map((i) =>
+        i.meta.id === fieldId
+          ? { ...i, cls: { category, confidence: 1, source: 'rule' } }
+          : i,
+      );
+      after = snapshotItems(items);
       return replan();
     },
 
