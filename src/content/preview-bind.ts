@@ -1,6 +1,8 @@
 import type { createFillSession } from '../content-session';
 import { buildPartialIssueUrl, FEEDBACK_REPO } from '../feedback/issue-url';
 import { hintForButton } from '../ai/failure-text';
+import { changedRows } from '../core/site-approval';
+import type { ApprovalRecord } from '../core/site-approval';
 import type { Address, Profile } from '../core/types';
 import type { ClassifyFailure } from '../messages';
 import type { ButtonHandle } from '../ui/button';
@@ -26,6 +28,10 @@ export interface PreviewBindInput {
   // PBI-138: the preview's 分類を直す flow. The handler opens the chooser, runs
   // the correction through the session and decides whether the site learns it.
   onFix?(fieldId: string, label: string, preview: PreviewHandle): void | Promise<void>;
+  // PBI-128: a matching per-site approval record shortens the preview to the
+  // changed rows; the record save runs after a successful apply.
+  approval?: ApprovalRecord | null;
+  recordApproval?(rows: PreviewRow[]): void;
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -35,6 +41,24 @@ export interface PreviewBindInput {
 // this is a move, verified by the existing E2E suite.
 export function bindPreview(input: PreviewBindInput): PreviewHandle {
   const { session, button } = input;
+  // PBI-128: a matching approval collapses the unchanged rows into one muted
+  // line. The plan itself is untouched — the apply still injects the full
+  // plan; only the view shortens.
+  const shortRows = (): PreviewRow[] => {
+    if (!input.approval) return input.rows;
+    const changed = changedRows(input.rows, input.approval);
+    const hidden = input.rows.length - changed.length;
+    if (hidden === 0 || changed.length === 0) return input.rows;
+    return [
+      ...changed,
+      {
+        label: '前回と同じ',
+        display: `${hidden}件を前回の承認どおりに入力します`,
+        status: 'ok',
+        source: 'rule',
+      },
+    ];
+  };
   // Single teardown for every close path (cancel, report flow, clean apply):
   // close the panel, then let the caller drop its handle.
   // teardown reads the `preview` declared below, which stays in the temporal
@@ -45,7 +69,7 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     input.onClosed();
   };
   const preview = showPreview({
-    rows: input.rows,
+    rows: shortRows(),
     addresses: input.addresses,
     selectedAddressId: session.selectedAddressId,
     onReanalyze: input.reanalyzable ? () => {
@@ -68,6 +92,7 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     onFix: input.onFix
       ? (fieldId, label) => { void input.onFix!(fieldId, label, preview); }
       : undefined,
+    onExpandAll: input.approval ? () => preview.setRows(input.rows) : undefined,
     onApply: (sendFeedback, approvedAbbrevs) => {
       // Last trust point: the session aborts before injecting anything when
       // the panel was hidden, moved, or covered. The panel stays open for
@@ -82,6 +107,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       }
       // The banner text arrives composed; this side only displays it.
       if (result.display.banner) button.showError(result.display.banner);
+      // PBI-128: the approval memory records the applied shape after a clean
+      // apply, so the next visit to the same form shortens its preview.
+      input.recordApproval?.(input.rows);
       // PBI-55: a partial apply (not everything filled) keeps the preview
       // open in result mode with a one-click breakdown report; PBI-132: a
       // clean apply with undo history also keeps it open so 元に戻す is

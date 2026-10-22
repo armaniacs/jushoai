@@ -15,6 +15,8 @@ import { draftFromPage } from '../core/import-draft';
 import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
 import { loadMappings, saveMappings } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
+import { matches, recordFor } from '../core/site-approval';
+import { loadApprovals, saveApprovals } from '../approval-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress, type GuestValues } from '../core/guest';import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
@@ -229,6 +231,8 @@ export default defineContentScript({
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
+      // PBI-128: the prior per-site approval record for this host, if any.
+      const priorApproval = (await loadApprovals())[hostOf(location.href)] ?? null;
       // PBI-138: the taught correction layer, loaded once per run.
       const activeMappings = await loadMappings();
 
@@ -384,6 +388,22 @@ export default defineContentScript({
               await saveMappings(next);
             })();
           });
+        },
+        // PBI-128: the per-site approval memory. A record for this host with
+        // the same form shape and selection shortens the preview to the
+        // changed rows; a clean apply records the shape (digests only — no
+        // raw profile value, no raw label).
+        approval: matches(priorApproval, location.href, metas, session.selectedProfileId, session.selectedAddressId)
+          ? priorApproval
+          : null,
+        recordApproval: (rows) => {
+          void (async () => {
+            const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
+            if (!record.domain) return;
+            const all = await loadApprovals();
+            all[record.domain] = record;
+            await saveApprovals(all);
+          })();
         },
       });
       openPreview = preview;

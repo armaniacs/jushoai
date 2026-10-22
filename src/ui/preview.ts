@@ -36,6 +36,9 @@ export interface PreviewOptions {
   // PBI-138: the preview's 分類を直す entry. The first argument is the field id,
   // the second the row label the chooser shows.
   onFix?(fieldId: string, label: string): void | Promise<void>;
+  // PBI-128: the shortened preview's expand entry. Renders the 前回と同じ rows
+  // that the diff collapsed.
+  onExpandAll?(): void;
 }
 
 export interface PreviewHandle {
@@ -162,9 +165,16 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   cancel.textContent = 'キャンセル';
   const onReanalyze = opts.onReanalyze;
   const onFix = opts.onFix;
+  const onExpandAll = opts.onExpandAll;
   const reanalyze = onReanalyze
     ? Object.assign(document.createElement('button'), {
         type: 'button', className: 'reanalyze', textContent: 'AI で分析',
+      })
+    : null;
+  // PBI-128: the expand button replaces the collapsed rows with the full list.
+  const expand = onExpandAll
+    ? Object.assign(document.createElement('button'), {
+        type: 'button', className: 'reanalyze', textContent: '前回と同じ欄を表示',
       })
     : null;
   let hasOk = false;
@@ -185,6 +195,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       reanalyze.disabled = busy;
       reanalyze.textContent = busy ? '分析中…' : 'AI で分析';
     }
+    if (expand) expand.disabled = busy;
     cancel.disabled = busy;
     apply.disabled = busy || !hasOk;
     feedbackBox.disabled = busy;
@@ -199,6 +210,14 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   };
   const actions = document.createElement('div');
   actions.className = 'actions';
+  if (expand) {
+    expand.addEventListener('click', () => {
+      // One-shot: the full list replaces the collapsed view.
+      expand.hidden = true;
+      onExpandAll?.();
+    });
+    actions.append(expand);
+  }
   actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
   panel.append(list, empty, actions, status);
 
