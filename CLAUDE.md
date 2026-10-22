@@ -26,6 +26,7 @@ make typecheck                                # tsc --noEmit
 make test                                     # 全テスト
 make site                                     # ドキュメントサイトを site-dist に生成して検査
 make site-serve                               # site-dist を 127.0.0.1:4173 で配信
+make eval                                     # samples の corpus でルール分類の指標をローカル計測（通信なし）
 npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```

@@ -1,6 +1,6 @@
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check check-all zip clean site site-serve addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
+.PHONY: help install dev build test typecheck check check-all zip clean site site-serve eval addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -56,6 +56,9 @@ site: ## Build and check the documentation site into site-dist (SITE_BASE sets t
 
 site-serve: site ## Serve site-dist at http://127.0.0.1:4173
 	node site/serve.ts
+
+eval: ## Run the local rule-metrics eval over the sample corpus (no network)
+	npm run eval
 
 addurl: ## Register URL in tests/target-url.md and sync fixtures (URL=... [FIXTURE=...])
 ifndef URL

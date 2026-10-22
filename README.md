@@ -106,6 +106,7 @@ AI を呼び出すたびに、モデルに送った内容と応答がこの端�
     make zip           # dist に配布用 zip を作る
     make site          # ドキュメントサイトを site-dist に生成して検査する
     make site-serve    # site-dist を http://127.0.0.1:4173 で確認する
+    make eval          # samples の corpus でルール分類の指標をローカル計測する（通信なし）
     make clean         # 生成物を削除
 
 `make help` で一覧を表示する。
