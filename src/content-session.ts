@@ -14,6 +14,7 @@ import {
 import { buildFeedbackIssueUrl, FEEDBACK_REPO } from './feedback/issue-url';
 import { resolveAddressId, resolveLastId } from './core/selection';
 import { shouldWarn, undoFill, type FillReport, type FillSummary, type UndoEntry, type UndoReport } from './dom/fill-plan';
+import { fieldKeyFor } from './core/domain-mapping';
 import type { PreviewRow } from './ui/preview';
 
 // Fill-session inputs that never touch the DOM: the stored profiles/addresses,
@@ -28,6 +29,9 @@ export interface SessionInput {
   lastAddressId?: string;
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
+  // PBI-142: the earlier page's approved values for this tab (content-script
+  // memory only). A field whose profile value is empty falls back to it.
+  carryover?: Record<string, string>;
   englishPage: boolean;
   canReanalyze: boolean;
 }
@@ -98,6 +102,9 @@ export interface SessionEnv {
   openUrl(url: string): void;
   feedbackContext(): { pageHref: string; provider: string; version: string };
   isExcluded(): boolean;
+  // PBI-142: the filled entries of an apply merge into the tab-scoped
+  // carryover, so the next page of the same tab re-offers them.
+  recordCarryover?(entries: readonly { key: string; value: string }[]): void;
 }
 
 // The minimal panel surface the consent gate reads.
@@ -244,6 +251,17 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       lastUndo = report.undo;
       const summary = report.summary;
       env.persistSelection({ profileId, addressId });
+      // PBI-142: the filled values merge into the tab-scoped carryover, so the
+      // next page of the same tab re-offers them. Profile values are never
+      // part of the merge — the signature and the value only.
+      if (env.recordCarryover) {
+        env.recordCarryover(plan
+          .filter((p) => p.value)
+          .map((p) => ({
+            key: fieldKeyFor(input.metasById.get(p.fieldId)!) ?? '',
+            value: p.value,
+          })));
+      }
       const ctx = env.feedbackContext();
       const feedbackInput = buildFeedbackInput({
         pageHref: ctx.pageHref,

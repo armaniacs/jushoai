@@ -17,6 +17,7 @@ import { loadMappings, saveMappings } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
 import { matches, recordFor } from '../core/site-approval';
 import { assignedFirst, assignmentFor } from '../core/site-profile';
+import { mergeCarryover } from '../core/carryover';
 import { loadApprovals, saveApprovals } from '../approval-store';
 import { loadAssignments, saveAssignments } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
@@ -160,6 +161,9 @@ export default defineContentScript({
     // throwaway copies at plan time, destroyed with the tab. Never
     // chrome.storage, never the audit log, never the export/import.
     let guest: GuestValues | null = null;
+    // PBI-142: the earlier page's approved values for this tab. Content-script
+    // memory only — a tab close destroys it, nothing persists or is sent.
+    let carryover: Record<string, string> = {};
 
     // Rule-only for one field: no LLM, no egress gate. The same planner
     // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
@@ -311,6 +315,7 @@ export default defineContentScript({
           addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
           assignedProfileId,
+          carryover,
           metas,
           metasById,
           englishPage,
@@ -349,6 +354,11 @@ export default defineContentScript({
           openUrl: openFeedbackUrl,
           feedbackContext: feedbackCtx,
           isExcluded: () => gate.isExcluded(),
+          // PBI-142: the filled values merge into this tab's carryover, so the
+          // next page re-offers them. Tab-scoped memory only — never storage.
+          recordCarryover: (entries) => {
+            carryover = mergeCarryover(carryover, entries);
+          },
         },
       );
       const started = await session.start();

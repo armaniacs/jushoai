@@ -486,3 +486,39 @@ describe('warn-no-value (PBI-10)', () => {
     expect(plan).toEqual([]);
   });
 });
+
+describe('carryover (PBI-142)', () => {
+  const bare = { ...profile, firstName: '', email: '' };
+
+  it('fills an empty profile field with the carried value', () => {
+    const plan = buildPlan([item('firstName', { name: 'first' }), item('email', { name: 'mail' })], {
+      profile: bare, address, carryover: { first: '太郎' },
+    });
+    expect(plan.map((p) => [p.category, p.value])).toEqual([
+      ['firstName', '太郎'],
+      ['email', ''],
+    ]);
+  });
+
+  it('lets the profile value win over the carried value', () => {
+    const plan = buildPlan([item('lastName', { name: 'last' })], {
+      profile, address, carryover: { last: '鈴木' },
+    });
+    expect(plan.map((p) => p.value)).toEqual(['山田']);
+  });
+
+  it('never rides a select or a radio field', () => {
+    const options = [
+      { value: '', text: '選択してください' },
+      { value: '男性', text: '男性' },
+      { value: '女性', text: '女性' },
+    ];
+    const bareGender = { ...profile, gender: '' };
+    const plan = buildPlan([item('gender', { tag: 'select', options, name: 'gender' })], {
+      profile: bareGender, address, carryover: { gender: '男性' },
+    });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', status: 'warn-no-value' }),
+    ]);
+  });
+});

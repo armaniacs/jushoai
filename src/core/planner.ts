@@ -12,6 +12,7 @@ import {
 import { matchOption } from './match-option';
 import { isAllowedRadioCategory } from './radio-policy';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
+import { carryoverFor } from './carryover';
 
 export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option' | 'warn-no-value';
 
@@ -37,6 +38,9 @@ export interface PlanContext {
   profile: Profile;
   address: Address | null;
   today?: Date;
+  // PBI-142: the earlier page's approved values, keyed by the field signature.
+  // A field whose profile value is empty falls back to the carried value.
+  carryover?: Record<string, string>;
 }
 
 // PBI-120: width-forcing patterns reshape the value's character width before
@@ -57,6 +61,18 @@ function enforceWidth(value: string, meta: FieldMeta): string {
 }
 
 function valueFor(
+  cls: Classification,
+  meta: FieldMeta,
+  { profile: p, address: a, today, carryover }: PlanContext,
+  present: Set<Category>,
+): string {
+  const filled = valueForBase(cls, meta, { profile: p, address: a, today }, present);
+  // PBI-142: the earlier page's approved value carries into this preview for
+  // the same field signature. Input fields only; the profile value always wins.
+  return filled || carryoverFor(meta, carryover);
+}
+
+function valueForBase(
   cls: Classification,
   meta: FieldMeta,
   { profile: p, address: a, today }: PlanContext,
