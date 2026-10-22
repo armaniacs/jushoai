@@ -1,6 +1,7 @@
 import { isReady, loadData, loadLastUsed, type LastUsed } from '../../storage';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { ANALYZE_MESSAGE_TYPE, isAnalyzeReason, type AnalyzeReason, type AnalyzeResponse } from '../../analyze-contract';
+import { GUEST_MESSAGE, type GuestResponse } from '../../guest-message';
 import { el } from '../options/dom';
 
 export function openOptionsPage(): Promise<void> {
@@ -29,6 +30,21 @@ export async function analyzeCurrentTab(): Promise<AnalyzeResponse> {
     return { ok: false, reason: isAnalyzeReason(res?.reason) ? res.reason : 'no-form' };
   } catch {
     return { ok: false, reason: 'no-tab' };
+  }
+}
+
+// PBI-144: asks the content script to open the one-shot guest entry panel. The
+// typed values never cross this message: the popup only opens the panel, and
+// the values stay in the content script's memory.
+export async function openGuestPanel(): Promise<boolean> {
+  try {
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    const id = tabs[0]?.id;
+    if (id == null) return false;
+    const res = (await chrome.tabs.sendMessage(id, GUEST_MESSAGE)) as GuestResponse | undefined;
+    return res?.ok === true;
+  } catch {
+    return false;
   }
 }
 
@@ -129,7 +145,22 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
       notice.hidden = false;
     });
   });
-  header.append(el('h1', '登録内容の確認'), analyze, gear);
+    const guestBtn = el('button', 'ゲストで入力');
+  guestBtn.type = 'button';
+  guestBtn.addEventListener('click', () => {
+    // PBI-144: the one-shot guest entry. Works without saved data — a guest
+    // fill needs no stored profile, and the typed values stay in memory.
+    notice.hidden = true;
+    void openGuestPanel().then((ok) => {
+      if (ok) {
+        window.close();
+        return;
+      }
+      notice.textContent = 'このタブでは開けません。フォームのあるページでお試しください。';
+      notice.hidden = false;
+    });
+  });
+  header.append(el('h1', '登録内容の確認'), analyze, guestBtn, gear);
 
   const profileTitle = el('h2', 'プロファイル');
   const profileList = el('ul');

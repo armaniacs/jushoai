@@ -13,6 +13,8 @@ import { fillField } from '../dom/fill';
 import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
 import { draftFromPage } from '../core/import-draft';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
+import { guestProfile, guestAddress, type GuestValues } from '../core/guest';import { GUEST_MESSAGE_TYPE } from '../guest-message';
+import { confirmGuest } from '../ui/guest-panel';
 import type { Item } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
@@ -146,6 +148,12 @@ export default defineContentScript({
       lastContextTarget = e.target instanceof Element ? e.target : null;
     }, true);
 
+    // --- PBI-144: one-shot guest values ----------------------------------------
+    // Memory only: set by the guest panel, overlaid onto the session's
+    // throwaway copies at plan time, destroyed with the tab. Never
+    // chrome.storage, never the audit log, never the export/import.
+    let guest: GuestValues | null = null;
+
     // Rule-only for one field: no LLM, no egress gate. The same planner
     // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
     // 警告して注入しない) and the value is always confirmed in a panel first.
@@ -211,7 +219,10 @@ export default defineContentScript({
     // only these coarse guidance lines do.
     async function run(container: Element, button: ButtonHandle) {
       const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
-      if (!isReady(data)) {
+      // PBI-144: the guest bypasses the readiness gate — a one-shot fill needs
+      // no saved profile, and the guest values overlay the (empty) stored
+      // copies below. No guest and nothing saved stays the settings guidance.
+      if (!isReady(data) && !guest) {
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
@@ -266,10 +277,17 @@ export default defineContentScript({
         version: chrome.runtime.getManifest().version,
       });
       const openFeedbackUrl = (url: string): void => { window.open(url, '_blank', 'noopener'); };
+      // PBI-144: the guest REPLACES the stored data for that fill — stored and
+      // guest values never mix, so the preview shows exactly what will fill.
+      // The stored arrays are never mutated, so chrome.storage stays untouched
+      // and the overlay dies with the tab.
+      const activeGuest = guest;
+      const sessionProfiles = activeGuest ? [guestProfile(activeGuest)] : data.profiles;
+      const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
       const session = createFillSession(
         {
-          profiles: data.profiles,
-          addresses: data.addresses,
+          profiles: sessionProfiles,
+          addresses: sessionAddresses,
           lastProfileId: last.profileId,
           lastAddressId: last.addressId,
           metas,
@@ -325,8 +343,8 @@ export default defineContentScript({
         session,
         button,
         rows: started.rows,
-        addresses: data.addresses,
-        profiles: data.profiles,
+        addresses: sessionAddresses,
+        profiles: sessionProfiles,
         reanalyzable: effectiveClassifier !== null,
         feedbackContext: feedbackCtx,
         openFeedbackUrl,
@@ -384,8 +402,7 @@ export default defineContentScript({
     // Triggered by the action popup's "AI で分析" button: runs the same flow as
     // the in-page button on the first detected form, reusing its handle so
     // errors surface the same way. No form mounted means nothing to fill.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
         return false;
       }
       // An excluded page is out of scope for the popup too; "no form" is what
@@ -433,6 +450,33 @@ export default defineContentScript({
         cls: classifyField(f.meta) ?? { category: 'unknown', confidence: 0, source: 'rule' },
       }));
       sendResponse({ ok: true, draft: draftFromPage(refineClassifications(items)) });
+      return false;
+    });
+
+    // PBI-144: the popup's ゲストで入力 button asks the tab to open the one-shot
+    // entry panel. The typed values stay in this script's memory (the tab close
+    // destroys them): never chrome.storage, never the audit log, never the
+    // export/import. An excluded page keeps its opt-out.
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (
+        typeof msg !== 'object' || msg === null ||
+        (msg as { type?: unknown }).type !== GUEST_MESSAGE_TYPE
+      ) {
+        return false;
+      }
+      if (gate.isExcluded()) {
+        sendResponse({ ok: false });
+        return false;
+      }
+      sendResponse({ ok: true });
+      void confirmGuest().then((decision) => {
+        if (!decision) return;
+        guest = decision;
+        closeOpenPanels();
+        const first = detectForms(document)[0];
+        const entry = first ? mounted.get(first.container) : undefined;
+        if (first && entry) void guardedRun(first.container, entry.handle);
+      });
       return false;
     });
 
