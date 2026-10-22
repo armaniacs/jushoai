@@ -59,6 +59,7 @@ function setup(opts: {
   excluded?: boolean; consent?: boolean; reItems?: Item[]; canReanalyze?: boolean;
   lastProfileId?: string; lastAddressId?: string; summary?: { filled: number; unapplied: number };
   failReason?: ClassifyFailure | null;
+  assignedProfileId?: string | null;
 } = {}) {
   const ms = metas();
   const classify = vi.fn(async (_m: FieldMeta[], o?: { force?: boolean }): Promise<SessionClassifyResult> =>
@@ -79,6 +80,7 @@ function setup(opts: {
     addresses: [address1],
     lastProfileId: opts.lastProfileId,
     lastAddressId: opts.lastAddressId,
+    assignedProfileId: opts.assignedProfileId,
     metas: ms,
     metasById: metasById(ms),
     englishPage: false,
@@ -95,6 +97,18 @@ describe('fill session: start and replan', () => {
     expect(session.selectedProfileId).toBe('p2');
     expect(session.selectedAddressId).toBe('a1');
     if (!started.excluded) expect(started.rows.length).toBeGreaterThan(0);
+  });
+
+  it('prefers the per-site assignment over the last-used selection (PBI-141)', async () => {
+    const { session } = setup({ lastProfileId: 'p2', assignedProfileId: 'p1' });
+    await session.start();
+    expect(session.selectedProfileId).toBe('p1');
+  });
+
+  it('falls back to the last-used selection when the assigned profile is gone (PBI-141)', async () => {
+    const { session } = setup({ lastProfileId: 'p2', assignedProfileId: 'gone' });
+    await session.start();
+    expect(session.selectedProfileId).toBe('p2');
   });
 
   it('falls back to the first profile and address without stored selection', async () => {

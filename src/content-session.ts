@@ -22,6 +22,9 @@ export interface SessionInput {
   profiles: Profile[];
   addresses: Address[];
   lastProfileId?: string;
+  // PBI-141: the per-site assignment for this host, when it still exists.
+  // 切替は候補提示のみ — it only changes the initial selection.
+  assignedProfileId?: string | null;
   lastAddressId?: string;
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
@@ -152,7 +155,13 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
     // The caller (content.ts run()) only creates a session for ready data, so
     // both lists are non-empty here; the `!` only satisfies
     // noUncheckedIndexedAccess.
-    profileId = resolveLastId(input.lastProfileId, input.profiles.map((p) => p.id))
+    // PBI-141: the per-site assignment wins over the last-used selection — it
+    // is the more specific hint and only suggests a candidate.
+    profileId = (input.assignedProfileId
+      && input.profiles.some((p) => p.id === input.assignedProfileId)
+      ? input.assignedProfileId
+      : null)
+      ?? resolveLastId(input.lastProfileId, input.profiles.map((p) => p.id))
       ?? input.profiles[0]!.id;
     addressId = resolveAddressId(input.addresses, profileId, input.lastAddressId)
       ?? input.addresses[0]!.id;

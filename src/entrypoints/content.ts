@@ -16,7 +16,9 @@ import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
 import { loadMappings, saveMappings } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
 import { matches, recordFor } from '../core/site-approval';
+import { assignedFirst, assignmentFor } from '../core/site-profile';
 import { loadApprovals, saveApprovals } from '../approval-store';
+import { loadAssignments, saveAssignments } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress, type GuestValues } from '../core/guest';import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
@@ -233,6 +235,9 @@ export default defineContentScript({
       }
       // PBI-128: the prior per-site approval record for this host, if any.
       const priorApproval = (await loadApprovals())[hostOf(location.href)] ?? null;
+      // PBI-141: the per-site profile assignment learned from use, if the
+      // profile still exists. 切替は候補提示のみ.
+      const assignments = await loadAssignments();
       // PBI-138: the taught correction layer, loaded once per run.
       const activeMappings = await loadMappings();
 
@@ -291,13 +296,21 @@ export default defineContentScript({
       // The stored arrays are never mutated, so chrome.storage stays untouched
       // and the overlay dies with the tab.
       const activeGuest = guest;
-      const sessionProfiles = activeGuest ? [guestProfile(activeGuest)] : data.profiles;
+      // PBI-141: the assigned profile becomes the first candidate. A guest fill
+      // has a single profile and no assignment.
+      const assignedProfileId = activeGuest
+        ? null
+        : assignmentFor(location.href, assignments, data.profiles.map((p) => p.id));
+      const sessionProfiles = activeGuest
+        ? [guestProfile(activeGuest)]
+        : assignedFirst(data.profiles, assignedProfileId);
       const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
       const session = createFillSession(
         {
           profiles: sessionProfiles,
           addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
+          assignedProfileId,
           metas,
           metasById,
           englishPage,
@@ -403,6 +416,17 @@ export default defineContentScript({
             const all = await loadApprovals();
             all[record.domain] = record;
             await saveApprovals(all);
+          })();
+        },
+        // PBI-141: the profile used on this host is learned from use. Only the
+        // host → profileId pair persists — never a profile value.
+        recordAssignment: (profileId) => {
+          void (async () => {
+            const domain = hostOf(location.href);
+            if (!domain) return;
+            const all = await loadAssignments();
+            all[domain] = profileId;
+            await saveAssignments(all);
           })();
         },
       });

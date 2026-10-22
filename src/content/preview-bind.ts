@@ -32,6 +32,9 @@ export interface PreviewBindInput {
   // changed rows; the record save runs after a successful apply.
   approval?: ApprovalRecord | null;
   recordApproval?(rows: PreviewRow[]): void;
+  // PBI-141: the profile used on this host is learned from use after a
+  // successful apply, so the next visit suggests it as the first candidate.
+  recordAssignment?(profileId: string): void;
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -110,6 +113,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       // PBI-128: the approval memory records the applied shape after a clean
       // apply, so the next visit to the same form shortens its preview.
       input.recordApproval?.(input.rows);
+      // PBI-141: the profile used on this host is learned from use — the next
+      // visit suggests it as the first candidate. 切替は候補提示のみ.
+      input.recordAssignment?.(session.selectedProfileId);
       // PBI-55: a partial apply (not everything filled) keeps the preview
       // open in result mode with a one-click breakdown report; PBI-132: a
       // clean apply with undo history also keeps it open so 元に戻す is
