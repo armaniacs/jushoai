@@ -156,6 +156,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const empty = document.createElement('p');
   empty.className = 'empty';
   empty.textContent = '入力できる欄が見つかりませんでした';
+  // PBI-143: the 相性 summary line, hidden until rows exist.
+  const coverage = document.createElement('p');
+  coverage.className = 'coverage';
+  coverage.hidden = true;
   const apply = document.createElement('button');
   apply.className = 'primary';
   apply.type = 'button';
@@ -219,7 +223,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     actions.append(expand);
   }
   actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
-  panel.append(list, empty, actions, status);
+  panel.append(list, empty, coverage, actions, status);
 
   let resultMode = false;
   // PBI-122: abbreviation candidates render as opt-in checkboxes. The boxes
@@ -316,6 +320,14 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       }),
     );
     empty.hidden = rows.length > 0;
+    // PBI-143: the compatibility summary. How many of the scanned fields the
+    // preview can fill, next to the per-field reasons. Page-derived strings
+    // never enter this line — it counts the plan, it does not quote it.
+    const fillable = currentRows.filter((r) => r.status === 'ok').length;
+    coverage.hidden = rows.length === 0 || fillable === 0;
+    coverage.textContent = fillable > 0
+      ? `${fillable} / ${currentRows.length} 欄に入力できます（承認後に注入します）`
+      : '';
     syncHasOk();
   };
 

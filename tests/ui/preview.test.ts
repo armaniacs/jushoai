@@ -120,6 +120,31 @@ describe('showPreview', () => {
   });
 });
 
+describe('showPreview coverage summary (PBI-143)', () => {
+  it('shows the compatibility rate next to the per-field reasons', () => {
+    const sh = open({ rows: [makeRow('ok'), makeRow('ok'), makeRow('warn-no-value', '')] });
+    const coverage = sh.root.querySelector('.coverage') as HTMLElement;
+    expect(coverage.hidden).toBe(false);
+    expect(coverage.textContent).toBe('2 / 3 欄に入力できます（承認後に注入します）');
+  });
+
+  it('stays hidden without fillable rows and after an empty re-render', () => {
+    const none = open({ rows: [makeRow('warn-no-value', '')] });
+    const coverage = none.root.querySelector('.coverage') as HTMLElement;
+    expect(coverage.hidden).toBe(true);
+    expect(coverage.textContent).toBe('');
+
+    const empty = open();
+    const emptyCoverage = empty.root.querySelector('.coverage') as HTMLElement;
+    expect(emptyCoverage.hidden).toBe(true);
+
+    const sh = open({ rows: [makeRow('ok')] });
+    const live = sh.root.querySelector('.coverage') as HTMLElement;
+    sh.handle.setRows([]);
+    expect(live.hidden).toBe(true);
+  });
+});
+
 const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });
 const addr = (id: string, label: string): Address => ({ ...EMPTY_ADDRESS, id, label });
 
