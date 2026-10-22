@@ -180,7 +180,22 @@ export function renderPopup(root: HTMLElement, data: StoredData, last: LastUsed)
     for (const a of data.addresses) addressList.append(addressItem(data, a, a.id === useId));
   }
 
-  root.replaceChildren(header, notice, profileTitle, profileList, addressTitle, addressList);
+  // PBI-135: the minimum English guide (register → fill → approve), appended
+  // after the Japanese sections. The Japanese UI policy stays untouched — this
+  // is an addition, never a replacement.
+  const guideTitle = el('h2', 'How to use / 使い方（English）');
+  const guide = el('ul');
+  guide.className = 'guide';
+  for (const step of [
+    '1. Register your name and address in 設定 (Settings).',
+    '2. Open the form page and press the JushoAI button.',
+    '3. Check the preview and press 入力する (Apply).',
+  ]) guide.append(el('li', step));
+  const guideWrap = el('div');
+  guideWrap.className = 'guide-wrap';
+  guideWrap.append(guideTitle, guide);
+
+  root.replaceChildren(header, notice, profileTitle, profileList, addressTitle, addressList, guideWrap);
 }
 
 // Auto-render only as the popup entry (tests import renderPopup directly).
