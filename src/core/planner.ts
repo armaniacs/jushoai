@@ -1,6 +1,7 @@
 import type { Item } from './types';
 import { abbreviateBuilding } from './abbreviate';
 import { zipAssistFor } from './zip-dict';
+import { readingFor } from './name-readings';
 import {
   splitBirthday, toDecade, toEraDate,
 } from './eras';
@@ -148,18 +149,47 @@ const ABBREVIATABLE: ReadonlySet<Category> = new Set<Category>([
   'building', 'street', 'addressNoPref', 'addressFull',
 ]);
 
-// PBI-125: the categories the zip dictionary assists. The lookup is
+// PBI-125: the categories the zip dictionary assists. PBI-133: the name
+// reading dictionary assists the kana categories. Both lookups are
 // terminal-only (no network, no LLM) and deterministic.
-const ASSISTABLE: ReadonlySet<Category> = new Set<Category>(['prefecture', 'city']);
+const ASSISTABLE: ReadonlySet<Category> = new Set<Category>([
+  'prefecture', 'city', 'lastNameKana', 'firstNameKana', 'fullNameKana',
+]);
 
-// PBI-125: the dictionary assist candidate for an empty prefecture/city
-// value, or null when the address has no zip or the prefix is unknown.
-function assistFor(category: Category, ctx: PlanContext): string | null {
-  const zip = ctx.address?.zip ?? '';
-  if (!zip) return null;
-  const assist = zipAssistFor(zip);
-  if (!assist) return null;
-  return category === 'prefecture' ? assist.prefecture : assist.city;
+// PBI-125 + PBI-133: the assist candidate for an empty assistable value, or
+// null when nothing resolves. The kana candidates convert through the
+// deterministic formatKana (kanaKind 変換は決定的コード); the full-name join
+// follows the field's own placeholder style like the kanji fullName case.
+function assistFor(category: Category, ctx: PlanContext, cls: Classification, meta: FieldMeta): string | null {
+  const p = ctx.profile;
+  const kind = cls.kanaKind ?? 'katakana';
+  switch (category) {
+    case 'prefecture':
+    case 'city': {
+      const zip = ctx.address?.zip ?? '';
+      if (!zip) return null;
+      const assist = zipAssistFor(zip);
+      if (!assist) return null;
+      return category === 'prefecture' ? assist.prefecture : assist.city;
+    }
+    case 'lastNameKana': {
+      const r = readingFor(p.lastName, 'surname');
+      return r ? formatKana(r, kind) : null;
+    }
+    case 'firstNameKana': {
+      const r = readingFor(p.firstName, 'given');
+      return r ? formatKana(r, kind) : null;
+    }
+    case 'fullNameKana': {
+      const last = readingFor(p.lastName, 'surname');
+      const first = readingFor(p.firstName, 'given');
+      return last && first
+        ? formatKana(joinName(last, first, detectNameSeparator(meta.placeholder)), kind)
+        : null;
+    }
+    default:
+      return null;
+  }
 }
 
 // Fits the shortened building into the budget; null when no rule fired, when
@@ -245,7 +275,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     // into the fill value. Without a candidate the row keeps its plain
     // warn-no-value shape (候補不一致・辞書なし時は従来通り警告で止まる).
     if (!raw) {
-      const candidate = ASSISTABLE.has(cls.category) ? assistFor(cls.category, ctx) : null;
+      const candidate = ASSISTABLE.has(cls.category) ? assistFor(cls.category, ctx, cls, meta) : null;
       plan.push({
         ...base,
         value: '',

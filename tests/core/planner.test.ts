@@ -341,6 +341,50 @@ describe('zip dictionary assist (PBI-125)', () => {
   });
 });
 
+describe('name reading assist (PBI-133)', () => {
+  const noKana: Profile = { ...profile, lastNameKana: '', firstNameKana: '' };
+
+  it('rides the reading candidate onto empty kana rows in the field width', () => {
+    const plan = buildPlan(
+      [item('lastNameKana', {}, 'katakana'), item('firstNameKana', {}, 'katakana')],
+      { profile: noKana, address },
+    );
+    expect(plan.map((p) => [p.status, p.assist])).toEqual([
+      ['warn-no-value', 'ヤマダ'], ['warn-no-value', 'タロウ'],
+    ]);
+  });
+
+  it('converts the candidate through the deterministic kanaKind', () => {
+    const plan = buildPlan([item('lastNameKana', {}, 'hiragana')], { profile: noKana, address });
+    expect(plan[0]!.assist).toBe('やまだ');
+  });
+
+  it('joins the full kana candidate by the placeholder style', () => {
+    const plan = buildPlan(
+      [item('fullNameKana', { placeholder: 'セイメイ' }, 'katakana')],
+      { profile: noKana, address },
+    );
+    expect(plan[0]!.assist).toBe('ヤマダタロウ');
+  });
+
+  it('stops with the plain warn-no-value for unknown readings', () => {
+    const unknown: Profile = { ...noKana, lastName: '未知', firstName: '不明' };
+    expect(buildPlan([item('lastNameKana', {}, 'katakana')], { profile: unknown, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+    // neither reading resolves → the full candidate stays empty
+    expect(buildPlan([item('fullNameKana', {}, 'katakana')], { profile: unknown, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('promotes an approved kana assist through the single approval seam', () => {
+    const plan = buildPlan([item('lastNameKana', {}, 'katakana')], { profile: noKana, address });
+    const approved = applyAbbrevApprovals(plan, new Set([plan[0]!.fieldId]));
+    expect(approved[0]).toMatchObject({ value: 'ヤマダ', status: 'ok' });
+  });
+});
+
 describe('birth selects', () => {
   const dated = { ...profile, birthday: '1990-05-07' };
   const monthOpts = [{ value: '', text: '--' }, { value: '04', text: '4' }, { value: '05', text: '5' }];
