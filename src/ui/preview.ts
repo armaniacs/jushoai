@@ -15,6 +15,9 @@ export interface PreviewRow {
   // travel to the apply callback, which promotes them into the fill plan.
   fieldId?: string;
   abbrev?: string;
+  // PBI-125: a zip dictionary assist candidate for an empty prefecture/city
+  // value. Same opt-in checkbox as the abbrev, with the 補助 wording.
+  assist?: string;
 }
 
 export interface PreviewOptions {
@@ -247,6 +250,23 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
           box.type = 'checkbox';
           const text = document.createElement('span');
           text.textContent = '略記して入れる';
+          wrap.append(box, text);
+          box.addEventListener('change', () => {
+            if (note) note.className = box.checked ? 'note muted' : 'note';
+            syncHasOk();
+          });
+          abbrevBoxes.push({ id: r.fieldId, box });
+          li.append(wrap);
+        }
+        // PBI-125: the zip assist checkbox, collected into the same approval
+        // set (applyAbbrevApprovals promotes either candidate).
+        if (r.assist && r.fieldId) {
+          const wrap = document.createElement('label');
+          wrap.className = 'abbrev';
+          const box = document.createElement('input');
+          box.type = 'checkbox';
+          const text = document.createElement('span');
+          text.textContent = '補助候補を入れる';
           wrap.append(box, text);
           box.addEventListener('change', () => {
             if (note) note.className = box.checked ? 'note muted' : 'note';

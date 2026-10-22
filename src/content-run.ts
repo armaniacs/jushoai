@@ -24,12 +24,16 @@ export function buildPreviewRows(plan: PlanItem[], metasById: Map<string, FieldM
     // duplicated across the two branches and the presence check is the shared
     // hasAbbrev judgment, so an empty candidate can never ride a row.
     const abbrev = hasAbbrev(p.abbrev) ? { fieldId: p.fieldId, abbrev: p.abbrev } : {};
+    // PBI-125: the zip assist candidate rides the row like the abbrev does;
+    // both spreads set the same fieldId, so an empty candidate can never ride.
+    const assist = hasAbbrev(p.assist) ? { fieldId: p.fieldId, assist: p.assist } : {};
     return {
       label: m ? (m.label || m.nearby || m.placeholder || m.name || m.htmlId) : p.fieldId,
       display: p.display,
       status: p.status,
       source: p.source,
       ...abbrev,
+      ...assist,
     };
   });
 }

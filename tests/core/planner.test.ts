@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPlan } from '../../src/core/planner';
+import { buildPlan, applyAbbrevApprovals } from '../../src/core/planner';
 import type { Address, Category, FieldMeta, Item, KanaKind, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -297,6 +297,46 @@ describe('company (PBI-119)', () => {
     expect(vals).toEqual(['株式会社サンプル', '開発部']);
     expect(buildPlan([item('company')], { profile: { ...profile, companyName: '' }, address })).toEqual([
       expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+});
+
+describe('zip dictionary assist (PBI-125)', () => {
+  const emptyAddress: Address = {
+    ...address, id: 'a3', label: '郵便番号のみ',
+    zip: '100-0001', prefecture: '', city: '', street: '', building: '',
+  };
+
+  it('rides the dictionary candidate onto an empty prefecture/city row', () => {
+    const plan = buildPlan([item('prefecture'), item('city')], { profile, address: emptyAddress });
+    expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
+      ['warn-no-value', '東京都', '候補: 東京都'],
+      ['warn-no-value', '千代田区', '候補: 千代田区'],
+    ]);
+  });
+
+  it('promotes an approved assist through the single approval seam', () => {
+    const plan = buildPlan([item('prefecture')], { profile, address: emptyAddress });
+    const approved = applyAbbrevApprovals(plan, new Set([plan[0]!.fieldId]));
+    expect(approved[0]).toMatchObject({ value: '東京都', status: 'ok' });
+    // unapproved keeps the plain warn-no-value with an empty value
+    const unapproved = applyAbbrevApprovals(plan, new Set());
+    expect(unapproved[0]).toMatchObject({ value: '', status: 'warn-no-value' });
+  });
+
+  it('keeps the plain warn-no-value when the zip is unknown or missing', () => {
+    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '601-8001' };
+    expect(buildPlan([item('prefecture')], { profile, address: unknownZip })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+    expect(buildPlan([item('prefecture')], { profile, address: null })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('never assists categories outside the assistable set', () => {
+    expect(buildPlan([item('street')], { profile, address: { ...emptyAddress, id: 'a5', street: '' } })).toEqual([
+      expect.objectContaining({ value: '', status: 'warn-no-value' }),
     ]);
   });
 });

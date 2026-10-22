@@ -282,3 +282,18 @@ describe('showResult: undo (PBI-132)', () => {
     expect(root.querySelector('.empty')?.textContent).toBe('元に戻しました（2件）');
   });
 });
+
+describe('zip assist checkbox (PBI-125)', () => {
+  it('renders the 補助 checkbox only for assist rows', () => {
+    const plain = open({ rows: [makeRow('ok')] });
+    expect(plain.root.textContent).not.toContain('補助候補を入れる');
+
+    const withAssist = open({
+      rows: [{ ...makeRow('warn-no-value', '候補: 東京都'), fieldId: 'f1', assist: '東京都' }],
+    });
+    const box = withAssist.root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    expect(box).toBeTruthy();
+    expect(withAssist.root.textContent).toContain('補助候補を入れる');
+    expect(withAssist.root.textContent).toContain('候補: 東京都');
+  });
+});
