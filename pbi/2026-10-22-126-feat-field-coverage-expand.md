@@ -20,10 +20,17 @@ Scenario: 対象外は安全に除外される
   Then 分類せず注入もしない（現行の除外方針を維持）
 
 ## 受け入れ基準
-- [ ] 新カテゴリ追加時は`CATEGORIES`・prompt schema・`parseLlmOutput`を同時更新する
-- [ ] 正規表現テストが落ちたら期待値ではなく正規表現を直す
-- [ ] 対象URLを持つ場合は`make addurl URL=<url>`から始め最小再現fixture＋期待値を埋める
-- [ ] radioはname単位1欄・checkbox対象外・hidden除外の方針を崩さない
+- [x] 新カテゴリ追加時は`CATEGORIES`・prompt schema・`parseLlmOutput`を同時更新する → 会社・部署（PBI-119）・生年月日1欄（PBI-118）・汎用select（PBI-41）を同時更新済み。`parseLlmOutput`はCATEGORIESのallow-listで検証するため新カテゴリも自動で通る
+- [x] 正規表現テストが落ちたら期待値ではなく正規表現を直す → テスト方針として運用中。corpusのfixture修正は`make eval`の指標とセット
+- [x] 対象URLを持つ場合は`make addurl URL=<url>`から始め最小再現fixture＋期待値を埋める → 本PBIはtarget URLなし。`samples/`に会社・日付の再現フォームがあり`tests/integration/samples.test.ts`で固定
+- [x] radioはname単位1欄・checkbox対象外・hidden除外の方針を崩さない → `radio-policy.ts`＋走査除外は現行のまま（`tests/core/radio-policy.test.ts`・`exclusions.test.ts`）
+
+## 実装記録（2026-10-23）
+
+- **カバレッジ部分は先行PBIで実装済み**: 会社名・会社の部署（PBI-119: `company` / `companyDepartment`）、生年月日1欄（PBI-118: `birthday`、text・type=date両対応）、汎用select（PBI-41: 性別・年代を`isAllowedRadioCategory`で共有、残りはselect専用）。`CATEGORIES`・prompt schema・`parseLlmOutput`・planner・profileは同時更新済み。
+- **カスタム対応付けはチェーン先のPBI-138**（ドメイン欄のカスタム対応付け）で実装する。本PBIのBDDシナリオ「対象外は安全に除外される」は現行の走査除外方針（checkbox対象外・hidden除外・submit等操作要素除外・radio name単位1欄）で固定済み。
+- 検証: `make eval` exit 0（corpus 3テスト、ruleHits 141/168 = 83.9%）。`make check` exit 0。
+- ドキュメントのみのコミット（コード変更なし）。
 
 ## テスト戦略
 - E2E: 実フォームでの注入確認（React/Vueのsetter＋イベント発火を含む）
@@ -34,6 +41,6 @@ Scenario: 対象外は安全に除外される
 8（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする（会社・日付・汎用selectはPBI-118/119/41で実装、対象外除外は既存の走査方針で固定）
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み（本PBIに実装記録。カスタム対応付けはPBI-138に委譲）
