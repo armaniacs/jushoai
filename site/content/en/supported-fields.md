@@ -31,6 +31,20 @@ JushoAI works with text, email, tel and search inputs and select lists (dropdown
 
 Fields it cannot classify are left alone. How classification works is described in [Supported forms and how it works](/en/guides/how-it-works/).
 
+## Out of scope
+
+Beyond field types, the following stay out of scope.
+
+| Item | Reason | Alternative |
+|---|---|---|
+| Sensitive data such as credit card or bank account numbers | The profile only stores everyday contact fields | Enter by hand, or use a password manager's secure field |
+| Authentication codes, SMS codes and two-factor prompts | Security-sensitive data | Enter by hand |
+| Auto-fill on page load | Nothing is injected without preview approval | Run it from the `JushoAI で入力` button |
+| Forms inside cross-origin iframes | Kept out of scope after investigation (embedded widgets and so on) | Open the page's own URL and fill there |
+| PDFs and printed forms | Outside browser forms | Your device's own input features |
+
+The range of data sent is described in [Privacy and sent data](/en/guides/privacy/).
+
 ## A form you would like supported
 
 If a form did not fill correctly, tell us as a GitHub issue using the links at the bottom of this page. The form's URL and the fields that were not filled help us a lot.
