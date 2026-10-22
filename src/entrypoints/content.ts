@@ -10,7 +10,10 @@ import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
-import { classifyField, isConfident } from '../core/classify-rules';
+import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
+import { draftFromPage } from '../core/import-draft';
+import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
+import type { Item } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
@@ -402,6 +405,35 @@ export default defineContentScript({
         () => sendResponse({ ok: false, reason: 'error' }),
       );
       return true;
+    });
+
+    // PBI-127: the settings page's フォームから取り込む button asks the active
+    // tab for a draft of the page's own filled values. Rule-only (classifyField
+    // + refine), no LLM and no gate: the values stay on-device and never cross
+    // the network. An excluded page keeps its opt-out — no draft from there.
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (
+        typeof msg !== 'object' || msg === null ||
+        (msg as { type?: unknown }).type !== IMPORT_DRAFT_MESSAGE_TYPE
+      ) {
+        return false;
+      }
+      if (gate.isExcluded()) {
+        sendResponse({ ok: false });
+        return false;
+      }
+      const form = detectForms(document)[0];
+      if (!form) {
+        sendResponse({ ok: false });
+        return false;
+      }
+      const scanned = scanContainer(form.container, document);
+      const items: Item[] = scanned.map((f) => ({
+        meta: f.meta,
+        cls: classifyField(f.meta) ?? { category: 'unknown', confidence: 0, source: 'rule' },
+      }));
+      sendResponse({ ok: true, draft: draftFromPage(refineClassifications(items)) });
+      return false;
     });
 
     let observer: MutationObserver | null = null;

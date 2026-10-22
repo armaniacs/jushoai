@@ -6,6 +6,8 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
+import { applyImportDraft } from '../../core/import-apply';
+import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
@@ -217,9 +219,22 @@ function render(notice?: HTMLElement) {
   save.textContent = '保存';
   save.addEventListener('click', onSave);
 
+  // PBI-127: the page-based import. Chrome's own autofill data is not readable
+  // by an extension, so the draft comes from the active tab's form (the values
+  // Chrome autofilled); only the normalized/validated subset becomes a form
+  // draft, and nothing saves until the 保存 button runs the full pipeline.
+  const importButton = document.createElement('button');
+  importButton.type = 'button';
+  importButton.textContent = 'フォームから取り込む';
+  importButton.addEventListener('click', () => {
+    void onImportDraft().catch(() => {
+      render(message('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+    });
+  });
+
   const footer = document.createElement('div');
   footer.className = 'row';
-  footer.append(save);
+  footer.append(save, importButton);
 
   app.replaceChildren(
     title, profilePage, addressPage, footer, transferHolder, ...(notice ? [notice] : []),
@@ -227,8 +242,38 @@ function render(notice?: HTMLElement) {
   applyActivePage();
 }
 
-async function onSave() {
-  const profiles = state.profiles.map(normalizeProfile);
+// PBI-127: ask the active tab's content script for the page draft, then run it
+// through normalizeProfile/normalizeAddress + validate. Only the fields that
+// pass become form values; the first profile/address card receives them (a
+// new user's card), and save stays a separate explicit step.
+async function onImportDraft(): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) {
+    render(message('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
+    return;
+  }
+  const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
+  if (!res || !res.ok) {
+    render(message('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
+    return;
+  }
+  const target = state.profiles[0] ?? { ...EMPTY_PROFILE, id: newId() };
+  const targetAddress = state.addresses[0] ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
+  const result = applyImportDraft(target, targetAddress, res.draft);
+  state.profiles = [result.profile, ...state.profiles.slice(1)];
+  state.addresses = [result.address, ...state.addresses.slice(1)];
+  if (result.taken === 0) {
+    render(message('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
+    return;
+  }
+  const lines = [
+    `${result.taken}件を取り込みました。保存ボタンで確定します。`,
+    ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
+  ];
+  render(message('saved', lines));
+}
+
+async function onSave() {  const profiles = state.profiles.map(normalizeProfile);
   const addresses = state.addresses.map(normalizeAddress);
   const errors = [
     ...profiles.flatMap((p, i) => validateProfile(p).map((e) => `${p.label || `プロファイル${i + 1}`}: ${e}`)),

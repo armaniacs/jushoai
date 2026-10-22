@@ -1,0 +1,64 @@
+import { describe, it, expect } from 'vitest';
+import { draftFromPage } from '../../src/core/import-draft';
+import { IMPORT_DRAFT_MESSAGE, IMPORT_DRAFT_MESSAGE_TYPE } from '../../src/import-message';
+import type { Category, FieldMeta, Item } from '../../src/core/types';
+import { makeMeta } from '../helpers';
+
+let seq = 0;
+const filled = (category: Category, value: string, meta: Partial<FieldMeta> = {}): Item => ({
+  meta: makeMeta({ id: `f${seq++}`, value, ...meta }),
+  cls: { category, confidence: 0.8, source: 'rule' },
+});
+const empty = (category: Category, meta: Partial<FieldMeta> = {}): Item =>
+  filled(category, '', meta);
+
+describe('draftFromPage (PBI-127)', () => {
+  it('maps filled confident fields onto the profile keys', () => {
+    const draft = draftFromPage([
+      filled('lastName', ' 山田 '), filled('firstName', '太郎'),
+      filled('lastNameKana', 'ヤマダ'), filled('email', 'yamada@example.com'),
+      filled('tel', '09012345678'),
+    ]);
+    expect(draft.profile).toEqual({
+      lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ',
+      email: 'yamada@example.com', tel: '09012345678',
+    });
+    expect(draft.address).toEqual({});
+  });
+
+  it('maps address fields and reassembles a split zip', () => {
+    const draft = draftFromPage([
+      filled('zip1', '100'), filled('zip2', '0001'),
+      filled('prefecture', '東京都'), filled('city', '千代田区'), filled('street', '千代田1-1'),
+    ]);
+    expect(draft.address).toEqual({
+      zip: '1000001', prefecture: '東京都', city: '千代田区', street: '千代田1-1',
+    });
+  });
+
+  it('ignores empty, blocked and unknown fields', () => {
+    const draft = draftFromPage([
+      empty('lastName'), filled('lastName', '山田', { readOnly: true }),
+      filled('lastName', '山田', { disabled: true }),
+      { meta: makeMeta({ id: 'fx', value: 'xxx' }), cls: { category: 'unknown', confidence: 0.2, source: 'rule' } },
+    ]);
+    expect(draft.profile).toEqual({});
+    expect(draft.address).toEqual({});
+  });
+
+  it('keeps the first value when a category repeats and drops a lone zip half', () => {
+    const draft = draftFromPage([
+      filled('lastName', '山田'), filled('lastName', '鈴木'),
+      filled('zip1', '100'),
+    ]);
+    expect(draft.profile).toEqual({ lastName: '山田' });
+    expect(draft.address).toEqual({});
+  });
+});
+
+describe('import message shape (PBI-127)', () => {
+  it('shares one chrome-free type between the options sender and content receiver', () => {
+    expect(IMPORT_DRAFT_MESSAGE).toEqual({ type: 'import-draft' });
+    expect(IMPORT_DRAFT_MESSAGE.type).toBe(IMPORT_DRAFT_MESSAGE_TYPE);
+  });
+});
