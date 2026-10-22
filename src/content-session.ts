@@ -45,14 +45,15 @@ export interface SessionClassifyResult {
 export async function classifyWithReason(
   classifier: FieldClassifier | null,
   metas: FieldMeta[],
-  opts: { force?: boolean; englishPage?: boolean } = {},
+  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
 ): Promise<SessionClassifyResult> {
   if (!classifier) {
     return { items: await classifyAll(metas, null, opts), failureReason: null };
   }
   // Session-local binding (not a run-closure escape): classifyAll only calls
   // classify(), so both seam members record the same attempt reason here and
-  // it leaves on the return value below.
+  // it leaves on the return value below. opts (including llmSkip, PBI-124)
+  // flow through to classifyAll unchanged.
   let failureReason: ClassifyFailure | null = null;
   const seam: FieldClassifier = {
     // PBI-48: non-throwing by contract — the partial map is returned WITHOUT
@@ -79,9 +80,10 @@ export async function classifyWithReason(
 // the caller; only the data flow and its order live here.
 export interface SessionEnv {
   // Seam-shaped: the failure reason travels on the return value (never into a
-  // caller closure). The caller passes intent (which classifier) via
-  // classifyWithReason; the apply ordering below owns the reason from there.
-  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean }): Promise<SessionClassifyResult>;
+  // caller closure). The caller passes intent (which classifier, which field
+  // ids the egress gate excluded) via classifyWithReason; the apply ordering
+  // below owns the reason from there.
+  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> }): Promise<SessionClassifyResult>;
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };

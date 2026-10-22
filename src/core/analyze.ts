@@ -21,12 +21,16 @@ function logRuleOnlyRun(fieldCount: number, startedAt: number): void {
 export async function classifyAll(
   metas: FieldMeta[],
   classifier: FieldClassifier | null,
-  opts: { force?: boolean; englishPage?: boolean } = {},
+  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
 ): Promise<Item[]> {
   const startedAt = Date.now();
   const force = opts.force === true;
   const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
-  const pending = (force ? ruled : ruled.filter((r) => !isConfident(r.cls))).map((r) => r.meta);
+  // PBI-124: llmSkip keeps field ids the egress gate excluded — their metadata
+  // never reaches the LLM and they fall through to the rule-keep path below.
+  const pending = (force ? ruled : ruled.filter((r) => !isConfident(r.cls)))
+    .filter((r) => !opts.llmSkip?.has(r.meta.id))
+    .map((r) => r.meta);
 
   // PBI-27: the rule-only trace fires only when no LLM attempt happens
   // (classifier off, or nothing pending). When the LLM is attempted, the AI

@@ -7,7 +7,12 @@ import type { FieldClassifier } from '../../src/core/classifier';
 import { makeMeta } from '../helpers';
 
 const llm = (answers: Record<string, Category>) => {
-  const classify = vi.fn(async (_fields: FieldMeta[]) => new Map(Object.entries(answers)));
+  // Faithful to the real adapter contract: answers only for the fields the
+  // caller asked about, never for fields outside the pending list.
+  const classify = vi.fn(async (fields: FieldMeta[]) => {
+    const ids = new Set(fields.map((f) => f.id));
+    return new Map(Object.entries(answers).filter(([id]) => ids.has(id)));
+  });
   // PBI-42: fakes speak the unified seam too — attempt carries the same map
   // with no failure reason, mirroring a successful adapter.
   const attempt = vi.fn(async (fields: FieldMeta[]) => ({ map: await classify(fields), failureReason: null }));
@@ -326,6 +331,46 @@ describe('classifyAll: chunk-boundary refine (PBI-131)', () => {
     const items = await classifyAll(metas, classifier);
     const tel = items.filter((i) => i.meta.id.startsWith('t')).map((i) => i.cls.category);
     expect(tel).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+});
+
+describe('classifyAll: llmSkip (PBI-124 egress gate)', () => {
+  it('keeps skipped fields out of the LLM pending and on the rule path', async () => {
+    const { classifier, classify } = llm({ b: 'building' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', name: 'xyz' })],
+      classifier,
+      { llmSkip: new Set(['b']) },
+    );
+    expect(classify).not.toHaveBeenCalled();
+    expect(items.map((i) => [i.meta.id, i.cls.category, i.cls.source])).toEqual([
+      ['a', 'lastName', 'rule'],
+      ['b', 'unknown', 'rule'],
+    ]);
+  });
+
+  it('sends only the allowed pending fields to the LLM', async () => {
+    const { classifier, classify } = llm({ b: 'building', c: 'city' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', name: 'last_name' }), makeMeta({ id: 'b', name: 'xyz' }), makeMeta({ id: 'c', name: 'xyz2' })],
+      classifier,
+      { llmSkip: new Set(['c']) },
+    );
+    expect(classify.mock.calls[0]![0].map((m) => m.id)).toEqual(['b']);
+    expect(items.map((i) => [i.meta.id, i.cls.category])).toEqual([
+      ['a', 'lastName'], ['b', 'building'], ['c', 'unknown'],
+    ]);
+  });
+
+  it('keeps a skipped weak rule hit on the rule path under force too', async () => {
+    const { classifier, classify } = llm({ a: 'city' });
+    const items = await classifyAll(
+      [makeMeta({ id: 'a', type: 'tel' })],
+      classifier,
+      { force: true, llmSkip: new Set(['a']) },
+    );
+    expect(classify).not.toHaveBeenCalled();
+    expect(items.map((i) => [i.cls.category, i.cls.source])).toEqual([['tel', 'rule']]);
   });
 });
 

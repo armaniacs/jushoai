@@ -7,6 +7,9 @@ import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { fillField } from '../dom/fill';
+import { classifyField, isConfident } from '../core/classify-rules';
+import { egressRowsFor } from '../ai/egress-preview';
+import { confirmEgress } from '../ui/egress-panel';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
 import type { ClassifyFailure } from '../messages';
@@ -174,6 +177,26 @@ export default defineContentScript({
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const metas = fields.map((f) => f.meta);
+      // PBI-124: the egress gate runs before any AI call. Rule classification
+      // is local (pure), so the pending split is known before the gate without
+      // any network. Suspect rows default to excluded; closing the gate
+      // (Escape included) resolves as rule-only, so no choice means no send.
+      let effectiveClassifier = classifier;
+      let llmSkip: ReadonlySet<string> | undefined;
+      if (classifier) {
+        const pending = metas.filter((m) => !isConfident(classifyField(m)));
+        if (pending.length > 0) {
+          closeOpenPanels();
+          const decision = await confirmEgress(egressRowsFor(pending));
+          if (decision.mode === 'rule-only') {
+            effectiveClassifier = null;
+          } else {
+            const skipped = pending.map((m) => m.id).filter((id) => !decision.send.has(id));
+            llmSkip = skipped.length > 0 ? new Set(skipped) : undefined;
+            if (llmSkip && llmSkip.size === pending.length) effectiveClassifier = null;
+          }
+        }
+      }
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
       const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
       // PBI-55: the same context feeds the apply-time feedback and the
@@ -193,10 +216,10 @@ export default defineContentScript({
           metas,
           metasById,
           englishPage,
-          canReanalyze: classifier !== null,
+          canReanalyze: effectiveClassifier !== null,
         },
         {
-          classify: (ms, opts) => classifyWithReason(classifier, ms, opts),
+          classify: (ms, opts) => classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -245,7 +268,7 @@ export default defineContentScript({
         rows: started.rows,
         addresses: data.addresses,
         profiles: data.profiles,
-        reanalyzable: classifier !== null,
+        reanalyzable: effectiveClassifier !== null,
         feedbackContext: feedbackCtx,
         openFeedbackUrl,
         onClosed: () => { openPreview = null; },
