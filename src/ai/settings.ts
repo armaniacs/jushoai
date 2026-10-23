@@ -303,3 +303,17 @@ export async function validateAiSettingsResolved(
   if (!errors.includes(check.reason)) errors.push(check.reason);
   return { errors };
 }
+
+// The DoH-confirmed address set for one endpoint, shown before the user approves the
+// first dial (VULN-001 trust-on-first-use). Returns [] when the endpoint is lexically
+// invalid or unresolvable; the settings page only calls this after the save-time gate
+// passed, so an empty result is not a bypass.
+export async function resolveConfirmedAddresses(input: string, deps: ResolveDeps): Promise<string[]> {
+  const lexical = validateBaseUrl(input);
+  if (!lexical.ok) return [];
+  try {
+    return await resolveHostAddresses(normalizeHost(lexical.url.hostname), deps);
+  } catch {
+    return [];
+  }
+}

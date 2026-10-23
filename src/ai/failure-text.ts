@@ -31,6 +31,10 @@ export const AI_FAILURE_TEXT: Record<ClassifyFailure | TestFailure, AiFailureTex
     hint: '内蔵AIが未準備のためルールのみで表示',
     notice: 'ブラウザ内蔵 AI がまだ使えません。モデルのダウンロード状況を確認してください。',
   },
+  'first-dial': {
+    hint: '接続先が未確認のためルールのみで表示: 設定で接続先を確認してください',
+    notice: '接続先が未確認です。設定ページで解決済みアドレスを確認して承認してください。',
+  },
   network: {
     hint: 'AI通信に失敗したためルールのみで表示: 再試行できます',
     notice: '接続に失敗しました。URL・モデル名・ネットワークを確認してください。',

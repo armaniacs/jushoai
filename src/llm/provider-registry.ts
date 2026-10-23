@@ -1,6 +1,8 @@
 import { AuditedClassifier, type TracedClassifier } from '../ai/audited-classifier';
 import { capAuditPageUrl, minimizeAuditPageUrl, type AuditPurpose, type AuditRecorder } from '../ai/audit-log';
 import { createGeminiClassifier, createOpenAiClassifier, HttpAuthError, HttpRequestError, isRejectedStatus } from '../ai/http-classifiers';
+import { originOf } from '../ai/key-reentry';
+import type { FirstDialVerdict } from '../ai/first-dial';
 import { requiredHostOrigins } from '../ai/permissions';
 import { validateAiSettings, type EgressCheck } from '../ai/settings';
 import { computeCloudStatus } from '../ai/status';
@@ -23,6 +25,9 @@ export interface RegistryEnv {
   fetch: typeof fetch;
   // Dial-time resolved-address gate; the OpenAI factory wires a DoH-based default.
   egress?: EgressCheck;
+  // First-dial confirmation gate: classify/test dial a cloud origin only after
+  // the user confirmed it in the settings page (trust-on-first-use, VULN-001).
+  firstDial?: (origin: string) => Promise<FirstDialVerdict>;
   audit: AuditRecorder;
 }
 
@@ -44,7 +49,7 @@ export interface RegistrySecrets {
 
 type Selection =
   | { ok: true; classifier: TracedClassifier }
-  | { ok: false; reason: 'not-configured' | 'permission' | 'auth' | 'unavailable' };
+  | { ok: false; reason: 'not-configured' | 'permission' | 'auth' | 'unavailable' | 'first-dial' };
 
 const TEST_FIELD: FieldMeta = {
   id: 't', tag: 'input', type: 'text', name: 'name', htmlId: '', autocomplete: '', label: 'お名前',
@@ -149,6 +154,15 @@ export class ProviderRegistry {
     // The stored key can be unreadable even though an envelope exists; treat that as not configured.
     if (validateAiSettings(s, present).length > 0) return { ok: false, reason: 'not-configured' };
     if (s.provider === 'openai') {
+      // First-dial confirmation: nothing dials an origin the user has not confirmed
+      // (VULN-001). The gate runs before the classifier is created, so the dial
+      // path is never entered for an unconfirmed origin.
+      if (this.env.firstDial) {
+        const origin = originOf(s.openai.baseUrl);
+        if (origin !== null && !(await this.env.firstDial(origin)).ok) {
+          return { ok: false, reason: 'first-dial' };
+        }
+      }
       return { ok: true, classifier: createOpenAiClassifier(s.openai, secrets?.openai, {
           fetch: this.env.fetch,
           egress: this.env.egress,
