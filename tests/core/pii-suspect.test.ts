@@ -27,6 +27,12 @@ describe('suspectPii', () => {
     expect(suspectPii('山田\u3000太郎')).toBe(true);
   });
 
+  it('flags katakana full-name-like text', () => {
+    expect(suspectPii('フリガナ（ヤマダ タロウ）')).toBe(true);
+    expect(suspectPii('ヤマダ\u3000タロウ')).toBe(true);
+    expect(suspectPii('フリガナ')).toBe(false);
+  });
+
   it('leaves plain field labels alone', () => {
     expect(suspectPii('お名前（全角）')).toBe(false);
     expect(suspectPii('フリガナ')).toBe(false);

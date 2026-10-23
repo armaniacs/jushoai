@@ -12,22 +12,28 @@ export interface ApprovalRecord {
   signature: string;
   profileId: string;
   addressId: string;
-  digests: Record<string, number>;
+  digests: Record<string, string>;
 }
 
-// A 32-bit djb2 digest, kept positive.
-export function digest(input: string): number {
-  let h = 5381;
+// Two independent 32-bit hashes (djb2 and FNV-1a) joined into one 64-bit
+// digest string. The digest is the only stored evidence of what was approved,
+// so a single-hash collision would hide a changed row from the shortened
+// preview; two independent hashes make that practically impossible.
+export function digest(input: string): string {
+  let djb2 = 5381;
+  let fnv = 0x811c9dc5;
   for (let i = 0; i < input.length; i += 1) {
-    h = ((h * 33) ^ input.charCodeAt(i)) >>> 0;
+    const c = input.charCodeAt(i);
+    djb2 = ((djb2 * 33) ^ c) >>> 0;
+    fnv = ((fnv ^ c) * 0x01000193) >>> 0;
   }
-  return h | 0;
+  return `${djb2.toString(36)}${fnv.toString(36)}`;
 }
 
 // The form's field-signature hash. A different field set is a different form
 // and falls back to the full preview.
 export function formSignature(metas: FieldMeta[]): string {
-  return digest(metas.map((m) => fieldKeyFor(m) ?? `id:${m.id}`).join('|')).toString();
+  return digest(metas.map((m) => fieldKeyFor(m) ?? `id:${m.id}`).join('|'));
 }
 
 export interface DiffRow {
@@ -36,8 +42,8 @@ export interface DiffRow {
   display: string;
 }
 
-export function rowDigests(rows: DiffRow[]): Record<string, number> {
-  const out: Record<string, number> = {};
+export function rowDigests(rows: DiffRow[]): Record<string, string> {
+  const out: Record<string, string> = {};
   for (const r of rows) {
     // A row without a field id (a synthetic line) has no shape to remember.
     if (typeof r.fieldId !== 'string') continue;

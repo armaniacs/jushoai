@@ -245,8 +245,10 @@ function render(notice?: HTMLElement) {
 
 // PBI-127: ask the active tab's content script for the page draft, then run it
 // through normalizeProfile/normalizeAddress + validate. Only the fields that
-// pass become form values; the first profile/address card receives them (a
-// new user's card), and save stays a separate explicit step.
+// pass become form values. The first card receives them when it is still
+// blank (a new user's card); a card that already has values is never silently
+// overwritten — the import creates a new card instead. Save stays a separate
+// explicit step.
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
@@ -258,11 +260,20 @@ async function onImportDraft(): Promise<void> {
     render(message('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
     return;
   }
-  const target = state.profiles[0] ?? { ...EMPTY_PROFILE, id: newId() };
-  const targetAddress = state.addresses[0] ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
+  const first = state.profiles[0];
+  const blankProfile = first === undefined || PROFILE_FIELDS.every((f) => (first[f.key] ?? '').trim() === '');
+  const target = blankProfile ? first ?? { ...EMPTY_PROFILE, id: newId() } : { ...EMPTY_PROFILE, id: newId(), label: '新規' };
+  const firstAddress = state.addresses[0];
+  // The address label is not a form value — a card with only the default
+  // label still counts as blank, so the import fills it instead of forking.
+  const blankAddress = firstAddress === undefined
+    || ADDRESS_FIELDS.filter((f) => f.key !== 'label').every((f) => (firstAddress[f.key] ?? '').trim() === '');
+  const targetAddress = blankAddress
+    ? firstAddress ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' }
+    : { ...EMPTY_ADDRESS, id: newId(), label: '新規' };
   const result = applyImportDraft(target, targetAddress, res.draft);
-  state.profiles = [result.profile, ...state.profiles.slice(1)];
-  state.addresses = [result.address, ...state.addresses.slice(1)];
+  state.profiles = blankProfile ? [result.profile, ...state.profiles.slice(1)] : [first!, result.profile, ...state.profiles.slice(1)];
+  state.addresses = blankAddress ? [result.address, ...state.addresses.slice(1)] : [firstAddress!, result.address, ...state.addresses.slice(1)];
   if (result.taken === 0) {
     render(message('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
     return;
@@ -274,7 +285,8 @@ async function onImportDraft(): Promise<void> {
   render(message('saved', lines));
 }
 
-async function onSave() {  const profiles = state.profiles.map(normalizeProfile);
+async function onSave() {
+  const profiles = state.profiles.map(normalizeProfile);
   const addresses = state.addresses.map(normalizeAddress);
   const errors = [
     ...profiles.flatMap((p, i) => validateProfile(p).map((e) => `${p.label || `プロファイル${i + 1}`}: ${e}`)),

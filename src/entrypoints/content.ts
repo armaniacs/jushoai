@@ -1,7 +1,7 @@
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
-import { planOneField, fillOneReasonLabel } from '../core/fill-one';
-import { resolveAddressId, resolveLastId } from '../core/selection';
+import { fillOneReasonLabel } from '../core/fill-one';
+import { fillOneEntry } from '../content/fill-one-entry';
 import { createFillSession, classifyWithReason } from '../content-session';
 import { bindPreview } from '../content/preview-bind';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
@@ -13,17 +13,19 @@ import { fillField } from '../dom/fill';
 import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
 import { draftFromPage } from '../core/import-draft';
 import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
-import { loadMappings, saveMappings } from '../mapping-store';
+import { loadMappings, upsertMapping } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
 import { matches, recordFor } from '../core/site-approval';
 import { assignedFirst, assignmentFor } from '../core/site-profile';
 import { mergeCarryover } from '../core/carryover';
-import { loadApprovals, saveApprovals } from '../approval-store';
-import { loadAssignments, saveAssignments } from '../assignment-store';
+import { loadApprovals, upsertApproval } from '../approval-store';
+import { loadAssignments, upsertAssignment } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
-import { guestProfile, guestAddress, type GuestValues } from '../core/guest';import { GUEST_MESSAGE_TYPE } from '../guest-message';
+import { guestProfile, guestAddress, type GuestValues } from '../core/guest';
+import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
 import type { Item } from '../core/types';
+import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
@@ -168,31 +170,24 @@ export default defineContentScript({
     // Rule-only for one field: no LLM, no egress gate. The same planner
     // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
     // 警告して注入しない) and the value is always confirmed in a panel first.
+    // The entry is extracted (src/content/fill-one-entry.ts) so the exclusion
+    // gate is checked in one place for every entry: right-click, Alt+J.
     async function fillOne(target: Element | null): Promise<void> {
-      if (!target) return;
-      const scanned = scanFields(document.body).find(
-        (f) => f.el === target || (f.radioInputs?.some((r) => r === target) ?? false),
-      );
-      if (!scanned) return;
-      const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
-      if (!isReady(data)) {
-        void chrome.runtime.sendMessage({ type: 'open-options' });
-        return;
-      }
-      const profileId = resolveLastId(last.profileId, data.profiles.map((p) => p.id))
-        ?? data.profiles[0]!.id;
-      const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
-      const addressId = resolveAddressId(data.addresses, profileId, last.addressId);
-      const address = data.addresses.find((a) => a.id === addressId) ?? null;
-      const resolved = planOneField(scanned.meta, profile, address, new Date());
-      const label = scanned.meta.label || scanned.meta.name || scanned.meta.htmlId || scanned.meta.id;
-      if (!resolved.ok) {
-        await showFillOneBlocked(label, resolved.reason);
-        return;
-      }
-      const decision = await confirmFillOne(`${label}（${scanned.meta.type}）`, resolved.plan.display);
-      if (decision.mode !== 'fill') return;
-      fillField(scanned.el, resolved.plan.value);
+      await fillOneEntry(target, {
+        isExcluded: () => gate.isExcluded(),
+        scan: (el) => scanFields(document.body).find(
+          (f) => f.el === el || (f.radioInputs?.some((r) => r === el) ?? false),
+        ) ?? null,
+        load: () => Promise.all([loadData(), loadLastUsed(), loadMappings()])
+          .then(([data, last, mappings]) => ({ data, last, mappings })),
+        ready: isReady,
+        carryover: () => carryover,
+        domain: () => hostOf(location.href),
+        onNoData: () => { void chrome.runtime.sendMessage({ type: 'open-options' }); },
+        showBlocked: (label, reason) => showFillOneBlocked(label, fillOneReasonLabel(reason)),
+        confirm: (label, display) => confirmFillOne(label, display),
+        fill: (el, value) => fillField(el, value),
+      });
     }
 
     document.addEventListener('keydown', (e) => {
@@ -237,13 +232,13 @@ export default defineContentScript({
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
-      // PBI-128: the prior per-site approval record for this host, if any.
-      const priorApproval = (await loadApprovals())[hostOf(location.href)] ?? null;
-      // PBI-141: the per-site profile assignment learned from use, if the
-      // profile still exists. 切替は候補提示のみ.
-      const assignments = await loadAssignments();
-      // PBI-138: the taught correction layer, loaded once per run.
-      const activeMappings = await loadMappings();
+      // PBI-128/141/138: the per-site learned state, loaded once per run. The
+      // taught correction layer also gates the LLM pending set below, so a
+      // field the user already corrected never sends its metadata.
+      const [priorApprovals, assignments, activeMappings] = await Promise.all([
+        loadApprovals(), loadAssignments(), loadMappings(),
+      ]);
+      const priorApproval = priorApprovals[hostOf(location.href)] ?? null;
 
       const info = await getAiStatusViaBackground();
       button.setStatus(info);
@@ -272,7 +267,17 @@ export default defineContentScript({
       let effectiveClassifier = classifier;
       let llmSkip: ReadonlySet<string> | undefined;
       if (classifier) {
-        const pending = metas.filter((m) => !isConfident(classifyField(m)));
+        // A field the user taught (PBI-138) needs no LLM attempt: the learned
+        // pair wins over whatever the LLM would answer, so its metadata stays
+        // local even before the gate opens.
+        const taught = new Set(
+          activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
+        );
+        const taughtField = (m: FieldMeta): boolean => {
+          const key = fieldKeyFor(m);
+          return key !== null && taught.has(key);
+        };
+        const pending = metas.filter((m) => !isConfident(classifyField(m)) && !taughtField(m));
         if (pending.length > 0) {
           closeOpenPanels();
           const decision = await confirmEgress(egressRowsFor(pending));
@@ -402,13 +407,7 @@ export default defineContentScript({
               const meta = metas.find((m) => m.id === fieldId);
               const fieldKey = meta ? fieldKeyFor(meta) : null;
               if (!fieldKey) return;
-              const domain = hostOf(location.href);
-              const entries = await loadMappings();
-              const next = [
-                ...entries.filter((e) => !(e.domain === domain && e.fieldKey === fieldKey)),
-                { domain, fieldKey, category: decision.category },
-              ];
-              await saveMappings(next);
+              await upsertMapping({ domain: hostOf(location.href), fieldKey, category: decision.category });
             })();
           });
         },
@@ -423,21 +422,19 @@ export default defineContentScript({
           void (async () => {
             const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
             if (!record.domain) return;
-            const all = await loadApprovals();
-            all[record.domain] = record;
-            await saveApprovals(all);
+            await upsertApproval(record);
           })();
         },
         // PBI-141: the profile used on this host is learned from use. Only the
         // host → profileId pair persists — never a profile value.
         recordAssignment: (profileId) => {
-          void (async () => {
-            const domain = hostOf(location.href);
-            if (!domain) return;
-            const all = await loadAssignments();
-            all[domain] = profileId;
-            await saveAssignments(all);
-          })();
+          void upsertAssignment(hostOf(location.href), profileId);
+        },
+        // PBI-144: the guest is one-shot — the fill consumes it. Without this
+        // the closure would keep overlaying the stored data for every later
+        // press on the same tab (BDD: タブを閉じるか完了する→破棄).
+        onApplied: () => {
+          if (activeGuest) guest = null;
         },
       });
       openPreview = preview;
@@ -491,7 +488,8 @@ export default defineContentScript({
     // Triggered by the action popup's "AI で分析" button: runs the same flow as
     // the in-page button on the first detected form, reusing its handle so
     // errors surface the same way. No form mounted means nothing to fill.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
+    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
+      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
         return false;
       }
       // An excluded page is out of scope for the popup too; "no form" is what

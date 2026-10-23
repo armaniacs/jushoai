@@ -40,6 +40,33 @@ describe('planOneField', () => {
     const r = planOneField(makeMeta({ id: 'a', name: 'last_name' }), { ...EMPTY_PROFILE, lastName: '' }, null);
     expect(r).toEqual({ ok: false, reason: 'warn-no-value' });
   });
+
+  it('honors the taught mapping so fill-one matches the full preview', () => {
+    // rule classification alone cannot read 'xyz' as an email.
+    const noMapping = planOneField(makeMeta({ id: 'a', name: 'xyz' }), EMPTY_PROFILE, null);
+    expect(noMapping).toEqual({ ok: false, reason: 'unknown' });
+    const mapped = planOneField(
+      makeMeta({ id: 'a', name: 'xyz' }),
+      { ...EMPTY_PROFILE, email: 'taro@example.jp' },
+      null,
+      undefined,
+      { mappings: { entries: [{ domain: 'e.com', fieldKey: 'xyz', category: 'email' as const }], domain: 'e.com' } },
+    );
+    expect(mapped.ok).toBe(true);
+    expect(mapped.ok && mapped.plan).toMatchObject({ category: 'email', status: 'ok' });
+  });
+
+  it('falls back to the carryover for an empty profile value', () => {
+    const r = planOneField(
+      makeMeta({ id: 'a', name: 'last_name' }),
+      { ...EMPTY_PROFILE, lastName: '' },
+      null,
+      undefined,
+      { carryover: { last_name: '鈴木' } },
+    );
+    expect(r.ok).toBe(true);
+    expect(r.ok && r.plan.value).toBe('鈴木');
+  });
 });
 
 describe('fillOneReasonLabel', () => {

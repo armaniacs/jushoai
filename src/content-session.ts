@@ -255,12 +255,16 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       // next page of the same tab re-offers them. Profile values are never
       // part of the merge — the signature and the value only.
       if (env.recordCarryover) {
-        env.recordCarryover(plan
-          .filter((p) => p.value)
-          .map((p) => ({
-            key: fieldKeyFor(input.metasById.get(p.fieldId)!) ?? '',
-            value: p.value,
-          })));
+        // A plan fieldId is built from the same metasById, so the lookup cannot
+        // miss in practice — the guard keeps a contract drift from throwing
+        // inside apply after the injection already happened.
+        env.recordCarryover(plan.flatMap((p) => {
+          if (!p.value) return [];
+          const meta = input.metasById.get(p.fieldId);
+          const key = meta ? fieldKeyFor(meta) : null;
+          if (!key) return [];
+          return [{ key, value: p.value }];
+        }));
       }
       const ctx = env.feedbackContext();
       const feedbackInput = buildFeedbackInput({

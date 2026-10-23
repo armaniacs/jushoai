@@ -18,6 +18,11 @@ export interface PreviewRow {
   // PBI-125: a zip dictionary assist candidate for an empty prefecture/city
   // value. Same opt-in checkbox as the abbrev, with the 補助 wording.
   assist?: string;
+  // PBI-128: marks the collapsed-summary row (前回と同じ) as synthetic — not a
+  // field, but an entry that states the hidden rows will fill as approved. It
+  // counts toward the apply button's state on purpose: those rows will fill,
+  // so the shortened preview stays usable when the visible rows are warnings.
+  synthetic?: true;
 }
 
 export interface PreviewOptions {
@@ -236,7 +241,9 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const syncHasOk = (): void => {
     // An approved abbreviation unlocks apply even when no plain ok row does:
     // an overflow-only field would otherwise strand the approval behind a
-    // disabled button.
+    // disabled button. The synthetic collapsed-summary row (PBI-128) counts
+    // too — its status 'ok' states that the hidden rows will fill as approved,
+    // so the shortened preview stays usable when the visible rows warn.
     hasOk = currentRows.some((r) => r.status === 'ok') || abbrevBoxes.some((b) => b.box.checked);
     syncButtons();
   };

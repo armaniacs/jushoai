@@ -11,6 +11,9 @@ const POSTAL_RE = /\d{3}-\d{4}/;
 const ADDRESS_RE = /[一-龥]{2,}[0-9０-９]+[-0-9０-９]*/;
 // Two kanji runs separated by a space read as a full name (山田 太郎).
 const NAME_RE = /[一-龥]{1,5}[ \u3000][一-龥]{1,5}/;
+// Two katakana runs separated by a space read as a kana name (ヤマダ タロウ) —
+// common in labels like フリガナ（ヤマダ タロウ）.
+const KANA_NAME_RE = /[ァ-ヶ]{2,10}[ \u3000][ァ-ヶ]{2,10}/;
 
 export function suspectPii(text: string): boolean {
   return (
@@ -18,6 +21,7 @@ export function suspectPii(text: string): boolean {
     PHONE_RE.test(text) ||
     POSTAL_RE.test(text) ||
     ADDRESS_RE.test(text) ||
-    NAME_RE.test(text)
+    NAME_RE.test(text) ||
+    KANA_NAME_RE.test(text)
   );
 }

@@ -18,3 +18,42 @@ describe('parseAssignments (PBI-141)', () => {
     expect(parseAssignments(['p1'])).toEqual({});
   });
 });
+
+describe('upsertAssignment (PBI-141)', () => {
+  it('moves the host to the end and caps at ASSIGNMENTS_MAX', async () => {
+    let store: Record<string, unknown> = {};
+    globalThis.chrome = {
+      storage: {
+        local: {
+          get: async (key: string) => ({ [key]: store[key] }),
+          set: async (obj: Record<string, unknown>) => { store = { ...store, ...obj }; },
+        },
+      },
+    } as typeof chrome;
+    const { upsertAssignment, saveAssignments, loadAssignments, ASSIGNMENTS_MAX } = await import('../src/assignment-store');
+    for (let i = 0; i < ASSIGNMENTS_MAX + 3; i += 1) {
+      await saveAssignments({ [`d${i}.com`]: 'p0' });
+    }
+    await upsertAssignment('d0.com', 'p1');
+    const loaded = await loadAssignments();
+    expect(Object.keys(loaded).length).toBeLessThanOrEqual(ASSIGNMENTS_MAX);
+    expect(loaded['d0.com']).toBe('p1');
+    expect(loaded['d1.com']).toBeUndefined();
+    expect(Object.keys(loaded)[Object.keys(loaded).length - 1]).toBe('d0.com');
+  });
+
+  it('ignores an empty host', async () => {
+    let setCalls = 0;
+    globalThis.chrome = {
+      storage: {
+        local: {
+          get: async () => ({}),
+          set: async () => { setCalls += 1; },
+        },
+      },
+    } as unknown as typeof chrome;
+    const { upsertAssignment } = await import('../src/assignment-store');
+    await upsertAssignment('', 'p1');
+    expect(setCalls).toBe(0);
+  });
+});

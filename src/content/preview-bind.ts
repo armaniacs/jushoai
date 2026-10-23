@@ -35,6 +35,10 @@ export interface PreviewBindInput {
   // PBI-141: the profile used on this host is learned from use after a
   // successful apply, so the next visit suggests it as the first candidate.
   recordAssignment?(profileId: string): void;
+  // PBI-144: called once after a successful apply, so a one-shot value (the
+  // guest overlay) is consumed with the fill instead of lingering for the
+  // next button press.
+  onApplied?(): void;
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -59,6 +63,7 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
         display: `${hidden}件を前回の承認どおりに入力します`,
         status: 'ok',
         source: 'rule',
+        synthetic: true,
       },
     ];
   };
@@ -116,6 +121,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       // PBI-141: the profile used on this host is learned from use — the next
       // visit suggests it as the first candidate. 切替は候補提示のみ.
       input.recordAssignment?.(session.selectedProfileId);
+      // PBI-144: the fill completed — a one-shot value is consumed here so a
+      // second press starts from the stored data again.
+      input.onApplied?.();
       // PBI-55: a partial apply (not everything filled) keeps the preview
       // open in result mode with a one-click breakdown report; PBI-132: a
       // clean apply with undo history also keeps it open so 元に戻す is

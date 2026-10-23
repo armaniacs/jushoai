@@ -15,6 +15,16 @@ describe('digest (PBI-128)', () => {
     expect(digest('a|ok|x')).toBe(digest('a|ok|x'));
     expect(digest('a|ok|x')).not.toBe(digest('a|ok|y'));
   });
+
+  it('is a 64-bit string built from two independent hashes', () => {
+    // A single 32-bit hash could collide across a form's rows and hide a
+    // changed row; two independent hashes make that practically impossible.
+    expect(typeof digest('a|ok|x')).toBe('string');
+    expect(digest('a|ok|x').length).toBeGreaterThanOrEqual(6);
+    const values = Array.from({ length: 2000 }, (_, i) => `f${i}|ok|100-000${i % 10}`);
+    const seen = new Set(values.map(digest));
+    expect(seen.size).toBe(values.length);
+  });
 });
 
 describe('formSignature (PBI-128)', () => {
