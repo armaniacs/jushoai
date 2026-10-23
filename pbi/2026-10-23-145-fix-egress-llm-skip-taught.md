@@ -56,6 +56,6 @@ Scenario: ゲートで全消ししたらclassifierを無効にする
 1（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make check`が緑
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make check`が緑
 - [ ] コードレビュー完了
