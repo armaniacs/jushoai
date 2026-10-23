@@ -25,6 +25,13 @@ describe('digest (PBI-128)', () => {
     const seen = new Set(values.map(digest));
     expect(seen.size).toBe(values.length);
   });
+
+  it('separates the two hashes so hash-length combinations cannot collide', () => {
+    // Variable-length base36 concatenation alone could collide: ab+cd and
+    // abc+d produce the same string. The separator keeps them distinct.
+    expect(digest('a|ok|x')).toMatch(/^[a-z0-9]+\.[a-z0-9]+$/);
+    expect(digest('a|ok|x')).not.toBe(digest('a|ok|y'));
+  });
 });
 
 describe('formSignature (PBI-128)', () => {

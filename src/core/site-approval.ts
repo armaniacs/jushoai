@@ -15,9 +15,11 @@ export interface ApprovalRecord {
   digests: Record<string, string>;
 }
 
-// Two independent 32-bit hashes (djb2 and FNV-1a) joined into one 64-bit
-// digest string. The digest is the only stored evidence of what was approved,
-// so a single-hash collision would hide a changed row from the shortened
+// Two independent 32-bit hashes (djb2 and FNV-1a) joined with a separator into
+// one 64-bit digest string. The separator keeps the two hashes structurally
+// distinct (variable-length base36 concatenation alone could collide across
+// hash-length combinations). The digest is the only stored evidence of what
+// was approved, so a collision would hide a changed row from the shortened
 // preview; two independent hashes make that practically impossible.
 export function digest(input: string): string {
   let djb2 = 5381;
@@ -27,7 +29,7 @@ export function digest(input: string): string {
     djb2 = ((djb2 * 33) ^ c) >>> 0;
     fnv = ((fnv ^ c) * 0x01000193) >>> 0;
   }
-  return `${djb2.toString(36)}${fnv.toString(36)}`;
+  return `${djb2.toString(36)}.${fnv.toString(36)}`;
 }
 
 // The form's field-signature hash. A different field set is a different form
