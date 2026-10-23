@@ -14,6 +14,12 @@ export async function loadAssignments(): Promise<Record<string, string>> {
 
 // The single write point: an upsert moves the host to the end (the most recent
 // survives the cap) and trims the oldest beyond ASSIGNMENTS_MAX.
+//
+// Known limit (PBI-148): the load-merge-save window is not serialized across
+// tabs. chrome.storage has no transactions, so two concurrent applies on the
+// same host are last-writer-wins — one record can be lost. Acceptable for a
+// single-user local extension; a competing writer would merge on
+// `storage.onChanged` instead.
 export async function upsertAssignment(domain: string, profileId: string): Promise<void> {
   if (!domain) return;
   const all = await loadAssignments();

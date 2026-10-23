@@ -17,6 +17,12 @@ export async function loadApprovals(): Promise<Record<string, ApprovalRecord>> {
 // The single write point: an upsert moves the record to the end (the most
 // recent host survives the cap) and trims the oldest beyond APPROVALS_MAX.
 // One load-merge-save in one place keeps the merge testable.
+//
+// Known limit (PBI-148): the load-merge-save window is not serialized across
+// tabs. chrome.storage has no transactions, so two concurrent applies on the
+// same host are last-writer-wins — one record can be lost. Acceptable for a
+// single-user local extension; a competing writer would merge on
+// `storage.onChanged` instead.
 export async function upsertApproval(record: ApprovalRecord): Promise<void> {
   const all = await loadApprovals();
   delete all[record.domain];

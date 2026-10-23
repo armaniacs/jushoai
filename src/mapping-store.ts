@@ -18,6 +18,12 @@ export async function loadMappings(): Promise<MappingEntry[]> {
 // The single write point: an upsert replaces this domain's pair for the same
 // fieldKey and trims beyond MAPPINGS_MAX. One load-merge-save in one place
 // keeps the merge testable.
+//
+// Known limit (PBI-148): the load-merge-save window is not serialized across
+// tabs. chrome.storage has no transactions, so two concurrent applies on the
+// same host are last-writer-wins — one pair can be lost. Acceptable for a
+// single-user local extension; a competing writer would merge on
+// `storage.onChanged` instead.
 export async function upsertMapping(entry: MappingEntry): Promise<void> {
   const all = await loadMappings();
   const next = [
