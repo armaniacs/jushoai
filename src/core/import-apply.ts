@@ -60,3 +60,33 @@ export function applyImportDraft(
   }
   return { profile, address, taken, dropped };
 }
+
+export interface ImportTargets {
+  target: Profile;
+  targetAddress: Address;
+  // Which first card receives the import (a blank first card is filled; a card
+  // that already has values is never silently overwritten — the import forks).
+  blankProfile: boolean;
+  blankAddress: boolean;
+}
+
+// The state update after a page import. A failed import (taken === 0) leaves
+// the card composition untouched — the guard runs before any state change, so
+// a forked new card is never added for an import that took nothing (PBI-147).
+export function applyImportToState(
+  state: { profiles: Profile[]; addresses: Address[] },
+  targets: ImportTargets,
+  result: { profile: Profile; address: Address; taken: number },
+): { profiles: Profile[]; addresses: Address[] } {
+  if (result.taken === 0) {
+    return { profiles: [...state.profiles], addresses: [...state.addresses] };
+  }
+  return {
+    profiles: targets.blankProfile
+      ? [result.profile, ...state.profiles.slice(1)]
+      : [state.profiles[0]!, result.profile, ...state.profiles.slice(1)],
+    addresses: targets.blankAddress
+      ? [result.address, ...state.addresses.slice(1)]
+      : [state.addresses[0]!, result.address, ...state.addresses.slice(1)],
+  };
+}

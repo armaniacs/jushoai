@@ -6,7 +6,7 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
-import { applyImportDraft } from '../../core/import-apply';
+import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import { mountAiSection } from './ai-section';
@@ -271,13 +271,15 @@ async function onImportDraft(): Promise<void> {
   const targetAddress = blankAddress
     ? firstAddress ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' }
     : { ...EMPTY_ADDRESS, id: newId(), label: '新規' };
+  const targets = { target, targetAddress, blankProfile, blankAddress };
   const result = applyImportDraft(target, targetAddress, res.draft);
-  state.profiles = blankProfile ? [result.profile, ...state.profiles.slice(1)] : [first!, result.profile, ...state.profiles.slice(1)];
-  state.addresses = blankAddress ? [result.address, ...state.addresses.slice(1)] : [firstAddress!, result.address, ...state.addresses.slice(1)];
   if (result.taken === 0) {
     render(message('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
     return;
   }
+  const next = applyImportToState(state, targets, result);
+  state.profiles = next.profiles;
+  state.addresses = next.addresses;
   const lines = [
     `${result.taken}件を取り込みました。保存ボタンで確定します。`,
     ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),

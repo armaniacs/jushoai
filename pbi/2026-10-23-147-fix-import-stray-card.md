@@ -24,9 +24,16 @@ Scenario: 取り込めたときは新規カードに分岐する
   Then 新規カードが作られ、取り込んだ値が入る（既存カードは変わらない）
 
 ## 受け入れ基準
-- [ ] `taken === 0`のときはstateを書き換えない（カードの追加・上書きが起きない）
-- [ ] 取り込めた場合は既存の分岐（新規カードへの分岐）を壊さない
-- [ ] テスト: `taken === 0`でカードが増えないことの固定テストを追加する
+- [x] `taken === 0`のときはstateを書き換えない（カードの追加・上書きが起きない） → `applyImportToState`の最初の分岐でガード。options側は取り込み→ガード→state更新の順（`import-apply.test.ts`で固定）
+- [x] 取り込めた場合は既存の分岐（新規カードへの分岐）を壊さない → blank/forkの分岐は`applyImportToState`に移設し、挙動は同じ（既存カードはfirstのまま残る）
+- [x] テスト: `taken === 0`でカードが増えないことの固定テストを追加する → 3件（失敗時はstate無変更・blank先頭カードへの反映・forkの先頭挿入）
+
+## 実装記録（2026-10-23）
+
+- `src/core/import-apply.ts`: `applyImportToState`（純粋関数）を追加。`taken === 0`ガードを最初の分岐に置き、失敗時はカード構成を一切変えない。blank/forkの分岐もここに集約。
+- `src/entrypoints/options/main.ts`: 取り込み→ガード→state更新の順に変更。失敗時にstateを変えずにエラー表示で戻る。
+- テスト: `tests/core/import-apply.test.ts`（3件追加、計8件）。
+- `make check` exit 0。
 
 ## テスト戦略
 - 統合: `applyImportDraft`の呼び出し順と`taken === 0`の分岐のテスト

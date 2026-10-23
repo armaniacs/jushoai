@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { applyImportDraft } from '../../src/core/import-apply';
+import { applyImportDraft, applyImportToState } from '../../src/core/import-apply';
 import { draftFromPage } from '../../src/core/import-draft';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import type { Profile } from '../../src/core/types';
@@ -62,5 +62,54 @@ describe('applyImportDraft (PBI-127)', () => {
     expect(result.profile.tel).toBe('');
     expect(result.taken).toBe(2);
     expect(result.dropped).toBe(1);
+  });
+});
+
+describe('applyImportToState (PBI-147)', () => {
+  const targets = (blankProfile: boolean, blankAddress: boolean) => ({
+    target: { ...EMPTY_PROFILE, id: 'p-new' },
+    targetAddress: { ...EMPTY_ADDRESS, id: 'a-new', label: '新規' },
+    blankProfile,
+    blankAddress,
+  });
+
+  it('leaves the card composition untouched when nothing was taken', () => {
+    const first = { ...EMPTY_PROFILE, id: 'p1', lastName: '山田' };
+    const state = { profiles: [first], addresses: [{ ...EMPTY_ADDRESS, id: 'a1', label: '自宅' }] };
+    const next = applyImportToState(
+      state,
+      targets(false, false),
+      { profile: { ...EMPTY_PROFILE, id: 'p-new' }, address: { ...EMPTY_ADDRESS, id: 'a-new' }, taken: 0 },
+    );
+    // A failed import never adds a forked new card (PBI-147).
+    expect(next.profiles).toEqual(state.profiles);
+    expect(next.addresses).toEqual(state.addresses);
+    expect(next.profiles.length).toBe(1);
+  });
+
+  it('fills a blank first card in place', () => {
+    const first = { ...EMPTY_PROFILE, id: 'p1' };
+    const state = { profiles: [first], addresses: [{ ...EMPTY_ADDRESS, id: 'a1', label: '自宅' }] };
+    const imported = { ...EMPTY_PROFILE, id: 'p1', lastName: '山田' };
+    const next = applyImportToState(
+      state,
+      targets(true, true),
+      { profile: imported, address: { ...EMPTY_ADDRESS, id: 'a1', label: '自宅' }, taken: 2 },
+    );
+    expect(next.profiles).toEqual([imported]);
+    expect(next.profiles.length).toBe(1);
+  });
+
+  it('forks a new card when the first already has values', () => {
+    const first = { ...EMPTY_PROFILE, id: 'p1', lastName: '山田' };
+    const state = { profiles: [first], addresses: [{ ...EMPTY_ADDRESS, id: 'a1', label: '自宅' }] };
+    const forked = { ...EMPTY_PROFILE, id: 'p-new', firstName: '太郎' };
+    const next = applyImportToState(
+      state,
+      targets(false, false),
+      { profile: forked, address: { ...EMPTY_ADDRESS, id: 'a-new' }, taken: 3 },
+    );
+    expect(next.profiles).toEqual([first, forked]);
+    expect(next.profiles[0]).toBe(first);
   });
 });
