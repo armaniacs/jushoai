@@ -33,11 +33,19 @@ Scenario: ゲートで全消ししたらclassifierを無効にする
   Then LLMの試行自体が起きず、ルール分類のみで動く
 
 ## 受け入れ基準
-- [ ] 学習済み欄のidが`llmSkip`に入り、`classifyAll`のLLM送信対象から除外される
-- [ ] ゲートの`pending`と`llmSkip`が同じ集合を参照し、表示と送信が一致する
-- [ ] 「すべて除外→classifier無効」の判定は非確信欄全体（学習済みを含む）に対して行われる
-- [ ] 学習済み欄はマッピング層で分類が補正され、ルール結果より学習が勝つ（既存のPBI-138の挙動を壊さない）
-- [ ] テスト: 学習済み欄がLLMに送られないことの固定テストを追加する
+- [x] 学習済み欄のidが`llmSkip`に入り、`classifyAll`のLLM送信対象から除外される → `planEgress`が学習済みidを計算し、content.tsが`llmSkip`に注入（`tests/core/egress-plan.test.ts`で固定）
+- [x] ゲートの`pending`と`llmSkip`が同じ集合を参照し、表示と送信が一致する → 両者が`planEgress`の同一計算から派生。ゲートは`plan.pending`を表示し、送信対象は同じ計算のtaughtIds+unchecked
+- [x] 「すべて除外→classifier無効」の判定は非確信欄全体（学習済みを含む）に対して行われる → `shouldDisableClassifier(llmSkip, plan.nonConfidentCount)`で学習済みを含む全体に対して判定（テストで固定）
+- [x] 学習済み欄はマッピング層で分類が補正され、ルール結果より学習が勝つ（既存のPBI-138の挙動を壊さない） → classify経路の`applyMapping`は変更なし。`fill-one.test.ts`の学習済みテストが通る
+- [x] テスト: 学習済み欄がLLMに送られないことの固定テストを追加する → `egress-plan.test.ts`9件（学習済み欄がpendingから外れtaughtIdsに入る・nonConfidentCountに数える・マージ・無効判定）
+
+## 実装記録（2026-10-23）
+
+- `src/core/egress-plan.ts`（新規）: 純粋関数3件。`planEgress`（非確信欄・学習済みid・nonConfidentCountを1箇所で計算）、`mergeLlmSkip`（ゲートのuncheckedと学習済みidのマージ）、`shouldDisableClassifier`（非確信欄全体に対する無効判定）。
+- `src/entrypoints/content.ts`: ゲートブロックを`planEgress`に差し替え。`llmSkip`を学習済みidで初期化し、ゲート承認後はuncheckedとマージ。ゲートの`pending`と`llmSkip`が同じ計算から派生し、「表示＝送信」が構造的に回復。
+- `src/core/analyze.ts`: 変更なし。`classifyAll`の既存の`llmSkip`フィルタがそのまま使われる（学習済みidが`llmSkip`に乗ることで送信対象から外れる）。
+- テスト: `tests/core/egress-plan.test.ts`（9件）。
+- `make check` exit 0。
 
 ## テスト戦略
 - 単体: `classifyAll`が`llmSkip`で送信対象を絞ることのテスト（既存）＋学習済みidが`llmSkip`に入ることの固定テスト（新規）

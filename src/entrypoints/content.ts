@@ -10,7 +10,7 @@ import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
-import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
+import { classifyField, refineClassifications } from '../core/classify-rules';
 import { draftFromPage } from '../core/import-draft';
 import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
 import { loadMappings, upsertMapping } from '../mapping-store';
@@ -28,6 +28,7 @@ import type { Item } from '../core/types';
 import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
+import { mergeLlmSkip, planEgress, shouldDisableClassifier } from '../core/egress-plan';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
 import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
@@ -265,28 +266,25 @@ export default defineContentScript({
       // any network. Suspect rows default to excluded; closing the gate
       // (Escape included) resolves as rule-only, so no choice means no send.
       let effectiveClassifier = classifier;
+      // PBI-145: the gate's pending list and the actual send come from the
+      // same plan, so the gate shows exactly what classifyAll will send and a
+      // taught field's metadata never reaches the LLM.
       let llmSkip: ReadonlySet<string> | undefined;
-      if (classifier) {
-        // A field the user taught (PBI-138) needs no LLM attempt: the learned
-        // pair wins over whatever the LLM would answer, so its metadata stays
-        // local even before the gate opens.
+      {
         const taught = new Set(
           activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
         );
-        const taughtField = (m: FieldMeta): boolean => {
-          const key = fieldKeyFor(m);
-          return key !== null && taught.has(key);
-        };
-        const pending = metas.filter((m) => !isConfident(classifyField(m)) && !taughtField(m));
-        if (pending.length > 0) {
+        const plan = planEgress(metas, taught);
+        llmSkip = plan.taughtIds.size > 0 ? plan.taughtIds : undefined;
+        if (classifier && plan.pending.length > 0) {
           closeOpenPanels();
-          const decision = await confirmEgress(egressRowsFor(pending));
+          const decision = await confirmEgress(egressRowsFor(plan.pending));
           if (decision.mode === 'rule-only') {
             effectiveClassifier = null;
           } else {
-            const skipped = pending.map((m) => m.id).filter((id) => !decision.send.has(id));
-            llmSkip = skipped.length > 0 ? new Set(skipped) : undefined;
-            if (llmSkip && llmSkip.size === pending.length) effectiveClassifier = null;
+            const unchecked = plan.pending.map((m) => m.id).filter((id) => !decision.send.has(id));
+            llmSkip = mergeLlmSkip(plan.taughtIds, unchecked);
+            if (shouldDisableClassifier(llmSkip, plan.nonConfidentCount)) effectiveClassifier = null;
           }
         }
       }
