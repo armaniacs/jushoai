@@ -88,6 +88,11 @@ function isPrivateIpv6(ip: string): boolean {
     return isInternalIpv4(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
   }
   if (v === '::' || v === '::1' || v === '0:0:0:0:0:0:0:1') return true;
+  // NAT64 (RFC 6052 well-known + RFC 8215 local-use) and 6to4 (RFC 7526) translation
+  // prefixes embed an IPv4 that routes through a translation gateway — internal.
+  // Everything under 64:ff9b::/16 and 2002::/16 is translation topology, so a prefix
+  // match on the first groups covers every expanded form.
+  if (v.startsWith('64:ff9b') || v.startsWith('2002:')) return true;
   const first = v.split(':')[0] ?? '';
   const n = parseInt(first, 16);
   if (Number.isNaN(n)) return true;
