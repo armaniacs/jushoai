@@ -33,6 +33,15 @@ describe('planEgress', () => {
     expect(plan.nonConfidentCount).toBe(0);
   });
 
+  it('never teaches a field whose key cannot be resolved, even with taught keys', () => {
+    // A field with no name/aria/label match has no fieldKey, so it can never
+    // be taught: it stays in the gate pending list whatever the taught set.
+    const meta = makeMeta({ id: 'f-n', label: '' });
+    const plan = planEgress([meta], new Set(['last_name', 'email']));
+    expect(plan.pending.map((m) => m.id)).toEqual(['f-n']);
+    expect(plan.taughtIds.size).toBe(0);
+  });
+
   it('counts the taught fields in nonConfidentCount for the disable check', () => {
     const taught = makeMeta({ id: 'f-x', name: 'xyz' });
     const open = makeMeta({ id: 'f-y', label: '' });
