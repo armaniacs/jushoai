@@ -54,7 +54,8 @@ export async function fillOneEntry(target: Element | null, deps: FillOneEntryDep
   const profileId = resolveLastId(last.profileId ?? undefined, data.profiles.map((p) => p.id))
     ?? data.profiles[0]!.id;
   const profile = data.profiles.find((p) => p.id === profileId) ?? data.profiles[0]!;
-  const addressId = resolveAddressId(data.addresses, profileId, last.addressId);  const address = data.addresses.find((a) => a.id === addressId) ?? null;
+  const addressId = resolveAddressId(data.addresses, profileId, last.addressId);
+  const address = data.addresses.find((a) => a.id === addressId) ?? null;
   const resolved = planOneField(scanned.meta, profile, address, new Date(), {
     mappings: { entries: mappings, domain: deps.domain() },
     carryover: deps.carryover(),

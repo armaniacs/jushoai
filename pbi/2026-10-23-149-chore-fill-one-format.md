@@ -18,7 +18,13 @@ Scenario: 1行1文になる
   Then 1行1文になり、動作は変わらない
 
 ## 受け入れ基準
-- [ ] 1行1文に整形され、動作が変わらないこと（`make check`緑）を確認する
+- [x] 1行1文に整形され、動作が変わらないこと（`make check`緑）を確認する → `fill-one-entry.ts` 57行の2文を1行1文に整形。`fill-one-entry.test.ts`（5件）が通る
+
+## 実装記録（2026-10-23）
+
+- `src/content/fill-one-entry.ts`: 57行の`const addressId = ...;  const address = ...`を1行1文に整形。動作の変更なし。
+- テスト: `tests/content/fill-one-entry.test.ts`（5件）が通る。
+- `make check` exit 0。
 
 ## テスト戦略
 - 単体: 既存の`fill-one-entry.test.ts`が通ることの確認
@@ -27,5 +33,5 @@ Scenario: 1行1文になる
 1（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 整形が済み、既存テストが通る
-- [ ] `make check`が緑
+- [x] 整形が済み、既存テストが通る
+- [x] `make check`が緑
