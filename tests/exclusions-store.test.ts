@@ -40,4 +40,20 @@ describe('exclusions store', () => {
     await saveExcludedUrls(['https://b.example/']);
     expect(await loadExcludedUrls()).toEqual(['https://b.example/']);
   });
+
+  // PBI-153: a failed write must surface as a typed error the caller can
+  // identify, not a raw chrome.storage rejection.
+  it('reports a failed save as a typed error, not a raw rejection (PBI-153)', async () => {
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async () => ({}),
+          set: async () => { throw new Error('quota exceeded'); },
+        },
+      },
+    });
+    const { saveExcludedUrls } = await import('../src/exclusions-store');
+    const { KvStoreSaveError } = await import('../src/kv-store');
+    await expect(saveExcludedUrls(['https://a.example/'])).rejects.toBeInstanceOf(KvStoreSaveError);
+  });
 });

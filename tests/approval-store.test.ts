@@ -61,4 +61,23 @@ describe('parseApprovals (PBI-128)', () => {
     expect(parseApprovals('junk')).toEqual({});
     expect(parseApprovals(['array'])).toEqual({});
   });
+
+  // PBI-153: a failed write must surface as a typed error the caller can
+  // identify, not a raw chrome.storage rejection.
+  describe('upsertApproval write failure (PBI-153)', () => {
+    it('reports a failed write as a typed error, not a raw rejection', async () => {
+      globalThis.chrome = {
+        storage: {
+          local: {
+            get: async () => ({}),
+            set: async () => { throw new Error('quota exceeded'); },
+          },
+        },
+      } as unknown as typeof chrome;
+      const { upsertApproval } = await import('../src/approval-store');
+      const { KvStoreSaveError } = await import('../src/kv-store');
+      await expect(upsertApproval({ domain: 'd.com', signature: '1', profileId: 'p1', addressId: 'a1', digests: {} }))
+        .rejects.toBeInstanceOf(KvStoreSaveError);
+    });
+  });
 });

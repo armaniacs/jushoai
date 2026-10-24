@@ -42,6 +42,7 @@ import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
 import { createTabDispatcher } from '../content/tab-dispatch';
+import { persistWrite } from '../content/persist-write';
 
 // --- PBI-21: sync prefilter -------------------------------------------------
 // sync() is debounced off the MutationObserver, but even a skipped sync pays a
@@ -355,7 +356,9 @@ export default defineContentScript({
             console.debug('[JushoAI] fill outcomes', report.summary);
             return report;
           },
-          persistSelection: (sel) => { void saveLastUsed(sel); },
+          // PBI-153: a failed write is reported instead of becoming an
+          // unhandled rejection; the typed error keeps it identifiable.
+          persistSelection: (sel) => { persistWrite('最終使用状態', () => saveLastUsed(sel)); },
           openUrl: openFeedbackUrl,
           feedbackContext: feedbackCtx,
           isExcluded: () => gate.isExcluded(),
@@ -403,12 +406,14 @@ export default defineContentScript({
             if (!decision) return;
             panel.setRows(session.recategorize(fieldId, decision.category));
             if (!decision.remember) return;
-            void (async () => {
+            // PBI-153: the IIFE's `void` used to let a failed write surface as
+            // an unhandled rejection; persistWrite reports it instead.
+            persistWrite('覚えた対応付け', async () => {
               const meta = metas.find((m) => m.id === fieldId);
               const fieldKey = meta ? fieldKeyFor(meta) : null;
               if (!fieldKey) return;
               await upsertMapping({ domain: hostOf(location.href), fieldKey, category: decision.category });
-            })();
+            });
           });
         },
         // PBI-128: the per-site approval memory. A record for this host with
@@ -419,16 +424,20 @@ export default defineContentScript({
           ? priorApproval
           : null,
         recordApproval: (rows) => {
-          void (async () => {
+          // PBI-153: reported through persistWrite instead of an unhandled
+          // rejection inside the `void` IIFE.
+          persistWrite('サイトごとの承認', async () => {
             const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
             if (!record.domain) return;
             await upsertApproval(record);
-          })();
+          });
         },
         // PBI-141: the profile used on this host is learned from use. Only the
         // host → profileId pair persists — never a profile value.
         recordAssignment: (profileId) => {
-          void upsertAssignment(hostOf(location.href), profileId);
+          // PBI-153: reported through persistWrite instead of an unhandled
+          // rejection from the bare `void`.
+          persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
         },
         // PBI-144: the guest is one-shot — the fill consumes it. Without this
         // the closure would keep overlaying the stored data for every later

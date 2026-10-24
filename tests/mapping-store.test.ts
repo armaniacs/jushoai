@@ -20,4 +20,23 @@ describe('parseMappings (PBI-138)', () => {
     expect(parseMappings({ domain: 'e.com' })).toEqual([]);
     expect(parseMappings('junk')).toEqual([]);
   });
+
+  // PBI-153: a failed write must surface as a typed error the caller can
+  // identify, not a raw chrome.storage rejection.
+  describe('upsertMapping write failure (PBI-153)', () => {
+    it('reports a failed write as a typed error, not a raw rejection', async () => {
+      globalThis.chrome = {
+        storage: {
+          local: {
+            get: async () => ({}),
+            set: async () => { throw new Error('quota exceeded'); },
+          },
+        },
+      } as unknown as typeof chrome;
+      const { upsertMapping } = await import('../src/mapping-store');
+      const { KvStoreSaveError } = await import('../src/kv-store');
+      await expect(upsertMapping({ domain: 'd.com', fieldKey: 'k', category: 'email' }))
+        .rejects.toBeInstanceOf(KvStoreSaveError);
+    });
+  });
 });

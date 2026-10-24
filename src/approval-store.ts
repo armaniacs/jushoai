@@ -1,42 +1,10 @@
 import type { ApprovalRecord } from './core/site-approval';
+import { capKeys, readKv, upsertKv, writeKv, type KvSpec } from './kv-store';
 
 export const APPROVALS_KEY = 'jushoai:site-approvals';
 // The approval memory caps at the most recent hosts (insertion order): the
 // store must not grow unboundedly with every site the user fills.
 export const APPROVALS_MAX = 100;
-
-// PBI-128: the stored per-site approval records, keyed by host. A missing,
-// corrupted or hand-edited value reads as an empty map — a broken store must
-// never keep the full preview from working. Only digests persist; no raw
-// profile value, no raw label ever enters storage.
-export async function loadApprovals(): Promise<Record<string, ApprovalRecord>> {
-  const result = await chrome.storage.local.get(APPROVALS_KEY);
-  return parseApprovals(result[APPROVALS_KEY]);
-}
-
-// The single write point: an upsert moves the record to the end (the most
-// recent host survives the cap) and trims the oldest beyond APPROVALS_MAX.
-// One load-merge-save in one place keeps the merge testable.
-//
-// Known limit (PBI-148): the load-merge-save window is not serialized across
-// tabs. chrome.storage has no transactions, so two concurrent applies on the
-// same host are last-writer-wins — one record can be lost. Acceptable for a
-// single-user local extension; a competing writer would merge on
-// `storage.onChanged` instead.
-export async function upsertApproval(record: ApprovalRecord): Promise<void> {
-  const all = await loadApprovals();
-  delete all[record.domain];
-  all[record.domain] = record;
-  await saveApprovals(all);
-}
-
-export async function saveApprovals(entries: Record<string, ApprovalRecord>): Promise<void> {
-  const keys = Object.keys(entries);
-  const trimmed = keys.length > APPROVALS_MAX ? keys.slice(keys.length - APPROVALS_MAX) : keys;
-  const out: Record<string, ApprovalRecord> = {};
-  for (const k of trimmed) out[k] = entries[k]!;
-  await chrome.storage.local.set({ [APPROVALS_KEY]: out });
-}
 
 export function parseApprovals(raw: unknown): Record<string, ApprovalRecord> {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) return {};
@@ -61,4 +29,35 @@ export function parseApprovals(raw: unknown): Record<string, ApprovalRecord> {
     };
   }
   return out;
+}
+
+// PBI-128 adapter: supplies key, parse, and cap to the one store module
+// (kv-store), which owns load/save/upsert and the typed error mode. A missing,
+// corrupted or hand-edited value reads as an empty map — a broken store must
+// never keep the full preview from working. Only digests persist; no raw
+// profile value, no raw label ever enters storage.
+const APPROVALS_STORE: KvSpec<Record<string, ApprovalRecord>> = {
+  key: APPROVALS_KEY,
+  parse: parseApprovals,
+  cap: (entries) => capKeys(entries, APPROVALS_MAX),
+};
+
+export async function loadApprovals(): Promise<Record<string, ApprovalRecord>> {
+  return readKv(APPROVALS_STORE);
+}
+
+// An upsert moves the record to the end (the most recent host survives the
+// cap); the load-merge-write window and its concurrency limit are owned by
+// kv-store's upsertKv.
+export async function upsertApproval(record: ApprovalRecord): Promise<void> {
+  await upsertKv(APPROVALS_STORE, (all) => {
+    const next = { ...all };
+    delete next[record.domain];
+    next[record.domain] = record;
+    return next;
+  });
+}
+
+export async function saveApprovals(entries: Record<string, ApprovalRecord>): Promise<void> {
+  await writeKv(APPROVALS_STORE, entries);
 }

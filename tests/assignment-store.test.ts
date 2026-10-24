@@ -56,4 +56,22 @@ describe('upsertAssignment (PBI-141)', () => {
     await upsertAssignment('', 'p1');
     expect(setCalls).toBe(0);
   });
+
+  // PBI-153: a failed write must surface as a typed error the caller can
+  // identify, not a raw chrome.storage rejection.
+  describe('upsertAssignment write failure (PBI-153)', () => {
+    it('reports a failed write as a typed error, not a raw rejection', async () => {
+      globalThis.chrome = {
+        storage: {
+          local: {
+            get: async () => ({}),
+            set: async () => { throw new Error('quota exceeded'); },
+          },
+        },
+      } as unknown as typeof chrome;
+      const { upsertAssignment } = await import('../src/assignment-store');
+      const { KvStoreSaveError } = await import('../src/kv-store');
+      await expect(upsertAssignment('d.com', 'p1')).rejects.toBeInstanceOf(KvStoreSaveError);
+    });
+  });
 });
