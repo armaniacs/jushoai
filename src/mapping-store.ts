@@ -27,7 +27,9 @@ export function parseMappings(raw: unknown): MappingEntry[] {
 // never keep the fill from working rule-only. Only the field signature →
 // category pairs persist; no profile value and no correction value ever
 // enters storage.
-const MAPPINGS_STORE: KvSpec<MappingEntry[]> = {
+// Exported (PBI-159) so the flow-unit loader can batch this spec with the
+// other learning stores behind one get call.
+export const MAPPINGS_STORE: KvSpec<MappingEntry[]> = {
   key: MAPPINGS_KEY,
   parse: parseMappings,
   cap: (entries) => capTail(entries, MAPPINGS_MAX),

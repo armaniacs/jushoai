@@ -19,7 +19,9 @@ export function parseAssignments(raw: unknown): Record<string, string> {
 // corrupted or hand-edited value reads as an empty map — a broken store must
 // never keep the preview from working. Only the host → profileId pair
 // persists; no profile value ever enters storage.
-const ASSIGNMENTS_STORE: KvSpec<Record<string, string>> = {
+// Exported (PBI-159) so the flow-unit loader can batch this spec with the
+// other learning stores behind one get call.
+export const ASSIGNMENTS_STORE: KvSpec<Record<string, string>> = {
   key: ASSIGNMENTS_KEY,
   parse: parseAssignments,
   cap: (entries) => capKeys(entries, ASSIGNMENTS_MAX),

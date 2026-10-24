@@ -70,6 +70,35 @@ export async function readKv<T>(spec: KvSpec<T>): Promise<T> {
   return spec.parse(raw);
 }
 
+// Batch read (PBI-159): one chrome.storage.local.get([keys...]) call for N
+// specs. The single reads it replaces each paid their own IPC round trip, so a
+// flow that needs several stores paid N calls and hand-assembled the bundle at
+// the entry point. Parsing stays per spec at the load boundary (the readKv
+// policy), and one failed get is ONE typed read failure for the whole bundle —
+// never a raw rejection. Tuple overloads keep the parsed shapes inferred per
+// position, so callers destructure typed values.
+export async function readKvBatch<A>(specs: readonly [KvSpec<A>]): Promise<[A]>;
+export async function readKvBatch<A, B>(specs: readonly [KvSpec<A>, KvSpec<B>]): Promise<[A, B]>;
+export async function readKvBatch<A, B, C>(
+  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>],
+): Promise<[A, B, C]>;
+export async function readKvBatch<A, B, C, D>(
+  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>, KvSpec<D>],
+): Promise<[A, B, C, D]>;
+export async function readKvBatch<A, B, C, D, E>(
+  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>, KvSpec<D>, KvSpec<E>],
+): Promise<[A, B, C, D, E]>;
+export async function readKvBatch(specs: readonly KvSpec<unknown>[]): Promise<unknown[]> {
+  const keys = specs.map((spec) => spec.key);
+  let result: Record<string, unknown>;
+  try {
+    result = await chrome.storage.local.get(keys);
+  } catch (err) {
+    throw new KvStoreReadError(`ストアの一括読み取りに失敗しました: ${keys.join(', ')}`, err);
+  }
+  return specs.map((spec) => spec.parse(result[spec.key]));
+}
+
 // The single write point: the cap runs before the write, so no path can grow
 // the store past its cap. Raw chrome.storage rejections surface as
 // KvStoreSaveError with the original failure as the cause.

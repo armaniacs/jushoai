@@ -2,8 +2,10 @@ import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
 import { fillOneReasonLabel } from '../core/fill-one';
 import { fillOneEntry } from '../content/fill-one-entry';
+import { loadFillOneState, loadRunState } from '../content/flow-state';
 import { createFillSession, classifyWithReason } from '../content-session';
 import { bindPreview } from '../content/preview-bind';
+import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
@@ -12,13 +14,13 @@ import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
 import { draftFromMetas } from '../core/import-draft';
 import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
-import { loadMappings, upsertMapping } from '../mapping-store';
+import { upsertMapping } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
 import { matches, recordFor } from '../core/site-approval';
 import { assignedFirst, assignmentFor } from '../core/site-profile';
 import { mergeCarryover } from '../core/carryover';
-import { loadApprovals, upsertApproval } from '../approval-store';
-import { loadAssignments, upsertAssignment } from '../assignment-store';
+import { upsertApproval } from '../approval-store';
+import { upsertAssignment } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress, type GuestValues } from '../core/guest';
 import { GUEST_MESSAGE_TYPE } from '../guest-message';
@@ -32,7 +34,7 @@ import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
 import type { ClassifyFailure } from '../messages';
-import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
+import { isReady, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
@@ -146,7 +148,11 @@ export default defineContentScript({
 
     // Only a dead extension context calls for a reload. Every other failure
     // (classification, network, bad response) is retryable on the classify side.
+    // PBI-159: the flow's state bundle reads through kv-store's typed read
+    // error now, so the dead-context marker can ride the KvStoreReadError
+    // cause — the same unwrap isQuotaExceededError applies to StorageSaveError.
     const isContextInvalidated = (e: unknown): boolean => {
+      if (e instanceof KvStoreReadError) return isContextInvalidated(e.cause);
       const msg = e instanceof Error ? e.message : String(e);
       return msg.includes('Extension context invalidated');
     };
@@ -179,8 +185,7 @@ export default defineContentScript({
         scan: (el) => scanFields(document.body).find(
           (f) => f.el === el || (f.radioInputs?.some((r) => r === el) ?? false),
         ) ?? null,
-        load: () => Promise.all([loadData(), loadLastUsed(), loadMappings()])
-          .then(([data, last, mappings]) => ({ data, last, mappings })),
+        load: () => loadFillOneState(),
         ready: isReady,
         carryover: () => carryover,
         domain: () => hostOf(location.href),
@@ -227,7 +232,11 @@ export default defineContentScript({
     // Raw statuses never leave the single table in ../ai/failure-text;
     // only these coarse guidance lines do.
     async function run(container: Element, button: ButtonHandle) {
-      const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
+      // PBI-159: the run flow's whole state bundle comes from the one loader
+      // (../content/flow-state) behind a single batched read — the profile
+      // data, the last-used selection and the per-site learned state. Which
+      // stores the flow needs lives there, not here.
+      const { data, last, priorApprovals, assignments, activeMappings } = await loadRunState();
       // PBI-144: the guest bypasses the readiness gate — a one-shot fill needs
       // no saved profile, and the guest values overlay the (empty) stored
       // copies below. No guest and nothing saved stays the settings guidance.
@@ -235,12 +244,9 @@ export default defineContentScript({
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
-      // PBI-128/141/138: the per-site learned state, loaded once per run. The
-      // taught correction layer also gates the LLM pending set below, so a
-      // field the user already corrected never sends its metadata.
-      const [priorApprovals, assignments, activeMappings] = await Promise.all([
-        loadApprovals(), loadAssignments(), loadMappings(),
-      ]);
+      // PBI-128/141/138: the taught correction layer also gates the LLM pending
+      // set below, so a field the user already corrected never sends its
+      // metadata.
       const priorApproval = priorApprovals[hostOf(location.href)] ?? null;
 
       const info = await getAiStatusViaBackground();

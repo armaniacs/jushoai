@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
-  capKeys, capTail, KvStoreReadError, KvStoreSaveError, readKv, upsertKv, writeKv,
+  capKeys, capTail, KvStoreReadError, KvStoreSaveError, readKv, readKvBatch, upsertKv, writeKv,
   type KvSpec,
 } from '../src/kv-store';
 
@@ -107,5 +107,60 @@ describe('cap helpers (PBI-153)', () => {
   it('capTail keeps the last max entries in order', () => {
     expect(capTail([1, 2, 3], 2)).toEqual([2, 3]);
     expect(capTail([1], 2)).toEqual([1]);
+  });
+});
+
+describe('kv-store batch read (PBI-159)', () => {
+  // The batch reader needs an array-aware get stub; the shared beforeEach stub
+  // only answers single keys.
+  const stubArrayGet = (calls: string[][]): void => {
+    vi.stubGlobal('chrome', {
+      storage: {
+        local: {
+          get: async (keys: string[]) => {
+            if (getShouldFail) throw getShouldFail;
+            calls.push([...keys]);
+            const out: Record<string, unknown> = {};
+            for (const k of keys) if (k in store) out[k] = store[k];
+            return out;
+          },
+          set: async () => {},
+        },
+      },
+    });
+  };
+
+  it('reads N specs with one get([keys...]) call and parses per spec', async () => {
+    const calls: string[][] = [];
+    stubArrayGet(calls);
+    store['a'] = ['x', 1];
+    store['b'] = { k: 'v' };
+    const [list, map, missing] = await readKvBatch([
+      { key: 'a', parse: parseList },
+      { key: 'b', parse: parseMap },
+      { key: 'c', parse: parseList },
+    ]);
+    expect(calls).toEqual([['a', 'b', 'c']]);
+    expect(list).toEqual(['x']);
+    expect(map).toEqual({ k: 'v' });
+    // A missing key reads as whatever parse decides, not an error.
+    expect(missing).toEqual([]);
+  });
+
+  it('reports a failed batch read as one KvStoreReadError', async () => {
+    stubArrayGet([]);
+    getShouldFail = new Error('storage unavailable');
+    await expect(readKvBatch([
+      { key: 'a', parse: parseList },
+      { key: 'b', parse: parseMap },
+    ])).rejects.toBeInstanceOf(KvStoreReadError);
+  });
+
+  it('keeps the raw failure as the cause of the batch read error', async () => {
+    stubArrayGet([]);
+    getShouldFail = new Error('storage unavailable');
+    const err: unknown = await readKvBatch([{ key: 'a', parse: parseList }]).catch((e) => e);
+    expect(err).toBeInstanceOf(KvStoreReadError);
+    expect((err as KvStoreReadError).cause).toBe(getShouldFail);
   });
 });

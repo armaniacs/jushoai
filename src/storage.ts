@@ -1,4 +1,5 @@
 import { validateProfile } from './core/profile';
+import type { KvSpec } from './kv-store';
 import {
   EMPTY_ADDRESS, EMPTY_PROFILE, type Address, type Profile, type StoredData,
 } from './core/types';
@@ -49,13 +50,20 @@ export function isQuotaExceededError(err: unknown): boolean {
   return /quota/i.test(text);
 }
 
-export async function loadLastUsed(): Promise<LastUsed> {
-  const result = await chrome.storage.local.get(LAST_KEY);
-  const v = result[LAST_KEY] as Partial<LastUsed> | undefined;
+// The last-used shape check, extracted as a pure parse so the spec below and
+// loadLastUsed share one copy (same pattern as the learning stores' exported
+// parse functions).
+export function parseLastUsed(raw: unknown): LastUsed {
+  const v = raw as Partial<LastUsed> | undefined;
   const out: LastUsed = {};
   if (typeof v?.profileId === 'string' && v.profileId !== '') out.profileId = v.profileId;
   if (typeof v?.addressId === 'string' && v.addressId !== '') out.addressId = v.addressId;
   return out;
+}
+
+export async function loadLastUsed(): Promise<LastUsed> {
+  const result = await chrome.storage.local.get(LAST_KEY);
+  return parseLastUsed(result[LAST_KEY]);
 }
 
 export async function saveLastUsed(v: LastUsed): Promise<void> {
@@ -65,6 +73,20 @@ export async function saveLastUsed(v: LastUsed): Promise<void> {
     throw new StorageSaveError('最終使用状態の保存に失敗しました', err);
   }
 }
+
+// The profile store's load specs (PBI-159): the flow-unit loader
+// (src/content/flow-state.ts) batches these with the learning stores' specs so
+// a flow reads all its keys in one get([keys...]) call. loadData/loadLastUsed
+// keep their own reads and error modes; the specs only supply key + parse.
+export const DATA_STORE: KvSpec<StoredData> = {
+  key: KEY,
+  parse: (raw) => migrateData(raw as LegacyStoredData | undefined),
+};
+
+export const LAST_USED_STORE: KvSpec<LastUsed> = {
+  key: LAST_KEY,
+  parse: parseLastUsed,
+};
 
 interface LegacyStoredData {
   profile?: Partial<Profile>;

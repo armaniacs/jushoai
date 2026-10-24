@@ -36,7 +36,9 @@ export function parseApprovals(raw: unknown): Record<string, ApprovalRecord> {
 // corrupted or hand-edited value reads as an empty map — a broken store must
 // never keep the full preview from working. Only digests persist; no raw
 // profile value, no raw label ever enters storage.
-const APPROVALS_STORE: KvSpec<Record<string, ApprovalRecord>> = {
+// Exported (PBI-159) so the flow-unit loader can batch this spec with the
+// other learning stores behind one get call.
+export const APPROVALS_STORE: KvSpec<Record<string, ApprovalRecord>> = {
   key: APPROVALS_KEY,
   parse: parseApprovals,
   cap: (entries) => capKeys(entries, APPROVALS_MAX),
