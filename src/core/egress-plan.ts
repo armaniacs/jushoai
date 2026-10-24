@@ -1,11 +1,13 @@
-import { classifyField, isConfident } from './classify-rules';
 import { fieldKeyFor } from './domain-mapping';
+import { splitPending } from './pending-split';
 import type { FieldMeta } from './types';
 
 // The egress gate's send plan (PBI-124/PBI-145): the gate shows exactly what
 // classifyAll will send. The taught field ids (PBI-138) ride llmSkip itself,
 // so the gate's pending list and the actual send stay the same set — a taught
 // field's metadata never reaches the LLM, and the gate never under-reports.
+// The pending split itself is owned by splitPending (PBI-154): planEgress and
+// classifyAll both go through it.
 
 export interface EgressPlan {
   // What the gate shows = what classifyAll will send.
@@ -21,7 +23,10 @@ export function planEgress(
   metas: FieldMeta[],
   taughtKeys: ReadonlySet<string>,
 ): EgressPlan {
-  const nonConfident = metas.filter((m) => !isConfident(classifyField(m)));
+  // No skip set: the non-confident side of the same split pending comes from.
+  // classifyField is a pure rule dispatch, so this pass and the pending pass
+  // below see exactly the same classifications.
+  const nonConfident = splitPending(metas);
   const taughtIds = new Set(
     nonConfident
       .filter((m) => {
@@ -30,7 +35,7 @@ export function planEgress(
       })
       .map((m) => m.id),
   );
-  const pending = nonConfident.filter((m) => !taughtIds.has(m.id));
+  const pending = splitPending(metas, taughtIds);
   return { pending, taughtIds, nonConfidentCount: nonConfident.length };
 }
 

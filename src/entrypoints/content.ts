@@ -254,9 +254,9 @@ export default defineContentScript({
       // apply ordering (consent→inject→persist→feedback→display) are owned by
       // the session module via classifyWithReason; no reporting wrapper and no
       // `let failureReason` closure escape remain here (PBI-42引継ぎの解消).
-      // The pending split (ACCEPT_THRESHOLD) stays inside classifyAll, so only
-      // sub-threshold fields reach the LLM and the audit keeps one record per
-      // attempt.
+      // The pending split (ACCEPT_THRESHOLD) is owned by splitPending
+      // (PBI-154), so only sub-threshold fields reach the LLM and the audit
+      // keeps one record per attempt.
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
@@ -267,8 +267,9 @@ export default defineContentScript({
       // (Escape included) resolves as rule-only, so no choice means no send.
       let effectiveClassifier = classifier;
       // PBI-145: the gate's pending list and the actual send come from the
-      // same plan, so the gate shows exactly what classifyAll will send and a
-      // taught field's metadata never reaches the LLM.
+      // same split (splitPending, PBI-154), so the gate shows exactly what
+      // classifyAll will send and a taught field's metadata never reaches
+      // the LLM.
       let llmSkip: ReadonlySet<string> | undefined;
       {
         const taught = new Set(
