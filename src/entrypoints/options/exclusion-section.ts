@@ -1,6 +1,6 @@
 import { addExclusionEntry, EXCLUDED_URLS_MAX, removeExclusionEntry } from '../../core/exclusions';
 import { loadExcludedUrls, saveExcludedUrls } from '../../exclusions-store';
-import { el, textInput } from './dom';
+import { el, notice, textInput } from './dom';
 import { applyActivePage, EXCLUSION_SECTION_ID } from './nav';
 
 export interface ExclusionSectionDeps {
@@ -15,18 +15,6 @@ const defaultDeps = (): ExclusionSectionDeps => ({
   save: saveExcludedUrls,
 });
 
-const notice = (kind: 'errors' | 'saved', text: string): HTMLElement => {
-  if (kind === 'saved') {
-    const p = el('p', text);
-    p.className = 'saved';
-    return p;
-  }
-  const ul = el('ul');
-  ul.className = 'errors';
-  ul.append(el('li', text));
-  return ul;
-};
-
 // Add and remove edit the in-memory list; 保存 persists it and tells the open
 // tabs to re-evaluate. Same shape as the AI section, so the page keeps one
 // mental model: edit, then save.
@@ -38,7 +26,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
   const onAdd = (): void => {
     const result = addExclusionEntry(entries, draft);
     if (!result.ok) {
-      feedback = notice('errors', result.reason);
+      feedback = notice('errors', [result.reason]);
     } else {
       entries = result.entries;
       draft = '';
@@ -56,11 +44,11 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
   const onSave = (): void => {
     void deps.save(entries).then(
       () => {
-        feedback = notice('saved', '保存しました');
+        feedback = notice('saved', ['保存しました']);
         render();
       },
       () => {
-        feedback = notice('errors', '保存に失敗しました');
+        feedback = notice('errors', ['保存に失敗しました']);
         render();
       },
     );

@@ -8,7 +8,7 @@ import {
   type TransferImportResult,
 } from '../../transfer';
 import { saveTextFile } from './audit-section';
-import { actionButton, el } from './dom';
+import { actionButton, el, notice } from './dom';
 
 export interface TransferSectionDeps {
   exportFile(): Promise<string>;
@@ -96,22 +96,14 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
 
   const feedback = el('div');
   feedback.setAttribute('aria-live', 'polite');
-  const showSaved = (text: string) => {
-    const p = el('p', text);
-    p.className = 'saved';
-    feedback.replaceChildren(p);
+  // Saved/errors rendering goes through the shared notice module (PBI-151):
+  // the truncate rule (5 shown lines plus a rest count) lives in dom.ts, so a
+  // 20-entry file of validation errors cannot grow an unbounded list here.
+  const showSaved = (text: string): void => {
+    feedback.replaceChildren(notice('saved', [text]));
   };
-  // Head N lines plus a count for the rest: a 20-entry file of validation
-  // errors must not grow an unbounded list on screen.
-  const MAX_SHOWN_ERRORS = 5;
-  const showErrors = (lines: string[]) => {
-    const shown = lines.slice(0, MAX_SHOWN_ERRORS);
-    const rest = lines.length - shown.length;
-    const ul = el('ul');
-    ul.className = 'errors';
-    ul.append(...shown.map((t) => el('li', t)));
-    if (rest > 0) ul.append(el('li', `他 ${rest} 件のエラーがあります`));
-    feedback.replaceChildren(ul);
+  const showErrors = (lines: string[]): void => {
+    feedback.replaceChildren(notice('errors', lines));
   };
 
   const onExport = (): void => {

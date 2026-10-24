@@ -7,7 +7,7 @@ import {
 import { testAiViaBackground } from '../../llm/background-gateway';
 import { noticeForTest } from '../../ai/failure-text';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
-import { el, labeled, textInput, buildSelect } from './dom';
+import { el, labeled, notice, textInput, buildSelect } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
 const ALL_PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
@@ -132,8 +132,9 @@ function setAiNotice(
   kind: 'saved' | 'errors',
   rerender: () => void,
 ): void {
-  state.notice = el('p', text);
-  state.notice.className = kind === 'saved' ? 'saved' : 'errors-text';
+  // The shared notice vocabulary (PBI-151): errors render as ul.errors like
+  // the other three sections instead of a drifting p.errors-text.
+  state.notice = notice(kind, [text]);
   rerender();
 }
 

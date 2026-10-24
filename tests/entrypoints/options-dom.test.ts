@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { kanaHiraganaHint, cardFieldset, actionButton, buildSelect } from '../../src/entrypoints/options/dom';
+import { kanaHiraganaHint, cardFieldset, actionButton, buildSelect, notice } from '../../src/entrypoints/options/dom';
 
 describe('kanaHiraganaHint', () => {
   it('converts stored katakana to hiragana like the fill path', () => {
@@ -79,5 +79,48 @@ describe('buildSelect', () => {
     select.value = 'x';
     select.dispatchEvent(new Event('change'));
     expect(seen).toEqual(['x']);
+  });
+});
+
+// PBI-151: the saved/errors notice vocabulary for all four options sections.
+// The truncate rule lives in the module default, so no section can grow its own.
+describe('notice', () => {
+  it('renders saved as a single p.saved line', () => {
+    const p = notice('saved', ['保存しました']);
+    expect(p.tagName).toBe('P');
+    expect(p.className).toBe('saved');
+    expect(p.textContent).toBe('保存しました');
+  });
+
+  it('falls back to an empty saved line without input', () => {
+    const p = notice('saved', []);
+    expect(p.tagName).toBe('P');
+    expect(p.className).toBe('saved');
+    expect(p.textContent).toBe('');
+  });
+
+  it('renders errors as ul.errors with one li per line', () => {
+    const ul = notice('errors', ['P1: 姓を入力してください', '住所: 郵便番号が短い']);
+    expect(ul.tagName).toBe('UL');
+    expect(ul.className).toBe('errors');
+    expect([...ul.querySelectorAll('li')].map((li) => li.textContent)).toEqual([
+      'P1: 姓を入力してください',
+      '住所: 郵便番号が短い',
+    ]);
+  });
+
+  it('collapses errors past five lines into a head plus a rest count', () => {
+    const lines = Array.from({ length: 8 }, (_, i) => `エラー${i + 1}`);
+    const ul = notice('errors', lines);
+    const items = [...ul.querySelectorAll('li')].map((li) => li.textContent);
+    expect(items).toHaveLength(6);
+    expect(items[4]).toBe('エラー5');
+    expect(items[5]).toBe('他 3 件のエラーがあります');
+  });
+
+  it('accepts a smaller max for the shown head', () => {
+    const ul = notice('errors', ['1', '2', '3'], { max: 2 });
+    const items = [...ul.querySelectorAll('li')].map((li) => li.textContent);
+    expect(items).toEqual(['1', '2', '他 1 件のエラーがあります']);
   });
 });
