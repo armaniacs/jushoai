@@ -102,20 +102,26 @@ describe('showPreview', () => {
     expect(status.textContent).toBe('');
   });
 
-  it('does not re-announce while busy (setRows keeps the live region stable)', () => {
-    const { handle, root } = open({ rows: [makeRow('ok')], onReanalyze: () => {} });
+  it('does not re-announce while busy (setRows keeps the live region stable)', async () => {
+    let resolve!: () => void;
+    const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
+    const { handle, root } = open({ rows: [makeRow('ok')], onReanalyze });
     const list = root.querySelector('ul')!;
     const status = root.querySelector('[role="status"]') as HTMLElement;
     expect(status.getAttribute('role')).toBe('status');
-    handle.setReanalyzing(true);
+    // PBI-157: busy is driven by the reanalyze flow only (setReanalyzing left
+    // the public handle). The click locks the panel synchronously; the handler
+    // runs on a microtask.
+    buttonIn(root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     expect(list.getAttribute('aria-busy')).toBe('true');
     expect(status.textContent).toBe('分析中…');
     // Mid-analysis row updates must not touch the live region again.
     handle.setRows([makeRow('ok')]);
     expect(list.getAttribute('aria-busy')).toBe('true');
     expect(status.textContent).toBe('分析中…');
-    handle.setReanalyzing(false);
-    expect(list.getAttribute('aria-busy')).toBe('false');
+    resolve();
+    await vi.waitFor(() => expect(list.getAttribute('aria-busy')).toBe('false'));
     expect(status.textContent).toBe('');
   });
 });
@@ -314,7 +320,7 @@ describe('zip assist checkbox (PBI-125)', () => {
     expect(plain.root.textContent).not.toContain('補助候補を入れる');
 
     const withAssist = open({
-      rows: [{ ...makeRow('warn-no-value', '候補: 東京都'), fieldId: 'f1', assist: '東京都' }],
+      rows: [{ ...makeRow('warn-no-value', '候補: 東京都'), fieldId: 'f1', candidates: [{ kind: 'assist', text: '東京都' }] }],
     });
     const box = withAssist.root.querySelector<HTMLInputElement>('input[type="checkbox"]');
     expect(box).toBeTruthy();
