@@ -1,5 +1,4 @@
-import { OVERLAY_CSS } from './overlay';
-import { mountPanel, type PanelHandle } from './panel';
+import { confirmDialog } from './confirm-dialog';
 import { CATEGORIES } from '../core/types';
 import type { Category } from '../core/types';
 
@@ -18,78 +17,51 @@ const REMEMBER_LABEL = 'このサイトに覚えさせる';
 // unknown is never a choice: it is the unclassifiable marker, not a meaning.
 const CHOICES = CATEGORIES.filter((c) => c !== 'unknown');
 
+// Close without a choice (Escape included) resolves null: no mapping is
+// applied. Settle-once and the safe default live in confirmDialog.
 export function chooseMapping(label: string, current: string): Promise<MappingDecision> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const settle = (d: MappingDecision): void => {
-      if (!settled) {
-        settled = true;
-        resolve(d);
+  let select!: HTMLSelectElement;
+  let rememberBox!: HTMLInputElement;
+  return confirmDialog<MappingDecision>({
+    title: TITLE,
+    body: (panel) => {
+      const field = document.createElement('p');
+      field.className = 'mfield';
+      field.textContent = label;
+
+      const wrap = document.createElement('label');
+      const caption = document.createElement('span');
+      caption.textContent = '意味';
+      select = document.createElement('select');
+      for (const c of CHOICES) {
+        const o = document.createElement('option');
+        o.value = c;
+        o.textContent = c;
+        o.selected = c === current;
+        select.append(o);
       }
-    };
-    let handle!: PanelHandle;
-    handle = mountPanel(
-      (host, root) => {
-        const style = document.createElement('style');
-        style.textContent = `${OVERLAY_CSS}
-.mfield { margin: 0 0 10px; font-size: 12px; color: #5a6270; }
-.mfield select { width: 100%; padding: 4px; font: inherit; }`;
-        const panel = document.createElement('div');
-        panel.className = 'panel';
+      wrap.append(caption, select);
 
-        const head = document.createElement('h2');
-        head.textContent = TITLE;
+      const rememberWrap = document.createElement('label');
+      rememberWrap.className = 'feedback';
+      rememberBox = document.createElement('input');
+      rememberBox.type = 'checkbox';
+      rememberBox.checked = true;
+      const rememberText = document.createElement('span');
+      rememberText.textContent = REMEMBER_LABEL;
+      rememberWrap.append(rememberBox, rememberText);
 
-        const field = document.createElement('p');
-        field.className = 'mfield';
-        field.textContent = label;
-
-        const wrap = document.createElement('label');
-        const caption = document.createElement('span');
-        caption.textContent = '意味';
-        const select = document.createElement('select');
-        for (const c of CHOICES) {
-          const o = document.createElement('option');
-          o.value = c;
-          o.textContent = c;
-          o.selected = c === current;
-          select.append(o);
-        }
-        wrap.append(caption, select);
-
-        const rememberWrap = document.createElement('label');
-        rememberWrap.className = 'feedback';
-        const rememberBox = document.createElement('input');
-        rememberBox.type = 'checkbox';
-        rememberBox.checked = true;
-        const rememberText = document.createElement('span');
-        rememberText.textContent = REMEMBER_LABEL;
-        rememberWrap.append(rememberBox, rememberText);
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        const cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.textContent = CANCEL_BUTTON;
-        cancelBtn.addEventListener('click', () => {
-          settle(null);
-          handle.close();
-        });
-        const decideBtn = document.createElement('button');
-        decideBtn.type = 'button';
-        decideBtn.className = 'primary';
-        decideBtn.textContent = DECIDE_BUTTON;
-        decideBtn.addEventListener('click', () => {
-          settle({ category: select.value as Category, remember: rememberBox.checked });
-          handle.close();
-        });
-        actions.append(cancelBtn, decideBtn);
-
-        panel.append(head, field, wrap, rememberWrap, actions);
-        root.append(style, panel);
+      panel.append(field, wrap, rememberWrap);
+      return '.mfield { margin: 0 0 10px; font-size: 12px; color: #5a6270; }\n.mfield select { width: 100%; padding: 4px; font: inherit; }';
+    },
+    actions: [
+      { label: CANCEL_BUTTON, pick: () => null },
+      {
+        label: DECIDE_BUTTON,
+        primary: true,
+        pick: () => ({ category: select.value as Category, remember: rememberBox.checked }),
       },
-      () => settle(null),
-      { accessibleName: TITLE, focus: 'primary' },
-    );
+    ],
+    defaultOnClose: null,
   });
 }

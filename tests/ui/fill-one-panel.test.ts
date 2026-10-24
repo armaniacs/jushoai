@@ -12,16 +12,12 @@ describe('confirmFillOne', () => {
     expect(await pending).toEqual({ mode: 'fill', value: '山田' });
   });
 
-  it('resolves cancel on the cancel button and on Escape', async () => {
+  // Escape → cancel is verified once in confirm-dialog.test.ts (PBI-155).
+  it('resolves cancel on the cancel button', async () => {
     const first = attachOpenShadow();
     const cancelPending = confirmFillOne('姓', '山田');
     buttonIn(first.root, 'キャンセル')!.click();
     expect(await cancelPending).toEqual({ mode: 'cancel' });
-
-    const second = attachOpenShadow();
-    const escapePending = confirmFillOne('姓', '山田');
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(await escapePending).toEqual({ mode: 'cancel' });
   });
 
   it('renders the label and value through textContent and never via innerHTML', async () => {
