@@ -71,7 +71,14 @@ export function createFirstDialGate(
   const load = deps.load ?? loadConfirmedOrigins;
   return async (origin: string): Promise<FirstDialVerdict> => {
     if (originOf(origin) === null) return { ok: false, reason: 'unconfirmed' };
-    const confirmed = await load();
+    let confirmed: ConfirmedOrigin[];
+    try {
+      confirmed = await load();
+    } catch {
+      // A storage failure reads as unconfirmed (fail-closed): the caller never
+      // has to identify a raw rejection, and nothing dials.
+      return { ok: false, reason: 'unconfirmed' };
+    }
     return confirmed.some((c) => c.origin === originOf(origin)) ? { ok: true } : { ok: false, reason: 'unconfirmed' };
   };
 }

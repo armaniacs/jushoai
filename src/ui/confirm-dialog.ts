@@ -41,8 +41,10 @@ export interface ConfirmDialogSpec<T> {
 }
 
 // Resolves exactly once with the picked decision, or with defaultOnClose when
-// the dialog closes without one. A throwing body or mountPanel rejects the
-// promise (the panel never opened); call sites treat that as no decision.
+// the dialog closes without one. Never rejects: a construction failure (a
+// throwing body) settles the safe default below instead of propagating, so
+// every call site can treat the result as "closed without a choice" with no
+// rejection handler of its own.
 export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
   return new Promise((resolve) => {
     // The safe-side invariants, owned here and nowhere else. Hand-writing a
@@ -55,7 +57,8 @@ export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
       resolve(d);
     };
     let handle!: PanelHandle;
-    handle = mountPanel(
+    try {
+      handle = mountPanel(
       (host, root) => {
         const style = document.createElement('style');
         const panel = document.createElement('div');
@@ -89,5 +92,11 @@ export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
       () => settle(spec.defaultOnClose),
       { accessibleName: spec.title, focus: 'primary' },
     );
+    } catch {
+      // The panel never opened (mountPanel tore down and rethrew): resolve the
+      // safe default instead of rejecting, so no call site needs its own
+      // rejection handler to stay on the "closed without a choice" path.
+      settle(spec.defaultOnClose);
+    }
   });
 }

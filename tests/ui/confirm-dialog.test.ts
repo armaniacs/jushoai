@@ -38,6 +38,20 @@ describe('confirmDialog (PBI-155)', () => {
     expect(resolutions).toEqual(['default']);
   });
 
+  // A throwing body must not reject: mountPanel tears down and rethrows, and
+  // confirmDialog converts that into the safe default ("closed without a
+  // choice"), so no call site needs its own rejection handler.
+  it('settles the default instead of rejecting when the body throws', async () => {
+    attachOpenShadow();
+    const pending = confirmDialog<string>({
+      title: '見出し',
+      body: () => { throw new Error('boom'); },
+      actions: [{ label: '選ぶ', pick: () => 'picked' }],
+      defaultOnClose: 'default',
+    });
+    await expect(pending).resolves.toBe('default');
+  });
+
   // The DOM order is the visual order (.panel is display:block): the heading
   // comes first, the body renders between the heading and the actions row.
   // Pinned because the heading used to land after the body when the body

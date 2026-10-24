@@ -28,6 +28,16 @@ describe('sample corpus metrics (local, no network)', () => {
     console.log(`[JushoAI eval] aggregate fixtures=${agg.fixtures} fields=${agg.total} ruleHits=${agg.ruleHits} llmFallbacks=${agg.llmFallbacks} fillable=${agg.fillable}`);
     expect(agg.fixtures).toBe(names.length);
     expect(agg.total).toBeGreaterThan(0);
+    // Snapshot of the rule pipeline composition: these move only when fixtures
+    // or the pipeline change. A drift here means the trace diverged from the
+    // hand-rolled composition it replaced, so re-run `make eval` and update
+    // together with the fixture set if this fails after adding a fixture.
+    const sum = (pick: (m: EvalMetrics) => number) => rows.reduce((acc, m) => acc + pick(m), 0);
+    expect(agg.ruleHits).toBe(141);
+    expect(agg.llmFallbacks).toBe(27);
+    expect(agg.fillable).toBe(89);
+    expect(sum((m) => m.refineChanged)).toBe(22);
+    expect(sum((m) => m.refineDropped)).toBe(0);
   });
 
   it('keeps page content out of every report line', async () => {

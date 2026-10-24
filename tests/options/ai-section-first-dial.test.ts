@@ -73,6 +73,7 @@ describe('first-dial confirmation block copy', () => {
     const text = pageOf(root).textContent ?? '';
     expect(text).toContain('このAIプロバイダを使うには');
     expect(text).toContain('への送信を承認しなければなりません');
+    expect(text).toContain('承認するまで送信しません');
     expect(text).toContain('https://api.example.com');
     expect(text).toContain('api.example.com');
     expect(text).toContain('153.120.132.21');
@@ -96,8 +97,20 @@ describe('first-dial confirmation block copy', () => {
     expect(fdMocks.confirm).toHaveBeenCalledWith('https://api.example.com', ['153.120.132.21']);
   });
 
-  it('names the origin in the confirmed state line', async () => {
+  it('hides the block when the endpoint cannot be resolved', async () => {
     storeMocks.load.mockResolvedValue({ ...openaiSaved() });
+    fdMocks.isConfirmed.mockResolvedValue(false);
+    resolveMocks.resolve.mockResolvedValue([]);
+    const root = document.createElement('div');
+    document.body.replaceChildren(root);
+    mountAiSection(root);
+    await settle();
+
+    expect(approveButton(root)).toBeUndefined();
+    expect(pageOf(root).textContent ?? '').not.toContain('IPアドレス');
+  });
+
+  it('names the origin in the confirmed state line', async () => {    storeMocks.load.mockResolvedValue({ ...openaiSaved() });
     fdMocks.isConfirmed.mockResolvedValue(true);
     const root = document.createElement('div');
     document.body.replaceChildren(root);

@@ -41,6 +41,11 @@ describe('createFirstDialGate', () => {
     const gate = createFirstDialGate({ load: async () => [] });
     expect(await gate('not a url')).toEqual({ ok: false, reason: 'unconfirmed' });
   });
+
+  it('reads a storage failure as unconfirmed instead of throwing', async () => {
+    const gate = createFirstDialGate({ load: async () => { throw new Error('storage gone'); } });
+    await expect(gate('https://any.example.com')).resolves.toEqual({ ok: false, reason: 'unconfirmed' });
+  });
 });
 
 describe('confirmed-origin record', () => {
