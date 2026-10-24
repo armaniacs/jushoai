@@ -82,7 +82,9 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     selectedAddressId: session.selectedAddressId,
     onReanalyze: input.reanalyzable ? () => {
       void session.reanalyze().then((res) => {
-        if (res?.failureReason) button.showError(hintForButton(res.failureReason));
+        if (res?.failureReason) {
+          button.showError({ kind: 'transient', text: hintForButton(res.failureReason) });
+        }
         input.onFailure?.(res?.failureReason ?? null);
         if (res) preview.setRows(res.rows);
       });
@@ -110,10 +112,10 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       // in the preview promote into the fill plan.
       const result = session.apply(sendFeedback, preview, approvedAbbrevs);
       if (!result.applied) {
-        button.showError(result.reason);
+        button.showError({ kind: 'transient', text: result.reason });
         return;
       }
-      // The banner text arrives composed; this side only displays it.
+      // The banner arrives with its kind; this side only displays it.
       if (result.display.banner) button.showError(result.display.banner);
       // PBI-128: the approval memory records the applied shape after a clean
       // apply, so the next visit to the same form shortens its preview.

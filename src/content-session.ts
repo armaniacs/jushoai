@@ -16,6 +16,7 @@ import { resolveAddressId, resolveLastId } from './core/selection';
 import { shouldWarn, undoFill, type FillReport, type FillSummary, type UndoEntry, type UndoReport } from './dom/fill-plan';
 import { fieldKeyFor } from './core/domain-mapping';
 import type { PreviewRow } from './ui/preview';
+import type { BannerNotice } from './ui/button';
 
 // Fill-session inputs that never touch the DOM: the stored profiles/addresses,
 // the last-used selection, and the scanned field metadata.
@@ -120,8 +121,11 @@ export type SessionStart =
 // What the caller shows after an application: silence (just close the panel)
 // or one composed banner. The composition lives here so new entrypoints
 // inherit the same wording instead of re-synthesizing summary + hint.
+// The banner's timer behavior rides the kind (PBI-152): this session owns the
+// "this is a partial-application banner" decision and passes it as a
+// structured notice; the button times each kind without sniffing the text.
 export interface DisplayDecision {
-  banner: string | null;
+  banner: BannerNotice | null;
 }
 
 // One classify → preview → apply flow. DOM / Chrome side effects (scan,
@@ -307,11 +311,13 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
 
 // Banner composition in one place: silence on full application, otherwise the
 // partial-application note composed with the AI failure hint (if any) so the
-// two never clobber each other on the shared error channel.
+// two never clobber each other on the shared error channel. The kind is
+// always 'partial' here: shouldWarn means not everything was filled, and the
+// persistent-banner behavior (PBI-08) is the one contract the button obeys.
 export function decideDisplay(summary: FillSummary, failureHint?: string): DisplayDecision {
   if (!shouldWarn(summary)) return { banner: null };
   const partial = `一部のみ適用（${summary.filled}/${summary.total}件）`;
-  return { banner: failureHint ? `${failureHint}。${partial}` : partial };
+  return { banner: { kind: 'partial', text: failureHint ? `${failureHint}。${partial}` : partial } };
 }
 
 export type FillSession = ReturnType<typeof createFillSession>;

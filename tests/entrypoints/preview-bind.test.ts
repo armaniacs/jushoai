@@ -76,7 +76,9 @@ describe('bindPreview (PBI-64 wiring)', () => {
     });
     const { root, buttonHandle } = bind(session, true);
     buttonIn(root, 'AI で分析')!.click();
-    await vi.waitFor(() => expect(buttonHandle.showError).toHaveBeenCalledWith(hintForButton('network')));
+    await vi.waitFor(() => expect(buttonHandle.showError).toHaveBeenCalledWith(
+      { kind: 'transient', text: hintForButton('network') },
+    ));
     expect(root.textContent).toContain('山田');
   });
 
@@ -112,7 +114,7 @@ describe('bindPreview (PBI-64 wiring)', () => {
     const { root, buttonHandle, input } = bind(session, false);
     buttonIn(root, '入力する')!.click();
     expect(session.apply).toHaveBeenCalledOnce();
-    expect(buttonHandle.showError).toHaveBeenCalledWith('パネルが隠れています');
+    expect(buttonHandle.showError).toHaveBeenCalledWith({ kind: 'transient', text: 'パネルが隠れています' });
     expect(input.onClosed).not.toHaveBeenCalled();
     expect(root.host.isConnected).toBe(true);
   });

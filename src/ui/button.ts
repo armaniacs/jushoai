@@ -4,9 +4,20 @@ import { createShadowHost } from './host';
 import { computeButtonPosition } from './position';
 import { badgeLabel } from './status-label';
 
+// Banner kinds (PBI-152): the timer behavior rides the kind, never the
+// wording. 'partial' banners persist until the next setStatus (PBI-08:
+// 部分適用は畳まず残す), 'transient' ones restore the last status after 4s.
+// The text is free wording — no caller may sniff it.
+export type BannerKind = 'partial' | 'transient';
+
+export interface BannerNotice {
+  kind: BannerKind;
+  text: string;
+}
+
 export interface ButtonHandle {
   setStatus(info: AiStatusInfo): void;
-  showError(text: string): void;
+  showError(notice: BannerNotice): void;
   reposition(): void;
   destroy(): void;
 }
@@ -79,29 +90,22 @@ export function mountButton(
       badge.dataset.status = info.status;
       handle.reposition();
     },
-    showError(text) {
+    showError(notice) {
       window.clearTimeout(errorTimer);
       // Expose the error reason to assistive technology: the badge keeps its
       // button semantics (no role override) and its text/style untouched, so
       // only the announcement behavior is added, politely (no interruption).
       badge.setAttribute('aria-live', 'polite');
       badge.setAttribute('aria-atomic', 'true');
-      badge.textContent = text;
+      badge.textContent = notice.text;
       badge.dataset.status = 'error';
-      if (text.includes('一部のみ適用')) {
-        // PBI-08: 部分適用バナーは4秒で消さない。4秒後に残存表示へ畳み、
-        // 次の setStatus（通常時）まで永続させる。badge クリックの再適用
-        // 導線（onBadgeClick）はそのまま残る。通常エラーは従来どおり復帰。
-        const m = text.match(/一部のみ適用（[^）]*）/);
-        const residual = `${m ? m[0] : '一部のみ適用'} 要確認`;
-        errorTimer = window.setTimeout(() => {
-          badge.textContent = residual;
-          badge.dataset.status = 'error';
-          handle.reposition();
-        }, 4000);
-      } else {
+      if (notice.kind === 'transient') {
         errorTimer = window.setTimeout(() => handle.setStatus(lastInfo), 4000);
       }
+      // kind='partial' sets no timer: the banner stays as displayed until the
+      // next setStatus (PBI-08), with the badge click reapply path
+      // (onBadgeClick) untouched. Transient errors restore after 4s. The kind
+      // arrives as a type, so the wording is never sniffed here (PBI-152).
       handle.reposition();
     },
     reposition() {
