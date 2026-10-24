@@ -49,6 +49,17 @@ You can register several addresses.
 
 If you have not registered a profile and at least one address, clicking `JushoAI で入力` (fill with JushoAI) opens the settings page instead.
 
+## Using AI (optional)
+
+AI is optional. It only classifies fields that the rules cannot identify. To use it, follow these steps in the `AI 判定` (AI detection) section of the settings page.
+
+1. Choose the kind under `AI プロバイダ` (AI provider): built-in browser AI, OpenAI-compatible API, or Google Gemini.
+2. For an OpenAI-compatible API, enter the base URL, model name, and API key, then save. When you save, the browser asks whether to allow network access to that provider.
+3. Before anything is sent to a saved endpoint for the first time, approve it. Check that the list of IP addresses shown below the saved endpoint (what the host name resolves to with DNS) is what you expect, then press `この接続先を承認する` (approve this endpoint). Nothing is sent to that endpoint until you approve it.
+4. Run `接続テスト` (connection test) to check that it works.
+
+See [Setting up an AI provider](/en/guides/ai-providers/) for details.
+
 ## Use it on a form
 
 A `JushoAI で入力` button appears near a form that has several fields for name, address and similar items.
