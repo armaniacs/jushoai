@@ -24,16 +24,12 @@ describe('confirmGuest (PBI-144)', () => {
     return pending.then((d) => expect(d).toMatchObject({ profile: { lastName: '山田' } }));
   });
 
-  it('resolves null on 使わない and on Escape', async () => {
+  // Escape → null is verified once in confirm-dialog.test.ts (PBI-155).
+  it('resolves null on 使わない', async () => {
     const first = attachOpenShadow();
     const cancelPending = confirmGuest();
     buttonIn(first.root, '使わない')!.click();
     expect(await cancelPending).toBeNull();
-
-    const second = attachOpenShadow();
-    const escapePending = confirmGuest();
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(await escapePending).toBeNull();
   });
 
   it('splits typed values between the profile and the address', async () => {

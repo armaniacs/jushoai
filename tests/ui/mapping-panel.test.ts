@@ -32,11 +32,5 @@ describe('chooseMapping (PBI-138)', () => {
     buttonIn(second.root, 'やめる')!.click();
     expect(await cancelPending).toBeNull();
   });
-
-  it('resolves null on Escape', async () => {
-    attachOpenShadow();
-    const escapePending = chooseMapping('姓', 'tel');
-    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-    expect(await escapePending).toBeNull();
-  });
+  // Escape → null is verified once in confirm-dialog.test.ts (PBI-155).
 });

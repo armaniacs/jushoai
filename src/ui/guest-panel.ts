@@ -1,5 +1,4 @@
-import { OVERLAY_CSS } from './overlay';
-import { mountPanel, type PanelHandle } from './panel';
+import { confirmDialog } from './confirm-dialog';
 import type { GuestValues } from '../core/guest';
 import type { Address, Profile } from '../core/types';
 
@@ -30,78 +29,58 @@ const ADDRESS_FIELDS: { key: keyof Address; label: string; placeholder: string }
   { key: 'building', label: '建物名・部屋番号', placeholder: '千代田ビル101' },
 ];
 
-// Resolves with the typed values, or null when the user picks 使わない (Escape
-// included): closing without a choice never activates the guest.
+// Close without a choice (Escape included) resolves null: closing without a
+// choice never activates the guest. Settle-once and the safe default live in
+// confirmDialog.
 export function confirmGuest(): Promise<GuestDecision> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const settle = (d: GuestDecision): void => {
-      if (!settled) {
-        settled = true;
-        resolve(d);
-      }
-    };
-    let handle!: PanelHandle;
-    handle = mountPanel(
-      (host, root) => {
-        const style = document.createElement('style');
-        style.textContent = `${OVERLAY_CSS}
-.gform { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }
-.gfield { display: grid; gap: 2px; font-size: 12px; color: #5a6270; }
-.gfield.wide { grid-column: 1 / -1; }
-.gfield input { font-size: 13px; padding: 6px 8px; border: 1px solid #cfd6e0; border-radius: 6px; }`;
-        const panel = document.createElement('div');
-        panel.className = 'panel';
-        panel.style.maxWidth = '420px';
+  const boxes: { key: string; box: HTMLInputElement }[] = [];
+  let useBtn: HTMLButtonElement | undefined;
+  const syncUse = (): void => {
+    if (!useBtn) return;
+    useBtn.disabled = !boxes.some((b) => b.box.value.trim() !== '');
+  };
+  return confirmDialog<GuestDecision>({
+    title: TITLE,
+    body: (panel) => {
+      const note = document.createElement('p');
+      note.className = 'empty';
+      note.textContent = '入力した内容は端末のメモリにだけ置かれ、保存・履歴・同期には残りません。';
 
-        const head = document.createElement('h2');
-        head.textContent = TITLE;
+      const form = document.createElement('div');
+      form.className = 'gform';
+      const appendFields = (
+        fields: { key: string; label: string; placeholder: string }[],
+      ): void => {
+        for (const f of fields) {
+          const wrap = document.createElement('label');
+          wrap.className = /zip|street|building/.test(f.key) ? 'gfield wide' : 'gfield';
+          const text = document.createElement('span');
+          text.textContent = f.label;
+          const box = document.createElement('input');
+          box.type = f.key === 'email' ? 'email' : (f.key === 'tel' ? 'tel' : 'text');
+          box.placeholder = f.placeholder;
+          box.addEventListener('input', () => syncUse());
+          wrap.append(text, box);
+          boxes.push({ key: f.key, box });
+          form.append(wrap);
+        }
+      };
+      appendFields(FIELDS);
+      appendFields(ADDRESS_FIELDS);
 
-        const note = document.createElement('p');
-        note.className = 'empty';
-        note.textContent = '入力した内容は端末のメモリにだけ置かれ、保存・履歴・同期には残りません。';
-
-        const form = document.createElement('div');
-        form.className = 'gform';
-        const boxes: { key: string; box: HTMLInputElement }[] = [];
-        const appendFields = (
-          fields: { key: string; label: string; placeholder: string }[],
-        ): void => {
-          for (const f of fields) {
-            const wrap = document.createElement('label');
-            wrap.className = /zip|street|building/.test(f.key) ? 'gfield wide' : 'gfield';
-            const text = document.createElement('span');
-            text.textContent = f.label;
-            const box = document.createElement('input');
-            box.type = f.key === 'email' ? 'email' : (f.key === 'tel' ? 'tel' : 'text');
-            box.placeholder = f.placeholder;
-            box.addEventListener('input', () => syncUse());
-            wrap.append(text, box);
-            boxes.push({ key: f.key, box });
-            form.append(wrap);
-          }
-        };
-        appendFields(FIELDS);
-        appendFields(ADDRESS_FIELDS);
-
-        const actions = document.createElement('div');
-        actions.className = 'actions';
-        const cancelBtn = document.createElement('button');
-        cancelBtn.type = 'button';
-        cancelBtn.textContent = CANCEL_BUTTON;
-        cancelBtn.addEventListener('click', () => {
-          settle(null);
-          handle.close();
-        });
-        const useBtn = document.createElement('button');
-        useBtn.type = 'button';
-        useBtn.className = 'primary';
-        useBtn.textContent = USE_BUTTON;
-        useBtn.disabled = true;
-        const syncUse = (): void => {
-          useBtn.disabled = !boxes.some((b) => b.box.value.trim() !== '');
-        };
-        useBtn.addEventListener('click', () => {
+      panel.append(note, form);
+      return '.gform { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }\n.gfield { display: grid; gap: 2px; font-size: 12px; color: #5a6270; }\n.gfield.wide { grid-column: 1 / -1; }\n.gfield input { font-size: 13px; padding: 6px 8px; border: 1px solid #cfd6e0; border-radius: 6px; }';
+    },
+    actions: [
+      { label: CANCEL_BUTTON, pick: () => null },
+      {
+        label: USE_BUTTON,
+        primary: true,
+        setup: (btn) => {
+          useBtn = btn;
+          btn.disabled = true;
+        },
+        pick: () => {
           const profile: GuestValues['profile'] = {};
           const address: GuestValues['address'] = {};
           for (const b of boxes) {
@@ -113,16 +92,10 @@ export function confirmGuest(): Promise<GuestDecision> {
               address[b.key as keyof Address] = value;
             }
           }
-          settle({ profile, address });
-          handle.close();
-        });
-        actions.append(cancelBtn, useBtn);
-
-        panel.append(head, note, form, actions);
-        root.append(style, panel);
+          return { profile, address };
+        },
       },
-      () => settle(null),
-      { accessibleName: TITLE },
-    );
+    ],
+    defaultOnClose: null,
   });
 }
