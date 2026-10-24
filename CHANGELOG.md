@@ -6,6 +6,20 @@
 
 ## [Unreleased]
 
+## [0.1.25] - 2026-10-25
+
+### Changed
+
+- 初回ダイヤル確認のブロックに接続先のoriginとIP一覧の説明を表示する。IPだけが裸で置かれていたのを解消し、「このAIプロバイダを使うには承認が必要」の前提条件として説明する
+- ユーザー向けドキュメント（AIプロバイダ設定ガイド・はじめにガイド、日英）に初回承認の手順を追記する
+- ライブラリを最新化する（`@types/chrome` 0.3.6、`fast-uri` 3.1.9、`@remotion` 4.0.538、playwright 1.64.1）。videoツールのTypeScriptを5.9から7.0へ上げ、mainと同一ツールチェーンに統一する
+
+### Fixed
+
+- 確認ダイアログの構築失敗を安全側既定値で解決する（never rejectを構造で保証し、全5呼び出し箇所でrejectionハンドラを不要にする）
+- 初回ダイヤルの確認ゲートの保存読み出し失敗を未確認に明示変換する（fail-closedの明示化。挙動は従来どおり安全側）
+- 録画スクリプトの陳腐化したセレクタ（`.errors-text`→`.errors`）を修正する
+
 ## [0.1.24] - 2026-10-24
 
 ### Changed
@@ -417,6 +431,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.25]: https://github.com/armaniacs/jushoai/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/armaniacs/jushoai/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/armaniacs/jushoai/compare/v0.1.22...v0.1.23
 [0.1.22]: https://github.com/armaniacs/jushoai/compare/v0.1.21...v0.1.22
