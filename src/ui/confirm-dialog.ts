@@ -41,8 +41,8 @@ export interface ConfirmDialogSpec<T> {
 }
 
 // Resolves exactly once with the picked decision, or with defaultOnClose when
-// the dialog closes without one. Never rejects: a throwing body propagates
-// through mountPanel (the panel never opened, so the promise never settles).
+// the dialog closes without one. A throwing body or mountPanel rejects the
+// promise (the panel never opened); call sites treat that as no decision.
 export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
   return new Promise((resolve) => {
     // The safe-side invariants, owned here and nowhere else. Hand-writing a
@@ -63,6 +63,7 @@ export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
 
         const head = document.createElement('h2');
         head.textContent = spec.title;
+        panel.append(head);
 
         const css = spec.body(panel);
 
@@ -82,7 +83,7 @@ export function confirmDialog<T>(spec: ConfirmDialogSpec<T>): Promise<T> {
         }
 
         style.textContent = css ? `${OVERLAY_CSS}\n${css}` : OVERLAY_CSS;
-        panel.append(head, actions);
+        panel.append(actions);
         root.append(style, panel);
       },
       () => settle(spec.defaultOnClose),

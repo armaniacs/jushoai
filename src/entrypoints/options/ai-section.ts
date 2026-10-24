@@ -107,8 +107,10 @@ export function mountAiSection(root: HTMLElement): () => void {
     // A load resolving after dispose() must neither render into a detached
     // root nor leave state behind for a later teardown to trip over.
     if (slot.disposed) return;
-    const fallbackNotice = builtInDisabled ? el('p', BUILT_IN_FALLBACK_NOTICE) : null;
-    if (fallbackNotice) fallbackNotice.className = 'errors-text';
+    // The shared notice vocabulary (PBI-151): the built-in fallback renders as
+    // ul.errors like every other notice in the section, not a drifting
+    // p.errors-text (the only CSS user of that class left in the options UI).
+    const fallbackNotice = builtInDisabled ? notice('errors', [BUILT_IN_FALLBACK_NOTICE]) : null;
     const state: AiSectionState = {
       settings: loaded,
       hasKey: keys,

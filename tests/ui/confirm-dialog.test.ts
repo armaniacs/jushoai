@@ -37,4 +37,31 @@ describe('confirmDialog (PBI-155)', () => {
     buttonIn(sh.root, '選ぶ')!.click();
     expect(resolutions).toEqual(['default']);
   });
+
+  // The DOM order is the visual order (.panel is display:block): the heading
+  // comes first, the body renders between the heading and the actions row.
+  // Pinned because the heading used to land after the body when the body
+  // rendered into the panel before the heading was appended.
+  it('renders the heading first and the actions row last', () => {
+    const sh = attachOpenShadow();
+    confirmDialog<string>({
+      title: '見出し',
+      body: (panel) => {
+        const note = document.createElement('p');
+        note.textContent = '本文';
+        panel.append(note);
+      },
+      actions: [{ label: '選ぶ', pick: () => 'picked' }],
+      defaultOnClose: 'default',
+    });
+
+    const panel = sh.root.querySelector('.panel')!;
+    const order = Array.from(panel.children).map((el) =>
+      el.classList.length ? `${el.tagName.toLowerCase()}.${el.className}` : el.tagName.toLowerCase(),
+    );
+    expect(order[0]).toBe('h2');
+    expect(order[order.length - 1]).toBe('div.actions');
+    expect(order.indexOf('h2')).toBeLessThan(order.indexOf('p'));
+    expect(order.indexOf('p')).toBeLessThan(order.indexOf('div.actions'));
+  });
 });
