@@ -54,6 +54,7 @@ function makeDeps(o: {
   fetch: typeof fetch;
   hasKey?: { openai: boolean; gemini: boolean };
   secrets?: { openai?: string; gemini?: string };
+  firstDial?: (origin: string) => Promise<{ ok: true } | { ok: false; reason: 'unconfirmed' }>;
 }): HandlerDeps {
   const registry = new ProviderRegistry(
     {
@@ -61,6 +62,7 @@ function makeDeps(o: {
       hasPermission: async () => true,
       fetch: o.fetch,
       egress: o.egress,
+      firstDial: o.firstDial,
       audit: { record: async () => {} },
     },
     { authFailed: new Set(), compat: new Set() },
@@ -477,5 +479,50 @@ describe('handleMessage gates ai-classify and ai-test at dial time', () => {
 describe('autoEgress wiring', () => {
   it('creates no gate under vitest so tests keep injecting their own fake', () => {
     expect(autoEgress()).toBeUndefined();
+  });
+});
+
+describe('first-dial confirmation gate in the registry (VULN-001 trust-on-first-use)', () => {
+  it('blocks classify of an origin the user has not confirmed and never dials', async () => {
+    const doh = dohFetch({ A: ['93.184.216.34'] });
+    const classifyFetch = vi.fn().mockResolvedValue(classifyOk());
+    const deps = makeDeps({
+      settings: attackerSettings('https://never-confirmed.example.com/v1'),
+      egress: createEgressCheck({ fetch: doh.fake }),
+      fetch: classifyFetch as unknown as typeof fetch,
+      firstDial: async () => ({ ok: false, reason: 'unconfirmed' }),
+    });
+    expect(await handleMessage({ type: 'ai-classify', fields: [field] }, deps))
+      .toEqual({ ok: false, reason: 'first-dial' });
+    expect(classifyFetch).not.toHaveBeenCalled();
+    expect(doh.calls).toEqual([]);
+  });
+
+  it('keeps a confirmed origin classifying normally through the gate', async () => {
+    const doh = dohFetch({ A: ['93.184.216.34'] });
+    const classifyFetch = vi.fn().mockResolvedValue(classifyOk());
+    const deps = makeDeps({
+      settings: attackerSettings('https://confirmed.example.com/v1'),
+      egress: createEgressCheck({ fetch: doh.fake }),
+      fetch: classifyFetch as unknown as typeof fetch,
+      firstDial: async () => ({ ok: true }),
+    });
+    expect(await handleMessage({ type: 'ai-classify', fields: [field] }, deps))
+      .toEqual({ ok: true, entries: [['f', 'lastName']] });
+    expect(classifyFetch).toHaveBeenCalled();
+  });
+
+  it('reports the unconfirmed reason on the connection test path too', async () => {
+    const doh = dohFetch({ A: ['93.184.216.34'] });
+    const classifyFetch = vi.fn().mockResolvedValue(classifyOk());
+    const deps = makeDeps({
+      settings: attackerSettings('https://never-confirmed.example.com/v1'),
+      egress: createEgressCheck({ fetch: doh.fake }),
+      fetch: classifyFetch as unknown as typeof fetch,
+      firstDial: async () => ({ ok: false, reason: 'unconfirmed' }),
+    });
+    expect(await handleMessage({ type: 'ai-test' }, deps))
+      .toEqual({ ok: false, reason: 'first-dial' });
+    expect(classifyFetch).not.toHaveBeenCalled();
   });
 });

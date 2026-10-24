@@ -15,7 +15,7 @@ import { MAX_TEXT_LENGTH } from './scan-limits';
 const MAX_ID_LENGTH = 100;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
-const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable'] as const;
+const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable', 'first-dial'] as const;
 
 export type TestFailure = (typeof TEST_FAILURES)[number];
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
