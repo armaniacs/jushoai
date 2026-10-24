@@ -65,8 +65,8 @@ function keyInput(root: ParentNode): HTMLInputElement | null {
   return pageOf(root).querySelector('input[type="password"]');
 }
 
-function notice(root: ParentNode): HTMLParagraphElement | null {
-  return pageOf(root).querySelector('p.saved, p.errors-text');
+function notice(root: ParentNode): HTMLElement | null {
+  return pageOf(root).querySelector('p.saved, ul.errors');
 }
 
 function buttonByText(root: ParentNode, text: string): HTMLButtonElement {
@@ -102,7 +102,7 @@ describe('save-time resolved-address gate', () => {
     await settle();
     expect(storeMocks.save).not.toHaveBeenCalled();
     const n = notice(root)!;
-    expect(n.className).toBe('errors-text');
+    expect(n.className).toBe('errors');
     expect(n.textContent).toBe('接続先が内部ネットワークのアドレスに解決されるため指定できません');
   });
 
@@ -116,7 +116,7 @@ describe('save-time resolved-address gate', () => {
     await settle();
     expect(storeMocks.save).not.toHaveBeenCalled();
     const n = notice(root)!;
-    expect(n.className).toBe('errors-text');
+    expect(n.className).toBe('errors');
     expect(n.textContent).toBe('接続先のアドレスを解決できなかったため、指定できません');
   });
 

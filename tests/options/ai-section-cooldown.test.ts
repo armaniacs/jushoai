@@ -59,8 +59,8 @@ function testButton(root: ParentNode): HTMLButtonElement {
   return found as HTMLButtonElement;
 }
 
-function notice(root: ParentNode): HTMLParagraphElement | null {
-  return root.querySelector('p.saved, p.errors-text');
+function notice(root: ParentNode): HTMLElement | null {
+  return root.querySelector('p.saved, ul.errors');
 }
 
 beforeEach(() => {

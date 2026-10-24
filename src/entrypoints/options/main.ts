@@ -8,7 +8,7 @@ import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, notice } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
@@ -125,18 +125,6 @@ function appendProfileField(
   if (hint) set.append(hint);
 }
 
-function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
-  if (kind === 'saved') {
-    const p = el('p', lines[0] ?? '');
-    p.className = 'saved';
-    return p;
-  }
-  const ul = el('ul');
-  ul.className = 'errors';
-  ul.append(...lines.map((t) => el('li', t)));
-  return ul;
-}
-
 function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLElement {
   const page = document.createElement('div');
   page.id = PROFILES_SECTION_ID;
@@ -206,7 +194,9 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
-function render(notice?: HTMLElement) {
+// The parameter is noticeElement: notice() is the shared notice builder, and a
+// parameter of the same name would shadow it inside this function body.
+function render(noticeElement?: HTMLElement) {
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
@@ -229,7 +219,7 @@ function render(notice?: HTMLElement) {
   importButton.textContent = 'フォームから取り込む';
   importButton.addEventListener('click', () => {
     void onImportDraft().catch(() => {
-      render(message('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+      render(notice('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
     });
   });
 
@@ -238,7 +228,7 @@ function render(notice?: HTMLElement) {
   footer.append(save, importButton);
 
   app.replaceChildren(
-    title, profilePage, addressPage, footer, transferHolder, ...(notice ? [notice] : []),
+    title, profilePage, addressPage, footer, transferHolder, ...(noticeElement ? [noticeElement] : []),
   );
   applyActivePage();
 }
@@ -252,12 +242,12 @@ function render(notice?: HTMLElement) {
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
-    render(message('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
+    render(notice('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
     return;
   }
   const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
   if (!res || !res.ok) {
-    render(message('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
+    render(notice('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
     return;
   }
   const first = state.profiles[0];
@@ -274,7 +264,7 @@ async function onImportDraft(): Promise<void> {
   const targets = { target, targetAddress, blankProfile, blankAddress };
   const result = applyImportDraft(target, targetAddress, res.draft);
   if (result.taken === 0) {
-    render(message('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
+    render(notice('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
     return;
   }
   const next = applyImportToState(state, targets, result);
@@ -284,7 +274,7 @@ async function onImportDraft(): Promise<void> {
     `${result.taken}件を取り込みました。保存ボタンで確定します。`,
     ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
   ];
-  render(message('saved', lines));
+  render(notice('saved', lines));
 }
 
 async function onSave() {
@@ -297,7 +287,7 @@ async function onSave() {
   if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
   if (addresses.length === 0) errors.push('住所を1件以上登録してください');
   if (errors.length > 0) {
-    render(message('errors', errors));
+    render(notice('errors', errors));
     return;
   }
   state = { profiles, addresses };
@@ -307,10 +297,10 @@ async function onSave() {
     // PBI-23: storage境界は型付きエラーで失敗を伝える。ここで受けて保存失敗を
     // 表示する（成功誤表示の防止）。詳細はメッセージに出さず件数のみ。
     console.warn('[JushoAI] save failed', e);
-    render(message('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
     return;
   }
-  render(message('saved', ['保存しました']));
+  render(notice('saved', ['保存しました']));
 }
 
 // Read storage again and redraw. Used at boot and after an import rewrites
@@ -339,7 +329,7 @@ const showReadFailure = (): void => {
       addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
     };
   }
-  render(message('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
+  render(notice('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
 };
 
 void reloadState().catch(showReadFailure);

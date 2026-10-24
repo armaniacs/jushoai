@@ -106,8 +106,8 @@ function removeCheckbox(root: ParentNode): HTMLInputElement | null {
   return pageOf(root).querySelector('input[type="checkbox"]');
 }
 
-function notice(root: ParentNode): HTMLParagraphElement | null {
-  return pageOf(root).querySelector('p.saved, p.errors-text');
+function notice(root: ParentNode): HTMLElement | null {
+  return pageOf(root).querySelector('p.saved, ul.errors');
 }
 
 function buttonByText(root: ParentNode, text: string): HTMLButtonElement {
@@ -251,7 +251,7 @@ describe('save parity', () => {
     await settle();
     expect(storeMocks.save).not.toHaveBeenCalled();
     const n = notice(root)!;
-    expect(n.className).toBe('errors-text');
+    expect(n.className).toBe('errors');
     expect(n.textContent).toBe(
       'ベース URL を変更したため、API キーを入力し直してください（保存済みのキーは別のホストに送られません）。',
     );
@@ -297,7 +297,7 @@ describe('save parity', () => {
     await settle();
     expect(storeMocks.save).toHaveBeenCalledOnce();
     const n = notice(root)!;
-    expect(n.className).toBe('errors-text');
+    expect(n.className).toBe('errors');
     expect(n.textContent).toBe(
       '保存しました。通信が許可されていないため AI は使えません。使うには、もう一度保存して許可してください。',
     );
@@ -310,7 +310,7 @@ describe('save parity', () => {
     expect(storeMocks.save).not.toHaveBeenCalled();
     expect(permMocks.request).not.toHaveBeenCalled();
     expect(notice(root)!.textContent).toContain('API キーを入力してください');
-    expect(notice(root)!.className).toBe('errors-text');
+    expect(notice(root)!.className).toBe('errors');
   });
 
   it('reports a save failure', async () => {
@@ -375,7 +375,7 @@ describe('connection test parity', () => {
     buttonByText(root, '接続テスト（保存済みの設定で実行）').click();
     await settle();
     expect(notice(root)!.textContent).toContain('認証に失敗しました');
-    expect(notice(root)!.className).toBe('errors-text');
+    expect(notice(root)!.className).toBe('errors');
 
     // PBI-89: the first completion starts a cooldown on this mount, so the
     // second reason is verified on a fresh mount (cooldown is per-mount state).
@@ -392,7 +392,7 @@ describe('connection test parity', () => {
     buttonByText(root, '接続テスト（保存済みの設定で実行）').click();
     await settle();
     expect(notice(root)!.textContent).toBe('バックグラウンドが応答しませんでした。');
-    expect(notice(root)!.className).toBe('errors-text');
+    expect(notice(root)!.className).toBe('errors');
   });
 
   it('guards double execution while a test is in flight', async () => {
