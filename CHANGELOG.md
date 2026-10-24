@@ -6,6 +6,18 @@
 
 ## [Unreleased]
 
+## [0.1.23] - 2026-10-24
+
+### Changed
+
+- 設定ページの AI 判定でエラーが出たときの表示を、他の section と同じリスト形式（最大5件、超過分は「他 N 件のエラーがあります」）に統一する
+- 1欄入力（Alt+J・右クリック）とフォームからの取り込みを、プレビューと同じ分類経路（ルール分類パイプライン）に統一する
+
+### Fixed
+
+- 1欄入力でフリガナ欄に漢字氏名が注入される問題を修正する（プレビューと同じカナ値が入る）。フォームからの取り込みで、入力済みのフリガナ欄が下書きに載らない問題も直す
+- 承認・mapping・前回選択などの学習状態の保存が容量超過等で失敗したとき、エラーが握りつぶされて無音で失われる問題を修正し、失敗を報告する
+
 ## [0.1.22] - 2026-10-21
 
 ### Added
@@ -381,6 +393,9 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.23]: https://github.com/armaniacs/jushoai/compare/v0.1.22...v0.1.23
+[0.1.22]: https://github.com/armaniacs/jushoai/compare/v0.1.21...v0.1.22
+[0.1.21]: https://github.com/armaniacs/jushoai/compare/v0.1.20...v0.1.21
 [0.1.20]: https://github.com/armaniacs/jushoai/compare/v0.1.19...v0.1.20
 [0.1.19]: https://github.com/armaniacs/jushoai/compare/v0.1.18...v0.1.19
 [0.1.18]: https://github.com/armaniacs/jushoai/compare/v0.1.17...v0.1.18
