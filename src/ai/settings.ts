@@ -88,6 +88,11 @@ function isPrivateIpv6(ip: string): boolean {
     return isInternalIpv4(`${hi >> 8}.${hi & 255}.${lo >> 8}.${lo & 255}`);
   }
   if (v === '::' || v === '::1' || v === '0:0:0:0:0:0:0:1') return true;
+  // NAT64 (RFC 6052 well-known + RFC 8215 local-use) and 6to4 (RFC 7526) translation
+  // prefixes embed an IPv4 that routes through a translation gateway — internal.
+  // Everything under 64:ff9b::/16 and 2002::/16 is translation topology, so a prefix
+  // match on the first groups covers every expanded form.
+  if (v.startsWith('64:ff9b') || v.startsWith('2002:')) return true;
   const first = v.split(':')[0] ?? '';
   const n = parseInt(first, 16);
   if (Number.isNaN(n)) return true;
@@ -302,4 +307,18 @@ export async function validateAiSettingsResolved(
   if (check.ok) return { errors };
   if (!errors.includes(check.reason)) errors.push(check.reason);
   return { errors };
+}
+
+// The DoH-confirmed address set for one endpoint, shown before the user approves the
+// first dial (VULN-001 trust-on-first-use). Returns [] when the endpoint is lexically
+// invalid or unresolvable; the settings page only calls this after the save-time gate
+// passed, so an empty result is not a bypass.
+export async function resolveConfirmedAddresses(input: string, deps: ResolveDeps): Promise<string[]> {
+  const lexical = validateBaseUrl(input);
+  if (!lexical.ok) return [];
+  try {
+    return await resolveHostAddresses(normalizeHost(lexical.url.hostname), deps);
+  } catch {
+    return [];
+  }
 }

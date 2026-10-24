@@ -1,5 +1,6 @@
 import { AuditStore } from '../ai/audit-log';
 import { autoEgress } from '../ai/http-classifiers';
+import { createFirstDialGate } from '../ai/first-dial';
 import { hasHostPermission } from '../ai/permissions';
 import { IdbKeyStore, type KeyStore } from '../ai/secret-store';
 import { AI_SETTINGS_KEY, loadAiSecrets, loadPublicAiSettings } from '../ai/settings-store';
@@ -29,12 +30,16 @@ export default defineBackground(() => {
   // the host again (per-call). autoEgress stays off under vitest so tests
   // keep injecting their own egress fake.
   const egress = autoEgress();
+  // First-dial confirmation gate: reads chrome.storage.local per classify, so a
+  // settings-page confirmation takes effect on the next call without a restart.
+  const firstDial = createFirstDialGate();
   const registry = new ProviderRegistry(
     {
       getLanguageModel,
       hasPermission: (origins) => hasHostPermission(origins),
       fetch: globalThis.fetch.bind(globalThis),
       egress,
+      firstDial,
       audit,
     },
     { authFailed, compat },
