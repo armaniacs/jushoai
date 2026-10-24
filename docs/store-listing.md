@@ -108,6 +108,7 @@ The source code is published on GitHub (GPL).
 | 権限 | 理由 |
 |---|---|
 | `storage` | プロファイル、住所、設定を端末内に保存するため |
+| `contextMenus` | 右クリックメニュー「JushoAI: この欄に入力」（入力欄での1欄入力のため） |
 | ホスト権限（`<all_urls>` の Content Script） | 任意のページのフォームを検出し、「JushoAI で入力」を表示して入力を補完するため。ページの内容を外部へ送ることはない |
 | `optional_host_permissions` | ユーザーが選んだ AI プロバイダへの通信を、設定ページの保存時にユーザーの許可を得て有効にするため。インストール時には要求しない |
 
