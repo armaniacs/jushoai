@@ -95,7 +95,7 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
   ]) fieldset.append(el('p', line));
 
   const feedback = el('div');
-  feedback.setAttribute('aria-live', 'polite');
+  // Live region moved into the shared notice: notice() itself marks its elements aria-live="polite".
   // Saved/errors rendering goes through the shared notice module (PBI-151):
   // the truncate rule (5 shown lines plus a rest count) lives in dom.ts, so a
   // 20-entry file of validation errors cannot grow an unbounded list here.

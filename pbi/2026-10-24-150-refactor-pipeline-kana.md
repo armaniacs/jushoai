@@ -37,11 +37,11 @@ Scenario: import-draft が本番経路で kana キーに到達できる
 
 ## 受け入れ基準
 
-- [ ] `planOneField` が classifyRulePipeline 経由で kana 帰属を得ている（classifyField 直呼びでない）
-- [ ] import-draft ハンドラが classifyRulePipeline 経由で分類し、PROFILE_KEYS の kana 行が本番経路で到達可能になっている
-- [ ] 「classifyField を直呼びしない」が docstring から構造（入口の統一）に昇格している
-- [ ] fill-one × kana・import-draft × kana のテストが追加されパスする
-- [ ] 既存テストが緑維持
+- [x] `planOneField` が classifyRulePipeline 経由で kana 帰属を得ている（classifyField 直呼びでない）
+- [x] import-draft ハンドラが classifyRulePipeline 経由で分類し、PROFILE_KEYS の kana 行が本番経路で到達可能になっている
+- [x] 「classifyField を直呼びしない」が docstring から構造（入口の統一）に昇格している
+- [x] fill-one × kana・import-draft × kana のテストが追加されパスする
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -55,6 +55,6 @@ Scenario: import-draft が本番経路で kana キーに到達できる
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

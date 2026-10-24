@@ -4,12 +4,12 @@
 
 `el('p').className='saved'` / `el('ul').className='errors'` という同じ表示語彙が4つ独立に定義されている:
 
-- `src/entrypoints/options/main.ts:128-138`（`message()` — 保存時の validation エラーを全件 li にする）
+- `src/entrypoints/options/main.ts:128-138`（`message()` ― 保存時の validation エラーを全件 li にする）
 - `src/entrypoints/options/exclusion-section.ts:18-28`（`notice()`）
-- `src/entrypoints/options/transfer-section.ts:99-115`（`showSaved`/`showErrors` — **5件で truncate** の追加挙動を持つ唯一の実装）
+- `src/entrypoints/options/transfer-section.ts:99-115`（`showSaved`/`showErrors` ― **5件で truncate** の追加挙動を持つ唯一の実装）
 - `src/entrypoints/options/ai-section.ts:129-138`（`setAiNotice`）
 
-同じ「saved/errors 通知」概念の挙動が呼び出し箇所ごとに違う。エラーが増えると main.ts の画面が伸び、truncate 規定は1実装にしかない。削除テスト: 共通 module を削除すれば p.saved/ul.errors の構築が4箇所に再出現する — 存在価値あり。
+同じ「saved/errors 通知」概念の挙動が呼び出し箇所ごとに違う。エラーが増えると main.ts の画面が伸び、truncate 規定は1実装にしかない。削除テスト: 共通 module を削除すれば p.saved/ul.errors の構築が4箇所に再出現する ― 存在価値あり。
 
 ## ユーザーストーリー
 
@@ -38,11 +38,11 @@ Scenario: main.ts の validation エラーにも truncate が適用される
 
 ## 受け入れ基準
 
-- [ ] `options/dom.ts` に `notice(kind, lines, { max })` が追加されている
-- [ ] 4実装（main.ts / exclusion / transfer / ai-section）が notice module 経由に置き換わっている
-- [ ] truncate 規定が module の1箇所で決まる
-- [ ] `.saved`/`.errors` を断言する既存テストが緑維持
-- [ ] `make check` が通る
+- [x] `options/dom.ts` に `notice(kind, lines, { max })` が追加されている
+- [x] 4実装（main.ts / exclusion / transfer / ai-section）が notice module 経由に置き換わっている
+- [x] truncate 規定が module の1箇所で決まる
+- [x] `.saved`/`.errors` を断言する既存テストが緑維持
+- [x] `make check` が通る
 
 ## テスト戦略
 
@@ -55,6 +55,6 @@ Scenario: main.ts の validation エラーにも truncate が適用される
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

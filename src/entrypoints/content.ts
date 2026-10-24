@@ -196,18 +196,27 @@ export default defineContentScript({
       });
     }
 
+    // The fill is fire-and-forget, but a failure must never become an
+    // unhandled rejection: the batched state read (loadFillOneState) rejects
+    // with KvStoreReadError, and PBI-153 closed this gap for the writes only.
+    // The report matches the persist writes (../content/persist-write); an
+    // invalidated context keeps the same reload guidance the in-page button
+    // shows, every other error passes through for the console.
+    const reportFillOneFailure = (e: unknown): void => {
+      console.warn(
+        `[JushoAI] フィールド補完に失敗しました${
+          isContextInvalidated(e) ? '（ページを再読み込みしてください）' : ''
+        }`,
+        e,
+      );
+    };
+
     document.addEventListener('keydown', (e) => {
       if (e.altKey && (e.key === 'j' || e.key === 'J')) {
         e.preventDefault();
-        void fillOne(document.activeElement);
+        void fillOne(document.activeElement).catch(reportFillOneFailure);
       }
     }, true);
-
-    chrome.runtime.onMessage.addListener((msg) => {
-      if ((msg as { type?: string } | null)?.type === FILL_ONE_MESSAGE.type) {
-        void fillOne(lastContextTarget ?? document.activeElement);
-      }
-    });
 
     async function guardedRun(container: Element, button: ButtonHandle): Promise<boolean> {
       if (running.has(container)) return true;
@@ -513,7 +522,6 @@ export default defineContentScript({
     // the in-page button on the first detected form, reusing its handle so
     // errors surface the same way. No form mounted means nothing to fill.
     registerTabMessage(ANALYZE_MESSAGE_TYPE, {
-      gate: true,
       excludedResponse: { ok: false, reason: 'no-form' },
       handler: (_msg, sendResponse) => {
         const first = detectForms(document)[0];
@@ -537,7 +545,6 @@ export default defineContentScript({
     // and no gate: the values stay on-device and never cross the network. An
     // excluded page keeps its opt-out — no draft from there.
     registerTabMessage(IMPORT_DRAFT_MESSAGE_TYPE, {
-      gate: true,
       handler: (_msg, sendResponse) => {
         const form = detectForms(document)[0];
         if (!form) {
@@ -555,7 +562,6 @@ export default defineContentScript({
     // destroys them): never chrome.storage, never the audit log, never the
     // export/import. An excluded page keeps its opt-out.
     registerTabMessage(GUEST_MESSAGE_TYPE, {
-      gate: true,
       handler: (_msg, sendResponse) => {
         sendResponse({ ok: true });
         void confirmGuest().then((decision) => {
@@ -566,6 +572,18 @@ export default defineContentScript({
           const entry = first ? mounted.get(first.container) : undefined;
           if (first && entry) void guardedRun(first.container, entry.handle);
         });
+        return false;
+      },
+    });
+
+    // PBI-137: the context-menu entry fills the remembered (or focused) field.
+    // The handler is fire-and-forget and returns false, so the response
+    // channel closes immediately — an excluded page now receives the default
+    // { ok: false } instead of the old no-response. The exclusion check inside
+    // fillOneEntry stays: the Alt+J path never reaches this dispatcher.
+    registerTabMessage(FILL_ONE_MESSAGE.type, {
+      handler: () => {
+        void fillOne(lastContextTarget ?? document.activeElement).catch(reportFillOneFailure);
         return false;
       },
     });

@@ -4,8 +4,8 @@
 
 入口ごとに学習状態の読み出し束を手組みしている:
 
-- `src/entrypoints/content.ts:228+239-241`（`run()` — loadData+loadLastUsed+loadApprovals+loadAssignments+loadMappings の5キー4モジュール）
-- `:182-183`（`fillOne` — 3キー）
+- `src/entrypoints/content.ts:228+239-241`（`run()` ― loadData+loadLastUsed+loadApprovals+loadAssignments+loadMappings の5キー4モジュール）
+- `:182-183`（`fillOne` ― 3キー）
 
 `chrome.storage.local.get` はキー配列を1回で受けられるが、ストアの seam が1キー1読みの shallow なため、N回の IPC と「そのフローが何を要するか」の組み立てが各入口に散らばる。PBI-128→141→138 の流れで新ストアが1つ増えるたびに run()・fillOne・options の全入口を編集した実績があり、次の学習状態ストアも同じ波及をする。
 
@@ -36,9 +36,9 @@ Scenario: 次のストア追加が入口に波及しない
 
 ## 受け入れ基準
 
-- [ ] バッチ読み（1回の get([keys...])）がストア層の背後に存在する
-- [ ] run() と fillOne がフロー単位の1つの module から状態束を受け取っている
-- [ ] 既存テストが緑維持
+- [x] バッチ読み（1回の get([keys...])）がストア層の背後に存在する
+- [x] run() と fillOne がフロー単位の1つの module から状態束を受け取っている
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -51,6 +51,6 @@ Scenario: 次のストア追加が入口に波及しない
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

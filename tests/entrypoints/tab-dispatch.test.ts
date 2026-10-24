@@ -95,4 +95,23 @@ describe('registerTabMessage', () => {
     const { ret } = dispatch(listeners[0]!, { type: 'analyze' });
     expect(ret).toBe(true);
   });
+
+  it('gates by default: a registration without gate answers the excluded response', () => {
+    const { register, listeners } = setup(true);
+    const handler = vi.fn(() => false);
+    register('fill-one', { handler });
+    const { ret, responded } = dispatch(listeners[0]!, { type: 'fill-one' });
+    expect(ret).toBe(false);
+    expect(responded).toEqual({ ok: false });
+    expect(handler).not.toHaveBeenCalled();
+  });
+
+  it('skips the gate only when gate is explicitly false', () => {
+    const { register, listeners } = setup(true);
+    const handler = vi.fn(() => false);
+    register('fill-one', { gate: false, handler });
+    const { ret } = dispatch(listeners[0]!, { type: 'fill-one' });
+    expect(ret).toBe(false);
+    expect(handler).toHaveBeenCalledOnce();
+  });
 });

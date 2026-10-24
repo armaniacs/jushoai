@@ -37,10 +37,10 @@ Scenario: gate の順序が1テストで検証できる
 
 ## 受け入れ基準
 
-- [ ] registerTabMessage（または同等の guarded dispatcher）が1関数 interface として存在する
-- [ ] 3リスナ（analyze/import/guest）が dispatcher 経由になり、手写しの gate check が消えている
-- [ ] 除外時の応答が dispatcher の1テストで検証されている
-- [ ] 既存テストが緑維持
+- [x] registerTabMessage（または同等の guarded dispatcher）が1関数 interface として存在する
+- [x] 3リスナ（analyze/import/guest）が dispatcher 経由になり、手写しの gate check が消えている
+- [x] 除外時の応答が dispatcher の1テストで検証されている
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -53,6 +53,6 @@ Scenario: gate の順序が1テストで検証できる
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

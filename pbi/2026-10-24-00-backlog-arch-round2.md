@@ -3,7 +3,7 @@
 /improve-codebase-architecture（HTML報告・10候補）を全件PBI化し、RICEで優先度付けした。
 報告ファイル: `/var/folders/b_/fzr253l50g58s5p7d94nxjmc0000gn/T/architecture-review-20261024-0932.html`（OS一時領域、リポジトリ外）
 
-探索方法: git log（PBI-124〜149 hot spots）+ 2体のサブエージェント（src/core+messaging 半分 / src/ui+entrypoints 半分）。過去ラウンド（2026-10-16 arch、2026-10-18 arch、holistic、weakness、deep-dive、newfeat、review2）の記録済みテーマとの重複は各候補で確認済み — いずれも別層・別方向の摩擦。
+探索方法: git log（PBI-124〜149 hot spots）+ 2体のサブエージェント（src/core+messaging 半分 / src/ui+entrypoints 半分）。過去ラウンド（2026-10-16 arch、2026-10-18 arch、holistic、weakness、deep-dive、newfeat、review2）の記録済みテーマとの重複は各候補で確認済み ― いずれも別層・別方向の摩擦。
 
 推定前提（全候補共通）: ユーザ向け＝月間影響100件基準、開発向け＝月間タッチ5〜30件基準、Effortは人月。
 依存による入替あり（156は150の後、158は151の後、153は156の後、159は153の後）。

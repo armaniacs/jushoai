@@ -8,7 +8,9 @@ import type { Address, Profile } from '../core/types';
 // values only and never reach storage, the audit log or the export/import.
 // The field vocabulary (PBI-158) comes from the core field catalog: the panel
 // renders exactly the catalog's guest subset, so a new row reaches the guest
-// only when the catalog marks it guest and the wording never drifts.
+// only when the catalog marks it guest and the wording never drifts. The wide
+// (two-column) rows are a catalog column too (guestWide → wide), so the panel
+// no longer decides width from key regexes.
 
 export type GuestDecision = GuestValues | null;
 
@@ -36,12 +38,12 @@ export function confirmGuest(): Promise<GuestDecision> {
       const form = document.createElement('div');
       form.className = 'gform';
       const appendFields = (
-        fields: readonly { key: string; label: string; placeholder: string; type?: string }[],
+        fields: readonly { key: string; label: string; placeholder: string; type?: string; wide?: boolean }[],
         owner: 'profile' | 'address',
       ): void => {
         for (const f of fields) {
           const wrap = document.createElement('label');
-          wrap.className = /zip|street|building/.test(f.key) ? 'gfield wide' : 'gfield';
+          wrap.className = f.wide ? 'gfield wide' : 'gfield';
           const text = document.createElement('span');
           text.textContent = f.label;
           const box = document.createElement('input');

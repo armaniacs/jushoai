@@ -33,11 +33,11 @@ Scenario: 一時エラーは4秒で復帰する
 
 ## 受け入れ基準
 
-- [ ] `showError` が構造化区分（kind + text）を受ける形状に拡張されている
-- [ ] `decideDisplay` が型で区分を渡し、button 側の includes/match 嗅ぎがなくなっている
-- [ ] 「部分適用は畳まず残す」の決定が session と button の1本の契約になっている
-- [ ] 文言を pin する既存テストが kind ベースのテストに変わっている
-- [ ] 既存テストが緑維持
+- [x] `showError` が構造化区分（kind + text）を受ける形状に拡張されている
+- [x] `decideDisplay` が型で区分を渡し、button 側の includes/match 嗅ぎがなくなっている
+- [x] 「部分適用は畳まず残す」の決定が session と button の1本の契約になっている
+- [x] 文言を pin する既存テストが kind ベースのテストに変わっている
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -50,6 +50,6 @@ Scenario: 一時エラーは4秒で復帰する
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

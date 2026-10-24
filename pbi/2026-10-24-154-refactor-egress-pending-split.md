@@ -4,8 +4,8 @@
 
 「ゲートが表示する pending = classifyAll が実際に送る集合」という interface の不変条件（`src/core/egress-plan.ts:5-8`、`src/entrypoints/content.ts:269-271` が2箇所で明言）が、**2つの並行実装**で維持されている:
 
-- `src/core/egress-plan.ts:24` — `metas.filter(m => !isConfident(classifyField(m)))`
-- `src/core/analyze.ts:28-33` — `ruled.filter(r => !isConfident(r.cls))` + llmSkip フィルタ
+- `src/core/egress-plan.ts:24` ― `metas.filter(m => !isConfident(classifyField(m)))`
+- `src/core/analyze.ts:28-33` ― `ruled.filter(r => !isConfident(r.cls))` + llmSkip フィルタ
 
 PBI-145（0203ce9）は llmSkip 導入の際に両方を同時修正（lockstep）する必要があった。テストは `tests/core/egress-plan.test.ts` と `tests/core/analyze.test.ts:337` で**互いに独立**に手組み期待値で検証しており、クロス parity テストが無い。isConfident / ACCEPT_THRESHOLD（`src/core/classify-rules.ts:9,13`）の意味論が変わるか、分割条件が増えると、2実装を lockstep で直す義務はコメントだけが担う。
 
@@ -38,10 +38,10 @@ Scenario: llmSkip が増えても lockstep 修正が不要
 
 ## 受け入れ基準
 
-- [ ] pending 分割（classify → confident フィルタ → llmSkip フィルタ）が1関数としてエクスポートされている
-- [ ] planEgress と classifyAll の両方がその関数経由になっている
-- [ ] planEgress(...).pending と classifyAll が attempt する集合の parity テストが追加されパスする
-- [ ] 既存テストが緑維持
+- [x] pending 分割（classify → confident フィルタ → llmSkip フィルタ）が1関数としてエクスポートされている
+- [x] planEgress と classifyAll の両方がその関数経由になっている
+- [x] planEgress(...).pending と classifyAll が attempt する集合の parity テストが追加されパスする
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -54,6 +54,6 @@ Scenario: llmSkip が増えても lockstep 修正が不要
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

@@ -9,7 +9,7 @@
 - `src/ui/guest-panel.ts:35-45`（Escape → null）
 - `src/ui/egress-panel.ts:23-47`（Escape → rule-only）
 
-各 adapter が `let settled = false` + `settle()`（1回だけ resolve）、Escape/外側 close を安全側 default に落とす配線、actions 行の cancel/primary ボタンを `settle + handle.close()` に配線する実装を繰り返す。削除テスト: この共通部を module にして削除すれば、settle-once と default-on-Escape が5呼び出し箇所に再出現する — 存在価値あり。
+各 adapter が `let settled = false` + `settle()`（1回だけ resolve）、Escape/外側 close を安全側 default に落とす配線、actions 行の cancel/primary ボタンを `settle + handle.close()` に配線する実装を繰り返す。削除テスト: この共通部を module にして削除すれば、settle-once と default-on-Escape が5呼び出し箇所に再出現する ― 存在価値あり。
 
 ## ユーザーストーリー
 
@@ -38,10 +38,10 @@ Scenario: 5パネルが同一 module の背後に収まる
 
 ## 受け入れ基準
 
-- [ ] confirmDialog が1関数 interface として存在する
-- [ ] 4パネル（mapping/fill-one/guest/egress）が confirmDialog 経由になり、手写しの settled guard が消えている
-- [ ] 「選択なしで閉じたら決定なし」の不変条件が1箇所で検証されている
-- [ ] 既存テストが緑維持（E2E 併用で実挙動を確認）
+- [x] confirmDialog が1関数 interface として存在する
+- [x] 4パネル（mapping/fill-one/guest/egress）が confirmDialog 経由になり、手写しの settled guard が消えている
+- [x] 「選択なしで閉じたら決定なし」の不変条件が1箇所で検証されている
+- [x] 既存テストが緑維持（E2E 併用で実挙動を確認）
 
 ## テスト戦略
 
@@ -54,6 +54,6 @@ Scenario: 5パネルが同一 module の背後に収まる
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

@@ -74,8 +74,10 @@ export function actionButton(label: string, disabled: boolean, onClick: () => vo
 }
 
 // Single source of the saved/errors notice vocabulary for the four options
-// sections: saved renders as a p.saved line, errors as a ul.errors list, and
-// the truncate rule lives in this module so no section can grow its own.
+// sections: saved renders as one p.saved line (multi-line lines join with br),
+// errors as a ul.errors list, and the truncate rule lives in this module so no
+// section can grow its own. Both returned elements are polite live regions, so
+// every section announces its notice without a per-section container.
 export interface NoticeOptions {
   // Head lines shown before the rest count. The default pins the shared
   // truncate rule (5 lines) every section inherits.
@@ -86,8 +88,13 @@ const MAX_SHOWN_ERRORS = 5;
 
 export function notice(kind: 'saved' | 'errors', lines: readonly string[], { max = MAX_SHOWN_ERRORS }: NoticeOptions = {}): HTMLElement {
   if (kind === 'saved') {
-    const p = el('p', lines[0] ?? '');
+    const p = el('p');
     p.className = 'saved';
+    lines.forEach((line, i) => {
+      if (i > 0) p.append(document.createElement('br'));
+      p.append(line);
+    });
+    p.setAttribute('aria-live', 'polite');
     return p;
   }
   const shown = lines.slice(0, max);
@@ -96,6 +103,7 @@ export function notice(kind: 'saved' | 'errors', lines: readonly string[], { max
   ul.className = 'errors';
   ul.append(...shown.map((t) => el('li', t)));
   if (rest > 0) ul.append(el('li', `他 ${rest} 件のエラーがあります`));
+  ul.setAttribute('aria-live', 'polite');
   return ul;
 }
 

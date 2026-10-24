@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, expectTypeOf, vi, beforeEach } from 'vitest';
 import {
   capKeys, capTail, KvStoreReadError, KvStoreSaveError, readKv, readKvBatch, upsertKv, writeKv,
   type KvSpec,
@@ -162,5 +162,50 @@ describe('kv-store batch read (PBI-159)', () => {
     const err: unknown = await readKvBatch([{ key: 'a', parse: parseList }]).catch((e) => e);
     expect(err).toBeInstanceOf(KvStoreReadError);
     expect((err as KvStoreReadError).cause).toBe(getShouldFail);
+  });
+
+  // PBI-148 review: the batch reader is one generic signature with a mapped
+  // tuple, not tuple overloads — a six-spec read stays typed per position.
+  it('returns a typed tuple for a six-spec batch read', async () => {
+    const calls: string[][] = [];
+    stubArrayGet(calls);
+    store['a'] = ['x', 1];
+    store['b'] = { k: 'v' };
+    const [list, map, missing, list2, map2, missing2] = await readKvBatch([
+      { key: 'a', parse: parseList },
+      { key: 'b', parse: parseMap },
+      { key: 'c', parse: parseList },
+      { key: 'd', parse: parseList },
+      { key: 'e', parse: parseMap },
+      { key: 'f', parse: parseList },
+    ]);
+    expect(calls).toEqual([['a', 'b', 'c', 'd', 'e', 'f']]);
+    expect(list).toEqual(['x']);
+    expect(map).toEqual({ k: 'v' });
+    expect(missing).toEqual([]);
+    expect(list2).toEqual([]);
+    expect(map2).toEqual({});
+    expect(missing2).toEqual([]);
+    // The parsed shapes stay inferred per position: a signature change that
+    // drops them fails the typecheck, not just these runtime assertions.
+    expectTypeOf(list).toEqualTypeOf<string[]>();
+    expectTypeOf(map).toEqualTypeOf<Record<string, string>>();
+    expectTypeOf(missing).toEqualTypeOf<string[]>();
+    expectTypeOf(list2).toEqualTypeOf<string[]>();
+    expectTypeOf(map2).toEqualTypeOf<Record<string, string>>();
+    expectTypeOf(missing2).toEqualTypeOf<string[]>();
+  });
+
+  it('reports a failed six-spec batch read as one KvStoreReadError', async () => {
+    stubArrayGet([]);
+    getShouldFail = new Error('storage unavailable');
+    await expect(readKvBatch([
+      { key: 'a', parse: parseList },
+      { key: 'b', parse: parseMap },
+      { key: 'c', parse: parseList },
+      { key: 'd', parse: parseList },
+      { key: 'e', parse: parseMap },
+      { key: 'f', parse: parseList },
+    ])).rejects.toBeInstanceOf(KvStoreReadError);
   });
 });

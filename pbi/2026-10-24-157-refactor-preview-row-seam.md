@@ -4,13 +4,13 @@
 
 `src/ui/preview.ts` が PBI ごとに copy-grown しており、row 描画の内部構造が未整理:
 
-- `:283-297`（abbrev checkbox block、PBI-122）と `:300-314`（assist checkbox block、PBI-125 — 同型の約15行を複製）
+- `:283-297`（abbrev checkbox block、PBI-122）と `:300-314`（assist checkbox block、PBI-125 ― 同型の約15行を複製）
 - `:115-132` と `:134-153`（profile select と address select の twin）
 - `:383-439` と `:447-463`（showResult/showUndoResult が title/head/actions 組み立てを重複）
 - closure state 7個（`:189-193`、`:233-238`）+ `syncButtons` が8ノードに触れる（`:202-219`）
 - `PreviewOptions` 12メンバー（optional callback 3つ）+ `PreviewHandle` 8メンバー
 
-PBI-122（abbrev）→125（assist）→128（synthetic/expand）→138（fix）→132（undo）→143（coverage）と、各 PBI が interface メンバーと row 描画内の bespoke block を1つずつ足してきた。PBI-125 は PBI-122 の block をそのまま写しており、「opt-in 候補の checkbox 行（note の red↔muted 反転、approval set への登録）」という概念が interface に現れず実装に2回出現。`resultMode` の「showResult 後の setRows は黙って無視」（`:250-254`）は convention+guard で守る順序制約で、呼び出し側（bindPreview）が知らねばならない interface の重みが PBI ごとに増え続けている。削除テスト: 行描画の内部 helper を作って削除すれば twin block が2箇所に再出現する。
+PBI-122（abbrev）→125（assist）→128（synthetic/expand）→138（fix）→132（undo）→143（coverage）と、各 PBI が interface メンバーと row 描画内の bespoke block を1つずつ足してきた。PBI-125 は PBI-122 の block をそのまま写しており、「opt-in 候補の checkbox 行（note の red⇔muted 反転、approval set への登録）」という概念が interface に現れず実装に2回出現。`resultMode` の「showResult 後の setRows は黙って無視」（`:250-254`）は convention+guard で守る順序制約で、呼び出し側（bindPreview）が知らねばならない interface の重みが PBI ごとに増え続けている。削除テスト: 行描画の内部 helper を作って削除すれば twin block が2箇所に再出現する。
 
 ## ユーザーストーリー
 
@@ -58,8 +58,8 @@ Scenario: select twin が1実装に収まる
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] コードレビュー完了
+- [x] `make check` が通る
 
 ## 実装記録（2026-10-24）
 

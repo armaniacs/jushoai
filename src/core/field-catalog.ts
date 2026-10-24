@@ -10,6 +10,8 @@
 //   not a plain text row; the select label still comes from this table.
 // - guest: whether the one-shot guest panel carries the row; the guest set is
 //   a subset of this table and is pinned by tests (tests/ui/guest-panel.test.ts).
+// - guestWide: guest-panel-only two-column width (zip/street/building); the
+//   options cards have no wide concept, so toOptionsField carries no wide.
 // Pure data: imports types only — no DOM, no LLM.
 
 import type { Address, Profile } from './types';
@@ -22,6 +24,7 @@ export interface FieldEntry<K extends string> {
   optionsNote?: string;
   optionsSelect?: boolean;
   guest: boolean;
+  guestWide?: boolean;
 }
 
 // Plain input rows only: id/label/gender never render as text rows (label is
@@ -56,24 +59,27 @@ const PREFECTURE_ENTRY: AddressFieldEntry = {
 
 export const ADDRESS_FIELD_CATALOG: readonly AddressFieldEntry[] = [
   { key: 'label', label: '名前（自宅・勤務先など）', placeholder: '自宅', guest: false },
-  { key: 'zip', label: '郵便番号', placeholder: '1000001', guest: true },
+  { key: 'zip', label: '郵便番号', placeholder: '1000001', guest: true, guestWide: true },
   PREFECTURE_ENTRY,
   { key: 'city', label: '市区町村', placeholder: '千代田区', guest: true },
-  { key: 'street', label: '番地', placeholder: '千代田1-1', guest: true },
-  { key: 'building', label: '建物名・部屋番号', placeholder: '千代田ビル101', optionsNote: '（任意）', guest: true },
+  { key: 'street', label: '番地', placeholder: '千代田1-1', guest: true, guestWide: true },
+  { key: 'building', label: '建物名・部屋番号', placeholder: '千代田ビル101', optionsNote: '（任意）', guest: true, guestWide: true },
 ];
 
 // The options side renders 都道府県 as a select; the label still comes from
 // the catalog row so the wording stays single-sourced.
 export const PREFECTURE_FIELD_LABEL = PREFECTURE_ENTRY.label;
 
-// The projected row both UIs consume: key/label/placeholder/type with the
-// per-UI wording already resolved.
+// The projected row each UI consumes: key/label/placeholder/type with the
+// per-UI wording already resolved. wide (two-column width) is guest-only: the
+// guest panel lays the guestWide rows out full-width, and the options cards
+// have no wide concept, so toOptionsField carries no wide.
 export interface CatalogField<K extends string> {
   key: K;
   label: string;
   placeholder: string;
   type?: 'email' | 'tel';
+  wide?: boolean;
 }
 
 const toGuestField = <K extends string>(f: FieldEntry<K>): CatalogField<K> => ({
@@ -81,6 +87,7 @@ const toGuestField = <K extends string>(f: FieldEntry<K>): CatalogField<K> => ({
   label: f.label,
   placeholder: f.placeholder,
   type: f.type,
+  wide: f.guestWide === true,
 });
 
 const toOptionsField = <K extends string>(f: FieldEntry<K>): CatalogField<K> => ({

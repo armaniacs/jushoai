@@ -4,8 +4,8 @@
 
 「key → label → placeholder → input type」という Profile/Address の語彙が2ファイルに写っている:
 
-- `src/ui/guest-panel.ts:16-31`（FIELDS/ADDRESS_FIELDS — 13欄中6欄の意図的な subset）
-- `src/entrypoints/options/main.ts:19-41`（PROFILE_FIELDS/ADDRESS_FIELDS — カード定義13欄）
+- `src/ui/guest-panel.ts:16-31`（FIELDS/ADDRESS_FIELDS ― 13欄中6欄の意図的な subset）
+- `src/entrypoints/options/main.ts:19-41`（PROFILE_FIELDS/ADDRESS_FIELDS ― カード定義13欄）
 
 placeholder は同一（山田/ヤマダ/yamada@example.com/09012345678、1000001/東京都/千代田区/千代田1-1/千代田ビル101）。guest は subset だが、kana label の文言差（`セイ` vs `セイ（フリガナ・ふりがな入力可）`）が subset 選択なのか更新漏れなのか interface 上は分からない。新しい Profile 欄（会社名・部署は PBI で追加済み）を足すとき、「guest に載せるか」の判断が語彙の重複に埋もれ、片側更新の drift が起こる。
 
@@ -36,11 +36,11 @@ Scenario: 新しい Profile 欄の追加が1表で済む
 
 ## 受け入れ基準
 
-- [ ] core/ に field catalog（key/label/placeholder/type + guest 集合）が存在する
-- [ ] guest パネルと options のカードが catalog 経由になっている
-- [ ] kana label の文言差が列として明示されている
-- [ ] guest は catalog の subset であることを1テストで pin している
-- [ ] 既存テストが緑維持
+- [x] core/ に field catalog（key/label/placeholder/type + guest 集合）が存在する
+- [x] guest パネルと options のカードが catalog 経由になっている
+- [x] kana label の文言差が列として明示されている
+- [x] guest は catalog の subset であることを1テストで pin している
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -53,6 +53,6 @@ Scenario: 新しい Profile 欄の追加が1表で済む
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] `make check` が通る
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] `make check` が通る

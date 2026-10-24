@@ -74,4 +74,18 @@ describe('field catalog (PBI-158)', () => {
       expect(optionsByPlaceholders.get(f.key)).toBe(f.placeholder);
     }
   });
+
+  // The wide (two-column) layout of the guest panel is data: only the
+  // guestWide column holds it, and the options projection carries no wide.
+  it('marks only zip/street/building with the guestWide column', () => {
+    const wideKeys = [...PROFILE_FIELD_CATALOG, ...ADDRESS_FIELD_CATALOG]
+      .filter((f) => f.guestWide === true).map((f) => f.key);
+    expect(wideKeys).toEqual(['zip', 'street', 'building']);
+    for (const f of [...GUEST_PROFILE_FIELDS, ...GUEST_ADDRESS_FIELDS]) {
+      expect(f.wide).toBe(['zip', 'street', 'building'].includes(f.key));
+    }
+    for (const f of [...OPTIONS_PROFILE_FIELDS, ...OPTIONS_ADDRESS_FIELDS]) {
+      expect(f.wide).toBeUndefined();
+    }
+  });
 });

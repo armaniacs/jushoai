@@ -1,7 +1,6 @@
-import { classifyField, isConfident, refineClassifications } from '../core/classify-rules';
-import { resolveKana } from '../core/kana';
+import { classifyRulePipelineWithTrace } from '../core/classify-rules';
 import { buildPlan } from '../core/planner';
-import { EMPTY_ADDRESS, EMPTY_PROFILE, type FieldMeta, type Item, type Profile } from '../core/types';
+import { EMPTY_ADDRESS, EMPTY_PROFILE, type FieldMeta, type Profile } from '../core/types';
 
 // Synthetic fixture values for the fillable metric. They live in code, never
 // reach the network (the eval runs rule-only with no classifier), and never
@@ -28,26 +27,22 @@ export interface EvalMetrics {
   fillable: number;
 }
 
-const categoryOf = (cls: Item['cls']): string => cls.category;
-
 export function evalMetricsFor(metas: FieldMeta[]): EvalMetrics {
-  const started: Item[] = metas.map((meta) => ({
-    meta,
-    cls: classifyField(meta) ?? { category: 'unknown', confidence: 0, source: 'rule' },
-  }));
-  const pending = started.filter((r) => !isConfident(r.cls));
-  const resolved = resolveKana(started);
-  const refined = refineClassifications(resolved);
-  const before = new Map(resolved.map((i) => [i.meta.id, categoryOf(i.cls)]));
-  const afterIds = new Set(refined.map((i) => i.meta.id));
+  // The canonical composition with its trace (classify → resolveKana →
+  // refine), the same one classifyRulePipeline runs: the metrics read the
+  // trace's intermediate values instead of hand-rolling the composition
+  // (PBI-145). pending is the initial classification's non-confident fields,
+  // before refine, as before.
+  const { items: refined, pending, refineChanged, refineDropped } =
+    classifyRulePipelineWithTrace(metas);
   const plan = buildPlan(refined, { profile: SYNTHETIC_PROFILE, address: EMPTY_ADDRESS });
   return {
     total: metas.length,
     ruleHits: refined.filter((i) => i.cls.category !== 'unknown').length,
     llmFallbacks: pending.length,
     unknowns: refined.filter((i) => i.cls.category === 'unknown').length,
-    refineChanged: refined.filter((i) => before.get(i.meta.id) !== categoryOf(i.cls)).length,
-    refineDropped: resolved.filter((i) => !afterIds.has(i.meta.id)).length,
+    refineChanged,
+    refineDropped,
     fillable: plan.filter((p) => p.status === 'ok').length,
   };
 }

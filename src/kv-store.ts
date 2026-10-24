@@ -75,20 +75,22 @@ export async function readKv<T>(spec: KvSpec<T>): Promise<T> {
 // flow that needs several stores paid N calls and hand-assembled the bundle at
 // the entry point. Parsing stays per spec at the load boundary (the readKv
 // policy), and one failed get is ONE typed read failure for the whole bundle —
-// never a raw rejection. Tuple overloads keep the parsed shapes inferred per
-// position, so callers destructure typed values.
-export async function readKvBatch<A>(specs: readonly [KvSpec<A>]): Promise<[A]>;
-export async function readKvBatch<A, B>(specs: readonly [KvSpec<A>, KvSpec<B>]): Promise<[A, B]>;
-export async function readKvBatch<A, B, C>(
-  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>],
-): Promise<[A, B, C]>;
-export async function readKvBatch<A, B, C, D>(
-  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>, KvSpec<D>],
-): Promise<[A, B, C, D]>;
-export async function readKvBatch<A, B, C, D, E>(
-  specs: readonly [KvSpec<A>, KvSpec<B>, KvSpec<C>, KvSpec<D>, KvSpec<E>],
-): Promise<[A, B, C, D, E]>;
-export async function readKvBatch(specs: readonly KvSpec<unknown>[]): Promise<unknown[]> {
+// never a raw rejection. One generic signature with a mapped tuple keeps the
+// parsed shapes inferred per position for any spec count, so callers
+// destructure typed values.
+
+// The readable shape of a spec: parse alone decides the parsed value, so the
+// constraint stays variance-safe (cap makes KvSpec invariant in its value).
+// The empty-tuple arm of the constraint is the Promise.all pattern: it makes
+// the constraint tuple-like, so an array-literal argument infers a tuple and
+// the parsed shapes stay positional (without it T infers as a plain array).
+type ReadableSpec = { key: string; parse: (raw: unknown) => unknown };
+type ParsedTuple<T extends readonly ReadableSpec[]> = {
+  [K in keyof T]: T[K] extends { parse: (raw: unknown) => infer V } ? V : never;
+};
+export async function readKvBatch<T extends readonly ReadableSpec[] | []>(
+  specs: T,
+): Promise<ParsedTuple<T>> {
   const keys = specs.map((spec) => spec.key);
   let result: Record<string, unknown>;
   try {
@@ -96,7 +98,7 @@ export async function readKvBatch(specs: readonly KvSpec<unknown>[]): Promise<un
   } catch (err) {
     throw new KvStoreReadError(`ストアの一括読み取りに失敗しました: ${keys.join(', ')}`, err);
   }
-  return specs.map((spec) => spec.parse(result[spec.key]));
+  return specs.map((spec) => spec.parse(result[spec.key])) as ParsedTuple<T>;
 }
 
 // The single write point: the cap runs before the write, so no path can grow

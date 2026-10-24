@@ -48,8 +48,8 @@ describe('sample corpus metrics (local, no network)', () => {
   });
 
   it('never reaches the network: metrics run rule-only', async () => {
-    // evalMetricsFor uses classifyField/resolveKana/refineClassifications and
-    // buildPlan only — no classifier, no fetch. The assertion pins the rule
+    // evalMetricsFor uses the rule-only pipeline (classifyRulePipelineWithTrace)
+    // and buildPlan only — no classifier, no fetch. The assertion pins the rule
     // fallback count as measurable without an LLM: every fixture reports a
     // fallback count without any network dependency by construction.
     const m = await metricsFor('<input name="last_name"><input type="tel" name="xyz">');

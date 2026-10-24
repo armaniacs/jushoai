@@ -83,4 +83,21 @@ describe('confirmGuest vs the field catalog (PBI-158)', () => {
     buttonIn(sh.root, '使わない')!.click();
     await pending;
   });
+
+  // The wide (two-column) rows come from the catalog's wide column
+  // (guestWide → wide), not from key regexes in the panel.
+  it('applies the catalog wide column as the gfield wide class', async () => {
+    const sh = attachOpenShadow();
+    const pending = confirmGuest();
+    const wideLabels = new Set(
+      [...GUEST_PROFILE_FIELDS, ...GUEST_ADDRESS_FIELDS].filter((f) => f.wide).map((f) => f.label),
+    );
+    expect(wideLabels).toEqual(new Set(['郵便番号', '番地', '建物名・部屋番号']));
+    for (const wrap of sh.root.querySelectorAll('label')) {
+      const label = wrap.querySelector('span')!.textContent ?? '';
+      expect(wrap.classList.contains('wide')).toBe(wideLabels.has(label));
+    }
+    buttonIn(sh.root, '使わない')!.click();
+    await pending;
+  });
 });

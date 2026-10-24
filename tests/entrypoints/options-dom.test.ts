@@ -99,6 +99,24 @@ describe('notice', () => {
     expect(p.textContent).toBe('');
   });
 
+  it('renders multi-line saved as one p.saved with the lines joined by br', () => {
+    const p = notice('saved', ['2件を取り込みました。保存ボタンで確定します。', '3件は検証を通らず除外しました。']);
+    expect(p.tagName).toBe('P');
+    expect(p.className).toBe('saved');
+    expect(p.childNodes).toHaveLength(3);
+    expect(p.childNodes[0]!.nodeType).toBe(3);
+    expect(p.childNodes[0]!.textContent).toBe('2件を取り込みました。保存ボタンで確定します。');
+    expect(p.childNodes[1]!.nodeName).toBe('BR');
+    expect(p.childNodes[2]!.nodeType).toBe(3);
+    expect(p.childNodes[2]!.textContent).toBe('3件は検証を通らず除外しました。');
+    expect(p.textContent).toBe('2件を取り込みました。保存ボタンで確定します。3件は検証を通らず除外しました。');
+  });
+
+  it('marks saved and errors notices as polite live regions', () => {
+    expect(notice('saved', ['保存しました']).getAttribute('aria-live')).toBe('polite');
+    expect(notice('errors', ['エラー']).getAttribute('aria-live')).toBe('polite');
+  });
+
   it('renders errors as ul.errors with one li per line', () => {
     const ul = notice('errors', ['P1: 姓を入力してください', '住所: 郵便番号が短い']);
     expect(ul.tagName).toBe('UL');

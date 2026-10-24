@@ -1,5 +1,5 @@
 import { fieldKeyFor } from './domain-mapping';
-import { splitPending } from './pending-split';
+import { splitPending, withoutSkipped } from './pending-split';
 import type { FieldMeta } from './types';
 
 // The egress gate's send plan (PBI-124/PBI-145): the gate shows exactly what
@@ -23,20 +23,26 @@ export function planEgress(
   metas: FieldMeta[],
   taughtKeys: ReadonlySet<string>,
 ): EgressPlan {
-  // No skip set: the non-confident side of the same split pending comes from.
-  // classifyField is a pure rule dispatch, so this pass and the pending pass
-  // below see exactly the same classifications.
-  const nonConfident = splitPending(metas);
+  // One splitPending call yields both partitions of the same classify pass
+  // (the pass planEgress used to pay twice, PBI-145): with no skip set,
+  // unconfident and pending start as the same gate list, and the taught ids
+  // derived from unconfident narrow the send side below.
+  const { unconfident, pending } = splitPending(metas);
   const taughtIds = new Set(
-    nonConfident
+    unconfident
       .filter((m) => {
         const key = fieldKeyFor(m);
         return key !== null && taughtKeys.has(key);
       })
       .map((m) => m.id),
   );
-  const pending = splitPending(metas, taughtIds);
-  return { pending, taughtIds, nonConfidentCount: nonConfident.length };
+  // The gate's send list applies the skip filter (withoutSkipped) — the same
+  // single owner classifyAll's force path goes through.
+  return {
+    pending: withoutSkipped(pending, taughtIds),
+    taughtIds,
+    nonConfidentCount: unconfident.length,
+  };
 }
 
 // The gate's unchecked ids merge with the taught ids into one llmSkip set:

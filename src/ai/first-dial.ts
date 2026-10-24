@@ -1,3 +1,4 @@
+import { readKv, upsertKv, type KvSpec } from '../kv-store';
 import { originOf } from './key-reentry';
 
 // First-dial confirmation (trust-on-first-use) for user-configured cloud endpoints.
@@ -34,21 +35,27 @@ function isConfirmedOrigin(v: unknown): v is ConfirmedOrigin {
   );
 }
 
+// The confirmed-origin record is a small chrome.storage-backed store, so it
+// goes through kv-store (PBI-153): kv-store owns the storage round trips and
+// the typed error mode. No cap: the record grows only through the user's
+// explicit approval in the settings page (VULN-001), so capping here would
+// change the security fix's behavior.
+const CONFIRMED_ORIGINS_SPEC: KvSpec<ConfirmedOrigin[]> = {
+  key: CONFIRMED_ORIGINS_KEY,
+  parse: (raw) => (Array.isArray(raw) ? raw.filter(isConfirmedOrigin) : []),
+};
+
 export async function loadConfirmedOrigins(): Promise<ConfirmedOrigin[]> {
-  const result = await chrome.storage.local.get(CONFIRMED_ORIGINS_KEY);
-  const raw = result[CONFIRMED_ORIGINS_KEY] as unknown;
-  return Array.isArray(raw) ? raw.filter(isConfirmedOrigin) : [];
+  return readKv(CONFIRMED_ORIGINS_SPEC);
 }
 
 // Upsert the confirmation for one origin: the record is keyed by normalized
 // origin (scheme://host[:port]), so a re-save of the same endpoint replaces it.
 export async function confirmOrigin(origin: string, addresses: string[]): Promise<void> {
-  const current = await loadConfirmedOrigins();
-  const next = [
+  await upsertKv(CONFIRMED_ORIGINS_SPEC, (current) => [
     ...current.filter((c) => c.origin !== origin),
     { origin, addresses: [...addresses], confirmedAt: Date.now() },
-  ];
-  await chrome.storage.local.set({ [CONFIRMED_ORIGINS_KEY]: next });
+  ]);
 }
 
 export async function isOriginConfirmed(origin: string): Promise<boolean> {

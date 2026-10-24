@@ -1,7 +1,7 @@
 import {
   classifyField, isConfident, refineClassifications, classifyRulePipeline,
 } from './classify-rules';
-import { splitPending } from './pending-split';
+import { splitPending, withoutSkipped } from './pending-split';
 import { detectKanaKind, resolveKana } from './kana';
 import type { Category, FieldMeta, Item } from './types';
 import type { FieldClassifier } from './classifier';
@@ -29,13 +29,16 @@ export async function classifyAll(
   const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
   // PBI-124: llmSkip keeps field ids the egress gate excluded — their metadata
   // never reaches the LLM and they fall through to the rule-keep path below.
+  // The skip filter itself is owned by withoutSkipped (pending-split.ts), so a
+  // skip semantics change is fixed there once and both this force path and
+  // splitPending's .pending follow — no lockstep fix (PBI-145) to remember.
   // The pending split is owned by splitPending (PBI-154): the same function
   // planEgress calls, so the gate's pending list and this attempt stay the
   // same set (parity pinned in tests/core/pending-split.test.ts). force has
   // no split: it sends every field the skip set does not exclude.
   const pending = force
-    ? ruled.filter((r) => !opts.llmSkip?.has(r.meta.id)).map((r) => r.meta)
-    : splitPending(metas, opts.llmSkip);
+    ? withoutSkipped(metas, opts.llmSkip)
+    : splitPending(metas, opts.llmSkip).pending;
 
   // PBI-27: the rule-only trace fires only when no LLM attempt happens
   // (classifier off, or nothing pending). When the LLM is attempted, the AI
