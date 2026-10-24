@@ -1,5 +1,19 @@
 # PBI 台帳インデックス
 
+## 進行中（archラウンド2・未実装）
+
+- `2026-10-24-00-backlog-arch-round2.md`（アーキテクチャレビュー10候補のPBI化・RICE順位確定、未実装・未コミット）
+- `2026-10-24-150-refactor-pipeline-kana.md`（順位 1、バッチ1。fill-one/import-draft の kana 帰属をパイプラインに戻す）
+- `2026-10-24-151-refactor-options-notice.md`（順位 2、バッチ1。options saved/errors 通知の1 module 化）
+- `2026-10-24-152-refactor-banner-kind.md`（順位 3、バッチ1。banner 挙動区分の型渡し）
+- `2026-10-24-153-refactor-store-module.md`（順位 4、バッチ2（156の後）。store 層統合+型付きエラーモード。159の前提）
+- `2026-10-24-154-refactor-egress-pending-split.md`（順位 5、バッチ1。egress pending 分割の1所有化）
+- `2026-10-24-155-refactor-confirm-dialog.md`（順位 6、バッチ1。モーダル Promise 化の1 module 化）
+- `2026-10-24-156-refactor-tab-dispatch.md`（順位 7、バッチ2（150の後）。tab メッセージ guarded dispatcher）
+- `2026-10-24-157-refactor-preview-row-seam.md`（順位 8、バッチ1。preview row 描画の内部 seam）
+- `2026-10-24-158-backlog-field-catalog.md`（順位 9、バッチ2（151の後）。フィールド語彙の1表集約）
+- `2026-10-24-159-backlog-flow-state-batch.md`（順位 10、バッチ3（153の後）。学習状態のバッチ読み）
+
 ## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
 
 - `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、未実装・未コミット）
