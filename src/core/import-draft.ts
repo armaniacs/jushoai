@@ -1,12 +1,13 @@
 // Import draft (PBI-127): a partial profile/address draft read from the
 // page's FILLED fields. Chrome's own autofill data is not readable by an
 // extension, so the realistic path is the form the user already has open with
-// autofilled values: the content script classifies (rule-only, no LLM, no
-// gate) and this pure module maps the confident filled fields onto the
-// profile/address keys. Empty fields never contribute; unknown classifications
-// never contribute.
+// autofilled values: this pure module runs the rule-only classification (no
+// LLM, no gate) and maps the confident filled fields onto the profile/address
+// keys. Empty fields never contribute; unknown classifications never
+// contribute.
 
-import type { Address, Item, Profile } from './types';
+import { classifyRulePipeline } from './classify-rules';
+import type { Address, FieldMeta, Item, Profile } from './types';
 
 export interface ImportDraft {
   profile: Partial<Record<keyof Profile, string>>;
@@ -71,4 +72,15 @@ export function draftFromPage(items: Item[]): ImportDraft {
   // not a zip and never becomes one silently.
   if (zip1 && zip2) draft.address.zip = `${zip1}${zip2}`;
   return draft;
+}
+
+// PBI-150: the classification entrance the import-draft handler rides through.
+// The canonical pipeline (classify → resolveKana → refine) runs here, so a
+// filled furigana pair reaches the kana profile keys (lastNameKana /
+// firstNameKana) instead of landing in the kanji keys or dropping silently.
+// Rule-only (no LLM, no gate): the values stay on-device and never cross the
+// network. The composition lives here (not in the content script) so the entry
+// seam is unit-testable in tests/core.
+export function draftFromMetas(metas: FieldMeta[]): ImportDraft {
+  return draftFromPage(classifyRulePipeline(metas));
 }

@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { planOneField, fillOneReasonLabel } from '../../src/core/fill-one';
+import { classifyAll } from '../../src/core/analyze';
+import { buildPlan } from '../../src/core/planner';
 import { EMPTY_PROFILE, EMPTY_ADDRESS } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -66,6 +68,30 @@ describe('planOneField', () => {
     );
     expect(r.ok).toBe(true);
     expect(r.ok && r.plan.value).toBe('鈴木');
+  });
+
+  it('plans the same kana attribution and value as the full preview for a kana field', async () => {
+    // PBI-150: label「フリガナ」は kana-blind 契約で classifyField が 'fullName'
+    // を返す。kana 帰属は resolveKana が持つため、入口がパイプラインを迂回すると
+    // 漢字氏名が plan になり、フルプレビューと同じ欄で異なる値が注入される。
+    const profile = {
+      ...EMPTY_PROFILE,
+      lastName: '山田', firstName: '太郎',
+      lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+    };
+    const meta = makeMeta({ id: 'a', label: 'フリガナ' });
+    const r = planOneField(meta, profile, null);
+    // フルプレビュー（classifyAll → buildPlan）と同一の分類・値。
+    const items = await classifyAll([meta], null);
+    const [full] = buildPlan(items, { profile, address: null });
+    expect(r.ok).toBe(true);
+    expect(r.ok && full).toBeTruthy();
+    if (r.ok && full) {
+      expect(r.plan.category).toBe(full.category);
+      expect(r.plan.value).toBe(full.value);
+    }
+    expect(r.ok && r.plan).toMatchObject({ category: 'fullNameKana', status: 'ok' });
+    expect(r.ok && r.plan.value).toBe('ヤマダ タロウ');
   });
 });
 

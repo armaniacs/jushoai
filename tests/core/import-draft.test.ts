@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { draftFromPage } from '../../src/core/import-draft';
+import { draftFromPage, draftFromMetas } from '../../src/core/import-draft';
 import { IMPORT_DRAFT_MESSAGE, IMPORT_DRAFT_MESSAGE_TYPE } from '../../src/import-message';
 import type { Category, FieldMeta, Item } from '../../src/core/types';
 import { makeMeta } from '../helpers';
@@ -53,6 +53,34 @@ describe('draftFromPage (PBI-127)', () => {
     ]);
     expect(draft.profile).toEqual({ lastName: '山田' });
     expect(draft.address).toEqual({});
+  });
+});
+
+describe('draftFromMetas via the pipeline entry (PBI-150)', () => {
+  it('reaches the kana profile keys from a filled furigana pair', () => {
+    // 本番ハンドラ（content.ts）と同一の入口: resolveKana が挟まれるので、
+    // filled なフリガナ欄 2 欄が lastNameKana/firstNameKana に分かれ、
+    // PROFILE_KEYS の kana 行に載る。迂回するとカタカナ値が漢字用キーに混入する。
+    const draft = draftFromMetas([
+      makeMeta({ id: 'k1', label: 'フリガナ', value: ' ヤマダ ' }),
+      makeMeta({ id: 'k2', label: 'フリガナ', value: 'タロウ' }),
+    ]);
+    expect(draft.profile.lastNameKana).toBe('ヤマダ');
+    expect(draft.profile.firstNameKana).toBe('タロウ');
+    expect(draft.profile.lastName).toBeUndefined();
+    expect(draft.profile.firstName).toBeUndefined();
+  });
+
+  it('keeps a lone furigana field out of the kanji keys', () => {
+    // 単独のフリガナ欄は fullNameKana のまま（PROFILE_KEYS に無い）: カタカナ値
+    // が lastName/firstName に混入せず、下書きにも漢字用キーに載らない。
+    const draft = draftFromMetas([
+      makeMeta({ id: 'k1', label: 'フリガナ', value: 'ヤマダ タロウ' }),
+    ]);
+    expect(draft.profile.lastName).toBeUndefined();
+    expect(draft.profile.firstName).toBeUndefined();
+    expect(draft.profile.lastNameKana).toBeUndefined();
+    expect(draft.profile.firstNameKana).toBeUndefined();
   });
 });
 
