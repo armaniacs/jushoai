@@ -339,21 +339,31 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
 }
 
 // First-dial confirmation block (VULN-001): shown for the saved OpenAI-compatible
-// endpoint only. Unconfirmed: the DoH-confirmed address list plus an approval
-// button — nothing dials the origin until the user approves. Confirmed: a
-// read-only state line. The block keys off the SAVED endpoint (savedOpenAi), not
-// the typed form value, so it always describes what the gate actually reads.
+// endpoint only. Unconfirmed: the origin, what the address list is (the
+// DoH-resolved IPs of the saved hostname), and an approval button — nothing
+// dials the origin until the user approves. Confirmed: a read-only state line.
+// The block keys off the SAVED endpoint (savedOpenAi), not the typed form
+// value, so it always describes what the gate actually reads.
 function buildFirstDialBlock(state: AiSectionState, rerender: () => void): HTMLElement | null {
   if (state.settings.provider !== 'openai' || state.firstDial === null) return null;
+  const origin = originOf(state.savedOpenAi.baseUrl);
+  if (origin === null) return null;
+  let hostname = origin;
+  try {
+    hostname = new URL(origin).hostname;
+  } catch {
+    hostname = origin;
+  }
   const wrap = el('div');
   if (state.firstDial.confirmed === true) {
-    const line = el('p', '接続先を確認済みです。AI 判定でこの接続先に送信できます。');
+    const line = el('p', `接続先 ${origin} を確認済みです。AI 判定でこの接続先に送信できます。`);
     line.className = 'saved';
     wrap.append(line);
     return wrap;
   }
   if (state.firstDial.confirmed === null || state.firstDial.addresses.length === 0) return null;
-  const intro = el('p', 'AI 判定を動かすには、下の解決済みアドレスを確認して承認してください（承認するまで送信しません）。');
+  const intro = el('p', `接続先 ${origin} に初めて送信する前の確認です。下の一覧はホスト名 ${hostname} をDNSで解決して得られたIPアドレスです。`);
+  const warn = el('p', '送信先が想定どおりか確かめてから承認してください（承認するまで送信しません）。見覚えのないアドレスがある場合は承認せず、ベースURLを確認してください。');
   const list = el('ul');
   for (const address of state.firstDial.addresses) {
     const item = el('li', address);
@@ -368,7 +378,7 @@ function buildFirstDialBlock(state: AiSectionState, rerender: () => void): HTMLE
       void refreshFirstDial(slot, { rerender });
     });
   });
-  wrap.append(intro, list, approve);
+  wrap.append(intro, list, warn, approve);
   return wrap;
 }
 
