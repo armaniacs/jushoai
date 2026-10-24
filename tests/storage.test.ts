@@ -440,6 +440,42 @@ describe('transfer (PBI-117)', () => {
     expect((await loadData()).profiles).toHaveLength(10);
   });
 
+  // VULN-002 (CWE-400): the entry-count gate at the input boundary rejects a
+  // crafted file before any per-entry work, so the processing cost never scales
+  // with attacker input. The saveImported capCheck stays the authoritative
+  // correctness gate; this ceiling is the DoS guard.
+  it('rejects a crafted 200k-entry file before any per-entry processing (VULN-002)', async () => {
+    await saveData(ready);
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const N = 200_000;
+    const crafted = `{"profiles":[${'{},'.repeat(N - 1)}{}],"addresses":[]}`;
+    try {
+      const result = await importTransferFile(crafted);
+      expect(result.ok).toBe(false);
+      if (!result.ok) {
+        // One error, not one per entry: the boundary rejects before the
+        // per-entry validation runs (pre-fix this was 1,000,000 strings).
+        expect(result.errors).toHaveLength(1);
+        expect(result.errors[0]).toContain('エントリ数');
+      }
+      expect(await loadData()).toEqual(ready);
+    } finally {
+      vi.restoreAllMocks();
+    }
+  });
+
+  it('keeps a file at the ceiling reaching the merge cap instead of the boundary (VULN-002 no over-blocking)', async () => {
+    const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
+    await saveData({ profiles: ten, addresses: [validAddress(0)] });
+    const thirty = Array.from({ length: 30 }, (_, i) => validProfile(i));
+    const result = await importTransferFile(JSON.stringify({ profiles: thirty, addresses: [] }));
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      // The seam cap (10件まで) rejects the merge; the boundary allowed 30.
+      expect(result.errors.join('\n')).not.toContain('エントリ数');
+    }
+  });
+
   it('allows an import that updates existing entries at the cap', async () => {
     const ten = Array.from({ length: 10 }, (_, i) => validProfile(i));
     await saveData({ profiles: ten, addresses: [validAddress(0)] });
