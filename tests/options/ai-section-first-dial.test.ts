@@ -71,6 +71,8 @@ describe('first-dial confirmation block copy', () => {
     await settle();
 
     const text = pageOf(root).textContent ?? '';
+    expect(text).toContain('このAIプロバイダを使うには');
+    expect(text).toContain('への送信を承認しなければなりません');
     expect(text).toContain('https://api.example.com');
     expect(text).toContain('api.example.com');
     expect(text).toContain('153.120.132.21');

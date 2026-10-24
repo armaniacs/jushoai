@@ -362,7 +362,7 @@ function buildFirstDialBlock(state: AiSectionState, rerender: () => void): HTMLE
     return wrap;
   }
   if (state.firstDial.confirmed === null || state.firstDial.addresses.length === 0) return null;
-  const intro = el('p', `接続先 ${origin} に初めて送信する前の確認です。下の一覧はホスト名 ${hostname} をDNSで解決して得られたIPアドレスです。`);
+  const intro = el('p', `このAIプロバイダを使うには、接続先 ${origin} への送信を承認しなければなりません。下の一覧はホスト名 ${hostname} をDNSで解決して得られたIPアドレスです。`);
   const warn = el('p', '送信先が想定どおりか確かめてから承認してください（承認するまで送信しません）。見覚えのないアドレスがある場合は承認せず、ベースURLを確認してください。');
   const list = el('ul');
   for (const address of state.firstDial.addresses) {
