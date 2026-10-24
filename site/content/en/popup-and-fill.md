@@ -34,6 +34,8 @@ A `JushoAI で入力` (fill with JushoAI) button appears near a form that has se
 | 一致する選択肢がないため入力しません | The dropdown has no matching option. |
 | プロファイルに値がないため入力しません | The profile has no value registered for that field. |
 
+After filling, the undo button in the preview restores only the fields JushoAI filled. To fill a single field, see [Tips and tools](/en/guides/shortcuts-and-tools/).
+
 Fields classified by AI are marked `AI判定` (decided by AI). Close the preview with the Esc key or `キャンセル` (cancel).
 
 ## URLs where JushoAI does not start

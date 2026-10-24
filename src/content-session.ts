@@ -1,4 +1,4 @@
-import type { Item } from './core/types';
+import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackSnapshot } from './feedback/issue-url';
@@ -13,8 +13,10 @@ import {
 } from './content-run';
 import { buildFeedbackIssueUrl, FEEDBACK_REPO } from './feedback/issue-url';
 import { resolveAddressId, resolveLastId } from './core/selection';
-import { shouldWarn, type FillSummary } from './dom/fill-plan';
+import { shouldWarn, undoFill, type FillReport, type FillSummary, type UndoEntry, type UndoReport } from './dom/fill-plan';
+import { fieldKeyFor } from './core/domain-mapping';
 import type { PreviewRow } from './ui/preview';
+import type { BannerNotice } from './ui/button';
 
 // Fill-session inputs that never touch the DOM: the stored profiles/addresses,
 // the last-used selection, and the scanned field metadata.
@@ -22,9 +24,15 @@ export interface SessionInput {
   profiles: Profile[];
   addresses: Address[];
   lastProfileId?: string;
+  // PBI-141: the per-site assignment for this host, when it still exists.
+  // 切替は候補提示のみ — it only changes the initial selection.
+  assignedProfileId?: string | null;
   lastAddressId?: string;
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
+  // PBI-142: the earlier page's approved values for this tab (content-script
+  // memory only). A field whose profile value is empty falls back to it.
+  carryover?: Record<string, string>;
   englishPage: boolean;
   canReanalyze: boolean;
 }
@@ -45,14 +53,15 @@ export interface SessionClassifyResult {
 export async function classifyWithReason(
   classifier: FieldClassifier | null,
   metas: FieldMeta[],
-  opts: { force?: boolean; englishPage?: boolean } = {},
+  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
 ): Promise<SessionClassifyResult> {
   if (!classifier) {
     return { items: await classifyAll(metas, null, opts), failureReason: null };
   }
   // Session-local binding (not a run-closure escape): classifyAll only calls
   // classify(), so both seam members record the same attempt reason here and
-  // it leaves on the return value below.
+  // it leaves on the return value below. opts (including llmSkip, PBI-124)
+  // flow through to classifyAll unchanged.
   let failureReason: ClassifyFailure | null = null;
   const seam: FieldClassifier = {
     // PBI-48: non-throwing by contract — the partial map is returned WITHOUT
@@ -79,19 +88,24 @@ export async function classifyWithReason(
 // the caller; only the data flow and its order live here.
 export interface SessionEnv {
   // Seam-shaped: the failure reason travels on the return value (never into a
-  // caller closure). The caller passes intent (which classifier) via
-  // classifyWithReason; the apply ordering below owns the reason from there.
-  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean }): Promise<SessionClassifyResult>;
+  // caller closure). The caller passes intent (which classifier, which field
+  // ids the egress gate excluded) via classifyWithReason; the apply ordering
+  // below owns the reason from there.
+  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> }): Promise<SessionClassifyResult>;
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };
-  // Returns the fill summary so the caller can display failures and decide
+  // Returns the fill report so the caller can display failures and decide
   // retries; never throws for per-field outcomes (fillPlan isolates those).
-  injectPlan(plan: PlanItem[]): FillSummary;
+  // The undo entries ride the report (PBI-132) and stay in session memory.
+  injectPlan(plan: PlanItem[]): FillReport;
   persistSelection(sel: { profileId: string; addressId: string }): void;
   openUrl(url: string): void;
   feedbackContext(): { pageHref: string; provider: string; version: string };
   isExcluded(): boolean;
+  // PBI-142: the filled entries of an apply merge into the tab-scoped
+  // carryover, so the next page of the same tab re-offers them.
+  recordCarryover?(entries: readonly { key: string; value: string }[]): void;
 }
 
 // The minimal panel surface the consent gate reads.
@@ -107,8 +121,11 @@ export type SessionStart =
 // What the caller shows after an application: silence (just close the panel)
 // or one composed banner. The composition lives here so new entrypoints
 // inherit the same wording instead of re-synthesizing summary + hint.
+// The banner's timer behavior rides the kind (PBI-152): this session owns the
+// "this is a partial-application banner" decision and passes it as a
+// structured notice; the button times each kind without sniffing the text.
 export interface DisplayDecision {
-  banner: string | null;
+  banner: BannerNotice | null;
 }
 
 // One classify → preview → apply flow. DOM / Chrome side effects (scan,
@@ -129,6 +146,10 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   // by apply(), so a retry shows the same hint until a newer run overwrites
   // it — the single place the failureReason-overwrite order is expressed.
   let lastFailureReason: ClassifyFailure | null = null;
+  // PBI-132: the latest fill run's undo history, held in this content-script
+  // session's memory only — never persisted, never sent (BDD: 履歴は外部に出ない).
+  // A later apply overwrites it, so undo is always the 直後の注入.
+  let lastUndo: UndoEntry[] = [];
 
   const currentProfile = (): Profile =>
     input.profiles.find((p) => p.id === profileId) ?? input.profiles[0]!;
@@ -145,7 +166,13 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
     // The caller (content.ts run()) only creates a session for ready data, so
     // both lists are non-empty here; the `!` only satisfies
     // noUncheckedIndexedAccess.
-    profileId = resolveLastId(input.lastProfileId, input.profiles.map((p) => p.id))
+    // PBI-141: the per-site assignment wins over the last-used selection — it
+    // is the more specific hint and only suggests a candidate.
+    profileId = (input.assignedProfileId
+      && input.profiles.some((p) => p.id === input.assignedProfileId)
+      ? input.assignedProfileId
+      : null)
+      ?? resolveLastId(input.lastProfileId, input.profiles.map((p) => p.id))
       ?? input.profiles[0]!.id;
     addressId = resolveAddressId(input.addresses, profileId, input.lastAddressId)
       ?? input.addresses[0]!.id;
@@ -154,6 +181,10 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
   return {
     get selectedProfileId(): string { return profileId; },
     get selectedAddressId(): string { return addressId; },
+    // PBI-138: the current category of a field, for the chooser's default.
+    get categoryFor(): (fieldId: string) => string {
+      return (fieldId) => items.find((i) => i.meta.id === fieldId)?.cls.category ?? 'unknown';
+    },
 
     async start(): Promise<SessionStart> {
       const result = await env.classify(input.metas, { englishPage: input.englishPage });
@@ -176,6 +207,20 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
 
     selectAddress(id: string): PreviewRow[] {
       addressId = id;
+      return replan();
+    },
+
+    // PBI-138: the preview's 分類を直す entry. A correction overrides one
+    // field's classification and re-plans synchronously (rule-only, no LLM):
+    // the corrected plan is what the next apply injects, and the feedback
+    // snapshot follows the correction.
+    recategorize(fieldId: string, category: Category): PreviewRow[] {
+      items = items.map((i) =>
+        i.meta.id === fieldId
+          ? { ...i, cls: { category, confidence: 1, source: 'rule' } }
+          : i,
+      );
+      after = snapshotItems(items);
       return replan();
     },
 
@@ -206,8 +251,25 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       }
       // Inject before persisting so the saved selection reflects an attempted
       // application; the outcomes ride the return value for display and retry.
-      const summary = env.injectPlan(plan);
+      const report = env.injectPlan(plan);
+      lastUndo = report.undo;
+      const summary = report.summary;
       env.persistSelection({ profileId, addressId });
+      // PBI-142: the filled values merge into the tab-scoped carryover, so the
+      // next page of the same tab re-offers them. Profile values are never
+      // part of the merge — the signature and the value only.
+      if (env.recordCarryover) {
+        // A plan fieldId is built from the same metasById, so the lookup cannot
+        // miss in practice — the guard keeps a contract drift from throwing
+        // inside apply after the injection already happened.
+        env.recordCarryover(plan.flatMap((p) => {
+          if (!p.value) return [];
+          const meta = input.metasById.get(p.fieldId);
+          const key = meta ? fieldKeyFor(meta) : null;
+          if (!key) return [];
+          return [{ key, value: p.value }];
+        }));
+      }
       const ctx = env.feedbackContext();
       const feedbackInput = buildFeedbackInput({
         pageHref: ctx.pageHref,
@@ -228,16 +290,34 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
       const failureHint = lastFailureReason ? hintForButton(lastFailureReason) : undefined;
       return { applied: true, summary, display: decideDisplay(summary, failureHint) };
     },
+
+    // PBI-132: how many fields the latest apply recorded for undo (0 when
+    // nothing filled yet or everything was a by-design skip). The preview
+    // wiring reads it to decide the undo button's visibility.
+    get undoCount(): number { return lastUndo.length; },
+
+    // One-shot 直後のundo: fields still holding exactly what JushoAI filled go
+    // back to their empty state; user-edited fields are skipped (never wiped).
+    // The entries are consumed, so a second click finds nothing and a later
+    // apply overwrites the history anyway.
+    undoLast(): UndoReport | null {
+      if (lastUndo.length === 0) return null;
+      const report = undoFill(lastUndo);
+      lastUndo = [];
+      return report;
+    },
   };
 }
 
 // Banner composition in one place: silence on full application, otherwise the
 // partial-application note composed with the AI failure hint (if any) so the
-// two never clobber each other on the shared error channel.
+// two never clobber each other on the shared error channel. The kind is
+// always 'partial' here: shouldWarn means not everything was filled, and the
+// persistent-banner behavior (PBI-08) is the one contract the button obeys.
 export function decideDisplay(summary: FillSummary, failureHint?: string): DisplayDecision {
   if (!shouldWarn(summary)) return { banner: null };
   const partial = `一部のみ適用（${summary.filled}/${summary.total}件）`;
-  return { banner: failureHint ? `${failureHint}。${partial}` : partial };
+  return { banner: { kind: 'partial', text: failureHint ? `${failureHint}。${partial}` : partial } };
 }
 
 export type FillSession = ReturnType<typeof createFillSession>;

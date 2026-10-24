@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
 description: What to do for each badge state, what to check when AI or filling does not work, and common questions.
-order: 9
+order: 11
 ---
 
 # Troubleshooting

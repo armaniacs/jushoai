@@ -41,6 +41,15 @@ Register a URL under "起動しないURL" (URLs where it does not start) in the 
 
 The steps and the settings screen are described in [Toolbar and filling a form](https://armaniacs.github.io/jushoai/en/guides/popup-and-fill/).
 
+## Not covered
+
+- Sensitive data such as credit card or bank account numbers (the profile only stores everyday contact fields)
+- Authentication codes, SMS codes and two-factor prompts
+- Auto-fill on page load (nothing is injected without preview approval; run it from the `JushoAI で入力` button)
+- Forms inside cross-origin iframes (embedded widgets and so on; kept out of scope after investigation)
+- PDFs and printed forms
+- Checkboxes and radio buttons other than gender and age group (see [Supported fields](https://armaniacs.github.io/jushoai/en/guides/supported-fields/))
+
 ## AI provider (optional)
 
 AI is off by default. In the settings page, choose a provider under `AI 判定`: an OpenAI-compatible API (OpenAI, Groq, Mistral, Ollama, LM Studio), Google Gemini, or the browser's built-in AI (Chrome with Gemini Nano, Edge with Phi-mini; not available in Firefox). Nothing is sent unless you turn it on, and only when you click the fill button. What is sent and what is not: see the [privacy guide](https://armaniacs.github.io/jushoai/en/guides/privacy/).

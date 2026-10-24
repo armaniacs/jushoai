@@ -41,6 +41,15 @@ Chrome は [Chrome ウェブストア](https://chromewebstore.google.com/detail/
 
 手順と画面の説明は[ツールバーとフォームへの入力](https://armaniacs.github.io/jushoai/guides/popup-and-fill/)にある。
 
+## 対応しないもの
+
+- クレジットカード番号・口座番号などの機微情報（プロファイルに保存できるのは日常の連絡先の情報に限る）
+- 認証コード・SMS 確認コード・2 段階認証
+- ページ読み込み時の自動入力（プレビュー確認なしに注入しないため。「JushoAI で入力」のボタンから実行する）
+- クロスオリジン iframe 内のフォーム（埋め込みウィジェットなど。調査の結果、対象外としている）
+- PDF・印刷帳票
+- チェックボックス、性別・年代以外のラジオボタン（欄の一覧は[対応する入力欄](https://armaniacs.github.io/jushoai/guides/supported-fields/)）
+
 ## 要望・不具合の連絡
 
 GitHub の Issue で受け付けている。[Issue を作成する](https://github.com/armaniacs/jushoai/issues/new/choose)から、種類に合うフォームを選ぶ。Issue は公開されるため、氏名・住所・電話番号などの個人情報は書かない。
@@ -97,6 +106,7 @@ AI を呼び出すたびに、モデルに送った内容と応答がこの端�
     make zip           # dist に配布用 zip を作る
     make site          # ドキュメントサイトを site-dist に生成して検査する
     make site-serve    # site-dist を http://127.0.0.1:4173 で確認する
+    make eval          # samples の corpus でルール分類の指標をローカル計測する（通信なし）
     make clean         # 生成物を削除
 
 `make help` で一覧を表示する。

@@ -57,7 +57,7 @@ try {
   const gemini = page.locator('fieldset', { has: page.locator('legend', { hasText: 'Google Gemini' }) });
   await gemini.locator('input').nth(0).fill(MODEL);
   await gemini.locator('input').nth(2).fill(KEY);
-  const notice = () => page.locator('.saved, .errors-text').last().innerText().catch(() => '(none)');
+  const notice = () => page.locator('.saved, .errors').last().innerText().catch(() => '(none)');
   await page.getByRole('button', { name: '保存', exact: true }).click();
   await page.waitForTimeout(1500);
   console.log('save :', await notice());

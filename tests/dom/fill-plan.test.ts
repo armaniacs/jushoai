@@ -2,10 +2,11 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { FILL_LAST_CATEGORIES } from '../../src/core/fill-order';
 import type { PlanItem } from '../../src/core/planner';
 import {
-  FILL_RESULT_LABELS, fillPlan, fillResultLabel, shouldWarn, summarizeFillOutcomes, targetsFromControls,
+  FILL_RESULT_LABELS, fillPlan, fillResultLabel, shouldWarn, summarizeFillOutcomes, targetsFromControls, undoFill,
 } from '../../src/dom/fill-plan';
 import type { FillResult } from '../../src/dom/fill-plan';
 import type { Control } from '../../src/dom/scan-fields';
+import { fillField, uncheckRadio } from '../../src/dom/fill';
 
 const item = (fieldId: string, category: PlanItem['category'], value = 'v'): PlanItem => ({
   fieldId, category, value, display: value, source: 'rule', status: 'ok',
@@ -27,6 +28,102 @@ const run = (
   map: Map<string, { el: Control; radioInputs?: HTMLInputElement[] }>,
   fill: (el: Control, value: string) => void = vi.fn(),
 ) => fillPlan(plan, targetsFromControls(map, fill)).outcomes;
+
+describe('fillPlan: undo history (PBI-132)', () => {
+  it('records entries only for filled outcomes', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    const report = fillPlan(
+      [item('a', 'lastName'), { ...item('b', 'firstName'), status: 'filled' }, { ...item('z1', 'zip1'), status: 'warn-no-value' }],
+      targetsFromControls(byId(), fill),
+    );
+    expect(report.undo.map((e) => e.fieldId)).toEqual(['a']);
+  });
+
+  it('restores a filled text field to its empty state through the setter discipline', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    const report = fillPlan([item('a', 'lastName', '山田')], targetsFromControls(byId(), fill));
+    const input = document.getElementById('a') as HTMLInputElement;
+    expect(input.value).toBe('山田');
+    const events: string[] = [];
+    input.addEventListener('input', () => events.push('input'));
+    input.addEventListener('change', () => events.push('change'));
+    input.addEventListener('blur', () => events.push('blur'));
+    const r = undoFill(report.undo);
+    expect(r.restored).toEqual(['a']);
+    expect(r.skipped).toEqual([]);
+    expect(input.value).toBe('');
+    expect(events).toEqual(['input', 'change', 'blur']);
+  });
+
+  it('skips a field the user edited after the fill', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    const report = fillPlan([item('a', 'lastName', '山田')], targetsFromControls(byId(), fill));
+    (document.getElementById('a') as HTMLInputElement).value = '山田太郎';
+    const r = undoFill(report.undo);
+    expect(r.restored).toEqual([]);
+    expect(r.skipped).toEqual(['a']);
+    expect((document.getElementById('a') as HTMLInputElement).value).toBe('山田太郎');
+  });
+
+  it('unchecks a filled radio group on undo', () => {
+    document.body.innerHTML = '<input id="r0" name="g" type="radio" value="0"><input id="r1" name="g" type="radio" value="1">';
+    const map = new Map([['g', {
+      el: document.getElementById('r0') as Control,
+      radioInputs: Array.from(document.querySelectorAll<HTMLInputElement>('input[name="g"]')),
+    }]]);
+    const report = fillPlan([item('g', 'gender', '1')], targetsFromControls(map, (el, value) => fillField(el, value)));
+    expect((document.getElementById('r1') as HTMLInputElement).checked).toBe(true);
+    const r = undoFill(report.undo);
+    expect(r.restored).toEqual(['g']);
+    expect((document.getElementById('r1') as HTMLInputElement).checked).toBe(false);
+  });
+
+  it('restores a filled select to its untouched first option', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    const report = fillPlan([item('s', 'address1', '27')], targetsFromControls(byId(), fill));
+    const select = document.getElementById('s') as HTMLSelectElement;
+    expect(select.value).toBe('27');
+    undoFill(report.undo);
+    expect(select.value).toBe('');
+  });
+
+  it('covers the BDD round trip: fill, undo, refill (注入→undo→再注入)', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    const targets = targetsFromControls(byId(), fill);
+    const first = fillPlan([item('a', 'lastName', '山田'), item('b', 'firstName', '太郎')], targets);
+    expect(first.summary.filled).toBe(2);
+    const undone = undoFill(first.undo);
+    expect(undone.restored).toEqual(['a', 'b']);
+    expect((document.getElementById('a') as HTMLInputElement).value).toBe('');
+    // refill works after the undo (the fields are empty again)
+    const second = fillPlan([item('a', 'lastName', '山田'), item('b', 'firstName', '太郎')], targets);
+    expect(second.summary.filled).toBe(2);
+    expect((document.getElementById('a') as HTMLInputElement).value).toBe('山田');
+  });
+
+  it('never touches a previously-filled field the fill module skipped', () => {
+    const fill = vi.fn((el: Control, value: string) => fillField(el, value));
+    (document.getElementById('b') as HTMLInputElement).value = '既存';
+    const report = fillPlan([item('a', 'lastName', '山田'), { ...item('b', 'firstName', '太郎'), status: 'filled' }], targetsFromControls(byId(), fill));
+    expect(report.undo.map((e) => e.fieldId)).toEqual(['a']);
+    undoFill(report.undo);
+    expect((document.getElementById('b') as HTMLInputElement).value).toBe('既存');
+  });
+});
+
+describe('uncheckRadio', () => {
+  it('unchecks through the setter discipline and fires the manual events', () => {
+    document.body.innerHTML = '<input id="r" name="g" type="radio" value="0" checked>';
+    const input = document.getElementById('r') as HTMLInputElement;
+    const events: string[] = [];
+    input.addEventListener('input', () => events.push('input'));
+    input.addEventListener('change', () => events.push('change'));
+    input.addEventListener('blur', () => events.push('blur'));
+    uncheckRadio(input);
+    expect(input.checked).toBe(false);
+    expect(events).toEqual(['input', 'change', 'blur']);
+  });
+});
 
 describe('fillPlan', () => {
   it('fills ok items and skips non-ok ones with per-field outcomes', () => {
@@ -188,6 +285,8 @@ describe('fillPlan robustness', () => {
       get connected(): boolean { throw new Error('boom'); },
       get empty() { return true; },
       fill: () => {},
+      snapshot: () => '',
+      restoreEmpty: () => {},
     });
     const out = fillPlan(plan, targets).outcomes;
     expect(out).toEqual([

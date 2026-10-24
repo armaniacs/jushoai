@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPlan } from '../../src/core/planner';
+import { buildPlan, applyAbbrevApprovals } from '../../src/core/planner';
 import type { Address, Category, FieldMeta, Item, KanaKind, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -301,6 +301,90 @@ describe('company (PBI-119)', () => {
   });
 });
 
+describe('zip dictionary assist (PBI-125)', () => {
+  const emptyAddress: Address = {
+    ...address, id: 'a3', label: '郵便番号のみ',
+    zip: '100-0001', prefecture: '', city: '', street: '', building: '',
+  };
+
+  it('rides the dictionary candidate onto an empty prefecture/city row', () => {
+    const plan = buildPlan([item('prefecture'), item('city')], { profile, address: emptyAddress });
+    expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
+      ['warn-no-value', '東京都', '候補: 東京都'],
+      ['warn-no-value', '千代田区', '候補: 千代田区'],
+    ]);
+  });
+
+  it('promotes an approved assist through the single approval seam', () => {
+    const plan = buildPlan([item('prefecture')], { profile, address: emptyAddress });
+    const approved = applyAbbrevApprovals(plan, new Set([plan[0]!.fieldId]));
+    expect(approved[0]).toMatchObject({ value: '東京都', status: 'ok' });
+    // unapproved keeps the plain warn-no-value with an empty value
+    const unapproved = applyAbbrevApprovals(plan, new Set());
+    expect(unapproved[0]).toMatchObject({ value: '', status: 'warn-no-value' });
+  });
+
+  it('keeps the plain warn-no-value when the zip is unknown or missing', () => {
+    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '601-8001' };
+    expect(buildPlan([item('prefecture')], { profile, address: unknownZip })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+    expect(buildPlan([item('prefecture')], { profile, address: null })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('never assists categories outside the assistable set', () => {
+    expect(buildPlan([item('street')], { profile, address: { ...emptyAddress, id: 'a5', street: '' } })).toEqual([
+      expect.objectContaining({ value: '', status: 'warn-no-value' }),
+    ]);
+  });
+});
+
+describe('name reading assist (PBI-133)', () => {
+  const noKana: Profile = { ...profile, lastNameKana: '', firstNameKana: '' };
+
+  it('rides the reading candidate onto empty kana rows in the field width', () => {
+    const plan = buildPlan(
+      [item('lastNameKana', {}, 'katakana'), item('firstNameKana', {}, 'katakana')],
+      { profile: noKana, address },
+    );
+    expect(plan.map((p) => [p.status, p.assist])).toEqual([
+      ['warn-no-value', 'ヤマダ'], ['warn-no-value', 'タロウ'],
+    ]);
+  });
+
+  it('converts the candidate through the deterministic kanaKind', () => {
+    const plan = buildPlan([item('lastNameKana', {}, 'hiragana')], { profile: noKana, address });
+    expect(plan[0]!.assist).toBe('やまだ');
+  });
+
+  it('joins the full kana candidate by the placeholder style', () => {
+    const plan = buildPlan(
+      [item('fullNameKana', { placeholder: 'セイメイ' }, 'katakana')],
+      { profile: noKana, address },
+    );
+    expect(plan[0]!.assist).toBe('ヤマダタロウ');
+  });
+
+  it('stops with the plain warn-no-value for unknown readings', () => {
+    const unknown: Profile = { ...noKana, lastName: '未知', firstName: '不明' };
+    expect(buildPlan([item('lastNameKana', {}, 'katakana')], { profile: unknown, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+    // neither reading resolves → the full candidate stays empty
+    expect(buildPlan([item('fullNameKana', {}, 'katakana')], { profile: unknown, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('promotes an approved kana assist through the single approval seam', () => {
+    const plan = buildPlan([item('lastNameKana', {}, 'katakana')], { profile: noKana, address });
+    const approved = applyAbbrevApprovals(plan, new Set([plan[0]!.fieldId]));
+    expect(approved[0]).toMatchObject({ value: 'ヤマダ', status: 'ok' });
+  });
+});
+
 describe('birth selects', () => {
   const dated = { ...profile, birthday: '1990-05-07' };
   const monthOpts = [{ value: '', text: '--' }, { value: '04', text: '4' }, { value: '05', text: '5' }];
@@ -400,5 +484,41 @@ describe('warn-no-value (PBI-10)', () => {
       { profile, address },
     );
     expect(plan).toEqual([]);
+  });
+});
+
+describe('carryover (PBI-142)', () => {
+  const bare = { ...profile, firstName: '', email: '' };
+
+  it('fills an empty profile field with the carried value', () => {
+    const plan = buildPlan([item('firstName', { name: 'first' }), item('email', { name: 'mail' })], {
+      profile: bare, address, carryover: { first: '太郎' },
+    });
+    expect(plan.map((p) => [p.category, p.value])).toEqual([
+      ['firstName', '太郎'],
+      ['email', ''],
+    ]);
+  });
+
+  it('lets the profile value win over the carried value', () => {
+    const plan = buildPlan([item('lastName', { name: 'last' })], {
+      profile, address, carryover: { last: '鈴木' },
+    });
+    expect(plan.map((p) => p.value)).toEqual(['山田']);
+  });
+
+  it('never rides a select or a radio field', () => {
+    const options = [
+      { value: '', text: '選択してください' },
+      { value: '男性', text: '男性' },
+      { value: '女性', text: '女性' },
+    ];
+    const bareGender = { ...profile, gender: '' };
+    const plan = buildPlan([item('gender', { tag: 'select', options, name: 'gender' })], {
+      profile: bareGender, address, carryover: { gender: '男性' },
+    });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', status: 'warn-no-value' }),
+    ]);
   });
 });

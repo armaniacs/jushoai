@@ -25,6 +25,14 @@ const setup = async () => {
     runtime: {
       id: 'ext-id',
       onMessage: { addListener: (fn: Listener) => { listeners.push(fn); } },
+      onInstalled: { addListener: () => {} },
+    },
+    // PBI-137: the fill-one menu registration runs inside defineBackground;
+    // the fake never fires a click, so no tabs fake is needed.
+    contextMenus: {
+      create: () => {},
+      removeAll: (cb: () => void) => cb(),
+      onClicked: { addListener: () => {} },
     },
     storage: {
       local: {

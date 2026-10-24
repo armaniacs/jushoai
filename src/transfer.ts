@@ -61,6 +61,15 @@ class TransferCapError extends Error {
 
 const READ_FAILURE_MESSAGE = '保存済みのデータを読み込めなかったため、取り込みを中止しました';
 
+// The import entry ceiling: a small multiple of MAX_ITEMS so a crafted file with
+// hundreds of thousands of entries is rejected at the boundary before a single
+// per-entry validation runs (VULN-002). MAX_ITEMS stays the single source and
+// the saveImported capCheck below stays the authoritative correctness gate; a
+// legal export never exceeds MAX_ITEMS per collection, so the ceiling never
+// blocks a real import.
+const IMPORT_ENTRY_CEILING = MAX_ITEMS * 3;
+const ENTRY_COUNT_MESSAGE = `JushoAI のエクスポートファイルのエントリ数が上限を超えています（プロファイルと住所はそれぞれ${IMPORT_ENTRY_CEILING}件までです）`;
+
 const rawIds = (entries: unknown[]): string[] =>
   entries.flatMap((entry) => {
     const id = (entry as { id?: unknown } | null)?.id;
@@ -82,6 +91,12 @@ export async function importTransferFile(json: string): Promise<TransferImportRe
   const raw = parsed as { profiles?: unknown; addresses?: unknown };
   if (!Array.isArray(raw.profiles) || !Array.isArray(raw.addresses)) {
     return { ok: false, errors: ['JushoAI のエクスポートファイルではありません（profiles と addresses の配列が必要です）'] };
+  }
+  // Entry-count gate at the input boundary (VULN-002): a file over the ceiling is
+  // rejected before any per-entry work (migrateData, normalization, validation),
+  // so the processing cost never scales with attacker input.
+  if (raw.profiles.length > IMPORT_ENTRY_CEILING || raw.addresses.length > IMPORT_ENTRY_CEILING) {
+    return { ok: false, errors: [ENTRY_COUNT_MESSAGE] };
   }
   // Read gate (doubles as the breakdown baseline): a failed read of the stored
   // data interrupts here instead of letting the file pretend storage is empty,

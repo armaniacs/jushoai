@@ -5,16 +5,35 @@ import { isMeasurable } from '../dom/geometry';
 import { OVERLAY_CSS } from './overlay';
 import { mountPanel, type PanelHandle } from './panel';
 
+// PBI-157: one opt-in candidate on a row (PBI-122 abbreviation, PBI-125
+// zip/kana dictionary assist). Rendered as an opt-in checkbox (unchecked =
+// not injected); the checked field ids travel to the apply callback, which
+// promotes them into the fill plan through the single approval seam.
+export interface PreviewRowCandidate {
+  // The kind picks the checkbox wording: 'abbrev' renders 略記して入れる,
+  // 'assist' renders 補助候補を入れる.
+  kind: 'abbrev' | 'assist';
+  // The candidate value itself. Owned by the plan; the display already shows
+  // it (raw → abbreviated, 候補: assist).
+  text: string;
+}
+
 export interface PreviewRow {
   label: string;
   display: string;
   status: PlanStatus;
   source: 'rule' | 'llm';
-  // PBI-122: an abbreviation candidate for an overflowing field. Rendered as
-  // an opt-in checkbox (unchecked = not injected); the checked field ids
-  // travel to the apply callback, which promotes them into the fill plan.
+  // The field this row fills. Rides the row only when opt-in candidates do,
+  // so the fix entry and the approval set share the same presence check.
   fieldId?: string;
-  abbrev?: string;
+  // PBI-157: the row's opt-in candidates (PBI-122 abbrev, PBI-125 assist) —
+  // one checkbox each through a single block, instead of the twin blocks.
+  candidates?: PreviewRowCandidate[];
+  // PBI-128: marks the collapsed-summary row (前回と同じ) as synthetic — not a
+  // field, but an entry that states the hidden rows will fill as approved. It
+  // counts toward the apply button's state on purpose: those rows will fill,
+  // so the shortened preview stays usable when the visible rows are warnings.
+  synthetic?: true;
 }
 
 export interface PreviewOptions {
@@ -30,16 +49,25 @@ export interface PreviewOptions {
   onApply(sendFeedback: boolean, approvedAbbrevs: ReadonlySet<string>): void;
   onCancel(): void;
   onReanalyze?(): void | Promise<void>;
+  // PBI-138: the preview's 分類を直す entry. The first argument is the field id,
+  // the second the row label the chooser shows.
+  onFix?(fieldId: string, label: string): void | Promise<void>;
+  // PBI-128: the shortened preview's expand entry. Renders the 前回と同じ rows
+  // that the diff collapsed.
+  onExpandAll?(): void;
 }
 
 export interface PreviewHandle {
   setRows(rows: PreviewRow[]): void;
-  setReanalyzing(busy: boolean): void;
   setAddressId(id: string): void;
   // Post-apply result mode (PBI-55): replaces the panel content with the
   // countable breakdown and a one-click report button. Used instead of
-  // close() when the apply was partial; a clean apply still closes.
-  showResult(summary: FillSummary, onReport: () => void): void;
+  // close() when the apply was partial or when the undo history exists
+  // (PBI-132); the undo option renders the 元に戻す button.
+  showResult(summary: FillSummary, onReport: () => void, undo?: { count: number; onUndo(): void }): void;
+  // Post-undo confirmation (PBI-132): replaces the result content with the
+  // restored/skipped counts and the close button only.
+  showUndoResult(restored: number, skipped: number): void;
   close(): void;
   // Center of the apply button in viewport coordinates, or null when it has
   // no box (hidden). The consent gate reads this through the handle because
@@ -75,11 +103,119 @@ const CSS = `
     background: #8a4fd6; border-radius: 3px; }
   .empty { color: #5a6270; margin: 0 0 12px; }
   .actions .reanalyze { margin-right: auto; }
+  .fix { grid-column: 2; justify-self: start; margin-top: 2px; padding: 1px 6px;
+    font-size: 10px; color: #5a6270; background: #f1f3f7; border: 1px solid #dfe3ea;
+    border-radius: 4px; cursor: pointer; }
   .feedback { display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
     color: #5a6270; cursor: pointer; }
   .feedback input { margin: 0; }
   button:disabled { opacity: .5; cursor: default; }
 `;
+
+// PBI-157: the caption-wrapped select seam. The profile and address selects
+// share this implementation — a wrapping label with a span caption, so the
+// visible text doubles as the accessible name (textContent only).
+const renderSelect = (
+  caption: string,
+  items: ReadonlyArray<{ id: string; label: string }>,
+  currentId: string,
+  onChange: (id: string) => void,
+): { label: HTMLLabelElement; select: HTMLSelectElement } => {
+  const select = document.createElement('select');
+  for (const item of items) {
+    const o = document.createElement('option');
+    o.value = item.id;
+    o.textContent = item.label;
+    o.selected = item.id === currentId;
+    select.append(o);
+  }
+  select.addEventListener('change', () => onChange(select.value));
+  const label = document.createElement('label');
+  const captionSpan = document.createElement('span');
+  captionSpan.textContent = caption;
+  label.append(captionSpan, select);
+  return { label, select };
+};
+
+// The opt-in checkbox copy per candidate kind (PBI-122 略記, PBI-125 補助).
+const CANDIDATE_TEXT: Record<PreviewRowCandidate['kind'], string> = {
+  abbrev: '略記して入れる',
+  assist: '補助候補を入れる',
+};
+
+// PBI-157: the caller side of the row seam. Approval bookkeeping (the apply
+// callback reads the checked boxes back) and the fix entry live with setRows;
+// the DOM assembly lives in renderRow.
+interface RenderRowCallbacks {
+  // PBI-138: the 分類を直す entry. The chooser (and the remember step) live
+  // with the onFix handler in the caller.
+  onFix?: (fieldId: string, label: string) => void;
+  // Collects an opt-in candidate checkbox into the approval bookkeeping.
+  addCandidate(id: string, box: HTMLInputElement): void;
+  // Re-syncs the apply button after a toggle: an approved candidate unlocks
+  // apply even when no plain ok row does.
+  onCandidateToggle(): void;
+}
+
+const renderRow = (r: PreviewRow, callbacks: RenderRowCallbacks): HTMLLIElement => {
+  const li = document.createElement('li');
+  const label = document.createElement('span');
+  label.className = 'label';
+  label.textContent = r.label;
+  const value = document.createElement('span');
+  value.className = 'value';
+  value.textContent = r.display;
+  if (r.source === 'llm') {
+    const ai = document.createElement('span');
+    ai.className = 'ai';
+    ai.textContent = 'AI判定';
+    value.append(ai);
+  }
+  li.append(label, value);
+  const { fieldId, candidates } = r;
+  // レビュー指摘: the status note and its opt-in candidates agree — checking a
+  // candidate flips the red「入力しません」note to muted (the row IS about to
+  // be entered), unchecking restores it.
+  let note: HTMLSpanElement | null = null;
+  if (STATUS_NOTE[r.status]) {
+    note = document.createElement('span');
+    note.className = r.status === 'filled' ? 'note muted' : 'note';
+    note.textContent = STATUS_NOTE[r.status];
+    li.append(note);
+  }
+  // PBI-157: one checkbox per candidate through this single block — the twin
+  // abbrev/assist blocks are gone. A candidate rides a row only with its
+  // field id, so the approval is always collectible.
+  if (fieldId && candidates) {
+    for (const c of candidates) {
+      const wrap = document.createElement('label');
+      wrap.className = 'abbrev';
+      const box = document.createElement('input');
+      box.type = 'checkbox';
+      const text = document.createElement('span');
+      text.textContent = CANDIDATE_TEXT[c.kind];
+      wrap.append(box, text);
+      box.addEventListener('change', () => {
+        if (note) note.className = box.checked ? 'note muted' : 'note';
+        callbacks.onCandidateToggle();
+      });
+      callbacks.addCandidate(fieldId, box);
+      li.append(wrap);
+    }
+  }
+  // PBI-138: the 分類を直す entry, one per row with a field id.
+  if (fieldId && callbacks.onFix) {
+    const onFix = callbacks.onFix;
+    const fix = document.createElement('button');
+    fix.type = 'button';
+    fix.className = 'fix';
+    fix.textContent = '直す';
+    fix.setAttribute('aria-label', `${r.label} の分類を直す`);
+    fix.addEventListener('click', () => { void onFix(fieldId, r.label); });
+    li.append(fix);
+  }
+  return li;
+};
 
 export function showPreview(opts: PreviewOptions): PreviewHandle {
   const style = document.createElement('style');
@@ -92,43 +228,14 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   panel.append(title);
 
   if (opts.profiles.length > 1) {
-    const select = document.createElement('select');
-    for (const p of opts.profiles) {
-      const o = document.createElement('option');
-      o.value = p.id;
-      o.textContent = p.label;
-      o.selected = p.id === opts.selectedProfileId;
-      select.append(o);
-    }
-    select.addEventListener('change', () => opts.onProfileChange(select.value));
-    // Same shape as options labeled(): a wrapping label with a span caption,
-    // so the visible text doubles as the accessible name (textContent only).
-    const label = document.createElement('label');
-    const caption = document.createElement('span');
-    caption.textContent = 'プロファイル';
-    label.append(caption, select);
-    panel.append(label);
+    panel.append(renderSelect('プロファイル', opts.profiles, opts.selectedProfileId, opts.onProfileChange).label);
   }
 
   let addressSelect: HTMLSelectElement | null = null;
   if (opts.addresses.length > 1) {
-    const select = document.createElement('select');
-    for (const a of opts.addresses) {
-      const o = document.createElement('option');
-      o.value = a.id;
-      o.textContent = a.label;
-      o.selected = a.id === opts.selectedAddressId;
-      select.append(o);
-    }
-    select.addEventListener('change', () => opts.onAddressChange(select.value));
-    // Same shape as options labeled(): a wrapping label with a span caption,
-    // so the visible text doubles as the accessible name (textContent only).
-    const label = document.createElement('label');
-    const caption = document.createElement('span');
-    caption.textContent = '住所';
-    label.append(caption, select);
-    panel.append(label);
-    addressSelect = select;
+    const address = renderSelect('住所', opts.addresses, opts.selectedAddressId, opts.onAddressChange);
+    panel.append(address.label);
+    addressSelect = address.select;
   }
 
   const list = document.createElement('ul');
@@ -140,6 +247,10 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const empty = document.createElement('p');
   empty.className = 'empty';
   empty.textContent = '入力できる欄が見つかりませんでした';
+  // PBI-143: the 相性 summary line, hidden until rows exist.
+  const coverage = document.createElement('p');
+  coverage.className = 'coverage';
+  coverage.hidden = true;
   const apply = document.createElement('button');
   apply.className = 'primary';
   apply.type = 'button';
@@ -148,9 +259,17 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   cancel.type = 'button';
   cancel.textContent = 'キャンセル';
   const onReanalyze = opts.onReanalyze;
+  const onFix = opts.onFix;
+  const onExpandAll = opts.onExpandAll;
   const reanalyze = onReanalyze
     ? Object.assign(document.createElement('button'), {
         type: 'button', className: 'reanalyze', textContent: 'AI で分析',
+      })
+    : null;
+  // PBI-128: the expand button replaces the collapsed rows with the full list.
+  const expand = onExpandAll
+    ? Object.assign(document.createElement('button'), {
+        type: 'button', className: 'reanalyze', textContent: '前回と同じ欄を表示',
       })
     : null;
   let hasOk = false;
@@ -171,6 +290,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
       reanalyze.disabled = busy;
       reanalyze.textContent = busy ? '分析中…' : 'AI で分析';
     }
+    if (expand) expand.disabled = busy;
     cancel.disabled = busy;
     apply.disabled = busy || !hasOk;
     feedbackBox.disabled = busy;
@@ -185,23 +305,40 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   };
   const actions = document.createElement('div');
   actions.className = 'actions';
+  if (expand) {
+    expand.addEventListener('click', () => {
+      // One-shot: the full list replaces the collapsed view.
+      expand.hidden = true;
+      onExpandAll?.();
+    });
+    actions.append(expand);
+  }
   actions.append(...(reanalyze ? [reanalyze, cancel, apply, feedback] : [cancel, apply]));
-  panel.append(list, empty, actions, status);
+  panel.append(list, empty, coverage, actions, status);
 
   let resultMode = false;
-  // PBI-122: abbreviation candidates render as opt-in checkboxes. The boxes
-  // reset on every setRows (a replan rebuilds the plan), so an approval is
-  // always bound to the plan the panel currently shows.
+  // PBI-157: the candidates render as opt-in checkboxes. The boxes reset
+  // on every setRows (a replan rebuilds the plan), so an approval is always
+  // bound to the plan the panel currently shows.
   let currentRows: PreviewRow[] = [];
-  let abbrevBoxes: { id: string; box: HTMLInputElement }[] = [];
-  const approvedAbbrevs = (): ReadonlySet<string> =>
-    new Set(abbrevBoxes.filter((b) => b.box.checked).map((b) => b.id));
+  let candidateBoxes: { id: string; box: HTMLInputElement }[] = [];
+  const approvedCandidates = (): ReadonlySet<string> =>
+    new Set(candidateBoxes.filter((b) => b.box.checked).map((b) => b.id));
   const syncHasOk = (): void => {
-    // An approved abbreviation unlocks apply even when no plain ok row does:
+    // An approved candidate unlocks apply even when no plain ok row does:
     // an overflow-only field would otherwise strand the approval behind a
-    // disabled button.
-    hasOk = currentRows.some((r) => r.status === 'ok') || abbrevBoxes.some((b) => b.box.checked);
+    // disabled button. The synthetic collapsed-summary row (PBI-128) counts
+    // too — its status 'ok' states that the hidden rows will fill as approved,
+    // so the shortened preview stays usable when the visible rows warn.
+    hasOk = currentRows.some((r) => r.status === 'ok') || candidateBoxes.some((b) => b.box.checked);
     syncButtons();
+  };
+  // The setRows side of the row seam (PBI-157): approval bookkeeping and the
+  // fix entry live here, the DOM assembly lives in renderRow.
+  const rowCallbacks: RenderRowCallbacks = {
+    onFix,
+    addCandidate: (id, box) => { candidateBoxes.push({ id, box }); },
+    onCandidateToggle: syncHasOk,
   };
   const setRows = (rows: PreviewRow[]) => {
     // PBI-59: result mode replaced the panel content, so re-rendering rows
@@ -209,52 +346,17 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     // setRows caller after open) has no button in result mode and cannot fire.
     if (resultMode) return;
     currentRows = rows;
-    abbrevBoxes = [];
-    list.replaceChildren(
-      ...rows.map((r) => {
-        const li = document.createElement('li');
-        const label = document.createElement('span');
-        label.className = 'label';
-        label.textContent = r.label;
-        const value = document.createElement('span');
-        value.className = 'value';
-        value.textContent = r.display;
-        if (r.source === 'llm') {
-          const ai = document.createElement('span');
-          ai.className = 'ai';
-          ai.textContent = 'AI判定';
-          value.append(ai);
-        }
-        li.append(label, value);
-        // レビュー指摘: the overflow note and its abbreviation checkbox agree —
-        // checking the opt-in abbrev flips the red「入力しません」note to muted
-        // (the row IS about to be entered), unchecking restores it.
-        let note: HTMLSpanElement | null = null;
-        if (STATUS_NOTE[r.status]) {
-          note = document.createElement('span');
-          note.className = r.status === 'filled' ? 'note muted' : 'note';
-          note.textContent = STATUS_NOTE[r.status];
-          li.append(note);
-        }
-        if (r.abbrev && r.fieldId) {
-          const wrap = document.createElement('label');
-          wrap.className = 'abbrev';
-          const box = document.createElement('input');
-          box.type = 'checkbox';
-          const text = document.createElement('span');
-          text.textContent = '略記して入れる';
-          wrap.append(box, text);
-          box.addEventListener('change', () => {
-            if (note) note.className = box.checked ? 'note muted' : 'note';
-            syncHasOk();
-          });
-          abbrevBoxes.push({ id: r.fieldId, box });
-          li.append(wrap);
-        }
-        return li;
-      }),
-    );
+    candidateBoxes = [];
+    list.replaceChildren(...rows.map((r) => renderRow(r, rowCallbacks)));
     empty.hidden = rows.length > 0;
+    // PBI-143: the compatibility summary. How many of the scanned fields the
+    // preview can fill, next to the per-field reasons. Page-derived strings
+    // never enter this line — it counts the plan, it does not quote it.
+    const fillable = currentRows.filter((r) => r.status === 'ok').length;
+    coverage.hidden = rows.length === 0 || fillable === 0;
+    coverage.textContent = fillable > 0
+      ? `${fillable} / ${currentRows.length} 欄に入力できます（承認後に注入します）`
+      : '';
     syncHasOk();
   };
 
@@ -280,7 +382,7 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   }
 
   apply.addEventListener('click', () =>
-    opts.onApply(feedbackBox.checked && !feedback.hidden, approvedAbbrevs()));
+    opts.onApply(feedbackBox.checked && !feedback.hidden, approvedCandidates()));
   cancel.addEventListener('click', () => opts.onCancel());
 
   setRows(opts.rows);
@@ -295,16 +397,33 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const setAddressId = (id: string): void => {
     if (addressSelect) addressSelect.value = id;
   };
+  // PBI-157: the result-view seam. showResult and showUndoResult share the
+  // title/head assembly, the content swap, and the resultMode flip; the
+  // breakdown and the undo wording stay with the callers.
+  const swapToResult = (headText: string, ...rest: HTMLElement[]): void => {
+    title.textContent = '入力結果';
+    const head = document.createElement('p');
+    head.className = 'empty';
+    head.textContent = headText;
+    panel.replaceChildren(title, head, ...rest);
+    resultMode = true;
+  };
+  // The result views' close button — same teardown as cancel: the panel
+  // closes idempotently and the caller drops its handle, so a later open
+  // starts from a clean state.
+  const doneButton = (): HTMLButtonElement => {
+    const done = document.createElement('button');
+    done.type = 'button';
+    done.textContent = '閉じる';
+    done.addEventListener('click', () => opts.onCancel());
+    return done;
+  };
   // PBI-55 result mode. Keeps the same mounted panel (focus trap and Escape
   // handling stay intact); only the content is swapped. Breakdown rows reuse
   // the .label/.value grid; the report button carries the one-click issue
   // action supplied by the caller. Labels come from the fill-plan-owned table
   // (PBI-58), shared with the issue-report body.
-  const showResult = (summary: FillSummary, onReport: () => void): void => {
-    title.textContent = '入力結果';
-    const head = document.createElement('p');
-    head.className = 'empty';
-    head.textContent = `適用済み ${summary.filled} / ${summary.total}件（未適用 ${summary.unapplied}件）`;
+  const showResult = (summary: FillSummary, onReport: () => void, undo?: { count: number; onUndo(): void }): void => {
     const breakdown = document.createElement('ul');
     breakdown.replaceChildren(
       ...Object.entries(summary.byResult)
@@ -330,17 +449,25 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     report.textContent = '内訳をissueで報告';
     report.title = '件数内訳入りのGitHub issue下書きを開きます（プロファイル値は含みません）';
     report.addEventListener('click', () => onReport());
-    const done = document.createElement('button');
-    done.type = 'button';
-    done.textContent = '閉じる';
-    // Same teardown as cancel: the panel closes idempotently and the caller
-    // drops its handle, so a later open starts from a clean state.
-    done.addEventListener('click', () => opts.onCancel());
     const resultActions = document.createElement('div');
     resultActions.className = 'actions';
-    resultActions.append(report, done);
-    panel.replaceChildren(title, head, breakdown, resultActions);
-    resultMode = true;
+    // PBI-132: the undo button only when the latest apply recorded history.
+    // The callback resolves through the caller (session.undoLast), and the
+    // view swaps to the undo confirmation from there.
+    if (undo && undo.count > 0) {
+      const undoBtn = document.createElement('button');
+      undoBtn.type = 'button';
+      undoBtn.className = 'report';
+      undoBtn.textContent = '元に戻す';
+      undoBtn.title = 'JushoAIが入れた欄だけ注入前の空状態に戻します（追記した欄は触りません）';
+      undoBtn.addEventListener('click', () => undo.onUndo());
+      resultActions.append(undoBtn);
+    }
+    resultActions.append(report, doneButton());
+    swapToResult(
+      `適用済み ${summary.filled} / ${summary.total}件（未適用 ${summary.unapplied}件）`,
+      breakdown, resultActions,
+    );
     // PBI-56: the removed apply button keeps DOM focus otherwise, stranding
     // keyboard users on <body>. Move it to the primary action of this view.
     report.focus();
@@ -350,5 +477,19 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     if (!isMeasurable(rect)) return null;
     return { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
   };
-  return { setRows, setReanalyzing, setAddressId, showResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
+  // PBI-132: post-undo confirmation — the restored/skipped counts and close
+  // only. The breakdown report is gone because the history was consumed.
+  const showUndoResult = (restored: number, skipped: number): void => {
+    const actions = document.createElement('div');
+    actions.className = 'actions';
+    actions.append(doneButton());
+    swapToResult(
+      skipped > 0
+        ? `元に戻しました（${restored}件）。追記後の${skipped}件はそのままです`
+        : `元に戻しました（${restored}件）`,
+      actions,
+    );
+  };
+
+  return { setRows, setAddressId, showResult, showUndoResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };
 }

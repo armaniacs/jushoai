@@ -73,6 +73,40 @@ export function actionButton(label: string, disabled: boolean, onClick: () => vo
   return button;
 }
 
+// Single source of the saved/errors notice vocabulary for the four options
+// sections: saved renders as one p.saved line (multi-line lines join with br),
+// errors as a ul.errors list, and the truncate rule lives in this module so no
+// section can grow its own. Both returned elements are polite live regions, so
+// every section announces its notice without a per-section container.
+export interface NoticeOptions {
+  // Head lines shown before the rest count. The default pins the shared
+  // truncate rule (5 lines) every section inherits.
+  max?: number;
+}
+
+const MAX_SHOWN_ERRORS = 5;
+
+export function notice(kind: 'saved' | 'errors', lines: readonly string[], { max = MAX_SHOWN_ERRORS }: NoticeOptions = {}): HTMLElement {
+  if (kind === 'saved') {
+    const p = el('p');
+    p.className = 'saved';
+    lines.forEach((line, i) => {
+      if (i > 0) p.append(document.createElement('br'));
+      p.append(line);
+    });
+    p.setAttribute('aria-live', 'polite');
+    return p;
+  }
+  const shown = lines.slice(0, max);
+  const rest = lines.length - shown.length;
+  const ul = el('ul');
+  ul.className = 'errors';
+  ul.append(...shown.map((t) => el('li', t)));
+  if (rest > 0) ul.append(el('li', `他 ${rest} 件のエラーがあります`));
+  ul.setAttribute('aria-live', 'polite');
+  return ul;
+}
+
 // Mirrors save-time normalization then the fill-time hiragana conversion, so the
 // hint under the kana inputs can never drift from what gets stored and injected.
 export function kanaHiraganaHint(rawKana: string): string {

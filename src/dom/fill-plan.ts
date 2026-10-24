@@ -1,5 +1,6 @@
 import { FILL_LAST_CATEGORIES } from '../core/fill-order';
 import { isUntouchedSelect, type PlanItem, type PlanStatus } from '../core/planner';
+import { uncheckRadio } from './fill';
 import type { Control } from './scan-fields';
 
 function isStillEmpty(el: Control, radioInputs?: HTMLInputElement[]): boolean {
@@ -29,6 +30,46 @@ export interface FillTarget {
   readonly empty: boolean;
   readonly radioOptions?: readonly RadioFillOption[];
   fill(value: string): void;
+  // PBI-132 undo surface: snapshot reads the live value for the user-edit
+  // guard, restoreEmpty puts the field back to its pre-fill (empty) state
+  // through the same setter discipline as fill. A field the fill module
+  // filled was empty before, so the empty state IS the pre-fill value.
+  snapshot(): string;
+  restoreEmpty(): void;
+}
+
+// One filled field's way back (PBI-132): the filled value plus the live
+// snapshot/restore closures from the target. Held in the content-script
+// session's memory only — never persisted, never sent (BDD: 履歴は外部に出ない).
+export interface UndoEntry {
+  fieldId: string;
+  value: string;
+  snapshot(): string;
+  restoreEmpty(): void;
+}
+
+export interface UndoReport {
+  restored: string[];
+  skipped: string[];
+}
+
+// One-shot inverse of a fill run: a field still holding exactly what JushoAI
+// filled goes back to its empty state; a field the user edited after the fill
+// is skipped, so their own input is never wiped. Readonly/disabled and
+// already-filled fields never get entries in the first place (only 'filled'
+// outcomes are recorded), so the undo cannot touch them.
+export function undoFill(entries: UndoEntry[]): UndoReport {
+  const restored: string[] = [];
+  const skipped: string[] = [];
+  for (const e of entries) {
+    if (e.snapshot() === e.value) {
+      e.restoreEmpty();
+      restored.push(e.fieldId);
+    } else {
+      skipped.push(e.fieldId);
+    }
+  }
+  return { restored, skipped };
 }
 
 // Single source of the FillResult vocabulary: the type below is derived from
@@ -122,6 +163,10 @@ export interface FillReport {
   // duplicate would collapse here. Keep producers unique.
   byId: Map<string, FillResult>;
   summary: FillSummary;
+  // PBI-132: one entry per filled field, in fill order. Only 'filled'
+  // outcomes get entries, so the undo surface excludes by-design skips,
+  // already-filled fields, and failures by construction.
+  undo: UndoEntry[];
 }
 
 // Warning decision in one call: by-design skips never warn, true failures do.
@@ -139,13 +184,26 @@ export function fillPlan(plan: PlanItem[], targets: Map<string, FillTarget>): Fi
     ...plan.filter((p) => FILL_LAST_CATEGORIES.has(p.category)),
   ];
   const out: FillOutcome[] = [];
+  const undo: UndoEntry[] = [];
   for (const p of ordered) {
     // One misbehaving field (a throwing getter or fill callback) must not
     // abort the remaining fields or lose their outcomes: isolate per field.
     // Caught errors surface as 'error' outcomes (and in the debug record),
     // never silently: an all-error summary still raises the banner.
     try {
-      out.push(applyOne(p, targets));
+      const outcome = applyOne(p, targets);
+      if (outcome.result === 'filled') {
+        const target = targets.get(p.fieldId);
+        if (target) {
+          undo.push({
+            fieldId: p.fieldId,
+            value: p.value,
+            snapshot: () => target.snapshot(),
+            restoreEmpty: () => target.restoreEmpty(),
+          });
+        }
+      }
+      out.push(outcome);
     } catch (e) {
       console.debug('[JushoAI] fill field error', p.fieldId, e);
       out.push({ fieldId: p.fieldId, result: 'error' });
@@ -155,6 +213,7 @@ export function fillPlan(plan: PlanItem[], targets: Map<string, FillTarget>): Fi
     outcomes: out,
     byId: new Map(out.map((o) => [o.fieldId, o.result])),
     summary: summarizeFillOutcomes(out),
+    undo,
   };
 }
 
@@ -207,6 +266,28 @@ export function targetsFromControls(
     targets.set(id, {
       get connected() { return el.isConnected; },
       get empty() { return isStillEmpty(el, radioInputs); },
+      // PBI-132 undo surface: snapshot reads the live value (the checked
+      // option's value for a radio group); restoreEmpty goes back through
+      // the same setter discipline as fill — '' for inputs, the untouched
+      // first option for selects, uncheck for radios.
+      snapshot: () => {
+        if (radioInputs) return radioInputs.find((r) => r.checked)?.value ?? '';
+        return el.value;
+      },
+      restoreEmpty: () => {
+        if (radioInputs) {
+          for (const r of radioInputs) {
+            if (r.checked) uncheckRadio(r);
+          }
+          return;
+        }
+        if (el instanceof HTMLSelectElement) {
+          const first = el.options[0];
+          if (first) fill(el, first.value);
+          return;
+        }
+        fill(el, '');
+      },
       ...(radioInputs
         // value/disabled stay live through getters like connected/empty above:
         // a page script that disables or swaps a radio option between planning

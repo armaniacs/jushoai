@@ -5,6 +5,7 @@ export const PROFILES_SECTION_ID = 'profiles';
 export const ADDRESSES_SECTION_ID = 'addresses';
 export const AI_SECTION_ID = 'ai';
 export const EXCLUSION_SECTION_ID = 'exclusions';
+export const MAPPING_SECTION_ID = 'mappings';
 export const AUDIT_SECTION_ID = 'audit';
 
 export const OPTION_SECTIONS = [
@@ -12,6 +13,7 @@ export const OPTION_SECTIONS = [
   { id: ADDRESSES_SECTION_ID, label: '住所' },
   { id: AI_SECTION_ID, label: 'AI 判定' },
   { id: EXCLUSION_SECTION_ID, label: '起動しないURL' },
+  { id: MAPPING_SECTION_ID, label: '覚えた対応付け' },
   { id: AUDIT_SECTION_ID, label: '通信の監査ログ' },
 ] as const;
 
@@ -63,11 +65,13 @@ export function applyActivePage(): void {
   const app = document.getElementById('app');
   const aiApp = document.getElementById('ai-app');
   const exclusionApp = document.getElementById('exclusion-app');
+  const mappingApp = document.getElementById('mapping-app');
   const auditApp = document.getElementById('audit-app');
-  if (!app || !aiApp || !exclusionApp || !auditApp) return;
+  if (!app || !aiApp || !exclusionApp || !mappingApp || !auditApp) return;
   app.hidden = activePage !== PROFILES_SECTION_ID && activePage !== ADDRESSES_SECTION_ID;
   aiApp.hidden = activePage !== AI_SECTION_ID;
   exclusionApp.hidden = activePage !== EXCLUSION_SECTION_ID;
+  mappingApp.hidden = activePage !== MAPPING_SECTION_ID;
   auditApp.hidden = activePage !== AUDIT_SECTION_ID;
   for (const s of OPTION_SECTIONS) {
     const section = document.getElementById(s.id);

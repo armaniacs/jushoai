@@ -1,16 +1,40 @@
 import { isExcludedUrl } from '../core/exclusions';
 import { isEnglishPageText } from '../core/page-language';
+import { fillOneReasonLabel } from '../core/fill-one';
+import { fillOneEntry } from '../content/fill-one-entry';
+import { loadFillOneState, loadRunState } from '../content/flow-state';
 import { createFillSession, classifyWithReason } from '../content-session';
 import { bindPreview } from '../content/preview-bind';
+import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
+import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
+import { draftFromMetas } from '../core/import-draft';
+import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
+import { upsertMapping } from '../mapping-store';
+import { chooseMapping } from '../ui/mapping-panel';
+import { matches, recordFor } from '../core/site-approval';
+import { assignedFirst, assignmentFor } from '../core/site-profile';
+import { mergeCarryover } from '../core/carryover';
+import { upsertApproval } from '../approval-store';
+import { upsertAssignment } from '../assignment-store';
+import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
+import { guestProfile, guestAddress, type GuestValues } from '../core/guest';
+import { GUEST_MESSAGE_TYPE } from '../guest-message';
+import { confirmGuest } from '../ui/guest-panel';
+import type { FieldMeta } from '../core/types';
+import { egressRowsFor } from '../ai/egress-preview';
+import { confirmEgress } from '../ui/egress-panel';
+import { mergeLlmSkip, planEgress, shouldDisableClassifier } from '../core/egress-plan';
+import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
+import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
 import type { ClassifyFailure } from '../messages';
-import { isReady, loadData, loadLastUsed, saveLastUsed } from '../storage';
+import { isReady, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
@@ -19,6 +43,8 @@ import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
+import { createTabDispatcher } from '../content/tab-dispatch';
+import { persistWrite } from '../content/persist-write';
 
 // --- PBI-21: sync prefilter -------------------------------------------------
 // sync() is debounced off the MutationObserver, but even a skipped sync pays a
@@ -122,10 +148,75 @@ export default defineContentScript({
 
     // Only a dead extension context calls for a reload. Every other failure
     // (classification, network, bad response) is retryable on the classify side.
+    // PBI-159: the flow's state bundle reads through kv-store's typed read
+    // error now, so the dead-context marker can ride the KvStoreReadError
+    // cause — the same unwrap isQuotaExceededError applies to StorageSaveError.
     const isContextInvalidated = (e: unknown): boolean => {
+      if (e instanceof KvStoreReadError) return isContextInvalidated(e.cause);
       const msg = e instanceof Error ? e.message : String(e);
       return msg.includes('Extension context invalidated');
     };
+
+    // --- PBI-137: single-field entry -------------------------------------------
+    // The remembered right-click target (capture-phase contextmenu) resolves
+    // the context-menu entry; keyboard entries resolve the focused control.
+    let lastContextTarget: Element | null = null;
+    document.addEventListener('contextmenu', (e) => {
+      lastContextTarget = e.target instanceof Element ? e.target : null;
+    }, true);
+
+    // --- PBI-144: one-shot guest values ----------------------------------------
+    // Memory only: set by the guest panel, overlaid onto the session's
+    // throwaway copies at plan time, destroyed with the tab. Never
+    // chrome.storage, never the audit log, never the export/import.
+    let guest: GuestValues | null = null;
+    // PBI-142: the earlier page's approved values for this tab. Content-script
+    // memory only — a tab close destroys it, nothing persists or is sent.
+    let carryover: Record<string, string> = {};
+
+    // Rule-only for one field: no LLM, no egress gate. The same planner
+    // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
+    // 警告して注入しない) and the value is always confirmed in a panel first.
+    // The entry is extracted (src/content/fill-one-entry.ts) so the exclusion
+    // gate is checked in one place for every entry: right-click, Alt+J.
+    async function fillOne(target: Element | null): Promise<void> {
+      await fillOneEntry(target, {
+        isExcluded: () => gate.isExcluded(),
+        scan: (el) => scanFields(document.body).find(
+          (f) => f.el === el || (f.radioInputs?.some((r) => r === el) ?? false),
+        ) ?? null,
+        load: () => loadFillOneState(),
+        ready: isReady,
+        carryover: () => carryover,
+        domain: () => hostOf(location.href),
+        onNoData: () => { void chrome.runtime.sendMessage({ type: 'open-options' }); },
+        showBlocked: (label, reason) => showFillOneBlocked(label, fillOneReasonLabel(reason)),
+        confirm: (label, display) => confirmFillOne(label, display),
+        fill: (el, value) => fillField(el, value),
+      });
+    }
+
+    // The fill is fire-and-forget, but a failure must never become an
+    // unhandled rejection: the batched state read (loadFillOneState) rejects
+    // with KvStoreReadError, and PBI-153 closed this gap for the writes only.
+    // The report matches the persist writes (../content/persist-write); an
+    // invalidated context keeps the same reload guidance the in-page button
+    // shows, every other error passes through for the console.
+    const reportFillOneFailure = (e: unknown): void => {
+      console.warn(
+        `[JushoAI] フィールド補完に失敗しました${
+          isContextInvalidated(e) ? '（ページを再読み込みしてください）' : ''
+        }`,
+        e,
+      );
+    };
+
+    document.addEventListener('keydown', (e) => {
+      if (e.altKey && (e.key === 'j' || e.key === 'J')) {
+        e.preventDefault();
+        void fillOne(document.activeElement).catch(reportFillOneFailure);
+      }
+    }, true);
 
     async function guardedRun(container: Element, button: ButtonHandle): Promise<boolean> {
       if (running.has(container)) return true;
@@ -135,7 +226,9 @@ export default defineContentScript({
         return true;
       } catch (e) {
         button.showError(
-          isContextInvalidated(e) ? 'エラー: ページを再読み込み' : 'エラー: 分類に失敗、再試行してください',
+          isContextInvalidated(e)
+            ? { kind: 'transient', text: 'エラー: ページを再読み込み' }
+            : { kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' },
         );
         return false;
       } finally {
@@ -148,11 +241,22 @@ export default defineContentScript({
     // Raw statuses never leave the single table in ../ai/failure-text;
     // only these coarse guidance lines do.
     async function run(container: Element, button: ButtonHandle) {
-      const [data, last] = await Promise.all([loadData(), loadLastUsed()]);
-      if (!isReady(data)) {
+      // PBI-159: the run flow's whole state bundle comes from the one loader
+      // (../content/flow-state) behind a single batched read — the profile
+      // data, the last-used selection and the per-site learned state. Which
+      // stores the flow needs lives there, not here.
+      const { data, last, priorApprovals, assignments, activeMappings } = await loadRunState();
+      // PBI-144: the guest bypasses the readiness gate — a one-shot fill needs
+      // no saved profile, and the guest values overlay the (empty) stored
+      // copies below. No guest and nothing saved stays the settings guidance.
+      if (!isReady(data) && !guest) {
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
+      // PBI-128/141/138: the taught correction layer also gates the LLM pending
+      // set below, so a field the user already corrected never sends its
+      // metadata.
+      const priorApproval = priorApprovals[hostOf(location.href)] ?? null;
 
       const info = await getAiStatusViaBackground();
       button.setStatus(info);
@@ -167,13 +271,41 @@ export default defineContentScript({
       // apply ordering (consent→inject→persist→feedback→display) are owned by
       // the session module via classifyWithReason; no reporting wrapper and no
       // `let failureReason` closure escape remain here (PBI-42引継ぎの解消).
-      // The pending split (ACCEPT_THRESHOLD) stays inside classifyAll, so only
-      // sub-threshold fields reach the LLM and the audit keeps one record per
-      // attempt.
+      // The pending split (ACCEPT_THRESHOLD) is owned by splitPending
+      // (PBI-154), so only sub-threshold fields reach the LLM and the audit
+      // keeps one record per attempt.
 
       const fields = scanContainer(container, document);
       const byId = new Map(fields.map((f) => [f.meta.id, f]));
       const metas = fields.map((f) => f.meta);
+      // PBI-124: the egress gate runs before any AI call. Rule classification
+      // is local (pure), so the pending split is known before the gate without
+      // any network. Suspect rows default to excluded; closing the gate
+      // (Escape included) resolves as rule-only, so no choice means no send.
+      let effectiveClassifier = classifier;
+      // PBI-145: the gate's pending list and the actual send come from the
+      // same split (splitPending, PBI-154), so the gate shows exactly what
+      // classifyAll will send and a taught field's metadata never reaches
+      // the LLM.
+      let llmSkip: ReadonlySet<string> | undefined;
+      {
+        const taught = new Set(
+          activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
+        );
+        const plan = planEgress(metas, taught);
+        llmSkip = plan.taughtIds.size > 0 ? plan.taughtIds : undefined;
+        if (classifier && plan.pending.length > 0) {
+          closeOpenPanels();
+          const decision = await confirmEgress(egressRowsFor(plan.pending));
+          if (decision.mode === 'rule-only') {
+            effectiveClassifier = null;
+          } else {
+            const unchecked = plan.pending.map((m) => m.id).filter((id) => !decision.send.has(id));
+            llmSkip = mergeLlmSkip(plan.taughtIds, unchecked);
+            if (shouldDisableClassifier(llmSkip, plan.nonConfidentCount)) effectiveClassifier = null;
+          }
+        }
+      }
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
       const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
       // PBI-55: the same context feeds the apply-time feedback and the
@@ -184,19 +316,42 @@ export default defineContentScript({
         version: chrome.runtime.getManifest().version,
       });
       const openFeedbackUrl = (url: string): void => { window.open(url, '_blank', 'noopener'); };
+      // PBI-144: the guest REPLACES the stored data for that fill — stored and
+      // guest values never mix, so the preview shows exactly what will fill.
+      // The stored arrays are never mutated, so chrome.storage stays untouched
+      // and the overlay dies with the tab.
+      const activeGuest = guest;
+      // PBI-141: the assigned profile becomes the first candidate. A guest fill
+      // has a single profile and no assignment.
+      const assignedProfileId = activeGuest
+        ? null
+        : assignmentFor(location.href, assignments, data.profiles.map((p) => p.id));
+      const sessionProfiles = activeGuest
+        ? [guestProfile(activeGuest)]
+        : assignedFirst(data.profiles, assignedProfileId);
+      const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
       const session = createFillSession(
         {
-          profiles: data.profiles,
-          addresses: data.addresses,
-          lastProfileId: last.profileId,
+          profiles: sessionProfiles,
+          addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
+          assignedProfileId,
+          carryover,
           metas,
           metasById,
           englishPage,
-          canReanalyze: classifier !== null,
+          canReanalyze: effectiveClassifier !== null,
         },
         {
-          classify: (ms, opts) => classifyWithReason(classifier, ms, opts),
+          // PBI-138: the taught mapping rides as a correction layer on top of
+          // whatever classification path ran — the learned pair wins over the
+          // rule, and an excluded page never gets here (the session returns
+          // excluded before opening any panel).
+          classify: (ms, opts) =>
+            classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }).then((res) => ({
+              ...res,
+              items: applyMapping(res.items, activeMappings, hostOf(location.href)),
+            })),
           checkConsent: (p) => {
             let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
             // applyIfConsented reports through callbacks; the no-op apply keeps the
@@ -214,18 +369,25 @@ export default defineContentScript({
             // Display decisions stay with onApply so the partial banner cannot
             // clobber the AI failure hint; the happy path stays silent.
             console.debug('[JushoAI] fill outcomes', report.summary);
-            return report.summary;
+            return report;
           },
-          persistSelection: (sel) => { void saveLastUsed(sel); },
+          // PBI-153: a failed write is reported instead of becoming an
+          // unhandled rejection; the typed error keeps it identifiable.
+          persistSelection: (sel) => { persistWrite('最終使用状態', () => saveLastUsed(sel)); },
           openUrl: openFeedbackUrl,
           feedbackContext: feedbackCtx,
           isExcluded: () => gate.isExcluded(),
+          // PBI-142: the filled values merge into this tab's carryover, so the
+          // next page re-offers them. Tab-scoped memory only — never storage.
+          recordCarryover: (entries) => {
+            carryover = mergeCarryover(carryover, entries);
+          },
         },
       );
       const started = await session.start();
       if (started.failureReason) {
         lastFailure = started.failureReason;
-        button.showError(hintForButton(started.failureReason));
+        button.showError({ kind: 'transient', text: hintForButton(started.failureReason) });
       } else {
         lastFailure = null;
       }
@@ -243,13 +405,61 @@ export default defineContentScript({
         session,
         button,
         rows: started.rows,
-        addresses: data.addresses,
-        profiles: data.profiles,
-        reanalyzable: classifier !== null,
+        addresses: sessionAddresses,
+        profiles: sessionProfiles,
+        reanalyzable: effectiveClassifier !== null,
         feedbackContext: feedbackCtx,
         openFeedbackUrl,
         onClosed: () => { openPreview = null; },
         onFailure: (reason) => { lastFailure = reason; },
+        // PBI-138: the 分類を直す flow. The correction runs through the session
+        // (rule-only re-plan) and the learned pair persists only when the user
+        // approved remembering it. The stored pair is a field signature →
+        // category, never a profile or correction value.
+        onFix: (fieldId, label, panel) => {
+          void chooseMapping(label, session.categoryFor(fieldId)).then((decision) => {
+            if (!decision) return;
+            panel.setRows(session.recategorize(fieldId, decision.category));
+            if (!decision.remember) return;
+            // PBI-153: the IIFE's `void` used to let a failed write surface as
+            // an unhandled rejection; persistWrite reports it instead.
+            persistWrite('覚えた対応付け', async () => {
+              const meta = metas.find((m) => m.id === fieldId);
+              const fieldKey = meta ? fieldKeyFor(meta) : null;
+              if (!fieldKey) return;
+              await upsertMapping({ domain: hostOf(location.href), fieldKey, category: decision.category });
+            });
+          });
+        },
+        // PBI-128: the per-site approval memory. A record for this host with
+        // the same form shape and selection shortens the preview to the
+        // changed rows; a clean apply records the shape (digests only — no
+        // raw profile value, no raw label).
+        approval: matches(priorApproval, location.href, metas, session.selectedProfileId, session.selectedAddressId)
+          ? priorApproval
+          : null,
+        recordApproval: (rows) => {
+          // PBI-153: reported through persistWrite instead of an unhandled
+          // rejection inside the `void` IIFE.
+          persistWrite('サイトごとの承認', async () => {
+            const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
+            if (!record.domain) return;
+            await upsertApproval(record);
+          });
+        },
+        // PBI-141: the profile used on this host is learned from use. Only the
+        // host → profileId pair persists — never a profile value.
+        recordAssignment: (profileId) => {
+          // PBI-153: reported through persistWrite instead of an unhandled
+          // rejection from the bare `void`.
+          persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
+        },
+        // PBI-144: the guest is one-shot — the fill consumes it. Without this
+        // the closure would keep overlaying the stored data for every later
+        // press on the same tab (BDD: タブを閉じるか完了する→破棄).
+        onApplied: () => {
+          if (activeGuest) guest = null;
+        },
       });
       openPreview = preview;
     }
@@ -299,30 +509,83 @@ export default defineContentScript({
       mounted.forEach((m) => m.handle.reposition());
     }
 
+    // PBI-156: one guarded dispatcher registers every tab-bound message. The
+    // type guard, the exclusion gate (after the type guard, before the body),
+    // and the response plumbing live in ../content/tab-dispatch, so a new
+    // listener cannot re-copy them.
+    const registerTabMessage = createTabDispatcher({
+      isExcluded: () => gate.isExcluded(),
+      addListener: (fn) => chrome.runtime.onMessage.addListener(fn),
+    });
+
     // Triggered by the action popup's "AI で分析" button: runs the same flow as
     // the in-page button on the first detected form, reusing its handle so
     // errors surface the same way. No form mounted means nothing to fill.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
+    registerTabMessage(ANALYZE_MESSAGE_TYPE, {
+      excludedResponse: { ok: false, reason: 'no-form' },
+      handler: (_msg, sendResponse) => {
+        const first = detectForms(document)[0];
+        const entry = first ? mounted.get(first.container) : undefined;
+        if (!first || !entry) {
+          sendResponse({ ok: false, reason: 'no-form' });
+          return false;
+        }
+        void guardedRun(first.container, entry.handle).then(
+          (started) => sendResponse(started ? { ok: true } : { ok: false, reason: 'error' }),
+          () => sendResponse({ ok: false, reason: 'error' }),
+        );
+        return true;
+      },
+    });
+
+    // PBI-127: the settings page's フォームから取り込む button asks the active
+    // tab for a draft of the page's own filled values. Rule-only
+    // (draftFromMetas: the classifyRulePipeline entrance, PBI-150 — resolveKana
+    // rides so a filled furigana pair reaches the kana profile keys), no LLM
+    // and no gate: the values stay on-device and never cross the network. An
+    // excluded page keeps its opt-out — no draft from there.
+    registerTabMessage(IMPORT_DRAFT_MESSAGE_TYPE, {
+      handler: (_msg, sendResponse) => {
+        const form = detectForms(document)[0];
+        if (!form) {
+          sendResponse({ ok: false });
+          return false;
+        }
+        const scanned = scanContainer(form.container, document);
+        sendResponse({ ok: true, draft: draftFromMetas(scanned.map((f) => f.meta)) });
         return false;
-      }
-      // An excluded page is out of scope for the popup too; "no form" is what
-      // the user sees there (no button to press either).
-      if (gate.isExcluded()) {
-        sendResponse({ ok: false, reason: 'no-form' });
+      },
+    });
+
+    // PBI-144: the popup's ゲストで入力 button asks the tab to open the one-shot
+    // entry panel. The typed values stay in this script's memory (the tab close
+    // destroys them): never chrome.storage, never the audit log, never the
+    // export/import. An excluded page keeps its opt-out.
+    registerTabMessage(GUEST_MESSAGE_TYPE, {
+      handler: (_msg, sendResponse) => {
+        sendResponse({ ok: true });
+        void confirmGuest().then((decision) => {
+          if (!decision) return;
+          guest = decision;
+          closeOpenPanels();
+          const first = detectForms(document)[0];
+          const entry = first ? mounted.get(first.container) : undefined;
+          if (first && entry) void guardedRun(first.container, entry.handle);
+        });
         return false;
-      }
-      const first = detectForms(document)[0];
-      const entry = first ? mounted.get(first.container) : undefined;
-      if (!first || !entry) {
-        sendResponse({ ok: false, reason: 'no-form' });
+      },
+    });
+
+    // PBI-137: the context-menu entry fills the remembered (or focused) field.
+    // The handler is fire-and-forget and returns false, so the response
+    // channel closes immediately — an excluded page now receives the default
+    // { ok: false } instead of the old no-response. The exclusion check inside
+    // fillOneEntry stays: the Alt+J path never reaches this dispatcher.
+    registerTabMessage(FILL_ONE_MESSAGE.type, {
+      handler: () => {
+        void fillOne(lastContextTarget ?? document.activeElement).catch(reportFillOneFailure);
         return false;
-      }
-      void guardedRun(first.container, entry.handle).then(
-        (started) => sendResponse(started ? { ok: true } : { ok: false, reason: 'error' }),
-        () => sendResponse({ ok: false, reason: 'error' }),
-      );
-      return true;
+      },
     });
 
     let observer: MutationObserver | null = null;

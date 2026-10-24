@@ -28,3 +28,15 @@ export function fillRadio(el: HTMLInputElement): void {
   el.dispatchEvent(new Event('change', { bubbles: true }));
   el.dispatchEvent(new Event('blur', { bubbles: true }));
 }
+
+// Inverse of fillRadio (PBI-132 undo): unchecking through the same prototype
+// setter plus the manual events, so React/Vue state trackers see the undo as
+// a real change just like the fill.
+export function uncheckRadio(el: HTMLInputElement): void {
+  const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'checked')?.set;
+  if (setter) setter.call(el, false);
+  else el.checked = false;
+  el.dispatchEvent(new Event('input', { bubbles: true }));
+  el.dispatchEvent(new Event('change', { bubbles: true }));
+  el.dispatchEvent(new Event('blur', { bubbles: true }));
+}

@@ -1,5 +1,7 @@
 import type { Item } from './types';
 import { abbreviateBuilding } from './abbreviate';
+import { zipAssistFor } from './zip-dict';
+import { readingFor } from './name-readings';
 import {
   splitBirthday, toDecade, toEraDate,
 } from './eras';
@@ -10,6 +12,7 @@ import {
 import { matchOption } from './match-option';
 import { isAllowedRadioCategory } from './radio-policy';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
+import { carryoverFor } from './carryover';
 
 export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option' | 'warn-no-value';
 
@@ -25,12 +28,19 @@ export interface PlanItem {
   // approval promotes it into the fill value (applyAbbrevApprovals), so the
   // fill never truncates silently (NOT-TODO 12).
   abbrev?: string;
+  // PBI-125: a dictionary assist candidate for a prefecture/city field whose
+  // profile value is missing while the address zip resolves. Same opt-in
+  // semantics as abbrev; the lookup is terminal-only and deterministic.
+  assist?: string;
 }
 
 export interface PlanContext {
   profile: Profile;
   address: Address | null;
   today?: Date;
+  // PBI-142: the earlier page's approved values, keyed by the field signature.
+  // A field whose profile value is empty falls back to the carried value.
+  carryover?: Record<string, string>;
 }
 
 // PBI-120: width-forcing patterns reshape the value's character width before
@@ -51,6 +61,18 @@ function enforceWidth(value: string, meta: FieldMeta): string {
 }
 
 function valueFor(
+  cls: Classification,
+  meta: FieldMeta,
+  { profile: p, address: a, today, carryover }: PlanContext,
+  present: Set<Category>,
+): string {
+  const filled = valueForBase(cls, meta, { profile: p, address: a, today }, present);
+  // PBI-142: the earlier page's approved value carries into this preview for
+  // the same field signature. Input fields only; the profile value always wins.
+  return filled || carryoverFor(meta, carryover);
+}
+
+function valueForBase(
   cls: Classification,
   meta: FieldMeta,
   { profile: p, address: a, today }: PlanContext,
@@ -143,6 +165,49 @@ const ABBREVIATABLE: ReadonlySet<Category> = new Set<Category>([
   'building', 'street', 'addressNoPref', 'addressFull',
 ]);
 
+// PBI-125: the categories the zip dictionary assists. PBI-133: the name
+// reading dictionary assists the kana categories. Both lookups are
+// terminal-only (no network, no LLM) and deterministic.
+const ASSISTABLE: ReadonlySet<Category> = new Set<Category>([
+  'prefecture', 'city', 'lastNameKana', 'firstNameKana', 'fullNameKana',
+]);
+
+// PBI-125 + PBI-133: the assist candidate for an empty assistable value, or
+// null when nothing resolves. The kana candidates convert through the
+// deterministic formatKana (kanaKind 変換は決定的コード); the full-name join
+// follows the field's own placeholder style like the kanji fullName case.
+function assistFor(category: Category, ctx: PlanContext, cls: Classification, meta: FieldMeta): string | null {
+  const p = ctx.profile;
+  const kind = cls.kanaKind ?? 'katakana';
+  switch (category) {
+    case 'prefecture':
+    case 'city': {
+      const zip = ctx.address?.zip ?? '';
+      if (!zip) return null;
+      const assist = zipAssistFor(zip);
+      if (!assist) return null;
+      return category === 'prefecture' ? assist.prefecture : assist.city;
+    }
+    case 'lastNameKana': {
+      const r = readingFor(p.lastName, 'surname');
+      return r ? formatKana(r, kind) : null;
+    }
+    case 'firstNameKana': {
+      const r = readingFor(p.firstName, 'given');
+      return r ? formatKana(r, kind) : null;
+    }
+    case 'fullNameKana': {
+      const last = readingFor(p.lastName, 'surname');
+      const first = readingFor(p.firstName, 'given');
+      return last && first
+        ? formatKana(joinName(last, first, detectNameSeparator(meta.placeholder)), kind)
+        : null;
+    }
+    default:
+      return null;
+  }
+}
+
 // Fits the shortened building into the budget; null when no rule fired, when
 // the shortening is empty (a whitespace-only building shortens to '' — a
 // candidate that would silently drop the tail or flip a row to an empty value),
@@ -198,12 +263,15 @@ export const hasAbbrev = (abbrev: string | null | undefined): abbrev is string =
 // checkbox set handed to apply) promotes a candidate into the fill value; rows
 // without a candidate never flip, and an unapproved id keeps warn-maxlength
 // with an empty value, so nothing injects silently. The candidate presence
-// check is the shared hasAbbrev judgment.
+// check is the shared hasAbbrev judgment. PBI-125: the dictionary assist rides
+// the same seam — one candidate per row (abbrev wins when both producers ever
+// collide on the same row).
 export function applyAbbrevApprovals(plan: PlanItem[], approved: ReadonlySet<string>): PlanItem[] {
   if (approved.size === 0) return plan;
-  return plan.map((p) =>
-    hasAbbrev(p.abbrev) && approved.has(p.fieldId) ? { ...p, value: p.abbrev, status: 'ok' } : p,
-  );
+  return plan.map((p) => {
+    const candidate = hasAbbrev(p.abbrev) ? p.abbrev : (hasAbbrev(p.assist) ? p.assist : null);
+    return candidate !== null && approved.has(p.fieldId) ? { ...p, value: candidate, status: 'ok' } : p;
+  });
 }
 
 export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
@@ -217,9 +285,20 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     // A missing profile value keeps its row with the reason attached instead
     // of vanishing: vanishing is indistinguishable from a classification
     // failure (unknown skips noiselessly above), so the preview could never
-    // explain the cause.
+    // explain the cause. PBI-125: a zip dictionary assist rides the row for a
+    // prefecture/city field while the address zip resolves — the preview
+    // offers it as an opt-in choice and only the user's approval promotes it
+    // into the fill value. Without a candidate the row keeps its plain
+    // warn-no-value shape (候補不一致・辞書なし時は従来通り警告で止まる).
     if (!raw) {
-      plan.push({ ...base, value: '', display: '', status: 'warn-no-value' });
+      const candidate = ASSISTABLE.has(cls.category) ? assistFor(cls.category, ctx, cls, meta) : null;
+      plan.push({
+        ...base,
+        value: '',
+        display: candidate ? `候補: ${candidate}` : '',
+        status: 'warn-no-value',
+        ...(hasAbbrev(candidate) ? { assist: candidate } : {}),
+      });
       continue;
     }
 

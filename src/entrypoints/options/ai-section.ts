@@ -1,13 +1,16 @@
 import { IdbKeyStore } from '../../ai/secret-store';
 import { loadPublicAiSettings } from '../../ai/settings-store';
 import { saveSettings } from '../../ai/settings-save';
+import { resolveConfirmedAddresses } from '../../ai/settings';
+import { confirmOrigin, isOriginConfirmed } from '../../ai/first-dial';
+import { originOf } from '../../ai/key-reentry';
 import {
   OPENAI_PRESETS, type AiSettings, type KeyPresence, type ProviderKind,
 } from '../../ai/types';
 import { testAiViaBackground } from '../../llm/background-gateway';
 import { noticeForTest } from '../../ai/failure-text';
 import { IS_FIREFOX, selectableProviders } from '../../ai/browser-target';
-import { el, labeled, textInput, buildSelect } from './dom';
+import { el, labeled, notice, textInput, buildSelect } from './dom';
 import { AI_SECTION_ID, applyActivePage } from './nav';
 
 const ALL_PROVIDER_OPTIONS: { value: ProviderKind; label: string }[] = [
@@ -64,6 +67,10 @@ interface AiSectionState {
   cooldownUntil: number;
   cooldownTimer: ReturnType<typeof setTimeout> | null;
   notice: HTMLElement | null;
+  // First-dial confirmation state for the saved OpenAI-compatible endpoint
+  // (VULN-001). null until the async refresh below resolves; confirmed === null
+  // means the origin could not be resolved, so no confirmation is offered.
+  firstDial: { confirmed: boolean | null; addresses: string[] } | null;
 }
 
 interface AiSectionRenderHooks {
@@ -100,8 +107,10 @@ export function mountAiSection(root: HTMLElement): () => void {
     // A load resolving after dispose() must neither render into a detached
     // root nor leave state behind for a later teardown to trip over.
     if (slot.disposed) return;
-    const fallbackNotice = builtInDisabled ? el('p', BUILT_IN_FALLBACK_NOTICE) : null;
-    if (fallbackNotice) fallbackNotice.className = 'errors-text';
+    // The shared notice vocabulary (PBI-151): the built-in fallback renders as
+    // ul.errors like every other notice in the section, not a drifting
+    // p.errors-text (the only CSS user of that class left in the options UI).
+    const fallbackNotice = builtInDisabled ? notice('errors', [BUILT_IN_FALLBACK_NOTICE]) : null;
     const state: AiSectionState = {
       settings: loaded,
       hasKey: keys,
@@ -112,9 +121,13 @@ export function mountAiSection(root: HTMLElement): () => void {
       cooldownUntil: 0,
       cooldownTimer: null,
       notice: fallbackNotice,
+      firstDial: null,
     };
     slot.state = state;
     rerender(state);
+    // First-dial confirmation display: loads after the section renders so the
+    // block appears with the resolved addresses once storage and DoH answer.
+    void refreshFirstDial(state, { rerender: () => rerender(state) });
   });
   // Drop a pending test-cooldown timer when the section is torn down, and
   // clear the slot so a late-arriving load cannot reattach state to a
@@ -132,9 +145,33 @@ function setAiNotice(
   kind: 'saved' | 'errors',
   rerender: () => void,
 ): void {
-  state.notice = el('p', text);
-  state.notice.className = kind === 'saved' ? 'saved' : 'errors-text';
+  // The shared notice vocabulary (PBI-151): errors render as ul.errors like
+  // the other three sections instead of a drifting p.errors-text.
+  state.notice = notice(kind, [text]);
   rerender();
+}
+
+// Reload the first-dial confirmation state for the saved OpenAI-compatible
+// endpoint (VULN-001): confirmed comes from the confirmation record, the
+// address list from the pinned DoH resolution. A storage or DoH failure leaves
+// the block hidden (confirmed === null) so no confirmation is offered; the gate
+// still blocks the dial, so the display failure never widens the dial surface.
+async function refreshFirstDial(state: AiSectionState, hooks: { rerender: () => void }): Promise<void> {
+  const baseUrl = state.savedOpenAi.baseUrl;
+  const origin = originOf(baseUrl);
+  if (state.settings.provider !== 'openai' || origin === null) {
+    state.firstDial = null;
+    hooks.rerender();
+    return;
+  }
+  try {
+    const confirmed = await isOriginConfirmed(origin);
+    const addresses = confirmed ? [] : await resolveConfirmedAddresses(baseUrl, { fetch: globalThis.fetch.bind(globalThis) });
+    state.firstDial = { confirmed, addresses };
+  } catch {
+    state.firstDial = null;
+  }
+  hooks.rerender();
 }
 
 function buildKeyField(state: AiSectionState, provider: KeyedProvider): HTMLElement {
@@ -257,6 +294,8 @@ function renderAiSection(root: HTMLElement, state: AiSectionState, hooks: AiSect
 
   parts.push(buildActionRow(state, hooks.onSave, hooks.onTest));
   if (state.notice) parts.push(state.notice);
+  const confirmBlock = buildFirstDialBlock(state, hooks.rerender);
+  if (confirmBlock) parts.push(confirmBlock);
 
   const page = el('div');
   page.id = AI_SECTION_ID;
@@ -287,6 +326,8 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
   state.removeKey.openai = false;
   state.removeKey.gemini = false;
   state.hasKey = result.hasKey;
+  // The saved endpoint may have changed: reload the first-dial confirmation state.
+  void refreshFirstDial(state, { rerender: env.rerender });
   // The save-time gate is fail-closed, so reaching this point means the resolved address
   // was confirmed public. Only a denied permission leaves AI unusable.
   env.notify(
@@ -297,8 +338,51 @@ async function saveAiSection(state: AiSectionState, env: { keyStore: IdbKeyStore
   );
 }
 
-function beginTestCooldown(state: AiSectionState, env: AiSectionEffectHooks): void {
-  state.cooldownUntil = Date.now() + TEST_COOLDOWN_MS;
+// First-dial confirmation block (VULN-001): shown for the saved OpenAI-compatible
+// endpoint only. Unconfirmed: the origin, what the address list is (the
+// DoH-resolved IPs of the saved hostname), and an approval button — nothing
+// dials the origin until the user approves. Confirmed: a read-only state line.
+// The block keys off the SAVED endpoint (savedOpenAi), not the typed form
+// value, so it always describes what the gate actually reads.
+function buildFirstDialBlock(state: AiSectionState, rerender: () => void): HTMLElement | null {
+  if (state.settings.provider !== 'openai' || state.firstDial === null) return null;
+  const origin = originOf(state.savedOpenAi.baseUrl);
+  if (origin === null) return null;
+  let hostname = origin;
+  try {
+    hostname = new URL(origin).hostname;
+  } catch {
+    hostname = origin;
+  }
+  const wrap = el('div');
+  if (state.firstDial.confirmed === true) {
+    const line = el('p', `接続先 ${origin} を確認済みです。AI 判定でこの接続先に送信できます。`);
+    line.className = 'saved';
+    wrap.append(line);
+    return wrap;
+  }
+  if (state.firstDial.confirmed === null || state.firstDial.addresses.length === 0) return null;
+  const intro = el('p', `このAIプロバイダを使うには、接続先 ${origin} への送信を承認しなければなりません。下の一覧はホスト名 ${hostname} をDNSで解決して得られたIPアドレスです。`);
+  const warn = el('p', '送信先が想定どおりか確かめてから承認してください（承認するまで送信しません）。見覚えのないアドレスがある場合は承認せず、ベースURLを確認してください。');
+  const list = el('ul');
+  for (const address of state.firstDial.addresses) {
+    const item = el('li', address);
+    list.append(item);
+  }
+  const approve = el('button', 'この接続先を承認する');
+  approve.addEventListener('click', () => {
+    const origin = originOf(state.savedOpenAi.baseUrl);
+    if (origin === null) return;
+    void confirmOrigin(origin, state.firstDial?.addresses ?? []).then(() => {
+      const slot = state;
+      void refreshFirstDial(slot, { rerender });
+    });
+  });
+  wrap.append(intro, list, warn, approve);
+  return wrap;
+}
+
+function beginTestCooldown(state: AiSectionState, env: AiSectionEffectHooks): void {  state.cooldownUntil = Date.now() + TEST_COOLDOWN_MS;
   if (state.cooldownTimer) clearTimeout(state.cooldownTimer);
   state.cooldownTimer = setTimeout(() => {
     state.cooldownTimer = null;

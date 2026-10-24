@@ -1,7 +1,7 @@
 ---
 title: Setting up an AI provider
 description: How to choose and configure an AI provider that classifies fields the rules cannot identify.
-order: 6
+order: 7
 ---
 
 # Setting up an AI provider
@@ -30,6 +30,8 @@ The base URL has these rules.
 - Enter only the URL of a provider you trust as the base URL.
 
 If you change the origin of the base URL (scheme, host or port), the saved API key is not carried over. Enter the key again. To delete a saved key, tick `保存済みの API キーを削除する` (delete the saved API key) and save.
+
+Before anything is sent to a saved endpoint for the first time, approve it on the settings page. Below the saved endpoint you will see the list of IP addresses the host name resolves to with DNS and a `この接続先を承認する` (approve this endpoint) button. Check that the destination is what you expect before approving; nothing is sent to that endpoint until you approve it. If you see an unfamiliar address, do not approve and check the base URL instead.
 
 ## Ollama and LM Studio (local)
 

@@ -102,21 +102,52 @@ describe('showPreview', () => {
     expect(status.textContent).toBe('');
   });
 
-  it('does not re-announce while busy (setRows keeps the live region stable)', () => {
-    const { handle, root } = open({ rows: [makeRow('ok')], onReanalyze: () => {} });
+  it('does not re-announce while busy (setRows keeps the live region stable)', async () => {
+    let resolve!: () => void;
+    const onReanalyze = vi.fn(() => new Promise<void>((r) => { resolve = r; }));
+    const { handle, root } = open({ rows: [makeRow('ok')], onReanalyze });
     const list = root.querySelector('ul')!;
     const status = root.querySelector('[role="status"]') as HTMLElement;
     expect(status.getAttribute('role')).toBe('status');
-    handle.setReanalyzing(true);
+    // PBI-157: busy is driven by the reanalyze flow only (setReanalyzing left
+    // the public handle). The click locks the panel synchronously; the handler
+    // runs on a microtask.
+    buttonIn(root, 'AI で分析')!.click();
+    await vi.waitFor(() => expect(onReanalyze).toHaveBeenCalledOnce());
     expect(list.getAttribute('aria-busy')).toBe('true');
     expect(status.textContent).toBe('分析中…');
     // Mid-analysis row updates must not touch the live region again.
     handle.setRows([makeRow('ok')]);
     expect(list.getAttribute('aria-busy')).toBe('true');
     expect(status.textContent).toBe('分析中…');
-    handle.setReanalyzing(false);
-    expect(list.getAttribute('aria-busy')).toBe('false');
+    resolve();
+    await vi.waitFor(() => expect(list.getAttribute('aria-busy')).toBe('false'));
     expect(status.textContent).toBe('');
+  });
+});
+
+describe('showPreview coverage summary (PBI-143)', () => {
+  it('shows the compatibility rate next to the per-field reasons', () => {
+    const sh = open({ rows: [makeRow('ok'), makeRow('ok'), makeRow('warn-no-value', '')] });
+    const coverage = sh.root.querySelector('.coverage') as HTMLElement;
+    expect(coverage.hidden).toBe(false);
+    expect(coverage.textContent).toBe('2 / 3 欄に入力できます（承認後に注入します）');
+  });
+
+  it('stays hidden without fillable rows and after an empty re-render', () => {
+    const none = open({ rows: [makeRow('warn-no-value', '')] });
+    const coverage = none.root.querySelector('.coverage') as HTMLElement;
+    expect(coverage.hidden).toBe(true);
+    expect(coverage.textContent).toBe('');
+
+    const empty = open();
+    const emptyCoverage = empty.root.querySelector('.coverage') as HTMLElement;
+    expect(emptyCoverage.hidden).toBe(true);
+
+    const sh = open({ rows: [makeRow('ok')] });
+    const live = sh.root.querySelector('.coverage') as HTMLElement;
+    sh.handle.setRows([]);
+    expect(live.hidden).toBe(true);
   });
 });
 
@@ -241,5 +272,59 @@ describe('showResult (PBI-55)', () => {
     handle.showResult(summary, () => {});
     expect(root.textContent).toContain('適用済み');
     expect(root.textContent).toContain('見送り（仕様どおり）');
+  });
+});
+
+describe('showResult: undo (PBI-132)', () => {
+  const summary = {
+    filled: 2,
+    unapplied: 0,
+    total: 2,
+    byResult: {
+      filled: 2, 'skipped-status': 0, 'missing-target': 0, detached: 0, 'already-filled': 0, 'no-option': 0, error: 0,
+    },
+  };
+
+  it('renders the undo button only when the option is given', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {});
+    expect(buttonIn(root, '元に戻す')).toBeUndefined();
+    const withUndo = open({ rows: [makeRow('ok')] });
+    withUndo.handle.showResult(summary, () => {}, { count: 2, onUndo: () => {} });
+    expect(buttonIn(withUndo.root, '元に戻す')).toBeTruthy();
+  });
+
+  it('swaps to the undo confirmation with restored and skipped counts', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, {
+      count: 2,
+      onUndo: () => handle.showUndoResult(1, 1),
+    });
+    buttonIn(root, '元に戻す')!.click();
+    expect(root.querySelector('.empty')?.textContent).toContain('元に戻しました（1件）');
+    expect(root.querySelector('.empty')?.textContent).toContain('追記後の1件はそのままです');
+    expect(buttonIn(root, '内訳をissueで報告')).toBeUndefined();
+  });
+
+  it('omits the skip note when nothing was skipped', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, { count: 2, onUndo: () => handle.showUndoResult(2, 0) });
+    buttonIn(root, '元に戻す')!.click();
+    expect(root.querySelector('.empty')?.textContent).toBe('元に戻しました（2件）');
+  });
+});
+
+describe('zip assist checkbox (PBI-125)', () => {
+  it('renders the 補助 checkbox only for assist rows', () => {
+    const plain = open({ rows: [makeRow('ok')] });
+    expect(plain.root.textContent).not.toContain('補助候補を入れる');
+
+    const withAssist = open({
+      rows: [{ ...makeRow('warn-no-value', '候補: 東京都'), fieldId: 'f1', candidates: [{ kind: 'assist', text: '東京都' }] }],
+    });
+    const box = withAssist.root.querySelector<HTMLInputElement>('input[type="checkbox"]');
+    expect(box).toBeTruthy();
+    expect(withAssist.root.textContent).toContain('補助候補を入れる');
+    expect(withAssist.root.textContent).toContain('候補: 東京都');
   });
 });

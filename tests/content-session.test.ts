@@ -9,7 +9,7 @@ import {
 import type { FieldClassifier } from '../src/core/classifier';
 import type { ClassifyFailure } from '../src/messages';
 import { hintForButton } from '../src/ai/failure-text';
-import type { FillSummary } from '../src/dom/fill-plan';
+import type { FillReport, FillSummary, UndoEntry } from '../src/dom/fill-plan';
 import { makeMeta } from './helpers';
 
 const profile1: Profile = {
@@ -49,12 +49,17 @@ const fullSummary = (filled: number, unapplied: number): FillSummary => ({
   },
 });
 
+const reportOf = (summary: FillSummary, undo: UndoEntry[] = []): FillReport => ({
+  outcomes: [], byId: new Map(), summary, undo,
+});
+
 const panel = { getApplyPoint: () => ({ x: 1, y: 2 }), getHost: () => ({}) as Element };
 
 function setup(opts: {
   excluded?: boolean; consent?: boolean; reItems?: Item[]; canReanalyze?: boolean;
   lastProfileId?: string; lastAddressId?: string; summary?: { filled: number; unapplied: number };
   failReason?: ClassifyFailure | null;
+  assignedProfileId?: string | null;
 } = {}) {
   const ms = metas();
   const classify = vi.fn(async (_m: FieldMeta[], o?: { force?: boolean }): Promise<SessionClassifyResult> =>
@@ -64,7 +69,7 @@ function setup(opts: {
     checkConsent: () => (opts.consent === false
       ? { ok: false as const, reason: '覆われているため中止' }
       : { ok: true as const }),
-    injectPlan: vi.fn((): FillSummary => fullSummary(opts.summary?.filled ?? 2, opts.summary?.unapplied ?? 0)),
+    injectPlan: vi.fn((): FillReport => reportOf(fullSummary(opts.summary?.filled ?? 2, opts.summary?.unapplied ?? 0))),
     persistSelection: vi.fn(),
     openUrl: vi.fn(),
     feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
@@ -75,6 +80,7 @@ function setup(opts: {
     addresses: [address1],
     lastProfileId: opts.lastProfileId,
     lastAddressId: opts.lastAddressId,
+    assignedProfileId: opts.assignedProfileId,
     metas: ms,
     metasById: metasById(ms),
     englishPage: false,
@@ -91,6 +97,18 @@ describe('fill session: start and replan', () => {
     expect(session.selectedProfileId).toBe('p2');
     expect(session.selectedAddressId).toBe('a1');
     if (!started.excluded) expect(started.rows.length).toBeGreaterThan(0);
+  });
+
+  it('prefers the per-site assignment over the last-used selection (PBI-141)', async () => {
+    const { session } = setup({ lastProfileId: 'p2', assignedProfileId: 'p1' });
+    await session.start();
+    expect(session.selectedProfileId).toBe('p1');
+  });
+
+  it('falls back to the last-used selection when the assigned profile is gone (PBI-141)', async () => {
+    const { session } = setup({ lastProfileId: 'p2', assignedProfileId: 'gone' });
+    await session.start();
+    expect(session.selectedProfileId).toBe('p2');
   });
 
   it('falls back to the first profile and address without stored selection', async () => {
@@ -140,7 +158,7 @@ describe('fill session: apply', () => {
     const { session, env } = setup({ summary: { filled: 1, unapplied: 1 } });
     await session.start();
     const order: string[] = [];
-    vi.mocked(env.injectPlan).mockImplementation(() => { order.push('inject'); return fullSummary(1, 1); });
+    vi.mocked(env.injectPlan).mockImplementation(() => { order.push('inject'); return reportOf(fullSummary(1, 1)); });
     vi.mocked(env.persistSelection).mockImplementation(() => { order.push('persist'); });
     const result = session.apply(false, panel);
     expect(order).toEqual(['inject', 'persist']);
@@ -152,7 +170,7 @@ describe('fill session: apply', () => {
     await session.start();
     expect(session.apply(false, panel)).toMatchObject({
       applied: true,
-      display: { banner: '一部のみ適用（1/2件）' },
+      display: { banner: { kind: 'partial', text: '一部のみ適用（1/2件）' } },
     });
   });
 
@@ -162,12 +180,18 @@ describe('fill session: apply', () => {
     // No hint argument: the session binds the seam reason internally.
     expect(session.apply(false, panel)).toMatchObject({
       applied: true,
-      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
+      display: { banner: { kind: 'partial', text: `${hintForButton('network')}。一部のみ適用（1/2件）` } },
     });
   });
 
   it('stays silent on full application', () => {
     expect(decideDisplay(fullSummary(2, 0))).toEqual({ banner: null });
+  });
+
+  it('passes the partial banner kind as a type for the button timer', () => {
+    expect(decideDisplay(fullSummary(1, 1))).toEqual({
+      banner: { kind: 'partial', text: '一部のみ適用（1/2件）' },
+    });
   });
 
   it('leaves the session open for retry when consent fails', async () => {
@@ -282,7 +306,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     const env: SessionEnv = {
       classify: async () => { order.push('classify'); return { items: baseItems(), failureReason: 'network' }; },
       checkConsent: () => { order.push('checkConsent'); return { ok: true as const }; },
-      injectPlan: () => { order.push('inject'); return fullSummary(1, 1); },
+      injectPlan: () => { order.push('inject'); return reportOf(fullSummary(1, 1)); },
       persistSelection: () => { order.push('persist'); },
       openUrl: () => { order.push('openUrl'); },
       feedbackContext: () => { order.push('feedbackContext'); return { pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }; },
@@ -306,7 +330,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     const env: SessionEnv = {
       classify: async () => ({ items: baseItems(), failureReason: null }),
       checkConsent: () => { order.push('checkConsent'); return { ok: false as const, reason: '覆われているため中止' }; },
-      injectPlan: () => { order.push('inject'); return fullSummary(2, 0); },
+      injectPlan: () => { order.push('inject'); return reportOf(fullSummary(2, 0)); },
       persistSelection: () => { order.push('persist'); },
       openUrl: () => { order.push('openUrl'); },
       feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
@@ -329,7 +353,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     // apply() never clears the reason: a retry shows the same hint.
     expect(second).toEqual(first);
     expect(second).toMatchObject({
-      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
+      display: { banner: { kind: 'partial', text: `${hintForButton('network')}。一部のみ適用（1/2件）` } },
     });
   });
 
@@ -339,7 +363,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     const env: SessionEnv = {
       classify: async () => ({ items: baseItems(), failureReason: reason }),
       checkConsent: () => ({ ok: true as const }),
-      injectPlan: () => fullSummary(1, 1),
+      injectPlan: () => reportOf(fullSummary(1, 1)),
       persistSelection: () => {},
       openUrl: () => {},
       feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
@@ -356,7 +380,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     expect(res?.failureReason).toBeNull();
     // The newer (successful) run clears the hint from the banner composition.
     expect(session.apply(false, panel)).toMatchObject({
-      display: { banner: '一部のみ適用（1/2件）' },
+      display: { banner: { kind: 'partial', text: '一部のみ適用（1/2件）' } },
     });
   });
 });
@@ -383,7 +407,7 @@ describe('fill session: apply approval seam (PBI-122 review #9)', () => {
       checkConsent: () => (consentOk()
         ? { ok: true as const }
         : { ok: false as const, reason: '覆われているため中止' }),
-      injectPlan: (p: PlanItem[]) => { injected.push(p); return fullSummary(1, 0); },
+      injectPlan: (p: PlanItem[]) => { injected.push(p); return reportOf(fullSummary(1, 0)); },
       persistSelection: () => {},
       openUrl: () => {},
       feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
@@ -425,5 +449,59 @@ describe('fill session: apply approval seam (PBI-122 review #9)', () => {
     consentOk = true;
     session.apply(false, panel);
     expect(injected[0]![0]).toMatchObject({ fieldId: 'f-bldg', value: '', status: 'warn-maxlength' });
+  });
+});
+
+describe('undoLast (PBI-132)', () => {
+  const undoEntry = (fieldId: string, value: string, snapshot: string, restoreEmpty = vi.fn()): UndoEntry => ({
+    fieldId, value, snapshot: () => snapshot, restoreEmpty,
+  });
+
+  it('keeps the latest fill history in memory and consumes it on undoLast', async () => {
+    const { session, env } = setup();
+    await session.start();
+    expect(session.undoCount).toBe(0);
+    const restore = vi.fn();
+    vi.mocked(env.injectPlan).mockImplementation(() =>
+      reportOf(fullSummary(1, 1), [undoEntry('jai-1', '山田', '山田', restore)]));
+    session.apply(false, panel);
+    expect(session.undoCount).toBe(1);
+    const r = session.undoLast();
+    expect(r?.restored).toEqual(['jai-1']);
+    expect(r?.skipped).toEqual([]);
+    expect(restore).toHaveBeenCalledOnce();
+    // One-shot: the entries are consumed.
+    expect(session.undoCount).toBe(0);
+    expect(session.undoLast()).toBeNull();
+  });
+
+  it('skips user-edited fields and never restores them', async () => {
+    const { session, env } = setup();
+    await session.start();
+    const restore = vi.fn();
+    vi.mocked(env.injectPlan).mockImplementation(() =>
+      reportOf(fullSummary(2, 0), [
+        undoEntry('jai-1', '山田', '山田太郎', restore),
+        undoEntry('jai-2', '東京都', '東京都', restore),
+      ]));
+    session.apply(false, panel);
+    const r = session.undoLast();
+    expect(r?.restored).toEqual(['jai-2']);
+    expect(r?.skipped).toEqual(['jai-1']);
+    expect(restore).toHaveBeenCalledTimes(1);
+  });
+
+  it('overwrites the history on a later apply (undo is always the 直後の注入)', async () => {
+    const { session, env } = setup();
+    await session.start();
+    vi.mocked(env.injectPlan).mockImplementationOnce(() =>
+      reportOf(fullSummary(1, 0), [undoEntry('jai-1', '山田', '山田')]));
+    session.apply(false, panel);
+    expect(session.undoCount).toBe(1);
+    vi.mocked(env.injectPlan).mockImplementationOnce(() =>
+      reportOf(fullSummary(1, 0), [undoEntry('jai-9', '東京', '東京')]));
+    session.apply(false, panel);
+    const r = session.undoLast();
+    expect(r?.restored).toEqual(['jai-9']);
   });
 });

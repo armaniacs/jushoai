@@ -16,8 +16,8 @@ export const edgeStoreUrl = (lang: Lang) => `${EDGE_STORE_URL}?hl=${lang}`;
 export const AMO_STORE_URL = 'https://addons.mozilla.org/firefox/addon/jushoai/';
 export const amoStoreUrl = (lang: Lang) => `https://addons.mozilla.org/${lang === 'en' ? 'en-US' : 'ja'}/firefox/addon/jushoai/`;
 export const GUIDE_SLUGS = [
-  'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'supported-fields',
-  'ai-providers', 'privacy', 'how-it-works', 'troubleshooting', 'license', 'glossary',
+  'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'shortcuts-and-tools', 'supported-fields',
+  'ai-providers', 'safety', 'privacy', 'how-it-works', 'troubleshooting', 'license', 'glossary',
 ] as const;
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 

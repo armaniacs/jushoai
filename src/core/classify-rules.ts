@@ -317,7 +317,7 @@ function classifyText(
 }
 
 /**
- * 欄単体から素名のみを返す（カナ帰属は解決せず `resolveKana` が行う）。単体直呼びの結果を planner に渡さず `classifyAll` 経由で使うこと。
+ * 欄単体から素名のみを返す（カナ帰属は解決せず `resolveKana` が行う）。注入・下書きの入口からは直呼びしない: `classifyRulePipeline`（分類 → kana 帰属 → refine の正準合成、PBI-150）経由で使うこと。
  */
 export function classifyField(m: FieldMeta): Classification | null {
   const ac = m.autocomplete.trim().toLowerCase().split(/\s+/).pop() ?? '';
@@ -598,21 +598,58 @@ export const TEXT_TO_CATEGORY_STAGES = [
   { name: 'englishPage', runs: 'applyEnglishPage' },
 ] as const;
 
+export interface RulePipelineTrace {
+  // The pipeline's final items (englishPage applied when requested).
+  items: Item[];
+  // Non-confident fields from the initial classification (the LLM fallback set).
+  pending: FieldMeta[];
+  // Fields whose category changed during the sibling refine step.
+  refineChanged: number;
+  // Fields the refine dropped (oversized ambiguous groups).
+  refineDropped: number;
+}
+
+// Trace-bearing single implementation of the canonical composition
+// (classify → resolveKana → refine → englishPage): classifyRulePipeline (the
+// production entrance) and the eval (src/eval/metrics.ts) share this one
+// composition, and the trace carries the intermediate values (pending, the
+// refine retag/drop counts) the eval reads — the eval's former hand-rolled
+// copy of the composition is replaced (PBI-145). pending is the initial
+// classification's non-confident fields, before resolveKana and refine (the
+// LLM fallback set). refineChanged / refineDropped count the refine step's
+// retags and drops and do not depend on englishPage.
+export function classifyRulePipelineWithTrace(
+  metas: FieldMeta[],
+  opts: { englishPage?: boolean } = {},
+): RulePipelineTrace {
+  const started: Item[] = metas.map((meta) => ({
+    meta,
+    cls: classifyField(meta) ?? { category: 'unknown', confidence: 0, source: 'rule' as const },
+  }));
+  const pending = started.filter((r) => !isConfident(r.cls)).map((r) => r.meta);
+  const resolved = resolveKana(started);
+  const refined = refineClassifications(resolved);
+  const before = new Map(resolved.map((i) => [i.meta.id, i.cls.category]));
+  const afterIds = new Set(refined.map((i) => i.meta.id));
+  const items = opts.englishPage === true ? applyEnglishPage(refined) : refined;
+  return {
+    items,
+    pending,
+    refineChanged: refined.filter((i) => before.get(i.meta.id) !== i.cls.category).length,
+    refineDropped: resolved.filter((i) => !afterIds.has(i.meta.id)).length,
+  };
+}
+
 /**
  * ルール限定の分類パイプライン（入口seam）。classifyAllのルール経路の正準で、
  * 未分類欄はunknown化する（LLM回答なし時と同一）。PBI-50: classifier不使用時
  * のclassifyAllはこの関数に委譲する（単一所有）。順序・意味論を変えるときは
- * ここだけ変えれば両経路に反映される。
+ * ここだけ変えれば両経路に反映される。PBI-150: analyze・fill-one・import-draft
+ * の分類入口はこの関数経由で呼ぶ（classifyField の直呼びは入口から出す）。
  */
 export function classifyRulePipeline(
   metas: FieldMeta[],
   opts: { englishPage?: boolean } = {},
 ): Item[] {
-  const started: Item[] = metas.map((meta) => ({
-    meta,
-    cls: classifyField(meta) ?? { category: 'unknown', confidence: 0, source: 'rule' as const },
-  }));
-  const resolved = resolveKana(started);
-  const refined = refineClassifications(resolved);
-  return opts.englishPage === true ? applyEnglishPage(refined) : refined;
+  return classifyRulePipelineWithTrace(metas, opts).items;
 }

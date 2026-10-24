@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { AI_FAILURE_TEXT, hintForButton, noticeForTest } from '../../src/ai/failure-text';
 import type { ClassifyFailure, TestFailure } from '../../src/messages';
 
-// 単一対応表の正準キー集合。共有の7キーが両型の共通部分で、truncated は
+// 単一対応表の正準キー集合。共有の8キーが両型の共通部分で、truncated は
 // classify-only（PBI-25: gateway の60件打ち切り信号）のため ClassifyFailure
 // にだけ含まれる。messages.ts に新規 reason を追加したら、このリストと
 // AI_FAILURE_TEXT の両方を更新すること（片方だけだと下のテストが失敗する）。
@@ -14,6 +14,9 @@ const SHARED_FAILURE_KEYS = [
   'rejected',
   'bad-response',
   'unavailable',
+  // VULN-001: first-dial confirmation gate (trust-on-first-use)。設定ページで
+  // 接続先を承認するまで classify/test をブロックする理由。
+  'first-dial',
 ] as const satisfies readonly TestFailure[];
 const CLASSIFY_ONLY_KEYS = ['truncated'] as const satisfies readonly ClassifyFailure[];
 const ALL_CLASSIFY_KEYS = [...SHARED_FAILURE_KEYS, ...CLASSIFY_ONLY_KEYS] as const;

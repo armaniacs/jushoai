@@ -1,4 +1,10 @@
 import { GENDERS } from '../../core/genders';
+// Field vocabulary (PBI-158): the profile/address card rows come from the core
+// field catalog, so a new row is one table entry for both UIs and the kana
+// label difference stays an explicit column instead of a drift.
+import {
+  OPTIONS_ADDRESS_FIELDS, OPTIONS_PROFILE_FIELDS, PREFECTURE_FIELD_LABEL,
+} from '../../core/field-catalog';
 import { PREFECTURES } from '../../core/prefectures';
 import {
   normalizeAddress, normalizeProfile, validateAddress, validateProfile,
@@ -6,36 +12,15 @@ import {
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
+import { applyImportDraft, applyImportToState } from '../../core/import-apply';
+import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, notice } from './dom';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
-
-const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
-  { key: 'lastName', label: '姓', placeholder: '山田' },
-  { key: 'firstName', label: '名', placeholder: '太郎' },
-  { key: 'lastNameKana', label: 'セイ（フリガナ・ふりがな入力可）', placeholder: 'ヤマダ' },
-  { key: 'firstNameKana', label: 'メイ（フリガナ・ふりがな入力可）', placeholder: 'タロウ' },
-  { key: 'lastNameRomaji', label: '姓（ローマ字・半角英字・任意）', placeholder: 'Yamada' },
-  { key: 'firstNameRomaji', label: '名（ローマ字・半角英字・任意）', placeholder: 'Taro' },
-  { key: 'birthday', label: '生年月日', placeholder: '1990-05-07' },
-  { key: 'school', label: '学校名', placeholder: '都立日比谷高校' },
-  { key: 'department', label: '学部・学科', placeholder: '普通科' },
-  { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル' },
-  { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部' },
-  { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email' },
-  { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel' },
-];
-
-const ADDRESS_FIELDS: { key: Exclude<keyof Address, 'id' | 'prefecture'>; label: string; placeholder: string }[] = [
-  { key: 'label', label: '名前（自宅・勤務先など）', placeholder: '自宅' },
-  { key: 'zip', label: '郵便番号', placeholder: '1000001' },
-  { key: 'city', label: '市区町村', placeholder: '千代田区' },
-  { key: 'street', label: '番地', placeholder: '千代田1-1' },
-  { key: 'building', label: '建物名・部屋番号（任意）', placeholder: '千代田ビル101' },
-];
+import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
   { key: 'country', label: '国名（半角英数・任意）', placeholder: 'United States' },
@@ -122,18 +107,6 @@ function appendProfileField(
   if (hint) set.append(hint);
 }
 
-function message(kind: 'errors' | 'saved', lines: string[]): HTMLElement {
-  if (kind === 'saved') {
-    const p = el('p', lines[0] ?? '');
-    p.className = 'saved';
-    return p;
-  }
-  const ul = el('ul');
-  ul.className = 'errors';
-  ul.append(...lines.map((t) => el('li', t)));
-  return ul;
-}
-
 function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLElement {
   const page = document.createElement('div');
   page.id = PROFILES_SECTION_ID;
@@ -142,7 +115,7 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
   const cards = profiles.map((p, i) => {
     const set = cardFieldset(`プロファイル ${i + 1}`);
     appendPlainField(set, '名前（個人用・家族用など）', '個人用', p.label, (v) => { p.label = v; });
-    for (const f of PROFILE_FIELDS) {
+    for (const f of OPTIONS_PROFILE_FIELDS) {
       appendProfileField(set, f, p[f.key], (v) => { p[f.key] = v; });
     }
     set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
@@ -174,11 +147,11 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   const cards = addresses.map((a, i) => {
     const set = cardFieldset();
     set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; }, profiles)));
-    for (const f of ADDRESS_FIELDS.slice(0, 2)) {
+    for (const f of OPTIONS_ADDRESS_FIELDS.slice(0, 2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
-    set.append(labeled('都道府県', prefectureSelect(a.prefecture, (v) => { a.prefecture = v; })));
-    for (const f of ADDRESS_FIELDS.slice(2)) {
+    set.append(labeled(PREFECTURE_FIELD_LABEL, prefectureSelect(a.prefecture, (v) => { a.prefecture = v; })));
+    for (const f of OPTIONS_ADDRESS_FIELDS.slice(2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
     const overseasTitle = document.createElement('h3');
@@ -203,7 +176,9 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
-function render(notice?: HTMLElement) {
+// The parameter is noticeElement: notice() is the shared notice builder, and a
+// parameter of the same name would shadow it inside this function body.
+function render(noticeElement?: HTMLElement) {
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
@@ -217,14 +192,71 @@ function render(notice?: HTMLElement) {
   save.textContent = '保存';
   save.addEventListener('click', onSave);
 
+  // PBI-127: the page-based import. Chrome's own autofill data is not readable
+  // by an extension, so the draft comes from the active tab's form (the values
+  // Chrome autofilled); only the normalized/validated subset becomes a form
+  // draft, and nothing saves until the 保存 button runs the full pipeline.
+  const importButton = document.createElement('button');
+  importButton.type = 'button';
+  importButton.textContent = 'フォームから取り込む';
+  importButton.addEventListener('click', () => {
+    void onImportDraft().catch(() => {
+      render(notice('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+    });
+  });
+
   const footer = document.createElement('div');
   footer.className = 'row';
-  footer.append(save);
+  footer.append(save, importButton);
 
   app.replaceChildren(
-    title, profilePage, addressPage, footer, transferHolder, ...(notice ? [notice] : []),
+    title, profilePage, addressPage, footer, transferHolder, ...(noticeElement ? [noticeElement] : []),
   );
   applyActivePage();
+}
+
+// PBI-127: ask the active tab's content script for the page draft, then run it
+// through normalizeProfile/normalizeAddress + validate. Only the fields that
+// pass become form values. The first card receives them when it is still
+// blank (a new user's card); a card that already has values is never silently
+// overwritten — the import creates a new card instead. Save stays a separate
+// explicit step.
+async function onImportDraft(): Promise<void> {
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab?.id) {
+    render(notice('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
+    return;
+  }
+  const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
+  if (!res || !res.ok) {
+    render(notice('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
+    return;
+  }
+  const first = state.profiles[0];
+  const blankProfile = first === undefined || OPTIONS_PROFILE_FIELDS.every((f) => (first[f.key] ?? '').trim() === '');
+  const target = blankProfile ? first ?? { ...EMPTY_PROFILE, id: newId() } : { ...EMPTY_PROFILE, id: newId(), label: '新規' };
+  const firstAddress = state.addresses[0];
+  // The address label is not a form value — a card with only the default
+  // label still counts as blank, so the import fills it instead of forking.
+  const blankAddress = firstAddress === undefined
+    || OPTIONS_ADDRESS_FIELDS.filter((f) => f.key !== 'label').every((f) => (firstAddress[f.key] ?? '').trim() === '');
+  const targetAddress = blankAddress
+    ? firstAddress ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' }
+    : { ...EMPTY_ADDRESS, id: newId(), label: '新規' };
+  const targets = { target, targetAddress, blankProfile, blankAddress };
+  const result = applyImportDraft(target, targetAddress, res.draft);
+  if (result.taken === 0) {
+    render(notice('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
+    return;
+  }
+  const next = applyImportToState(state, targets, result);
+  state.profiles = next.profiles;
+  state.addresses = next.addresses;
+  const lines = [
+    `${result.taken}件を取り込みました。保存ボタンで確定します。`,
+    ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
+  ];
+  render(notice('saved', lines));
 }
 
 async function onSave() {
@@ -237,7 +269,7 @@ async function onSave() {
   if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
   if (addresses.length === 0) errors.push('住所を1件以上登録してください');
   if (errors.length > 0) {
-    render(message('errors', errors));
+    render(notice('errors', errors));
     return;
   }
   state = { profiles, addresses };
@@ -247,10 +279,10 @@ async function onSave() {
     // PBI-23: storage境界は型付きエラーで失敗を伝える。ここで受けて保存失敗を
     // 表示する（成功誤表示の防止）。詳細はメッセージに出さず件数のみ。
     console.warn('[JushoAI] save failed', e);
-    render(message('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
     return;
   }
-  render(message('saved', ['保存しました']));
+  render(notice('saved', ['保存しました']));
 }
 
 // Read storage again and redraw. Used at boot and after an import rewrites
@@ -279,7 +311,7 @@ const showReadFailure = (): void => {
       addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
     };
   }
-  render(message('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
+  render(notice('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
 };
 
 void reloadState().catch(showReadFailure);
@@ -288,6 +320,9 @@ mountAiSection(document.getElementById('ai-app')!);
 // Where JushoAI must not start is its own page: the list can grow, and the
 // save button belongs with the list it saves.
 mountExclusionSection(document.getElementById('exclusion-app')!);
+// The taught correction layer is its own page: the list grows with each 教えた
+// pair and the remove buttons belong with it.
+mountMappingSection(document.getElementById('mapping-app')!);
 // The audit log is its own page so it can grow without pushing the AI settings down.
 const auditPage = document.createElement('div');
 auditPage.id = AUDIT_SECTION_ID;

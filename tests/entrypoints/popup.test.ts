@@ -31,6 +31,23 @@ describe('renderPopup', () => {
     expect(badges).toEqual(['使用中', '使用中']);
   });
 
+  it('appends the minimum English guide after the Japanese sections (PBI-135)', () => {
+    const root = document.createElement('div');
+    renderPopup(root, data(), {});
+    const guide = root.querySelector('.guide-wrap');
+    expect(guide).not.toBeNull();
+    expect(guide?.querySelector('h2')?.textContent).toBe('How to use / 使い方（English）');
+    const steps = [...(guide?.querySelectorAll('.guide li') ?? [])].map((li) => li.textContent);
+    expect(steps).toEqual([
+      '1. Register your name and address in 設定 (Settings).',
+      '2. Open the form page and press the JushoAI button.',
+      '3. Check the preview and press 入力する (Apply).',
+    ]);
+    // The Japanese sections stay untouched (they come first).
+    expect(root.querySelector('h1')?.textContent).toBe('登録内容の確認');
+    expect(root.textContent).toContain('自宅用: 山田 太郎');
+  });
+
   it('falls back to the first entry without last-used state', () => {
     const root = document.createElement('div');
     renderPopup(root, data(), {});

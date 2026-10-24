@@ -1,5 +1,21 @@
 # PBI 台帳インデックス
 
+## 進行中（archラウンド2・実装済み）
+
+- `2026-10-24-00-backlog-arch-round2.md`（アーキテクチャレビュー10候補のPBI化・RICE順位確定、実装済み・コードレビューのみ残）
+- `2026-10-24-150-refactor-pipeline-kana.md`（順位 1。実装済み（`d0d0c9d`）・fill-one/import-draft を classifyRulePipeline 入口に統一）
+- `2026-10-24-151-refactor-options-notice.md`（順位 2。実装済み（`fa248d3`）・saved/errors通知をnotice moduleに統一）
+- `2026-10-24-152-refactor-banner-kind.md`（順位 3。実装済み（`0cb8969`）・banner挙動区分を型で渡す）
+- `2026-10-24-153-refactor-store-module.md`（順位 4。実装済み（`77c6006`）・store層をkv-store 1 moduleに寄せ型付きエラー導入）
+- `2026-10-24-154-refactor-egress-pending-split.md`（順位 5。実装済み（`6cb8ce0`）・pending分割をsplitPending 1所有に寄せる）
+- `2026-10-24-155-refactor-confirm-dialog.md`（順位 6。実装済み（`342e34b`）・モーダルPromise化をconfirmDialogに統一）
+- `2026-10-24-156-refactor-tab-dispatch.md`（順位 7。実装済み（`9a451f2`）・tabメッセージのguarded dispatcher）
+- `2026-10-24-157-refactor-preview-row-seam.md`（順位 8。実装済み（`d4bba0d`）・preview行描画に内部seam）
+- `2026-10-24-158-backlog-field-catalog.md`（順位 9。実装済み（`3118e68`）・フィールド語彙をcatalogに集約）
+- `2026-10-24-159-backlog-flow-state-batch.md`（順位 10。実装済み（`343f7f4`）・学習状態の読み出し束をflow-state loaderに寄せる）
+
+最終検証: `make check` exit 0（152 files / 1890 passed + 1 expected fail）
+
 ## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
 
 - `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、未実装・未コミット）

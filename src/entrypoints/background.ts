@@ -1,9 +1,11 @@
 import { AuditStore } from '../ai/audit-log';
 import { autoEgress } from '../ai/http-classifiers';
+import { createFirstDialGate } from '../ai/first-dial';
 import { hasHostPermission } from '../ai/permissions';
 import { IdbKeyStore, type KeyStore } from '../ai/secret-store';
 import { AI_SETTINGS_KEY, loadAiSecrets, loadPublicAiSettings } from '../ai/settings-store';
 import type { ProviderKind } from '../ai/types';
+import { registerFillOneMenu } from '../context-menu';
 import { getLanguageModel } from '../llm/availability';
 import { handleMessage } from '../llm/handle-message';
 import { ProviderRegistry } from '../llm/provider-registry';
@@ -28,12 +30,16 @@ export default defineBackground(() => {
   // the host again (per-call). autoEgress stays off under vitest so tests
   // keep injecting their own egress fake.
   const egress = autoEgress();
+  // First-dial confirmation gate: reads chrome.storage.local per classify, so a
+  // settings-page confirmation takes effect on the next call without a restart.
+  const firstDial = createFirstDialGate();
   const registry = new ProviderRegistry(
     {
       getLanguageModel,
       hasPermission: (origins) => hasHostPermission(origins),
       fetch: globalThis.fetch.bind(globalThis),
       egress,
+      firstDial,
       audit,
     },
     { authFailed, compat },
@@ -69,5 +75,14 @@ export default defineBackground(() => {
       loadSecrets,
     }, { pageUrl: sender.tab?.url }).then(sendResponse, () => sendResponse(undefined));
     return true;
+  });
+
+  // PBI-137: the one-click この欄に入力 entry. The menu is created in
+  // onInstalled only (contextMenus are per-profile persistent, so a SW wake
+  // must not recreate it); the click routes to the content script, which
+  // resolves the remembered right-click target itself. A tab without a
+  // content script (chrome:// pages) fails silently through lastError.
+  registerFillOneMenu(chrome.runtime.onInstalled, chrome.contextMenus, (tabId, msg) => {
+    chrome.tabs.sendMessage(tabId, msg, () => void chrome.runtime.lastError);
   });
 });

@@ -45,9 +45,22 @@ Open the extension's settings page and fill in these items.
 | Address | Street number | |
 | Address | Building name | Optional. |
 
-You can register several addresses.
+You can register several addresses (up to 10 each).
+
+The import-from-form button on the settings page builds a draft from the values in the form you have open. You can also export your profiles and addresses to a file and import it elsewhere. The exported file is plain text. A temporary add-on in Firefox loses your registration when Firefox quits, so an export makes registering again easy. See [Tips and tools](/en/guides/shortcuts-and-tools/) for details.
 
 If you have not registered a profile and at least one address, clicking `JushoAI で入力` (fill with JushoAI) opens the settings page instead.
+
+## Using AI (optional)
+
+AI is optional. It only classifies fields that the rules cannot identify. To use it, follow these steps in the `AI 判定` (AI detection) section of the settings page.
+
+1. Choose the kind under `AI プロバイダ` (AI provider): built-in browser AI, OpenAI-compatible API, or Google Gemini.
+2. For an OpenAI-compatible API, enter the base URL, model name, and API key, then save. When you save, the browser asks whether to allow network access to that provider.
+3. Before anything is sent to a saved endpoint for the first time, approve it. Check that the list of IP addresses shown below the saved endpoint (what the host name resolves to with DNS) is what you expect, then press `この接続先を承認する` (approve this endpoint). Nothing is sent to that endpoint until you approve it.
+4. Run `接続テスト` (connection test) to check that it works.
+
+See [Setting up an AI provider](/en/guides/ai-providers/) for details.
 
 ## Use it on a form
 
@@ -62,12 +75,26 @@ The button appears when the form has at least 3 controls (text, email, tel and s
 
 Close the preview with the Esc key or `キャンセル` (cancel). Fields you edit yourself while the preview is open are not overwritten. The postal code field is filled last, to avoid conflicts with forms that complete the address automatically.
 
+## For your safety
+
+JushoAI works under these rules.
+
+- Nothing is filled until you review the preview and press the fill button. Opening a page never fills anything.
+- Fields that already have a value are not overwritten, and a value longer than the field allows is not truncated but flagged with a warning.
+- Right after filling, the undo button in the preview restores only the fields JushoAI filled.
+- AI is off by default. Even when you turn it on, only field metadata is sent, never your profile values.
+- A new AI destination receives nothing until you approve it.
+
+The whole picture is in [How JushoAI keeps your data safe](/en/guides/safety/).
+
 ## When you have several addresses
 
 At the top of the preview, you can choose which address to use. The list updates when you choose another one.
 
 ## What to read next
 
+- [How JushoAI keeps your data safe](/en/guides/safety/) ― what is done for safety
+- [Tips and tools](/en/guides/shortcuts-and-tools/) ― single-field fill, import and export
 - [Profiles](/en/guides/profiles/) and [Addresses](/en/guides/addresses/) ― details on what you register
 - [Toolbar and filling a form](/en/guides/popup-and-fill/) ― how to fill with the button
 - [Setting up an AI provider](/en/guides/ai-providers/) ― setup for using AI

@@ -1,6 +1,6 @@
 {
   "meta": {
-    "title": "JushoAI — Fill Japanese forms into the right fields",
+    "title": "JushoAI - Fill Japanese forms into the right fields",
     "description": "A Chromium browser extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
   },
   "chrome": {
@@ -22,7 +22,7 @@
       { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number and prefecture-to-building address fields in the shape each field expects." },
       { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
       { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
-      { "title": "Multiple profiles and addresses", "body": "Keep up to 10 profiles and any number of addresses. Each address can be tied to the profile that uses it. The toolbar icon shows what is registered and which profile is in use." },
+      { "title": "Multiple profiles and addresses", "body": "Keep up to 10 profiles and up to 10 addresses. Each address can be tied to the profile that uses it. The toolbar icon shows what is registered and which profile is in use." },
       { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
     ]
   },
@@ -70,6 +70,21 @@
       { "name": "Built-in browser AI", "body": "Chrome (Gemini Nano) or Edge (Phi-mini). Needs a flag and a restart, and nothing leaves your device." }
     ]
   },
+  "safety": {
+    "title": "How we keep it safe",
+    "lead": "JushoAI handles personal information, so it is built on three rules: never fill without asking, never send without being asked, and layer the defenses.",
+    "items": [
+      { "title": "Nothing is filled until you approve", "body": "Pressing the button does not fill anything. Only the fields you confirm in the preview and approve with the fill button are filled. There is no auto-fill on page load." },
+      { "title": "No overwriting, no truncating", "body": "Fields that already have a value are never overwritten. A value longer than the field's maximum length is not truncated; it is skipped with a warning. Read-only and disabled fields are skipped too." },
+      { "title": "Undo after filling", "body": "Right after filling, the undo button restores only the fields JushoAI filled to their previous state. Fields you typed into afterwards are left alone. The history lives only in memory on your device and is never saved or sent." },
+      { "title": "Rules make the values, AI only classifies", "body": "AI only classifies what kind of field it is; it never produces the values. Your profile values are not given to AI or to anyone else. AI is off by default." },
+      { "title": "Strict checks on the destination", "body": "https only (http only for localhost and similar). Internal network addresses are rejected, and DNS results are checked when you save and again just before each call. Redirects are not followed. A new destination receives nothing until you have reviewed its IP addresses and approved it." },
+      { "title": "Minimal keys and permissions", "body": "API keys are stored encrypted with AES-GCM and are never shown on the settings page. Network permission is not requested at install; only the saved provider's host is requested, when you save." },
+      { "title": "UI the page cannot touch", "body": "The extension's UI sits inside a closed Shadow DOM that page scripts cannot reach. Strings that come from the page are shown as text, never interpreted as HTML." },
+      { "title": "A local record of every call", "body": "Every AI call is recorded in an audit log on your device. You can review, download or delete it on the settings page. Entries disappear automatically after 7 days." }
+    ],
+    "link": "Read the safety details"
+  },
   "privacy": {
     "title": "Privacy",
     "items": [
@@ -101,7 +116,8 @@
     "items": [
       { "q": "Does it work without AI?", "a": "Yes. Fields are classified by rules, and AI only helps with ambiguous ones. AI is off by default." },
       { "q": "What gets sent outside?", "a": "Nothing, unless you configure AI. If you do, only field metadata is sent; your profile values and the values already in fields are not." },
-      { "q": "I'm worried about wrong entries.", "a": "You review everything in a preview before filling, and fields that already have a value are not overwritten." },
+      { "q": "I'm worried about wrong entries.", "a": "You review everything in a preview before filling, and fields that already have a value are not overwritten. Right after filling, you can undo." },
+      { "q": "What do you do for safety?", "a": "Preview approval, no overwriting, undo, never giving profile values to AI, destination checks with first-use approval, encrypted API keys and an audit log of every call. See How we keep it safe on the home page and the Safety guide." },
       { "q": "Does it work on every form?", "a": "It handles common inputs (text, email, tel, and prefecture dropdowns). Fields it cannot classify are left alone." },
       { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." }
     ],

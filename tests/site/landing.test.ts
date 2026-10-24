@@ -14,7 +14,7 @@ describe('renderLanding', () => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });
     expect((html.match(/<h1/g) ?? []).length).toBe(1);
-    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
+    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'safety', 'privacy', 'install', 'faq']) {
       expect(html).toContain(`id="${id}"`);
     }
     for (const item of s.features.items) expect(html).toContain(item.title);
@@ -117,7 +117,7 @@ describe('renderLanding', () => {
 
   it.each(['ja', 'en'] as const)('has each section id exactly once for %s', async (lang) => {
     const html = renderLanding({ lang, base: '/', s: await load(lang) });
-    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'privacy', 'install', 'faq']) {
+    for (const id of ['features', 'demo', 'steps', 'fields', 'providers', 'safety', 'privacy', 'install', 'faq']) {
       expect(html.split(`id="${id}"`).length - 1).toBe(1);
     }
   });
