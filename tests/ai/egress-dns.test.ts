@@ -91,7 +91,10 @@ describe('isPrivateIp', () => {
     ['fe7f::1', false], ['fe80::1', true], ['febf::1', true], ['fec0::1', false],
     ['fb00::1', false], ['fc00::1', true], ['fd00::1', true], ['fdff::1', true],
     ['::ffff:10.0.0.1', true], ['::ffff:8.8.8.8', false], ['::ffff:a00:1', true],
-    ['2606:4700:4700::1111', false],
+    // VULN-003: NAT64 (RFC 6052 well-known + RFC 8215 local-use) and 6to4 (RFC 7526)
+    // translation prefixes embed an IPv4 behind a translation gateway — internal.
+    ['64:ff9b::a00:1', true], ['64:ff9b:1::a00:1', true], ['64:ff9b::', true], ['2002:a00:1::', true],
+    ['64:ff9a::1', false], ['2606:4700:4700::1111', false],
   ])('ipv6 %s -> %s', (ip, expected) => {
     expect(isPrivateIp(ip)).toBe(expected);
   });
@@ -145,6 +148,14 @@ describe('createEgressCheck', () => {
     const check = createEgressCheck({ fetch: doh.fake });
     await expect(check(new URL('https://api.openai.com/v1'))).resolves.toEqual({ ok: true });
     expect(doh.calls).toEqual(['A', 'AAAA']);
+  });
+
+  it('blocks a name that resolves to a NAT64-embedded internal address (VULN-003)', async () => {
+    const nat64 = createEgressCheck({ fetch: dohFetch({ AAAA: ['64:ff9b::a00:1'] }).fake });
+    await expect(nat64(new URL('https://nat64-attacker.example.com/v1'))).resolves.toEqual({
+      ok: false,
+      internal: true,
+    });
   });
 
   it('blocks the dial when DoH is unreachable, errors or answers nothing', async () => {
