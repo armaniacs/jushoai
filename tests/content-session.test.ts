@@ -170,7 +170,7 @@ describe('fill session: apply', () => {
     await session.start();
     expect(session.apply(false, panel)).toMatchObject({
       applied: true,
-      display: { banner: '一部のみ適用（1/2件）' },
+      display: { banner: { kind: 'partial', text: '一部のみ適用（1/2件）' } },
     });
   });
 
@@ -180,12 +180,18 @@ describe('fill session: apply', () => {
     // No hint argument: the session binds the seam reason internally.
     expect(session.apply(false, panel)).toMatchObject({
       applied: true,
-      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
+      display: { banner: { kind: 'partial', text: `${hintForButton('network')}。一部のみ適用（1/2件）` } },
     });
   });
 
   it('stays silent on full application', () => {
     expect(decideDisplay(fullSummary(2, 0))).toEqual({ banner: null });
+  });
+
+  it('passes the partial banner kind as a type for the button timer', () => {
+    expect(decideDisplay(fullSummary(1, 1))).toEqual({
+      banner: { kind: 'partial', text: '一部のみ適用（1/2件）' },
+    });
   });
 
   it('leaves the session open for retry when consent fails', async () => {
@@ -347,7 +353,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     // apply() never clears the reason: a retry shows the same hint.
     expect(second).toEqual(first);
     expect(second).toMatchObject({
-      display: { banner: `${hintForButton('network')}。一部のみ適用（1/2件）` },
+      display: { banner: { kind: 'partial', text: `${hintForButton('network')}。一部のみ適用（1/2件）` } },
     });
   });
 
@@ -374,7 +380,7 @@ describe('fill session: aggregated apply ordering (PBI-45)', () => {
     expect(res?.failureReason).toBeNull();
     // The newer (successful) run clears the hint from the banner composition.
     expect(session.apply(false, panel)).toMatchObject({
-      display: { banner: '一部のみ適用（1/2件）' },
+      display: { banner: { kind: 'partial', text: '一部のみ適用（1/2件）' } },
     });
   });
 });

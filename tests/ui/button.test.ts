@@ -60,7 +60,7 @@ describe('mountButton', () => {
     vi.useFakeTimers();
     const { handle, badge } = mount();
     handle.setStatus({ status: 'available', provider: 'built-in' });
-    handle.showError('<b>x</b>');
+    handle.showError({ kind: 'transient', text: '<b>x</b>' });
     expect(badge().textContent).toBe('<b>x</b>');
     expect(badge().children).toHaveLength(0);
     vi.advanceTimersByTime(4000);
@@ -117,7 +117,7 @@ describe('mountButton', () => {
     it('announces a consent-gate failure reason politely without changing the wording', () => {
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('同意が確認できなかったため注入しませんでした');
+      handle.showError({ kind: 'transient', text: '同意が確認できなかったため注入しませんでした' });
       expect(badge().textContent).toBe('同意が確認できなかったため注入しませんでした');
       expect(badge().getAttribute('aria-live')).toBe('polite');
       expect(badge().getAttribute('aria-atomic')).toBe('true');
@@ -126,7 +126,7 @@ describe('mountButton', () => {
     it('announces an AI failure reason politely', () => {
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('AI通信に失敗したためルールのみで表示: 再試行できます');
+      handle.showError({ kind: 'transient', text: 'AI通信に失敗したためルールのみで表示: 再試行できます' });
       expect(badge().textContent).toBe('AI通信に失敗したためルールのみで表示: 再試行できます');
       expect(badge().getAttribute('aria-live')).toBe('polite');
       expect(badge().getAttribute('aria-atomic')).toBe('true');
@@ -145,7 +145,7 @@ describe('mountButton', () => {
       vi.useFakeTimers();
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('エラー: 分類に失敗、再試行してください');
+      handle.showError({ kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' });
       expect(badge().getAttribute('aria-live')).toBe('polite');
       vi.advanceTimersByTime(4000);
       expect(badge().textContent).toBe('AI 有効');
@@ -156,7 +156,7 @@ describe('mountButton', () => {
     it('drops the error-restore timer on destroy', () => {
       vi.useFakeTimers();
       const { handle } = mount();
-      handle.showError('エラー: 分類に失敗、再試行してください');
+      handle.showError({ kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' });
       expect(vi.getTimerCount()).toBe(1);
       handle.destroy();
       expect(vi.getTimerCount()).toBe(0);
@@ -164,71 +164,67 @@ describe('mountButton', () => {
 
     it('keeps the badge a button with no role override', () => {
       const { handle, badge } = mount();
-      handle.showError('エラー: 分類に失敗、再試行してください');
+      handle.showError({ kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' });
       expect(badge().tagName).toBe('BUTTON');
       expect(badge().getAttribute('role')).toBeNull();
     });
   });
 
-  describe('partial banner persistence (PBI-08)', () => {
-    it('keeps a residual 要確認表示 after 4s instead of restoring', () => {
+  describe('banner kind (PBI-152)', () => {
+    it('keeps a partial banner after 4s without depending on the wording', () => {
       vi.useFakeTimers();
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('一部のみ適用（3/5件）');
-      expect(badge().textContent).toBe('一部のみ適用（3/5件）');
+      // The old wording sniff (includes('一部のみ適用')) would drop this
+      // banner after 4s; the kind alone decides, so any wording persists.
+      handle.showError({ kind: 'partial', text: '3/5件だけ入りました' });
+      expect(badge().textContent).toBe('3/5件だけ入りました');
       vi.advanceTimersByTime(4000);
-      expect(badge().textContent).toContain('一部のみ適用');
-      expect(badge().textContent).toContain('要確認');
-      expect(badge().textContent).not.toBe('AI 有効');
-    });
-
-    it('holds the residual without a second auto-restore', () => {
-      vi.useFakeTimers();
-      const { handle, badge } = mount();
-      handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('一部のみ適用（3/5件）');
-      vi.advanceTimersByTime(4000);
-      const residual = badge().textContent;
-      expect(residual).toContain('要確認');
+      expect(badge().textContent).toBe('3/5件だけ入りました');
+      expect(badge().getAttribute('data-status')).toBe('error');
       vi.advanceTimersByTime(10000);
-      expect(badge().textContent).toBe(residual);
+      expect(badge().textContent).toBe('3/5件だけ入りました');
     });
 
-    it('keeps the residual for a composed hint + partial banner', () => {
+    it('restores the badge on the next status update after a partial banner', () => {
       vi.useFakeTimers();
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('AI通信に失敗したためルールのみで表示: 再試行できます。一部のみ適用（3/5件）');
+      handle.showError({ kind: 'partial', text: '一部のみ適用（3/5件）' });
       vi.advanceTimersByTime(4000);
-      expect(badge().textContent).toBe('一部のみ適用（3/5件） 要確認');
-    });
-
-    it('returns to the conventional display on the next status update', () => {
-      vi.useFakeTimers();
-      const { handle, badge } = mount();
-      handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('一部のみ適用（3/5件）');
-      vi.advanceTimersByTime(4000);
-      expect(badge().textContent).toContain('要確認');
+      expect(badge().textContent).not.toBe('AI 有効');
       handle.setStatus({ status: 'available', provider: 'built-in' });
       expect(badge().textContent).toBe('AI 有効');
+      expect(badge().hasAttribute('aria-live')).toBe(false);
     });
 
-    it('still restores ordinary errors after 4s', () => {
+    it('restores a transient error after 4s even when the wording mentions partial application', () => {
       vi.useFakeTimers();
       const { handle, badge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('エラー: 分類に失敗、再試行してください');
+      // The old sniff folded any text containing 一部のみ適用 into a residual;
+      // the kind alone decides, so this transient restores like any other.
+      handle.showError({ kind: 'transient', text: '一部のみ適用（3/5件）' });
       vi.advanceTimersByTime(4000);
       expect(badge().textContent).toBe('AI 有効');
     });
 
-    it('keeps the badge reapply導線 on trusted clicks after a partial banner', () => {
+    it('sets no restore timer for a partial banner and drops it on destroy for a transient one', () => {
+      vi.useFakeTimers();
+      const { handle } = mount();
+      handle.showError({ kind: 'partial', text: '一部のみ適用（3/5件）' });
+      expect(vi.getTimerCount()).toBe(0);
+      handle.showError({ kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' });
+      expect(vi.getTimerCount()).toBe(1);
+      handle.destroy();
+      expect(vi.getTimerCount()).toBe(0);
+    });
+
+    it('keeps the badge reapply path on trusted clicks after a partial banner', () => {
       vi.useFakeTimers();
       const { handle, onBadgeClick, fireBadge } = mount();
       handle.setStatus({ status: 'available', provider: 'built-in' });
-      handle.showError('一部のみ適用（3/5件）');
+      handle.showError({ kind: 'partial', text: '一部のみ適用（3/5件）' });
       vi.advanceTimersByTime(4000);
       fireBadge(true);
       expect(onBadgeClick).toHaveBeenCalledWith({ status: 'available', provider: 'built-in' });

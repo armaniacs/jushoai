@@ -212,7 +212,9 @@ export default defineContentScript({
         return true;
       } catch (e) {
         button.showError(
-          isContextInvalidated(e) ? 'エラー: ページを再読み込み' : 'エラー: 分類に失敗、再試行してください',
+          isContextInvalidated(e)
+            ? { kind: 'transient', text: 'エラー: ページを再読み込み' }
+            : { kind: 'transient', text: 'エラー: 分類に失敗、再試行してください' },
         );
         return false;
       } finally {
@@ -367,7 +369,7 @@ export default defineContentScript({
       const started = await session.start();
       if (started.failureReason) {
         lastFailure = started.failureReason;
-        button.showError(hintForButton(started.failureReason));
+        button.showError({ kind: 'transient', text: hintForButton(started.failureReason) });
       } else {
         lastFailure = null;
       }
