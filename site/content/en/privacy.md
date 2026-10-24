@@ -1,7 +1,7 @@
 ---
 title: Privacy and what is sent
 description: What JushoAI sends and does not send, when it makes requests, and how API keys are stored.
-order: 7
+order: 9
 ---
 
 # Privacy and what is sent
@@ -10,7 +10,7 @@ order: 7
 
 Unless you configure AI, JushoAI makes no external requests.
 
-Data is sent only when you have configured a provider other than the built-in AI and you click `JushoAI で入力` (fill with JushoAI). Only fields that the rules cannot identify are included. For each such field, the extension sends:
+Data is sent only when you have configured a provider other than the built-in AI and you click `JushoAI で入力` (fill with JushoAI). Only fields that the rules cannot identify are included. The connection test on the settings page sends only one synthetic test field. For each such field, the extension sends:
 
 - An internal field ID. It is generated in the form `jai-N` and is not the HTML `id` attribute.
 - `type` and `maxLength`.
@@ -27,7 +27,7 @@ Labels and headings are text from the page. They can contain personal informatio
 
 ## When requests happen
 
-Requests happen only when you click `JushoAI で入力`. Opening a page does not contact an AI provider. Checking the badge state only reads the saved settings and permissions. It makes no request.
+Requests happen only when you click `JushoAI で入力` or run `接続テスト` (connection test) on the settings page. Opening a page does not contact an AI provider. Checking the badge state only reads the saved settings and permissions. It makes no request.
 
 The destination host is verified down to its resolved address when you save the settings; the save is rejected when the address resolves into an internal network address or when the resolution cannot be confirmed. The resolved address is re-checked right before each call, and the call is not made when the address is confirmed to be internal or when the resolution cannot be confirmed; the rest of the run continues with the rules only. The lexical checks on the host name still apply. The host is resolved again on every call (per-call); a previous result is never carried into the next call. The verification and the actual connection are separate name resolutions, so a change of the resolved address between them (DNS rebinding) cannot be fully ruled out.
 
@@ -70,6 +70,10 @@ The settings page never shows a key. It shows only whether one is saved, and let
 ## Network permission
 
 The extension does not ask for network access at install time. When you save the settings, it asks for access to that provider's host only (an optional permission). The permission is per host and does not distinguish ports, so it also covers the other ports on the same host. Actual requests go only to the saved endpoint. Without the permission, AI is not used. In Firefox, it also asks for your consent to send website content (the field metadata) to the provider, as a data collection permission, in the same request.
+
+## Other safeguards
+
+Safeguards while filling, destination checks and UI isolation are described in [How JushoAI keeps your data safe](/en/guides/safety/).
 
 ## With the built-in AI
 

@@ -1,7 +1,7 @@
 ---
 title: License
 description: A summary of JushoAI's license terms (GPL-3.0-only): what you may do, the conditions when you distribute it, the disclaimer, and how dependencies are treated.
-order: 10
+order: 12
 ---
 
 # License

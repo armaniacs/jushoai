@@ -1,7 +1,7 @@
 ---
 title: Glossary
 description: The meanings of five terms used across the guides (profile, address, preview, AI classification, audit log) in one place.
-order: 11
+order: 13
 ---
 
 # Glossary

@@ -1,7 +1,7 @@
 ---
 title: 対応する入力欄
 description: JushoAI が入力できる欄の一覧と、対応していない欄です。
-order: 5
+order: 6
 ---
 
 # 対応する入力欄

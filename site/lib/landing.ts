@@ -19,6 +19,7 @@ export interface Strings {
   steps: { title: string; items: Titled[] };
   fields: { title: string; items: Titled[] };
   providers: { title: string; lead: string; items: { name: string; body: string }[] };
+  safety: { title: string; lead: string; items: Titled[]; link: string };
   privacy: { title: string; items: Titled[]; link: string };
   install: { title: string; steps: string[]; store: string; storeNote: string; edgeStore: string; edgeStoreNote: string; amoStore: string; amoStoreNote: string; more: string; releases: string };
   faq: { title: string; items: { q: string; a: string }[]; more: string };
@@ -86,13 +87,20 @@ ${cards(s.fields.items)}
 <figure>${mockButton()}<figcaption>${e(s.mock.captionButton)}</figcaption></figure></div>
 </div></section>
 
-<section class="block" id="privacy"><div class="wrap">
+<section class="block" id="safety"><div class="wrap">
+<h2 class="section-title">${e(s.safety.title)}</h2>
+<p class="section-lead">${e(s.safety.lead)}</p>
+${cards(s.safety.items)}
+<p class="note"><a href="${u('guides/safety/')}">${e(s.safety.link)}</a></p>
+</div></section>
+
+<section class="block soft" id="privacy"><div class="wrap">
 <h2 class="section-title">${e(s.privacy.title)}</h2>
 ${cards(s.privacy.items)}
 <p class="note"><a href="${u('guides/privacy/')}">${e(s.privacy.link)}</a></p>
 </div></section>
 
-<section class="block soft" id="install"><div class="wrap narrow">
+<section class="block" id="install"><div class="wrap narrow">
 <h2 class="section-title">${e(s.install.title)}</h2>
 <ol>${s.install.steps.map((t) => `<li>${e(t)}</li>`).join('')}</ol>
 <p><a class="btn primary" href="${e(storeUrl(p.lang))}" target="_blank" rel="noopener noreferrer">${e(s.install.store)}</a> <span class="note">${e(s.install.storeNote)}</span></p>

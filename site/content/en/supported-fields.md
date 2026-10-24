@@ -1,7 +1,7 @@
 ---
 title: Supported fields
 description: The fields JushoAI can fill, and the ones it does not support.
-order: 5
+order: 6
 ---
 
 # Supported fields
