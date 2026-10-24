@@ -11,7 +11,7 @@ const abbrevRow: PreviewRow = {
   label: '建物',
   display: 'サンプルパークマンション203号室 → サンプルパーク邸203号室',
   status: 'warn-maxlength', source: 'rule',
-  fieldId: 'f1', abbrev: 'サンプルパーク邸203号室',
+  fieldId: 'f1', candidates: [{ kind: 'abbrev', text: 'サンプルパーク邸203号室' }],
 };
 
 afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
@@ -74,5 +74,40 @@ describe('preview abbreviation choice (PBI-122)', () => {
     expect(note.className).toBe('note muted');
     box.click();
     expect(note.className).toBe('note');
+  });
+});
+
+// PBI-157: the opt-in candidates ride PreviewRow.candidates as one structure,
+// and the row renders them through a single block — the twin abbrev/assist
+// blocks are gone (deletion test: dropping renderRow would bring them back).
+describe('opt-in candidates in one structure (PBI-157)', () => {
+  it('renders both candidate kinds through the single block', () => {
+    const { root } = open([{
+      ...makeRow('warn-no-value', '候補: 東京都'),
+      fieldId: 'f1',
+      candidates: [
+        { kind: 'abbrev', text: 'サンプルパーク邸' },
+        { kind: 'assist', text: '東京都' },
+      ],
+    }]);
+    const boxes = root.querySelectorAll('li input[type="checkbox"]');
+    expect(boxes).toHaveLength(2);
+    expect((boxes[0] as HTMLInputElement).checked).toBe(false);
+    expect(root.textContent).toContain('略記して入れる');
+    expect(root.textContent).toContain('補助候補を入れる');
+  });
+
+  it('collects the approved field id for either candidate kind', () => {
+    const onApply = vi.fn();
+    const { root } = open([{
+      ...makeRow('warn-no-value', '候補: 東京都'),
+      fieldId: 'f1',
+      candidates: [{ kind: 'assist', text: '東京都' }],
+    }], onApply);
+    const box = root.querySelector('li input[type="checkbox"]') as HTMLInputElement;
+    box.click();
+    expect(buttonIn(root, '入力する')!.disabled).toBe(false);
+    buttonIn(root, '入力する')!.click();
+    expect(onApply).toHaveBeenCalledWith(false, new Set(['f1']));
   });
 });

@@ -39,12 +39,12 @@ Scenario: select twin が1実装に収まる
 
 ## 受け入れ基準
 
-- [ ] renderRow / renderSelect の内部 seam が file 内に存在する
-- [ ] abbrev/assist の twin block が1実装に収まっている
-- [ ] opt-in 候補が PreviewRow.candidates（または同等の1構造）にまとまっている
-- [ ] PreviewOptions / PreviewHandle の interface 重みが減る方向に変わっている
-- [ ] textContent のみ・checkbox 挙動がそのまま維持されている
-- [ ] 既存テストが緑維持
+- [x] renderRow / renderSelect の内部 seam が file 内に存在する
+- [x] abbrev/assist の twin block が1実装に収まっている
+- [x] opt-in 候補が PreviewRow.candidates（または同等の1構造）にまとまっている
+- [x] PreviewOptions / PreviewHandle の interface 重みが減る方向に変わっている
+- [x] textContent のみ・checkbox 挙動がそのまま維持されている
+- [x] 既存テストが緑維持
 
 ## テスト戦略
 
@@ -57,6 +57,17 @@ Scenario: select twin が1実装に収まる
 
 ## Definition of Done
 
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
 - [ ] `make check` が通る
+
+## 実装記録（2026-10-24）
+
+- `src/ui/preview.ts`: file 内に内部 seam を切った。`renderRow(row, callbacks)`（モジュールレベル。label/value の grid、AI バッジ、status note、opt-in checkbox、直すボタンの組み立て。twin block の温床を1責務に）と `renderSelect(caption, items, currentId, onChange)`（profile と address の select twin を1実装に。textContent のみ）と `swapToResult(headText, ...rest)` + `doneButton()`（showResult/showUndoResult の title/head/閉じる組み立て）。approval set の収集（`candidateBoxes`）と hasOk 再計算は `RenderRowCallbacks` で setRows 側から注入。
+- `PreviewRow.candidates?: { kind, text }[]`: abbrev/assist の文字列2メンバーを1構造にまとめた。kind → checkbox 文言の map（`CANDIDATE_TEXT`）。fieldId は従来どおり候補がある行だけに乗り、fix entry と approval set が同じ presence check を共有する。PreviewRow は 8メンバー → 7メンバー。
+- `PreviewHandle` から外部未使用の `setReanalyzing` を削除（busy は reanalyze 経由でのみ動く。唯一の外部利用は preview.test.ts の1件）。8メンバー → 7メンバー。`PreviewOptions` は唯一の呼び出し側（bindPreview）が全 12メンバーを消費するため据え置き（削れるメンバーなし）。
+- `src/content-run.ts`: `buildPreviewRows` が candidates を1構造で積む（abbrev → assist の順。`applyAbbrevApprovals` の優先と一致）。
+- textContent のみ・checkbox 挙動・resultMode 順序制約（showResult 後の setRows は黙って無視）・Escape/close は変更なし。innerHTML は不使用。
+- テスト: `tests/ui/preview-abbrev.test.ts` に1構造の固定2件を追加（両 kind を1 block で描く・どちらの kind でも approval set に乗る）。`tests/ui/preview.test.ts` の busy テスト1件のみ、setReanalyzing を public handle から外す構造変更の根拠で busy の駆動を reanalyze クリック経由に変え、アサーション（aria-busy・live region の内容）はそのまま。
+- 検証: `npx vitest run tests/ui/preview-abbrev.test.ts tests/ui/` 16ファイル 159テスト緑 + 変更シームを直接消費する entrypoint テスト3ファイル 18テスト緑 + `npx tsc --noEmit` 0。フルスイート（make check）はこのworktreeでは未実施（PBI の指示どおり preview 系に絞る）。
+- なぜなぜ分析: /tmp/whywhy-preview-row-seam.md
