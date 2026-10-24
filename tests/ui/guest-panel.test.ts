@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { confirmGuest } from '../../src/ui/guest-panel';
+import { GUEST_ADDRESS_FIELDS, GUEST_PROFILE_FIELDS } from '../../src/core/field-catalog';
 import { attachOpenShadow, buttonIn } from '../helpers';
 
 afterEach(() => { vi.restoreAllMocks(); document.body.innerHTML = ''; });
@@ -53,5 +54,33 @@ describe('confirmGuest (PBI-144)', () => {
     type(sh.root, 1, '   ');
     buttonIn(sh.root, 'この内容で使う')!.click();
     expect(await pending).toEqual({ profile: { lastName: '山田' }, address: {} });
+  });
+});
+
+// PBI-158: the guest panel is the field catalog's guest subset and nothing
+// else. Keys are not rendered, so the pin walks the label/placeholder/type
+// sequence: membership, order, and the base (non-options-note) wording all
+// come from the catalog, so a one-sided edit in the panel fails here.
+describe('confirmGuest vs the field catalog (PBI-158)', () => {
+  it('renders exactly the catalog guest subset in order', async () => {
+    const sh = attachOpenShadow();
+    const pending = confirmGuest();
+    const expected = [...GUEST_PROFILE_FIELDS, ...GUEST_ADDRESS_FIELDS].map((f) => ({
+      label: f.label,
+      placeholder: f.placeholder,
+      type: f.type ?? 'text',
+    }));
+    const rendered = [...sh.root.querySelectorAll('label')].map((wrap) => {
+      const box = wrap.querySelector<HTMLInputElement>('input')!;
+      return {
+        label: wrap.querySelector('span')!.textContent ?? '',
+        placeholder: box.placeholder,
+        type: box.type,
+      };
+    });
+    expect(rendered).toEqual(expected);
+    expect(rendered).toHaveLength(11);
+    buttonIn(sh.root, '使わない')!.click();
+    await pending;
   });
 });

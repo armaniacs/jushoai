@@ -1,4 +1,10 @@
 import { GENDERS } from '../../core/genders';
+// Field vocabulary (PBI-158): the profile/address card rows come from the core
+// field catalog, so a new row is one table entry for both UIs and the kana
+// label difference stays an explicit column instead of a drift.
+import {
+  OPTIONS_ADDRESS_FIELDS, OPTIONS_PROFILE_FIELDS, PREFECTURE_FIELD_LABEL,
+} from '../../core/field-catalog';
 import { PREFECTURES } from '../../core/prefectures';
 import {
   normalizeAddress, normalizeProfile, validateAddress, validateProfile,
@@ -15,30 +21,6 @@ import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import { mountMappingSection } from './mapping-section';
-
-const PROFILE_FIELDS: { key: keyof Profile; label: string; placeholder: string; type?: string }[] = [
-  { key: 'lastName', label: '姓', placeholder: '山田' },
-  { key: 'firstName', label: '名', placeholder: '太郎' },
-  { key: 'lastNameKana', label: 'セイ（フリガナ・ふりがな入力可）', placeholder: 'ヤマダ' },
-  { key: 'firstNameKana', label: 'メイ（フリガナ・ふりがな入力可）', placeholder: 'タロウ' },
-  { key: 'lastNameRomaji', label: '姓（ローマ字・半角英字・任意）', placeholder: 'Yamada' },
-  { key: 'firstNameRomaji', label: '名（ローマ字・半角英字・任意）', placeholder: 'Taro' },
-  { key: 'birthday', label: '生年月日', placeholder: '1990-05-07' },
-  { key: 'school', label: '学校名', placeholder: '都立日比谷高校' },
-  { key: 'department', label: '学部・学科', placeholder: '普通科' },
-  { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル' },
-  { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部' },
-  { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email' },
-  { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel' },
-];
-
-const ADDRESS_FIELDS: { key: Exclude<keyof Address, 'id' | 'prefecture'>; label: string; placeholder: string }[] = [
-  { key: 'label', label: '名前（自宅・勤務先など）', placeholder: '自宅' },
-  { key: 'zip', label: '郵便番号', placeholder: '1000001' },
-  { key: 'city', label: '市区町村', placeholder: '千代田区' },
-  { key: 'street', label: '番地', placeholder: '千代田1-1' },
-  { key: 'building', label: '建物名・部屋番号（任意）', placeholder: '千代田ビル101' },
-];
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
   { key: 'country', label: '国名（半角英数・任意）', placeholder: 'United States' },
@@ -133,7 +115,7 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
   const cards = profiles.map((p, i) => {
     const set = cardFieldset(`プロファイル ${i + 1}`);
     appendPlainField(set, '名前（個人用・家族用など）', '個人用', p.label, (v) => { p.label = v; });
-    for (const f of PROFILE_FIELDS) {
+    for (const f of OPTIONS_PROFILE_FIELDS) {
       appendProfileField(set, f, p[f.key], (v) => { p[f.key] = v; });
     }
     set.append(labeled('性別（任意）', genderSelect(p.gender, (v) => { p.gender = v; })));
@@ -165,11 +147,11 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   const cards = addresses.map((a, i) => {
     const set = cardFieldset();
     set.append(labeled('使うプロファイル', ownerSelect(a.profileId, (v) => { a.profileId = v; }, profiles)));
-    for (const f of ADDRESS_FIELDS.slice(0, 2)) {
+    for (const f of OPTIONS_ADDRESS_FIELDS.slice(0, 2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
-    set.append(labeled('都道府県', prefectureSelect(a.prefecture, (v) => { a.prefecture = v; })));
-    for (const f of ADDRESS_FIELDS.slice(2)) {
+    set.append(labeled(PREFECTURE_FIELD_LABEL, prefectureSelect(a.prefecture, (v) => { a.prefecture = v; })));
+    for (const f of OPTIONS_ADDRESS_FIELDS.slice(2)) {
       appendPlainField(set, f.label, f.placeholder, a[f.key], (v) => { a[f.key] = v; });
     }
     const overseasTitle = document.createElement('h3');
@@ -251,13 +233,13 @@ async function onImportDraft(): Promise<void> {
     return;
   }
   const first = state.profiles[0];
-  const blankProfile = first === undefined || PROFILE_FIELDS.every((f) => (first[f.key] ?? '').trim() === '');
+  const blankProfile = first === undefined || OPTIONS_PROFILE_FIELDS.every((f) => (first[f.key] ?? '').trim() === '');
   const target = blankProfile ? first ?? { ...EMPTY_PROFILE, id: newId() } : { ...EMPTY_PROFILE, id: newId(), label: '新規' };
   const firstAddress = state.addresses[0];
   // The address label is not a form value — a card with only the default
   // label still counts as blank, so the import fills it instead of forking.
   const blankAddress = firstAddress === undefined
-    || ADDRESS_FIELDS.filter((f) => f.key !== 'label').every((f) => (firstAddress[f.key] ?? '').trim() === '');
+    || OPTIONS_ADDRESS_FIELDS.filter((f) => f.key !== 'label').every((f) => (firstAddress[f.key] ?? '').trim() === '');
   const targetAddress = blankAddress
     ? firstAddress ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' }
     : { ...EMPTY_ADDRESS, id: newId(), label: '新規' };
