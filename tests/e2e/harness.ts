@@ -263,4 +263,24 @@ export async function badgeNotice(driver: WebDriver): Promise<{ status: string |
   }
 }
 
+// Direct-child tags of the first .panel in any JushoAI shadow root, for
+// pinning panel assembly order in a real browser (heading first, actions
+// last — the DOM order is the visual order). Resolves [] when no panel exists.
+export async function panelChildTags(driver: WebDriver): Promise<string[]> {
+  for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+    const root = await host.getShadowRoot();
+    const panels = await root.findElements(By.css('.panel'));
+    if (panels.length > 0) {
+      const tags: string[] = [];
+      for (const kid of await panels[0]!.findElements(By.xpath('./*'))) {
+        const tag = (await kid.getTagName()).toLowerCase();
+        const cls = await kid.getAttribute('class');
+        tags.push(cls ? `${tag}.${cls}` : tag);
+      }
+      return tags;
+    }
+  }
+  return [];
+}
+
 export { By, until };
