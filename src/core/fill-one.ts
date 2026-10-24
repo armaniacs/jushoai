@@ -1,4 +1,4 @@
-import { classifyField, refineClassifications } from './classify-rules';
+import { classifyRulePipeline } from './classify-rules';
 import { buildPlan } from './planner';
 import type { PlanItem, PlanStatus } from './planner';
 import type { Address, FieldMeta, Profile } from './types';
@@ -6,9 +6,11 @@ import { applyMapping } from './domain-mapping';
 import type { MappingEntry } from './domain-mapping';
 
 // One-field resolution (PBI-137): rule classification only — no LLM, no
-// egress gate — and the same planner guards as the full preview. An unknown
-// field never fills and guides to the full preview instead (BDD: 未分類の欄は
-// 入力しない); the planner's warn statuses keep the no-fill contract.
+// egress gate — and the same planner guards as the full preview. PBI-150: the
+// classification rides the classifyRulePipeline entrance, so the parity covers
+// the kana attribution too. An unknown field never fills and guides to the
+// full preview instead (BDD: 未分類の欄は入力しない); the planner's warn
+// statuses keep the no-fill contract.
 export type FillOneReason = 'unknown' | 'inactive' | Exclude<PlanStatus, 'ok'>;
 
 export type FillOnePlan =
@@ -47,14 +49,14 @@ export function planOneField(
   opts?: FillOneOpts,
 ): FillOnePlan {
   if (meta.readOnly || meta.disabled) return { ok: false, reason: 'inactive' };
-  // classifyField returns null for an unclassifiable field — the same null
-  // the analyze pipeline treats as the unknown class. The null becomes the
-  // unknown class here so the taught mapping (PBI-138) can still correct it,
-  // exactly like the full preview's classification path.
-  const cls = classifyField(meta) ?? { category: 'unknown' as const, confidence: 0, source: 'rule' as const };
-  // Refine on a one-element list: sibling corrections (tel1/2/3, fullName
-  // split) cannot apply to a single field, and that is the intended scope.
-  const refined = refineClassifications([{ meta, cls }])[0];
+  // PBI-150: the canonical pipeline (classify → resolveKana → refine) is the
+  // only classification entrance, so a fill-one carries the full preview's kana
+  // attribution too. classifyField answers kana-blind ('fullName' for a フリガナ
+  // label) and the pipeline's resolveKana stage converts it to 'fullNameKana'
+  // before refine, exactly like analyze.ts classifyAll. Refine on a
+  // one-element list keeps the intended scope: sibling corrections (tel1/2/3,
+  // fullName split) cannot apply to a single field.
+  const refined = classifyRulePipeline([meta])[0];
   if (!refined) return { ok: false, reason: 'unknown' };
   const mapped = opts?.mappings ? applyMapping([refined], opts.mappings.entries, opts.mappings.domain)[0]! : refined;
   if (mapped.cls.category === 'unknown') return { ok: false, reason: 'unknown' };

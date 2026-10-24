@@ -10,8 +10,7 @@ import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
-import { classifyField, refineClassifications } from '../core/classify-rules';
-import { draftFromPage } from '../core/import-draft';
+import { draftFromMetas } from '../core/import-draft';
 import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
 import { loadMappings, upsertMapping } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
@@ -24,7 +23,6 @@ import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress, type GuestValues } from '../core/guest';
 import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
-import type { Item } from '../core/types';
 import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
@@ -510,9 +508,11 @@ export default defineContentScript({
     });
 
     // PBI-127: the settings page's フォームから取り込む button asks the active
-    // tab for a draft of the page's own filled values. Rule-only (classifyField
-    // + refine), no LLM and no gate: the values stay on-device and never cross
-    // the network. An excluded page keeps its opt-out — no draft from there.
+    // tab for a draft of the page's own filled values. Rule-only
+    // (draftFromMetas: the classifyRulePipeline entrance, PBI-150 — resolveKana
+    // rides so a filled furigana pair reaches the kana profile keys), no LLM
+    // and no gate: the values stay on-device and never cross the network. An
+    // excluded page keeps its opt-out — no draft from there.
     chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       if (
         typeof msg !== 'object' || msg === null ||
@@ -530,11 +530,7 @@ export default defineContentScript({
         return false;
       }
       const scanned = scanContainer(form.container, document);
-      const items: Item[] = scanned.map((f) => ({
-        meta: f.meta,
-        cls: classifyField(f.meta) ?? { category: 'unknown', confidence: 0, source: 'rule' },
-      }));
-      sendResponse({ ok: true, draft: draftFromPage(refineClassifications(items)) });
+      sendResponse({ ok: true, draft: draftFromMetas(scanned.map((f) => f.meta)) });
       return false;
     });
 

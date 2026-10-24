@@ -122,10 +122,12 @@ const KANA_CATEGORY: Partial<Record<Category, Category>> = {
 
 // The single kana attribution seam. classifyField answers kana-blind (plain name
 // bases only); this module converts bases to kana after rules and the LLM, before
-// refinement groups the pairs. A legend shared with a sibling that claims kana
-// through its own attributes describes the section, not each row: heading evidence
-// alone must not flip plain-name rows (e.g. a kanji 姓 row inside a
-// お名前（フリガナ）fieldset).
+// refinement groups the pairs. Every production entry reaches this seam through
+// classifyRulePipeline (PBI-150): a caller that hand-composes classifyField +
+// refineClassifications silently keeps kanji bases. A legend shared with a
+// sibling that claims kana through its own attributes describes the section,
+// not each row: heading evidence alone must not flip plain-name rows (e.g. a
+// kanji 姓 row inside a お名前（フリガナ）fieldset).
 // Resolves kana attribution and returns the same array: callers thread the
 // return value through (const resolved = resolveKana(items)) instead of
 // relying on the in-place update alone, so the data flow reads explicitly.
