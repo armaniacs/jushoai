@@ -41,6 +41,7 @@ import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
 import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
+import { createTabDispatcher } from '../content/tab-dispatch';
 
 // --- PBI-21: sync prefilter -------------------------------------------------
 // sync() is debounced off the MutationObserver, but even a skipped sync pays a
@@ -484,30 +485,34 @@ export default defineContentScript({
       mounted.forEach((m) => m.handle.reposition());
     }
 
+    // PBI-156: one guarded dispatcher registers every tab-bound message. The
+    // type guard, the exclusion gate (after the type guard, before the body),
+    // and the response plumbing live in ../content/tab-dispatch, so a new
+    // listener cannot re-copy them.
+    const registerTabMessage = createTabDispatcher({
+      isExcluded: () => gate.isExcluded(),
+      addListener: (fn) => chrome.runtime.onMessage.addListener(fn),
+    });
+
     // Triggered by the action popup's "AI で分析" button: runs the same flow as
     // the in-page button on the first detected form, reusing its handle so
     // errors surface the same way. No form mounted means nothing to fill.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (typeof msg !== 'object' || msg === null || (msg as { type?: unknown }).type !== ANALYZE_MESSAGE_TYPE) {
-        return false;
-      }
-      // An excluded page is out of scope for the popup too; "no form" is what
-      // the user sees there (no button to press either).
-      if (gate.isExcluded()) {
-        sendResponse({ ok: false, reason: 'no-form' });
-        return false;
-      }
-      const first = detectForms(document)[0];
-      const entry = first ? mounted.get(first.container) : undefined;
-      if (!first || !entry) {
-        sendResponse({ ok: false, reason: 'no-form' });
-        return false;
-      }
-      void guardedRun(first.container, entry.handle).then(
-        (started) => sendResponse(started ? { ok: true } : { ok: false, reason: 'error' }),
-        () => sendResponse({ ok: false, reason: 'error' }),
-      );
-      return true;
+    registerTabMessage(ANALYZE_MESSAGE_TYPE, {
+      gate: true,
+      excludedResponse: { ok: false, reason: 'no-form' },
+      handler: (_msg, sendResponse) => {
+        const first = detectForms(document)[0];
+        const entry = first ? mounted.get(first.container) : undefined;
+        if (!first || !entry) {
+          sendResponse({ ok: false, reason: 'no-form' });
+          return false;
+        }
+        void guardedRun(first.container, entry.handle).then(
+          (started) => sendResponse(started ? { ok: true } : { ok: false, reason: 'error' }),
+          () => sendResponse({ ok: false, reason: 'error' }),
+        );
+        return true;
+      },
     });
 
     // PBI-127: the settings page's フォームから取り込む button asks the active
@@ -516,52 +521,38 @@ export default defineContentScript({
     // rides so a filled furigana pair reaches the kana profile keys), no LLM
     // and no gate: the values stay on-device and never cross the network. An
     // excluded page keeps its opt-out — no draft from there.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (
-        typeof msg !== 'object' || msg === null ||
-        (msg as { type?: unknown }).type !== IMPORT_DRAFT_MESSAGE_TYPE
-      ) {
+    registerTabMessage(IMPORT_DRAFT_MESSAGE_TYPE, {
+      gate: true,
+      handler: (_msg, sendResponse) => {
+        const form = detectForms(document)[0];
+        if (!form) {
+          sendResponse({ ok: false });
+          return false;
+        }
+        const scanned = scanContainer(form.container, document);
+        sendResponse({ ok: true, draft: draftFromMetas(scanned.map((f) => f.meta)) });
         return false;
-      }
-      if (gate.isExcluded()) {
-        sendResponse({ ok: false });
-        return false;
-      }
-      const form = detectForms(document)[0];
-      if (!form) {
-        sendResponse({ ok: false });
-        return false;
-      }
-      const scanned = scanContainer(form.container, document);
-      sendResponse({ ok: true, draft: draftFromMetas(scanned.map((f) => f.meta)) });
-      return false;
+      },
     });
 
     // PBI-144: the popup's ゲストで入力 button asks the tab to open the one-shot
     // entry panel. The typed values stay in this script's memory (the tab close
     // destroys them): never chrome.storage, never the audit log, never the
     // export/import. An excluded page keeps its opt-out.
-    chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
-      if (
-        typeof msg !== 'object' || msg === null ||
-        (msg as { type?: unknown }).type !== GUEST_MESSAGE_TYPE
-      ) {
+    registerTabMessage(GUEST_MESSAGE_TYPE, {
+      gate: true,
+      handler: (_msg, sendResponse) => {
+        sendResponse({ ok: true });
+        void confirmGuest().then((decision) => {
+          if (!decision) return;
+          guest = decision;
+          closeOpenPanels();
+          const first = detectForms(document)[0];
+          const entry = first ? mounted.get(first.container) : undefined;
+          if (first && entry) void guardedRun(first.container, entry.handle);
+        });
         return false;
-      }
-      if (gate.isExcluded()) {
-        sendResponse({ ok: false });
-        return false;
-      }
-      sendResponse({ ok: true });
-      void confirmGuest().then((decision) => {
-        if (!decision) return;
-        guest = decision;
-        closeOpenPanels();
-        const first = detectForms(document)[0];
-        const entry = first ? mounted.get(first.container) : undefined;
-        if (first && entry) void guardedRun(first.container, entry.handle);
-      });
-      return false;
+      },
     });
 
     let observer: MutationObserver | null = null;
