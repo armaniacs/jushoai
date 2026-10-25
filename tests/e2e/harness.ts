@@ -212,11 +212,15 @@ export async function valueOf(driver: WebDriver, id: string): Promise<string> {
 
 // Reads the PBI-55 result-mode report button out of the shadow DOM. Resolves
 // null when the preview closed (clean apply) instead of entering result mode.
+// Matches by text, not just the button class: the undo button once shared the
+// 'report' class and sat first, so a class-only selector landed on it.
 export async function reportButton(driver: WebDriver): Promise<WebElement | null> {
   const read = async (): Promise<WebElement | null> => {
     for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
-      const el = await shadowButton(host, 'button.report');
-      if (el) return el;
+      const root = await host.getShadowRoot();
+      for (const el of await root.findElements(By.css('button.report'))) {
+        if ((await el.getText())?.includes('issueで報告')) return el;
+      }
     }
     return null;
   };
@@ -261,6 +265,26 @@ export async function badgeNotice(driver: WebDriver): Promise<{ status: string |
   } catch {
     return null;
   }
+}
+
+// Direct-child tags of the first .panel in any JushoAI shadow root, for
+// pinning panel assembly order in a real browser (heading first, actions
+// last — the DOM order is the visual order). Resolves [] when no panel exists.
+export async function panelChildTags(driver: WebDriver): Promise<string[]> {
+  for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+    const root = await host.getShadowRoot();
+    const panels = await root.findElements(By.css('.panel'));
+    if (panels.length > 0) {
+      const tags: string[] = [];
+      for (const kid of await panels[0]!.findElements(By.xpath('./*'))) {
+        const tag = (await kid.getTagName()).toLowerCase();
+        const cls = await kid.getAttribute('class');
+        tags.push(cls ? `${tag}.${cls}` : tag);
+      }
+      return tags;
+    }
+  }
+  return [];
 }
 
 export { By, until };

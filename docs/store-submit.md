@@ -139,7 +139,7 @@ npx wxt submit --dry-run  # 認証だけ確認し、zip は送らない
   Release 作成の前にあるのは「提出失敗時に半端な Release を残さない」ため。
 - `wxt submit` は `wxt` の submit エイリアスで、実体は publish-extension。
   `CHROME_ZIP` 等の env があるストアだけ提出対象になる。
-- `CHROME_API_VERSION=v1.1` 固定（サービスアカウント方式の v2 は組織ポリシーで不可のため）。
+- `CHROME_API_VERSION=v2` 固定（サービスアカウント方式。API v1.1＋OAuth は 2026-10-15 で Google が停止したため使わない）。
   `FIREFOX_CHANNEL=listed` 固定。
   自動公開のため `skip-submit-review` 系は付けていない。
 - Edge 用に別ビルドはしない。`EDGE_ZIP` に chrome zip を渡している。

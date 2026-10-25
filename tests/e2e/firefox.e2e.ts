@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import type { WebDriver } from 'selenium-webdriver';
+import { Key, type WebDriver } from 'selenium-webdriver';
 import {
-  By, OPTIONS_URL, clickInShadow, closeExtensionPage, openExtensionPage, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
+  By, OPTIONS_URL, badgeNotice, clickInShadow, closeExtensionPage, openExtensionPage, panelChildTags, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -36,6 +36,51 @@ describe('firefox: fill flow', () => {
     expect(await valueOf(driver, 'ln')).toBe('佐藤');
     expect(await valueOf(driver, 'fn')).toBe('');
     expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+  });
+});
+
+describe('firefox: fill-one kana (PBI-150)', () => {
+  it('fills the kana value through Alt+J with the heading-first confirm dialog', async () => {
+    await driver.get(`${pages.origin}/single-field-form.html`);
+    const furigana = await driver.findElement(By.name('furigana'));
+    await driver.actions().click(furigana).keyDown(Key.ALT).sendKeys('j').keyUp(Key.ALT).perform();
+    // The confirm dialog assembles heading first, body in the middle, actions
+    // last (the DOM order is the visual order). Pinned in a real browser
+    // because the heading-after-body regression once slipped through unit tests.
+    const tags = (await driver.wait(async () => {
+      const t = await panelChildTags(driver);
+      return t.length > 0 ? t : null;
+    }, 15_000, 'no confirm dialog panel appeared'))!;
+    expect(tags[0]).toBe('h2');
+    expect(tags[tags.length - 1]).toBe('div.actions');
+    await clickInShadow(driver, 'button.primary');
+    // The full-name join follows the fixture placeholder's separator
+    // (detectNameSeparator): "ヤマダ　タロウ" here. The PBI-150 point is that a
+    // kana value lands in the kana field, never the kanji name.
+    expect(await furigana.getAttribute('value')).toBe('ヤマダ　タロウ');
+  });
+});
+
+describe('firefox: partial banner persistence (PBI-152)', () => {
+  it('keeps the partial notice instead of rewriting it after seconds', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    await clickInShadow(driver, 'button:not(.badge)');
+    // Detach a planned field between planning and applying: its row fills as
+    // 'detached', which counts as unapplied (by-design skips never warn), so
+    // the persistent partial banner fires.
+    await driver.executeScript(`document.getElementById('fn')?.remove()`);
+    await clickInShadow(driver, 'button.primary');
+    // Poll for the error banner itself: the read must come after the apply
+    // finishes, or it races the pre-apply badge status.
+    const first = (await driver.wait(async () => {
+      const b = await badgeNotice(driver);
+      return b?.status === 'error' ? b : null;
+    }, 15_000, 'no partial error banner appeared'))!;
+    expect(first.text).toContain('一部のみ適用');
+    // The old banner rewrote itself after ~4s; the persistent banner must read
+    // the same past that window.
+    await new Promise((r) => setTimeout(r, 5_500));
+    expect((await badgeNotice(driver))?.text).toBe(first!.text);
   });
 });
 

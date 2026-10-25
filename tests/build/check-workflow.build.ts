@@ -31,13 +31,28 @@ describe('check workflow permissions', () => {
     expect(topLevel, 'permissions must be job-scoped, not workflow-wide').toEqual([]);
   });
 
-  it('grants read-only contents permission to the check job', () => {
-    const scoped = lines.filter((line) => /^\s+permissions:/.test(line));
-    expect(scoped.length, 'exactly one job-scoped permissions block is expected').toBe(1);
-    const head = scoped[0] ?? '';
-    const block = lines.slice(lines.indexOf(head), lines.indexOf(head) + 3).join('\n');
-    expect(block).toMatch(/contents:\s*read/);
-    expect(block, 'the check job must not gain write access').not.toMatch(/contents:\s*write/);
+  it('grants read-only contents permission to every job', () => {
+    // Job ids are the two-space-indented keys directly under `jobs:`. A new
+    // job without its own block would inherit the repository default, so the
+    // block count must track the job count exactly.
+    const jobsIndex = lines.findIndex((line) => /^jobs:/.test(line));
+    const jobIds = lines
+      .slice(jobsIndex + 1)
+      .filter((line) => /^  [A-Za-z0-9_-]+:\s*$/.test(line));
+    expect(jobIds.length, 'at least one job is expected').toBeGreaterThan(0);
+    const heads: number[] = [];
+    lines.forEach((line, i) => {
+      if (/^\s+permissions:/.test(line)) heads.push(i);
+    });
+    expect(
+      heads.length,
+      'every job must scope its own permissions block (one per job, none workflow-wide)',
+    ).toBe(jobIds.length);
+    for (const i of heads) {
+      const block = lines.slice(i, i + 3).join('\n');
+      expect(block).toMatch(/contents:\s*read/);
+      expect(block, 'no job must gain write access').not.toMatch(/contents:\s*write/);
+    }
   });
 });
 
