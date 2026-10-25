@@ -6,10 +6,16 @@
 
 ## [Unreleased]
 
+## [0.1.26] - 2026-10-25
+
 ### Added
 
 - ユーザー向けドキュメントに新規ガイド「安全のための仕組み」「ショートカットと操作」を追加する（日英）。ランディングページにも安全の節を追加する
 - 実ブラウザで動くe2eテストを追加する（1欄入力のカナ値、確認ダイアログの見出し順序、部分適用バナーの残存、Chrome/Firefox両対応）。CIのCheckワークフローで回る
+
+### Fixed
+
+- 結果パネルの「元に戻す」ボタンのクラスを分離する（報告ボタンと同名で取得が誤認されていた。描画・挙動に変更なし）
 
 ## [0.1.25] - 2026-10-25
 
@@ -436,6 +442,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.26]: https://github.com/armaniacs/jushoai/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/armaniacs/jushoai/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/armaniacs/jushoai/compare/v0.1.23...v0.1.24
 [0.1.23]: https://github.com/armaniacs/jushoai/compare/v0.1.22...v0.1.23
