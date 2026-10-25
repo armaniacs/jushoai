@@ -457,7 +457,9 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
     if (undo && undo.count > 0) {
       const undoBtn = document.createElement('button');
       undoBtn.type = 'button';
-      undoBtn.className = 'report';
+      // Its own class, not 'report': both buttons once shared 'report' and an
+      // E2E selector for the issue-report button kept landing on this one.
+      undoBtn.className = 'undo';
       undoBtn.textContent = '元に戻す';
       undoBtn.title = 'JushoAIが入れた欄だけ注入前の空状態に戻します（追記した欄は触りません）';
       undoBtn.addEventListener('click', () => undo.onUndo());

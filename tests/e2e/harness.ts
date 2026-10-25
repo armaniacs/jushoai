@@ -212,11 +212,15 @@ export async function valueOf(driver: WebDriver, id: string): Promise<string> {
 
 // Reads the PBI-55 result-mode report button out of the shadow DOM. Resolves
 // null when the preview closed (clean apply) instead of entering result mode.
+// Matches by text, not just the button class: the undo button once shared the
+// 'report' class and sat first, so a class-only selector landed on it.
 export async function reportButton(driver: WebDriver): Promise<WebElement | null> {
   const read = async (): Promise<WebElement | null> => {
     for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
-      const el = await shadowButton(host, 'button.report');
-      if (el) return el;
+      const root = await host.getShadowRoot();
+      for (const el of await root.findElements(By.css('button.report'))) {
+        if ((await el.getText())?.includes('issueで報告')) return el;
+      }
     }
     return null;
   };
