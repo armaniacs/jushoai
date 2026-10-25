@@ -42,3 +42,43 @@ jobs:
 
       - name: Typecheck, test and build
         run: make check
+
+  e2e:
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      # Report both browsers even when one fails.
+      fail-fast: false
+      matrix:
+        include:
+          - browser: chrome
+            target: e2e-chrome
+          - browser: firefox
+            target: e2e-firefox
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
+        with:
+          persist-credentials: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "24"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Generate WXT types
+        # Same reason as in the check job above: postinstall is skipped.
+        run: npx wxt prepare
+
+      - name: E2E in a real browser (${{ matrix.browser }})
+        # HEADLESS is required (no display on runners). CI=true is set by
+        # GitHub itself, which switches the harness to --no-sandbox.
+        run: make ${{ matrix.target }}
+        env:
+          HEADLESS: "1"
