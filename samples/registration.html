@@ -1,0 +1,82 @@
+<!-- Minimal reproduction of https://fair.j-lis.go.jp/registration/ (Japanese section). Values stripped. -->
+<form>
+  <table>
+    <tr><th>会社名</th><td>
+      <label for="legalEnt">法人格</label>
+      <select name="legalEnt" id="legalEnt"><option value="">--</option></select>
+      <label for="company">会社名</label>
+      <input name="company" id="company" type="text" value="" maxlength="50">
+    </td></tr>
+    <tr><th><span>会社名（フリガナ）</span></th><td>
+      <input name="company_kana" type="text" value="" maxlength="50">
+      <div>※「カブシキガイシャ」などの法人格は省略してください。</div>
+    </td></tr>
+    <tr><th>郵便番号</th><td>
+      <input name="postalCode" type="text" value="" maxlength="7">
+    </td></tr>
+    <tr><th>都道府県</th><td>
+      <select name="state" id="state"><option value="">--</option></select>
+    </td></tr>
+    <tr><th>市区町村・番地</th><td>
+      <input name="address" type="text" value="" maxlength="50">
+    </td></tr>
+    <tr><th>ビル名・建物名・事業所名</th><td>
+      <input name="building" type="text" value="" maxlength="50">
+    </td></tr>
+    <tr><th>部署</th><td>
+      <input name="deptTxt" type="text" value="" maxlength="50">
+    </td></tr>
+    <tr><th>役職</th><td>
+      <input name="jobTxt" type="text" value="" maxlength="50">
+    </td></tr>
+    <tr><th>勤務先メールアドレス</th><td>
+      <input name="work_email" type="email" value="" placeholder="sample@sample.com" maxlength="100">
+    </td></tr>
+    <tr><th>氏名</th><td>
+      <label for="nameSei">姓</label>
+      <input name="nameSei" id="nameSei" type="text" value="" placeholder="山田" maxlength="25">
+      <label for="nameMei">名</label>
+      <input name="nameMei" id="nameMei" type="text" value="" placeholder="太郎" maxlength="25">
+    </td></tr>
+    <tr><th>フリガナ</th><td>
+      <label for="yomiSei">セイ</label>
+      <input name="yomiSei" id="yomiSei" type="text" value="" placeholder="ヤマダ" maxlength="25">
+      <label for="yomiMei">メイ</label>
+      <input name="yomiMei" id="yomiMei" type="text" value="" placeholder="タロウ" maxlength="25">
+    </td></tr>
+    <tr><th>電話番号</th><td>
+      <input name="phone:a" type="text" value="" placeholder="000-0000-0000" maxlength="20">
+    </td></tr>
+    <tr><th>メールアドレス</th><td>
+      <input name="email" type="email" value="" placeholder="sample@sample.com" maxlength="100">
+      <input name="email:cf" type="email" value="" maxlength="100">
+    </td></tr>
+    <tr><th>その他業種</th><td>
+      <input name="q6_other" id="q6_other" type="text" value="" maxlength="20">
+    </td></tr>
+    <tr><th>その他職種</th><td>
+      <input name="q7_other" id="q7_other" type="text" value="" maxlength="20">
+    </td></tr>
+  </table>
+<!-- skip: corporation_position (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: password (password): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: confirmation_password (password): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: member_category (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q3 (checkbox): out of scope (skip fixed) -->
+<!-- skip: q4 (checkbox): out of scope (skip fixed) -->
+<!-- skip: q5 (checkbox): out of scope (skip fixed) -->
+<!-- skip: q6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q7 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: ok (checkbox): out of scope (skip fixed) -->
+<!-- skip: exhibitor_share_consent (checkbox): out of scope (skip fixed) -->
+<!-- skip: marketing_consent (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: privacy_consent (checkbox): out of scope (skip fixed) -->
+<!-- skip: division_none (checkbox): out of scope (skip fixed) -->
+<!-- skip: position_none (checkbox): out of scope (skip fixed) -->
+<!-- skip: survey_purpose (checkbox): out of scope (skip fixed) -->
+<!-- skip: survey_challenges (checkbox): out of scope (skip fixed) -->
+<!-- skip: cms_directory_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

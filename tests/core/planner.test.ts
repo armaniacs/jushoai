@@ -10,6 +10,7 @@ const profile: Profile = {
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
@@ -298,6 +299,26 @@ describe('company (PBI-119)', () => {
     expect(buildPlan([item('company')], { profile: { ...profile, companyName: '' }, address })).toEqual([
       expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
     ]);
+  });
+});
+
+describe('company name kana (PBI-160)', () => {
+  it('fills the company kana with formatKana, marks warn-no-value when blank', () => {
+    expect(values([item('companyNameKana')])).toEqual(['カブシキガイシャサンプル']);
+    expect(buildPlan([item('companyNameKana')], { profile: { ...profile, companyNameKana: '' }, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('formats by kanaKind like the person kana', () => {
+    expect(buildPlan([item('companyNameKana', {}, 'hiragana')], { profile, address }).map((p) => p.value))
+      .toEqual(['かぶしきがいしゃさんぷる']);
+  });
+
+  it('never assists company kana from the person-name dictionary', () => {
+    const plan = buildPlan([item('companyNameKana')], { profile: { ...profile, companyNameKana: '' }, address });
+    expect(plan).toEqual([expect.objectContaining({ status: 'warn-no-value', display: '' })]);
+    expect('assist' in plan[0]!).toBe(false);
   });
 });
 

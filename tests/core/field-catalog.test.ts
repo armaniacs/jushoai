@@ -47,6 +47,17 @@ describe('field catalog (PBI-158)', () => {
     expect(GUEST_PROFILE_FIELDS.find((f) => f.key === 'lastNameKana')!.label).toBe('セイ');
   });
 
+  // PBI-160: 会社名フリガナは options のみに載り、guest には載らない。
+  it('carries the company-kana row for options only, not guest', () => {
+    const row = PROFILE_FIELD_CATALOG.find((f) => f.key === 'companyNameKana')!;
+    expect(row.label).toBe('会社名（フリガナ・任意）');
+    expect(row.placeholder).toBe('カブシキガイシャサンプル');
+    expect(row.guest).toBe(false);
+    expect(OPTIONS_PROFILE_FIELDS.find((f) => f.key === 'companyNameKana')!.label)
+      .toBe('会社名（フリガナ・任意）');
+    expect(GUEST_PROFILE_FIELDS.some((f) => f.key === 'companyNameKana')).toBe(false);
+  });
+
   it('marks the building note as options-only too', () => {
     expect(OPTIONS_ADDRESS_FIELDS.find((f) => f.key === 'building')!.label)
       .toBe('建物名・部屋番号（任意）');

@@ -13,6 +13,8 @@ export const CATEGORIES = [
   'school', 'department',
   // PBI-119: 会社名・会社の部署。既存 department は学部・学科用のまま。
   'company', 'companyDepartment',
+  // PBI-160: 会社名フリガナ（terminal カテゴリ。resolveKana の帰属変換を通さない）。
+  'companyNameKana',
   'unknown',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -76,6 +78,8 @@ export interface Profile {
   // PBI-119: 会社名・会社の部署（いずれも任意・空可・検証なし）。既存 department は学部・学科用。
   companyName: string;
   companyDepartment: string;
+  // PBI-160: 会社名フリガナ（任意・空可・検証なし）。
+  companyNameKana: string;
   email: string;
   tel: string;
 }
@@ -114,6 +118,6 @@ export const EMPTY_PROFILE: Profile = {
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '',
   birthday: '', school: '', department: '',
-  companyName: '', companyDepartment: '',
+  companyName: '', companyDepartment: '', companyNameKana: '',
   email: '', tel: '',
 };

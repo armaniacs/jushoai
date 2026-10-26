@@ -96,6 +96,20 @@ const officeEligible = (own: string): boolean =>
 const officeLegendEligible = (own: string): boolean =>
   !KANA_NOTE.test(own) && !BIRTH_CTX.test(own)
   && !COMPANY_OFFICE.test(own) && !DEPT_OFFICE.test(own);
+// PBI-160: 会社名フリガナの連言（会社・法人系語彙 AND カナ注記）。company
+// エントリの COMPANY_OFFICE に厳密に従い（応募/申込の団体名除外を含む）、
+// カナ側は KANA_NOTE と同型の注記集合（フリガナはカナを部分文字列に含まない
+// ため明示する）。norm が全角括弧を半角化するため括弧の存続には依存せず、
+// 語の共起だけを見る（会社名（フリガナ）・会社名(フリガナ)のいずれも一致する）。
+const COMPANY_KANA =
+  /(?=.*(?:(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名))(?=.*(?:フリガナ|カナ|かな|kana))/;
+// PBI-160: 会社名フリガナの緩和境界。own 側は欄自身、legend 側は共有見出しが
+// 連言を持つときに開く（th 見出し「会社名（フリガナ）」の company_kana 欄は
+// own に和語がなく legend 経由で到達する）。誕生文脈は両側とも除外。
+// name のみ（company_kana・ラベルなし）は両方とも連言を持たないため
+// unknown のまま（誤注入より不注入）。
+const officeKanaEligible = (own: string, legend: string): boolean =>
+  !BIRTH_CTX.test(`${own} ${legend}`) && (COMPANY_KANA.test(own) || COMPANY_KANA.test(legend));
 const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
 const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 const COUNTRY = /country/i;
@@ -201,6 +215,18 @@ const DISPATCH: readonly MatcherEntry[] = [
   // （field 自身 0.7 が shared heading 0.65 に勝る）。own 側の緩和境界は
   // officeEligible、legend 側は officeLegendEligible（欄自身の office 語一致を
   // 要求せず、own 語がある欄は legend に流さない）が一箇所で持つ。
+  // PBI-160: 会社名フリガナは terminal カテゴリ（resolveKana の帰属変換を通さず
+  // classifyField が直接返す）。own 側は欄自身の連言、legend 側は共有見出しの
+  // 連言で開く。legend 側は own に会社語がある欄（漢字の会社名欄）には流さない
+  // （officeLegendEligible と同型の交差遮断）。誕生文脈は両側で除外する。
+  ...ownLegend(
+    COMPANY_KANA,
+    'companyNameKana',
+    (ctx) => !BIRTH_CTX.test(ctx.ownText),
+    (ctx) =>
+      !BIRTH_CTX.test(`${ctx.ownText} ${ctx.legendText}`)
+      && !COMPANY_OFFICE.test(ctx.ownText) && !DEPT_OFFICE.test(ctx.ownText),
+  ),
   ...ownLegend(
     COMPANY_OFFICE,
     'company',
@@ -337,7 +363,10 @@ export function classifyField(m: FieldMeta): Classification | null {
   const legendText = views.legendText;
   // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す。
   // 緩和境界（カナ文脈・誕生文脈・部署名を除外）は officeEligible が一箇所で持つ。
-  const officeField = EXCLUDE.test(ownText) && !officeEligible(ownText);
+  // PBI-160: 会社名フリガナ（会社・法人系語彙 AND カナ注記の連言）は
+  // officeKanaEligible が own/legend の両側で一箇所に持つ（誕生文脈は除外）。
+  const officeField =
+    EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText);
 
   const ownTrimmed = ownText.trim();
   // レビュー指摘: the single-birthday anchor reads the LABEL view only.

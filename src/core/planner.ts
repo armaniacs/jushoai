@@ -141,6 +141,9 @@ function valueForBase(
     // PBI-119: 会社名・会社の部署。空は従来どおりスキップ（warn-no-value）。
     case 'company': return p.companyName;
     case 'companyDepartment': return p.companyDepartment;
+    // PBI-160: 会社名フリガナ。人名カナと同一の formatKana 変換。
+    // 辞書 assist（ASSISTABLE）には加えない（人名辞書は会社名に向かない）。
+    case 'companyNameKana': return p.companyNameKana ? formatKana(p.companyNameKana, kind) : '';
     case 'gender': return p.gender;
     case 'ageDecade': return toDecade(p.birthday, today) ?? '';
     case 'country': return a?.country ?? '';

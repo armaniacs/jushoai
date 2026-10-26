@@ -1,10 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, isConfident, refineClassifications, refineWithDrops,
+  ACCEPT_THRESHOLD, classifyField, classifyRulePipeline, isConfident, refineClassifications, refineWithDrops,
 } from '../../src/core/classify-rules';
 import { detectKanaKind, matchFieldOwned, matchLegend, resolveKana, wantsKana } from '../../src/core/kana';
 import { buildPlan } from '../../src/core/planner';
-import type { Address, Category, Classification, Profile } from '../../src/core/types';
+import type { Address, Category, Classification, Item, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
 const cat = (p: Parameters<typeof makeMeta>[0]) => classifyField(makeMeta(p))?.category ?? null;
@@ -266,6 +266,82 @@ describe('classifyField: company legend and 応募文脈 (review)', () => {
   });
 });
 
+// PBI-160: 会社名フリガナは専用カテゴリ companyNameKana で開く。own-text の
+// 連言（会社・法人系語彙 AND カナ注記）で tight に、誕生文脈は除外する。
+// fixture 先行: 先に失敗させてから直す。
+describe('classifyField: company name kana (PBI-160)', () => {
+  it.each([
+    // th ラベル（own 側 0.7）。全角括弧は norm で半角化されるため括弧に依存しない。
+    { label: '会社名（フリガナ）' },
+    { label: '会社名(フリガナ)' },
+    // name + label。
+    { name: 'company_kana', label: '会社名（フリガナ）' },
+    // placeholder 変種（カナ注記が placeholder 側）。
+    { label: '会社名', placeholder: 'フリガナ' },
+    { name: 'company_kana', label: '会社名', placeholder: '例）カブシキガイシャサンプル' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as companyNameKana', (p) => {
+    expect(cat(p)).toBe('companyNameKana');
+  });
+
+  it('reaches the legend-only company-kana case (fixture shape: name + th heading)', () => {
+    expect(classifyField(makeMeta({ name: 'company_kana', nearby: '会社名（フリガナ）' })))
+      .toMatchObject({ category: 'companyNameKana', confidence: 0.65 });
+  });
+
+  it.each([
+    // 素の会社名は company のまま。
+    [{ label: '会社名' }, 'company'],
+    // セイ/メイは人名カナ経路のまま（blind base）。
+    [{ label: 'セイ', placeholder: 'ヤマダ' }, 'lastName'],
+    [{ label: 'メイ', placeholder: 'タロウ' }, 'firstName'],
+    // 素のフリガナは人名経路のまま。
+    [{ label: 'フリガナ' }, 'fullName'],
+    // 複合欄（会社名・部署名）は従来動作（company）のまま。
+    [{ label: '会社名・部署名' }, 'company'],
+  ] as [Parameters<typeof makeMeta>[0], Category][])('keeps %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    // 誕生文脈は除外。
+    { label: '会社の生年月日（フリガナ）' },
+    // name のみ（ラベルなし）の company_kana は unknown のまま（誤注入より不注入）。
+    { name: 'company_kana' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j unclassified', (p) => {
+    expect(cat(p)).toBeNull();
+  });
+});
+
+describe('companyNameKana pipeline guards (PBI-160)', () => {
+  const fixturePair: Parameters<typeof makeMeta>[0][] = [
+    { id: 'c1', name: 'company_kana', nearby: '会社名（フリガナ）' },
+    { id: 's1', name: 'yomiSei', label: 'セイ', placeholder: 'ヤマダ', nearby: 'フリガナ' },
+  ];
+
+  it('never puts the company_kana field on a person-kana category', () => {
+    const items = classifyRulePipeline(fixturePair.map((p) => makeMeta(p)));
+    expect(items.find((i) => i.meta.id === 'c1')!.cls.category).toBe('companyNameKana');
+  });
+
+  it('never puts a person-kana field on companyNameKana', () => {
+    const items = classifyRulePipeline(fixturePair.map((p) => makeMeta(p)));
+    expect(items.find((i) => i.meta.id === 's1')!.cls.category).not.toBe('companyNameKana');
+  });
+
+  it('pins katakana kanaKind on the fixture field through the pipeline', () => {
+    const items = classifyRulePipeline([makeMeta({ id: 'c1', name: 'company_kana', nearby: '会社名（フリガナ）' })]);
+    expect(items[0]!.cls).toMatchObject({ category: 'companyNameKana', kanaKind: 'katakana' });
+  });
+
+  it('resolveKana never converts companyNameKana (terminal category)', () => {
+    const items: Item[] = [{
+      meta: makeMeta({ id: 'c1' }),
+      cls: { category: 'companyNameKana', confidence: 0.65, source: 'rule' },
+    }];
+    expect(resolveKana(items).map((i) => i.cls.category)).toEqual(['companyNameKana']);
+  });
+});
+
 describe('refineClassifications', () => {
   const item = (category: Category, id: string) => ({
     meta: makeMeta({ id }),
@@ -444,7 +520,7 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
     lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
     gender: '', birthday: '', school: '', department: '',
-    companyName: '', companyDepartment: '', email: '', tel: '09012345678',
+    companyName: '', companyDepartment: '', companyNameKana: '', email: '', tel: '09012345678',
   };
   const address: Address = {
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',

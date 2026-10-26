@@ -47,6 +47,7 @@ export const PROFILE_FIELD_CATALOG: readonly ProfileFieldEntry[] = [
   { key: 'school', label: '学校名', placeholder: '都立日比谷高校', guest: false },
   { key: 'department', label: '学部・学科', placeholder: '普通科', guest: false },
   { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル', guest: false },
+  { key: 'companyNameKana', label: '会社名（フリガナ・任意）', placeholder: 'カブシキガイシャサンプル', guest: false },
   { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部', guest: false },
   { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email', guest: true },
   { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel', guest: true },

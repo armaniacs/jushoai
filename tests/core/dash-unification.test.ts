@@ -23,7 +23,7 @@ const profile: Profile = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '女性', birthday: '1990-05-07', school: '', department: '',
-  companyName: '', companyDepartment: '',
+  companyName: '', companyDepartment: '', companyNameKana: '',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {

@@ -82,6 +82,18 @@ describe('draftFromMetas via the pipeline entry (PBI-150)', () => {
     expect(draft.profile.lastNameKana).toBeUndefined();
     expect(draft.profile.firstNameKana).toBeUndefined();
   });
+
+  it('reaches the company-kana profile key from a filled company-kana field (PBI-160)', () => {
+    // fixture 形状（name + th 見出し）: 会社カナ欄の値が companyNameKana に載り、
+    // 人名カナや会社名（漢字）のキーに混入しない。
+    const draft = draftFromMetas([
+      makeMeta({ id: 'ck', name: 'company_kana', nearby: '会社名（フリガナ）', value: 'カブシキガイシャサンプル' }),
+    ]);
+    expect(draft.profile.companyNameKana).toBe('カブシキガイシャサンプル');
+    expect(draft.profile.lastNameKana).toBeUndefined();
+    expect(draft.profile.firstNameKana).toBeUndefined();
+    expect(draft.profile.companyName).toBeUndefined();
+  });
 });
 
 describe('import message shape (PBI-127)', () => {

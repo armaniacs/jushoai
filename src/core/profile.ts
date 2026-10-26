@@ -39,6 +39,8 @@ export function normalizeProfile(p: Profile): Profile {
     // PBI-119: 会社名・会社の部署は trim のみ（検証なし・空許容）。
     companyName: p.companyName.trim(),
     companyDepartment: p.companyDepartment.trim(),
+    // PBI-160: 会社名フリガナも trim のみ（検証なし・空許容）。
+    companyNameKana: p.companyNameKana.trim(),
     email: clean(p.email),
     tel: digits(p.tel),
   };
