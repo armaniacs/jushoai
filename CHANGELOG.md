@@ -6,6 +6,12 @@
 
 ## [Unreleased]
 
+## [0.1.27] - 2026-10-26
+
+### Added
+
+- 会社名フリガナ欄の対応。専用カテゴリ `companyNameKana` とプロファイル項目を追加し、設定ページで会社フリガナを登録すると補完される。対象 URL の例：fair.j-lis.go.jp の登録フォーム
+
 ## [0.1.26] - 2026-10-25
 
 ### Added
@@ -442,6 +448,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.27]: https://github.com/armaniacs/jushoai/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/armaniacs/jushoai/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/armaniacs/jushoai/compare/v0.1.24...v0.1.25
 [0.1.24]: https://github.com/armaniacs/jushoai/compare/v0.1.23...v0.1.24
