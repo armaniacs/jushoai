@@ -1,5 +1,9 @@
 # PBI 台帳インデックス
 
+## 進行中（対象 URL 対応・実装済み）
+
+- `2026-10-26-160-feat-company-name-kana.md`（fair.j-lis.go.jp の会社名フリガナ欄に専用カテゴリ companyNameKana で対応、実装済み・未コミット）
+
 ## 進行中（archラウンド2・実装済み）
 
 - `2026-10-24-00-backlog-arch-round2.md`（アーキテクチャレビュー10候補のPBI化・RICE順位確定、実装済み・コードレビューのみ残）

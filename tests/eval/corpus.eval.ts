@@ -33,9 +33,13 @@ describe('sample corpus metrics (local, no network)', () => {
     // hand-rolled composition it replaced, so re-run `make eval` and update
     // together with the fixture set if this fails after adding a fixture.
     const sum = (pick: (m: EvalMetrics) => number) => rows.reduce((acc, m) => acc + pick(m), 0);
-    expect(agg.ruleHits).toBe(141);
-    expect(agg.llmFallbacks).toBe(27);
-    expect(agg.fillable).toBe(89);
+    // PBI-160: registration.html の company_kana 欄が companyNameKana に載り
+    // ruleHits +1・llmFallbacks -1（fillable 不変）。141→142 相当の前回 pin 値は
+    // registration.html 追加前のもので、同 fixture 分（ruleHits 14・fallbacks 5・
+    // fillable 8）を加えた 155/32/97 が親作業時点の正当な基準値。
+    expect(agg.ruleHits).toBe(156);
+    expect(agg.llmFallbacks).toBe(31);
+    expect(agg.fillable).toBe(97);
     expect(sum((m) => m.refineChanged)).toBe(22);
     expect(sum((m) => m.refineDropped)).toBe(0);
   });

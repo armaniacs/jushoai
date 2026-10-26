@@ -43,6 +43,15 @@ describe('normalizeProfile', () => {
     expect(p.school).toBe('都立日比谷高校');
     expect(p.department).toBe('普通科');
   });
+
+  it('trims the company fields including the kana name (PBI-160)', () => {
+    const p = normalizeProfile({
+      ...base, companyName: ' 株式会社サンプル ', companyDepartment: ' 開発部 ', companyNameKana: ' カブシキガイシャサンプル ',
+    });
+    expect(p.companyName).toBe('株式会社サンプル');
+    expect(p.companyDepartment).toBe('開発部');
+    expect(p.companyNameKana).toBe('カブシキガイシャサンプル');
+  });
 });
 
 describe('validateProfile', () => {

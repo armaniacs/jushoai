@@ -26,6 +26,7 @@ import raijo from '../../samples/formmailer-raijo-age.html?raw';
 import reinvent from '../../samples/reinvent-registration-contact.html?raw';
 import fmFreeConsult from '../../samples/12fc22bc297429.html?raw';
 import fmCompanyBriefing from '../../samples/2dd1c663300469.html?raw';
+import registration from '../../samples/registration.html?raw';
 import { isEnglishPageText } from '../../src/core/page-language';
 
 const SAMPLES: Record<string, string> = {
@@ -49,6 +50,7 @@ const SAMPLES: Record<string, string> = {
   'profile-fields-form.html': profileFields,
   '12fc22bc297429.html': fmFreeConsult,
   '2dd1c663300469.html': fmCompanyBriefing,
+  'registration.html': registration,
 };
 
 const profile: Profile = {
@@ -58,6 +60,7 @@ const profile: Profile = {
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
   companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
 };
 const address: Address = {
@@ -340,5 +343,60 @@ describe('sample forms end to end', () => {
 //   validated (hidden): empty-submit shim or server state, never a fill target (exclude)
 //   (no name/id) (button): unaddressable (exclude)
 //   (no name/id) (button): unaddressable (exclude)
+  });
+  it('registration.html fills the in-scope fields', async () => {
+    expect(await planFor('registration.html')).toEqual({
+      'company': '株式会社サンプル',
+      // PBI-160: 会社名（フリガナ）欄は companyNameKana に分類され会社カナが入る
+      'company_kana': 'カブシキガイシャサンプル',
+      'postalCode': '1000001',
+      'address': '東京都千代田区千代田1-1',
+      'building': '千代田ビル101',
+      'deptTxt': '開発部',
+      'work_email': 'yamada@example.com',
+      'nameSei': '山田',
+      'nameMei': '太郎',
+      // yomiSei/yomiMei は従来どおり fullNameKana の結合値（セイ/メイ別ラベルのため
+      // same-label 分割が適用されない既存動作。PBI-160 の差分では不変）。
+      'yomiSei': 'ヤマダタロウ',
+      'yomiMei': 'ヤマダタロウ',
+      'phone:a': '090-1234-5678',
+      'email': 'yamada@example.com',
+      'email:cf': 'yamada@example.com',
+    });
+//   legalEnt (select): only a `--` option, correctly warn-no-option
+//   state (select): only a `--` option, correctly warn-no-option
+//   jobTxt (役職): no profile value, correctly unfilled
+//   q6_other (その他業種): no profile value, correctly unfilled
+//   q7_other (その他職種): no profile value, correctly unfilled
+//   corporation_position (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   corporation_position (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   password (password): not scanned (scan covers text/email/tel/search + select; exclude)
+//   confirmation_password (password): not scanned (scan covers text/email/tel/search + select; exclude)
+//   member_category (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   q3 (checkbox): out of scope (skip fixed)
+//   q4 (checkbox): out of scope (skip fixed)
+//   q5 (checkbox): out of scope (skip fixed)
+//   q6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   q7 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   ok (checkbox): out of scope (skip fixed)
+//   exhibitor_share_consent (checkbox): out of scope (skip fixed)
+//   marketing_consent (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   (no name/id) (button): unaddressable (exclude)
+//   privacy_consent (checkbox): out of scope (skip fixed)
+//   division_none (checkbox): out of scope (skip fixed)
+//   position_none (checkbox): out of scope (skip fixed)
+//   password (password): not scanned (scan covers text/email/tel/search + select; exclude)
+//   confirmation_password (password): not scanned (scan covers text/email/tel/search + select; exclude)
+//   survey_purpose (checkbox): out of scope (skip fixed)
+//   survey_challenges (checkbox): out of scope (skip fixed)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   cms_directory_id (hidden): empty-submit shim or server state, never a fill target (exclude)
   });
 });
