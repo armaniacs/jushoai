@@ -1,7 +1,7 @@
 import type { AiStatusInfo } from '../ai/types';
 import { isMeasurable } from '../dom/geometry';
 import { createShadowHost } from './host';
-import { computeButtonPosition } from './position';
+import { computePlacement, type Rect } from './position';
 import { badgeLabel } from './status-label';
 
 // Banner kinds (PBI-152): the timer behavior rides the kind, never the
@@ -18,6 +18,8 @@ export interface BannerNotice {
 export interface ButtonHandle {
   setStatus(info: AiStatusInfo): void;
   showError(notice: BannerNotice): void;
+  /** Blocker rects in document coordinates, cached at scan time (PBI-161). */
+  setAvoids(rects: Rect[]): void;
   reposition(): void;
   destroy(): void;
 }
@@ -77,6 +79,12 @@ export function mountButton(
   let lastInfo: AiStatusInfo = INITIAL;
   let statusKnown = false;
   let errorTimer: number | undefined;
+  // Blockers cached in document coordinates at scan time (PBI-161); converted
+  // to viewport space at reposition time, so a scroll never needs a fresh
+  // sweep. hasPosition tracks whether a position has been written: the first
+  // render must place the button somewhere even if nothing is clear.
+  let avoidRects: Rect[] = [];
+  let hasPosition = false;
   const handle: ButtonHandle = {
     setStatus(info) {
       lastInfo = info;
@@ -108,6 +116,9 @@ export function mountButton(
       // arrives as a type, so the wording is never sniffed here (PBI-152).
       handle.reposition();
     },
+    setAvoids(rects) {
+      avoidRects = rects;
+    },
     reposition() {
       // A detached or not-yet-laid-out anchor reports a zero rect; writing a
       // position from it would fling the button to a viewport corner, so keep
@@ -117,22 +128,37 @@ export function mountButton(
       if (!isMeasurable(anchorRect)) return;
       const hostRect = host.getBoundingClientRect();
       const clientWidth = document.documentElement.clientWidth;
-      // The host is fixed, so the whole computation runs in viewport space:
-      // the anchor rect is already viewport-relative and passing zero scroll
-      // keeps computeButtonPosition's "is there room above" test honest
-      // (document-space math would report room that is off-screen).
-      const pos = computeButtonPosition({
+      // The avoid rects are document-relative; the host is fixed, so convert
+      // them to viewport space with the current scroll offset. Empty scroll
+      // keeps computePlacement's "is there room above" test honest — the
+      // anchor rect is already viewport-relative.
+      const sx = window.scrollX || 0;
+      const sy = window.scrollY || 0;
+      const avoid = avoidRects.map((r) => ({
+        top: r.top - sy,
+        left: r.left - sx,
+        right: r.right - sx,
+        bottom: r.bottom - sy,
+      }));
+      const pos = computePlacement({
         anchor: anchorRect,
         size: { width: hostRect.width || 220, height: hostRect.height || 32 },
         viewport: { width: clientWidth > 0 ? Math.min(window.innerWidth, clientWidth) : window.innerWidth },
         scroll: { x: 0, y: 0 },
+        avoid,
       });
+      // No collision-free candidate: keep the last good position instead of
+      // writing an overlapping one (PBI-161). The first render has no last
+      // position, so it writes the best-effort placement and the translucent
+      // banner (PBI-162) mitigates the residual overlap.
+      if (!pos.clear && hasPosition) return;
       // The host reset uses `all: initial !important`, which expands to
       // `top: initial !important` / `left: initial !important`. Plain inline
       // writes lose to it, so the coordinates must be written important too
       // (same-priority important declarations resolve by source order).
       host.style.setProperty('top', `${pos.top}px`, 'important');
       host.style.setProperty('left', `${pos.left}px`, 'important');
+      hasPosition = true;
     },
     destroy() {
       // Drop a pending error-restore timer: without this, a destroyed badge

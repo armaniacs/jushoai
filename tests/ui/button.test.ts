@@ -323,5 +323,43 @@ describe('mountButton', () => {
       // Falls below the anchor (34 + 8) instead of writing a negative top.
       expect(host.style.top).toBe('42px');
     });
+
+    it('keeps the last position when every placement would cover a field (PBI-161)', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(window, 'scrollX', 'get').mockReturnValue(0);
+      vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      anchor.getBoundingClientRect = () => rect(100, 50, 250, 124);
+      const handle = mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+      // One blocker covering the whole right/above/below space: no candidate
+      // is collision-free, so the last good position stays.
+      handle.setAvoids([{ top: 0, left: 0, right: 1000, bottom: 200 }]);
+      handle.reposition();
+      expect(host.style.left).toBe('258px');
+      expect(host.style.top).toBe(`${100 + (24 - 32) / 2}px`);
+    });
+
+    it('converts cached document rects to viewport space before avoiding (PBI-161)', () => {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(window, 'scrollX', 'get').mockReturnValue(0);
+      vi.spyOn(window, 'scrollY', 'get').mockReturnValue(300);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(0, 0, 220, 32));
+      const anchor = document.body.appendChild(document.createElement('input'));
+      anchor.getBoundingClientRect = () => rect(100, 50, 250, 124);
+      const handle = mountButton(anchor, () => {});
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+      // Document rect 400..440 minus scrollY 300 covers the viewport 100..140:
+      // the right candidate (96..128) collides, above (60..92) stays clear.
+      handle.setAvoids([{ top: 400, left: 252, right: 478, bottom: 440 }]);
+      handle.reposition();
+      expect(host.style.top).toBe('60px');
+      expect(host.style.left).toBe('50px');
+    });
   });
 });

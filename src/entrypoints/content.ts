@@ -8,6 +8,7 @@ import { bindPreview } from '../content/preview-bind';
 import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
 import { fillPlan, targetsFromControls } from '../dom/fill-plan';
+import { collectAvoidRects } from '../dom/avoid-rects';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { scanFields } from '../dom/scan-fields';
@@ -126,7 +127,7 @@ export default defineContentScript({
   matches: ['<all_urls>'],
   runAt: 'document_idle',
   async main() {
-    const mounted = new Map<Element, { handle: ButtonHandle; anchor: Element }>();
+    const mounted = new Map<Element, { handle: ButtonHandle; anchor: Element; container: Element }>();
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
@@ -503,10 +504,16 @@ export default defineContentScript({
             );
           },
         );
-        mounted.set(form.container, { handle, anchor: form.anchor.el });
+        mounted.set(form.container, { handle, anchor: form.anchor.el, container: form.container });
         void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }
-      mounted.forEach((m) => m.handle.reposition());
+      // PBI-161: the blockers are re-collected per scan and cached in
+      // document coordinates; reposition() converts them to viewport space,
+      // so scrolling stays a conversion instead of a fresh sweep.
+      mounted.forEach((m) => {
+        m.handle.setAvoids(collectAvoidRects(m.container, document));
+        m.handle.reposition();
+      });
     }
 
     // PBI-156: one guarded dispatcher registers every tab-bound message. The
