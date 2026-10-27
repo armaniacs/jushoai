@@ -1,5 +1,34 @@
 # PBI 台帳インデックス
 
+## 進行中からアーカイブ済み（2026-10-27・autonomous-task-closerで実装・検証済み・`make check` green）
+
+- `archived/2026-10-27-161-fix-float-button-placement.md`（順位 1。重ねない配置。0ed109c）
+- `archived/2026-10-27-162-fix-float-button-translucency.md`（順位 2。背景だけ半透明。256d455）
+- `archived/2026-10-27-163-feat-float-button-drag.md`（順位 3。手動ドラッグ移動。ef14cdb）
+
+最終検証: `make check` exit 0（155 files / 1971 passed + 1 expected fail）。コードレビューと実ブラウザ E2E（実機タッチ含む）はユーザー作業。
+
+## 進行中（1021-1022ラウンド・実装済み・コミット済み・コードレビューのみ残）
+
+（124〜128・130 は実装コミット済み。129 は実装記録に残置判断を記録（着手条件未到来で backlog 残置）。コードレビューはユーザー作業）
+
+- `2026-10-21-115-chore-ci-make-check.md`（f54ed09 chore(ci): make checkのCIガードを追加）
+- `2026-10-21-116-refactor-nfkc-norm-clean.md`（3fc1067 refactor: norm/clean分離とダッシュ統一）
+- `2026-10-21-117-feat-profile-export-import.md`（b441268 feat(transfer): プロファイルのexport/import）
+- `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
+- `2026-10-21-119-feat-company-department.md`（093eb73 同上）
+- `2026-10-21-120-feat-width-enforcement.md`（208c1ac feat(fill): 幅強制と建物名略記）
+- `2026-10-21-121-feat-dash-unification.md`（3fc1067 同上）
+- `2026-10-21-122-feat-building-abbreviate.md`（208c1ac 同上）
+- `2026-10-21-123-backlog-iframe-investigation.md`（5db41e0 docs: backlogとiframe調査）
+- `2026-10-22-124-feat-egress-preview-masking.md`（1b7fe95 feat(egress): 送信前メタデータのゲートとPII疑い警告）
+- `2026-10-22-125-feat-zip-address-assist.md`（9b79158 feat(zip): 郵便番号辞書による住所補助）
+- `2026-10-22-126-feat-field-coverage-expand.md`（7340bd1 カバレッジは先行PBIで実装済みの実装記録）
+- `2026-10-22-127-feat-onboarding-import.md`（857cd8f feat(onboarding): フォームからの下書き取り込み）
+- `2026-10-22-128-feat-repeat-fill-memory.md`（4cf4a59 feat(fill): サイト別承認記憶による短縮プレビュー）
+- `2026-10-22-129-feat-dynamic-form-support.md`（実装なし。後描画追従は既存実装で担保、残る差分は残置判断を記録）
+- `2026-10-22-130-backlog-local-learning-loop.md`（420ebff 学習ループはPBI-138で実装済みの実装記録）
+
 ## 進行中（対象 URL 対応・実装済み）
 
 - `2026-10-26-160-feat-company-name-kana.md`（fair.j-lis.go.jp の会社名フリガナ欄に専用カテゴリ companyNameKana で対応、実装済み・未コミット）
@@ -22,7 +51,7 @@
 
 ## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
 
-- `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、未実装・未コミット）
+- `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、4件とも子PBI 61-64 として実装済み）
 - `2026-10-19-61-chore-result-label-helper.md`（順位 1、実装済み・`make check` green、未コミット。Quick Win）
 - `2026-10-19-62-refactor-status-text-table.md`（順位 2、実装済み・`make check` green、未コミット）
 - `2026-10-19-63-refactor-public-url-brand.md`（順位 3、実装済み・`make check` green、未コミット）
@@ -157,6 +186,7 @@
 
 ## 台帳
 
+- `archived/2026-10-27-00-backlog-float-button-round.md`（アーカイブ済み）
 - `archived/2026-10-11-06-backlog-run2-remediation-round.md`（アーカイブ済み）
 - `archived/2026-10-11-03-backlog-egress-gate-round.md`（アーカイブ済み）
 - `archived/2026-10-11-00-backlog-pages-update.md`（アーカイブ済み）
@@ -315,3 +345,7 @@
 | 2026-10-07-07-refactor-nav-hash-helper.md | 0b8d1fc refactor: hash読みをreadPageFromHashに集約する |
 | 2026-10-06-00-backlog-holistic-improvement.md | ab3f856 fix: content-runをentrypoints走査外のsrc直下に移す（子PBI 17-22 全件完了でラウンド完結） |
 | 2026-10-06-00-backlog-japanese-polish.md | d29c9f9 chore(pbi): 完了PBI 16をアーカイブし台帳を更新する（子PBI 10-16 全件完了でラウンド完結） |
+| 2026-10-27-00-backlog-float-button-round.md | 0ed109c feat: 入力ボタンの重なり報告3件（161〜163）をPBI化しRICE順位・深掘り判断を確定する（ラウンド完結） |
+| 2026-10-27-161-fix-float-button-placement.md | 0ed109c feat: 入力ボタンの配置を入力欄と重ならない候補に変える（コードレビューはユーザー作業） |
+| 2026-10-27-162-fix-float-button-translucency.md | 256d455 fix: 入力ボタンの背景を半透明にして下の入力を見えるようにする（コードレビューはユーザー作業） |
+| 2026-10-27-163-feat-float-button-drag.md | ef14cdb feat: 入力ボタンをマウス・タッチ・キーボードで移動できるようにする（コードレビューはユーザー作業） |
