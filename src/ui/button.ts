@@ -26,6 +26,14 @@ export interface ButtonHandle {
 
 const INITIAL: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
+// PBI-163: a pointer gesture below this distance is a click, not a drag —
+// tiny jitter must not swallow the button press.
+const DRAG_THRESHOLD = 4;
+const KEY_STEP = 16;
+const KEY_STEP_LARGE = 64;
+// Same viewport edge margin the placement uses (position.ts MARGIN, unexported).
+const EDGE_MARGIN = 8;
+
 const CSS = `
   .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
     font: 600 13px/1 system-ui, sans-serif; color: #fff;
@@ -34,9 +42,13 @@ const CSS = `
        collision-free spot). Text and badge keep full opacity; hover, focus
        and active restore the opaque banner for reading and clicking. */
     background: rgba(36, 87, 214, 0.8);
-    padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
+    padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25);
+    /* PBI-163: the banner is draggable — the grab cursor and touch-action
+       keep the gesture from scrolling the page or reading as a dead zone. */
+    touch-action: none; cursor: grab; }
   .wrap:hover, .wrap:focus-within, .wrap:active { background: #1c46b3; }
-  button { all: initial; cursor: pointer; font: inherit; color: inherit; }
+  .wrap:active { cursor: grabbing; }
+  button { all: initial; cursor: inherit; font: inherit; color: inherit; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     background: rgba(255,255,255,.22); }
   .badge[data-status="error"], .badge[data-status="not-configured"],
@@ -66,17 +78,90 @@ export function mountButton(
   badge.type = 'button';
   badge.className = 'badge';
   wrap.append(button, badge);
+  wrap.title = 'ドラッグで移動できます';
+  // PBI-163: a drag that ends on the banner consumes the click that follows,
+  // so moving the banner never starts the fill flow.
   button.addEventListener('click', (e) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     if (!e.isTrusted) return;
     e.preventDefault();
     e.stopPropagation();
     onClick();
   });
   badge.addEventListener('click', (e) => {
+    if (suppressClick) {
+      suppressClick = false;
+      return;
+    }
     if (!e.isTrusted) return;
     e.preventDefault();
     e.stopPropagation();
     if (statusKnown) onBadgeClick(lastInfo);
+  });
+  // Keep the banner inside the viewport: the fixed host must never be
+  // dragged partially off-screen or out of reach.
+  const moveHostTo = (top: number, left: number) => {
+    const box = host.getBoundingClientRect();
+    const width = box.width || 220;
+    const height = box.height || 32;
+    const maxLeft = Math.max(EDGE_MARGIN, document.documentElement.clientWidth - width - EDGE_MARGIN);
+    const maxTop = Math.max(EDGE_MARGIN, window.innerHeight - height - EDGE_MARGIN);
+    host.style.setProperty('top', `${Math.min(Math.max(top, EDGE_MARGIN), maxTop)}px`, 'important');
+    host.style.setProperty('left', `${Math.min(Math.max(left, EDGE_MARGIN), maxLeft)}px`, 'important');
+  };
+  wrap.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    const box = host.getBoundingClientRect();
+    dragOrigin = { x: e.clientX, y: e.clientY, top: box.top, left: box.left };
+    // Capture keeps the gesture alive outside the banner. Some engines (and
+    // jsdom) lack the API — it is an optimization, not a requirement.
+    try {
+      wrap.setPointerCapture(e.pointerId);
+    } catch {
+      // unavailable: pointer events still reach the banner in practice
+    }
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!dragOrigin) return;
+    const dx = e.clientX - dragOrigin.x;
+    const dy = e.clientY - dragOrigin.y;
+    if (!dragging && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
+    dragging = true;
+    manual = true;
+    moveHostTo(dragOrigin.top + dy, dragOrigin.left + dx);
+  });
+  const endDrag = (e: PointerEvent) => {
+    if (!dragOrigin) return;
+    if (dragging) suppressClick = true;
+    dragging = false;
+    dragOrigin = null;
+    try {
+      wrap.releasePointerCapture(e.pointerId);
+    } catch {
+      // unavailable
+    }
+  };
+  wrap.addEventListener('pointerup', endDrag);
+  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('keydown', (e) => {
+    const step = e.shiftKey ? KEY_STEP_LARGE : KEY_STEP;
+    // delta = [top, left]; moveHostTo takes them in that order.
+    const delta: [number, number] | null =
+      e.key === 'ArrowUp' ? [-step, 0] :
+      e.key === 'ArrowDown' ? [step, 0] :
+      e.key === 'ArrowLeft' ? [0, -step] :
+      e.key === 'ArrowRight' ? [0, step] : null;
+    if (!delta) return;
+    // The keyboard path is part of the feature (マウス等): arrow keys move
+    // the banner without touching the page scroll.
+    e.preventDefault();
+    e.stopPropagation();
+    const box = host.getBoundingClientRect();
+    manual = true;
+    moveHostTo(box.top + delta[0], box.left + delta[1]);
   });
   root.append(style, wrap);
   document.body.append(host);
@@ -90,6 +175,12 @@ export function mountButton(
   // render must place the button somewhere even if nothing is clear.
   let avoidRects: Rect[] = [];
   let hasPosition = false;
+  // PBI-163: the manual position wins once the user places the banner. Reset
+  // only on destroy — a mounted banner has no re-show path.
+  let manual = false;
+  let dragging = false;
+  let suppressClick = false;
+  let dragOrigin: { x: number; y: number; top: number; left: number } | null = null;
   const handle: ButtonHandle = {
     setStatus(info) {
       lastInfo = info;
@@ -125,6 +216,9 @@ export function mountButton(
       avoidRects = rects;
     },
     reposition() {
+      // PBI-163: a user-placed position wins — the anchor-based recompute
+      // must not overwrite it (scroll, resize and status changes included).
+      if (manual) return;
       // A detached or not-yet-laid-out anchor reports a zero rect; writing a
       // position from it would fling the button to a viewport corner, so keep
       // the last good position until the anchor is measurable again.
@@ -170,6 +264,10 @@ export function mountButton(
       // would still flip text and reposition after the timeout, extending the
       // handle's closure past teardown.
       window.clearTimeout(errorTimer);
+      manual = false;
+      dragging = false;
+      suppressClick = false;
+      dragOrigin = null;
       host.remove();
     },
   };

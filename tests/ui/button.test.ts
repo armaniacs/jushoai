@@ -17,7 +17,26 @@ function fakeClick(isTrusted: boolean): FakeClick {
   return { isTrusted, preventDefault() {}, stopPropagation() {} };
 }
 
-function mount() {
+interface FakePointerEvent {
+  button: number;
+  clientX: number;
+  clientY: number;
+  pointerId: number;
+  key: string;
+  shiftKey: boolean;
+  preventDefault(): void;
+  stopPropagation(): void;
+}
+
+function fakePointer(init: Partial<FakePointerEvent> = {}): FakePointerEvent {
+  return {
+    button: 0, clientX: 0, clientY: 0, pointerId: 1, key: '', shiftKey: false,
+    preventDefault() {}, stopPropagation() {},
+    ...init,
+  };
+}
+
+function mount(anchorRect?: DOMRect) {
   let root!: ShadowRoot;
   const attach = HTMLElement.prototype.attachShadow;
   vi.spyOn(HTMLElement.prototype, 'attachShadow').mockImplementation(function (this: HTMLElement) {
@@ -28,6 +47,7 @@ function mount() {
   // のため、実クリック相当はハンドラ捕捉＋偽イベントで再現する。
   // 捕捉順: [0]=button, [1]=badge（button.ts の登録順）。
   const clickHandlers: Array<(e: FakeClick) => void> = [];
+  const wrapHandlers: Record<string, Array<(e: FakePointerEvent) => void>> = {};
   const origAdd = EventTarget.prototype.addEventListener;
   vi.spyOn(EventTarget.prototype, 'addEventListener').mockImplementation(function (
     this: EventTarget,
@@ -37,9 +57,17 @@ function mount() {
     if (type === 'click' && typeof listener === 'function' && this instanceof HTMLButtonElement) {
       clickHandlers.push(listener as (e: FakeClick) => void);
     }
+    if (
+      ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'keydown'].includes(type) &&
+      typeof listener === 'function' &&
+      this instanceof HTMLDivElement
+    ) {
+      (wrapHandlers[type] ??= []).push(listener as unknown as (e: FakePointerEvent) => void);
+    }
     return Reflect.apply(origAdd as (...a: unknown[]) => void, this, args);
   });
   const anchor = document.body.appendChild(document.createElement('input'));
+  if (anchorRect) anchor.getBoundingClientRect = () => anchorRect;
   const onClick = vi.fn();
   const onBadgeClick = vi.fn();
   const handle = mountButton(anchor, onClick, onBadgeClick);
@@ -49,7 +77,10 @@ function mount() {
     onBadgeClick,
     badge: () => root.querySelector('.badge')!,
     button: () => root.querySelector('button:not(.badge)') as HTMLButtonElement,
+    wrap: () => root.querySelector('.wrap') as HTMLElement,
     css: () => root.querySelector('style')?.textContent ?? '',
+    fireWrap: (type: string, init: Partial<FakePointerEvent> = {}) =>
+      (wrapHandlers[type] ?? []).forEach((h) => h(fakePointer(init))),
     /** trusted=true が実クリック相当、false が el.click() 等の合成イベント相当 */
     fireButton: (trusted = true) => clickHandlers[0]?.(fakeClick(trusted)),
     fireBadge: (trusted = true) => clickHandlers[1]?.(fakeClick(trusted)),
@@ -376,6 +407,89 @@ describe('mountButton', () => {
       handle.reposition();
       expect(host.style.top).toBe('60px');
       expect(host.style.left).toBe('50px');
+    });
+  });
+
+  describe('drag (PBI-163)', () => {
+    function rect(top: number, left: number, right: number, bottom: number) {
+      return { top, left, right, bottom, width: right - left, height: bottom - top, x: left, y: top, toJSON() {} } as DOMRect;
+    }
+    // The prototype stub stands in for the fixed host box; moveHostTo reads
+    // it, so the assertions are relative to the stub box, not the style.
+    function measure() {
+      vi.spyOn(window, 'innerWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(window, 'innerHeight', 'get').mockReturnValue(800);
+      vi.spyOn(window, 'scrollX', 'get').mockReturnValue(0);
+      vi.spyOn(window, 'scrollY', 'get').mockReturnValue(0);
+      vi.spyOn(document.documentElement, 'clientWidth', 'get').mockReturnValue(1000);
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue(rect(100, 100, 320, 132));
+    }
+
+    it('moves the host once the pointer passes the threshold and swallows the click', () => {
+      measure();
+      // The anchor has no box: the initial render places nothing and the
+      // drag is the first position ever written.
+      const { onClick, fireWrap, fireButton } = mount(rect(0, 0, 0, 0));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 200, clientY: 140 });
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('190px');
+      expect(host.style.top).toBe('124px');
+      fireWrap('pointerup', { clientX: 200, clientY: 140 });
+      // The drag consumed the click that follows the release.
+      fireButton(true);
+      expect(onClick).not.toHaveBeenCalled();
+    });
+
+    it('treats a sub-threshold gesture as a click', () => {
+      measure();
+      const { handle, onClick, fireWrap, fireButton } = mount(rect(100, 50, 250, 124));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 112, clientY: 118 });
+      fireWrap('pointerup', { clientX: 112, clientY: 118 });
+      fireButton(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
+      // No drag happened: the anchor-based position is still in effect.
+      handle.reposition();
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('258px');
+    });
+
+    it('keeps the manual position when reposition() runs afterwards', () => {
+      measure();
+      // The anchor rect is irrelevant after a manual move: reposition()
+      // returns early without reading it.
+      const { handle, fireWrap } = mount(rect(100, 50, 250, 124));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 300, clientY: 200 });
+      fireWrap('pointerup', { clientX: 300, clientY: 200 });
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('290px');
+      handle.reposition();
+      expect(host.style.left).toBe('290px');
+      expect(host.style.top).toBe('184px');
+    });
+
+    it('moves the host with arrow keys and the manual position survives reposition()', () => {
+      measure();
+      const { handle, fireWrap } = mount(rect(100, 50, 250, 124));
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      // The stub box is constant, so every key press reads the same origin:
+      // ArrowLeft writes 100-16, ArrowUp(Shift) writes 100-64.
+      fireWrap('keydown', { key: 'ArrowLeft' });
+      expect(host.style.left).toBe('84px');
+      fireWrap('keydown', { key: 'ArrowUp', shiftKey: true });
+      expect(host.style.top).toBe('36px');
+      // Manual: the anchor-based recompute must not overwrite either write.
+      handle.reposition();
+      expect(host.style.left).toBe('100px');
+      expect(host.style.top).toBe('36px');
+    });
+
+    it('marks the banner draggable with a title and grab cursor', () => {
+      const { css, wrap } = mount();
+      expect(wrap().title).toBe('ドラッグで移動できます');
+      expect(css()).toMatch(/\.wrap \{[^}]*touch-action: none; cursor: grab/);
     });
   });
 });
