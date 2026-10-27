@@ -49,6 +49,7 @@ function mount() {
     onBadgeClick,
     badge: () => root.querySelector('.badge')!,
     button: () => root.querySelector('button:not(.badge)') as HTMLButtonElement,
+    css: () => root.querySelector('style')?.textContent ?? '',
     /** trusted=true が実クリック相当、false が el.click() 等の合成イベント相当 */
     fireButton: (trusted = true) => clickHandlers[0]?.(fakeClick(trusted)),
     fireBadge: (trusted = true) => clickHandlers[1]?.(fakeClick(trusted)),
@@ -230,6 +231,21 @@ describe('mountButton', () => {
       expect(onBadgeClick).toHaveBeenCalledWith({ status: 'available', provider: 'built-in' });
       fireBadge(false);
       expect(onBadgeClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('translucent banner (PBI-162)', () => {
+    it('keeps the banner background translucent with opaque text and badge', () => {
+      const { css } = mount();
+      // Background only: the banner lets a still-covered field show through.
+      expect(css()).toMatch(/\.wrap \{[^}]*background: rgba\(36, 87, 214, 0\.8\)/);
+      // The badge colors are untouched (they carry the status meaning).
+      expect(css()).toMatch(/\.badge\[data-status="error"\][^{]*\{ background: #b3261e; \}/);
+    });
+
+    it('restores the opaque banner on hover, focus and active', () => {
+      const { css } = mount();
+      expect(css()).toMatch(/\.wrap:hover, \.wrap:focus-within, \.wrap:active \{ background: #1c46b3; \}/);
     });
   });
 

@@ -28,9 +28,14 @@ const INITIAL: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 
 const CSS = `
   .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
-    font: 600 13px/1 system-ui, sans-serif; color: #fff; background: #2457d6;
+    font: 600 13px/1 system-ui, sans-serif; color: #fff;
+    /* PBI-162: the banner background stays translucent so a field it still
+       covers remains readable (the placement, PBI-161, cannot always find a
+       collision-free spot). Text and badge keep full opacity; hover, focus
+       and active restore the opaque banner for reading and clicking. */
+    background: rgba(36, 87, 214, 0.8);
     padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25); }
-  .wrap:hover { background: #1c46b3; }
+  .wrap:hover, .wrap:focus-within, .wrap:active { background: #1c46b3; }
   button { all: initial; cursor: pointer; font: inherit; color: inherit; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     background: rgba(255,255,255,.22); }
