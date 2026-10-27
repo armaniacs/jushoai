@@ -6,7 +6,7 @@
 - `archived/2026-10-27-162-fix-float-button-translucency.md`（順位 2。背景だけ半透明。256d455）
 - `archived/2026-10-27-163-feat-float-button-drag.md`（順位 3。手動ドラッグ移動。ef14cdb）
 
-最終検証: `make check` exit 0（155 files / 1971 passed + 1 expected fail）。コードレビューと実ブラウザ E2E（実機タッチ含む）はユーザー作業。
+最終検証: `make check` exit 0（155 files / 1971 passed + 1 expected fail）＋実ブラウザ E2E 12/12 green（tests/e2e/chrome.e2e.ts、配置・ドラッグ・半透明を含む）。コードレビューと実機タッチはユーザー作業。
 
 ## 進行中（1021-1022ラウンド・実装済み・コミット済み・コードレビューのみ残）
 
