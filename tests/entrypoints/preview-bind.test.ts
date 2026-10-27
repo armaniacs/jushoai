@@ -43,7 +43,7 @@ const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
 function bind(session: FillSession, reanalyzable = true) {
   const sh = attachOpenShadow();
   const buttonHandle: ButtonHandle = {
-    setStatus: vi.fn(), showError: vi.fn(), setAvoids: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
+    setStatus: vi.fn(), showError: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
   };
   const input = {
     session,
@@ -86,7 +86,7 @@ describe('bindPreview (PBI-64 wiring)', () => {
     const onFailure = vi.fn();
     const sh = attachOpenShadow();
     const buttonHandle: ButtonHandle = {
-      setStatus: vi.fn(), showError: vi.fn(), setAvoids: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
+      setStatus: vi.fn(), showError: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
     };
     bindPreview({
       session: fakeSession({

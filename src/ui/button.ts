@@ -1,7 +1,7 @@
 import type { AiStatusInfo } from '../ai/types';
 import { isMeasurable } from '../dom/geometry';
 import { createShadowHost } from './host';
-import { computePlacement, type Rect } from './position';
+import { computePlacement, MARGIN, type Rect } from './position';
 import { badgeLabel } from './status-label';
 
 // Banner kinds (PBI-152): the timer behavior rides the kind, never the
@@ -18,9 +18,14 @@ export interface BannerNotice {
 export interface ButtonHandle {
   setStatus(info: AiStatusInfo): void;
   showError(notice: BannerNotice): void;
-  /** Blocker rects in document coordinates, cached at scan time (PBI-161). */
-  setAvoids(rects: Rect[]): void;
-  reposition(): void;
+  /**
+   * Recompute the position. The blocker rects in document coordinates
+   * (PBI-161) may be passed with the call; they are kept for the follow-up
+   * repositions that viewport tracking triggers. Passing them here keeps the
+   * avoid update and the recompute on one call, so no caller can update one
+   * and forget the other.
+   */
+  reposition(avoid?: Rect[]): void;
   destroy(): void;
 }
 
@@ -31,17 +36,22 @@ const INITIAL: AiStatusInfo = { status: 'unavailable', provider: 'none' };
 const DRAG_THRESHOLD = 4;
 const KEY_STEP = 16;
 const KEY_STEP_LARGE = 64;
-// Same viewport edge margin the placement uses (position.ts MARGIN, unexported).
-const EDGE_MARGIN = 8;
+
+// The placement falls back to this size while the banner is not yet laid out
+// (moveHostTo's clamp and reposition's candidate sizing share it).
+const BANNER_FALLBACK = { width: 220, height: 32 };
 
 const CSS = `
   .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
     font: 600 13px/1 system-ui, sans-serif; color: #fff;
     /* PBI-162: the banner background stays translucent so a field it still
        covers remains readable (the placement, PBI-161, cannot always find a
-       collision-free spot). Text and badge keep full opacity; hover, focus
-       and active restore the opaque banner for reading and clicking. */
-    background: rgba(36, 87, 214, 0.8);
+       collision-free spot). 0.9 keeps the page visible through the banner
+       while the blended background over a white form measures 5.0:1 against
+       the white text - WCAG AA (4.5:1). Text and badge keep full opacity;
+       hover, focus and active restore the opaque banner for reading and
+       clicking. */
+    background: rgba(36, 87, 214, 0.9);
     padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25);
     /* PBI-163: the banner is draggable — the grab cursor and touch-action
        keep the gesture from scrolling the page or reading as a dead zone. */
@@ -55,6 +65,8 @@ const CSS = `
   .badge[data-status="permission-missing"], .badge[data-status="auth-error"] { background: #b3261e; }
   .badge[data-status="unavailable"], .badge[data-status="unsupported"],
   .badge[data-status="disabled"] { background: rgba(0,0,0,.3); }
+  .hint { position: absolute; width: 1px; height: 1px; overflow: hidden;
+    clip-path: inset(50%); white-space: nowrap; }
 `;
 
 export function mountButton(
@@ -77,7 +89,17 @@ export function mountButton(
   const badge = document.createElement('button');
   badge.type = 'button';
   badge.className = 'badge';
-  wrap.append(button, badge);
+  // PBI-163: the drag affordance must reach assistive technology — the title
+  // tooltip is hover-only. A visually-hidden hint, referenced through
+  // aria-describedby from both buttons, announces the drag and the keyboard
+  // path.
+  const hint = document.createElement('span');
+  hint.className = 'hint';
+  hint.id = 'jushoai-drag-hint';
+  hint.textContent = 'ドラッグ、または矢印キーで移動できます';
+  button.setAttribute('aria-describedby', hint.id);
+  badge.setAttribute('aria-describedby', hint.id);
+  wrap.append(button, badge, hint);
   wrap.title = 'ドラッグで移動できます';
   // PBI-163: a drag that ends on the banner consumes the click that follows,
   // so moving the banner never starts the fill flow.
@@ -101,19 +123,33 @@ export function mountButton(
     e.stopPropagation();
     if (statusKnown) onBadgeClick(lastInfo);
   });
+  // The same viewport width the placement uses: a zero clientWidth means no
+  // layout yet (detached documents), so fall back to innerWidth instead of
+  // clamping everything against a zero-width viewport.
+  const viewportWidth = (): number => {
+    const clientWidth = document.documentElement.clientWidth;
+    return clientWidth > 0 ? Math.min(window.innerWidth, clientWidth) : window.innerWidth;
+  };
   // Keep the banner inside the viewport: the fixed host must never be
   // dragged partially off-screen or out of reach.
   const moveHostTo = (top: number, left: number) => {
     const box = host.getBoundingClientRect();
-    const width = box.width || 220;
-    const height = box.height || 32;
-    const maxLeft = Math.max(EDGE_MARGIN, document.documentElement.clientWidth - width - EDGE_MARGIN);
-    const maxTop = Math.max(EDGE_MARGIN, window.innerHeight - height - EDGE_MARGIN);
-    host.style.setProperty('top', `${Math.min(Math.max(top, EDGE_MARGIN), maxTop)}px`, 'important');
-    host.style.setProperty('left', `${Math.min(Math.max(left, EDGE_MARGIN), maxLeft)}px`, 'important');
+    const width = box.width || BANNER_FALLBACK.width;
+    const height = box.height || BANNER_FALLBACK.height;
+    const maxLeft = Math.max(MARGIN, viewportWidth() - width - MARGIN);
+    const maxTop = Math.max(MARGIN, window.innerHeight - height - MARGIN);
+    host.style.setProperty('top', `${Math.min(Math.max(top, MARGIN), maxTop)}px`, 'important');
+    host.style.setProperty('left', `${Math.min(Math.max(left, MARGIN), maxLeft)}px`, 'important');
   };
   const onDragMove = (e: PointerEvent) => {
     if (!dragOrigin) return;
+    // A missed pointerup (released over an iframe or outside the viewport)
+    // must not leave the banner chasing the cursor: the primary button is no
+    // longer held, so the gesture is over.
+    if (!(e.buttons & 1)) {
+      endDrag(e);
+      return;
+    }
     const dx = e.clientX - dragOrigin.x;
     const dy = e.clientY - dragOrigin.y;
     if (!dragging && Math.abs(dx) < DRAG_THRESHOLD && Math.abs(dy) < DRAG_THRESHOLD) return;
@@ -133,6 +169,11 @@ export function mountButton(
     window.removeEventListener('pointercancel', endDrag);
   };
   wrap.addEventListener('pointerdown', (e) => {
+    // A new gesture clears a leftover flag: a drag that ended outside the
+    // banner (released over the page) never delivers its click to the
+    // banner's listeners, and without the reset the next legitimate press
+    // would be silently swallowed.
+    suppressClick = false;
     if (e.button !== 0) return;
     const box = host.getBoundingClientRect();
     dragOrigin = { x: e.clientX, y: e.clientY, top: box.top, left: box.left };
@@ -211,13 +252,19 @@ export function mountButton(
       // arrives as a type, so the wording is never sniffed here (PBI-152).
       handle.reposition();
     },
-    setAvoids(rects) {
-      avoidRects = rects;
-    },
-    reposition() {
+    reposition(avoid?: Rect[]) {
+      if (avoid) avoidRects = avoid;
       // PBI-163: a user-placed position wins — the anchor-based recompute
       // must not overwrite it (scroll, resize and status changes included).
-      if (manual) return;
+      // A resized or DevTools-docked viewport can still leave the written
+      // position outside reach, so the manual position is kept but clamped
+      // back into the viewport: a banner stranded off-screen would be
+      // unreachable until a reload.
+      if (manual) {
+        const box = host.getBoundingClientRect();
+        if (box.width > 0 || box.height > 0) moveHostTo(box.top, box.left);
+        return;
+      }
       // A detached or not-yet-laid-out anchor reports a zero rect; writing a
       // position from it would fling the button to a viewport corner, so keep
       // the last good position until the anchor is measurable again.
@@ -225,14 +272,13 @@ export function mountButton(
       const anchorRect = anchor.getBoundingClientRect();
       if (!isMeasurable(anchorRect)) return;
       const hostRect = host.getBoundingClientRect();
-      const clientWidth = document.documentElement.clientWidth;
       // The avoid rects are document-relative; the host is fixed, so convert
       // them to viewport space with the current scroll offset. Empty scroll
       // keeps computePlacement's "is there room above" test honest — the
       // anchor rect is already viewport-relative.
       const sx = window.scrollX || 0;
       const sy = window.scrollY || 0;
-      const avoid = avoidRects.map((r) => ({
+      const blockers = avoidRects.map((r) => ({
         top: r.top - sy,
         left: r.left - sx,
         right: r.right - sx,
@@ -240,10 +286,10 @@ export function mountButton(
       }));
       const pos = computePlacement({
         anchor: anchorRect,
-        size: { width: hostRect.width || 220, height: hostRect.height || 32 },
-        viewport: { width: clientWidth > 0 ? Math.min(window.innerWidth, clientWidth) : window.innerWidth },
+        size: { width: hostRect.width || BANNER_FALLBACK.width, height: hostRect.height || BANNER_FALLBACK.height },
+        viewport: { width: viewportWidth() },
         scroll: { x: 0, y: 0 },
-        avoid,
+        avoid: blockers,
       });
       // No collision-free candidate: keep the last good position instead of
       // writing an overlapping one (PBI-161). The first render has no last
@@ -254,8 +300,10 @@ export function mountButton(
       // `top: initial !important` / `left: initial !important`. Plain inline
       // writes lose to it, so the coordinates must be written important too
       // (same-priority important declarations resolve by source order).
-      host.style.setProperty('top', `${pos.top}px`, 'important');
-      host.style.setProperty('left', `${pos.left}px`, 'important');
+      // moveHostTo clamps the write into the viewport, so a form whose bottom
+      // edge sits at the viewport end cannot fling the banner below the fold
+      // (PBI-161 scenario 3: the banner stays on screen).
+      moveHostTo(pos.top, pos.left);
       hasPosition = true;
     },
     destroy() {

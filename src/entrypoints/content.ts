@@ -481,7 +481,25 @@ export default defineContentScript({
         const input = el as HTMLInputElement;
         return `${el.tagName}:${input.type}:${input.name}:${el.id}`;
       }).join('|');
-      if (sig === lastScan && [...mounted.values()].every((m) => m.anchor.isConnected)) return;
+      // PBI-161: the blockers are re-collected on every pass, the
+      // short-circuited ones included: a layout shift (validation text,
+      // accordion, image load) moves fields without changing the input
+      // signature, and a stale blocker set would place the banner against
+      // coordinates that no longer exist. sync() is debounced and
+      // prefiltered, so the sweep is bounded; the scroll path still never
+      // collects (reposition converts the cached rects). The rects ride the
+      // reposition call, so the avoid update and the recompute stay on one
+      // invocation (no caller can update one and forget the other).
+      const refreshAvoids = (): void => {
+        const rects = collectAvoidRects(document);
+        mounted.forEach((m) => {
+          m.handle.reposition(rects);
+        });
+      };
+      if (sig === lastScan && [...mounted.values()].every((m) => m.anchor.isConnected)) {
+        refreshAvoids();
+        return;
+      }
       lastScan = sig;
       const forms = detectForms(document);
       const plan = planMounts(new Map([...mounted].map(([c, m]) => [c, m.anchor])), forms);
@@ -507,13 +525,7 @@ export default defineContentScript({
         mounted.set(form.container, { handle, anchor: form.anchor.el, container: form.container });
         void getAiStatusViaBackground().then((s) => handle.setStatus(s));
       }
-      // PBI-161: the blockers are re-collected per scan and cached in
-      // document coordinates; reposition() converts them to viewport space,
-      // so scrolling stays a conversion instead of a fresh sweep.
-      mounted.forEach((m) => {
-        m.handle.setAvoids(collectAvoidRects(m.container, document));
-        m.handle.reposition();
-      });
+      refreshAvoids();
     }
 
     // PBI-156: one guarded dispatcher registers every tab-bound message. The

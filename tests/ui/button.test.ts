@@ -19,6 +19,7 @@ function fakeClick(isTrusted: boolean): FakeClick {
 
 interface FakePointerEvent {
   button: number;
+  buttons: number;
   clientX: number;
   clientY: number;
   pointerId: number;
@@ -30,7 +31,7 @@ interface FakePointerEvent {
 
 function fakePointer(init: Partial<FakePointerEvent> = {}): FakePointerEvent {
   return {
-    button: 0, clientX: 0, clientY: 0, pointerId: 1, key: '', shiftKey: false,
+    button: 0, buttons: 1, clientX: 0, clientY: 0, pointerId: 1, key: '', shiftKey: false,
     preventDefault() {}, stopPropagation() {},
     ...init,
   };
@@ -286,7 +287,9 @@ describe('mountButton', () => {
     it('keeps the banner background translucent with opaque text and badge', () => {
       const { css } = mount();
       // Background only: the banner lets a still-covered field show through.
-      expect(css()).toMatch(/\.wrap \{[^}]*background: rgba\(36, 87, 214, 0\.8\)/);
+      // 0.9 keeps the page visible while the blended background over a white
+      // form measures 5.0:1 against the white text (WCAG AA).
+      expect(css()).toMatch(/\.wrap \{[^}]*background: rgba\(36, 87, 214, 0\.9\)/);
       // The badge colors are untouched (they carry the status meaning).
       expect(css()).toMatch(/\.badge\[data-status="error"\][^{]*\{ background: #b3261e; \}/);
     });
@@ -401,8 +404,7 @@ describe('mountButton', () => {
       expect(host.style.left).toBe('258px');
       // One blocker covering the whole right/above/below space: no candidate
       // is collision-free, so the last good position stays.
-      handle.setAvoids([{ top: 0, left: 0, right: 1000, bottom: 200 }]);
-      handle.reposition();
+      handle.reposition([{ top: 0, left: 0, right: 1000, bottom: 200 }]);
       expect(host.style.left).toBe('258px');
       expect(host.style.top).toBe(`${100 + (24 - 32) / 2}px`);
     });
@@ -420,8 +422,7 @@ describe('mountButton', () => {
       expect(host.style.left).toBe('258px');
       // Document rect 400..440 minus scrollY 300 covers the viewport 100..140:
       // the right candidate (96..128) collides, above (60..92) stays clear.
-      handle.setAvoids([{ top: 400, left: 252, right: 478, bottom: 440 }]);
-      handle.reposition();
+      handle.reposition([{ top: 400, left: 252, right: 478, bottom: 440 }]);
       expect(host.style.top).toBe('60px');
       expect(host.style.left).toBe('50px');
     });
@@ -475,16 +476,36 @@ describe('mountButton', () => {
     it('keeps the manual position when reposition() runs afterwards', () => {
       measure();
       // The anchor rect is irrelevant after a manual move: reposition()
-      // returns early without reading it.
+      // re-clamps the manual position instead of recomputing from the anchor.
+      // The stub follows the written position, as the real browser's box does
+      // for a fixed host.
       const { handle, fireWrap } = mount(rect(100, 50, 250, 124));
       fireWrap('pointerdown', { clientX: 110, clientY: 116 });
       fireWrap('pointermove', { clientX: 300, clientY: 200 });
       fireWrap('pointerup', { clientX: 300, clientY: 200 });
       const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
       expect(host.style.left).toBe('290px');
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => rect(184, 290, 510, 216));
       handle.reposition();
       expect(host.style.left).toBe('290px');
       expect(host.style.top).toBe('184px');
+    });
+
+    it('clamps a manual position back into the viewport on resize', () => {
+      measure();
+      const { handle, fireWrap } = mount(rect(100, 50, 250, 124));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 300, clientY: 200 });
+      fireWrap('pointerup', { clientX: 300, clientY: 200 });
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('290px');
+      // The window shrank (DevTools docking): the written position is now
+      // below the fold. The manual position wins, clamped into reach — the
+      // banner must never become unreachable until a reload.
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => rect(1200, 290, 510, 1232));
+      handle.reposition();
+      expect(host.style.top).toBe(`${800 - 32 - 8}px`);
+      expect(host.style.left).toBe('290px');
     });
 
     it('moves the host with arrow keys and the manual position survives reposition()', () => {
@@ -498,15 +519,75 @@ describe('mountButton', () => {
       fireWrap('keydown', { key: 'ArrowUp', shiftKey: true });
       expect(host.style.top).toBe('36px');
       // Manual: the anchor-based recompute must not overwrite either write.
+      // The stub follows the written position, as the real browser's box does.
+      vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(() => rect(36, 84, 304, 68));
       handle.reposition();
-      expect(host.style.left).toBe('100px');
+      expect(host.style.left).toBe('84px');
       expect(host.style.top).toBe('36px');
+    });
+
+    it('keeps the next legit click alive when a drag ends outside the banner', () => {
+      measure();
+      // Released over the page: the click that follows fires on the body and
+      // never reaches the banner's listeners, so nothing consumes the flag.
+      // The next gesture must clear it, or the fill flow needs two presses.
+      const { onClick, fireWrap, fireButton } = mount(rect(100, 50, 250, 124));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 400, clientY: 200 });
+      fireWrap('pointerup', { clientX: 800, clientY: 600 });
+      // The missed click is simulated by not firing fireButton here.
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointerup', { clientX: 110, clientY: 116 });
+      fireButton(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+
+    it('ends a drag whose pointerup was missed over an iframe', () => {
+      measure();
+      const { handle, onClick, fireWrap, fireButton } = mount(rect(0, 0, 0, 0));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      // The release happened over an iframe and never reached the window:
+      // the next move reports no held buttons, so the gesture is over and
+      // the banner must not chase the cursor.
+      fireWrap('pointermove', { clientX: 400, clientY: 200, buttons: 0 });
+      const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
+      expect(host.style.left).toBe('');
+      fireWrap('pointermove', { clientX: 500, clientY: 300 });
+      expect(host.style.left).toBe('');
+      // The release without a drag keeps the click alive.
+      fireButton(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
+      expect(handle).toBeDefined();
+    });
+
+    it('leaves the next legit click alive after a pointercancel', () => {
+      measure();
+      const { onClick, fireWrap, fireButton } = mount(rect(100, 50, 250, 124));
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointermove', { clientX: 400, clientY: 200 });
+      // A canceled gesture fires no click: the flag set here must be cleared
+      // by the next gesture, not by a click that never arrives.
+      fireWrap('pointercancel', { clientX: 400, clientY: 200 });
+      fireWrap('pointerdown', { clientX: 110, clientY: 116 });
+      fireWrap('pointerup', { clientX: 110, clientY: 116 });
+      fireButton(true);
+      expect(onClick).toHaveBeenCalledTimes(1);
     });
 
     it('marks the banner draggable with a title and grab cursor', () => {
       const { css, wrap } = mount();
       expect(wrap().title).toBe('ドラッグで移動できます');
       expect(css()).toMatch(/\.wrap \{[^}]*touch-action: none; cursor: grab/);
+    });
+
+    it('announces the drag affordance through aria-describedby (title is hover-only)', () => {
+      const { button, badge, wrap, css } = mount();
+      const describedBy = button().getAttribute('aria-describedby');
+      expect(describedBy).toBeTruthy();
+      expect(badge().getAttribute('aria-describedby')).toBe(describedBy);
+      const hint = wrap().querySelector(`#${describedBy}`)!;
+      expect(hint.textContent).toBe('ドラッグ、または矢印キーで移動できます');
+      expect(css()).toMatch(/\.hint \{[^}]*clip-path: inset\(50%\)/);
     });
   });
 });

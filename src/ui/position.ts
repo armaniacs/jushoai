@@ -10,25 +10,34 @@ export interface PositionInput {
 }
 
 const GAP = 8;
-const MARGIN = 8;
+// The same viewport edge margin the drag clamping uses (button.ts imports it).
+export const MARGIN = 8;
+
+// Candidate placements in preference order (right of the anchor, then above,
+// then below), computed once and shared by the trusted default
+// (computeButtonPosition) and the collision-checked placement
+// (computePlacement) — the priority contract lives here, nowhere else.
+function placementCandidates(i: PositionInput): Rect[] {
+  const { anchor: a, size: s, viewport: v, scroll: sc } = i;
+  const maxLeft = v.width - s.width - MARGIN;
+  const fallbackLeft = maxLeft < MARGIN ? MARGIN : Math.min(Math.max(a.left, MARGIN), maxLeft);
+  const list: Rect[] = [];
+  if (a.right + GAP + s.width <= v.width - MARGIN) {
+    list.push(rectAt(Math.max(0, a.top + (a.bottom - a.top - s.height) / 2 + sc.y), a.right + GAP + sc.x, s));
+  }
+  const above = a.top - s.height - GAP + sc.y;
+  if (above >= 0) list.push(rectAt(above, fallbackLeft + sc.x, s));
+  // Clamping the fallback to 0 would cover the anchor, so go below it instead.
+  list.push(rectAt(a.bottom + GAP + sc.y, fallbackLeft + sc.x, s));
+  return list;
+}
 
 export function computeButtonPosition(i: PositionInput): { top: number; left: number } {
   const { anchor: a, size: s, viewport: v, scroll: sc } = i;
   const nums = [a.top, a.left, a.right, a.bottom, s.width, s.height, v.width, sc.x, sc.y];
   if (!nums.every(Number.isFinite)) return { top: 0, left: MARGIN };
-
-  if (a.right + GAP + s.width <= v.width - MARGIN) {
-    return {
-      left: a.right + GAP + sc.x,
-      top: Math.max(0, a.top + (a.bottom - a.top - s.height) / 2 + sc.y),
-    };
-  }
-
-  const maxLeft = v.width - s.width - MARGIN;
-  const left = maxLeft < MARGIN ? MARGIN : Math.min(Math.max(a.left, MARGIN), maxLeft);
-  const above = a.top - s.height - GAP + sc.y;
-  // Clamping to 0 would cover the anchor, so go below it instead.
-  return { top: above >= 0 ? above : a.bottom + GAP + sc.y, left: left + sc.x };
+  const first = placementCandidates(i)[0]!;
+  return { top: first.top, left: first.left };
 }
 
 function isFiniteRect(r: Rect): boolean {
@@ -62,17 +71,7 @@ export function computePlacement(i: PositionInput): { top: number; left: number;
   const best = computeButtonPosition(i);
   const avoid = (i.avoid ?? []).filter(isFiniteRect);
   if (avoid.length === 0) return { ...best, clear: true };
-  const { anchor: a, size: s, viewport: v, scroll: sc } = i;
-  const maxLeft = v.width - s.width - MARGIN;
-  const fallbackLeft = maxLeft < MARGIN ? MARGIN : Math.min(Math.max(a.left, MARGIN), maxLeft);
-  const candidates: Rect[] = [];
-  if (a.right + GAP + s.width <= v.width - MARGIN) {
-    candidates.push(rectAt(Math.max(0, a.top + (a.bottom - a.top - s.height) / 2 + sc.y), a.right + GAP + sc.x, s));
-  }
-  const above = a.top - s.height - GAP + sc.y;
-  if (above >= 0) candidates.push(rectAt(above, fallbackLeft + sc.x, s));
-  candidates.push(rectAt(a.bottom + GAP + sc.y, fallbackLeft + sc.x, s));
-  for (const candidate of candidates) {
+  for (const candidate of placementCandidates(i)) {
     if (!overlapsAny(candidate, avoid)) return { top: candidate.top, left: candidate.left, clear: true };
   }
   return { ...best, clear: false };

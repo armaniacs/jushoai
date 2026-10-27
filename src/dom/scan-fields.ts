@@ -12,7 +12,9 @@ export interface ScannedField {
 
 // PBI-118: type=date joins the scan. The HTML standard pins its value to
 // YYYY-MM-DD, so the birthday category's single ISO injection covers it.
-const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search', 'date']);
+// Exported for the avoid-rect collector (PBI-161): the fields the button must
+// not cover are exactly the scanned fields — one set, one contract.
+export const TEXT_TYPES = new Set(['text', 'email', 'tel', 'search', 'date']);
 const clean = (s: string | null | undefined) => (s ?? '').replace(/\s+/g, ' ').trim();
 // One clean+clip pass for every page-controlled string (name, htmlId, label,
 // legend, option text): the matchers in core/classify-rules join these into regex inputs,

@@ -11,7 +11,11 @@ export interface FormCandidate {
 
 const MIN_CONTROLS = 3;
 const MIN_CLASSIFIED = 2;
-const TEXT_INPUT_TYPES = new Set(['text', 'email', 'tel', 'search']);
+// Anchor preference is deliberately narrower than the scan set (scan-fields
+// TEXT_TYPES, which includes date since PBI-118): a date picker is not where
+// a person starts filling in, so date fields do not win the anchor. They are
+// still scanned, still filled, and still blockers (PBI-161).
+const ANCHOR_TEXT_TYPES = new Set(['text', 'email', 'tel', 'search']);
 
 // classifyField is pure over the meta snapshot (it never reads meta.value),
 // so verdicts are memoized by a key of every classification-relevant field.
@@ -60,7 +64,7 @@ export function clearClassifyCache(): void {
 // not push the button down to the first recognised field. Leading selects and radios are skipped: a
 // quantity picker or a plan chooser is not where a person starts filling in.
 function pickAnchor(fields: ScannedField[]): ScannedField {
-  const isTextInput = (f: ScannedField) => f.el instanceof HTMLInputElement && TEXT_INPUT_TYPES.has(f.el.type);
+  const isTextInput = (f: ScannedField) => f.el instanceof HTMLInputElement && ANCHOR_TEXT_TYPES.has(f.el.type);
   // Box facts come from the shared geometry module: one memoized read per
   // element for the whole pick (hidden check, box test, sort key).
   const cache = createRectCache();
