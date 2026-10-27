@@ -275,6 +275,40 @@ describe('chrome: banner drag (PBI-163)', () => {
     expect(scrolled.left).toBe(after.left);
     expect(scrolled.top).toBe(after.top);
   });
+
+  it('treats touch pointer events like mouse in the drag path', async () => {
+    // Real hardware feel (gesture smoothness) stays manual. What is provable
+    // here: the drag handlers do not special-case mouse — a touch-pointer
+    // gesture (pointerType: 'touch') moves the banner the same way. The
+    // events are synthetic (isTrusted false), so this pins the code path,
+    // not the hardware delivery. Dispatched on the wrap via WebDriver's
+    // shadow access; the bubbling reaches the window-level drag listeners.
+    await driver.get(`${pages.origin}/split-form.html`);
+    await driver.wait(async () => (await hosts()) > 0, 10_000);
+    const boxOf = async (): Promise<Box> => (await placementRects()).banner;
+    const host = await driver.findElement(By.css('div[data-jushoai]'));
+    const root = await host.getShadowRoot();
+    const wrap = (await root.findElements(By.css('.wrap')))[0]!;
+    const before = await boxOf();
+    await driver.executeScript(`
+      const el = arguments[0];
+      const b = el.getBoundingClientRect();
+      const x = b.left + b.width / 2, y = b.top + b.height / 2;
+      const touch = (type, cx, cy, button) =>
+        new PointerEvent(type, {
+          pointerType: 'touch', pointerId: 2, isPrimary: true,
+          button, buttons: type === 'pointerup' ? 0 : 1,
+          clientX: cx, clientY: cy, bubbles: true, composed: true,
+        });
+      el.dispatchEvent(touch('pointerdown', x, y, 0));
+      el.dispatchEvent(touch('pointermove', x + 160, y + 90, -1));
+      el.dispatchEvent(touch('pointerup', x + 160, y + 90, 0));
+    `, wrap);
+    await driver.sleep(150);
+    const after = await boxOf();
+    expect(after.left).not.toBe(before.left);
+    expect(after.top).not.toBe(before.top);
+  });
 });
 
 describe('chrome: translucent banner (PBI-162)', () => {
@@ -289,8 +323,10 @@ describe('chrome: translucent banner (PBI-162)', () => {
       }
       return null;
     }, 10_000, 'no .wrap in the banner shadow root');
-    // 0.8 alpha keeps a covered field readable; the opaque hover/active states
+    // 0.9 alpha keeps a covered field readable and the blended background
+    // over a white form measures 5.0:1 against the white text (WCAG AA); the
+    // opaque hover/active states
     // and the badge colors are unit-covered (tests/ui/button.test.ts).
-    expect(bg).toBe('rgba(36, 87, 214, 0.8)');
+    expect(bg).toBe('rgba(36, 87, 214, 0.9)');
   });
 });

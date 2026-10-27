@@ -153,3 +153,77 @@ describe('firefox: excluded pages', () => {
     await removeFirstExclusion();
   });
 });
+
+interface Box { top: number; left: number; right: number; bottom: number }
+
+// Host box of the mounted banner plus every visible input/select rect, from
+// the light DOM: the shadow root is closed, but the fixed host and the page
+// fields are ordinary elements the test can measure.
+const placementRects = (): Promise<{ banner: Box; width: number; inputs: Box[] }> =>
+  driver.executeScript(() => {
+    const host = document.querySelector('div[data-jushoai]');
+    const box = host!.getBoundingClientRect();
+    const inputs = Array.from(document.querySelectorAll('input, select'))
+      .map((el) => el.getBoundingClientRect())
+      .filter((r) => r.width > 0 && r.height > 0)
+      .map((r) => ({ top: r.top, left: r.left, right: r.right, bottom: r.bottom }));
+    return {
+      banner: { top: box.top, left: box.left, right: box.right, bottom: box.bottom },
+      width: box.width,
+      inputs,
+    };
+  });
+
+describe('firefox: button placement (PBI-161)', () => {
+  it('places the banner where it covers no input field on a dense two-column form', async () => {
+    // Same scenario as the chrome suite: the reported bug covered the 名 column.
+    await driver.get(`${pages.origin}/two-column-form.html`);
+    await driver.wait(async () => (await hosts()) > 0, 10_000);
+    const rects = await placementRects();
+    expect(rects.width).toBeGreaterThan(0);
+    for (const input of rects.inputs) {
+      const covers = rects.banner.left < input.right && rects.banner.right > input.left
+        && rects.banner.top < input.bottom && rects.banner.bottom > input.top;
+      expect(covers, `banner ${JSON.stringify(rects.banner)} covers input ${JSON.stringify(input)}`).toBe(false);
+    }
+  });
+});
+
+describe('firefox: banner drag (PBI-163)', () => {
+  it('moves the banner by dragging and keeps the manual position on scroll', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    await driver.wait(async () => (await hosts()) > 0, 10_000);
+    const boxOf = async (): Promise<Box> => (await placementRects()).banner;
+    const host = await driver.findElement(By.css('div[data-jushoai]'));
+    const before = await boxOf();
+    await driver.actions().move({ origin: host, x: 10, y: 10 }).press()
+      .move({ origin: host, x: 140, y: 70 }).release().perform();
+    const after = await boxOf();
+    expect(after.left).not.toBe(before.left);
+    expect(after.top).not.toBe(before.top);
+    // Manual placement wins: a scroll-triggered reposition must not re-anchor
+    // the banner. dispatchEvent keeps the scroll path alive on a page too
+    // short to scroll.
+    await driver.executeScript('window.scrollTo(0, 300); window.dispatchEvent(new Event("scroll"));');
+    await driver.sleep(300);
+    const scrolled = await boxOf();
+    expect(scrolled.left).toBe(after.left);
+    expect(scrolled.top).toBe(after.top);
+  });
+});
+
+describe('firefox: translucent banner (PBI-162)', () => {
+  it('renders the banner background translucent so covered fields stay readable', async () => {
+    await driver.get(`${pages.origin}/split-form.html`);
+    // WebDriver reaches the closed shadow root through the host element.
+    const bg = await driver.wait(async () => {
+      for (const host of await driver.findElements(By.css('div[data-jushoai]'))) {
+        const root = await host.getShadowRoot();
+        const wrap = (await root.findElements(By.css('.wrap')))[0];
+        if (wrap) return wrap.getCssValue('background-color');
+      }
+      return null;
+    }, 10_000, 'no .wrap in the banner shadow root');
+    expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+  });
+});
