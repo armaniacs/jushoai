@@ -60,11 +60,28 @@ function mount(anchorRect?: DOMRect) {
     if (
       ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'keydown'].includes(type) &&
       typeof listener === 'function' &&
-      this instanceof HTMLDivElement
+      (this instanceof HTMLDivElement || this === window)
     ) {
       (wrapHandlers[type] ??= []).push(listener as unknown as (e: FakePointerEvent) => void);
     }
     return Reflect.apply(origAdd as (...a: unknown[]) => void, this, args);
+  });
+  // vitest の jsdom 環境では window に addEventListener が own プロパティとし
+  // て存在するため、prototype の spy では window 登録を捉えられない。ドラッグ
+  // の window リスナー（pointermove/up/cancel）を捉えるための追加スパイ。
+  const origWindowAdd = window.addEventListener;
+  vi.spyOn(window, 'addEventListener').mockImplementation(function (
+    this: unknown,
+    ...args: [string, EventListenerOrEventListenerObject | null, ...unknown[]]
+  ) {
+    const [type, listener] = args;
+    if (
+      ['pointermove', 'pointerup', 'pointercancel'].includes(type) &&
+      typeof listener === 'function'
+    ) {
+      (wrapHandlers[type] ??= []).push(listener as unknown as (e: FakePointerEvent) => void);
+    }
+    return Reflect.apply(origWindowAdd as (...a: unknown[]) => unknown, this, args);
   });
   const anchor = document.body.appendChild(document.createElement('input'));
   if (anchorRect) anchor.getBoundingClientRect = () => anchorRect;

@@ -112,19 +112,7 @@ export function mountButton(
     host.style.setProperty('top', `${Math.min(Math.max(top, EDGE_MARGIN), maxTop)}px`, 'important');
     host.style.setProperty('left', `${Math.min(Math.max(left, EDGE_MARGIN), maxLeft)}px`, 'important');
   };
-  wrap.addEventListener('pointerdown', (e) => {
-    if (e.button !== 0) return;
-    const box = host.getBoundingClientRect();
-    dragOrigin = { x: e.clientX, y: e.clientY, top: box.top, left: box.left };
-    // Capture keeps the gesture alive outside the banner. Some engines (and
-    // jsdom) lack the API — it is an optimization, not a requirement.
-    try {
-      wrap.setPointerCapture(e.pointerId);
-    } catch {
-      // unavailable: pointer events still reach the banner in practice
-    }
-  });
-  wrap.addEventListener('pointermove', (e) => {
+  const onDragMove = (e: PointerEvent) => {
     if (!dragOrigin) return;
     const dx = e.clientX - dragOrigin.x;
     const dy = e.clientY - dragOrigin.y;
@@ -132,20 +120,31 @@ export function mountButton(
     dragging = true;
     manual = true;
     moveHostTo(dragOrigin.top + dy, dragOrigin.left + dx);
-  });
+  };
   const endDrag = (e: PointerEvent) => {
     if (!dragOrigin) return;
     if (dragging) suppressClick = true;
     dragging = false;
     dragOrigin = null;
-    try {
-      wrap.releasePointerCapture(e.pointerId);
-    } catch {
-      // unavailable
-    }
+    // The window-level listeners are per-gesture: without this, a stale
+    // listener keeps dragging after the release.
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', endDrag);
+    window.removeEventListener('pointercancel', endDrag);
   };
-  wrap.addEventListener('pointerup', endDrag);
-  wrap.addEventListener('pointercancel', endDrag);
+  wrap.addEventListener('pointerdown', (e) => {
+    if (e.button !== 0) return;
+    const box = host.getBoundingClientRect();
+    dragOrigin = { x: e.clientX, y: e.clientY, top: box.top, left: box.left };
+    // The move/up listeners live on the window instead of the banner plus
+    // pointer capture: the pointer leaves the banner during a drag, and
+    // capturing would retarget the release so the click that follows lands
+    // on the wrap instead of the button — the fill flow never starts
+    // (caught by tests/e2e/chrome.e2e.ts).
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', endDrag);
+    window.addEventListener('pointercancel', endDrag);
+  });
   wrap.addEventListener('keydown', (e) => {
     const step = e.shiftKey ? KEY_STEP_LARGE : KEY_STEP;
     // delta = [top, left]; moveHostTo takes them in that order.
@@ -264,6 +263,11 @@ export function mountButton(
       // would still flip text and reposition after the timeout, extending the
       // handle's closure past teardown.
       window.clearTimeout(errorTimer);
+      // Drop an in-flight drag's window listeners: without this, a destroyed
+      // banner keeps dragging the (removed) host after the release.
+      window.removeEventListener('pointermove', onDragMove);
+      window.removeEventListener('pointerup', endDrag);
+      window.removeEventListener('pointercancel', endDrag);
       manual = false;
       dragging = false;
       suppressClick = false;
