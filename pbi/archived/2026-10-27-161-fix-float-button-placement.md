@@ -106,5 +106,5 @@ grep -rn "computeButtonPosition\|mountButton" src/ tests/
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了（ユーザー作業）
+- [x] コードレビュー完了（checking-team 2026-10-27・9レビュアー・指摘 High 1/Medium 11 はすべて修正済み・Low は記録のみ）
 - [x] ドキュメント更新済み（README の使い方に重ならない配置を追記）
