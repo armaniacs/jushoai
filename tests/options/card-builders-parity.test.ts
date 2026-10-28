@@ -20,7 +20,9 @@ function makeProfile(id: string, label: string) {
     id, label,
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
-    birthday: '', school: '', department: '', email: '', tel: '',
+    birthday: '', school: '', department: '',
+    companyName: '', companyDepartment: '', companyNameKana: '',
+    email: '', tel: '',
   };
 }
 

@@ -6,6 +6,7 @@ import {
   OPTIONS_ADDRESS_FIELDS, OPTIONS_PROFILE_FIELDS, PREFECTURE_FIELD_LABEL,
 } from '../../core/field-catalog';
 import { PREFECTURES } from '../../core/prefectures';
+import { makeSampleAddress, makeSampleProfile } from '../../core/sample-data';
 import {
   normalizeAddress, normalizeProfile,
 } from '../../core/profile';
@@ -201,6 +202,45 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
   const rerender = () => render();
   const profilePage = renderProfilePage(state.profiles, rerender);
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
+  const fillBlanksWithSample = (): void => {
+    const sampleP = makeSampleProfile();
+    const first = state.profiles[0];
+    if (first) {
+      const keys = Object.keys(sampleP) as (keyof typeof sampleP)[];
+      for (const k of keys) {
+        if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
+          (first[k] as string) = sampleP[k];
+        }
+      }
+    }
+    const sampleA = makeSampleAddress();
+    const firstAddress = state.addresses[0];
+    if (firstAddress) {
+      if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
+      const keys = (['zip', 'prefecture', 'city', 'street', 'building'] as const);
+      for (const k of keys) {
+        if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
+          firstAddress[k] = sampleA[k];
+        }
+      }
+    }
+    render(notice('saved', ['お試しデータを入力しました。保存ボタンで確定します。']));
+  };
+  if (!hasValidProfile(state.profiles.map(normalizeProfile))) {
+    const bannerText = document.createElement('p');
+    bannerText.textContent = '初めてですか？架空の名前と住所で試せます';
+    const trial = actionButton('お試し入力', false, fillBlanksWithSample);
+    const banner = document.createElement('div');
+    banner.className = 'trial-banner';
+    banner.append(bannerText, trial);
+    const banner2 = banner.cloneNode(true) as HTMLElement;
+    const trial2 = banner2.querySelector('button');
+    if (trial2) {
+      trial2.addEventListener('click', fillBlanksWithSample);
+    }
+    profilePage.prepend(banner);
+    addressPage.prepend(banner2);
+  }
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
