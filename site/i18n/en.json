@@ -23,7 +23,8 @@
       { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
       { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
       { "title": "Multiple profiles and addresses", "body": "Keep up to 10 profiles and up to 10 addresses. Each address can be tied to the profile that uses it. The toolbar icon shows what is registered and which profile is in use." },
-      { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." }
+      { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." },
+      { "title": "The button stays out of the way", "body": "The `JushoAI で入力` button appears where it does not overlap any fields. If it still gets in the way, drag it somewhere clear. Its translucent background keeps the field underneath readable." }
     ]
   },
   "mock": {
