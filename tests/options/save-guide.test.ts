@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { normalizeAddress, normalizeProfile } from '../../src/core/profile';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import {
-  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+  addressErrorsFor, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from '../../src/entrypoints/options/save-guide';
 
 const validProfile = normalizeProfile({
@@ -44,5 +44,35 @@ describe('trialToastText', () => {
     expect(trialToastText(p, a)).toBe(
       '架空の名前として山田 太郎さん（東京都千代田区在住）を作りました',
     );
+  });
+});
+
+describe('guideTrialMode', () => {
+  const validProfile = normalizeProfile({
+    ...EMPTY_PROFILE, id: 'p1', label: '個人用', lastName: '山田', firstName: '太郎',
+    lastNameKana: 'ヤマダ', firstNameKana: 'タロウ', email: 'yamada@example.com', tel: '09012345678',
+  });
+  const validAddress = normalizeAddress({
+    ...EMPTY_ADDRESS, id: 'a1', label: '自宅', zip: '1000001', prefecture: '東京都',
+    city: '千代田区', street: '千代田1-1',
+  });
+  const blankProfile = normalizeProfile({ ...EMPTY_PROFILE, id: 'p2' });
+  const blankAddress = normalizeAddress({ ...EMPTY_ADDRESS, id: 'a2', label: '自宅' });
+
+  it('hides the guide when both sides are valid', () => {
+    expect(guideTrialMode([validProfile], [validAddress])).toBe('none');
+  });
+
+  it('offers the combined trial when both sides lack valid entries', () => {
+    expect(guideTrialMode([blankProfile], [blankAddress])).toBe('both');
+    expect(guideTrialMode([], [])).toBe('both');
+  });
+
+  it('offers the profile trial when only the profile is missing', () => {
+    expect(guideTrialMode([blankProfile], [validAddress])).toBe('profile');
+  });
+
+  it('offers the address trial when only the address is missing', () => {
+    expect(guideTrialMode([validProfile], [blankAddress])).toBe('address');
   });
 });

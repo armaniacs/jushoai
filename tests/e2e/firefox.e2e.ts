@@ -308,8 +308,12 @@ describe('firefox: options trial input (PBI-162/163/166)', () => {
         By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
       ).click();
       await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
-      await driver.findElement(trial).click();
-      await waitSavedContaining('架空の名前として');
+      // Only the profile is missing now, so the guide offers the per-side trial,
+      // whose save toast is the generic one (no personalized trial toast).
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の名前を作って試す']"),
+      ).click();
+      await waitSavedContaining('保存しました');
       expect(await profileCardCount()).toBe(1);
     });
   });
@@ -378,6 +382,52 @@ describe('firefox: float notice behavior (PBI-165)', () => {
       await driver.wait(async () =>
         (await driver.findElements(By.css('#float-root .float-error'))).length === 0,
       10_000, 'error banner did not close');
+    });
+  });
+});
+
+const withAddressesPage = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, `${OPTIONS_URL}#addresses`);
+  try {
+    await driver.wait(until.elementLocated(By.css('#addresses')), 10_000);
+    return await fn();
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+describe('firefox: options zero-count error trial (PBI-167)', () => {
+  it('offers a trial address from the empty-address error', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withAddressesPage(async () => {
+      await driver.findElement(By.xpath("//*[@id='addresses']//button[text()='保存']")).click();
+      await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の住所を作って試す']"),
+      ).click();
+      await waitSavedContaining('保存しました');
+      expect(await driver.findElements(By.css('#addresses fieldset'))).toHaveLength(1);
+    });
+  });
+});
+
+describe('firefox: options per-side guide (PBI-167)', () => {
+  it('offers a trial address when only the address is missing', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withProfilesPage(async () => {
+      const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+      expect(await guide.getText()).toContain('架空の住所を作って試す');
+      expect(await guide.getText()).not.toContain('架空の名前と住所を作って試す');
+    });
+  });
+
+  it('offers a trial profile when only the profile is missing', async () => {
+    await setOptionsData({ profiles: [], addresses: PROFILE_DATA.addresses });
+    await withProfilesPage(async () => {
+      const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+      expect(await guide.getText()).toContain('架空の名前を作って試す');
+      expect(await guide.getText()).toContain('名前を登録する');
     });
   });
 });

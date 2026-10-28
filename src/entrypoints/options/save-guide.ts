@@ -22,3 +22,16 @@ export function addressErrorsFor(addresses: readonly Address[]): string[] {
 export function trialToastText(p: Profile, a: Address): string {
   return `架空の名前として${p.lastName} ${p.firstName}さん（${a.prefecture}${a.city}在住）を作りました`;
 }
+
+// Which sides still need a valid entry (inputs must be normalized first,
+// like the other helpers here). Drives guide visibility and the trial
+// button selection: 'none' hides the guide.
+export type TrialMode = 'both' | 'profile' | 'address' | 'none';
+
+export function guideTrialMode(profiles: readonly Profile[], addresses: readonly Address[]): TrialMode {
+  const okProfile = hasValidProfile(profiles);
+  const okAddress = hasValidAddress(addresses);
+  if (okProfile && okAddress) return 'none';
+  if (!okProfile && !okAddress) return 'both';
+  return !okProfile ? 'profile' : 'address';
+}

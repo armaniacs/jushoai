@@ -25,7 +25,7 @@ import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { ADDRESSES_SECTION_ID, applyActivePage, getActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import {
-  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+  addressErrorsFor, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from './save-guide';
 import { mountMappingSection } from './mapping-section';
 
@@ -206,8 +206,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
-async function onTrialSave(): Promise<void> {
-  // Same card-ensuring and blanks-only fill as the old trial input.
+function fillTrialProfile(): void {
   const sampleP = makeSampleProfile();
   let first = state.profiles[0];
   if (!first) {
@@ -219,6 +218,9 @@ async function onTrialSave(): Promise<void> {
       (first[k] as string) = sampleP[k];
     }
   }
+}
+
+function fillTrialAddress(): void {
   const sampleA = makeSampleAddress();
   let firstAddress = state.addresses[0];
   if (!firstAddress) {
@@ -231,6 +233,12 @@ async function onTrialSave(): Promise<void> {
       firstAddress[k] = sampleA[k];
     }
   }
+}
+
+async function onTrialSave(): Promise<void> {
+  // Same card-ensuring and blanks-only fill as the old trial input.
+  fillTrialProfile();
+  fillTrialAddress();
   // Both sides are validated before anything is written, so no unvalidated
   // value can reach storage from this path.
   const profiles = state.profiles.map(normalizeProfile);
@@ -256,11 +264,36 @@ async function onTrialSave(): Promise<void> {
   render();
 }
 
+// Single-side trials fill one side, then run that side's normal save
+// (validation, storage discipline, and guide toasts stay in one place).
+async function onTrialSaveProfile(): Promise<void> {
+  fillTrialProfile();
+  await onSaveProfiles();
+}
+
+async function onTrialSaveAddress(): Promise<void> {
+  fillTrialAddress();
+  await onSaveAddresses();
+}
+
+function trialButtonFor(mode: 'both' | 'profile' | 'address'): HTMLButtonElement {
+  if (mode === 'profile') {
+    return actionButton('架空の名前を作って試す', false, () => { void onTrialSaveProfile(); });
+  }
+  if (mode === 'address') {
+    return actionButton('架空の住所を作って試す', false, () => { void onTrialSaveAddress(); });
+  }
+  return actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
+}
+
 function buildGuideNode(): HTMLElement {
   const wrap = el('div');
   const head = el('p');
   head.textContent = '初めてですか？架空の名前と住所で試せます';
-  const trial = actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
+  const mode = guideTrialMode(
+    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
+  );
+  const trial = trialButtonFor(mode === 'none' ? 'both' : mode);
   const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
   const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
   const x = actionButton('×', false, () => dismissGuideForSession());
@@ -275,7 +308,10 @@ function buildGuideNode(): HTMLElement {
 function syncGuide(): void {
   const page = getActivePage();
   const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
-  if (!isGuideDismissed() && relevant && !hasValidProfile(state.profiles.map(normalizeProfile))) {
+  const mode = guideTrialMode(
+    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
+  );
+  if (!isGuideDismissed() && relevant && mode !== 'none') {
     showFloatGuide(buildGuideNode());
   } else {
     hideFloatGuide();
@@ -348,7 +384,13 @@ const goAddresses = (): void => setActivePage(ADDRESSES_SECTION_ID);
 async function onSaveProfiles() {
   const profiles = state.profiles.map(normalizeProfile);
   const errors = profileErrorsFor(profiles);
-  if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
+  if (profiles.length === 0) {
+    showFloatError(['プロファイルを1件以上登録してください'], {
+      label: '架空の名前を作って試す', onClick: () => { void onTrialSaveProfile(); },
+    });
+    render();
+    return;
+  }
   if (errors.length > 0) {
     showFloatError(errors);
     render();
@@ -384,7 +426,13 @@ async function onSaveProfiles() {
 async function onSaveAddresses() {
   const addresses = state.addresses.map(normalizeAddress);
   const errors = addressErrorsFor(addresses);
-  if (addresses.length === 0) errors.push('住所を1件以上登録してください');
+  if (addresses.length === 0) {
+    showFloatError(['住所を1件以上登録してください'], {
+      label: '架空の住所を作って試す', onClick: () => { void onTrialSaveAddress(); },
+    });
+    render();
+    return;
+  }
   if (errors.length > 0) {
     showFloatError(errors);
     render();

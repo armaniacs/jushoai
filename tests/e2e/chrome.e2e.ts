@@ -337,22 +337,38 @@ describe('chrome: translucent banner (PBI-162)', () => {
 // to its section (the hidden page's button is not interactable).
 const optionsUrl = (hash: string): string => `chrome-extension://${extensionId}/options.html${hash}`;
 
-const setOptionsData = async (data: unknown): Promise<void> => {
+const setOptionsData = async (data: {
+  profiles: unknown[]; addresses: unknown[];
+}): Promise<void> => {
   await driver.get(optionsUrl(''));
   await driver.executeAsyncScript(
     `const done = arguments[arguments.length - 1];
      chrome.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
     data,
   );
-  // driver.get() to the same document with a different hash does not reload,
-  // so refresh explicitly: boot re-reads storage on load.
-  await driver.navigate().refresh();
+};
+
+let freshSeq = 0;
+
+// Every test seeds storage via setOptionsData and then opens through here.
+// Same-URL and fragment-only navigations do not reliably reboot the page,
+// and waits can pass on the stale DOM while no fresh boot ever runs —
+// observed as a missing guide with correctly seeded storage. The
+// cache-busting query forces a genuinely fresh load every time (boot reads
+// the settled seed; no later navigation can predate it), so state is
+// deterministic without polling for it.
+const openFreshPage = async (hash: '#profiles' | '#addresses'): Promise<void> => {
+  freshSeq += 1;
+  await driver.get(`chrome-extension://${extensionId}/options.html?fresh=${Date.now()}-${freshSeq}${hash}`);
   await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
 };
 
 const openProfilesPage = async (): Promise<void> => {
-  await driver.get(optionsUrl('#profiles'));
-  await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+  await openFreshPage('#profiles');
+};
+
+const openAddressesPage = async (): Promise<void> => {
+  await openFreshPage('#addresses');
 };
 
 const profileCardCount = async (): Promise<number> =>
@@ -406,8 +422,12 @@ describe('chrome: options trial input (PBI-162/163/166)', () => {
       By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
     ).click();
     await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
-    await driver.findElement(trial).click();
-    await waitSavedContaining('架空の名前として');
+    // Only the profile is missing now, so the guide offers the per-side trial,
+    // whose save toast is the generic one (no personalized trial toast).
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の名前を作って試す']"),
+    ).click();
+    await waitSavedContaining('保存しました');
     expect(await profileCardCount()).toBe(1);
   });
 
@@ -471,5 +491,37 @@ describe('chrome: float notice behavior (PBI-165)', () => {
     await driver.wait(async () =>
       (await driver.findElements(By.css('#float-root .float-error'))).length === 0,
     10_000, 'error banner did not close');
+  });
+});
+
+describe('chrome: options zero-count error trial (PBI-167)', () => {
+  it('offers a trial address from the empty-address error', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openAddressesPage();
+    await driver.findElement(By.xpath("//*[@id='addresses']//button[text()='保存']")).click();
+    await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の住所を作って試す']"),
+    ).click();
+    await waitSavedContaining('保存しました');
+    expect(await driver.findElements(By.css('#addresses fieldset'))).toHaveLength(1);
+  });
+});
+
+describe('chrome: options per-side guide (PBI-167)', () => {
+  it('offers a trial address when only the address is missing', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openProfilesPage();
+    const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+    expect(await guide.getText()).toContain('架空の住所を作って試す');
+    expect(await guide.getText()).not.toContain('架空の名前と住所を作って試す');
+  });
+
+  it('offers a trial profile when only the profile is missing', async () => {
+    await setOptionsData({ profiles: [], addresses: PROFILE_DATA.addresses });
+    await openProfilesPage();
+    const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+    expect(await guide.getText()).toContain('架空の名前を作って試す');
+    expect(await guide.getText()).toContain('名前を登録する');
   });
 });
