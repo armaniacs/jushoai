@@ -16,14 +16,16 @@ import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
-import { showFloatError, showFloatToast } from './float-layer';
+import {
+  dismissGuideForSession, hideFloatGuide, isGuideDismissed, showFloatError, showFloatGuide, showFloatToast,
+} from './float-layer';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
-import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import { ADDRESSES_SECTION_ID, applyActivePage, getActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import {
-  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor,
+  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from './save-guide';
 import { mountMappingSection } from './mapping-section';
 
@@ -208,22 +210,17 @@ function render() {
   const rerender = () => render();
   const profilePage = renderProfilePage(state.profiles, rerender);
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
-  const fillBlanksWithSample = (): void => {
+  const onTrialSave = async (): Promise<void> => {
+    // Same card-ensuring and blanks-only fill as the old trial input.
     const sampleP = makeSampleProfile();
-    // No card means nowhere to fill: create the first card so the trial
-    // always leaves enterable data behind (an empty list plus a success
-    // notice would be a lie, and the next save would fail on item count).
     let first = state.profiles[0];
     if (!first) {
       first = { ...EMPTY_PROFILE, id: newId() };
       state.profiles.push(first);
     }
-    {
-      const keys = Object.keys(sampleP) as (keyof typeof sampleP)[];
-      for (const k of keys) {
-        if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
-          (first[k] as string) = sampleP[k];
-        }
+    for (const k of Object.keys(sampleP) as (keyof typeof sampleP)[]) {
+      if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
+        (first[k] as string) = sampleP[k];
       }
     }
     const sampleA = makeSampleAddress();
@@ -232,33 +229,61 @@ function render() {
       firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
       state.addresses.push(firstAddress);
     }
-    {
-      if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
-      const keys = (['zip', 'prefecture', 'city', 'street', 'building'] as const);
-      for (const k of keys) {
-        if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
-          firstAddress[k] = sampleA[k];
-        }
+    if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
+    for (const k of (['zip', 'prefecture', 'city', 'street', 'building'] as const)) {
+      if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
+        firstAddress[k] = sampleA[k];
       }
     }
-    showFloatToast(['お試しデータを入力しました。保存ボタンで確定します。']);
+    // Both sides are validated before anything is written, so no unvalidated
+    // value can reach storage from this path.
+    const profiles = state.profiles.map(normalizeProfile);
+    const addresses = state.addresses.map(normalizeAddress);
+    const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
+    if (errors.length > 0) {
+      showFloatError(errors);
+      render();
+      return;
+    }
+    state = { profiles, addresses };
+    try {
+      await saveData(state);
+    } catch (e) {
+      console.warn('[JushoAI] save failed', e);
+      showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+      render();
+      return;
+    }
+    const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
+    const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
+    showFloatToast([trialToastText(savedProfile, savedAddress)]);
     render();
   };
-  if (!hasValidProfile(state.profiles.map(normalizeProfile))) {
-    const bannerText = document.createElement('p');
-    bannerText.textContent = '初めてですか？架空の名前と住所で試せます';
-    const trial = actionButton('お試し入力', false, fillBlanksWithSample);
-    const banner = document.createElement('div');
-    banner.className = 'trial-banner';
-    banner.append(bannerText, trial);
-    const banner2 = banner.cloneNode(true) as HTMLElement;
-    const trial2 = banner2.querySelector('button');
-    if (trial2) {
-      trial2.addEventListener('click', fillBlanksWithSample);
+  const buildGuideNode = (): HTMLElement => {
+    const wrap = el('div');
+    const head = el('p');
+    head.textContent = '初めてですか？架空の名前と住所で試せます';
+    const trial = actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
+    const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
+    const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
+    const x = actionButton('×', false, () => dismissGuideForSession());
+    x.classList.add('float-close');
+    const row = el('div');
+    row.className = 'float-row';
+    row.append(trial, toProfiles, toAddresses, x);
+    wrap.append(head, row);
+    return wrap;
+  };
+  const syncGuide = (): void => {
+    const page = getActivePage();
+    const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+    if (!isGuideDismissed() && relevant && !hasValidProfile(state.profiles.map(normalizeProfile))) {
+      showFloatGuide(buildGuideNode());
+    } else {
+      hideFloatGuide();
     }
-    profilePage.prepend(banner);
-    addressPage.prepend(banner2);
-  }
+  };
+  syncGuide();
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
@@ -444,3 +469,16 @@ mountTransferSection(transferHolder, {
   onImported: async () => { await reloadState(); },
 });
 mountNav(document.getElementById('side')!);
+// Tab switches do not re-render (nav only toggles visibility), so sync the
+// floating guide here. Registered after mountNav; both listeners are
+// synchronous and read the already-updated hash.
+window.addEventListener('hashchange', () => {
+  const page = getActivePage();
+  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+  const empty = !hasValidProfile(state.profiles.map(normalizeProfile));
+  if (!isGuideDismissed() && relevant && empty) {
+    render();
+  } else {
+    hideFloatGuide();
+  }
+});
