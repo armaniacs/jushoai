@@ -26,6 +26,13 @@ const cues: [string, string][] = [
   ['open', '移動したあとも、押せばプレビューが開きます'],
 ];
 
+// The demo page uses only the top-left of the 1920x1080 frame, so the drag
+// action plays zoomed into that corner (scale 2 shows the top-left 960x540).
+// The zoom ramps in on the hover and back out before the preview opens: the
+// preview panel sits in the top-right corner and needs the full frame.
+const ZOOM_SCALE = 2;
+const zoomTarget = { from: rel(D.grab) - 0.5, to: rel(D.open) - 0.3, scale: ZOOM_SCALE, origin: '0% 0%' };
+
 export const DRAG_CLIP: DemoClip = {
   file: 'clip-drag.webm',
   start,
@@ -35,7 +42,7 @@ export const DRAG_CLIP: DemoClip = {
     to: i + 1 < cues.length ? rel(D[cues[i + 1][0]]) : duration,
     text,
   })),
-  zoom: { from: 0, to: Number.POSITIVE_INFINITY, scale: 1, origin: '0 0', ramp: 0 },
+  zoom: zoomTarget,
 };
 
 const sec = (s: number) => Math.round(s * FPS);
