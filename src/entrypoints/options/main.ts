@@ -15,7 +15,8 @@ import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, notice } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
+import { showFloatError, showFloatToast } from './float-layer';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
@@ -145,7 +146,8 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
   const save = actionButton('保存', false, () => { void onSaveProfiles(); });
   const importButton = actionButton('フォームから取り込む', false, () => {
     void onImportDraft().catch(() => {
-      render(notice('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      render();
     });
   });
   const footer = document.createElement('div');
@@ -191,7 +193,8 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   const save = actionButton('保存', false, () => { void onSaveAddresses(); });
   const importButton = actionButton('フォームから取り込む', false, () => {
     void onImportDraft().catch(() => {
-      render(notice('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      render();
     });
   });
   const footer = document.createElement('div');
@@ -201,7 +204,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
-function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
+function render() {
   const rerender = () => render();
   const profilePage = renderProfilePage(state.profiles, rerender);
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
@@ -238,7 +241,8 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
         }
       }
     }
-    render(notice('saved', ['お試しデータを入力しました。保存ボタンで確定します。']));
+    showFloatToast(['お試しデータを入力しました。保存ボタンで確定します。']);
+    render();
   };
   if (!hasValidProfile(state.profiles.map(normalizeProfile))) {
     const bannerText = document.createElement('p');
@@ -258,14 +262,7 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
-  app.replaceChildren(
-    title,
-    profilePage,
-    addressPage,
-    transferHolder,
-    ...(noticeElement ? [noticeElement] : []),
-    ...(guideElement ? [guideElement] : []),
-  );
+  app.replaceChildren(title, profilePage, addressPage, transferHolder);
   applyActivePage();
 }
 
@@ -278,12 +275,14 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
-    render(notice('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
+    showFloatError(['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']);
+    render();
     return;
   }
   const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
   if (!res || !res.ok) {
-    render(notice('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
+    showFloatError(['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']);
+    render();
     return;
   }
   const first = state.profiles[0];
@@ -300,7 +299,8 @@ async function onImportDraft(): Promise<void> {
   const targets = { target, targetAddress, blankProfile, blankAddress };
   const result = applyImportDraft(target, targetAddress, res.draft);
   if (result.taken === 0) {
-    render(notice('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
+    showFloatError(['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']);
+    render();
     return;
   }
   const next = applyImportToState(state, targets, result);
@@ -310,21 +310,20 @@ async function onImportDraft(): Promise<void> {
     `${result.taken}件を取り込みました。保存ボタンで確定します。`,
     ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
   ];
-  render(notice('saved', lines));
+  showFloatToast(lines);
+  render();
 }
 
-function guideButton(label: string, target: 'profiles' | 'addresses'): HTMLButtonElement {
-  return actionButton(label, false, () => {
-    setActivePage(target === 'profiles' ? PROFILES_SECTION_ID : ADDRESSES_SECTION_ID);
-  });
-}
+const goProfiles = (): void => setActivePage(PROFILES_SECTION_ID);
+const goAddresses = (): void => setActivePage(ADDRESSES_SECTION_ID);
 
 async function onSaveProfiles() {
   const profiles = state.profiles.map(normalizeProfile);
   const errors = profileErrorsFor(profiles);
   if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
   if (errors.length > 0) {
-    render(notice('errors', errors));
+    showFloatError(errors);
+    render();
     return;
   }
   state = { profiles, addresses: state.addresses };
@@ -339,17 +338,19 @@ async function onSaveProfiles() {
     await saveData({ profiles, addresses: storedAddresses });
   } catch (e) {
     console.warn('[JushoAI] save failed', e);
-    render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
     return;
   }
   if (hasValidAddress(state.addresses.map(normalizeAddress))) {
-    render(notice('saved', ['保存しました']));
+    showFloatToast(['保存しました']);
+    render();
     return;
   }
-  render(
-    notice('saved', ['保存しました。次は住所を入力してください']),
-    guideButton('住所を入力する', 'addresses'),
-  );
+  showFloatToast(['保存しました。次は住所を入力してください'], {
+    label: '住所を入力する', onClick: goAddresses,
+  });
+  render();
 }
 
 async function onSaveAddresses() {
@@ -357,7 +358,8 @@ async function onSaveAddresses() {
   const errors = addressErrorsFor(addresses);
   if (addresses.length === 0) errors.push('住所を1件以上登録してください');
   if (errors.length > 0) {
-    render(notice('errors', errors));
+    showFloatError(errors);
+    render();
     return;
   }
   state = { profiles: state.profiles, addresses };
@@ -372,17 +374,19 @@ async function onSaveAddresses() {
     await saveData({ profiles: storedProfiles, addresses });
   } catch (e) {
     console.warn('[JushoAI] save failed', e);
-    render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
     return;
   }
   if (hasValidProfile(state.profiles.map(normalizeProfile))) {
-    render(notice('saved', ['保存しました']));
+    showFloatToast(['保存しました']);
+    render();
     return;
   }
-  render(
-    notice('saved', ['保存しました。次はプロファイルを入力してください']),
-    guideButton('プロファイルを入力する', 'profiles'),
-  );
+  showFloatToast(['保存しました。次はプロファイルを入力してください'], {
+    label: 'プロファイルを入力する', onClick: goProfiles,
+  });
+  render();
 }
 
 // Read storage again and redraw. Used at boot and after an import rewrites
@@ -411,7 +415,8 @@ const showReadFailure = (): void => {
       addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
     };
   }
-  render(notice('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
+  showFloatError(['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']);
+  render();
 };
 
 void reloadState().catch(showReadFailure);
