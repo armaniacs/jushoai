@@ -18,3 +18,7 @@ export function addressErrorsFor(addresses: readonly Address[]): string[] {
   return addresses.flatMap((a) =>
     validateAddress(a).map((e) => `${a.label || '住所'}: ${e}`));
 }
+
+export function trialToastText(p: Profile, a: Address): string {
+  return `架空の名前として${p.lastName} ${p.firstName}さん（${a.prefecture}${a.city}在住）を作りました`;
+}
