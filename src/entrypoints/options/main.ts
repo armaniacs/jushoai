@@ -207,8 +207,15 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
   const fillBlanksWithSample = (): void => {
     const sampleP = makeSampleProfile();
-    const first = state.profiles[0];
-    if (first) {
+    // No card means nowhere to fill: create the first card so the trial
+    // always leaves enterable data behind (an empty list plus a success
+    // notice would be a lie, and the next save would fail on item count).
+    let first = state.profiles[0];
+    if (!first) {
+      first = { ...EMPTY_PROFILE, id: newId() };
+      state.profiles.push(first);
+    }
+    {
       const keys = Object.keys(sampleP) as (keyof typeof sampleP)[];
       for (const k of keys) {
         if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
@@ -217,8 +224,12 @@ function render(noticeElement?: HTMLElement, guideElement?: HTMLElement) {
       }
     }
     const sampleA = makeSampleAddress();
-    const firstAddress = state.addresses[0];
-    if (firstAddress) {
+    let firstAddress = state.addresses[0];
+    if (!firstAddress) {
+      firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
+      state.addresses.push(firstAddress);
+    }
+    {
       if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
       const keys = (['zip', 'prefecture', 'city', 'street', 'building'] as const);
       for (const k of keys) {
