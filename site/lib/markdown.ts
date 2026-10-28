@@ -10,6 +10,8 @@ export interface RenderOptions {
   base: string;
   copyLabel: string;
   copiedLabel: string;
+  /** Guide file identity for build error messages (e.g. "ja/popup-and-fill.md"). */
+  source?: string;
 }
 
 export interface Rendered {
@@ -30,10 +32,21 @@ export function slugify(text: string): string {
 export const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
-export function renderMarkdown(src: string, { base, copyLabel, copiedLabel }: RenderOptions): Rendered {
+export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx]!;
+    // ```youtube <11-char-id> with the iframe title on the content line
+    // embeds the no-cookie player (same markup as the landing demo section).
+    // Anything else renders as a copyable code block, as before.
+    const [kind, id] = token.info.trim().split(/\s+/);
+    if (kind === 'youtube') {
+      const title = token.content.trim();
+      if (!/^[A-Za-z0-9_-]{11}$/.test(id ?? '') || title === '') {
+        throw new Error(`${source ?? 'guide'}: invalid youtube fence (want "\`\`\`youtube <11-char-id>" + a title line)`);
+      }
+      return `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${escapeHtml(title)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>\n`;
+    }
     return (
       `<div class="code"><button class="copy" type="button" data-copy data-done="${escapeHtml(copiedLabel)}">${escapeHtml(copyLabel)}</button>` +
       `<pre><code>${escapeHtml(token.content)}</code></pre></div>\n`

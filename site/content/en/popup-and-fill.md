@@ -29,6 +29,10 @@ If the button covers a field and gets in the way, drag it somewhere clear. You c
 - A moved position is kept after scrolling and resizing
 - Tiny moves count as a click, so you will not move it by accident when you mean to press it
 
+```youtube tqVTcE3UqYQ
+Dragging the button (about 20 seconds)
+```
+
 1. Click `JushoAI で入力`. A preview opens.
 2. At the top, choose the profile and address to use.
 3. Review the list of fields and values. Fields with a note are not filled.

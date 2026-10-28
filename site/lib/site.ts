@@ -104,7 +104,7 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
       }
       const order = Number(data.order);
       if (data.order && !Number.isFinite(order)) problems.push(`${lang}/${slug}.md: order must be a number`);
-      const r = renderMarkdown(body, { base, copyLabel: COPY_LABEL[lang].copy, copiedLabel: COPY_LABEL[lang].done });
+      const r = renderMarkdown(body, { base, copyLabel: COPY_LABEL[lang].copy, copiedLabel: COPY_LABEL[lang].done, source: `${lang}/${slug}.md` });
       guides.push({
         lang, slug, title: data.title ?? '', description: data.description ?? '',
         order: Number.isFinite(order) ? order : 0, html: r.html, headings: r.headings, links: r.links,
