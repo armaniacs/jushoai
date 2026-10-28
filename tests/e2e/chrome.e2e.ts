@@ -366,7 +366,7 @@ const clickProfilesButton = async (text: string): Promise<void> => {
 // for the text to change instead of the element to appear.
 const waitSavedContaining = async (text: string): Promise<void> => {
   await driver.wait(async () => {
-    const els = await driver.findElements(By.css('#app p.saved'));
+    const els = await driver.findElements(By.css('#float-root .float-toast'));
     if (els.length === 0) return false;
     return ((await els[0]!.getText()) ?? '').includes(text);
   }, 10_000, `no saved notice containing ${text}`);
@@ -380,7 +380,7 @@ describe('chrome: options save split (PBI-161)', () => {
     await openProfilesPage();
     await clickProfilesButton('保存');
     await waitSavedContaining('保存しました');
-    expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
   });
 });
 
@@ -400,6 +400,7 @@ describe('chrome: options trial input (PBI-162/163)', () => {
     await driver.findElement(By.css('#profiles .trial-banner button')).click();
     await clickProfilesButton('保存');
     await waitSavedContaining('保存しました');
+    await driver.wait(async () => (await driver.findElements(By.css('#float-root .float-toast'))).length === 0, 10_000, 'trial toast did not dismiss');
     await driver.findElement(
       By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
     ).click();
@@ -408,6 +409,36 @@ describe('chrome: options trial input (PBI-162/163)', () => {
     expect(await profileCardCount()).toBe(1);
     await clickProfilesButton('保存');
     await waitSavedContaining('保存しました');
-    expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
+  });
+});
+
+describe('chrome: float notice behavior (PBI-165)', () => {
+  it('auto-dismisses the success toast', async () => {
+    await setOptionsData(PROFILE_DATA);
+    await openProfilesPage();
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    await driver.wait(async () =>
+      (await driver.findElements(By.css('#float-root .float-toast'))).length === 0,
+    10_000, 'success toast did not auto-dismiss');
+  });
+
+  it('keeps the error until closed', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(By.css('#profiles .trial-banner button')).click();
+    await driver.wait(async () => (await driver.findElements(By.css('#float-root .float-toast'))).length === 0, 10_000, 'trial toast did not dismiss');
+    await driver.findElement(
+      By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+    ).click();
+    await clickProfilesButton('保存');
+    await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+    await driver.sleep(4500);
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(1);
+    await driver.findElement(By.css('#float-root .float-error .float-close')).click();
+    await driver.wait(async () =>
+      (await driver.findElements(By.css('#float-root .float-error'))).length === 0,
+    10_000, 'error banner did not close');
   });
 });
