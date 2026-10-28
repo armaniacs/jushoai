@@ -127,7 +127,10 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
       profiles.push({ ...p, id: newId(), label: `${p.label} のコピー` });
       rerender();
     });
-    const remove = actionButton('このプロファイルを削除', profiles.length <= 1, () => {
+    // The last profile stays deletable like the last address: an empty list
+    // renders only the add button, and saving with zero profiles is blocked
+    // with a message until one is added back.
+    const remove = actionButton('このプロファイルを削除', false, () => {
       profiles.splice(i, 1);
       rerender();
     });
