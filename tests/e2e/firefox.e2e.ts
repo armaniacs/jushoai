@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Key, type WebDriver } from 'selenium-webdriver';
 import {
-  By, OPTIONS_URL, badgeNotice, clickInShadow, closeExtensionPage, openExtensionPage, panelChildTags, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
+  By, OPTIONS_URL, PROFILE_DATA, badgeNotice, clickInShadow, closeExtensionPage, openExtensionPage, panelChildTags, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -225,5 +225,96 @@ describe('firefox: translucent banner (PBI-162)', () => {
       return null;
     }, 10_000, 'no .wrap in the banner shadow root');
     expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+  });
+});
+
+// Options save split and trial (PBI-161/162/163): same scenarios as the
+// chrome suite. The options page is only reachable through the browser
+// chrome context, so each test seeds storage in one tab, then opens a fresh
+// tab (boot reads the seeded storage) and closes it afterwards.
+const setOptionsData = async (data: unknown): Promise<void> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, OPTIONS_URL);
+  try {
+    await driver.executeAsyncScript(
+      `const done = arguments[arguments.length - 1];
+       browser.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
+      data,
+    );
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+const withProfilesPage = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, `${OPTIONS_URL}#profiles`);
+  try {
+    await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+    return await fn();
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+const profileCardCount = async (): Promise<number> =>
+  (await driver.findElements(By.css('#profiles fieldset'))).length;
+
+const clickProfilesButton = async (text: string): Promise<void> => {
+  await driver.findElement(By.xpath(`//*[@id='profiles']//button[text()='${text}']`)).click();
+};
+
+const clickTrial = async (): Promise<void> => {
+  await driver.findElement(By.css('#profiles .trial-banner button')).click();
+};
+
+// The trial notice and the save notice share one p.saved element, so wait
+// for the text to change instead of the element to appear.
+const waitSavedContaining = async (text: string): Promise<void> => {
+  await driver.wait(async () => {
+    const els = await driver.findElements(By.css('#app p.saved'));
+    if (els.length === 0) return false;
+    return ((await els[0]!.getText()) ?? '').includes(text);
+  }, 10_000, `no saved notice containing ${text}`);
+};
+
+describe('firefox: options save split (PBI-161)', () => {
+  it('saves a profile alone without address errors', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withProfilesPage(async () => {
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+      expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
+    });
+  });
+});
+
+describe('firefox: options trial input (PBI-162/163)', () => {
+  it('creates cards from an empty state and saves them', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await clickTrial();
+      expect(await profileCardCount()).toBe(1);
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+    });
+  });
+
+  it('recovers through trial after deleting the last profile', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await clickTrial();
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+      await driver.findElement(
+        By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+      ).click();
+      await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
+      await clickTrial();
+      expect(await profileCardCount()).toBe(1);
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+      expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
+    });
   });
 });

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Key, type WebDriver } from 'selenium-webdriver';
 import {
-  By, badgeNotice, clickInShadow, panelChildTags, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
+  By, PROFILE_DATA, badgeNotice, clickInShadow, panelChildTags, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -328,5 +328,86 @@ describe('chrome: translucent banner (PBI-162)', () => {
     // opaque hover/active states
     // and the badge colors are unit-covered (tests/ui/button.test.ts).
     expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+  });
+});
+
+// Options save split and trial (PBI-161/162/163): the settings page is light
+// DOM, so buttons and notices are reachable with plain selectors. Save
+// buttons exist on both pages with the same label, so every xpath is scoped
+// to its section (the hidden page's button is not interactable).
+const optionsUrl = (hash: string): string => `chrome-extension://${extensionId}/options.html${hash}`;
+
+const setOptionsData = async (data: unknown): Promise<void> => {
+  await driver.get(optionsUrl(''));
+  await driver.executeAsyncScript(
+    `const done = arguments[arguments.length - 1];
+     chrome.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
+    data,
+  );
+  // driver.get() to the same document with a different hash does not reload,
+  // so refresh explicitly: boot re-reads storage on load.
+  await driver.navigate().refresh();
+  await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+};
+
+const openProfilesPage = async (): Promise<void> => {
+  await driver.get(optionsUrl('#profiles'));
+  await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+};
+
+const profileCardCount = async (): Promise<number> =>
+  (await driver.findElements(By.css('#profiles fieldset'))).length;
+
+const clickProfilesButton = async (text: string): Promise<void> => {
+  await driver.findElement(By.xpath(`//*[@id='profiles']//button[text()='${text}']`)).click();
+};
+
+// The trial notice and the save notice share one p.saved element, so wait
+// for the text to change instead of the element to appear.
+const waitSavedContaining = async (text: string): Promise<void> => {
+  await driver.wait(async () => {
+    const els = await driver.findElements(By.css('#app p.saved'));
+    if (els.length === 0) return false;
+    return ((await els[0]!.getText()) ?? '').includes(text);
+  }, 10_000, `no saved notice containing ${text}`);
+};
+
+describe('chrome: options save split (PBI-161)', () => {
+  it('saves a profile alone without address errors', async () => {
+    // The reported bug: saving with only a profile showed address errors
+    // from the invisible address section.
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openProfilesPage();
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
+  });
+});
+
+describe('chrome: options trial input (PBI-162/163)', () => {
+  it('creates cards from an empty state and saves them', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(By.css('#profiles .trial-banner button')).click();
+    expect(await profileCardCount()).toBe(1);
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+  });
+
+  it('recovers through trial after deleting the last profile', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(By.css('#profiles .trial-banner button')).click();
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    await driver.findElement(
+      By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+    ).click();
+    await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
+    await driver.findElement(By.css('#profiles .trial-banner button')).click();
+    expect(await profileCardCount()).toBe(1);
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    expect(await driver.findElements(By.css('#app ul.errors'))).toHaveLength(0);
   });
 });
