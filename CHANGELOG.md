@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.28] - 2026-10-28
+
 ### Added
 
 - 「JushoAI で入力」ボタンを、入力欄と重ならない位置に置く。右・上・下の候補から入力欄とぶつからない最初を採り、どこにも空きがないときは最後の良い位置を保つ
@@ -465,6 +467,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.28]: https://github.com/armaniacs/jushoai/compare/v0.1.27...v0.1.28
 [0.1.27]: https://github.com/armaniacs/jushoai/compare/v0.1.26...v0.1.27
 [0.1.26]: https://github.com/armaniacs/jushoai/compare/v0.1.25...v0.1.26
 [0.1.25]: https://github.com/armaniacs/jushoai/compare/v0.1.24...v0.1.25
