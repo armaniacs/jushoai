@@ -22,6 +22,11 @@ If no profile or address is registered yet, it shows guidance for registering th
 
 A `JushoAI で入力` (fill with JushoAI) button appears near a form that has several fields for name, address and similar items. The badge next to it shows the AI status.
 
+The button appears where it does not overlap any fields. If it still gets in the way, drag it out of the way (or focus it and use the arrow keys). Its background is translucent, so a field it covers stays readable.
+
+- A moved position is kept after scrolling and resizing
+- With the arrow keys, hold Shift to move in larger steps
+
 1. Click `JushoAI で入力`. A preview opens.
 2. At the top, choose the profile and address to use.
 3. Review the list of fields and values. Fields with a note are not filled.
