@@ -29,7 +29,7 @@ If the button covers a field and gets in the way, drag it somewhere clear. You c
 - A moved position is kept after scrolling and resizing
 - Tiny moves count as a click, so you will not move it by accident when you mean to press it
 
-```youtube tqVTcE3UqYQ
+```youtube 9gHt4KeipHc
 Dragging the button (about 20 seconds)
 ```
 
