@@ -314,8 +314,15 @@ async function onSaveProfiles() {
     return;
   }
   state = { profiles, addresses: state.addresses };
+  let storedAddresses = state.addresses;
   try {
-    await saveData(state);
+    const latest = await loadData();
+    storedAddresses = latest.addresses;
+  } catch {
+    storedAddresses = state.addresses;
+  }
+  try {
+    await saveData({ profiles, addresses: storedAddresses });
   } catch (e) {
     console.warn('[JushoAI] save failed', e);
     render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
@@ -340,8 +347,15 @@ async function onSaveAddresses() {
     return;
   }
   state = { profiles: state.profiles, addresses };
+  let storedProfiles = state.profiles;
   try {
-    await saveData(state);
+    const latest = await loadData();
+    storedProfiles = latest.profiles;
+  } catch {
+    storedProfiles = state.profiles;
+  }
+  try {
+    await saveData({ profiles: storedProfiles, addresses });
   } catch (e) {
     console.warn('[JushoAI] save failed', e);
     render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
