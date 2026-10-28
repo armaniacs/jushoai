@@ -264,7 +264,7 @@ const clickProfilesButton = async (text: string): Promise<void> => {
   await driver.findElement(By.xpath(`//*[@id='profiles']//button[text()='${text}']`)).click();
 };
 
-// The trial notice and the save notice share one p.saved element, so wait
+// The trial notice and the save notice share one .float-toast element, so wait
 // for the text to change instead of the element to appear.
 const waitSavedContaining = async (text: string): Promise<void> => {
   await driver.wait(async () => {

@@ -206,83 +206,86 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
+async function onTrialSave(): Promise<void> {
+  // Same card-ensuring and blanks-only fill as the old trial input.
+  const sampleP = makeSampleProfile();
+  let first = state.profiles[0];
+  if (!first) {
+    first = { ...EMPTY_PROFILE, id: newId() };
+    state.profiles.push(first);
+  }
+  for (const k of Object.keys(sampleP) as (keyof typeof sampleP)[]) {
+    if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
+      (first[k] as string) = sampleP[k];
+    }
+  }
+  const sampleA = makeSampleAddress();
+  let firstAddress = state.addresses[0];
+  if (!firstAddress) {
+    firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
+    state.addresses.push(firstAddress);
+  }
+  if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
+  for (const k of (['zip', 'prefecture', 'city', 'street', 'building'] as const)) {
+    if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
+      firstAddress[k] = sampleA[k];
+    }
+  }
+  // Both sides are validated before anything is written, so no unvalidated
+  // value can reach storage from this path.
+  const profiles = state.profiles.map(normalizeProfile);
+  const addresses = state.addresses.map(normalizeAddress);
+  const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
+  if (errors.length > 0) {
+    showFloatError(errors);
+    render();
+    return;
+  }
+  state = { profiles, addresses };
+  try {
+    await saveData(state);
+  } catch (e) {
+    console.warn('[JushoAI] save failed', e);
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
+    return;
+  }
+  const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
+  const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
+  showFloatToast([trialToastText(savedProfile, savedAddress)]);
+  render();
+}
+
+function buildGuideNode(): HTMLElement {
+  const wrap = el('div');
+  const head = el('p');
+  head.textContent = '初めてですか？架空の名前と住所で試せます';
+  const trial = actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
+  const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
+  const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
+  const x = actionButton('×', false, () => dismissGuideForSession());
+  x.classList.add('float-close');
+  const row = el('div');
+  row.className = 'float-row';
+  row.append(trial, toProfiles, toAddresses, x);
+  wrap.append(head, row);
+  return wrap;
+}
+
+function syncGuide(): void {
+  const page = getActivePage();
+  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+  if (!isGuideDismissed() && relevant && !hasValidProfile(state.profiles.map(normalizeProfile))) {
+    showFloatGuide(buildGuideNode());
+  } else {
+    hideFloatGuide();
+  }
+}
+
 function render() {
   const rerender = () => render();
   const profilePage = renderProfilePage(state.profiles, rerender);
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
-  const onTrialSave = async (): Promise<void> => {
-    // Same card-ensuring and blanks-only fill as the old trial input.
-    const sampleP = makeSampleProfile();
-    let first = state.profiles[0];
-    if (!first) {
-      first = { ...EMPTY_PROFILE, id: newId() };
-      state.profiles.push(first);
-    }
-    for (const k of Object.keys(sampleP) as (keyof typeof sampleP)[]) {
-      if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
-        (first[k] as string) = sampleP[k];
-      }
-    }
-    const sampleA = makeSampleAddress();
-    let firstAddress = state.addresses[0];
-    if (!firstAddress) {
-      firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
-      state.addresses.push(firstAddress);
-    }
-    if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
-    for (const k of (['zip', 'prefecture', 'city', 'street', 'building'] as const)) {
-      if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
-        firstAddress[k] = sampleA[k];
-      }
-    }
-    // Both sides are validated before anything is written, so no unvalidated
-    // value can reach storage from this path.
-    const profiles = state.profiles.map(normalizeProfile);
-    const addresses = state.addresses.map(normalizeAddress);
-    const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
-    if (errors.length > 0) {
-      showFloatError(errors);
-      render();
-      return;
-    }
-    state = { profiles, addresses };
-    try {
-      await saveData(state);
-    } catch (e) {
-      console.warn('[JushoAI] save failed', e);
-      showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
-      render();
-      return;
-    }
-    const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
-    const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
-    showFloatToast([trialToastText(savedProfile, savedAddress)]);
-    render();
-  };
-  const buildGuideNode = (): HTMLElement => {
-    const wrap = el('div');
-    const head = el('p');
-    head.textContent = '初めてですか？架空の名前と住所で試せます';
-    const trial = actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
-    const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
-    const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
-    const x = actionButton('×', false, () => dismissGuideForSession());
-    x.classList.add('float-close');
-    const row = el('div');
-    row.className = 'float-row';
-    row.append(trial, toProfiles, toAddresses, x);
-    wrap.append(head, row);
-    return wrap;
-  };
-  const syncGuide = (): void => {
-    const page = getActivePage();
-    const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
-    if (!isGuideDismissed() && relevant && !hasValidProfile(state.profiles.map(normalizeProfile))) {
-      showFloatGuide(buildGuideNode());
-    } else {
-      hideFloatGuide();
-    }
-  };
   syncGuide();
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
@@ -469,6 +472,12 @@ mountTransferSection(transferHolder, {
   onImported: async () => { await reloadState(); },
 });
 mountNav(document.getElementById('side')!);
+// Side-nav clicks switch tabs via replaceState (no hashchange, no render),
+// so sync floating-guide visibility here. Registered after mountNav, so the
+// nav handler runs first and getActivePage() is already updated.
+document.getElementById('side')!.querySelector('nav')!.addEventListener('click', () => {
+  syncGuide();
+});
 // Tab switches do not re-render (nav only toggles visibility), so sync the
 // floating guide here. Registered after mountNav; both listeners are
 // synchronous and read the already-updated hash.
