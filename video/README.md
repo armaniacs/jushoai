@@ -9,13 +9,18 @@ video/
 ├── playwright/
 │   ├── setup-ai.mjs    # AI の録画用ブラウザプロファイルを作る（Gemini のキーを、設定ページから保存する）
 │   ├── record.mjs      # ルールだけの 3 ページ（a / b / c）を録画する
-│   └── record-ai.mjs   # 設定画面（s）と AI のデモ（d）を録画する
+│   ├── record-ai.mjs   # 設定画面（s）と AI のデモ（d）を録画する
+│   └── record-drag.mjs # ボタンのドラッグ（drag）を録画する。samples/ と tests/e2e/pages/ を自前の配信（127.0.0.1:4181）で出すため、別ターミナルは要らない
 └── remotion/
     ├── src/clips.json      # record.mjs が書く、各クリップの時刻（秒）
     ├── src/clips-ai.json   # record-ai.mjs が書く、各クリップの時刻（秒）
+    ├── src/clips-drag.json # record-drag.mjs が書く、ドラッグのクリップの時刻（秒）
     ├── src/timeline.ts     # 場面の順序、字幕の文言、拡大、早送り
+    ├── src/timeline-drag.ts # ドラッグ動画の場面と字幕（Promo の部品を再利用）
+    ├── src/DragDemo.tsx    # ドラッグ動画の描画（Intro → デモ → 終幕、短い BGM）
     ├── src/Promo.tsx       # 映像の描画、音楽
-    └── render.mjs          # video/output/promo.mp4 に書き出す
+    ├── render.mjs          # video/output/promo.mp4 に書き出す
+    └── render-drag.mjs     # video/output/drag-demo.mp4 に書き出す
 ```
 
 録画（`remotion/public/*.webm`）、音楽（`remotion/public/bgm.mp3`）、録画用のブラウザプロファイルと拡張機能のコピー（`playwright/.work/`、`ext/`）、書き出した動画（`output/`）は、リポジトリに含めない。音楽は、YouTube オーディオライブラリの曲で、音楽ファイルを単体で配信できない。
@@ -40,6 +45,19 @@ npm install
 cd video/remotion
 npm run render   # → video/output/promo.mp4
 ```
+
+## ドラッグの説明動画（v0.1.28 から）
+
+ボタンをドラッグで移動できることを説明する、約 20 秒の動画。導入・デモ・終幕の 3 場面で、日本語字幕付き。
+
+```bash
+node video/playwright/record-drag.mjs   # → remotion/public/clip-drag.webm と src/clips-drag.json
+cd video/remotion && npm run render-drag # → video/output/drag-demo.mp4
+```
+
+- 録画は headless のフル Chromium（channel: 'chromium'）で行う。headless shell では拡張機能が動かないため、`record.mjs` の `headless: false` は使わない
+- デモページは `tests/e2e/pages/two-column-form.html`（PBI-161 の再現配置）。ボタンをつかんで移動し、離したあとに押してプレビューが開くまでを録る
+- 字幕の文言は `remotion/src/timeline-drag.ts`、描画は `remotion/src/DragDemo.tsx`（`Promo.tsx` の Intro・Demo・Info を再利用）。BGM は `bgm.mp3` を 1 回だけ流す
 
 ## 録画し直す
 

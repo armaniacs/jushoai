@@ -5,8 +5,7 @@ const FONT = '-apple-system, "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu G
 const BLUE = '#2f55d4';
 const FADE = 10;
 
-const Fade: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames, children }) => {
-  const f = useCurrentFrame();
+const Fade: React.FC<{ frames: number; children: React.ReactNode }> = ({ frames, children }) => {  const f = useCurrentFrame();
   const opacity = interpolate(f, [0, FADE, frames - FADE, frames], [0, 1, 1, 0], { extrapolateLeft: 'clamp', extrapolateRight: 'clamp' });
   return <AbsoluteFill style={{ opacity }}>{children}</AbsoluteFill>;
 };
@@ -18,7 +17,7 @@ const Brand: React.FC<{ size: number }> = ({ size }) => (
   </div>
 );
 
-const Intro: React.FC<{ sub?: string }> = ({ sub }) => {
+export const Intro: React.FC<{ title?: React.ReactNode; sub?: string }> = ({ title, sub }) => {
   const f = useCurrentFrame();
   const { fps } = useVideoConfig();
   const rise = spring({ frame: f - 6, fps, config: { damping: 200 } });
@@ -27,14 +26,14 @@ const Intro: React.FC<{ sub?: string }> = ({ sub }) => {
     <AbsoluteFill style={{ background: `linear-gradient(135deg, ${BLUE}, #1e3a9e)`, fontFamily: FONT, alignItems: 'center', justifyContent: 'center', gap: 56 }}>
       <Brand size={120} />
       <div style={{ opacity: rise, transform: `translateY(${y}px)`, color: '#fff', fontSize: 84, fontWeight: 800, textAlign: 'center', lineHeight: 1.3 }}>
-        氏名・フリガナ・住所を<br />1 クリックで
+        {title ?? <>氏名・フリガナ・住所を<br />1 クリックで</>}
       </div>
       {sub ? <div style={{ color: '#d6e0ff', fontSize: 36 }}>{sub}</div> : null}
     </AbsoluteFill>
   );
 };
 
-const Subtitles: React.FC<{ cues: DemoClip['subtitles'] }> = ({ cues }) => {
+export const Subtitles: React.FC<{ cues: DemoClip['subtitles'] }> = ({ cues }) => {
   const f = useCurrentFrame();
   const t = f / FPS;
   const cue = cues.find((c) => t >= c.from && t < c.to);
@@ -48,7 +47,7 @@ const Subtitles: React.FC<{ cues: DemoClip['subtitles'] }> = ({ cues }) => {
   );
 };
 
-const Demo: React.FC<{ clip: DemoClip }> = ({ clip }) => {
+export const Demo: React.FC<{ clip: DemoClip }> = ({ clip }) => {
   const f = useCurrentFrame();
   const t = f / FPS;
   const { from, to, scale: zs, origin, ramp = 0.8 } = clip.zoom;
@@ -84,14 +83,14 @@ const Demo: React.FC<{ clip: DemoClip }> = ({ clip }) => {
   );
 };
 
-const Info: React.FC<{ title: string; sub: string }> = ({ title, sub }) => (
+export const Info: React.FC<{ title: string; sub: string }> = ({ title, sub }) => (
   <AbsoluteFill style={{ background: '#0b1020', fontFamily: FONT, alignItems: 'center', justifyContent: 'center', gap: 36 }}>
     <div style={{ color: '#fff', fontSize: 76, fontWeight: 800 }}>{title}</div>
     <div style={{ color: '#aab6e0', fontSize: 52, fontWeight: 600 }}>{sub}</div>
   </AbsoluteFill>
 );
 
-const Scene: React.FC<{ from: number; frames: number; children: React.ReactNode }> = ({ from, frames, children }) => (
+export const Scene: React.FC<{ from: number; frames: number; children: React.ReactNode }> = ({ from, frames, children }) => (
   <Sequence from={from} durationInFrames={frames}>
     <Fade frames={frames}>{children}</Fade>
   </Sequence>
