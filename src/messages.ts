@@ -79,24 +79,18 @@ export type VersionlessAiRequest =
   | { type: 'audit-clear' };
 
 export function encodeRequest(req: VersionlessAiRequest | AiRequest): AiRequest {
-  switch (req.type) {
-    case 'ai-status':
-      return { type: 'ai-status', v: AI_REQUEST_VERSION };
-    case 'ai-download':
-      return { type: 'ai-download', v: AI_REQUEST_VERSION };
-    case 'ai-test':
-      return { type: 'ai-test', v: AI_REQUEST_VERSION };
-    case 'open-options':
-      return { type: 'open-options', v: AI_REQUEST_VERSION };
-    case 'audit-clear':
-      return { type: 'audit-clear', v: AI_REQUEST_VERSION };
-    case 'ai-classify': {
-      const chunk = req.chunk;
-      return chunk
-        ? { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields, chunk }
-        : { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields };
-    }
+  // PBI-190: the simple wire types (a table row of only the discriminant) all
+  // share the identical wire shape { type, v }, so one branch encodes them all:
+  // the current version is stamped and stray keys (v, extra) are dropped here.
+  // ai-classify keeps its own arm — the fields passthrough and the optional
+  // chunk (omitted while undefined) have no table row.
+  if (req.type !== 'ai-classify') {
+    return { type: req.type, v: AI_REQUEST_VERSION };
   }
+  const chunk = req.chunk;
+  return chunk
+    ? { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields, chunk }
+    : { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields };
 }
 
 // Version-stamped builders: senders construct every AiRequest through these so
@@ -230,6 +224,12 @@ const REQUEST_WIRE_KEYS: Record<AiRequest['type'], readonly string[]> = {
   'ai-classify': ['type', 'fields'],
 };
 const AI_CLASSIFY_CHUNK_KEYS: readonly string[] = [...REQUEST_WIRE_KEYS['ai-classify'], 'chunk'];
+// PBI-190: table membership as a type predicate. A string naming a row is a
+// wire request type, so the decode walk and the encode branch below assemble
+// their { type, v } records without per-type casts. hasOwnProperty (not `in`)
+// keeps prototype keys ('__proto__' etc.) out of the wire vocabulary.
+const isWireRequestType = (v: string): v is AiRequest['type'] =>
+  Object.prototype.hasOwnProperty.call(REQUEST_WIRE_KEYS, v);
 
 const hasOnlyKeys = (keys: string[], allow: readonly string[]): boolean =>
   keys.length === allow.length && keys.every((k) => allow.includes(k));
@@ -256,17 +256,23 @@ export function decodeRequestResult(msg: unknown): DecodedRequestResult {
   if (!checkRequestVersion(msg)) return { ok: false, reason: 'version' };
   // A legacy sender omits `v`; strip it before counting so the strict
   // closed-vocabulary key check below keeps rejecting every other extra key.
+  // The strip must stay ahead of the table walk: hasOnlyKeys compares
+  // keys.length, so a legacy version-less request would fail every row here.
   const keys = Object.keys(msg).filter((k) => k !== 'v');
-  if (msg.type === 'ai-status' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-status']))
-    return { ok: true, request: { type: 'ai-status', v: AI_REQUEST_VERSION } };
-  if (msg.type === 'ai-download' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-download']))
-    return { ok: true, request: { type: 'ai-download', v: AI_REQUEST_VERSION } };
-  if (msg.type === 'ai-test' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-test']))
-    return { ok: true, request: { type: 'ai-test', v: AI_REQUEST_VERSION } };
-  if (msg.type === 'open-options' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['open-options']))
-    return { ok: true, request: { type: 'open-options', v: AI_REQUEST_VERSION } };
-  if (msg.type === 'audit-clear' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['audit-clear']))
-    return { ok: true, request: { type: 'audit-clear', v: AI_REQUEST_VERSION } };
+  // PBI-190: one arm walks the wire-type table for the simple request types
+  // (every row whose allow-list is only the discriminant), so a new simple
+  // wire type rides its REQUEST_WIRE_KEYS row without a new arm here. The
+  // walk keeps the table-membership guard and assembles the { type, v }
+  // record without a cast; the ai-classify arm below stays outside the table
+  // because its asymmetries (fields array validation, withChunk decision,
+  // oversize backstop, parseSchedule) have no table row.
+  const type = msg.type;
+  if (
+    typeof type === 'string' && isWireRequestType(type) && type !== 'ai-classify' &&
+    hasOnlyKeys(keys, REQUEST_WIRE_KEYS[type])
+  ) {
+    return { ok: true, request: { type, v: AI_REQUEST_VERSION } };
+  }
   if (msg.type === 'ai-classify' && Array.isArray(msg.fields)) {
     const withChunk = keys.length === 3;
     if (!hasOnlyKeys(keys, withChunk ? AI_CLASSIFY_CHUNK_KEYS : REQUEST_WIRE_KEYS['ai-classify']))
