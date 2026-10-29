@@ -1,6 +1,6 @@
 import { fieldKeyFor } from './domain-mapping';
 import { ruleAll, splitRuled, withoutSkipped } from './pending-split';
-import type { FieldMeta, RuledField } from './types';
+import type { FieldMeta, RunContext } from './types';
 
 // One classify pass shared across entrances (PBI-179). The gate display, the
 // send list and the merge used to each re-run classifyField on the same metas
@@ -28,19 +28,13 @@ export function taughtIdsFor(
   );
 }
 
-export interface ClassifyOnceBundle {
-  // The single classifyField pass over the metas.
-  ruled: RuledField[];
-  // Non-confident fields (the gate list), before the skip filter.
-  unconfident: FieldMeta[];
-  // The send list: unconfident minus the taught ids.
-  pending: FieldMeta[];
-  // The ids skipped because the user taught their category (PBI-138).
-  taughtIds: ReadonlySet<string>;
-  // The non-confident count, taught included: the "all skipped" disable check
-  // compares against this, not against the shorter pending list.
-  nonConfidentCount: number;
-}
+// PBI-181: the bundle IS the canonical RunContext (alias, not a redefinition),
+// and the pipeline pass is its Pick view. Every entrance names the same shape.
+export type ClassifyOnceBundle = RunContext;
+
+// The pass the send path reads (PBI-179/181): the pipeline's premade and the
+// merge's ruled projection are this view, so they cannot drift from the bundle.
+export type PremadePass = Pick<RunContext, 'ruled' | 'unconfident'>;
 
 export function prepare(
   metas: readonly FieldMeta[],

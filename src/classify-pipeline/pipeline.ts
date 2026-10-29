@@ -5,7 +5,8 @@ import {
 import { detectKanaKind, resolveKana } from '../core/kana';
 import { applyEnglishPage } from '../core/page-language';
 import { isAllowedRadioCategory } from '../core/radio-policy';
-import { splitPending, withoutSkipped } from '../core/pending-split';
+import { withoutSkipped } from '../core/pending-split';
+import { prepare, type PremadePass } from '../core/classify-once';
 import type { Category, FieldMeta, Item, RuledField } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
 import { planChunks, scheduleFor } from './chunks';
@@ -23,11 +24,13 @@ export interface ClassifyPipelineOptions {
   englishPage?: boolean;
   llmSkip?: ReadonlySet<string>;
   signal?: AbortSignal;
-  // A classify-once bundle (PBI-179): when the caller already holds one pass
-  // over these metas (the gate path does), the pipeline reads its views
-  // instead of re-running classifyField. Same verdicts — pure functions over
-  // the same inputs — so with/without results are identical.
-  premade?: { ruled: readonly RuledField[]; unconfident: readonly FieldMeta[] };
+  // The shared classify-once pass (PBI-179/181): a PremadePass view of the
+  // canonical RunContext. The caller that already holds one pass over these
+  // metas (the gate path does) hands it over; the pipeline never re-runs
+  // classifyField on its own path below. Absent only in rule-only and legacy
+  // direct uses, where the boundary normalizes it once (same pure functions,
+  // same inputs — results identical).
+  premade?: PremadePass;
 }
 
 export interface ClassifyPipelineResult {
@@ -120,15 +123,15 @@ export async function runClassifyPipeline(
     logRuleOnlyRun(metas.length, startedAt);
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };
   }
-  // PBI-124/154: pending 分割の所有は splitPending/withoutSkipped。
-  // force は全件 (skip 除外)、通常は非 confident のみ。PBI-179: premade が
-  // あれば分類を再実行せず、その unconfident 区分に skip を適用するだけ
-  // （同一純粋関数の同一入力なので集合は等しい）。
+  // PBI-124/154: pending 分割の所有は withoutSkipped。force は全件 (skip
+  // 除外)、通常は非 confident のみ。PBI-181: 単経路 — 冒頭で1パスに正規化し、
+  // 下流 (pending 選択も merge も) はその pass のみ読む。premade ありなら
+  // 分類を再実行せず、その unconfident 区分に skip を適用するだけ（同一純粋
+  // 関数の同一入力なので集合は等しい）。
+  const pass = opts.premade ?? prepare(metas, { taughtKeys: new Set() });
   const pending = force
     ? withoutSkipped(metas, opts.llmSkip)
-    : opts.premade
-      ? withoutSkipped(opts.premade.unconfident, opts.llmSkip)
-      : splitPending(metas, opts.llmSkip).pending;
+    : withoutSkipped(pass.unconfident, opts.llmSkip);
   if (pending.length === 0) {
     logRuleOnlyRun(metas.length, startedAt);
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };
@@ -161,5 +164,5 @@ export async function runClassifyPipeline(
   if (plan.truncatedCount > 0 && failureReason === null) {
     failureReason = 'truncated';
   }
-  return { items: mergeClassified(metas, fromLlm, { force, englishPage }, opts.premade?.ruled), failureReason };
+  return { items: mergeClassified(metas, fromLlm, { force, englishPage }, pass.ruled), failureReason };
 }
