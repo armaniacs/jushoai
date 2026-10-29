@@ -38,5 +38,5 @@ Scenario: 影響調査が設計書にまとまり着手判断が決まる
 ## Definition of Done
 
 - [x] BDDシナリオのとおり調査結果が設計書として纏まる(docs/superpowers/specs/2026-10-21-iframe-design.md、文字種検証 exit 0)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] 次の着手判断が可能(実装 PBI or 対象外)(推奨は対象外維持。再開条件は iframe 内フォームの実測 1 件以上(fixture・台帳)またはユーザー報告 1 件以上)

@@ -45,5 +45,5 @@ Scenario: 判定できない欄は現行どおり
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(tests/core/width-enforcement.test.ts 16 テストが幅判定・変換・無変換境界を機械的に守る)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

@@ -45,5 +45,5 @@ Scenario: 分類でダッシュ種別差異を同一視する
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(fixture 先行 red 4件→実装後緑。7 種の同一視・非同族の現行どおり・分類と整形の共有を tests/core/dash-unification.test.ts が機械的に守る)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

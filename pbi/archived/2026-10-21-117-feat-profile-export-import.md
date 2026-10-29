@@ -52,5 +52,5 @@ Scenario: 不正 JSON で storage が変化しない
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(tests/storage.test.ts 16 ケース+tests/options/transfer-section.test.ts 10 ケースでエクスポート警告・検証と上限・不正 JSON で storage 不変を機械的に守る)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

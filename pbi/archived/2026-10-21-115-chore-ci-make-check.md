@@ -44,5 +44,5 @@ Scenario: postinstall を飛ばした分を補う
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(trigger と make check ステップ・wxt prepare 明示実行の宣言を tests/build/check-workflow.build.ts が検査。GitHub 上の初回実行結果は push 後の確認)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

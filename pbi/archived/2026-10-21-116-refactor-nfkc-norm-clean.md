@@ -44,5 +44,5 @@ Scenario: 意味の違いが保持される
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(clean-semantics.test.ts が意味の違いを機械的に守り normalize-parity.test.ts が併合禁止を検査)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

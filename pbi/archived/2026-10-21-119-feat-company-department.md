@@ -45,5 +45,5 @@ Scenario: 会社語が学校欄・部署欄に流れない
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(samples.test.ts に 12fc22bc297429.html の法人・団体名欄(field_4647587)が company に分類され会社名が注入されるケースを追加。「会社名 が school にならない」「Company Department → null」「部署名/ご担当者名/会社の生年月日 → null」等の既存ガードは不変で維持)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

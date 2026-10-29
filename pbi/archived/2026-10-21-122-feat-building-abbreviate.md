@@ -45,5 +45,5 @@ Scenario: 略記しても収まらないときは現行どおり
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(tests/core/building-abbreviate.test.ts 13 テスト+tests/ui/preview-abbrev.test.ts 5 テストが規則表・承認契約(既定未承認=注入しない)・略記前後の表示を機械的に守る)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る
