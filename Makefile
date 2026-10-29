@@ -1,3 +1,11 @@
+# Verification layers: layer | config | include | make target | real browser | network | in check.
+# test  | vitest.config.ts       | tests/**/*.test.ts       | test                  | no  | no  | yes (check)
+# build | vitest.build.config.ts | tests/build/**/*.build.ts | test-build           | no  | no  | yes (check, needs dist/*-mv3)
+# e2e   | vitest.e2e.config.ts   | tests/e2e/**/*.e2e.ts    | e2e-firefox/e2e-chrome | yes | no* | via check-all only (serial: fileParallelism is false)
+# eval  | vitest.eval.config.ts  | tests/eval/**/*.eval.ts  | eval                  | no  | no  | no (on demand; corpus health never gates check)
+# site  | site/tsconfig.json     | site/**                  | site                  | no  | no  | via check-all only (builds + checks into site-dist)
+# video | (none)                 | video/**                 | (none, by design)     | yes | no* | no (manual promo recording)
+# *e2e/video drive a real browser against localhost (e2e harness on 127.0.0.1, video on :4180) plus dist/*-mv3; no external network.
 .DEFAULT_GOAL := help
 
 .PHONY: help install dev build test typecheck check check-all zip clean site site-serve eval addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
