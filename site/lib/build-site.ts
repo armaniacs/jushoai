@@ -4,7 +4,8 @@ import { renderFeedbackFooter } from './feedback.ts';
 import { renderGuidesIndex } from './guides-index.ts';
 import { renderLanding, type Strings } from './landing.ts';
 import { renderPage } from './layout.ts';
-import { diffShape, findEmptyStrings, LANGS, loadGuides, pagePath, pageUrl, SITE_ORIGIN, type Lang } from './site.ts';
+import { LANGS, loadGuides, pagePath, pageUrl, SITE_ORIGIN, type Lang } from './site.ts';
+import { validateStrings } from './validate-guides.ts';
 
 export interface BuildOptions {
   siteDir: string;
@@ -17,11 +18,7 @@ export async function loadStrings(i18nDir: string): Promise<Record<Lang, Strings
   const read = async (lang: Lang) => JSON.parse(await readFile(join(i18nDir, `${lang}.json`), 'utf8')) as Strings;
   const ja = await read('ja');
   const en = await read('en');
-  const problems = [
-    ...diffShape(ja, en),
-    ...findEmptyStrings(ja).map((p) => `ja ${p}: empty`),
-    ...findEmptyStrings(en).map((p) => `en ${p}: empty`),
-  ];
+  const problems = validateStrings(ja, en);
   if (problems.length > 0) throw new Error(`i18n problems:\n${problems.join('\n')}`);
   return { ja, en };
 }
