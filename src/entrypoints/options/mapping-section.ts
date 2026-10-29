@@ -1,7 +1,7 @@
 import { loadMappings, saveMappings } from '../../mapping-store';
 import type { MappingEntry } from '../../core/domain-mapping';
 import { el, notice } from './dom';
-import { applyActivePage } from './nav';
+import { applyActivePage, MAPPING_SECTION_ID, setSectionCount } from './nav';
 import { bootListSection } from './list-boot';
 
 export interface MappingSectionDeps {
@@ -23,6 +23,13 @@ export function mountMappingSection(root: HTMLElement, deps: MappingSectionDeps 
   let entries: MappingEntry[] = [];
   let feedback: HTMLElement | null = null;
 
+  // The nav badge mirrors the in-memory list (PBI-168): set after a successful
+  // load and after every removal. The failed-load boot path skips it — a count
+  // that could not be read must not render as (0).
+  const syncNavCount = (): void => {
+    setSectionCount(MAPPING_SECTION_ID, entries.length);
+  };
+
   const onRemove = (index: number): void => {
     entries = entries.filter((_, i) => i !== index);
     // The removal persists immediately (no save button here). A failed save
@@ -39,6 +46,9 @@ export function mountMappingSection(root: HTMLElement, deps: MappingSectionDeps 
         render();
       },
     );
+    // The in-memory count changed with the removal in both save outcomes, so
+    // the badge updates here rather than per save branch.
+    syncNavCount();
     render();
   };
 
@@ -81,6 +91,7 @@ export function mountMappingSection(root: HTMLElement, deps: MappingSectionDeps 
     (loaded) => {
       entries = loaded;
       render();
+      syncNavCount();
       applyActivePage();
     },
     (failure) => {

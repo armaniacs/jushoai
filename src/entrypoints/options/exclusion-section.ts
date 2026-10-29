@@ -2,7 +2,7 @@ import { addExclusionEntry, EXCLUDED_URLS_MAX, removeExclusionEntry } from '../.
 import { loadExcludedUrls, saveExcludedUrls } from '../../exclusions-store';
 import { el, notice, textInput } from './dom';
 import { bootListSection } from './list-boot';
-import { applyActivePage, EXCLUSION_SECTION_ID } from './nav';
+import { applyActivePage, EXCLUSION_SECTION_ID, setSectionCount } from './nav';
 
 export interface ExclusionSectionDeps {
   load(): Promise<string[]>;
@@ -24,6 +24,13 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
   let draft = '';
   let feedback: HTMLElement | null = null;
 
+  // The nav badge mirrors the in-memory list (PBI-168): set after a successful
+  // load and after every edit. The failed-load boot path skips it — a count
+  // that could not be read must not render as (0).
+  const syncNavCount = (): void => {
+    setSectionCount(EXCLUSION_SECTION_ID, entries.length);
+  };
+
   const onAdd = (): void => {
     const result = addExclusionEntry(entries, draft);
     if (!result.ok) {
@@ -32,6 +39,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
       entries = result.entries;
       draft = '';
       feedback = null;
+      syncNavCount();
     }
     render();
   };
@@ -39,6 +47,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
   const onRemove = (value: string): void => {
     entries = removeExclusionEntry(entries, value);
     feedback = null;
+    syncNavCount();
     render();
   };
 
@@ -46,6 +55,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
     void deps.save(entries).then(
       () => {
         feedback = notice('saved', ['保存しました']);
+        syncNavCount();
         render();
       },
       () => {
@@ -113,6 +123,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
     (list) => {
       entries = list;
       render();
+      syncNavCount();
     },
     (failure) => {
       feedback = failure;

@@ -19,10 +19,18 @@ import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
-import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import {
+  ADDRESSES_SECTION_ID, applyActivePage, mountNav, onNavigate, setActivePage,
+  PROFILES_SECTION_ID, AUDIT_SECTION_ID, EXCLUSION_SECTION_ID, MAPPING_SECTION_ID,
+  setSectionCount, setSectionCounts,
+} from './nav';
 import { createGuideController } from './guide-controller';
 import { SIDE_SPECS, saveBoth, saveSide } from './save-side';
 import type { SideKind } from './save-side';
+import { hasValidAddress, hasValidProfile } from './save-guide';
+import { loadExcludedUrls } from '../../exclusions-store';
+import { loadMappings } from '../../mapping-store';
+import { AuditStore } from '../../ai/audit-log';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -330,6 +338,15 @@ function render() {
 
   app.replaceChildren(title, profilePage, addressPage, transferHolder);
   applyActivePage();
+  // Count badges (PBI-168): the two sides this module owns, passed at boot
+  // (reloadState renders) and on every render. The count is the registered
+  // entries — the same validity the trial-mode guide decides on, so the blank
+  // first-run cards are not registrations and (0) lines up with the guide
+  // offering the trial.
+  setSectionCounts({
+    [PROFILES_SECTION_ID]: state.profiles.filter((p) => hasValidProfile([p])).length,
+    [ADDRESSES_SECTION_ID]: state.addresses.filter((a) => hasValidAddress([a])).length,
+  });
 }
 
 // PBI-127: ask the active tab's content script for the page draft, then run it
@@ -451,15 +468,24 @@ mountTransferSection(transferHolder, {
   onImported: async () => { await reloadState(); },
 });
 mountNav(document.getElementById('side')!);
-// Side-nav clicks switch tabs via replaceState (no hashchange, no render),
-// so sync floating-guide visibility here. Registered after mountNav, so the
-// nav handler runs first and getActivePage() is already updated.
-document.getElementById('side')!.querySelector('nav')!.addEventListener('click', () => {
-  guideController.sync();
-});
-// Tab switches do not re-render (nav only toggles visibility), so sync the
-// floating guide here. Registered after mountNav; both listeners are
-// synchronous and read the already-updated hash.
-window.addEventListener('hashchange', () => {
-  guideController.sync();
-});
+// Guide sync rides the nav's own transition callback (PBI-196): setActivePage
+// notifies this single registration after the page state and the visibility
+// classes are updated, so the former order-dependent click/hashchange
+// listeners are gone. render()'s own sync() stays for the float-guide
+// restore on re-render.
+onNavigate(() => guideController.sync());
+// Count badges (PBI-168): one read per store this module does not own, so the
+// badges exist before the sections report theirs. A failed read only skips
+// its badge (the label stays bare) and never touches the save paths.
+void loadExcludedUrls().then(
+  (entries) => { setSectionCount(EXCLUSION_SECTION_ID, entries.length); },
+  () => { /* A count that cannot be read renders no badge. */ },
+);
+void loadMappings().then(
+  (entries) => { setSectionCount(MAPPING_SECTION_ID, entries.length); },
+  () => { /* Same: the label stays bare on a failed read. */ },
+);
+void new AuditStore().list().then(
+  (entries) => { setSectionCount(AUDIT_SECTION_ID, entries.length); },
+  () => { /* Same: the label stays bare on a failed read. */ },
+);

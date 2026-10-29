@@ -2,6 +2,7 @@ import { AuditStore, auditFileName, toTsv, type AuditEntry } from '../../ai/audi
 import { clearAuditViaBackground } from '../../llm/background-gateway';
 import { SYSTEM_PROMPT } from '../../llm/prompt';
 import { el } from './dom';
+import { AUDIT_SECTION_ID, setSectionCount } from './nav';
 
 export interface AuditSectionDeps {
   store: Pick<AuditStore, 'list' | 'clear'>;
@@ -140,7 +141,12 @@ export function mountAuditSection(root: HTMLElement, deps: AuditSectionDeps = de
   };
   const refresh = async () => {
     try {
-      show(await deps.store.list());
+      const list = await deps.store.list();
+      show(list);
+      // The nav badge is the current entries count (PBI-168). Only the success
+      // path sets it: a failed read must not render as (0) — the badge is
+      // absent until a read succeeds.
+      setSectionCount(AUDIT_SECTION_ID, list.length);
     } catch {
       show([]);
       status.textContent = 'ログを読み込めませんでした。';
