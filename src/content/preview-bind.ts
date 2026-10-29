@@ -31,14 +31,8 @@ export interface PreviewBindInput {
   // PBI-128: a matching per-site approval record shortens the preview to the
   // changed rows; the record save runs after a successful apply.
   approval?: ApprovalRecord | null;
-  recordApproval?(rows: PreviewRow[]): void;
-  // PBI-141: the profile used on this host is learned from use after a
-  // successful apply, so the next visit suggests it as the first candidate.
-  recordAssignment?(profileId: string): void;
-  // PBI-144: called once after a successful apply, so a one-shot value (the
-  // guest overlay) is consumed with the fill instead of lingering for the
-  // next button press.
-  onApplied?(): void;
+  // Post-apply writes (recordApproval/recordAssignment/onApplied) ride the
+  // FillFlow transaction (PBI-178); this view only shortens rows via approval.
 }
 
 // Preview wiring extracted from the entrypoint run() (PBI-64): reanalysis,
@@ -104,12 +98,11 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       : undefined,
     onExpandAll: input.approval ? () => preview.setRows(input.rows) : undefined,
     onApply: (sendFeedback, approvedAbbrevs) => {
-      // Last trust point: the session aborts before injecting anything when
-      // the panel was hidden, moved, or covered. The panel stays open for
-      // cancel or retry, and the reason goes to the form button, which stays
-      // visible even when the panel is hidden. The abbreviation approvals
-      // (PBI-122) ride the same call: only rows the user explicitly checked
-      // in the preview promote into the fill plan.
+      // Dumb view (PBI-178): the FillFlow transaction owns the whole apply
+      // order (consent→…→banner＋承認/割当/guest後処理). This side only
+      // digests the result — abort reason, banner, then result/teardown.
+      // The abbreviation approvals (PBI-122) ride the same call: only rows
+      // the user explicitly checked in the preview promote into the fill plan.
       const result = session.apply(sendFeedback, preview, approvedAbbrevs);
       if (!result.applied) {
         button.showError({ kind: 'transient', text: result.reason });
@@ -117,15 +110,6 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
       }
       // The banner arrives with its kind; this side only displays it.
       if (result.display.banner) button.showError(result.display.banner);
-      // PBI-128: the approval memory records the applied shape after a clean
-      // apply, so the next visit to the same form shortens its preview.
-      input.recordApproval?.(input.rows);
-      // PBI-141: the profile used on this host is learned from use — the next
-      // visit suggests it as the first candidate. 切替は候補提示のみ.
-      input.recordAssignment?.(session.selectedProfileId);
-      // PBI-144: the fill completed — a one-shot value is consumed here so a
-      // second press starts from the stored data again.
-      input.onApplied?.();
       // PBI-55: a partial apply (not everything filled) keeps the preview
       // open in result mode with a one-click breakdown report; PBI-132: a
       // clean apply with undo history also keeps it open so 元に戻す is

@@ -4,6 +4,7 @@ import { fillOneReasonLabel } from '../core/fill-one';
 import { fillOneEntry } from '../content/fill-one-entry';
 import { loadFillOneState, loadRunState } from '../content/flow-state';
 import { createFillSession, classifyWithReason } from '../content-session';
+import type { FillBundle } from '../content/fill-flow';
 import { bindPreview } from '../content/preview-bind';
 import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
@@ -331,8 +332,11 @@ export default defineContentScript({
         ? [guestProfile(activeGuest)]
         : assignedFirst(data.profiles, assignedProfileId);
       const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
-      const session = createFillSession(
-        {
+      // PBI-178: the whole apply transaction (consent→inject→persist→
+      // carryover→feedback→banner＋承認/割当/guest後処理) is assembled here as
+      // one FillFlow bundle. bindPreview below only digests the apply result.
+      const bundle: FillBundle = {
+        input: {
           profiles: sessionProfiles,
           addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
@@ -343,7 +347,7 @@ export default defineContentScript({
           englishPage,
           canReanalyze: effectiveClassifier !== null,
         },
-        {
+        env: {
           // PBI-138: the taught mapping rides as a correction layer on top of
           // whatever classification path ran — the learned pair wins over the
           // rule, and an excluded page never gets here (the session returns
@@ -383,8 +387,35 @@ export default defineContentScript({
           recordCarryover: (entries) => {
             carryover = mergeCarryover(carryover, entries);
           },
+          // PBI-128: the per-site approval memory. A record for this host with
+          // the same form shape and selection shortens the preview to the
+          // changed rows; a clean apply records the shape (digests only — no
+          // raw profile value, no raw label).
+          recordApproval: (rows) => {
+            // PBI-153: reported through persistWrite instead of an unhandled
+            // rejection inside the `void` IIFE.
+            persistWrite('サイトごとの承認', async () => {
+              const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
+              if (!record.domain) return;
+              await upsertApproval(record);
+            });
+          },
+          // PBI-141: the profile used on this host is learned from use. Only the
+          // host → profileId pair persists — never a profile value.
+          recordAssignment: (profileId) => {
+            // PBI-153: reported through persistWrite instead of an unhandled
+            // rejection from the bare `void`.
+            persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
+          },
+          // PBI-144: the guest is one-shot — the fill consumes it. Without this
+          // the closure would keep overlaying the stored data for every later
+          // press on the same tab (BDD: タブを閉じるか完了する→破棄).
+          onApplied: () => {
+            if (activeGuest) guest = null;
+          },
         },
-      );
+      };
+      const session = createFillSession(bundle.input, bundle.env);
       const started = await session.start();
       if (started.failureReason) {
         lastFailure = started.failureReason;
@@ -432,35 +463,12 @@ export default defineContentScript({
             });
           });
         },
-        // PBI-128: the per-site approval memory. A record for this host with
-        // the same form shape and selection shortens the preview to the
-        // changed rows; a clean apply records the shape (digests only — no
-        // raw profile value, no raw label).
+        // PBI-128: the per-site approval memory shortens the preview to the
+        // changed rows (view only). The record save rides the FillFlow
+        // transaction (PBI-178: bundle.env.recordApproval above).
         approval: matches(priorApproval, location.href, metas, session.selectedProfileId, session.selectedAddressId)
           ? priorApproval
           : null,
-        recordApproval: (rows) => {
-          // PBI-153: reported through persistWrite instead of an unhandled
-          // rejection inside the `void` IIFE.
-          persistWrite('サイトごとの承認', async () => {
-            const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
-            if (!record.domain) return;
-            await upsertApproval(record);
-          });
-        },
-        // PBI-141: the profile used on this host is learned from use. Only the
-        // host → profileId pair persists — never a profile value.
-        recordAssignment: (profileId) => {
-          // PBI-153: reported through persistWrite instead of an unhandled
-          // rejection from the bare `void`.
-          persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
-        },
-        // PBI-144: the guest is one-shot — the fill consumes it. Without this
-        // the closure would keep overlaying the stored data for every later
-        // press on the same tab (BDD: タブを閉じるか完了する→破棄).
-        onApplied: () => {
-          if (activeGuest) guest = null;
-        },
       });
       openPreview = preview;
     }
