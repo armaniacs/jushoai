@@ -20,9 +20,9 @@ Scenario: import失敗時の表示が一元化される
   Then 同一ヘルパーで表示される
 
 ## 受け入れ基準
-- [ ] onSaveSide(kind)が単一化されている
-- [ ] goSide/onTrialSaveSide/import失敗ヘルパーが集約されている
-- [ ] SIDE_SPECSが使用されている
+- [x] onSaveSide(kind)が単一化されている
+- [x] goSide/onTrialSaveSide/import失敗ヘルパーが集約されている
+- [x] SIDE_SPECSが使用されている
 
 ## テスト戦略
 - E2E: 保存フローの回帰確認
@@ -33,6 +33,6 @@ Scenario: import失敗時の表示が一元化される
 - 0.15人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

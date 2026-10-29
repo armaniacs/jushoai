@@ -20,9 +20,9 @@ Scenario: eval指標と実送信が一致する
   Then 同一定義に基づく
 
 ## 受け入れ基準
-- [ ] sendSetが唯一の送信集合所有者である
-- [ ] pipeline分岐とWithTraceが委譲している
-- [ ] force×skip×refine-dropのparityテストがある
+- [x] sendSetが唯一の送信集合所有者である
+- [x] pipeline分岐とWithTraceが委譲している
+- [x] force×skip×refine-dropのparityテストがある
 
 ## テスト戦略
 - E2E: 分類フローの回帰確認
@@ -33,6 +33,6 @@ Scenario: eval指標と実送信が一致する
 - 0.2人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み
