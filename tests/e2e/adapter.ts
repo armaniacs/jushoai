@@ -11,6 +11,7 @@ import {
 // UUID and must open it from the browser chrome context (harness.ts).
 // Scenarios (scenarios.ts) only see this interface, so a new flow is written
 // once and runs on both browsers.
+// Seam責務: 起動・options到達・seed経路を隠す。scenariosが直接触ってよいのはform頁のdriver/pagesに限り、options頁はwithOptionsPage・seedはseed()経由のみ。
 export interface BrowserAdapter {
   readonly label: string;
   readonly driver: WebDriver;
@@ -62,6 +63,7 @@ export class ChromeAdapter implements BrowserAdapter {
   async seed(data: unknown = PROFILE_DATA): Promise<void> {
     if (data === PROFILE_DATA) {
       // Initial seed keeps the exact harness path.
+      // TODO: 削除条件＝storage経由seedで初回bootが両browser緑のときexact-path分岐を消す。
       await seedChromeProfile(this.driver, this.extensionId);
       return;
     }
@@ -107,6 +109,7 @@ export class FirefoxAdapter implements BrowserAdapter {
   async seed(data: unknown = PROFILE_DATA): Promise<void> {
     if (data === PROFILE_DATA) {
       // Initial seed keeps the exact harness path.
+      // TODO: 削除条件＝storage経由seedで初回bootが両browser緑のときexact-path分岐を消す。
       await seedProfile(this.driver);
       return;
     }

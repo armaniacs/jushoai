@@ -389,9 +389,9 @@ export function runOptionsSaveSplit(adapter: BrowserAdapter, label: string): voi
     it('saves a profile alone without address errors', async () => {
       // The reported bug: saving with only a profile showed address errors
       // from the invisible address section.
-      const { driver } = adapter;
       await adapter.seed({ profiles: PROFILE_DATA.profiles, addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await clickProfilesButton(driver, '保存');
         await waitSavedContaining(driver, '保存しました');
         expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
@@ -403,9 +403,9 @@ export function runOptionsSaveSplit(adapter: BrowserAdapter, label: string): voi
 export function runOptionsTrialInput(adapter: BrowserAdapter, label: string): void {
   describe(`${label}: options trial input (PBI-162/163/166)`, () => {
     it('registers on one trial press without a manual save', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await driver.findElement(
           By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
         ).click();
@@ -416,9 +416,9 @@ export function runOptionsTrialInput(adapter: BrowserAdapter, label: string): vo
     });
 
     it('recovers through trial after deleting the last profile', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         const trial = By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']");
         await driver.findElement(trial).click();
         await waitSavedContaining(driver, '架空の名前として');
@@ -437,9 +437,9 @@ export function runOptionsTrialInput(adapter: BrowserAdapter, label: string): vo
     });
 
     it('navigates through the guide buttons', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await driver.findElement(
           By.xpath("//*[@id='float-root']//button[text()='住所を登録する']"),
         ).click();
@@ -458,9 +458,9 @@ export function runOptionsTrialInput(adapter: BrowserAdapter, label: string): vo
     });
 
     it('hides the guide for the session and shows it again on reload', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await driver.findElement(By.css('#float-root .float-guide .float-close')).click();
         await driver.wait(async () =>
           (await driver.findElements(By.css('#float-root .float-guide'))).length === 0,
@@ -476,9 +476,9 @@ export function runOptionsTrialInput(adapter: BrowserAdapter, label: string): vo
 export function runFloatNotice(adapter: BrowserAdapter, label: string): void {
   describe(`${label}: float notice behavior (PBI-165)`, () => {
     it('auto-dismisses the success toast', async () => {
-      const { driver } = adapter;
       await adapter.seed(PROFILE_DATA);
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await clickProfilesButton(driver, '保存');
         await waitSavedContaining(driver, '保存しました');
         await driver.wait(async () =>
@@ -488,9 +488,9 @@ export function runFloatNotice(adapter: BrowserAdapter, label: string): void {
     });
 
     it('keeps the error until closed', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         await driver.findElement(
           By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
         ).click();
@@ -514,9 +514,9 @@ export function runFloatNotice(adapter: BrowserAdapter, label: string): void {
 export function runOptionsZeroCountTrial(adapter: BrowserAdapter, label: string): void {
   describe(`${label}: options zero-count error trial (PBI-167)`, () => {
     it('offers a trial address from the empty-address error', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: PROFILE_DATA.profiles, addresses: [] });
       await adapter.withOptionsPage('#addresses', async () => {
+        const { driver } = adapter;
         await driver.findElement(By.xpath("//*[@id='addresses']//button[text()='保存']")).click();
         await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
         await driver.findElement(
@@ -532,9 +532,9 @@ export function runOptionsZeroCountTrial(adapter: BrowserAdapter, label: string)
 export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): void {
   describe(`${label}: options per-side guide (PBI-167)`, () => {
     it('offers a trial address when only the address is missing', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: PROFILE_DATA.profiles, addresses: [] });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
         expect(await guide.getText()).toContain('架空の住所を作って試す');
         expect(await guide.getText()).not.toContain('架空の名前と住所を作って試す');
@@ -542,9 +542,9 @@ export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): 
     });
 
     it('offers a trial profile when only the profile is missing', async () => {
-      const { driver } = adapter;
       await adapter.seed({ profiles: [], addresses: PROFILE_DATA.addresses });
       await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
         const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
         expect(await guide.getText()).toContain('架空の名前を作って試す');
         expect(await guide.getText()).toContain('名前を登録する');
@@ -557,7 +557,8 @@ export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): 
 // includePartialNotice + includeTouchPointer + expectBuiltInProvider;
 // Firefox passes none of them.
 export function runBrowserScenarios(adapter: BrowserAdapter, opts: BrowserScenarioOptions): void {
-  const { label } = opts;
+  // opts.labelは残すが表示名はadapter.labelに一本化（段階移行中・動作不変）。
+  const label = adapter.label;
   runFillFlow(adapter, label);
   if (opts.includePartialNotice) runPartialNoticeFlow(adapter, label);
   runFillOneKana(adapter, label);
