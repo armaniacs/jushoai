@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Key, type WebDriver } from 'selenium-webdriver';
 import {
-  By, OPTIONS_URL, badgeNotice, clickInShadow, closeExtensionPage, openExtensionPage, panelChildTags, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
+  By, OPTIONS_URL, PROFILE_DATA, badgeNotice, clickInShadow, closeExtensionPage, openExtensionPage, panelChildTags, seedProfile, startDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -225,5 +225,209 @@ describe('firefox: translucent banner (PBI-162)', () => {
       return null;
     }, 10_000, 'no .wrap in the banner shadow root');
     expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+  });
+});
+
+// Options save split and trial (PBI-161/162/163): same scenarios as the
+// chrome suite. The options page is only reachable through the browser
+// chrome context, so each test seeds storage in one tab, then opens a fresh
+// tab (boot reads the seeded storage) and closes it afterwards.
+const setOptionsData = async (data: unknown): Promise<void> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, OPTIONS_URL);
+  try {
+    await driver.executeAsyncScript(
+      `const done = arguments[arguments.length - 1];
+       browser.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
+      data,
+    );
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+const withProfilesPage = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, `${OPTIONS_URL}#profiles`);
+  try {
+    await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+    return await fn();
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+const profileCardCount = async (): Promise<number> =>
+  (await driver.findElements(By.css('#profiles fieldset'))).length;
+
+const clickProfilesButton = async (text: string): Promise<void> => {
+  await driver.findElement(By.xpath(`//*[@id='profiles']//button[text()='${text}']`)).click();
+};
+
+// The trial notice and the save notice share one .float-toast element, so wait
+// for the text to change instead of the element to appear.
+const waitSavedContaining = async (text: string): Promise<void> => {
+  await driver.wait(async () => {
+    const els = await driver.findElements(By.css('#float-root .float-toast'));
+    if (els.length === 0) return false;
+    return ((await els[0]!.getText()) ?? '').includes(text);
+  }, 10_000, `no saved notice containing ${text}`);
+};
+
+describe('firefox: options save split (PBI-161)', () => {
+  it('saves a profile alone without address errors', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withProfilesPage(async () => {
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+      expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
+    });
+  });
+});
+
+describe('firefox: options trial input (PBI-162/163/166)', () => {
+  it('registers on one trial press without a manual save', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
+      ).click();
+      await waitSavedContaining('架空の名前として');
+      expect(await profileCardCount()).toBe(1);
+      expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
+    });
+  });
+
+  it('recovers through trial after deleting the last profile', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      const trial = By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']");
+      await driver.findElement(trial).click();
+      await waitSavedContaining('架空の名前として');
+      await driver.findElement(
+        By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+      ).click();
+      await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
+      // Only the profile is missing now, so the guide offers the per-side trial,
+      // whose save toast is the generic one (no personalized trial toast).
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の名前を作って試す']"),
+      ).click();
+      await waitSavedContaining('保存しました');
+      expect(await profileCardCount()).toBe(1);
+    });
+  });
+
+  it('navigates through the guide buttons', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='住所を登録する']"),
+      ).click();
+      await driver.wait(async () =>
+        (await driver.findElement(By.css('#side nav a[data-section="addresses"]'))
+          .getAttribute('aria-current')) === 'true',
+      10_000, 'did not switch to the addresses tab');
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='名前を登録する']"),
+      ).click();
+      await driver.wait(async () =>
+        (await driver.findElement(By.css('#side nav a[data-section="profiles"]'))
+          .getAttribute('aria-current')) === 'true',
+      10_000, 'did not switch back to the profiles tab');
+    });
+  });
+
+  it('hides the guide for the session and shows it again on reload', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await driver.findElement(By.css('#float-root .float-guide .float-close')).click();
+      await driver.wait(async () =>
+        (await driver.findElements(By.css('#float-root .float-guide'))).length === 0,
+      10_000, 'guide did not hide');
+      await driver.navigate().refresh();
+      await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+      await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+    });
+  });
+});
+
+describe('firefox: float notice behavior (PBI-165)', () => {
+  it('auto-dismisses the success toast', async () => {
+    await setOptionsData(PROFILE_DATA);
+    await withProfilesPage(async () => {
+      await clickProfilesButton('保存');
+      await waitSavedContaining('保存しました');
+      await driver.wait(async () =>
+        (await driver.findElements(By.css('#float-root .float-toast'))).length === 0,
+      10_000, 'success toast did not auto-dismiss');
+    });
+  });
+
+  it('keeps the error until closed', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await withProfilesPage(async () => {
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
+      ).click();
+      await driver.wait(async () => (await driver.findElements(By.css('#float-root .float-toast'))).length === 0, 10_000, 'trial toast did not dismiss');
+      await driver.findElement(
+        By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+      ).click();
+      await clickProfilesButton('保存');
+      await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+      await driver.sleep(4500);
+      expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(1);
+      await driver.findElement(By.css('#float-root .float-error .float-close')).click();
+      await driver.wait(async () =>
+        (await driver.findElements(By.css('#float-root .float-error'))).length === 0,
+      10_000, 'error banner did not close');
+    });
+  });
+});
+
+const withAddressesPage = async <T>(fn: () => Promise<T>): Promise<T> => {
+  const home = await driver.getWindowHandle();
+  await openExtensionPage(driver, `${OPTIONS_URL}#addresses`);
+  try {
+    await driver.wait(until.elementLocated(By.css('#addresses')), 10_000);
+    return await fn();
+  } finally {
+    await closeExtensionPage(driver, home);
+  }
+};
+
+describe('firefox: options zero-count error trial (PBI-167)', () => {
+  it('offers a trial address from the empty-address error', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withAddressesPage(async () => {
+      await driver.findElement(By.xpath("//*[@id='addresses']//button[text()='保存']")).click();
+      await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+      await driver.findElement(
+        By.xpath("//*[@id='float-root']//button[text()='架空の住所を作って試す']"),
+      ).click();
+      await waitSavedContaining('保存しました');
+      expect(await driver.findElements(By.css('#addresses fieldset'))).toHaveLength(1);
+    });
+  });
+});
+
+describe('firefox: options per-side guide (PBI-167)', () => {
+  it('offers a trial address when only the address is missing', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await withProfilesPage(async () => {
+      const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+      expect(await guide.getText()).toContain('架空の住所を作って試す');
+      expect(await guide.getText()).not.toContain('架空の名前と住所を作って試す');
+    });
+  });
+
+  it('offers a trial profile when only the profile is missing', async () => {
+    await setOptionsData({ profiles: [], addresses: PROFILE_DATA.addresses });
+    await withProfilesPage(async () => {
+      const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+      expect(await guide.getText()).toContain('架空の名前を作って試す');
+      expect(await guide.getText()).toContain('名前を登録する');
+    });
   });
 });

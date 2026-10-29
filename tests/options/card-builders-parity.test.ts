@@ -20,7 +20,9 @@ function makeProfile(id: string, label: string) {
     id, label,
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
-    birthday: '', school: '', department: '', email: '', tel: '',
+    birthday: '', school: '', department: '',
+    companyName: '', companyDepartment: '', companyNameKana: '',
+    email: '', tel: '',
   };
 }
 
@@ -167,15 +169,20 @@ describe('profile cards parity', () => {
     expect(limitNote(profileSection())).toBe('');
   });
 
-  it('disables delete at a single profile', () => {
+  it('keeps delete enabled at a single profile and deletes it (2 -> 1 -> 0)', () => {
     buttonsIn(profileCards()[0]!, 'このプロファイルを削除')[0]!.click();
     expect(profileCards()).toHaveLength(1);
-    expect(buttonsIn(profileSection(), 'このプロファイルを削除')[0]!.disabled).toBe(true);
+    expect(buttonsIn(profileSection(), 'このプロファイルを削除')[0]!.disabled).toBe(false);
+    buttonsIn(profileCards()[0]!, 'このプロファイルを削除')[0]!.click();
+    expect(profileCards()).toHaveLength(0);
+    expect(buttonsIn(profileSection(), 'このプロファイルを削除')).toHaveLength(0);
+    expect(buttonsIn(profileSection(), 'プロファイルを新規追加')[0]!.disabled).toBe(false);
+    expect(limitNote(profileSection())).toBe('');
   });
 
-  it('adds a profile back (1 -> 2)', () => {
+  it('adds a profile back (0 -> 1) with delete enabled', () => {
     buttonsIn(profileSection(), 'プロファイルを新規追加')[0]!.click();
-    expect(profileCards()).toHaveLength(2);
+    expect(profileCards()).toHaveLength(1);
     expect(buttonsIn(profileSection(), 'このプロファイルを削除')[0]!.disabled).toBe(false);
   });
 

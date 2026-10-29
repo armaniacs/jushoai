@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Key, type WebDriver } from 'selenium-webdriver';
 import {
-  By, badgeNotice, clickInShadow, panelChildTags, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
+  By, PROFILE_DATA, badgeNotice, clickInShadow, panelChildTags, reportButton, resultPanelText, seedChromeProfile, startChromeDriver, startPageServer, until, valueOf, type PageServer,
 } from './harness';
 
 let driver: WebDriver;
@@ -328,5 +328,200 @@ describe('chrome: translucent banner (PBI-162)', () => {
     // opaque hover/active states
     // and the badge colors are unit-covered (tests/ui/button.test.ts).
     expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+  });
+});
+
+// Options save split and trial (PBI-161/162/163): the settings page is light
+// DOM, so buttons and notices are reachable with plain selectors. Save
+// buttons exist on both pages with the same label, so every xpath is scoped
+// to its section (the hidden page's button is not interactable).
+const optionsUrl = (hash: string): string => `chrome-extension://${extensionId}/options.html${hash}`;
+
+const setOptionsData = async (data: {
+  profiles: unknown[]; addresses: unknown[];
+}): Promise<void> => {
+  await driver.get(optionsUrl(''));
+  await driver.executeAsyncScript(
+    `const done = arguments[arguments.length - 1];
+     chrome.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`,
+    data,
+  );
+};
+
+let freshSeq = 0;
+
+// Every test seeds storage via setOptionsData and then opens through here.
+// Same-URL and fragment-only navigations do not reliably reboot the page,
+// and waits can pass on the stale DOM while no fresh boot ever runs —
+// observed as a missing guide with correctly seeded storage. The
+// cache-busting query forces a genuinely fresh load every time (boot reads
+// the settled seed; no later navigation can predate it), so state is
+// deterministic without polling for it.
+const openFreshPage = async (hash: '#profiles' | '#addresses'): Promise<void> => {
+  freshSeq += 1;
+  await driver.get(`chrome-extension://${extensionId}/options.html?fresh=${Date.now()}-${freshSeq}${hash}`);
+  await driver.wait(until.elementLocated(By.css('#profiles')), 10_000);
+};
+
+const openProfilesPage = async (): Promise<void> => {
+  await openFreshPage('#profiles');
+};
+
+const openAddressesPage = async (): Promise<void> => {
+  await openFreshPage('#addresses');
+};
+
+const profileCardCount = async (): Promise<number> =>
+  (await driver.findElements(By.css('#profiles fieldset'))).length;
+
+const clickProfilesButton = async (text: string): Promise<void> => {
+  await driver.findElement(By.xpath(`//*[@id='profiles']//button[text()='${text}']`)).click();
+};
+
+// The trial notice and the save notice share one .float-toast element, so wait
+// for the text to change instead of the element to appear.
+const waitSavedContaining = async (text: string): Promise<void> => {
+  await driver.wait(async () => {
+    const els = await driver.findElements(By.css('#float-root .float-toast'));
+    if (els.length === 0) return false;
+    return ((await els[0]!.getText()) ?? '').includes(text);
+  }, 10_000, `no saved notice containing ${text}`);
+};
+
+describe('chrome: options save split (PBI-161)', () => {
+  it('saves a profile alone without address errors', async () => {
+    // The reported bug: saving with only a profile showed address errors
+    // from the invisible address section.
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openProfilesPage();
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
+  });
+});
+
+describe('chrome: options trial input (PBI-162/163/166)', () => {
+  it('registers on one trial press without a manual save', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
+    ).click();
+    await waitSavedContaining('架空の名前として');
+    expect(await profileCardCount()).toBe(1);
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(0);
+  });
+
+  it('recovers through trial after deleting the last profile', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    const trial = By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']");
+    await driver.findElement(trial).click();
+    await waitSavedContaining('架空の名前として');
+    await driver.findElement(
+      By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+    ).click();
+    await driver.wait(async () => (await profileCardCount()) === 0, 10_000, 'profile card was not deleted');
+    // Only the profile is missing now, so the guide offers the per-side trial,
+    // whose save toast is the generic one (no personalized trial toast).
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の名前を作って試す']"),
+    ).click();
+    await waitSavedContaining('保存しました');
+    expect(await profileCardCount()).toBe(1);
+  });
+
+  it('navigates through the guide buttons', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='住所を登録する']"),
+    ).click();
+    await driver.wait(async () =>
+      (await driver.findElement(By.css('#side nav a[data-section="addresses"]'))
+        .getAttribute('aria-current')) === 'true',
+    10_000, 'did not switch to the addresses tab');
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='名前を登録する']"),
+    ).click();
+    await driver.wait(async () =>
+      (await driver.findElement(By.css('#side nav a[data-section="profiles"]'))
+        .getAttribute('aria-current')) === 'true',
+    10_000, 'did not switch back to the profiles tab');
+  });
+
+  it('hides the guide for the session and shows it again on reload', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(By.css('#float-root .float-guide .float-close')).click();
+    await driver.wait(async () =>
+      (await driver.findElements(By.css('#float-root .float-guide'))).length === 0,
+    10_000, 'guide did not hide');
+    await driver.navigate().refresh();
+    await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+  });
+});
+
+describe('chrome: float notice behavior (PBI-165)', () => {
+  it('auto-dismisses the success toast', async () => {
+    await setOptionsData(PROFILE_DATA);
+    await openProfilesPage();
+    await clickProfilesButton('保存');
+    await waitSavedContaining('保存しました');
+    await driver.wait(async () =>
+      (await driver.findElements(By.css('#float-root .float-toast'))).length === 0,
+    10_000, 'success toast did not auto-dismiss');
+  });
+
+  it('keeps the error until closed', async () => {
+    await setOptionsData({ profiles: [], addresses: [] });
+    await openProfilesPage();
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']"),
+    ).click();
+    await driver.wait(async () => (await driver.findElements(By.css('#float-root .float-toast'))).length === 0, 10_000, 'trial toast did not dismiss');
+    await driver.findElement(
+      By.xpath("//*[@id='profiles']//button[text()='このプロファイルを削除']"),
+    ).click();
+    await clickProfilesButton('保存');
+    await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+    await driver.sleep(4500);
+    expect(await driver.findElements(By.css('#float-root .float-error'))).toHaveLength(1);
+    await driver.findElement(By.css('#float-root .float-error .float-close')).click();
+    await driver.wait(async () =>
+      (await driver.findElements(By.css('#float-root .float-error'))).length === 0,
+    10_000, 'error banner did not close');
+  });
+});
+
+describe('chrome: options zero-count error trial (PBI-167)', () => {
+  it('offers a trial address from the empty-address error', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openAddressesPage();
+    await driver.findElement(By.xpath("//*[@id='addresses']//button[text()='保存']")).click();
+    await driver.wait(until.elementLocated(By.css('#float-root .float-error')), 10_000);
+    await driver.findElement(
+      By.xpath("//*[@id='float-root']//button[text()='架空の住所を作って試す']"),
+    ).click();
+    await waitSavedContaining('保存しました');
+    expect(await driver.findElements(By.css('#addresses fieldset'))).toHaveLength(1);
+  });
+});
+
+describe('chrome: options per-side guide (PBI-167)', () => {
+  it('offers a trial address when only the address is missing', async () => {
+    await setOptionsData({ profiles: PROFILE_DATA.profiles, addresses: [] });
+    await openProfilesPage();
+    const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+    expect(await guide.getText()).toContain('架空の住所を作って試す');
+    expect(await guide.getText()).not.toContain('架空の名前と住所を作って試す');
+  });
+
+  it('offers a trial profile when only the profile is missing', async () => {
+    await setOptionsData({ profiles: [], addresses: PROFILE_DATA.addresses });
+    await openProfilesPage();
+    const guide = await driver.wait(until.elementLocated(By.css('#float-root .float-guide')), 10_000);
+    expect(await guide.getText()).toContain('架空の名前を作って試す');
+    expect(await guide.getText()).toContain('名前を登録する');
   });
 });

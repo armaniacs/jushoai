@@ -6,20 +6,27 @@ import {
   OPTIONS_ADDRESS_FIELDS, OPTIONS_PROFILE_FIELDS, PREFECTURE_FIELD_LABEL,
 } from '../../core/field-catalog';
 import { PREFECTURES } from '../../core/prefectures';
+import { makeSampleAddress, makeSampleProfile } from '../../core/sample-data';
 import {
-  normalizeAddress, normalizeProfile, validateAddress, validateProfile,
+  normalizeAddress, normalizeProfile,
 } from '../../core/profile';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, notice } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
+import {
+  dismissGuideForSession, hideFloatGuide, isGuideDismissed, showFloatError, showFloatGuide, showFloatToast,
+} from './float-layer';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
-import { mountNav, applyActivePage, PROFILES_SECTION_ID, ADDRESSES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import { ADDRESSES_SECTION_ID, applyActivePage, getActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import {
+  addressErrorsFor, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+} from './save-guide';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -123,7 +130,10 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
       profiles.push({ ...p, id: newId(), label: `${p.label} のコピー` });
       rerender();
     });
-    const remove = actionButton('このプロファイルを削除', profiles.length <= 1, () => {
+    // The last profile stays deletable like the last address: an empty list
+    // renders only the add button, and saving with zero profiles is blocked
+    // with a message until one is added back.
+    const remove = actionButton('このプロファイルを削除', false, () => {
       profiles.splice(i, 1);
       rerender();
     });
@@ -135,7 +145,17 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
     rerender();
   });
   const limitNote = buildLimitNote(`プロファイルは${MAX_ITEMS}件まで登録できます`, isAtLimit(profiles.length));
-  page.append(heading, ...cards, addProfile, ...(limitNote.textContent ? [limitNote] : []));
+  const save = actionButton('保存', false, () => { void onSaveProfiles(); });
+  const importButton = actionButton('フォームから取り込む', false, () => {
+    void onImportDraft().catch(() => {
+      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      render();
+    });
+  });
+  const footer = document.createElement('div');
+  footer.className = 'row';
+  footer.append(save, importButton);
+  page.append(heading, ...cards, addProfile, ...(limitNote.textContent ? [limitNote] : []), footer);
   return page;
 }
 
@@ -172,46 +192,141 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
     rerender();
   });
   const limitNote = buildLimitNote(`住所は${MAX_ITEMS}件まで登録できます`, isAtLimit(addresses.length));
-  page.append(heading, ...cards, add, ...(limitNote.textContent ? [limitNote] : []));
-  return page;
-}
-
-// The parameter is noticeElement: notice() is the shared notice builder, and a
-// parameter of the same name would shadow it inside this function body.
-function render(noticeElement?: HTMLElement) {
-  const title = document.createElement('h1');
-  title.textContent = 'JushoAI 設定';
-
-  const rerender = () => render();
-  const profilePage = renderProfilePage(state.profiles, rerender);
-  const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
-
-  const save = document.createElement('button');
-  save.type = 'button';
-  save.className = 'primary';
-  save.textContent = '保存';
-  save.addEventListener('click', onSave);
-
-  // PBI-127: the page-based import. Chrome's own autofill data is not readable
-  // by an extension, so the draft comes from the active tab's form (the values
-  // Chrome autofilled); only the normalized/validated subset becomes a form
-  // draft, and nothing saves until the 保存 button runs the full pipeline.
-  const importButton = document.createElement('button');
-  importButton.type = 'button';
-  importButton.textContent = 'フォームから取り込む';
-  importButton.addEventListener('click', () => {
+  const save = actionButton('保存', false, () => { void onSaveAddresses(); });
+  const importButton = actionButton('フォームから取り込む', false, () => {
     void onImportDraft().catch(() => {
-      render(notice('errors', ['取り込みに失敗しました。フォームを開いているタブで実行してください。']));
+      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      render();
     });
   });
-
   const footer = document.createElement('div');
   footer.className = 'row';
   footer.append(save, importButton);
+  page.append(heading, ...cards, add, ...(limitNote.textContent ? [limitNote] : []), footer);
+  return page;
+}
 
-  app.replaceChildren(
-    title, profilePage, addressPage, footer, transferHolder, ...(noticeElement ? [noticeElement] : []),
+function fillTrialProfile(): void {
+  const sampleP = makeSampleProfile();
+  let first = state.profiles[0];
+  if (!first) {
+    first = { ...EMPTY_PROFILE, id: newId() };
+    state.profiles.push(first);
+  }
+  for (const k of Object.keys(sampleP) as (keyof typeof sampleP)[]) {
+    if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
+      (first[k] as string) = sampleP[k];
+    }
+  }
+}
+
+function fillTrialAddress(): void {
+  const sampleA = makeSampleAddress();
+  let firstAddress = state.addresses[0];
+  if (!firstAddress) {
+    firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
+    state.addresses.push(firstAddress);
+  }
+  if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
+  for (const k of (['zip', 'prefecture', 'city', 'street', 'building'] as const)) {
+    if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
+      firstAddress[k] = sampleA[k];
+    }
+  }
+}
+
+async function onTrialSave(): Promise<void> {
+  // Same card-ensuring and blanks-only fill as the old trial input.
+  fillTrialProfile();
+  fillTrialAddress();
+  // Both sides are validated before anything is written, so no unvalidated
+  // value can reach storage from this path.
+  const profiles = state.profiles.map(normalizeProfile);
+  const addresses = state.addresses.map(normalizeAddress);
+  const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
+  if (errors.length > 0) {
+    showFloatError(errors);
+    render();
+    return;
+  }
+  state = { profiles, addresses };
+  try {
+    await saveData(state);
+  } catch (e) {
+    console.warn('[JushoAI] save failed', e);
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
+    return;
+  }
+  const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
+  const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
+  showFloatToast([trialToastText(savedProfile, savedAddress)]);
+  render();
+}
+
+// Single-side trials fill one side, then run that side's normal save
+// (validation, storage discipline, and guide toasts stay in one place).
+async function onTrialSaveProfile(): Promise<void> {
+  fillTrialProfile();
+  await onSaveProfiles();
+}
+
+async function onTrialSaveAddress(): Promise<void> {
+  fillTrialAddress();
+  await onSaveAddresses();
+}
+
+function trialButtonFor(mode: 'both' | 'profile' | 'address'): HTMLButtonElement {
+  if (mode === 'profile') {
+    return actionButton('架空の名前を作って試す', false, () => { void onTrialSaveProfile(); });
+  }
+  if (mode === 'address') {
+    return actionButton('架空の住所を作って試す', false, () => { void onTrialSaveAddress(); });
+  }
+  return actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
+}
+
+function buildGuideNode(): HTMLElement {
+  const wrap = el('div');
+  const head = el('p');
+  head.textContent = '初めてですか？架空の名前と住所で試せます';
+  const mode = guideTrialMode(
+    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
   );
+  const trial = trialButtonFor(mode === 'none' ? 'both' : mode);
+  const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
+  const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
+  const x = actionButton('×', false, () => dismissGuideForSession());
+  x.classList.add('float-close');
+  const row = el('div');
+  row.className = 'float-row';
+  row.append(trial, toProfiles, toAddresses, x);
+  wrap.append(head, row);
+  return wrap;
+}
+
+function syncGuide(): void {
+  const page = getActivePage();
+  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+  const mode = guideTrialMode(
+    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
+  );
+  if (!isGuideDismissed() && relevant && mode !== 'none') {
+    showFloatGuide(buildGuideNode());
+  } else {
+    hideFloatGuide();
+  }
+}
+
+function render() {
+  const rerender = () => render();
+  const profilePage = renderProfilePage(state.profiles, rerender);
+  const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
+  syncGuide();
+  const title = document.createElement('h1');
+  title.textContent = 'JushoAI 設定';
+
+  app.replaceChildren(title, profilePage, addressPage, transferHolder);
   applyActivePage();
 }
 
@@ -224,12 +339,14 @@ function render(noticeElement?: HTMLElement) {
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
-    render(notice('errors', ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']));
+    showFloatError(['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']);
+    render();
     return;
   }
   const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
   if (!res || !res.ok) {
-    render(notice('errors', ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']));
+    showFloatError(['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']);
+    render();
     return;
   }
   const first = state.profiles[0];
@@ -246,7 +363,8 @@ async function onImportDraft(): Promise<void> {
   const targets = { target, targetAddress, blankProfile, blankAddress };
   const result = applyImportDraft(target, targetAddress, res.draft);
   if (result.taken === 0) {
-    render(notice('errors', ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']));
+    showFloatError(['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']);
+    render();
     return;
   }
   const next = applyImportToState(state, targets, result);
@@ -256,33 +374,95 @@ async function onImportDraft(): Promise<void> {
     `${result.taken}件を取り込みました。保存ボタンで確定します。`,
     ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
   ];
-  render(notice('saved', lines));
+  showFloatToast(lines);
+  render();
 }
 
-async function onSave() {
+const goProfiles = (): void => setActivePage(PROFILES_SECTION_ID);
+const goAddresses = (): void => setActivePage(ADDRESSES_SECTION_ID);
+
+async function onSaveProfiles() {
   const profiles = state.profiles.map(normalizeProfile);
-  const addresses = state.addresses.map(normalizeAddress);
-  const errors = [
-    ...profiles.flatMap((p, i) => validateProfile(p).map((e) => `${p.label || `プロファイル${i + 1}`}: ${e}`)),
-    ...addresses.flatMap((a) => validateAddress(a).map((e) => `${a.label || '住所'}: ${e}`)),
-  ];
-  if (profiles.length === 0) errors.push('プロファイルを1件以上登録してください');
-  if (addresses.length === 0) errors.push('住所を1件以上登録してください');
+  const errors = profileErrorsFor(profiles);
+  if (profiles.length === 0) {
+    showFloatError(['プロファイルを1件以上登録してください'], {
+      label: '架空の名前を作って試す', onClick: () => { void onTrialSaveProfile(); },
+    });
+    render();
+    return;
+  }
   if (errors.length > 0) {
-    render(notice('errors', errors));
+    showFloatError(errors);
+    render();
     return;
   }
-  state = { profiles, addresses };
+  state = { profiles, addresses: state.addresses };
+  let storedAddresses = state.addresses;
   try {
-    await saveData(state);
+    const latest = await loadData();
+    storedAddresses = latest.addresses;
+  } catch {
+    storedAddresses = state.addresses;
+  }
+  try {
+    await saveData({ profiles, addresses: storedAddresses });
   } catch (e) {
-    // PBI-23: storage境界は型付きエラーで失敗を伝える。ここで受けて保存失敗を
-    // 表示する（成功誤表示の防止）。詳細はメッセージに出さず件数のみ。
     console.warn('[JushoAI] save failed', e);
-    render(notice('errors', ['保存に失敗しました。容量不足の可能性があります。']));
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
     return;
   }
-  render(notice('saved', ['保存しました']));
+  if (hasValidAddress(state.addresses.map(normalizeAddress))) {
+    showFloatToast(['保存しました']);
+    render();
+    return;
+  }
+  showFloatToast(['保存しました。次は住所を入力してください'], {
+    label: '住所を入力する', onClick: goAddresses,
+  });
+  render();
+}
+
+async function onSaveAddresses() {
+  const addresses = state.addresses.map(normalizeAddress);
+  const errors = addressErrorsFor(addresses);
+  if (addresses.length === 0) {
+    showFloatError(['住所を1件以上登録してください'], {
+      label: '架空の住所を作って試す', onClick: () => { void onTrialSaveAddress(); },
+    });
+    render();
+    return;
+  }
+  if (errors.length > 0) {
+    showFloatError(errors);
+    render();
+    return;
+  }
+  state = { profiles: state.profiles, addresses };
+  let storedProfiles = state.profiles;
+  try {
+    const latest = await loadData();
+    storedProfiles = latest.profiles;
+  } catch {
+    storedProfiles = state.profiles;
+  }
+  try {
+    await saveData({ profiles: storedProfiles, addresses });
+  } catch (e) {
+    console.warn('[JushoAI] save failed', e);
+    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    render();
+    return;
+  }
+  if (hasValidProfile(state.profiles.map(normalizeProfile))) {
+    showFloatToast(['保存しました']);
+    render();
+    return;
+  }
+  showFloatToast(['保存しました。次はプロファイルを入力してください'], {
+    label: 'プロファイルを入力する', onClick: goProfiles,
+  });
+  render();
 }
 
 // Read storage again and redraw. Used at boot and after an import rewrites
@@ -311,7 +491,8 @@ const showReadFailure = (): void => {
       addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
     };
   }
-  render(notice('errors', ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']));
+  showFloatError(['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']);
+  render();
 };
 
 void reloadState().catch(showReadFailure);
@@ -339,3 +520,22 @@ mountTransferSection(transferHolder, {
   onImported: async () => { await reloadState(); },
 });
 mountNav(document.getElementById('side')!);
+// Side-nav clicks switch tabs via replaceState (no hashchange, no render),
+// so sync floating-guide visibility here. Registered after mountNav, so the
+// nav handler runs first and getActivePage() is already updated.
+document.getElementById('side')!.querySelector('nav')!.addEventListener('click', () => {
+  syncGuide();
+});
+// Tab switches do not re-render (nav only toggles visibility), so sync the
+// floating guide here. Registered after mountNav; both listeners are
+// synchronous and read the already-updated hash.
+window.addEventListener('hashchange', () => {
+  const page = getActivePage();
+  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+  const empty = !hasValidProfile(state.profiles.map(normalizeProfile));
+  if (!isGuideDismissed() && relevant && empty) {
+    render();
+  } else {
+    hideFloatGuide();
+  }
+});
