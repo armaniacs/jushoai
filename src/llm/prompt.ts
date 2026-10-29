@@ -28,6 +28,9 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 const clip = (s: string) => s.slice(0, META_CLIP_LENGTH);
 
 // Prompt rows carry only the metadata allow-list (MetaWire), with strings clipped for prompt size.
+// PBI-175: radio/select の tag・options は wire 対象外と明示したため（messages の
+// WIRE_EXCLUDED_KEYS）、prompt 行にも現れない。encode→decode→buildPrompt の
+// round-trip で行内容は不変である（tests/llm/classify-transport.test.ts）。
 const toPromptRow = (f: FieldMeta): MetaWire => {
   const w = encodeFieldMeta(f);
   return {

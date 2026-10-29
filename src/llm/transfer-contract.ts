@@ -1,5 +1,6 @@
 // 転送契約 (PBI-43): ai-classify の送受信両端が共有する cap・timeout・chunk 形状の
-// 単一所有モジュール。送信側 (background-gateway) と受信側 (messages) は数値を
+// 単一所有モジュール。送信側 (classify-transport の send。background-gateway は
+// 構成値を流すだけの適合層) と受信側 (messages) は数値を
 // ここから import するだけで、自前リテラルを持たない。値を変えるときはこの
 // ファイルだけを変えれば両端に反映される。
 //
