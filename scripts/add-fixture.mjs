@@ -4,6 +4,7 @@
 // expectations stay '<expected>' placeholders until a human fills and trims them.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { extractControls, renderFixture, renderTestStub } from './scaffold-fixture.mjs';
+import { fetchPage } from './shared-fetch.mjs';
 
 export function fixtureNameFromUrl(href) {
   try {
@@ -58,17 +59,20 @@ export function buildWiring(html, sourceLabel, file) {
 }
 
 // CLI: node scripts/add-fixture.mjs <url> [fixture-name]
+// Shared apply order with sync-target-urls.mjs: fetch → buildWiring →
+// write → applyTest → stamp (stamp is the registry write-back, sync only).
 // Guarded so importing the pure functions has no side effects.
 if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
   const [url, wanted] = process.argv.slice(2);
   if (url) {
-  const res = await fetch(url);
-  if (!res.ok) {
-    console.error(`fetch failed: ${res.status} ${res.statusText}`);
+  const page = await fetchPage(url);
+  if (!page.ok) {
+    // Single-shot policy: one URL was asked for, so a non-ok fetch exits 1.
+    // The bulk sync instead logs and continues with the next URL.
+    console.error(`fetch failed: ${page.status ?? page.error?.name ?? 'error'}`);
     process.exit(1);
   }
-  const html = await res.text();
-  const wiring = buildWiring(html, url, wanted ?? fixtureNameFromUrl(url));
+  const wiring = buildWiring(page.text, url, wanted ?? fixtureNameFromUrl(url));
   writeFileSync(new URL(`../samples/${wiring.file}`, import.meta.url), wiring.fixture);
   const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
   writeFileSync(testPath, wiring.applyTest(readFileSync(testPath, 'utf8')));

@@ -4,6 +4,11 @@
 // Static HTML only; expectations stay '<expected>' placeholders for humans.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildWiring, fixtureNameFromUrl } from './add-fixture.mjs';
+import { FETCH_TIMEOUT_MS, fetchPage } from './shared-fetch.mjs';
+
+// Re-exported so existing importers keep working; the implementation lives in
+// scripts/shared-fetch.mjs, the single fetch seam for both fixture CLIs.
+export { FETCH_TIMEOUT_MS, fetchPage };
 
 export function parseRegistry(md) {
   const out = [];
@@ -28,10 +33,6 @@ export function stampRegistry(md, url, file) {
   if (!touched && !next.some((l) => l.includes(url))) next.push(`- ${url} → ${file}`);
   return next.join('\n');
 }
-
-// One fetch must never block the whole sync: unresponsive hosts are cut off
-// after FETCH_TIMEOUT_MS and skipped so the next URL can proceed.
-export const FETCH_TIMEOUT_MS = 15_000;
 
 export function parseSyncArgs(argv) {
   let only = null;
@@ -60,18 +61,6 @@ export function selectTargets(entries, { only = null, all = false } = {}) {
   if (only) return entries.filter((e) => e.url === only);
   if (all) return entries.slice();
   return [];
-}
-
-// Fetch a page with a timeout; never throws. A non-ok result means "skip this
-// URL and continue with the next one" for the caller.
-export async function fetchPage(url, fetchFn = fetch) {
-  try {
-    const res = await fetchFn(url, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) });
-    if (!res.ok) return { ok: false, status: res.status };
-    return { ok: true, text: await res.text() };
-  } catch (err) {
-    return { ok: false, error: err };
-  }
 }
 
 // Unfilled scaffold expectations: `renderTestStub` writes `'<expected>'`
@@ -126,6 +115,9 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
       console.log(`skip ${url} (already wired)`);
       continue;
     }
+    // Shared apply order with add-fixture.mjs: fetch → buildWiring →
+    // write → applyTest → stamp. Bulk policy: a non-ok fetch logs and
+    // continues with the next URL (single-shot instead exits 1).
     const page = await fetchPage(url);
     if (!page.ok) {
       const reason = page.status ?? page.error?.name ?? 'error';
