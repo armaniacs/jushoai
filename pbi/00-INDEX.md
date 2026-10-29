@@ -1,5 +1,18 @@
 # PBI 台帳インデックス
 
+## 進行中（archラウンド4・2026-10-30にPBI化・未実装）
+
+- `2026-10-30-00-backlog-arch-round4.md`（ラウンド3適用後の新規摩擦9候補のPBI化・RICE順位確定）
+- `2026-10-30-181-refactor-shared-pass.md`（順位 1。分類パス受け渡しのSharedPass正準化）
+- `2026-10-30-182-refactor-trial-both-saveside.md`（順位 2。両面試用保存のsaveSide統合）
+- `2026-10-30-183-refactor-layers-table.md`（順位 3。層対応表の実態整合）
+- `2026-10-30-184-refactor-save-handler-factory.md`（順位 4。保存ハンドラのkind解決集約）
+- `2026-10-30-185-refactor-send-set-unify.md`（順位 5。送信集合のsendSet一本化）
+- `2026-10-30-186-refactor-entry-points-list.md`（順位 6。分類入口一覧の可視化）
+- `2026-10-30-187-refactor-validator-split.md`（順位 7。検証器の責務分担宣言）
+- `2026-10-30-188-refactor-adapter-seam.md`（順位 8。adapterシームの規約化）
+- `2026-10-30-189-refactor-float-shim.md`（順位 9。float-layerのshim化）
+
 ## 進行中からアーカイブ済み（archラウンド3・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 
 - `archived/2026-10-29-00-backlog-arch-round3.md`（アーキテクチャレビュー12候補のPBI化・RICE順位確定。ラウンド完結）
