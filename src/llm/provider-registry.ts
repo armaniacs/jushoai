@@ -9,6 +9,7 @@ import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
 import type { ClassifySchedule } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
+import { asClassifyFailure } from '../messages';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
 import { createAuthBlock, type AuthBlock } from './auth-block';
 import { PromptApiClassifier } from './classifier';
@@ -178,8 +179,9 @@ export class ProviderRegistry {
     return { ok: false, reason: 'not-configured' };
   }
 
-  // Single source of the failure vocabulary: classify() and test() share this
-  // mapping so a new reason (or a status-code rule change) lands in one place.
+  // Single source of the throw-path failure vocabulary: test() uses this
+  // mapping for the classify() throw contract (now test-only, PBI-174), so a
+  // new reason or a status-code rule change lands in one place.
   // Success-path bookkeeping (authFailed add/delete) stays with each caller.
   // ClassifyFailure and TestFailure are the same literal set under two names,
   // so this return type satisfies both wire shapes.
@@ -207,8 +209,20 @@ export class ProviderRegistry {
     });
     // The caller chooses its error display from the reason, so never drop it.
     if (!sel.ok) return { ok: false, reason: sel.reason };
+    // PBI-174: attempt 委譲。throw 経路 (classify) は test 専用化し、classify
+    // 応答は attempt 戻り値から組み立てる。語彙の正準は adapter 側の
+    // failureReason (asClassifyFailure で畳む) で、throw 時の backstop だけが
+    // mapFailure に残る。
     try {
-      return { ok: true, entries: [...(await sel.classifier.classify(fields, opts.chunk))] };
+      const outcome = await sel.classifier.attempt(fields, opts.chunk);
+      if (outcome.error !== undefined) {
+        if (outcome.error instanceof HttpAuthError) {
+          this.authBlock.record(s.provider);
+          return { ok: false, reason: 'auth' };
+        }
+        return { ok: false, reason: asClassifyFailure(outcome.failureReason) ?? 'bad-response' };
+      }
+      return { ok: true, entries: [...outcome.map] };
     } catch (e) {
       if (e instanceof HttpAuthError) {
         this.authBlock.record(s.provider);

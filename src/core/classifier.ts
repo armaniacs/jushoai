@@ -21,9 +21,17 @@ export interface ClassifySchedule {
 // partial map WITHOUT rethrowing outcome.error: a failed chunk's partial
 // results still reach analyze, which keeps rule results for the missing fields.
 // Do not swap such a seam for a raw classifier without preserving this.
+//
+// PBI-174: the abort signal rides the seam as an explicit run argument
+// (ClassifyPipeline passes preview disposal down to the transfer). Adapters
+// without chunking may ignore it; the run still checks it between chunks.
 export interface FieldClassifier {
   classify(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<Map<string, Category>>;
-  attempt(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<AttemptOutcome>;
+  attempt(
+    fields: FieldMeta[],
+    schedule?: ClassifySchedule,
+    opts?: { signal?: AbortSignal },
+  ): Promise<AttemptOutcome>;
 }
 
 // Result of one classification attempt: the partial map bound to the reason of
@@ -56,5 +64,9 @@ export interface CappedAttempt extends AttemptOutcome {
 // alongside TracedClassifier.attempt; now both narrow the one
 // FieldClassifier.attempt seam.
 export interface CappedClassifier extends FieldClassifier {
-  attempt(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<CappedAttempt>;
+  attempt(
+    fields: FieldMeta[],
+    schedule?: ClassifySchedule,
+    opts?: { signal?: AbortSignal },
+  ): Promise<CappedAttempt>;
 }

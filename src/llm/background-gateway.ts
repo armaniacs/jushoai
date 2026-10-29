@@ -1,7 +1,8 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
 import { aiClassifyRequest, aiDownloadRequest, aiStatusRequest, aiTestRequest, parseAuditClearResponse, parseClassifyResult, parseStatusResponse, parseTestResponse, isLegacyClassifyFailure, encodeFieldMeta, type ClassifyFailure, type TestResponse } from '../messages';
-import { TRANSFER_CHUNK_SIZE, TRANSFER_CHUNK_TIMEOUT_MS, TRANSFER_STATUS_TIMEOUT_MS, TRANSFER_TOTAL_CAP, TRANSFER_TOTAL_TIMEOUT_MS } from './transfer-contract';
+import { TRANSFER_CHUNK_TIMEOUT_MS, TRANSFER_STATUS_TIMEOUT_MS, TRANSFER_TOTAL_CAP, TRANSFER_TOTAL_TIMEOUT_MS } from './transfer-contract';
+import { planChunks, scheduleFor } from '../classify-pipeline/chunks';
 import type { CappedAttempt, CappedClassifier, ClassifySchedule } from '../core/classifier';
 
 // PBI-43: cap・timeout は転送契約モジュールが所有する。ここでは既存の名前を
@@ -12,9 +13,10 @@ export const CLASSIFY_TIMEOUT_MS = TRANSFER_CHUNK_TIMEOUT_MS;
 // case on slow lines). The per-chunk send is additionally clamped to the
 // remaining budget, so the wall clock stays within this bound.
 export const CLASSIFY_TOTAL_TIMEOUT_MS = TRANSFER_TOTAL_TIMEOUT_MS;
+// PBI-174: cap・chunk 幅の数値は転送契約ではなくチャンク計画
+// (classify-pipeline/chunks) が所有する。ここでは既存の名前を別名として
+// 残し、外部 import (テスト含む) の振る舞いを変えない。
 export const MAX_CLASSIFY_TOTAL = TRANSFER_TOTAL_CAP;
-// PBI-43: チャンク幅も契約から引き、messages 経由の間接参照をやめる。
-const MAX_CLASSIFY_CHUNK = TRANSFER_CHUNK_SIZE;
 const DOWNLOAD_TIMEOUT_MS = 120_000;
 const TEST_TIMEOUT_MS = 30_000;
 const CLEAR_TIMEOUT_MS = 10_000;
@@ -86,27 +88,26 @@ export class BackgroundClassifier implements CappedClassifier {
   // PBI-42: this is the unified FieldClassifier.attempt seam ({map,
   // failureReason}) narrowed with the cap detail — callers read truncation and
   // failure reasons off the return value instead of a wrapper.
-  // The schedule param is accepted for seam substitutability but intentionally
-  // unused: the gateway derives its own chunk schedule from the cap and
-  // MAX_CLASSIFY_CHUNK (single-chunk runs stay out of the audit log's
-  // scheduling fields), so a caller schedule would be meaningless here.
+  // PBI-174: the gateway is transfer-only. The chunk plan (cap, chunk width)
+  // is owned by classify-pipeline/chunks; the run passes its own schedule for
+  // a pre-chunked single transfer, which this method forwards to the wire and
+  // the audit instead of deriving its own. A direct call without a schedule
+  // still derives one when the input itself spans chunks (compat path).
   // PBI-33: the whole sequential run is bounded by totalTimeoutMs (remaining
   // budget clamps each chunk send), and opts.signal (preview disposal) stops
   // the run before/during a chunk. Either cutoff keeps earlier chunks and
   // reports 'network' so the caller safely continues with rules only.
   async attempt(
     fields: FieldMeta[],
-    _schedule?: ClassifySchedule,
+    callerSchedule?: ClassifySchedule,
     opts?: { signal?: AbortSignal },
   ): Promise<CappedAttempt & { failureReason: ClassifyFailure | null }> {
     const signal = opts?.signal;
     const startedAt = Date.now();
     const out = new Map<string, Category>();
     let failureReason: ClassifyFailure | null = null;
-    const truncatedCount = Math.max(0, fields.length - MAX_CLASSIFY_TOTAL);
-    const capped = fields.slice(0, MAX_CLASSIFY_TOTAL);
-    const chunkCount = Math.ceil(capped.length / MAX_CLASSIFY_CHUNK);
-    for (let i = 0; i < capped.length; i += MAX_CLASSIFY_CHUNK) {
+    const plan = planChunks(fields);
+    for (let i = 0; i < plan.chunks.length; i++) {
       if (signal?.aborted) {
         failureReason ??= 'network';
         break;
@@ -116,12 +117,14 @@ export class BackgroundClassifier implements CappedClassifier {
         failureReason ??= 'network';
         break;
       }
-      const rows = capped.slice(i, i + MAX_CLASSIFY_CHUNK).map(encodeFieldMeta);
+      const rows = plan.chunks[i]!.map(encodeFieldMeta);
       // The chunk position rides along only when the run was actually split, so
       // single-chunk calls stay out of the audit log's scheduling fields.
       // PBI-54: sent through the ai-classify builder (codec-owned envelope);
       // rows are MetaWire and the wire type says so.
-      const schedule = chunkCount > 1 ? { index: i / MAX_CLASSIFY_CHUNK + 1, count: chunkCount } : undefined;
+      const schedule = plan.chunks.length > 1
+        ? scheduleFor(i + 1, plan.chunks.length)
+        : callerSchedule;
       let parsed: ReturnType<typeof parseClassifyResult>;
       let raw: unknown;
       try {
@@ -147,10 +150,10 @@ export class BackgroundClassifier implements CappedClassifier {
       }
       for (const [id, c] of parsed.map) out.set(id, c);
     }
-    if (truncatedCount > 0 && failureReason === null) {
+    if (plan.truncatedCount > 0 && failureReason === null) {
       failureReason = 'truncated';
     }
-    return { map: out, failureReason, truncatedCount };
+    return { map: out, failureReason, truncatedCount: plan.truncatedCount };
   }
 
   async classify(fields: FieldMeta[], _schedule?: ClassifySchedule, opts?: { signal?: AbortSignal }): Promise<Map<string, Category>> {
