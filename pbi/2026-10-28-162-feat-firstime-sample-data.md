@@ -60,7 +60,7 @@ Scenario: 有効データができたら案内は消える
 - 連続生成で値が変わること
 - セイ・メイが全角カナ、郵便番号7桁、都道府県が正式名称、電話10〜11桁、誕生日が実在日であること
 
-Note (2026-10-29): superseded by the instant trial save — see 2026-10-29-float-notice-guide-design.md.
+Note (2026-10-29): superseded by the instant trial save. See 2026-10-29-float-notice-guide-design.md.
 
 ## 実装アプローチ
 - **Outside-In**: 画面シナリオ（初回バナー→お試し→保存）から開始し、失敗を確認してから実装
