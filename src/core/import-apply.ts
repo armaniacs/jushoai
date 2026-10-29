@@ -74,7 +74,8 @@ export interface ImportTargets {
 // the card composition untouched — the guard runs before any state change, so
 // a forked new card is never added for an import that took nothing (PBI-147).
 // Caller contract: blankProfile/blankAddress false imply profiles[0] /
-// addresses[0] exist (importTargets in options/main.ts guarantees this).
+// addresses[0] exist — guaranteed by the selectImportTargets return value
+// (the single construction site of ImportTargets), not by caller discipline.
 export function applyImportToState(
   state: { profiles: Profile[]; addresses: Address[] },
   targets: ImportTargets,

@@ -14,6 +14,7 @@ import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
+import { selectImportTargets } from '../../core/import-targets';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import {
@@ -316,18 +317,7 @@ async function onImportDraft(): Promise<void> {
     render();
     return;
   }
-  const first = state.profiles[0];
-  const blankProfile = first === undefined || OPTIONS_PROFILE_FIELDS.every((f) => (first[f.key] ?? '').trim() === '');
-  const target = blankProfile ? first ?? { ...EMPTY_PROFILE, id: newId() } : { ...EMPTY_PROFILE, id: newId(), label: '新規' };
-  const firstAddress = state.addresses[0];
-  // The address label is not a form value — a card with only the default
-  // label still counts as blank, so the import fills it instead of forking.
-  const blankAddress = firstAddress === undefined
-    || OPTIONS_ADDRESS_FIELDS.filter((f) => f.key !== 'label').every((f) => (firstAddress[f.key] ?? '').trim() === '');
-  const targetAddress = blankAddress
-    ? firstAddress ?? { ...EMPTY_ADDRESS, id: newId(), label: '自宅' }
-    : { ...EMPTY_ADDRESS, id: newId(), label: '新規' };
-  const targets = { target, targetAddress, blankProfile, blankAddress };
+  const targets = selectImportTargets(state.profiles, state.addresses, { profileId: newId(), addressId: newId() });
   const result = applyImportDraft(target, targetAddress, res.draft);
   if (result.taken === 0) {
     showFloatError(['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']);
