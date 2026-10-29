@@ -4,8 +4,7 @@
   "type": "module",
   "scripts": {
     "studio": "remotion studio",
-    "render": "node render.mjs",
-    "render-drag": "node render-drag.mjs"
+    "render": "node render.mjs"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.0",
