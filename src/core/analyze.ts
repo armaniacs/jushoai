@@ -1,18 +1,20 @@
 import type { FieldMeta, Item } from './types';
 import type { FieldClassifier } from './classifier';
-import { runClassifyPipeline, withLegacyThrowFallback } from '../classify-pipeline/pipeline';
+import { runClassifyPipeline } from '../classify-pipeline/pipeline';
 
-// PBI-174: analyze は LLM 編成を持たない。「1回の分類試行」の境界
-// (pending 分割→チャンク試行→合流) と失敗語彙の所有は runClassifyPipeline
-// (classify-pipeline/) に集約し、classifyAll は既存呼び出し向けの薄い入口
-// として items だけを返す。合流の実体 (LLM合流・radio ゲート・
-// resolveKana→refine→englishPage の順序) も同モジュールの merge 所有で、
-// ここに二重実装は置かない。throw 契約 (classify) は test/legacy 専用の
-// 互換包み経由でのみ使う。
+// PBI-174: analyze owns no LLM orchestration. The boundary of one classify
+// attempt (pending split → chunk attempts → merge) and the failure vocabulary
+// are owned by runClassifyPipeline (classify-pipeline/); classifyAll is the
+// thin entry that returns items only, for existing callers. The merge itself
+// (LLM merge, radio gate, resolveKana→refine→englishPage order) is that same
+// module's merge owner — no second implementation here.
+// PBI-198: the legacy throw wrapper (withLegacyThrowFallback) is normalized
+// once at the pipeline boundary (runClassifyPipeline), so classifyAll hands
+// the classifier through verbatim instead of wrapping it a second time.
 export async function classifyAll(
   metas: FieldMeta[],
   classifier: FieldClassifier | null,
   opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
 ): Promise<Item[]> {
-  return (await runClassifyPipeline(withLegacyThrowFallback(classifier), metas, opts)).items;
+  return (await runClassifyPipeline(classifier, metas, opts)).items;
 }
