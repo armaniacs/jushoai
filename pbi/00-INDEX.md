@@ -1,5 +1,21 @@
 # PBI 台帳インデックス
 
+## 進行中（archラウンド3・2026-10-29にPBI化・未実装）
+
+- `2026-10-29-00-backlog-arch-round3.md`（アーキテクチャレビュー12候補のPBI化・RICE順位確定）
+- `2026-10-29-169-refactor-e2e-scenario-unification.md`（順位 1。e2e二重世界のscenarios集約）
+- `2026-10-29-170-refactor-guide-controller.md`（順位 2。ガイド可視性のGuideController集約）
+- `2026-10-29-171-refactor-save-side-deepen.md`（順位 3。片面セーブのsaveSide集約）
+- `2026-10-29-172-refactor-guide-validator.md`（順位 4。日英parityのvalidateGuides集約）
+- `2026-10-29-173-refactor-import-target-select.md`（順位 5。取り込み対象選定の純粋関数化）
+- `2026-10-29-174-refactor-classify-pipeline.md`（順位 6。ClassifyPipeline集約）
+- `2026-10-29-175-refactor-classify-transport.md`（順位 7。ClassifyTransport集約。174の後に実施）
+- `2026-10-29-176-refactor-notice-center.md`（順位 8。NoticeCenter集約）
+- `2026-10-29-177-refactor-shared-fetch-seam.md`（順位 9。shared-fetch＋層対応表）
+- `2026-10-29-178-refactor-fill-flow.md`（順位 10。FillFlow集約）
+- `2026-10-29-179-refactor-classify-once.md`（順位 11。ClassifyOnceバンドル）
+- `2026-10-29-180-refactor-video-lib-unify.md`（順位 12。video-lib集約）
+
 ## 進行中からアーカイブ済み（2026-10-27・autonomous-task-closerで実装・検証済み・`make check` green）
 
 - `archived/2026-10-27-161-fix-float-button-placement.md`（順位 1。重ねない配置。0ed109c）
