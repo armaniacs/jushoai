@@ -17,9 +17,7 @@ import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { selectImportTargets } from '../../core/import-targets';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
-import {
-  showFloatError, showFloatToast,
-} from './float-layer';
+import { post } from './notice-center';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
@@ -159,7 +157,7 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
   const save = actionButton('保存', false, () => { void onSaveProfiles(); });
   const importButton = actionButton('フォームから取り込む', false, () => {
     void onImportDraft().catch(() => {
-      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      post({ kind: 'errors', lines: ['取り込みに失敗しました。フォームを開いているタブで実行してください。'] });
       render();
     });
   });
@@ -206,7 +204,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   const save = actionButton('保存', false, () => { void onSaveAddresses(); });
   const importButton = actionButton('フォームから取り込む', false, () => {
     void onImportDraft().catch(() => {
-      showFloatError(['取り込みに失敗しました。フォームを開いているタブで実行してください。']);
+      post({ kind: 'errors', lines: ['取り込みに失敗しました。フォームを開いているタブで実行してください。'] });
       render();
     });
   });
@@ -256,7 +254,7 @@ async function onTrialSave(): Promise<void> {
   const addresses = state.addresses.map(normalizeAddress);
   const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
   if (errors.length > 0) {
-    showFloatError(errors);
+    post({ kind: 'errors', lines: errors });
     render();
     return;
   }
@@ -265,13 +263,13 @@ async function onTrialSave(): Promise<void> {
     await saveData(state);
   } catch (e) {
     console.warn('[JushoAI] save failed', e);
-    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
+    post({ kind: 'errors', lines: ['保存に失敗しました。容量不足の可能性があります。'] });
     render();
     return;
   }
   const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
   const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
-  showFloatToast([trialToastText(savedProfile, savedAddress)]);
+  post({ kind: 'saved', lines: [trialToastText(savedProfile, savedAddress)] });
   render();
 }
 
@@ -308,20 +306,20 @@ function render() {
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
-    showFloatError(['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。']);
+    post({ kind: 'errors', lines: ['取り込み先のタブが見つかりません。フォームを開いているタブで実行してください。'] });
     render();
     return;
   }
   const res = await chrome.tabs.sendMessage(tab.id, IMPORT_DRAFT_MESSAGE);
   if (!res || !res.ok) {
-    showFloatError(['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。']);
+    post({ kind: 'errors', lines: ['取り込めるフォームがありません。自動入力済みのフォームを開いてから実行してください。'] });
     render();
     return;
   }
   const targets = selectImportTargets(state.profiles, state.addresses, { profileId: newId(), addressId: newId() });
   const result = applyImportDraft(targets.target, targets.targetAddress, res.draft);
   if (result.taken === 0) {
-    showFloatError(['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']);
+    post({ kind: 'errors', lines: ['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。'] });
     render();
     return;
   }
@@ -332,7 +330,7 @@ async function onImportDraft(): Promise<void> {
     `${result.taken}件を取り込みました。保存ボタンで確定します。`,
     ...(result.dropped > 0 ? [`${result.dropped}件は検証を通らず除外しました。`] : []),
   ];
-  showFloatToast(lines);
+  post({ kind: 'saved', lines });
   render();
 }
 
@@ -346,8 +344,8 @@ async function onSaveProfiles() {
     loadData,
     saveData,
     ui: {
-      showError: (messages, action) => showFloatError(messages, action),
-      showToast: (messages, action) => showFloatToast(messages, action),
+      showError: (messages, action) => post({ kind: 'errors', lines: messages, ...(action ? { action } : {}) }),
+      showToast: (messages, action) => post({ kind: 'saved', lines: messages, ...(action ? { action } : {}) }),
       render,
       onTrial: () => { void onTrialSaveProfile(); },
       goOther: goAddresses,
@@ -362,8 +360,8 @@ async function onSaveAddresses() {
     loadData,
     saveData,
     ui: {
-      showError: (messages, action) => showFloatError(messages, action),
-      showToast: (messages, action) => showFloatToast(messages, action),
+      showError: (messages, action) => post({ kind: 'errors', lines: messages, ...(action ? { action } : {}) }),
+      showToast: (messages, action) => post({ kind: 'saved', lines: messages, ...(action ? { action } : {}) }),
       render,
       onTrial: () => { void onTrialSaveAddress(); },
       goOther: goProfiles,
@@ -397,7 +395,7 @@ const showReadFailure = (): void => {
       addresses: [{ ...EMPTY_ADDRESS, id: newId(), label: '自宅' }],
     };
   }
-  showFloatError(['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。']);
+  post({ kind: 'errors', lines: ['保存済みのデータを読み込めませんでした。ページを再読み込みしてください。'] });
   render();
 };
 

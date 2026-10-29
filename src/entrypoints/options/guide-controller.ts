@@ -6,8 +6,8 @@ import { normalizeAddress, normalizeProfile } from '../../core/profile';
 import type { StoredData } from '../../core/types';
 import { actionButton, el } from './dom';
 import {
-  dismissGuideForSession, hideFloatGuide, isGuideDismissed, showFloatGuide,
-} from './float-layer';
+  dismissGuideForSession, hideGuide, isGuideDismissed, showGuide,
+} from './notice-center';
 import {
   ADDRESSES_SECTION_ID, PROFILES_SECTION_ID, getActivePage, setActivePage,
 } from './nav';
@@ -62,9 +62,9 @@ export function createGuideController(
       isGuideDismissed(),
     );
     if (resolved.visible) {
-      showFloatGuide(buildGuideNode(resolved.mode));
+      showGuide(buildGuideNode(resolved.mode));
     } else {
-      hideFloatGuide();
+      hideGuide();
     }
   }
 
