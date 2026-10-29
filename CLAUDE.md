@@ -10,6 +10,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## コマンド
 
+シェルで `cd` せず、リポジトリ内のパスは `/Users/yaar/Playground/JushoAI` からの絶対パスで指定する（`tmp/` 配下などで cwd がずれて path-not-found になるため）。
+
 スタックは WXT + TypeScript + Vitest（jsdom）。
 
 `make help` で一覧を表示する。`make check` が typecheck + test + 両ブラウザの build + manifest 検査 + web-ext lint を通しで実行する。
@@ -30,6 +32,16 @@ make eval                                     # samples の corpus でルール�
 npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```
+
+## ディレクトリ配置
+
+- `src/`: 実装(`core/` 純粋関数、`dom/`、`llm/`、`ai/`、`entrypoints/`)。`tests/` は `src/` と同じ構造で、`tests/core/`、`tests/integration/`、`tests/build/`、`tests/e2e/`
+- `samples/`: 手動確認用のサンプルフォームと fixture
+- `docs/superpowers/{specs,plans}/`: 設計書と実装計画。`pbi/`: PBI 台帳
+- `site/`: ドキュメントサイトのソース、`site-dist/`: 生成物
+- `promo/<日付>-<名前>/`: 記事・告知文(`zenn.md`、`note.md`、`x-post.md`)。`video/` と `tmp/video-store-promo/`: プロモ動画の作業場
+- `dist/chrome-mv3`、`dist/firefox-mv3`: ビルド出力。存在確認は `ls` してから Read する(パスを推測しない)
+- 他に `scripts/`、`public/`、`plans/`、`JushoAI_VULNHUNT_RESULTS_*/`(脆弱性スキャン結果)
 
 ## アーキテクチャ
 
