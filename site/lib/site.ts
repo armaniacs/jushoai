@@ -2,6 +2,9 @@ import { readdir, readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { parseFrontMatter } from './frontmatter.ts';
 import { renderMarkdown, type Heading } from './markdown.ts';
+import { validateGuidePair } from './validate-guides.ts';
+
+export { diffShape, findEmptyStrings } from './validate-guides.ts';
 
 export type Lang = 'ja' | 'en';
 export const LANGS: readonly Lang[] = ['ja', 'en'];
@@ -36,36 +39,6 @@ export function normalizeBase(raw: string | undefined): string {
 
 export const pagePath = (lang: Lang, path: string) => (lang === 'en' ? `en/${path}` : path);
 export const pageUrl = (base: string, lang: Lang, path: string) => base + pagePath(lang, path);
-
-const isObject = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-
-// Compares the shape (keys, array lengths, value types) of the ja and en dictionaries.
-export function diffShape(ja: unknown, en: unknown, path = ''): string[] {
-  if (Array.isArray(ja) || Array.isArray(en)) {
-    if (!Array.isArray(ja) || !Array.isArray(en)) return [`${path}: type`];
-    const out = ja.length !== en.length ? [`${path}: length ${ja.length} vs ${en.length}`] : [];
-    for (let i = 0; i < Math.min(ja.length, en.length); i++) out.push(...diffShape(ja[i], en[i], `${path}[${i}]`));
-    return out;
-  }
-  if (ja === null || en === null) return ja === en ? [] : [`${path}: type`];
-  if (isObject(ja) && isObject(en)) {
-    const keys = new Set([...Object.keys(ja), ...Object.keys(en)]);
-    return [...keys].flatMap((k) => {
-      const p = path ? `${path}.${k}` : k;
-      if (k in ja && k in en) return diffShape(ja[k], en[k], p);
-      return [`${p}: missing in ${k in ja ? 'en' : 'ja'}`];
-    });
-  }
-  return typeof ja === typeof en ? [] : [`${path}: type`];
-}
-
-export function findEmptyStrings(v: unknown, path = ''): string[] {
-  if (typeof v === 'string') return v.trim() === '' ? [path] : [];
-  if (Array.isArray(v)) return v.flatMap((x, i) => findEmptyStrings(x, `${path}[${i}]`));
-  if (isObject(v)) return Object.entries(v).flatMap(([k, x]) => findEmptyStrings(x, path ? `${path}.${k}` : k));
-  return [];
-}
 
 export interface Guide {
   lang: Lang;
@@ -122,10 +95,10 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
   }
 
   for (const slug of GUIDE_SLUGS) {
-    const counts = LANGS.map((l) => guides.find((g) => g.lang === l && g.slug === slug)?.headings.filter((h) => h.level === 2).length);
-    if (counts.every((c) => c !== undefined) && counts[0] !== counts[1]) {
-      problems.push(`${slug}: h2 section count differs (ja ${counts[0]} vs en ${counts[1]})`);
-    }
+    const ja = guides.find((g) => g.lang === 'ja' && g.slug === slug);
+    const en = guides.find((g) => g.lang === 'en' && g.slug === slug);
+    // A missing file is already reported above; only paired guides are compared.
+    if (ja && en) problems.push(...validateGuidePair(ja, en));
   }
 
   if (problems.length > 0) throw new Error(`guide content problems:\n${problems.join('\n')}`);
