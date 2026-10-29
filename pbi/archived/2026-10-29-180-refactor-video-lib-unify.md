@@ -20,9 +20,9 @@ Scenario: 既存の録画・合成が壊れない
   Then 従来どおり動作する
 
 ## 受け入れ基準
-- [ ] `playwright/lib.mjs` に共通骨格が集約されている
-- [ ] timeline buildersがexportされdrag側が再利用している
-- [ ] renderが一本化されている
+- [x] `playwright/lib.mjs` に共通骨格が集約されている
+- [x] timeline buildersがexportされdrag側が再利用している
+- [x] renderが一本化されている
 
 ## テスト戦略
 - E2E: 対象外
@@ -33,6 +33,6 @@ Scenario: 既存の録画・合成が壊れない
 - 0.15人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

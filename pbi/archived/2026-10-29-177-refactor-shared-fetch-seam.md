@@ -20,9 +20,9 @@ Scenario: 層の対応が読める
   Then 対応表を照合できる
 
 ## 受け入れ基準
-- [ ] shared-fetchが単発・一括の両CLIで使われている
-- [ ] 層対応表（config/include/make/実ブラウザ要否/network要否/check包含）が文書化されている
-- [ ] 既存CLIの振る舞いが変わらない
+- [x] shared-fetchが単発・一括の両CLIで使われている
+- [x] 層対応表（config/include/make/実ブラウザ要否/network要否/check包含）が文書化されている
+- [x] 既存CLIの振る舞いが変わらない
 
 ## テスト戦略
 - E2E: 対象外
@@ -33,6 +33,6 @@ Scenario: 層の対応が読める
 - 0.1人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

@@ -20,9 +20,9 @@ Scenario: 新規シナリオ追加は1箇所で済む
   Then ブラウザ別ファイルの同時編集が不要である
 
 ## 受け入れ基準
-- [ ] `tests/e2e/scenarios.ts` にfill/kana/banner等のフローがブラウザ非依存でまとまっている
-- [ ] `chrome.e2e.ts` / `firefox.e2e.ts` が起動・seed等のadapterのみになっている
-- [ ] 既存e2eが両ブラウザで緑のままである
+- [x] `tests/e2e/scenarios.ts` にfill/kana/banner等のフローがブラウザ非依存でまとまっている
+- [x] `chrome.e2e.ts` / `firefox.e2e.ts` が起動・seed等のadapterのみになっている
+- [x] 既存e2eが両ブラウザで緑のままである
 
 ## テスト戦略
 - E2E: 両ブラウザで既存スイートが緑であること
@@ -33,6 +33,6 @@ Scenario: 新規シナリオ追加は1箇所で済む
 - 0.15人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

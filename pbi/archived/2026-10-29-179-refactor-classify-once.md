@@ -20,9 +20,9 @@ Scenario: 分類は1回だけ走る
   Then classifyFieldの実行が1回に束ねられる
 
 ## 受け入れ基準
-- [ ] `prepare` がruled/unconfident/pending/planを1回計算で返す
-- [ ] 各入口がバンドルのviewを読むだけになっている
-- [ ] 一致の組み合わせテストがある
+- [x] `prepare` がruled/unconfident/pending/planを1回計算で返す
+- [x] 各入口がバンドルのviewを読むだけになっている
+- [x] 一致の組み合わせテストがある
 
 ## テスト戦略
 - E2E: ゲート表示と送信の一致確認
@@ -33,6 +33,6 @@ Scenario: 分類は1回だけ走る
 - 0.35人月
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み
