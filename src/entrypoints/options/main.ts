@@ -223,7 +223,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
 // prefecture(select行)を含まないが、trial は従来どおり prefecture の空欄も
 // sample で埋める。import側との不一致であり、仕様確認までは現状維持する
 // (推測で統一しない)。
-function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): Profile {
+export function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): Profile {
   const next = { ...base };
   for (const key of PROFILE_BLANK_KEYS) {
     if ((next[key] ?? '').trim() === '' && (sample[key] ?? '') !== '') {
@@ -237,7 +237,7 @@ function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): 
   return next;
 }
 
-function applyTrialSampleToAddress(base: Address, sample: Omit<Address, 'id' | 'profileId'>): Address {
+export function applyTrialSampleToAddress(base: Address, sample: Omit<Address, 'id' | 'profileId'>): Address {
   const next = { ...base };
   for (const key of ADDRESS_BLANK_KEYS) {
     if ((next[key] ?? '').trim() === '' && (sample[key] ?? '') !== '') {
@@ -250,52 +250,51 @@ function applyTrialSampleToAddress(base: Address, sample: Omit<Address, 'id' | '
   return next;
 }
 
-// Card ensuring goes through selectImportTargets (PBI-182): the blank flags
-// and the fresh-card construction (EMPTY + new id + default label) are the
-// same as the page import. The merge always repairs the first card instead of
-// forking (see above).
-function withTrialProfile(
-  current: StoredData, sample: Omit<Profile, 'id'>, ids: { profileId: string; addressId: string },
-): StoredData {
-  const targets = selectImportTargets(current.profiles, current.addresses, ids);
-  const base = targets.blankProfile ? targets.target : current.profiles[0]!;
-  const filled = applyTrialSampleToProfile(base, sample);
-  return {
-    profiles: current.profiles.length === 0 ? [filled] : [filled, ...current.profiles.slice(1)],
-    addresses: current.addresses,
-  };
+// Head fill shared by both sides (PBI-194): the sample is applied to the
+// first card only. An empty list keeps exactly the one built card (the fresh
+// selectImportTargets target) and a non-empty list repairs the first card in
+// place, keeping the rest untouched — a prepend without the length check would
+// add a second card on a zero-count recovery.
+function withFilledHead<T, S>(
+  list: T[],
+  base: T,
+  sample: S | undefined,
+  apply: (base: T, sample: S) => T,
+): T[] {
+  if (sample === undefined) {
+    return list;
+  }
+  const filled = apply(base, sample);
+  return list.length === 0 ? [filled] : [filled, ...list.slice(1)];
 }
 
-function withTrialAddress(
-  current: StoredData, sample: Omit<Address, 'id' | 'profileId'>, ids: { profileId: string; addressId: string },
-): StoredData {
-  const targets = selectImportTargets(current.profiles, current.addresses, ids);
-  const base = targets.blankAddress ? targets.targetAddress : current.addresses[0]!;
-  const filled = applyTrialSampleToAddress(base, sample);
-  return {
-    profiles: current.profiles,
-    addresses: current.addresses.length === 0 ? [filled] : [filled, ...current.addresses.slice(1)],
-  };
-}
-
-function withTrialBoth(
+// Trial application (PBI-194): one function applies the sample to the profile
+// side, the address side, or both — which side is the `sample` argument, not a
+// third copy of the selectImportTargets -> blank check -> apply -> head swap.
+// The blank flags and the fresh-card construction (EMPTY + new id + default
+// label) stay the page import's own (PBI-182), and the per-key fill stays in
+// the applyTrialSampleTo* helpers above: the first card is repaired in place,
+// never forked. The sample itself is not validated here — the save side
+// (saveBoth/onSaveSide) owns validation.
+export function withTrialSample(
   current: StoredData,
-  sampleP: Omit<Profile, 'id'>,
-  sampleA: Omit<Address, 'id' | 'profileId'>,
+  sample: { profile?: Omit<Profile, 'id'>; address?: Omit<Address, 'id' | 'profileId'> },
   ids: { profileId: string; addressId: string },
 ): StoredData {
   const targets = selectImportTargets(current.profiles, current.addresses, ids);
-  const baseP = targets.blankProfile ? targets.target : current.profiles[0]!;
-  const baseA = targets.blankAddress ? targets.targetAddress : current.addresses[0]!;
   return {
-    profiles: [
-      applyTrialSampleToProfile(baseP, sampleP),
-      ...(current.profiles.length === 0 ? [] : current.profiles.slice(1)),
-    ],
-    addresses: [
-      applyTrialSampleToAddress(baseA, sampleA),
-      ...(current.addresses.length === 0 ? [] : current.addresses.slice(1)),
-    ],
+    profiles: withFilledHead(
+      current.profiles,
+      targets.blankProfile ? targets.target : current.profiles[0]!,
+      sample.profile,
+      applyTrialSampleToProfile,
+    ),
+    addresses: withFilledHead(
+      current.addresses,
+      targets.blankAddress ? targets.targetAddress : current.addresses[0]!,
+      sample.address,
+      applyTrialSampleToAddress,
+    ),
   };
 }
 
@@ -303,9 +302,10 @@ async function onTrialSave(): Promise<void> {
   // Both sides are validated before anything is written, and memory commits
   // only on storage success (saveBoth): no pre-assignment, so a failed save
   // leaves the memory state untouched.
-  const draft = withTrialBoth(state, makeSampleProfile(), makeSampleAddress(), {
-    profileId: newId(), addressId: newId(),
-  });
+  const draft = withTrialSample(state, {
+    profile: makeSampleProfile(),
+    address: makeSampleAddress(),
+  }, { profileId: newId(), addressId: newId() });
   await saveBoth(draft, {
     setState: (next) => { state = next; },
     saveData,
@@ -320,11 +320,11 @@ async function onTrialSave(): Promise<void> {
 // Single-side trials fill one side, then run that side's normal save
 // (validation, storage discipline, and guide toasts stay in one place).
 async function onTrialSaveSide(kind: SideKind): Promise<void> {
-  if (kind === 'profile') {
-    state = withTrialProfile(state, makeSampleProfile(), { profileId: newId(), addressId: newId() });
-  } else {
-    state = withTrialAddress(state, makeSampleAddress(), { profileId: newId(), addressId: newId() });
-  }
+  state = withTrialSample(
+    state,
+    kind === 'profile' ? { profile: makeSampleProfile() } : { address: makeSampleAddress() },
+    { profileId: newId(), addressId: newId() },
+  );
   await onSaveSide(kind);
 }
 
