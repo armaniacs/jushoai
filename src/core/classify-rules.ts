@@ -675,6 +675,8 @@ export function classifyRulePipelineWithTrace(
  * のclassifyAllはこの関数に委譲する（単一所有）。順序・意味論を変えるときは
  * ここだけ変えれば両経路に反映される。PBI-150: analyze・fill-one・import-draft
  * の分類入口はこの関数経由で呼ぶ（classifyField の直呼びは入口から出す）。
+ * PBI-186: 分類入口の一覧 — full-preview は runClassifyPipeline（LLM合流あり）、
+ * fill-one・import-draft はこの関数（rule-only）、eval は WithTrace（trace読取）。
  */
 export function classifyRulePipeline(
   metas: FieldMeta[],

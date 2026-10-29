@@ -11,8 +11,9 @@ import type { FieldClassifier } from '../core/classifier';
 import { planChunks, scheduleFor } from './chunks';
 
 // 分類1回ユースケースの境界と所有モジュール (PBI-174)。「1回の分類試行」
-// (pending 分割→チャンク試行→合流) はこのモジュールが所有し、呼び出し元
-// (content・fill-one・import-draft・eval) は run だけを通る。失敗語彙の
+// (pending 分割→チャンク試行→合流) はこのモジュールが所有し、content 系の
+// 呼び出し元は run を通る。rule-only の純粋合成 (fill-one・import-draft・
+// eval) は classifyRulePipeline が所有し、そちらを通る (PBI-186)。失敗語彙の
 // 優先順位 (チャンク失敗 > 切り詰め通知、未知語彙→bad-response) もここに
 // 集約する。core/ 直下に I/O は置かない: 送信は FieldClassifier 縫い目に
 // 注入し、このモジュールは送信手段を選ばない。

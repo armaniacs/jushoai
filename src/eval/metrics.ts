@@ -32,7 +32,8 @@ export function evalMetricsFor(metas: FieldMeta[]): EvalMetrics {
   // refine), the same one classifyRulePipeline runs: the metrics read the
   // trace's intermediate values instead of hand-rolling the composition
   // (PBI-145). pending is the initial classification's non-confident fields,
-  // before refine, as before.
+  // before refine, as before. PBI-186: this detour is legitimate — run does
+  // not return a trace, so metrics read WithTrace directly.
   const { items: refined, pending, refineChanged, refineDropped } =
     classifyRulePipelineWithTrace(metas);
   const plan = buildPlan(refined, { profile: SYNTHETIC_PROFILE, address: EMPTY_ADDRESS });
