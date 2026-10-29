@@ -58,6 +58,21 @@ const TEST_FIELD: FieldMeta = {
   disabled: false, value: '',
 };
 
+// Route of one provider attempt; the parameter that selects the unknown-error
+// row below (PBI-192).
+type FailureRoute = 'classify' | 'test';
+
+// Route-specific outcome table (PBI-192): the historical asymmetry as one row
+// per route instead of a call-site comment. classify() folds unknown errors to
+// 'bad-response' (the analyze contract folds out-of-vocabulary reasons there
+// too); the connection test has always reported them as 'network' — its
+// callers read 'network' as "the endpoint did not answer". 401/403 ('auth')
+// and rejected shapes ('rejected') share one mapping regardless of route.
+const UNKNOWN_FAILURE_BY_ROUTE: Record<FailureRoute, TestFailure> = {
+  classify: 'bad-response',
+  test: 'network',
+};
+
 // The provider-resolution module: status, adapter selection, the auth/compat
 // memory, the audit wrap, and the error-vocabulary mapping live behind this one
 // interface. Adding a provider is one entry in selectRaw plus its factory, not
@@ -179,19 +194,37 @@ export class ProviderRegistry {
     return { ok: false, reason: 'not-configured' };
   }
 
-  // Single source of the throw-path failure vocabulary: test() uses this
-  // mapping for the classify() throw contract (now test-only, PBI-174), so a
-  // new reason or a status-code rule change lands in one place.
-  // Success-path bookkeeping (authFailed add/delete) stays with each caller.
-  // ClassifyFailure and TestFailure are the same literal set under two names,
-  // so this return type satisfies both wire shapes.
-  private mapFailure(e: unknown): TestFailure {
+  // PBI-192: one fold of a failed provider attempt into its wire response.
+  // HttpAuthError records the provider and returns 'auth' from this single
+  // place — the former call sites (classify's attempt arm, classify's catch
+  // arm, test's catch arm) each repeated the same two lines, and the
+  // authFailed bookkeeping had to stay in lockstep with the 'auth' reason it
+  // is paired with. The record keeps its instanceof check: an adapter that
+  // returns a failureReason of 'auth' without throwing must not record, so a
+  // reason-string check here would be wrong. null means not an auth failure;
+  // each caller keeps its own remaining vocabulary.
+  private authFailure(e: unknown, provider: ProviderKind): { ok: false; reason: TestFailure } | null {
+    if (e instanceof HttpAuthError) {
+      this.authBlock.record(provider);
+      return { ok: false, reason: 'auth' };
+    }
+    return null;
+  }
+
+  // Single source of the throw-path failure vocabulary: classify() and test()
+  // share the 401/403 and rejected-shape rows; only the unknown row is
+  // route-specific (UNKNOWN_FAILURE_BY_ROUTE, pinned by tests). Auth recording
+  // lives in authFailure, so this mapping is only reached after that fold
+  // returned null; the HttpAuthError arm stays so a future call site that
+  // skips the fold still gets the right reason. Success-path bookkeeping
+  // (authFailed add/delete) stays with each caller. ClassifyFailure and
+  // TestFailure are the same literal set under two names, so this return type
+  // satisfies both wire shapes.
+  private mapFailure(e: unknown, route: FailureRoute): TestFailure {
     if (e instanceof HttpAuthError) return 'auth';
     if (e instanceof HttpRequestError && isRejectedStatus(e.status)) return 'rejected';
     if (e instanceof HttpRequestError) return 'network';
-    // classify() keeps 'bad-response' for unknown errors; test() maps them to
-    // 'network' at its own call site (historical asymmetry, preserved here).
-    return 'bad-response';
+    return UNKNOWN_FAILURE_BY_ROUTE[route];
   }
 
   async classify(
@@ -216,19 +249,15 @@ export class ProviderRegistry {
     try {
       const outcome = await sel.classifier.attempt(fields, opts.chunk);
       if (outcome.error !== undefined) {
-        if (outcome.error instanceof HttpAuthError) {
-          this.authBlock.record(s.provider);
-          return { ok: false, reason: 'auth' };
-        }
+        const auth = this.authFailure(outcome.error, s.provider);
+        if (auth) return auth;
         return { ok: false, reason: asClassifyFailure(outcome.failureReason) ?? 'bad-response' };
       }
       return { ok: true, entries: [...outcome.map] };
     } catch (e) {
-      if (e instanceof HttpAuthError) {
-        this.authBlock.record(s.provider);
-        return { ok: false, reason: 'auth' };
-      }
-      return { ok: false, reason: this.mapFailure(e) };
+      const auth = this.authFailure(e, s.provider);
+      if (auth) return auth;
+      return { ok: false, reason: this.mapFailure(e, 'classify') };
     }
   }
 
@@ -241,14 +270,9 @@ export class ProviderRegistry {
       this.authBlock.clear(s.provider);
       return { ok: true, category };
     } catch (e) {
-      if (e instanceof HttpAuthError) {
-        this.authBlock.record(s.provider);
-        return { ok: false, reason: 'auth' };
-      }
-      const reason = this.mapFailure(e);
-      // Historical asymmetry, preserved: the connection test reports unknown
-      // errors as 'network' while classify() reports 'bad-response'.
-      return { ok: false, reason: reason === 'bad-response' ? 'network' : reason };
+      const auth = this.authFailure(e, s.provider);
+      if (auth) return auth;
+      return { ok: false, reason: this.mapFailure(e, 'test') };
     }
   }
 }
