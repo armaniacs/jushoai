@@ -4,9 +4,10 @@
 // opposite side re-read, the guide check, the guide destination). The table
 // below keeps one row per kind so the flow cannot drift again.
 import { normalizeAddress, normalizeProfile } from '../../core/profile';
+import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import {
-  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor,
+  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from './save-guide';
 
 export type SideKind = 'profile' | 'address';
@@ -128,5 +129,68 @@ export async function saveSide(spec: SideSpec, deps: SaveSideDeps): Promise<void
   } else {
     deps.ui.showToast([spec.nextMessage], { label: spec.nextLabel, onClick: () => deps.ui.goOther() });
   }
+  deps.ui.render();
+}
+
+// Both-side trial save (PBI-182): the old onTrialSave wrote normalized values
+// into memory before storage succeeded, so a failed save left polluted state.
+// The both-side equivalent of the SideSpec discipline is validate both sides,
+// save once, and commit to memory only on success. There is no opposite side
+// to re-read (the single-side re-read exists to avoid a stale overwrite of
+// the side being kept; here both sides come from the caller draft), and the
+// caller prepares the draft before calling, so this shell never assigns state
+// before the save resolves. A failed save leaves memory untouched.
+export type BothDecision =
+  | { outcome: 'empty' }
+  | { outcome: 'invalid'; errors: string[] }
+  | { outcome: 'ready'; profiles: Profile[]; addresses: Address[] };
+
+// Pure validation half of the both-side save: no storage, no UI, no state
+// writes. Both sides are normalized and validated before anything is written.
+export function decideSaveBoth(draft: StoredData): BothDecision {
+  const profiles = draft.profiles.map(normalizeProfile);
+  const addresses = draft.addresses.map(normalizeAddress);
+  if (profiles.length === 0 || addresses.length === 0) return { outcome: 'empty' };
+  const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
+  if (errors.length > 0) return { outcome: 'invalid', errors };
+  return { outcome: 'ready', profiles, addresses };
+}
+
+export interface SaveBothDeps {
+  setState(next: StoredData): void;
+  saveData(data: StoredData): Promise<void>;
+  ui: {
+    showError(messages: string[]): void;
+    showToast(messages: string[]): void;
+    render(): void;
+  };
+}
+
+// Thin async shell with one fixed order: validate both, save, commit to memory
+// only on success, then toast and render.
+export async function saveBoth(draft: StoredData, deps: SaveBothDeps): Promise<void> {
+  const decision = decideSaveBoth(draft);
+  if (decision.outcome === 'empty') {
+    deps.ui.showError(['プロファイルと住所を1件以上登録してください']);
+    deps.ui.render();
+    return;
+  }
+  if (decision.outcome === 'invalid') {
+    deps.ui.showError(decision.errors);
+    deps.ui.render();
+    return;
+  }
+  try {
+    await deps.saveData({ profiles: decision.profiles, addresses: decision.addresses });
+  } catch (e) {
+    console.warn('[JushoAI] save failed', e);
+    deps.ui.showError(['保存に失敗しました。容量不足の可能性があります。']);
+    deps.ui.render();
+    return;
+  }
+  deps.setState({ profiles: decision.profiles, addresses: decision.addresses });
+  const savedProfile = decision.profiles[0] ?? EMPTY_PROFILE;
+  const savedAddress = decision.addresses[0] ?? EMPTY_ADDRESS;
+  deps.ui.showToast([trialToastText(savedProfile, savedAddress)]);
   deps.ui.render();
 }

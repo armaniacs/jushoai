@@ -2,10 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import type { Address, Profile, StoredData } from '../../src/core/types';
 import {
-  ADDRESS_SPEC, PROFILE_SPEC, SIDE_SPECS, decideSaveSide,
-  saveSide,
+  ADDRESS_SPEC, PROFILE_SPEC, SIDE_SPECS, decideSaveBoth, decideSaveSide,
+  saveBoth, saveSide,
 } from '../../src/entrypoints/options/save-side';
-import type { SaveSideDeps, SideSpec } from '../../src/entrypoints/options/save-side';
+import type { SaveBothDeps, SaveSideDeps, SideSpec } from '../../src/entrypoints/options/save-side';
 
 function validProfileRaw(): Profile {
   return {
@@ -177,5 +177,101 @@ describe.each(SPECS)('saveSide ($name)', ({ spec, validOwn, blankOwn }) => {
     expect(saved).toBeDefined();
     expect(deps.toasts).toEqual([['保存しました']]);
     expect(deps.setStateCalls).toHaveLength(1);
+  });
+});
+
+function fakeBothDeps(overrides: Partial<SaveBothDeps> = {}): SaveBothDeps & {
+  calls: string[]; setStateCalls: StoredData[]; errors: string[][]; toasts: string[][]; saved: StoredData[];
+} {
+  const calls: string[] = [];
+  const setStateCalls: StoredData[] = [];
+  const errors: string[][] = [];
+  const toasts: string[][] = [];
+  const saved: StoredData[] = [];
+  return {
+    calls, setStateCalls, errors, toasts, saved,
+    setState: (next: StoredData) => { calls.push('setState'); setStateCalls.push(next); },
+    saveData: async (d: StoredData) => { calls.push('save'); saved.push(d); },
+    ui: {
+      showError: (m: string[]) => { calls.push('error'); errors.push(m); },
+      showToast: (m: string[]) => { calls.push('toast'); toasts.push(m); },
+      render: () => { calls.push('render'); },
+    },
+    ...overrides,
+  } as SaveBothDeps & {
+    calls: string[]; setStateCalls: StoredData[]; errors: string[][]; toasts: string[][]; saved: StoredData[];
+  };
+}
+
+function validBothState(): StoredData {
+  return { profiles: [validProfileRaw()], addresses: [validAddressRaw()] };
+}
+
+describe('decideSaveBoth', () => {
+  it('returns empty when either side has zero entries', () => {
+    expect(decideSaveBoth({ profiles: [], addresses: [validAddressRaw()] })).toEqual({ outcome: 'empty' });
+    expect(decideSaveBoth({ profiles: [validProfileRaw()], addresses: [] })).toEqual({ outcome: 'empty' });
+  });
+
+  it('returns invalid when either side fails validation', () => {
+    const d = decideSaveBoth({ profiles: [blankProfileRaw()], addresses: [validAddressRaw()] });
+    expect(d.outcome).toBe('invalid');
+    if (d.outcome === 'invalid') expect(d.errors.length).toBeGreaterThan(0);
+    const d2 = decideSaveBoth({ profiles: [validProfileRaw()], addresses: [blankAddressRaw()] });
+    expect(d2.outcome).toBe('invalid');
+    if (d2.outcome === 'invalid') expect(d2.errors.length).toBeGreaterThan(0);
+  });
+
+  it('returns ready with normalized both sides when both are valid', () => {
+    const d = decideSaveBoth(validBothState());
+    expect(d.outcome).toBe('ready');
+    if (d.outcome === 'ready') {
+      expect(d.profiles).toHaveLength(1);
+      expect(d.addresses).toHaveLength(1);
+    }
+  });
+});
+
+describe('saveBoth', () => {
+  it('shows the empty message and never touches storage', async () => {
+    const deps = fakeBothDeps();
+    const save = vi.spyOn(deps, 'saveData');
+    await saveBoth({ profiles: [], addresses: [] }, deps);
+    expect(deps.errors).toEqual([['プロファイルと住所を1件以上登録してください']]);
+    expect(deps.calls).toEqual(['error', 'render']);
+    expect(save).not.toHaveBeenCalled();
+    expect(deps.setStateCalls).toHaveLength(0);
+  });
+
+  it('shows validation errors and never touches storage', async () => {
+    const deps = fakeBothDeps();
+    const save = vi.spyOn(deps, 'saveData');
+    await saveBoth({ profiles: [blankProfileRaw()], addresses: [validAddressRaw()] }, deps);
+    expect(deps.errors.length).toBe(1);
+    expect(deps.errors[0]?.length).toBeGreaterThan(0);
+    expect(save).not.toHaveBeenCalled();
+    expect(deps.setStateCalls).toHaveLength(0);
+  });
+
+  it('commits normalized both sides only after a successful save, in validate->save->commit order', async () => {
+    const deps = fakeBothDeps();
+    await saveBoth(validBothState(), deps);
+    expect(deps.calls).toEqual(['save', 'setState', 'toast', 'render']);
+    expect(deps.saved).toHaveLength(1);
+    expect(deps.setStateCalls).toHaveLength(1);
+    expect(deps.setStateCalls[0]).toEqual(deps.saved[0]);
+    expect(deps.toasts).toHaveLength(1);
+    expect(deps.toasts[0]?.[0]).toContain('架空の名前として');
+  });
+
+  it('keeps memory state untouched when the save fails', async () => {
+    const deps = fakeBothDeps({
+      saveData: async () => { depsRef.calls.push('save'); throw new Error('quota'); },
+    });
+    const depsRef = deps;
+    await saveBoth(validBothState(), deps);
+    expect(deps.errors).toEqual([['保存に失敗しました。容量不足の可能性があります。']]);
+    expect(deps.calls).toEqual(['save', 'error', 'render']);
+    expect(deps.setStateCalls).toHaveLength(0);
   });
 });
