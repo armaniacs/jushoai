@@ -318,7 +318,7 @@ async function onImportDraft(): Promise<void> {
     return;
   }
   const targets = selectImportTargets(state.profiles, state.addresses, { profileId: newId(), addressId: newId() });
-  const result = applyImportDraft(target, targetAddress, res.draft);
+  const result = applyImportDraft(targets.target, targets.targetAddress, res.draft);
   if (result.taken === 0) {
     showFloatError(['取り込める項目がありません。氏名・住所が入力済みのフォームで実行してください。']);
     render();
