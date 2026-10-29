@@ -20,13 +20,15 @@
 
 RICE = (Reach × Impact × Confidence) / Effort。Effortは人月。詳細の内訳は各PBIファイルの優先度節を参照。
 
-実装バッチ（ファイル重複に基づく）:
-- バッチ1: 190（messages.ts 単独）
-- バッチ2: 191 → 193 → 198 → 197（classify-transport / background-gateway / pipeline / kana / analyze の連鎖、直列）
-- バッチ3: 192（provider-registry 単独、バッチ2と並列可）
-- バッチ4: 195 → 196（options sections、PBI-168と直列）
-- バッチ5: 194（options main.ts）
-- バッチ6: 201（content.ts + src/content/）
-- バッチ7: 199（kana.ts、バッチ2の後）
-- バッチ8: 200（tests/e2e、実ブラウザe2eが実行できる場合のみ）
+実装バッチ（ファイル重複に基づく）と結果（2026-10-30 完了・`make check` green）:
+- バッチ1: 190（messages.ts 単独）→ cc4e93e
+- バッチ2: 191 → 193 → 198 → 197（classify-transport / background-gateway / pipeline / kana / analyze の連鎖、直列）→ bd7282d / 217a0a2 / 72a6c13
+- バッチ3: 192（provider-registry 単独、バッチ2と並列）→ 86b233a
+- バッチ4: 195（options list boot）→ 40d98a8、196（nav 同期）+ PBI-168（件数バッジ）→ a2a5611
+- バッチ5: 194（options main.ts trial トリオ）→ 2fb0e2a
+- バッチ6: 201（content.ts + src/content/tab-scope.ts）→ be4bf73
+- バッチ7: 199（kana.ts evidence）→ 946ed08
+- バッチ8: 200（tests/e2e harness seam）→ 38603f8
 - 残置: 202（着手条件: 次のタブ宛てアクション追加時）
+
+検証: `make check` exit 0（typecheck + 173 test files + 両ブラウザ build + manifest + web-ext lint）。実ブラウザ E2E は環境の ChromeDriver/Chrome 版数不整合（154 vs 156）で自動実行できずユーザー作業として残置。実装済み12件は受け入れ基準のうち自動検証可能なボックスのみ [x] に確定しアーカイブ済み（コードレビュー完了と E2E 実行はユーザー作業）。
