@@ -47,7 +47,7 @@ JushoAI は Chrome ウェブストア・Edge Add-ons・Firefox AMO の3ストア
 - `docs/store-listing.md` の 5枚構成（1280x800、最大5枚）を、0.1.29 以降の新 UI（フローティングガイド・保存分離・ナビ件数バッジ）を写した撮り直しに更新する
 - 撮り方は現行どおり `samples/demo-registration.html` と設定ページを使い、ダミーのプロファイルで個人情報を写さない
 - 画像のファイルはストア申請用としてリポジトリに含めない現行規則を維持する
-- `docs/blog/images/` が空で、ブログ記事1本目の画像参照（`before-reanalyze.png`・`after-reanalyze.png`）が壊れている。この機会に実画像を撮って埋めるか、参照を削る
+- `docs/blog/images/` が空で、ブログ記事1本目の画像参照（`before-reanalyze.png`・`after-reanalyze.png`）が壊れている。ストアスクリーンショットの撮り直しと同じ手順（`samples/demo-registration.html` と設定ページ・ダミープロファイル）で実画像を撮り、`docs/blog/images/` に置いて参照を修復する
 
 ### 3. 「値を送らない」設計の記事
 
