@@ -46,5 +46,5 @@ Scenario: 誕生日語の 1 input 欄が分類対象になる
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする(fixture 先行 red 4件(分類 3+planner 1)→実装後緑。ISO 注入と解釈不能値の空扱いを planner テストが機械的に守る)
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] `make check` が通る

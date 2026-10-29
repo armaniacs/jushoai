@@ -20,8 +20,8 @@ Scenario: 取れない埋め込みは説明する
   Then 注入せず理由と手動入力への案内を出す
 
 ## 受け入れ基準
-- [ ] 同一オリジン外のDOMには触らない（権限・隔離を崩さない）
-- [ ] 再走査の無限ループ・多重ボタンを起こさない
+- [x] 同一オリジン外のDOMには触らない（権限・隔離を崩さない）（content.ts の defineContentScript は matches のみで allFrames 指定なし→MV3 既定でトップフレームのみ注入。設計書 2026-10-21-iframe-design.md:15 が manifest に all_frames キーなしを確認済み）
+- [x] 再走査の無限ループ・多重ボタンを起こさない（prefilter isRelevantMutation/shouldSyncForMutations＋署名一致スキップ＋500ms debounce の2段＋コンテナ単位 mounted map・planMounts。tests/entrypoints/content-sync-prefilter.test.ts 7件＋tests/dom/mount-plan.test.ts 4件が緑）
 - [ ] 対象URLを持つ場合は`make addurl`→最小再現fixture→期待値の手順を守る
 
 ## テスト戦略
@@ -34,7 +34,7 @@ Scenario: 取れない埋め込みは説明する
 
 ## Definition of Done
 - [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [ ] ドキュメント更新済み
 
 ## 実装記録（2026-10-27 残置判断）

@@ -64,7 +64,7 @@ Scenario: 境界 ― CI='1' では --no-sandbox を付ける
 ## Definition of Done
 - [x] 全BDDシナリオが自動テストとして実装されパスする
 - [x] `npx vitest run tests/e2e/chrome-flags.test.ts` がグリーンである
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] リファクタリング完了（グリーン後）
 - [x] ドキュメント更新不要であることを確認済み（フラグ組み立て仕様の変更なし）
 

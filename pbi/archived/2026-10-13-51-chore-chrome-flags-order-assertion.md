@@ -114,7 +114,7 @@ grep -rn "chromeLaunchArgs" tests/e2e/
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
 - [x] `npx vitest run tests/e2e/chrome-flags.test.ts` がパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] プロダクションコードの振る舞いに変更がない
 - [x] ドキュメント更新の必要なし（テスト改善のみのため）
 

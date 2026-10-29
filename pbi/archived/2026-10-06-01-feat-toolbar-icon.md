@@ -81,5 +81,5 @@ ls public/                            # public/ は存在しない
 - [x] `tests/icons.test.ts` がパスする
 - [x] `make check` が通る
 - [x] `dist/chrome-mv3/manifest.json` に `icons` が反映される
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] ドキュメント更新: 不要（README にアイコン手順の記載はスコープ外）

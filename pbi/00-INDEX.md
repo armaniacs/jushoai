@@ -8,26 +8,12 @@
 
 最終検証: `make check` exit 0（155 files / 1979 passed + 1 expected fail）＋実ブラウザ E2E 13/13 green（tests/e2e/chrome.e2e.ts、配置・ドラッグ・タッチ経路・半透明を含む）。コードレビュー完了（checking-team 2026-10-27・9レビュアー、指摘 High 1/Medium 11 はすべて修正済み・Low は記録のみ）。実機タッチの手触り確認のみユーザー作業（タッチ経路自体は E2E で実測）。
 
-## 進行中（1021-1022ラウンド・実装済み・コミット済み・コードレビューのみ残）
+## 進行中（1021-1022ラウンド・残2件）
 
-（124〜128・130 は実装コミット済み。129 は実装記録に残置判断を記録（着手条件未到来で backlog 残置）。コードレビューはユーザー作業）
+（115〜117・119〜128・130 はレビュー確認を経てアーカイブ済み。118 は対象URL確定がユーザー作業、129 は着手条件未到来で backlog 残置）
 
-- `2026-10-21-115-chore-ci-make-check.md`（f54ed09 chore(ci): make checkのCIガードを追加）
-- `2026-10-21-116-refactor-nfkc-norm-clean.md`（3fc1067 refactor: norm/clean分離とダッシュ統一）
-- `2026-10-21-117-feat-profile-export-import.md`（b441268 feat(transfer): プロファイルのexport/import）
 - `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
-- `2026-10-21-119-feat-company-department.md`（093eb73 同上）
-- `2026-10-21-120-feat-width-enforcement.md`（208c1ac feat(fill): 幅強制と建物名略記）
-- `2026-10-21-121-feat-dash-unification.md`（3fc1067 同上）
-- `2026-10-21-122-feat-building-abbreviate.md`（208c1ac 同上）
-- `2026-10-21-123-backlog-iframe-investigation.md`（5db41e0 docs: backlogとiframe調査）
-- `2026-10-22-124-feat-egress-preview-masking.md`（1b7fe95 feat(egress): 送信前メタデータのゲートとPII疑い警告）
-- `2026-10-22-125-feat-zip-address-assist.md`（9b79158 feat(zip): 郵便番号辞書による住所補助）
-- `2026-10-22-126-feat-field-coverage-expand.md`（7340bd1 カバレッジは先行PBIで実装済みの実装記録）
-- `2026-10-22-127-feat-onboarding-import.md`（857cd8f feat(onboarding): フォームからの下書き取り込み）
-- `2026-10-22-128-feat-repeat-fill-memory.md`（4cf4a59 feat(fill): サイト別承認記憶による短縮プレビュー）
 - `2026-10-22-129-feat-dynamic-form-support.md`（実装なし。後描画追従は既存実装で担保、残る差分は残置判断を記録）
-- `2026-10-22-130-backlog-local-learning-loop.md`（420ebff 学習ループはPBI-138で実装済みの実装記録）
 
 ## 進行中（対象 URL 対応・実装済み）
 
@@ -349,3 +335,17 @@
 | 2026-10-27-161-fix-float-button-placement.md | 0ed109c feat: 入力ボタンの配置を入力欄と重ならない候補に変える（コードレビューはユーザー作業） |
 | 2026-10-27-162-fix-float-button-translucency.md | 256d455 fix: 入力ボタンの背景を半透明にして下の入力を見えるようにする（コードレビューはユーザー作業） |
 | 2026-10-27-163-feat-float-button-drag.md | ef14cdb feat: 入力ボタンをマウス・タッチ・キーボードで移動できるようにする（コードレビューはユーザー作業） |
+| 2026-10-21-115-chore-ci-make-check.md | f54ed09 chore(ci): make checkのCIガードを追加 |
+| 2026-10-21-116-refactor-nfkc-norm-clean.md | 3fc1067 refactor: norm/clean分離とダッシュ統一 |
+| 2026-10-21-117-feat-profile-export-import.md | b441268 feat(transfer): プロファイルのexport/import |
+| 2026-10-21-119-feat-company-department.md | 093eb73 feat(profile): 会社項目 |
+| 2026-10-21-120-feat-width-enforcement.md | 208c1ac feat(fill): 幅強制と建物名略記 |
+| 2026-10-21-121-feat-dash-unification.md | 3fc1067 refactor: norm/clean分離とダッシュ統一 |
+| 2026-10-21-122-feat-building-abbreviate.md | 208c1ac feat(fill): 幅強制と建物名略記 |
+| 2026-10-21-123-backlog-iframe-investigation.md | 5db41e0 docs: backlogとiframe調査 |
+| 2026-10-22-124-feat-egress-preview-masking.md | 1b7fe95 feat(egress): 送信前メタデータのゲートとPII疑い警告 |
+| 2026-10-22-125-feat-zip-address-assist.md | 9b79158 feat(zip): 郵便番号辞書による住所補助 |
+| 2026-10-22-126-feat-field-coverage-expand.md | 7340bd1 カバレッジは先行PBIで実装済みの実装記録 |
+| 2026-10-22-127-feat-onboarding-import.md | 857cd8f feat(onboarding): フォームからの下書き取り込み |
+| 2026-10-22-128-feat-repeat-fill-memory.md | 4cf4a59 feat(fill): サイト別承認記憶による短縮プレビュー |
+| 2026-10-22-130-backlog-local-learning-loop.md | 420ebff 学習ループはPBI-138で実装済みの実装記録 |

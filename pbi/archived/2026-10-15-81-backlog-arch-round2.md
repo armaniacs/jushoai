@@ -43,7 +43,7 @@ round 1（かな・Session・Registry・trace・settings-save）と後続ラウ�
 ## Definition of Done
 
 - [x] 全 5 件＋本台帳がユーザーに提示され、順位の合意が取れている
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 
 ## 実施記録（2026-10-15、自律タスククローザーによる実装完結）
 
