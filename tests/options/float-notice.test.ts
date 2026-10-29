@@ -4,6 +4,10 @@ import {
   resetFloatState, showFloatError, showFloatGuide, showFloatToast,
 } from '../../src/entrypoints/options/float-layer';
 import { el } from '../../src/entrypoints/options/dom';
+import {
+  post as postNotice,
+  TOAST_MS as CENTER_TOAST_MS,
+} from '../../src/entrypoints/options/notice-center';
 
 beforeEach(() => {
   vi.useRealTimers();
@@ -64,5 +68,55 @@ describe('float notice layer', () => {
     hideFloatGuide();
     resetFloatState();
     expect(isGuideDismissed()).toBe(false);
+  });
+});
+
+describe('notice center seam crossing', () => {
+  it('keeps an error when the earlier toast timer deadline passes', () => {
+    vi.useFakeTimers();
+    expect(CENTER_TOAST_MS).toBe(TOAST_MS);
+    postNotice({ kind: 'saved', lines: ['保存しました'] });
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(1);
+    vi.advanceTimersByTime(TOAST_MS - 1000);
+    postNotice({ kind: 'errors', lines: ['e1'] });
+    expect(document.querySelectorAll('#float-root .float-error')).toHaveLength(1);
+    vi.advanceTimersByTime(1000);
+    expect(document.querySelectorAll('#float-root .float-error')).toHaveLength(1);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(0);
+    vi.advanceTimersByTime(TOAST_MS * 3);
+    expect(document.querySelectorAll('#float-root .float-error')).toHaveLength(1);
+  });
+
+  it('lets a stale timer clear nothing after a replacement chain', () => {
+    vi.useFakeTimers();
+    postNotice({ kind: 'saved', lines: ['first'] });
+    vi.advanceTimersByTime(TOAST_MS - 1000);
+    postNotice({ kind: 'errors', lines: ['e1'] });
+    postNotice({ kind: 'saved', lines: ['second'] });
+    vi.advanceTimersByTime(1000);
+    expect(document.querySelector('#float-root .float-toast')!.textContent).toContain('second');
+    vi.advanceTimersByTime(TOAST_MS - 1001);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(0);
+  });
+
+  it('hands timer ownership from an action toast to a plain toast', () => {
+    vi.useFakeTimers();
+    let fired = 0;
+    postNotice({
+      kind: 'saved',
+      lines: ['次は住所を入力してください'],
+      action: { label: '住所を入力する', onClick: () => { fired += 1; } },
+    });
+    vi.advanceTimersByTime(TOAST_MS * 2);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(1);
+    postNotice({ kind: 'saved', lines: ['保存しました'] });
+    expect(document.querySelector('#float-root .float-toast')!.textContent).toContain('保存しました');
+    vi.advanceTimersByTime(TOAST_MS - 1);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(1);
+    vi.advanceTimersByTime(1);
+    expect(document.querySelectorAll('#float-root .float-toast')).toHaveLength(0);
+    expect(fired).toBe(0);
   });
 });
