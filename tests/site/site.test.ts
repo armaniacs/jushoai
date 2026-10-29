@@ -4,8 +4,9 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import {
-  diffShape, findEmptyStrings, GUIDE_SLUGS, loadGuides, normalizeBase, pagePath, pageUrl,
+  GUIDE_SLUGS, loadGuides, normalizeBase, pagePath, pageUrl,
 } from '../../site/lib/site.ts';
+import { diffShape, findEmptyStrings } from '../../site/lib/validate-guides.ts';
 
 describe('urls', () => {
   it('normalizes the base path', () => {

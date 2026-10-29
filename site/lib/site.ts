@@ -4,8 +4,6 @@ import { parseFrontMatter } from './frontmatter.ts';
 import { renderMarkdown, type Heading } from './markdown.ts';
 import { validateGuidePair } from './validate-guides.ts';
 
-export { diffShape, findEmptyStrings } from './validate-guides.ts';
-
 export type Lang = 'ja' | 'en';
 export const LANGS: readonly Lang[] = ['ja', 'en'];
 export const SITE_ORIGIN = 'https://armaniacs.github.io';
@@ -72,8 +70,9 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
         continue;
       }
       const { data, body } = parseFrontMatter(await readFile(join(contentDir, lang, `${slug}.md`), 'utf8'));
+      // Existence checks (required/missing) live here; empty-content checks live in validateGuidePair.
       for (const key of ['title', 'description', 'order']) {
-        if (!data[key]) problems.push(`${lang}/${slug}.md: front matter ${key} is required`);
+        if (data[key] === undefined || data[key] === null) problems.push(`${lang}/${slug}.md: front matter ${key} is required`);
       }
       const order = Number(data.order);
       if (data.order && !Number.isFinite(order)) problems.push(`${lang}/${slug}.md: order must be a number`);
