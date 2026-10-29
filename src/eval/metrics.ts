@@ -15,8 +15,13 @@ export interface EvalMetrics {
   total: number;
   // Fields the rules classify (not unknown) after resolve + refine.
   ruleHits: number;
-  // Fields a non-confident rule result would send to the LLM. Measured
-  // without an LLM call: the eval never reaches the network.
+  // Fields a non-confident rule result would send to the LLM (PBI-185
+  // definition: pre-skip, pre-refine, non-force — the initial classification's
+  // non-confident count, i.e. sendSet(metas) with no skip and no force).
+  // Measured without an LLM call: the eval never reaches the network. This is
+  // NOT the actual send set: the real send applies the skip filter and, under
+  // force, includes confident fields too (sendSet owns that decision), and
+  // refine may later drop some of these fields (refineDropped below).
   llmFallbacks: number;
   unknowns: number;
   // Fields whose category changed during the sibling refine step.
@@ -31,16 +36,18 @@ export function evalMetricsFor(metas: FieldMeta[]): EvalMetrics {
   // The canonical composition with its trace (classify → resolveKana →
   // refine), the same one classifyRulePipeline runs: the metrics read the
   // trace's intermediate values instead of hand-rolling the composition
-  // (PBI-145). pending is the initial classification's non-confident fields,
-  // before refine, as before. PBI-186: this detour is legitimate — run does
-  // not return a trace, so metrics read WithTrace directly.
-  const { items: refined, pending, refineChanged, refineDropped } =
+  // (PBI-145). initialUnconfident is the initial classification's
+  // non-confident fields, before refine and before any skip filter, as before
+  // (PBI-185: renamed from `pending`; pre-skip/pre-refine/non-force). PBI-186:
+  // this detour is legitimate — run does not return a trace, so metrics read
+  // WithTrace directly.
+  const { items: refined, initialUnconfident, refineChanged, refineDropped } =
     classifyRulePipelineWithTrace(metas);
   const plan = buildPlan(refined, { profile: SYNTHETIC_PROFILE, address: EMPTY_ADDRESS });
   return {
     total: metas.length,
     ruleHits: refined.filter((i) => i.cls.category !== 'unknown').length,
-    llmFallbacks: pending.length,
+    llmFallbacks: initialUnconfident.length,
     unknowns: refined.filter((i) => i.cls.category === 'unknown').length,
     refineChanged,
     refineDropped,

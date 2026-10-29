@@ -22,6 +22,50 @@ export function withoutSkipped(
   return metas.filter((m) => !skipIds?.has(m.id));
 }
 
+export interface SendSetOptions {
+  // The field ids whose metadata must not reach the LLM (taught ids merged
+  // with the gate's unchecked ids). An undefined set skips nothing.
+  skip?: ReadonlySet<string>;
+  // true: every field is a send candidate (confident included); false: only
+  // the non-confident fields are candidates. Either way the skip filter
+  // applies last.
+  force?: boolean;
+}
+
+const isRuledList = (
+  input: readonly (FieldMeta | RuledField)[],
+): input is readonly RuledField[] => {
+  const first = input[0];
+  return first !== undefined && 'meta' in first && 'cls' in first;
+};
+
+// Single owner of the LLM send set (PBI-185): the one function that decides
+// which fields reach the LLM. force = all fields minus skip, otherwise the
+// non-confident fields minus skip. Accepts either raw metas (classifies
+// once internally) or a pre-classified pass (no re-classification). The
+// pipeline, the gate bundle and the eval definition all funnel through here
+// or through the split filters below it — never a hand-rolled third branch.
+export function sendSet(
+  metas: readonly FieldMeta[],
+  opts?: SendSetOptions,
+): FieldMeta[];
+export function sendSet(
+  ruled: readonly RuledField[],
+  opts?: SendSetOptions,
+): FieldMeta[];
+export function sendSet(
+  input: readonly (FieldMeta | RuledField)[],
+  opts: SendSetOptions = {},
+): FieldMeta[] {
+  const skip = opts.skip;
+  if (opts.force === true) {
+    const all = isRuledList(input) ? input.map((r) => r.meta) : [...(input as readonly FieldMeta[])];
+    return withoutSkipped(all, skip);
+  }
+  if (isRuledList(input)) return splitRuled(input, skip).pending;
+  // Overload homogeneity: a non-ruled list is FieldMeta[] here.
+  return splitRuled(ruleAll(input as readonly FieldMeta[]), skip).pending;
+}
 export interface PendingSplit {
   // The non-confident fields (the gate list), before the skip filter.
   unconfident: FieldMeta[];
