@@ -21,7 +21,8 @@ import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import { createGuideController } from './guide-controller';
-import { ADDRESS_SPEC, PROFILE_SPEC, saveBoth, saveSide } from './save-side';
+import { SIDE_SPECS, saveBoth, saveSide } from './save-side';
+import type { SideKind } from './save-side';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -40,8 +41,8 @@ let state: StoredData;
 // dismissed flag and the active page itself, so callers only invoke sync().
 const guideController = createGuideController(() => state, {
   onTrialBoth: () => { void onTrialSave(); },
-  onTrialProfile: () => { void onTrialSaveProfile(); },
-  onTrialAddress: () => { void onTrialSaveAddress(); },
+  onTrialProfile: () => { void onTrialSaveSide('profile'); },
+  onTrialAddress: () => { void onTrialSaveSide('address'); },
 });
 
 // The export/import section (PBI-117) is mounted once like the audit and
@@ -148,12 +149,9 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
     rerender();
   });
   const limitNote = buildLimitNote(`プロファイルは${MAX_ITEMS}件まで登録できます`, isAtLimit(profiles.length));
-  const save = actionButton('保存', false, () => { void onSaveProfiles(); });
+  const save = actionButton('保存', false, () => { void onSaveSide('profile'); });
   const importButton = actionButton('フォームから取り込む', false, () => {
-    void onImportDraft().catch(() => {
-      post({ kind: 'errors', lines: ['取り込みに失敗しました。フォームを開いているタブで実行してください。'] });
-      render();
-    });
+    void onImportDraft().catch(onImportFailed);
   });
   const footer = document.createElement('div');
   footer.className = 'row';
@@ -195,12 +193,9 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
     rerender();
   });
   const limitNote = buildLimitNote(`住所は${MAX_ITEMS}件まで登録できます`, isAtLimit(addresses.length));
-  const save = actionButton('保存', false, () => { void onSaveAddresses(); });
+  const save = actionButton('保存', false, () => { void onSaveSide('address'); });
   const importButton = actionButton('フォームから取り込む', false, () => {
-    void onImportDraft().catch(() => {
-      post({ kind: 'errors', lines: ['取り込みに失敗しました。フォームを開いているタブで実行してください。'] });
-      render();
-    });
+    void onImportDraft().catch(onImportFailed);
   });
   const footer = document.createElement('div');
   footer.className = 'row';
@@ -316,14 +311,13 @@ async function onTrialSave(): Promise<void> {
 
 // Single-side trials fill one side, then run that side's normal save
 // (validation, storage discipline, and guide toasts stay in one place).
-async function onTrialSaveProfile(): Promise<void> {
-  state = withTrialProfile(state, makeSampleProfile(), { profileId: newId(), addressId: newId() });
-  await onSaveProfiles();
-}
-
-async function onTrialSaveAddress(): Promise<void> {
-  state = withTrialAddress(state, makeSampleAddress(), { profileId: newId(), addressId: newId() });
-  await onSaveAddresses();
+async function onTrialSaveSide(kind: SideKind): Promise<void> {
+  if (kind === 'profile') {
+    state = withTrialProfile(state, makeSampleProfile(), { profileId: newId(), addressId: newId() });
+  } else {
+    state = withTrialAddress(state, makeSampleAddress(), { profileId: newId(), addressId: newId() });
+  }
+  await onSaveSide(kind);
 }
 
 function render() {
@@ -344,6 +338,13 @@ function render() {
 // blank (a new user's card); a card that already has values is never silently
 // overwritten — the import creates a new card instead. Save stays a separate
 // explicit step.
+// Import failure display is shared by both pages (PBI-184): the two
+// 取り込む buttons showed the same notice, so the catch body lives here.
+function onImportFailed(): void {
+  post({ kind: 'errors', lines: ['取り込みに失敗しました。フォームを開いているタブで実行してください。'] });
+  render();
+}
+
 async function onImportDraft(): Promise<void> {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab?.id) {
@@ -375,27 +376,12 @@ async function onImportDraft(): Promise<void> {
   render();
 }
 
-const goProfiles = (): void => setActivePage(PROFILES_SECTION_ID);
-const goAddresses = (): void => setActivePage(ADDRESSES_SECTION_ID);
-
-async function onSaveProfiles() {
-  await saveSide(PROFILE_SPEC, {
-    getState: () => state,
-    setState: (next) => { state = next; },
-    loadData,
-    saveData,
-    ui: {
-      showError: (messages, action) => post({ kind: 'errors', lines: messages, ...(action ? { action } : {}) }),
-      showToast: (messages, action) => post({ kind: 'saved', lines: messages, ...(action ? { action } : {}) }),
-      render,
-      onTrial: () => { void onTrialSaveProfile(); },
-      goOther: goAddresses,
-    },
-  });
+function goSide(kind: SideKind): void {
+  setActivePage(kind === 'profile' ? PROFILES_SECTION_ID : ADDRESSES_SECTION_ID);
 }
 
-async function onSaveAddresses() {
-  await saveSide(ADDRESS_SPEC, {
+async function onSaveSide(kind: SideKind) {
+  await saveSide(SIDE_SPECS[kind], {
     getState: () => state,
     setState: (next) => { state = next; },
     loadData,
@@ -404,8 +390,8 @@ async function onSaveAddresses() {
       showError: (messages, action) => post({ kind: 'errors', lines: messages, ...(action ? { action } : {}) }),
       showToast: (messages, action) => post({ kind: 'saved', lines: messages, ...(action ? { action } : {}) }),
       render,
-      onTrial: () => { void onTrialSaveAddress(); },
-      goOther: goProfiles,
+      onTrial: () => { void onTrialSaveSide(kind); },
+      goOther: () => { goSide(kind === 'profile' ? 'address' : 'profile'); },
     },
   });
 }
