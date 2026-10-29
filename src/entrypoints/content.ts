@@ -30,7 +30,8 @@ import { confirmGuest } from '../ui/guest-panel';
 import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
-import { mergeLlmSkip, planEgress, shouldDisableClassifier } from '../core/egress-plan';
+import { mergeLlmSkip, shouldDisableClassifier } from '../core/egress-plan';
+import { prepare } from '../core/classify-once';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
 import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
@@ -285,16 +286,23 @@ export default defineContentScript({
       // any network. Suspect rows default to excluded; closing the gate
       // (Escape included) resolves as rule-only, so no choice means no send.
       let effectiveClassifier = classifier;
-      // PBI-145: the gate's pending list and the actual send come from the
-      // same split (splitPending, PBI-154), so the gate shows exactly what
-      // classifyAll will send and a taught field's metadata never reaches
-      // the LLM.
+      // PBI-179: one classify pass shared by the gate and the send path. The
+      // bundle below holds the pass's staged artifacts; the gate reads its
+      // plan views and the send path receives it as premade, so the gate
+      // shows exactly what classifyWithReason will send and a taught field's
+      // metadata never reaches the LLM.
       let llmSkip: ReadonlySet<string> | undefined;
-      {
-        const taught = new Set(
+      const prepared = prepare(metas, {
+        taughtKeys: new Set(
           activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
-        );
-        const plan = planEgress(metas, taught);
+        ),
+      });
+      const plan = {
+        pending: prepared.pending,
+        taughtIds: prepared.taughtIds,
+        nonConfidentCount: prepared.nonConfidentCount,
+      };
+      {
         llmSkip = plan.taughtIds.size > 0 ? plan.taughtIds : undefined;
         if (classifier && plan.pending.length > 0) {
           closeOpenPanels();
@@ -353,7 +361,16 @@ export default defineContentScript({
           // rule, and an excluded page never gets here (the session returns
           // excluded before opening any panel).
           classify: (ms, opts) =>
-            classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }).then((res) => ({
+            classifyWithReason(effectiveClassifier, ms, {
+              ...opts,
+              llmSkip,
+              // Same metas as the gate pass: hand over the staged artifacts
+              // instead of re-running classifyField. Anything else falls back
+              // to the pipeline's own pass.
+              premade: ms === metas
+                ? { ruled: prepared.ruled, unconfident: prepared.unconfident }
+                : undefined,
+            }).then((res) => ({
               ...res,
               items: applyMapping(res.items, activeMappings, hostOf(location.href)),
             })),

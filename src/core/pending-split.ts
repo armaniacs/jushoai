@@ -1,5 +1,13 @@
 import { classifyField, isConfident } from './classify-rules';
-import type { FieldMeta } from './types';
+import type { FieldMeta, RuledField } from './types';
+
+// The one classify pass, shared: every entrance that needs verdicts for a
+// meta list maps through here instead of inlining its own
+// metas.map(classifyField). A single definition keeps the pass identical
+// everywhere it is shared (splitPending below, classify-once bundles).
+export function ruleAll(metas: readonly FieldMeta[]): RuledField[] {
+  return metas.map((meta) => ({ meta, cls: classifyField(meta) }));
+}
 
 // The skip filter's single owner (PBI-145): a field id in skipIds never
 // reaches the LLM, and an undefined set skips nothing (the gate's "no taught
@@ -8,7 +16,7 @@ import type { FieldMeta } from './types';
 // skip semantics change is fixed here once — the force path needs no lockstep
 // fix to remember from a comment.
 export function withoutSkipped(
-  metas: FieldMeta[],
+  metas: readonly FieldMeta[],
   skipIds?: ReadonlySet<string>,
 ): FieldMeta[] {
   return metas.filter((m) => !skipIds?.has(m.id));
@@ -21,19 +29,29 @@ export interface PendingSplit {
   pending: FieldMeta[];
 }
 
+// Partition over pre-classified verdicts: the same confident filter and skip
+// filter as splitPending, but without re-running classifyField. Lets a
+// classify-once bundle share one pass with the gate and the send list while
+// this module stays the single owner of the split semantics.
+export function splitRuled(
+  ruled: readonly RuledField[],
+  skipIds?: ReadonlySet<string>,
+): PendingSplit {
+  const unconfident = ruled.filter((r) => !isConfident(r.cls)).map((r) => r.meta);
+  return { unconfident, pending: withoutSkipped(unconfident, skipIds) };
+}
+
 // Single owner of the pending split (PBI-154): classify → confident filter →
 // skip filter, one pass over the metas. The egress gate (planEgress) reads
 // both partitions; the LLM attempt (classifyAll) reads only .pending.
 // skipIds carries the field ids whose metadata must not reach the LLM:
 // taught ids (PBI-138), merged with the gate's unchecked ids by mergeLlmSkip.
-// classifyField is also called by classifyAll's ruled map (analyze.ts) on the
-// same metas; that cross-call-path duplication stays — removing it would need
-// a classify-once seam across entrances. The duplication this one-pass split
-// removes is planEgress's former two splitPending calls (PBI-145).
+// Callers that already hold a classify pass (classify-once bundles) go
+// through splitRuled instead, so the pass below is the only classifyField
+// call in this module.
 export function splitPending(
   metas: FieldMeta[],
   skipIds?: ReadonlySet<string>,
 ): PendingSplit {
-  const unconfident = metas.filter((m) => !isConfident(classifyField(m)));
-  return { unconfident, pending: withoutSkipped(unconfident, skipIds) };
+  return splitRuled(ruleAll(metas), skipIds);
 }

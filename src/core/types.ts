@@ -62,6 +62,16 @@ export interface Item {
   cls: Classification;
 }
 
+// One classifyField verdict, possibly null (unruly meta). The staged artifact
+// a classify-once bundle carries so the gate, the send list and the merge all
+// read one pass instead of re-running classifyField per entrance (PBI-179).
+// Lives here for the same cycle reason as Item: pending-split and
+// classify-once both shape it without importing each other.
+export interface RuledField {
+  meta: FieldMeta;
+  cls: Classification | null;
+}
+
 export interface Profile {
   id: string;
   label: string;

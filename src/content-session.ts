@@ -1,6 +1,6 @@
 import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
-import type { Address, FieldMeta, Profile } from './core/types';
+import type { Address, FieldMeta, Profile, RuledField } from './core/types';
 import { runClassifyPipeline } from './classify-pipeline/pipeline';
 import type { FieldClassifier } from './core/classifier';
 import type { ClassifyFailure } from './messages';
@@ -42,7 +42,7 @@ export interface SessionClassifyResult {
 export async function classifyWithReason(
   classifier: FieldClassifier | null,
   metas: FieldMeta[],
-  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
+  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string>; premade?: { ruled: readonly RuledField[]; unconfident: readonly FieldMeta[] } } = {},
 ): Promise<SessionClassifyResult> {
   return runClassifyPipeline(classifier, metas, opts);
 }

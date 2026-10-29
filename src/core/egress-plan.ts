@@ -1,5 +1,4 @@
-import { fieldKeyFor } from './domain-mapping';
-import { splitPending, withoutSkipped } from './pending-split';
+import { prepare } from './classify-once';
 import type { FieldMeta } from './types';
 
 // The egress gate's send plan (PBI-124/PBI-145): the gate shows exactly what
@@ -23,25 +22,14 @@ export function planEgress(
   metas: FieldMeta[],
   taughtKeys: ReadonlySet<string>,
 ): EgressPlan {
-  // One splitPending call yields both partitions of the same classify pass
-  // (the pass planEgress used to pay twice, PBI-145): with no skip set,
-  // unconfident and pending start as the same gate list, and the taught ids
-  // derived from unconfident narrow the send side below.
-  const { unconfident, pending } = splitPending(metas);
-  const taughtIds = new Set(
-    unconfident
-      .filter((m) => {
-        const key = fieldKeyFor(m);
-        return key !== null && taughtKeys.has(key);
-      })
-      .map((m) => m.id),
-  );
-  // The gate's send list applies the skip filter (withoutSkipped) — the same
-  // single owner classifyAll's force path goes through.
+  // Delegates to the classify-once bundle (PBI-179): one classify pass whose
+  // views are exactly this plan's fields, so the gate cannot drift from the
+  // pass the send path reads.
+  const bundle = prepare(metas, { taughtKeys });
   return {
-    pending: withoutSkipped(pending, taughtIds),
-    taughtIds,
-    nonConfidentCount: unconfident.length,
+    pending: bundle.pending,
+    taughtIds: bundle.taughtIds,
+    nonConfidentCount: bundle.nonConfidentCount,
   };
 }
 

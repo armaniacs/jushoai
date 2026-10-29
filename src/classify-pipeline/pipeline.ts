@@ -6,7 +6,7 @@ import { detectKanaKind, resolveKana } from '../core/kana';
 import { applyEnglishPage } from '../core/page-language';
 import { isAllowedRadioCategory } from '../core/radio-policy';
 import { splitPending, withoutSkipped } from '../core/pending-split';
-import type { Category, FieldMeta, Item } from '../core/types';
+import type { Category, FieldMeta, Item, RuledField } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
 import { planChunks, scheduleFor } from './chunks';
 
@@ -22,6 +22,11 @@ export interface ClassifyPipelineOptions {
   englishPage?: boolean;
   llmSkip?: ReadonlySet<string>;
   signal?: AbortSignal;
+  // A classify-once bundle (PBI-179): when the caller already holds one pass
+  // over these metas (the gate path does), the pipeline reads its views
+  // instead of re-running classifyField. Same verdicts — pure functions over
+  // the same inputs — so with/without results are identical.
+  premade?: { ruled: readonly RuledField[]; unconfident: readonly FieldMeta[] };
 }
 
 export interface ClassifyPipelineResult {
@@ -42,9 +47,10 @@ export function mergeClassified(
   metas: FieldMeta[],
   fromLlm: Map<string, Category>,
   opts: { force?: boolean; englishPage?: boolean } = {},
+  premadeRuled?: readonly RuledField[],
 ): Item[] {
   const force = opts.force === true;
-  const ruled = metas.map((meta) => ({ meta, cls: classifyField(meta) }));
+  const ruled = premadeRuled ?? metas.map((meta) => ({ meta, cls: classifyField(meta) }));
   const items: Item[] = [];
   for (const { meta, cls } of ruled) {
     if (!force && isConfident(cls)) {
@@ -114,10 +120,14 @@ export async function runClassifyPipeline(
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };
   }
   // PBI-124/154: pending 分割の所有は splitPending/withoutSkipped。
-  // force は全件 (skip 除外)、通常は非 confident のみ。
+  // force は全件 (skip 除外)、通常は非 confident のみ。PBI-179: premade が
+  // あれば分類を再実行せず、その unconfident 区分に skip を適用するだけ
+  // （同一純粋関数の同一入力なので集合は等しい）。
   const pending = force
     ? withoutSkipped(metas, opts.llmSkip)
-    : splitPending(metas, opts.llmSkip).pending;
+    : opts.premade
+      ? withoutSkipped(opts.premade.unconfident, opts.llmSkip)
+      : splitPending(metas, opts.llmSkip).pending;
   if (pending.length === 0) {
     logRuleOnlyRun(metas.length, startedAt);
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };
@@ -150,5 +160,5 @@ export async function runClassifyPipeline(
   if (plan.truncatedCount > 0 && failureReason === null) {
     failureReason = 'truncated';
   }
-  return { items: mergeClassified(metas, fromLlm, { force, englishPage }), failureReason };
+  return { items: mergeClassified(metas, fromLlm, { force, englishPage }, opts.premade?.ruled), failureReason };
 }
