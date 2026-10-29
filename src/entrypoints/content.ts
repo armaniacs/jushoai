@@ -30,7 +30,7 @@ import { confirmGuest } from '../ui/guest-panel';
 import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
-import { mergeLlmSkip, shouldDisableClassifier } from '../core/egress-plan';
+import { mergeLlmSkip, shouldDisableClassifier, type EgressPlan } from '../core/egress-plan';
 import { prepare } from '../core/classify-once';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
 import { FILL_ONE_MESSAGE } from '../context-menu';
@@ -297,11 +297,10 @@ export default defineContentScript({
           activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
         ),
       });
-      const plan = {
-        pending: prepared.pending,
-        taughtIds: prepared.taughtIds,
-        nonConfidentCount: prepared.nonConfidentCount,
-      };
+      // PBI-181: prepare 一本化 — the gate plan is a thin EgressPlan view of
+      // the same bundle the send path receives (no second classify pass, no
+      // hand-built plan literal).
+      const plan: EgressPlan = prepared;
       {
         llmSkip = plan.taughtIds.size > 0 ? plan.taughtIds : undefined;
         if (classifier && plan.pending.length > 0) {
@@ -354,6 +353,9 @@ export default defineContentScript({
           metasById,
           englishPage,
           canReanalyze: effectiveClassifier !== null,
+          // PBI-181: the run's shared pass. The session attaches it to every
+          // classify call, so the env below passes it through first-class.
+          run: prepared,
         },
         env: {
           // PBI-138: the taught mapping rides as a correction layer on top of
@@ -364,12 +366,11 @@ export default defineContentScript({
             classifyWithReason(effectiveClassifier, ms, {
               ...opts,
               llmSkip,
-              // Same metas as the gate pass: hand over the staged artifacts
-              // instead of re-running classifyField. Anything else falls back
-              // to the pipeline's own pass.
-              premade: ms === metas
-                ? { ruled: prepared.ruled, unconfident: prepared.unconfident }
-                : undefined,
+              // PBI-181: pass through the shared bundle received first-class on
+              // opts.run (attached from input.run by the session). No
+              // metas-identity check: a copied/filtered metas array resolves to
+              // the same pass.
+              premade: opts.run,
             }).then((res) => ({
               ...res,
               items: applyMapping(res.items, activeMappings, hostOf(location.href)),

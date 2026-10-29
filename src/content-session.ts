@@ -1,6 +1,7 @@
 import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
-import type { Address, FieldMeta, Profile, RuledField } from './core/types';
+import type { Address, FieldMeta, Profile, RunContext } from './core/types';
+import type { PremadePass } from './core/classify-once';
 import { runClassifyPipeline } from './classify-pipeline/pipeline';
 import type { FieldClassifier } from './core/classifier';
 import type { ClassifyFailure } from './messages';
@@ -21,6 +22,11 @@ export interface SessionInput {
   lastAddressId?: string;
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
+  // PBI-181: the shared classify-once pass for this run. The session attaches
+  // it to every classify call (see createFillSession), so the env receives the
+  // pass first-class instead of matching metas by reference. Absent in tests
+  // and legacy callers — the pipeline normalizes it at its boundary.
+  run?: RunContext;
   // PBI-142: the earlier page's approved values for this tab (content-script
   // memory only). A field whose profile value is empty falls back to it.
   carryover?: Record<string, string>;
@@ -42,7 +48,7 @@ export interface SessionClassifyResult {
 export async function classifyWithReason(
   classifier: FieldClassifier | null,
   metas: FieldMeta[],
-  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string>; premade?: { ruled: readonly RuledField[]; unconfident: readonly FieldMeta[] } } = {},
+  opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string>; premade?: PremadePass } = {},
 ): Promise<SessionClassifyResult> {
   return runClassifyPipeline(classifier, metas, opts);
 }
@@ -55,7 +61,11 @@ export interface SessionEnv {
   // caller closure). The caller passes intent (which classifier, which field
   // ids the egress gate excluded) via classifyWithReason; the apply ordering
   // below owns the reason from there.
-  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> }): Promise<SessionClassifyResult>;
+  // PBI-181: the shared pass rides opts.run first-class (attached from
+  // input.run by createFillSession). The env passes it through to
+  // classifyWithReason's premade — no metas-identity check, so a copied or
+  // filtered metas array gets the same pass.
+  classify(metas: FieldMeta[], opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string>; run?: RunContext }): Promise<SessionClassifyResult>;
   // Consent gate over the apply panel; the caller builds it from the panel
   // handle because the button lives inside the closed shadow root.
   checkConsent(panel: SessionPanel): { ok: true } | { ok: false; reason: string };
@@ -92,7 +102,15 @@ export type SessionStart =
 // recordAssignment / onApplied) arrive via FillFlowEnv when the caller has
 // them (content.ts), and are simply absent here.
 export function createFillSession(input: SessionInput, env: SessionEnv) {
-  const flow = createFillFlow({ input, env: env as FillFlowEnv });
+  // PBI-181: attach the run's shared pass to every classify call, so the env
+  // receives it first-class on opts.run (and a copied/filtered metas array
+  // still resolves to the same pass). fill-flow itself stays untouched: the
+  // pass travels input → this wrapper → env, never by metas identity.
+  const flowEnv: FillFlowEnv = {
+    ...env,
+    classify: (ms, opts) => env.classify(ms, { ...opts, run: input.run }),
+  };
+  const flow = createFillFlow({ input, env: flowEnv });
 
   return {
     get selectedProfileId(): string { return flow.selectedProfileId; },

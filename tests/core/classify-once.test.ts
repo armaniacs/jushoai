@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import type { Category } from '../../src/core/types';
+import type { FieldClassifier } from '../../src/core/classifier';
+import type { EgressPlan } from '../../src/core/egress-plan';
 import { prepare } from '../../src/core/classify-once';
 import { planEgress } from '../../src/core/egress-plan';
 import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
@@ -51,5 +54,44 @@ describe('pipeline with and without a premade bundle', () => {
     });
     expect(bundled.items).toEqual(plain.items);
     expect(bundled.failureReason).toBe(plain.failureReason);
+  });
+});
+
+// PBI-181: the canonical RunContext pass. The gate plan is a thin EgressPlan
+// view of the bundle, and the pipeline reads the pass without matching metas
+// by reference — a copied metas array resolves to the same verdicts.
+describe('RunContext canonical pass (PBI-181)', () => {
+  const stubClassifier = (map: Map<string, Category>): FieldClassifier => ({
+    classify: async () => map,
+    attempt: async () => ({ map, failureReason: null }),
+  });
+
+  it('exposes the gate plan as a thin view of the same bundle', () => {
+    const taughtKeys = new Set(['xyz']);
+    const bundle = prepare(MIXED, { taughtKeys });
+    const plan: EgressPlan = bundle;
+    const egress = planEgress(MIXED, taughtKeys);
+    expect(plan.pending).toEqual(egress.pending);
+    expect(plan.taughtIds).toEqual(egress.taughtIds);
+    expect(plan.nonConfidentCount).toBe(egress.nonConfidentCount);
+  });
+
+  it('applies the pass to a copied metas array without an identity check', async () => {
+    const bundle = prepare(MIXED, { taughtKeys: new Set() });
+    const copied = MIXED.map((m) => ({ ...m }));
+    const classifier = stubClassifier(new Map([['f-taught', 'email'], ['f-open', 'tel']]));
+    const viaPass = await runClassifyPipeline(classifier, copied, {
+      premade: { ruled: bundle.ruled, unconfident: bundle.unconfident },
+    });
+    const direct = await runClassifyPipeline(classifier, copied, {});
+    expect(viaPass.items.map((i) => [i.meta.id, i.cls.category, i.cls.source])).toEqual(
+      direct.items.map((i) => [i.meta.id, i.cls.category, i.cls.source]),
+    );
+    expect(viaPass.items.find((i) => i.meta.id === 'f-taught')?.cls).toMatchObject({
+      category: 'email', source: 'llm',
+    });
+    expect(viaPass.items.find((i) => i.meta.id === 'f-last')?.cls).toMatchObject({
+      category: 'lastName', source: 'rule',
+    });
   });
 });

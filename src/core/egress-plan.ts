@@ -1,5 +1,5 @@
 import { prepare } from './classify-once';
-import type { FieldMeta } from './types';
+import type { FieldMeta, RunContext } from './types';
 
 // The egress gate's send plan (PBI-124/PBI-145): the gate shows exactly what
 // classifyAll will send. The taught field ids (PBI-138) ride llmSkip itself,
@@ -8,15 +8,10 @@ import type { FieldMeta } from './types';
 // The pending split itself is owned by splitPending (PBI-154): planEgress and
 // classifyAll both go through it.
 
-export interface EgressPlan {
-  // What the gate shows = what classifyAll will send.
-  pending: FieldMeta[];
-  // The ids skipped because the user taught their category (PBI-138).
-  taughtIds: ReadonlySet<string>;
-  // The non-confident count, taught included: the "all skipped" disable check
-  // compares against this, not against the gate's shorter pending list.
-  nonConfidentCount: number;
-}
+// PBI-181: the plan is a thin view of the canonical RunContext (alias, not a
+// redefinition) — the gate display and the send set are identically-typed by
+// construction.
+export type EgressPlan = Pick<RunContext, 'pending' | 'taughtIds' | 'nonConfidentCount'>;
 
 export function planEgress(
   metas: FieldMeta[],
