@@ -2,10 +2,9 @@ import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
 import type { Address, FieldMeta, Profile } from './core/types';
 import type { FeedbackSnapshot } from './feedback/issue-url';
-import { classifyAll } from './core/analyze';
+import { runClassifyPipeline } from './classify-pipeline/pipeline';
 import type { FieldClassifier } from './core/classifier';
 import type { ClassifyFailure } from './messages';
-import { asClassifyFailure } from './messages';
 import { hintForButton } from './ai/failure-text';
 import { applyAbbrevApprovals } from './core/planner';
 import {
@@ -37,14 +36,12 @@ export interface SessionInput {
   canReanalyze: boolean;
 }
 
-// One classification run through the unified attempt seam (PBI-42/45). The
-// pending split (ACCEPT_THRESHOLD: confident fields never reach the LLM) stays
-// inside classifyAll: this adapter only binds the attempt's failureReason to
-// the run's return value, so no caller closure needs to catch the reason on
-// the side. A null classifier (or no pending fields) means rule-only:
-// classifyAll emits its single aggregated trace line and the reason stays
-// null — no second audit record is produced here because the audited adapters
-// log once per attempt call either way.
+// One classification run through the unified attempt seam (PBI-42/45/174).
+// The run boundary (pending split, chunking, failureReason binding) is owned
+// by runClassifyPipeline (classify-pipeline/): this adapter only forwards the
+// caller intent (which classifier, which field ids the egress gate excluded).
+// A null classifier (or no pending fields) means rule-only: the run emits its
+// single aggregated trace line and the reason stays null.
 export interface SessionClassifyResult {
   items: Item[];
   failureReason: ClassifyFailure | null;
@@ -55,32 +52,7 @@ export async function classifyWithReason(
   metas: FieldMeta[],
   opts: { force?: boolean; englishPage?: boolean; llmSkip?: ReadonlySet<string> } = {},
 ): Promise<SessionClassifyResult> {
-  if (!classifier) {
-    return { items: await classifyAll(metas, null, opts), failureReason: null };
-  }
-  // Session-local binding (not a run-closure escape): classifyAll only calls
-  // classify(), so both seam members record the same attempt reason here and
-  // it leaves on the return value below. opts (including llmSkip, PBI-124)
-  // flow through to classifyAll unchanged.
-  let failureReason: ClassifyFailure | null = null;
-  const seam: FieldClassifier = {
-    // PBI-48: non-throwing by contract — the partial map is returned WITHOUT
-    // rethrowing outcome.error (unlike a raw classifier's classify(), which
-    // throws). A failed chunk's partial results still reach classifyAll, which
-    // keeps rule results for the missing fields (fail-safe: analyze's own
-    // try/catch stays as the backstop for a throwing classify).
-    classify: async (fields, schedule) => {
-      const outcome = await classifier.attempt(fields, schedule);
-      failureReason = asClassifyFailure(outcome.failureReason);
-      return outcome.map;
-    },
-    attempt: async (fields, schedule) => {
-      const outcome = await classifier.attempt(fields, schedule);
-      failureReason = asClassifyFailure(outcome.failureReason);
-      return { ...outcome, failureReason };
-    },
-  };
-  return { items: await classifyAll(metas, seam, opts), failureReason };
+  return runClassifyPipeline(classifier, metas, opts);
 }
 
 // Every DOM / Chrome side effect the session needs, injected so the ordering is
