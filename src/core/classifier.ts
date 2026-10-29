@@ -43,12 +43,12 @@ export interface AttemptOutcome {
   failureReason: string | null;
 }
 
-// Result of a gateway attempt that caps the input (BackgroundClassifier slices at
-// MAX_CLASSIFY_TOTAL): partial results stay bound to the run's failure reason, and
-// truncatedCount reports how many trailing fields the cap dropped (0 when the run
-// was not capped). The 'truncated' ClassifyFailure rides failureReason into the
-// existing failureReason→showError path; the count rides alongside it so callers
-// can state exact numbers without parsing strings.
+// Result of a gateway attempt (PBI-193): the cap/split run lives in
+// runClassifyPipeline (classify-pipeline/), so the gateway's single bounded
+// send never drops fields and truncatedCount stays 0 — the run-level dropped
+// count is the pipeline plan's. Partial results stay bound to the run's
+// failure reason; the 'truncated' ClassifyFailure rides failureReason into the
+// existing failureReason→showError path.
 export interface CappedAttempt extends AttemptOutcome {
   truncatedCount: number;
 }
@@ -56,13 +56,13 @@ export interface CappedAttempt extends AttemptOutcome {
 // Gateway classifiers that cap the run narrow the unified seam with the cap
 // detail: attempt() still returns the seam's {map, failureReason}, plus the
 // truncated count. PBI-49: the schedule param is accepted for substitutability
-// (a CappedClassifier is usable wherever a FieldClassifier is expected) but
-// intentionally unused: the gateway slices the input itself (cap, then
-// MAX_CLASSIFY_CHUNK pieces) instead of consuming a caller schedule —
-// schedules only flow background→provider, where TracedClassifier adapters
-// record them in the audit log. PBI-42: formerly a separate incompatible shape
-// alongside TracedClassifier.attempt; now both narrow the one
-// FieldClassifier.attempt seam.
+// (a CappedClassifier is usable wherever a FieldClassifier is expected) and
+// rides the single bounded send through to the wire: the pipeline run passes
+// scheduleFor(i, count) for split runs and undefined for a single-chunk run,
+// so the audit log's scheduling fields stay empty for degenerate runs
+// (PBI-193: the cap/split is the pipeline plan's, not the gateway's). PBI-42:
+// formerly a separate incompatible shape alongside TracedClassifier.attempt;
+// now both narrow the one FieldClassifier.attempt seam.
 export interface CappedClassifier extends FieldClassifier {
   attempt(
     fields: FieldMeta[],

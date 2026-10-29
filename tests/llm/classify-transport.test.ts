@@ -20,28 +20,27 @@ const echo = async (m: { fields: { id: string }[] }) => ({
   entries: m.fields.map((f) => [f.id, 'email']),
 });
 
-describe('classify transport boundary table (PBI-175)', () => {
-  it.each([
-    [20, 1, 20, 0, null],
-    [30, 2, 30, 0, null],
-    [60, 3, 60, 0, null],
-    [61, 3, 60, 1, 'truncated'],
-  ] as const)('%i fields -> %i sends, map %i, truncated %i, reason %s', async (n, calls, size, truncated, reason) => {
+describe('classify transport single bounded send (PBI-193)', () => {
+  it('makes one wire call over the fields it is given at the chunk width', async () => {
     sendMessage.mockImplementation(echo);
-    const res = await send(metas(n));
-    expect(sendMessage).toHaveBeenCalledTimes(calls);
-    expect(res.map.size).toBe(size);
-    expect(res.truncatedCount).toBe(truncated);
-    expect(res.failureReason).toBe(reason);
+    const res = await send(metas(20));
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect((sendMessage.mock.calls[0]![0] as { fields: unknown[] }).fields).toHaveLength(20);
+    expect(res.map.size).toBe(20);
+    expect(res.failureReason).toBeNull();
+    expect(res.truncatedCount).toBe(0);
   });
 
-  it('splits 30 fields into 20+10 and 61 into 20+20+20', async () => {
+  it('holds no chunk run: even an over-width input is one bounded send', async () => {
+    // The chunk run (cap clamp → split → schedule → failure aggregation) is
+    // the pipeline's (runClassifyPipeline); the transport never splits or
+    // truncates on its own, so the run export surface stays one layer.
     sendMessage.mockImplementation(echo);
-    await send(metas(30));
-    expect(sendMessage.mock.calls.map((c) => (c[0] as { fields: unknown[] }).fields.length)).toEqual([20, 10]);
-    sendMessage.mockClear();
-    await send(metas(61));
-    expect(sendMessage.mock.calls.map((c) => (c[0] as { fields: unknown[] }).fields.length)).toEqual([20, 20, 20]);
+    const res = await send(metas(45));
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect((sendMessage.mock.calls[0]![0] as { fields: unknown[] }).fields).toHaveLength(45);
+    expect(res.map.size).toBe(45);
+    expect(res.truncatedCount).toBe(0);
   });
 
   it('sends nothing for no fields', async () => {
@@ -51,38 +50,39 @@ describe('classify transport boundary table (PBI-175)', () => {
     expect(res.failureReason).toBeNull();
     expect(res.truncatedCount).toBe(0);
   });
+
+  it('passes the caller schedule through and omits the chunk key without one', async () => {
+    sendMessage.mockImplementation(echo);
+    await send(metas(2), { schedule: { index: 1, count: 2 } });
+    expect((sendMessage.mock.calls[0]![0] as { chunk?: unknown }).chunk).toEqual({ index: 1, count: 2 });
+    sendMessage.mockClear();
+    await send(metas(2));
+    expect('chunk' in (sendMessage.mock.calls[0]![0] as Record<string, unknown>)).toBe(false);
+  });
 });
 
-describe('classify transport chunk-boundary failures (PBI-175)', () => {
-  it('stops at an auth failure on the chunk boundary and keeps earlier chunks', async () => {
-    sendMessage
-      .mockImplementationOnce(echo)
-      .mockResolvedValueOnce({ ok: false, reason: 'auth' });
-    const res = await send(metas(40));
-    expect(sendMessage).toHaveBeenCalledTimes(2);
-    expect(res.map.size).toBe(20);
+describe('classify transport wire failure vocabulary (PBI-175)', () => {
+  it('reports the provider reason on a failing reply', async () => {
+    sendMessage.mockResolvedValueOnce({ ok: false, reason: 'auth' });
+    const res = await send(metas(5));
+    expect(res.map.size).toBe(0);
     expect(res.failureReason).toBe('auth');
-    expect(res.truncatedCount).toBe(0);
   });
 
-  it('reports network on a disconnect at the chunk boundary and keeps earlier chunks', async () => {
-    sendMessage
-      .mockImplementationOnce(echo)
-      .mockRejectedValueOnce(new Error('cut'));
-    const res = await send(metas(40));
-    expect(sendMessage).toHaveBeenCalledTimes(2);
-    expect(res.map.size).toBe(20);
+  it('reports network on a disconnect', async () => {
+    sendMessage.mockRejectedValueOnce(new Error('cut'));
+    const res = await send(metas(5));
     expect(res.failureReason).toBe('network');
   });
 
-  it('keeps a chunk failure ahead of the truncation notice at the cap boundary', async () => {
-    sendMessage
-      .mockImplementationOnce(echo)
-      .mockResolvedValueOnce({ ok: false, reason: 'auth' });
-    const res = await send(metas(61));
-    expect(res.failureReason).toBe('auth');
-    expect(res.truncatedCount).toBe(1);
-    expect(res.map.size).toBe(20);
+  it('reports network when already aborted without a wire call', async () => {
+    const c = new AbortController();
+    c.abort();
+    const res = await send(metas(5), { signal: c.signal });
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(res.map.size).toBe(0);
+    expect(res.failureReason).toBe('network');
+    expect(res.truncatedCount).toBe(0);
   });
 
   it('records null for a legacy reason-less failure instead of bad-response', async () => {

@@ -3,13 +3,15 @@ import type { ProviderKind } from '../../src/ai/types';
 import type { PublicAiSettings } from '../../src/ai/types';
 import { asClassifyFailure } from '../../src/messages';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
+import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
 import { ProviderRegistry } from '../../src/llm/provider-registry';
 import { makeMeta } from '../helpers';
 
-// PBI-174 step 1: 失敗語彙の優先順位を ClassifyPipeline 集約の前に固定する。
-// ここで pin する順序は集約後も変えない:
-//   - チャンク失敗が切り詰め通知より優先される (gateway)
-//   - abort/期限切れの打ち切りが切り詰め通知より優先される (gateway)
+// PBI-174 step 1: 失敗語彙の優先順位を pin する。PBI-193 以降、走の規律は
+// canonical な runClassifyPipeline 経由で pin する（gateway + wire の本番
+// 経路そのもの）。ここで pin する順序は集約後も変えない:
+//   - チャンク失敗が切り詰め通知より優先される (pipeline 集約)
+//   - abort/期限切れの打ち切りが切り詰め通知より優先される (pipeline 集約)
 //   - 未知語彙は bad-response に畳まれ、null(成功/legacy 不明)は通す (messages)
 //   - HTTP 状態→語彙の対応は classify/test で同一 (registry。test の
 //     bad-response→network 読み替えだけが歴史的非対称として残る)
@@ -18,57 +20,57 @@ const send = vi.fn();
 vi.stubGlobal('chrome', { runtime: { sendMessage: send } });
 afterEach(() => send.mockReset());
 
-const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
+const pending = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, name: `xyz-${i}` }));
+const llmItem = (result: { items: { meta: { id: string }; cls: { source: string; category: string } }[] }, id: string) =>
+  result.items.find((i) => i.meta.id === id && i.cls.source === 'llm');
+const echo = async (m: { fields: { id: string }[] }) => ({
+  ok: true,
+  entries: m.fields.map((f) => [f.id, 'email']),
+});
 
 describe('failure vocabulary priority: gateway chunk failure beats truncation', () => {
   it('keeps a chunk failure ahead of the truncation notice', async () => {
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
-      .mockResolvedValueOnce({ ok: false, reason: 'auth' });
-    const attempt = await new BackgroundClassifier().attempt(metas(61));
-    expect(attempt.failureReason).toBe('auth');
-    expect(attempt.truncatedCount).toBe(1);
-    expect(attempt.map.size).toBe(1);
+      .mockResolvedValue({ ok: false, reason: 'auth' });
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(61), {});
+    expect(result.failureReason).toBe('auth');
+    expect(llmItem(result, 'f0')).toMatchObject({ cls: { category: 'tel' } });
   });
 
   it('keeps an abort cutoff ahead of the truncation notice', async () => {
     const c = new AbortController();
     c.abort();
-    const attempt = await new BackgroundClassifier().attempt(metas(61), undefined, { signal: c.signal });
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(61), { signal: c.signal });
     expect(send).not.toHaveBeenCalled();
-    expect(attempt.failureReason).toBe('network');
-    expect(attempt.truncatedCount).toBe(1);
+    expect(result.failureReason).toBe('network');
+    expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
   });
 
   it('keeps the first failure when a later chunk would also fail', async () => {
     send
       .mockResolvedValueOnce({ ok: false, reason: 'auth' })
       .mockResolvedValueOnce({ ok: false, reason: 'network' });
-    const attempt = await new BackgroundClassifier().attempt(metas(30));
-    expect(send).toHaveBeenCalledTimes(1);
-    expect(attempt.failureReason).toBe('auth');
-    expect(attempt.map.size).toBe(0);
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(30), {});
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(result.failureReason).toBe('auth');
+    expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
   });
 
   it('reports truncated only when every chunk succeeded', async () => {
-    send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
-      ok: true,
-      entries: m.fields.map((f) => [f.id, 'email']),
-    }));
-    const attempt = await new BackgroundClassifier().attempt(metas(61));
-    expect(attempt.failureReason).toBe('truncated');
-    expect(attempt.truncatedCount).toBe(1);
-    expect(attempt.map.size).toBe(60);
+    send.mockImplementation(echo);
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(61), {});
+    expect(result.failureReason).toBe('truncated');
+    expect(result.items.filter((i) => i.cls.source === 'llm')).toHaveLength(60);
   });
 
   it('folds a reason-less legacy failure into truncated when the cap also drops fields', async () => {
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
-      .mockResolvedValueOnce({ ok: false });
-    const attempt = await new BackgroundClassifier().attempt(metas(61));
-    expect(attempt.failureReason).toBe('truncated');
-    expect(attempt.truncatedCount).toBe(1);
-    expect([...attempt.map]).toEqual([['f0', 'tel']]);
+      .mockResolvedValue({ ok: false });
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(61), {});
+    expect(result.failureReason).toBe('truncated');
+    expect(llmItem(result, 'f0')).toMatchObject({ cls: { category: 'tel' } });
   });
 });
 

@@ -5,6 +5,7 @@ import type { LanguageModelStatic } from '../../src/llm/availability';
 import { handleMessage, type HandlerDeps } from '../../src/llm/handle-message';
 import { ProviderRegistry } from '../../src/llm/provider-registry';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
+import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
 import { parseClassifyResult } from '../../src/messages';
 import { makeMeta } from '../helpers';
 
@@ -148,17 +149,19 @@ vi.stubGlobal('chrome', { runtime: { sendMessage: send } });
 afterEach(() => send.mockReset());
 
 describe('BackgroundClassifier failure reasons', () => {
+  const pending = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, name: `xyz-${i}` }));
   const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, value: 'SECRET' }));
 
   it('keeps earlier chunks and reports the reason on the return value after a reasoned failure', async () => {
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
-      .mockResolvedValueOnce({ ok: false, reason: 'auth' });
+      .mockResolvedValue({ ok: false, reason: 'auth' });
     const classifier = new BackgroundClassifier();
-    const attempt = await classifier.attempt(metas(30));
-    expect([...attempt.map]).toEqual([['f0', 'tel']]);
+    const result = await runClassifyPipeline(classifier, pending(30), {});
+    const kept = result.items.find((i) => i.meta.id === 'f0' && i.cls.source === 'llm');
+    expect(kept).toMatchObject({ cls: { category: 'tel' } });
     expect(send).toHaveBeenCalledTimes(2);
-    expect(attempt.failureReason).toBe('auth');
+    expect(result.failureReason).toBe('auth');
   });
 
   it('reports bad-response for a malformed reply', async () => {

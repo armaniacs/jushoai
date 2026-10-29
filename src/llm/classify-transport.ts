@@ -7,24 +7,30 @@ import {
   parseClassifyResult,
   type ClassifyFailure,
 } from '../messages';
-import { planChunks, scheduleFor } from '../classify-pipeline/chunks';
 import { TRANSFER_CHUNK_TIMEOUT_MS, TRANSFER_TOTAL_TIMEOUT_MS } from './transfer-contract';
+import { sendWithTimeout } from './timed-call';
 
-// 分類転送の単一所有 (PBI-175)。cap/slice/chunk/encode/schedule/clamp/timeout/
-// 失敗語彙のうち転送側の関心事はこのモジュールに集約し、公開入口は send の
-// みとする。chunk 幅・cap・schedule 生成の数値判断は持たず、PBI-174 の
-// classify-pipeline/chunks（planChunks/scheduleFor）を再利用する。
-// gateway（background-gateway.ts）は転送内容を持たず send に委譲するだけの
-// 薄い適合層、pipeline（classify-pipeline/pipeline.ts）は試行の順序と合流だけ
-// を持ち、送信自体は FieldClassifier 縫い目経由でここに流れる。
+// Single owner of the classify transfer wire (PBI-175). The transfer-side
+// concerns — encode, the codec-owned envelope, one bounded round-trip, and the
+// wire failure vocabulary — are aggregated here, and the only public entry is
+// send. The sequential chunk run (cap clamp → split → schedule → failure
+// aggregation) is NOT here: since PBI-193 the pipeline run
+// (runClassifyPipeline, classify-pipeline/pipeline.ts) is the canonical run,
+// and this send is one bounded send over the fields the caller hands in. The
+// seam invariant is that pipeline fields already fit one chunk width; the plan
+// call that kept that invariant lives in the pipeline alone. The gateway
+// (background-gateway.ts) holds no transfer content either: it is the thin
+// adapter that forwards its configuration pair into send.
 
 export interface ClassifySendOptions {
   signal?: AbortSignal;
-  // 分割済み単一転送の位置。複数 chunk 走時は plan に従い scheduleFor を
-  // 付け直すため無視される（gateway 互換: 単一 chunk 走のみ caller 値を運ぶ）。
+  // Chunk position for this one send, passed through to the wire verbatim.
+  // The pipeline hands scheduleFor(i, count) for split runs and undefined for
+  // a single-chunk run, so degenerate runs stay out of the audit log's
+  // scheduling fields (the transport:88-90 passthrough, kept by PBI-193).
   schedule?: ClassifySchedule;
-  // 既定は転送契約値。gateway の構成値（テスト含む）をそのまま流すための
-  // 上書き口で、通常は指定しない。
+  // Defaults are the transfer-contract values. Passthrough for the gateway's
+  // configuration (tests included); normally left unspecified.
   timeoutMs?: number;
   totalTimeoutMs?: number;
 }
@@ -35,86 +41,62 @@ export interface ClassifySendResult {
   truncatedCount: number;
 }
 
-// A stalled Service Worker reply must not leave the caller pending forever.
-// The optional signal links the wait to preview disposal (PBI-33): an abort
-// rejects the in-flight chunk so the loop below stops without sending more.
-function sendWithTimeout(msg: unknown, ms: number, signal?: AbortSignal): Promise<unknown> {
-  return new Promise((resolve, reject) => {
-    if (signal?.aborted) {
-      reject(new Error('aborted'));
-      return;
-    }
-    const timer = setTimeout(() => { cleanup(); reject(new Error('timeout')); }, ms);
-    const onAbort = () => { clearTimeout(timer); cleanup(); reject(new Error('aborted')); };
-    const cleanup = () => signal?.removeEventListener('abort', onAbort);
-    signal?.addEventListener('abort', onAbort, { once: true });
-    (chrome.runtime.sendMessage(msg) as Promise<unknown>).then(
-      (v) => { clearTimeout(timer); cleanup(); resolve(v); },
-      (e) => { clearTimeout(timer); cleanup(); reject(e); },
-    );
-  });
-}
-
-// 唯一の転送入口。fields 全体の転送走（cap 切り詰め＋逐次 chunk 送信）を
-// 1 回で行い、部分結果と停止理由と切り詰め件数を束ねて返す。
-// 失敗語彙の優先順位: 先に起きた chunk 失敗が理由になる（後続の失敗や切り詰め
-// 通知より優先）。切り詰め通知 'truncated' は他に失敗がないときのみ付く。
-// PBI-33: 逐次走全体は totalTimeoutMs で区切り（残 budget が各 chunk 送信を
-// clamp する）、signal（プレビュー破棄）は走の前・途中で止める。いずれの
-// 打ち切りも既得 chunk を保持し 'network' で返す（呼び出し側は rule のみ継続）。
+// The one bounded send (PBI-193): encode the fields the caller hands in, one
+// wire round-trip, and bind the wire failure vocabulary to the result. The run
+// disciplines (first failure wins, the 'truncated' notice only when nothing
+// else failed, an abort keeping what is earned) are owned by
+// runClassifyPipeline — the canonical chunk run this module serves through the
+// FieldClassifier seam.
+//
+// Failure vocabulary of this one send: a rejected round-trip (timeout, abort,
+// disconnect) is 'network', a legacy reason-less failure stays null, a
+// malformed reply is 'bad-response', and a failing provider (401, 429,
+// timeout) reports its reason verbatim.
+//
+// PBI-33: totalTimeoutMs still clamps this send (Math.min(timeoutMs,
+// remaining)), so a send's wall clock stays within the budget the caller
+// configured; the signal stops the send before and during the round-trip.
+// Either cutoff returns 'network' with the map earned so far.
 export async function send(fields: FieldMeta[], opts: ClassifySendOptions = {}): Promise<ClassifySendResult> {
   const signal = opts.signal;
   const timeoutMs = opts.timeoutMs ?? TRANSFER_CHUNK_TIMEOUT_MS;
   const totalTimeoutMs = opts.totalTimeoutMs ?? TRANSFER_TOTAL_TIMEOUT_MS;
-  const startedAt = Date.now();
   const out = new Map<string, Category>();
-  let failureReason: ClassifyFailure | null = null;
-  const plan = planChunks(fields);
-  for (let i = 0; i < plan.chunks.length; i++) {
-    if (signal?.aborted) {
-      failureReason ??= 'network';
-      break;
-    }
-    const remaining = totalTimeoutMs - (Date.now() - startedAt);
-    if (remaining <= 0) {
-      failureReason ??= 'network';
-      break;
-    }
-    const rows = plan.chunks[i]!.map(encodeFieldMeta);
-    // The chunk position rides along only when the run was actually split, so
-    // single-chunk calls stay out of the audit log's scheduling fields.
-    // PBI-54: sent through the ai-classify builder (codec-owned envelope);
-    // rows are MetaWire and the wire type says so.
-    const schedule = plan.chunks.length > 1
-      ? scheduleFor(i + 1, plan.chunks.length)
-      : opts.schedule;
-    let parsed: ReturnType<typeof parseClassifyResult>;
-    let raw: unknown;
-    try {
-      raw = await sendWithTimeout(
-        aiClassifyRequest(rows, schedule),
-        Math.min(timeoutMs, remaining),
-        signal,
-      );
-      parsed = parseClassifyResult(raw);
-    } catch {
-      failureReason = 'network';
-      break;
-    }
-    if (!parsed) {
-      // A legacy reply carries no reason; record unknown instead of crying wolf.
-      failureReason = isLegacyClassifyFailure(raw) ? null : 'bad-response';
-      break;
-    }
-    if (parsed.ok === false) {
-      // A failing provider (401, 429, timeout) would fail every later chunk too.
-      failureReason = parsed.reason;
-      break;
-    }
-    for (const [id, c] of parsed.map) out.set(id, c);
+  // One send never drops fields: the cap/split lives in the pipeline's plan
+  // (PBI-193), so the count is 0 for every outcome below.
+  const truncatedCount = 0;
+  if (fields.length === 0) {
+    return { map: out, failureReason: null, truncatedCount };
   }
-  if (plan.truncatedCount > 0 && failureReason === null) {
-    failureReason = 'truncated';
+  if (signal?.aborted) {
+    return { map: out, failureReason: 'network', truncatedCount };
   }
-  return { map: out, failureReason, truncatedCount: plan.truncatedCount };
+  const startedAt = Date.now();
+  const remaining = totalTimeoutMs - (Date.now() - startedAt);
+  if (remaining <= 0) {
+    return { map: out, failureReason: 'network', truncatedCount };
+  }
+  const rows = fields.map(encodeFieldMeta);
+  // PBI-54: sent through the ai-classify builder (codec-owned envelope);
+  // rows are MetaWire and the wire type says so.
+  let raw: unknown;
+  try {
+    raw = await sendWithTimeout(
+      aiClassifyRequest(rows, opts.schedule),
+      Math.min(timeoutMs, remaining),
+      signal,
+    );
+  } catch {
+    return { map: out, failureReason: 'network', truncatedCount };
+  }
+  const parsed = parseClassifyResult(raw);
+  if (!parsed) {
+    // A legacy reply carries no reason; record unknown instead of crying wolf.
+    return { map: out, failureReason: isLegacyClassifyFailure(raw) ? null : 'bad-response', truncatedCount };
+  }
+  if (parsed.ok === false) {
+    return { map: out, failureReason: parsed.reason, truncatedCount };
+  }
+  for (const [id, c] of parsed.map) out.set(id, c);
+  return { map: out, failureReason: null, truncatedCount };
 }

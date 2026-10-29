@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { parseClassifyResult } from '../../src/messages';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
+import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
 import { makeMeta } from '../helpers';
 
 // Legacy Bridge (fixed): an old background answering `{ok:false}` WITHOUT a
@@ -26,16 +27,18 @@ describe('parseClassifyResult legacy shape (Legacy Bridge Medium)', () => {
 });
 
 describe('BackgroundClassifier legacy failure fidelity (Legacy Bridge Medium)', () => {
+  const pending = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, name: `xyz-${i}` }));
   const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
 
   it('reports null (unknown) for a reason-less {ok:false} reply while keeping earlier chunks', async () => {
     const c = new BackgroundClassifier();
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
-      .mockResolvedValueOnce({ ok: false });
-    const attempt = await c.attempt(metas(30));
-    expect([...attempt.map]).toEqual([['f0', 'tel']]);
-    expect(attempt.failureReason).toBeNull();
+      .mockResolvedValue({ ok: false });
+    const result = await runClassifyPipeline(c, pending(30), {});
+    const kept = result.items.find((i) => i.meta.id === 'f0' && i.cls.source === 'llm');
+    expect(kept).toMatchObject({ cls: { category: 'tel' } });
+    expect(result.failureReason).toBeNull();
   });
 
   it('still reports bad-response for a genuinely malformed reply', async () => {
