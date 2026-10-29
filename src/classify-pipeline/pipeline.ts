@@ -5,7 +5,7 @@ import {
 import { detectKanaKind, resolveKana } from '../core/kana';
 import { applyEnglishPage } from '../core/page-language';
 import { isAllowedRadioCategory } from '../core/radio-policy';
-import { withoutSkipped } from '../core/pending-split';
+import { sendSet } from '../core/pending-split';
 import { prepare, type PremadePass } from '../core/classify-once';
 import type { Category, FieldMeta, Item, RuledField } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
@@ -123,15 +123,13 @@ export async function runClassifyPipeline(
     logRuleOnlyRun(metas.length, startedAt);
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };
   }
-  // PBI-124/154: pending 分割の所有は withoutSkipped。force は全件 (skip
+  // PBI-124/154/185: 送信集合の所有は sendSet。force は全件 (skip
   // 除外)、通常は非 confident のみ。PBI-181: 単経路 — 冒頭で1パスに正規化し、
   // 下流 (pending 選択も merge も) はその pass のみ読む。premade ありなら
-  // 分類を再実行せず、その unconfident 区分に skip を適用するだけ（同一純粋
+  // 分類を再実行せず、その pass から sendSet が集合を決める（同一純粋
   // 関数の同一入力なので集合は等しい）。
   const pass = opts.premade ?? prepare(metas, { taughtKeys: new Set() });
-  const pending = force
-    ? withoutSkipped(metas, opts.llmSkip)
-    : withoutSkipped(pass.unconfident, opts.llmSkip);
+  const pending = sendSet(pass.ruled, { skip: opts.llmSkip, force });
   if (pending.length === 0) {
     logRuleOnlyRun(metas.length, startedAt);
     return { items: classifyRulePipeline(metas, { englishPage }), failureReason: null };

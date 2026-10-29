@@ -630,8 +630,11 @@ export const TEXT_TO_CATEGORY_STAGES = [
 export interface RulePipelineTrace {
   // The pipeline's final items (englishPage applied when requested).
   items: Item[];
-  // Non-confident fields from the initial classification (the LLM fallback set).
-  pending: FieldMeta[];
+  // Non-confident fields from the initial classification (the LLM fallback
+  // set, PBI-185: renamed from `pending` — the trace value is pre-skip,
+  // pre-refine and non-force, while the actual send set is post-skip and
+  // force-aware, so the shared name hid the gap; sendSet owns the send set).
+  initialUnconfident: FieldMeta[];
   // Fields whose category changed during the sibling refine step.
   refineChanged: number;
   // Fields the refine dropped (oversized ambiguous groups).
@@ -641,12 +644,14 @@ export interface RulePipelineTrace {
 // Trace-bearing single implementation of the canonical composition
 // (classify → resolveKana → refine → englishPage): classifyRulePipeline (the
 // production entrance) and the eval (src/eval/metrics.ts) share this one
-// composition, and the trace carries the intermediate values (pending, the
-// refine retag/drop counts) the eval reads — the eval's former hand-rolled
-// copy of the composition is replaced (PBI-145). pending is the initial
-// classification's non-confident fields, before resolveKana and refine (the
-// LLM fallback set). refineChanged / refineDropped count the refine step's
-// retags and drops and do not depend on englishPage.
+// composition, and the trace carries the intermediate values (the initial
+// non-confident list, the refine retag/drop counts) the eval reads — the
+// eval's former hand-rolled copy of the composition is replaced (PBI-145).
+// initialUnconfident is the initial classification's non-confident fields,
+// before resolveKana and refine, without any skip filter and without force
+// (PBI-185: the pre-skip/pre-refine/non-force definition, distinct from the
+// sendSet-owned send set). refineChanged / refineDropped count the refine
+// step's retags and drops and do not depend on englishPage.
 export function classifyRulePipelineWithTrace(
   metas: FieldMeta[],
   opts: { englishPage?: boolean } = {},
@@ -655,7 +660,7 @@ export function classifyRulePipelineWithTrace(
     meta,
     cls: classifyField(meta) ?? { category: 'unknown', confidence: 0, source: 'rule' as const },
   }));
-  const pending = started.filter((r) => !isConfident(r.cls)).map((r) => r.meta);
+  const initialUnconfident = started.filter((r) => !isConfident(r.cls)).map((r) => r.meta);
   const resolved = resolveKana(started);
   const refined = refineClassifications(resolved);
   const before = new Map(resolved.map((i) => [i.meta.id, i.cls.category]));
@@ -663,7 +668,7 @@ export function classifyRulePipelineWithTrace(
   const items = opts.englishPage === true ? applyEnglishPage(refined) : refined;
   return {
     items,
-    pending,
+    initialUnconfident,
     refineChanged: refined.filter((i) => before.get(i.meta.id) !== i.cls.category).length,
     refineDropped: resolved.filter((i) => !afterIds.has(i.meta.id)).length,
   };
