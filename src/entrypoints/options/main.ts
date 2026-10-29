@@ -26,9 +26,10 @@ import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import {
-  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+  addressErrorsFor, profileErrorsFor, trialToastText,
 } from './save-guide';
 import { createGuideController } from './guide-controller';
+import { ADDRESS_SPEC, PROFILE_SPEC, saveSide } from './save-side';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -339,87 +340,35 @@ const goProfiles = (): void => setActivePage(PROFILES_SECTION_ID);
 const goAddresses = (): void => setActivePage(ADDRESSES_SECTION_ID);
 
 async function onSaveProfiles() {
-  const profiles = state.profiles.map(normalizeProfile);
-  const errors = profileErrorsFor(profiles);
-  if (profiles.length === 0) {
-    showFloatError(['プロファイルを1件以上登録してください'], {
-      label: '架空の名前を作って試す', onClick: () => { void onTrialSaveProfile(); },
-    });
-    render();
-    return;
-  }
-  if (errors.length > 0) {
-    showFloatError(errors);
-    render();
-    return;
-  }
-  state = { profiles, addresses: state.addresses };
-  let storedAddresses = state.addresses;
-  try {
-    const latest = await loadData();
-    storedAddresses = latest.addresses;
-  } catch {
-    storedAddresses = state.addresses;
-  }
-  try {
-    await saveData({ profiles, addresses: storedAddresses });
-  } catch (e) {
-    console.warn('[JushoAI] save failed', e);
-    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
-    render();
-    return;
-  }
-  if (hasValidAddress(state.addresses.map(normalizeAddress))) {
-    showFloatToast(['保存しました']);
-    render();
-    return;
-  }
-  showFloatToast(['保存しました。次は住所を入力してください'], {
-    label: '住所を入力する', onClick: goAddresses,
+  await saveSide(PROFILE_SPEC, {
+    getState: () => state,
+    setState: (next) => { state = next; },
+    loadData,
+    saveData,
+    ui: {
+      showError: (messages, action) => showFloatError(messages, action),
+      showToast: (messages, action) => showFloatToast(messages, action),
+      render,
+      onTrial: () => { void onTrialSaveProfile(); },
+      goOther: goAddresses,
+    },
   });
-  render();
 }
 
 async function onSaveAddresses() {
-  const addresses = state.addresses.map(normalizeAddress);
-  const errors = addressErrorsFor(addresses);
-  if (addresses.length === 0) {
-    showFloatError(['住所を1件以上登録してください'], {
-      label: '架空の住所を作って試す', onClick: () => { void onTrialSaveAddress(); },
-    });
-    render();
-    return;
-  }
-  if (errors.length > 0) {
-    showFloatError(errors);
-    render();
-    return;
-  }
-  state = { profiles: state.profiles, addresses };
-  let storedProfiles = state.profiles;
-  try {
-    const latest = await loadData();
-    storedProfiles = latest.profiles;
-  } catch {
-    storedProfiles = state.profiles;
-  }
-  try {
-    await saveData({ profiles: storedProfiles, addresses });
-  } catch (e) {
-    console.warn('[JushoAI] save failed', e);
-    showFloatError(['保存に失敗しました。容量不足の可能性があります。']);
-    render();
-    return;
-  }
-  if (hasValidProfile(state.profiles.map(normalizeProfile))) {
-    showFloatToast(['保存しました']);
-    render();
-    return;
-  }
-  showFloatToast(['保存しました。次はプロファイルを入力してください'], {
-    label: 'プロファイルを入力する', onClick: goProfiles,
+  await saveSide(ADDRESS_SPEC, {
+    getState: () => state,
+    setState: (next) => { state = next; },
+    loadData,
+    saveData,
+    ui: {
+      showError: (messages, action) => showFloatError(messages, action),
+      showToast: (messages, action) => showFloatToast(messages, action),
+      render,
+      onTrial: () => { void onTrialSaveAddress(); },
+      goOther: goProfiles,
+    },
   });
-  render();
 }
 
 // Read storage again and redraw. Used at boot and after an import rewrites
