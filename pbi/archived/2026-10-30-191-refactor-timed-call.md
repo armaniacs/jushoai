@@ -20,10 +20,10 @@ Scenario: abort は timer より先に返る
   Then timer が破棄され aborted Error で reject される（listener 残留なし）
 
 ## 受け入れ基準
-- [ ] timed-call 1 module が timeout+abort+cleanup を所有する
-- [ ] classify-transport と background-gateway の逐語複製が削除され、双方その module を通る
-- [ ] gateway の deprecated 再export（CLASSIFY_TIMEOUT_MS 等、テスト import 含む）と 4 timeout 既定（5/30/120/10s）は維持
-- [ ] `make check` が緑（cleanup 後 timer 0 件の既存 pin 含む）
+- [x] timed-call 1 module が timeout+abort+cleanup を所有する
+- [x] classify-transport と background-gateway の逐語複製が削除され、双方その module を通る
+- [x] gateway の deprecated 再export（CLASSIFY_TIMEOUT_MS 等、テスト import 含む）と 4 timeout 既定（5/30/120/10s）は維持
+- [x] `make check` が緑（cleanup 後 timer 0 件の既存 pin 含む）
 
 ## テスト戦略
 - 単体: tests/llm/background-gateway.test.ts の既存 pin（stall reply・cleanup）が成立すること
@@ -41,6 +41,6 @@ Scenario: abort は timer より先に返る
 - fetch 版は finally が fetch 往復のみ、DoH 版は res.json() まで覆う＝統一すると timeout のカバー範囲が変わるため対象外
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

@@ -20,11 +20,11 @@ Scenario: carryover はどこにも出ない
   Then carryover がどこにも現れない（単体テストで pin）
 
 ## 受け入れ基準
-- [ ] 1 所有者（src/content/tab-scope.ts）に set/merge/consume/peek が集まる
-- [ ] activeGuest は run 開始時 snapshot の意味を保つ（最新値参照に変えない）
-- [ ] FillFlowEnv 契約（recordCarryover の位置・順序）は不変
-- [ ] 「storage に出ない」規律を単体テストで pin
-- [ ] `make check` が緑
+- [x] 1 所有者（src/content/tab-scope.ts）に set/merge/consume/peek が集まる
+- [x] activeGuest は run 開始時 snapshot の意味を保つ（最新値参照に変えない）
+- [x] FillFlowEnv 契約（recordCarryover の位置・順序）は不変
+- [x] 「storage に出ない」規律を単体テストで pin
+- [x] `make check` が緑
 
 ## テスト戦略
 - 単体: 所有者オブジェクトの set/merge/consume/peek を pin（content.ts は defineContentScript 内で単体 import 不能のため src/content/ に切り出す）
@@ -41,6 +41,6 @@ Scenario: carryover はどこにも出ない
 - carryover は fill-one と run の両方から () => 参照する。オブジェクト化時に getter 経由で取得タイミングを変えない
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

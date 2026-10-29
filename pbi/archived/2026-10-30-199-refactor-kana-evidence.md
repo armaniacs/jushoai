@@ -20,10 +20,10 @@ Scenario: 証拠源泉ごとの合成規律が名前を持つ
   Then 否決条項の有無が名前のある分岐になり、非対称が文書化される
 
 ## 受け入れ基準
-- [ ] 源泉別判定（placeholder/own-text/legend/pattern）が 1 module に置かれる
-- [ ] 2 述語は証拠 module の合成になり、否決条項の有無が名前のある分岐になる
-- [ ] 挙動不変（kana-memoize テストの s1=legend 抑制・s2=own 付与 pin どおり）
-- [ ] `make check` が緑
+- [x] 源泉別判定（placeholder/own-text/legend/pattern）が 1 module に置かれる
+- [x] 2 述語は証拠 module の合成になり、否決条項の有無が名前のある分岐になる
+- [x] 挙動不変（kana-memoize テストの s1=legend 抑制・s2=own 付与 pin どおり）
+- [x] `make check` が緑
 
 ## テスト戦略
 - 単体: kana-memoize.test.ts の混在フォーム pin（category+kanaKind）が成立すること
@@ -40,6 +40,6 @@ Scenario: 証拠源泉ごとの合成規律が名前を持つ
 - kana-memoize テストの回数 lock（wantsKana 1 回/欄）は classifyField 経路のメモ契約なので、呼ばれ方を変えない
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

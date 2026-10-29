@@ -20,9 +20,9 @@ Scenario: 非 blank の第1カードは fork せず blank 欄だけ埋める
   Then in-place 修復で blank 欄だけが埋まる（現行 3 関数と新 1 関数の parity 単体で pin）
 
 ## 受け入れ基準
-- [ ] 1 関数に束ねられ、片側/両側の差が引数になる（3 重複削除）
-- [ ] 配列差し替えの差（空リスト時 1 枚構築 vs 先頭挿入）が現行どおり
-- [ ] prefecture 不一致（ADDRESS_BLANK_KEYS に prefecture が無いが trial は埋める）は現状維持（コメント記録のまま・別 PBI）
+- [x] 1 関数に束ねられ、片側/両側の差が引数になる（3 重複削除）
+- [x] 配列差し替えの差（空リスト時 1 枚構築 vs 先頭挿入）が現行どおり
+- [x] prefecture 不一致（ADDRESS_BLANK_KEYS に prefecture が無いが trial は埋める）は現状維持（コメント記録のまま・別 PBI）
 - [ ] e2e 4 本（trial toast 文言・card 数 1 含む）と `make check` が緑
 
 ## テスト戦略
@@ -40,6 +40,6 @@ Scenario: 非 blank の第1カードは fork せず blank 欄だけ埋める
 - 空リスト時の 1 枚構築 vs 先頭挿入の差し替え差を一律にすると、e2e 'recovers through trial after deleting the last profile' の 0 枚復帰で card 2 枚化・toast 文言変化が起きて落ちる（最大の落とし穴）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

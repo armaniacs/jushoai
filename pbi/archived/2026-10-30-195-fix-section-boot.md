@@ -20,11 +20,11 @@ Scenario: mapping も同じ骨格を通る
   Then 同一の boot 骨格から通知が出る
 
 ## 受け入れ基準
-- [ ] list section の boot 骨格（load→render→失敗通知）が 1 所有者に集約される
-- [ ] exclusion/mapping で load 失敗時に通知が出る（tests/options/ に reject stub で新規固定）
-- [ ] 既有の保存失敗時 entries 保持と audit 現行文言（「ログを読み込めませんでした。」）は不変
-- [ ] mapping の remove 時 `void deps.save(entries)`（catch なし）も後始末される
-- [ ] `make check` が緑
+- [x] list section の boot 骨格（load→render→失敗通知）が 1 所有者に集約される
+- [x] exclusion/mapping で load 失敗時に通知が出る（tests/options/ に reject stub で新規固定）
+- [x] 既有の保存失敗時 entries 保持と audit 現行文言（「ログを読み込めませんでした。」）は不変
+- [x] mapping の remove 時 `void deps.save(entries)`（catch なし）も後始末される
+- [x] `make check` が緑
 
 ## テスト戦略
 - 単体: load 失敗は tests/options/ に reject stub で新規固定（現状 load 失敗テスト不在のため）
@@ -43,6 +43,6 @@ Scenario: mapping も同じ骨格を通る
 - exclusion テストは「load 解決後の render」に依存するため、boot 骨格を同期 render にしない
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

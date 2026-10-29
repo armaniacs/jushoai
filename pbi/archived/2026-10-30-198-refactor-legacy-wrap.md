@@ -15,10 +15,10 @@ Scenario: 正規化は pipeline 境界で 1 回だけ
   Then 正規化は pipeline 境界で 1 回だけ走り、結果は同値
 
 ## 受け入れ基準
-- [ ] analyze.ts の wrap と import が削除される（classifyAll は素の classifier を渡す）
-- [ ] runClassifyPipeline の wrap は正規化点として残る
-- [ ] withLegacyThrowFallback のテスト pin（classify-pipeline テストの legacy fake 経路）が緑
-- [ ] `make check` が緑（typecheck の未使用 import 含む）
+- [x] analyze.ts の wrap と import が削除される（classifyAll は素の classifier を渡す）
+- [x] runClassifyPipeline の wrap は正規化点として残る
+- [x] withLegacyThrowFallback のテスト pin（classify-pipeline テストの legacy fake 経路）が緑
+- [x] `make check` が緑（typecheck の未使用 import 含む）
 
 ## テスト戦略
 - 単体: classify-only fake が pipeline 境界で正規化される既存 pin が成立すること
@@ -35,6 +35,6 @@ Scenario: 正規化は pipeline 境界で 1 回だけ
 - pipeline 側の wrap は絶対に消さない（content-session 直行経路が legacy fake を渡す可能性を含む）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

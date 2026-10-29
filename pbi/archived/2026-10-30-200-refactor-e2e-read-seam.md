@@ -20,9 +20,9 @@ Scenario: scenarios は生CSSを書かない
   Then 意図 named の harness ヘルパーで読め、生CSS（.wrap 含む）の直書きが不要である
 
 ## 受け入れ基準
-- [ ] host 走査＋待ちポリシーが harness の 1 seam に置かれる
-- [ ] セレクタ辞書が harness 側に集まり、scenarios の生CSS直書き（.wrap 再実装 2 か所含む）が消える
-- [ ] reportButton の catch→null（clean-apply 判定）は不変
+- [x] host 走査＋待ちポリシーが harness の 1 seam に置かれる
+- [x] セレクタ辞書が harness 側に集まり、scenarios の生CSS直書き（.wrap 再実装 2 か所含む）が消える
+- [x] reportButton の catch→null（clean-apply 判定）は不変
 - [ ] 両ブラウザ e2e が緑（実行できる環境の場合）
 
 ## テスト戦略
@@ -40,6 +40,6 @@ Scenario: scenarios は生CSSを書かない
 - ユニットは赤にならない壊れ方をするため、実ブラウザ e2e の実行が必須
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

@@ -15,10 +15,10 @@ Scenario: kanaKind は resolveKana 接尾ルールから 1 回だけ付く
   Then kanaKind は接尾ルールから付与され、merge 分岐の付与は存在しない
 
 ## 受け入れ基準
-- [ ] mergeClassified の kanaKind 付与（category.endsWith('Kana') → detectKanaKind）が削除される
-- [ ] kana.ts の stale コメント（「mirroring analyze.ts's」）の参照先が pipeline に是正される
-- [ ] mergeClassified の resolveKana 呼び出しは残る（カナ flip 自体の所有）
-- [ ] 既有テスト（kana-blind、fill-one、classify-pipeline）と `make check` が緑
+- [x] mergeClassified の kanaKind 付与（category.endsWith('Kana') → detectKanaKind）が削除される
+- [x] kana.ts の stale コメント（「mirroring analyze.ts's」）の参照先が pipeline に是正される
+- [x] mergeClassified の resolveKana 呼び出しは残る（カナ flip 自体の所有）
+- [x] 既有テスト（kana-blind、fill-one、classify-pipeline）と `make check` が緑
 
 ## テスト戦略
 - 単体: LLM 直返しカナ category の kanaKind が resolveKana 接尾ルールで付くことを pin（merge 直後の形状を pin する既存テストは無いため追加）
@@ -34,6 +34,6 @@ Scenario: kanaKind は resolveKana 接尾ルールから 1 回だけ付く
 - 削除後も mergeClassified の resolveKana 呼び出しを外すと kanaKind だけでなくカナ flip 自体が消え、fill-one テストが落ちる（最大の落とし穴）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

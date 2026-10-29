@@ -20,11 +20,11 @@ Scenario: unknown error の写像が経路別に明示される
   Then classify は bad-response、test は network（対応表 1 行・テスト pin 済み）
 
 ## 受け入れ基準
-- [ ] auth 記帳が 1 箇所の折り畳みになる（3 箇所削除）
-- [ ] record は instanceof HttpAuthError 判定のまま（reason 文字列判定にしない）
-- [ ] test() 非対称の写像が対応表 1 行になり、テストで pin される（現状未固定）
-- [ ] select の ignoreAuthFailure（dial 前 'auth'・record なし）と test() 成功時の clear は不変
-- [ ] `make check` が緑（classify 401→auth+record+status auth-error+invalidate の既存 pin 含む）
+- [x] auth 記帳が 1 箇所の折り畳みになる（3 箇所削除）
+- [x] record は instanceof HttpAuthError 判定のまま（reason 文字列判定にしない）
+- [x] test() 非対称の写像が対応表 1 行になり、テストで pin される（現状未固定）
+- [x] select の ignoreAuthFailure（dial 前 'auth'・record なし）と test() 成功時の clear は不変
+- [x] `make check` が緑（classify 401→auth+record+status auth-error+invalidate の既存 pin 含む）
 
 ## テスト戦略
 - 単体: tests/llm/provider-registry.test.ts に test() 経路の unknown→network ケースを追加して pin
@@ -42,6 +42,6 @@ Scenario: unknown error の写像が経路別に明示される
 - 'rejected'（400/422）と compat 再試行条件の同値共有は触らない
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

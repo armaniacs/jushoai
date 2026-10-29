@@ -20,11 +20,11 @@ Scenario: もう一方の層は走を持たない
   Then 有界 1 回の送信だけを見て、走の規律を再実装しない
 
 ## 受け入れ基準
-- [ ] 走の所有が 1 層に寄せられる（方向: pipeline 走を canonical とし、transport は有界 1 回の送信に畳む）
-- [ ] 失敗集約規律（初回失敗優先・truncated 最後・signal 打ち切り）が 1 か所になる
-- [ ] 1 chunk 退化時の caller schedule 通過（transport:88-90）が不変
-- [ ] テスト 3 重（classify-pipeline / classify-transport / background-gateway）が統合される
-- [ ] `make check` が緑
+- [x] 走の所有が 1 層に寄せられる（方向: pipeline 走を canonical とし、transport は有界 1 回の送信に畳む）
+- [x] 失敗集約規律（初回失敗優先・truncated 最後・signal 打ち切り）が 1 か所になる
+- [x] 1 chunk 退化時の caller schedule 通過（transport:88-90）が不変
+- [x] テスト 3 重（classify-pipeline / classify-transport / background-gateway）が統合される
+- [x] `make check` が緑
 
 ## テスト戦略
 - 単体: pipeline テストの schedule handoff（single-chunk=undefined 含む）と tel trio の合流後 refine が成立すること
@@ -43,6 +43,6 @@ Scenario: もう一方の層は走を持たない
 - single-chunk で chunk キー省略（background-gateway テスト pin）と「分割時のみ schedule」の 2 規律が潰れないように
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

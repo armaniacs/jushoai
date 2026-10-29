@@ -20,10 +20,10 @@ Scenario: round-trip が保たれる
   Then 既存テストの期待値どおりに復元される
 
 ## 受け入れ基準
-- [ ] decodeRequestResult の単純5型が表走査 1 アームになる
-- [ ] ai-classify 特殊 arm（fields 配列検証・oversize・chunk parse）は残る
-- [ ] encodeRequest も表駆動に寄せる（ai-classify の fields 刻印は維持）
-- [ ] `make check` が緑（extra key→malformed、legacy v 無し許容、chunk sanity の既存 pin 含む）
+- [x] decodeRequestResult の単純5型が表走査 1 アームになる
+- [x] ai-classify 特殊 arm（fields 配列検証・oversize・chunk parse）は残る
+- [x] encodeRequest も表駆動に寄せる（ai-classify の fields 刻印は維持）
+- [x] `make check` が緑（extra key→malformed、legacy v 無し許容、chunk sanity の既存 pin 含む）
 
 ## テスト戦略
 - 単体: tests/messages.test.ts の既存 pin がそのまま成立すること
@@ -42,6 +42,6 @@ Scenario: round-trip が保たれる
 - hasOnlyKeys は keys.length 比較なので、v を除く filter を忘れると legacy 無印リクエストが全滅する（最大の落とし穴）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み

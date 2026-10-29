@@ -1,22 +1,43 @@
 # PBI 台帳インデックス
 
-## 進行中（archラウンド5・2026-10-30・13件PBI化・実装進行中）
+## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 
-- `2026-10-30-00-backlog-arch-round5.md`（ラウンド4適用後の新規摩擦13候補のPBI化・RICE順位確定。ラウンド進行中）
-- `2026-10-30-190-refactor-decode-table.md`（順位 1。decodeをREQUEST_WIRE_KEYS表駆動に）
-- `2026-10-30-191-refactor-timed-call.md`（順位 2。有界非同期呼び出しの単一所有）
-- `2026-10-30-192-refactor-registry-outcome.md`（順位 3。試行→応答の折り畳みをregistry内1moduleに）
-- `2026-10-30-193-refactor-chunk-run-owner.md`（順位 4。逐次チャンク走の二重所有解消。191の後）
-- `2026-10-30-194-refactor-trial-apply.md`（順位 5。試用サンプル適用のwith*トリオ1関数化）
-- `2026-10-30-195-fix-section-boot.md`（順位 6。options list sectionのboot骨格集約・実在のunhandled rejection修正）
-- `2026-10-30-196-refactor-guide-nav-sync.md`（順位 7。ガイド同期トリガーのnav一方向化）
-- `2026-10-30-197-refactor-kanakind-owner.md`（順位 8。kanaKind付与の第2所有削除）
-- `2026-10-30-198-refactor-legacy-wrap.md`（順位 9。withLegacyThrowFallback二重適用の単一化）
-- `2026-10-30-199-refactor-kana-evidence.md`（順位 10。カナ証拠判定の証拠module化）
-- `2026-10-30-200-refactor-e2e-read-seam.md`（順位 11。e2e harnessのclosed-shadow読み取りseam）
-- `2026-10-30-201-refactor-tab-scope-memory.md`（順位 12。タブスコープメモリの所有者集約）
+- `archived/2026-10-30-00-backlog-arch-round5.md`は進行中（残置1件の202が紐づくため未アーカイブ）。ラウンド4適用後の新規摩擦13候補のPBI化・RICE順位確定
+- `archived/2026-10-30-190-refactor-decode-table.md`（順位 1。decodeをREQUEST_WIRE_KEYS表駆動に。cc4e93e）
+- `archived/2026-10-30-191-refactor-timed-call.md`（順位 2。有界非同期呼び出しをtimed-callに抽出。bd7282d）
+- `archived/2026-10-30-192-refactor-registry-outcome.md`（順位 3。試行→応答の折り畳みをauthFailureに集約しtest()非対称を対応表化。86b233a）
+- `archived/2026-10-30-193-refactor-chunk-run-owner.md`（順位 4。チャンク走をpipeline走に寄せtransportを有界1回の送信に。bd7282d）
+- `archived/2026-10-30-194-refactor-trial-apply.md`（順位 5。with*トリオをwithTrialSample 1関数に統一。2fb0e2a）
+- `archived/2026-10-30-195-fix-section-boot.md`（順位 6。list sectionのboot骨格をlist-bootに集約し読み込み失敗時に通知。40d98a8）
+- `archived/2026-10-30-196-refactor-guide-nav-sync.md`（順位 7。ガイド同期トリガーをnav経由に一方向化。a2a5611）
+- `archived/2026-10-30-197-refactor-kanakind-owner.md`（順位 8。kanaKind付与をresolveKanaに単一化。72a6c13）
+- `archived/2026-10-30-198-refactor-legacy-wrap.md`（順位 9。withLegacyThrowFallbackをpipeline境界に単一化。217a0a2）
+- `archived/2026-10-30-199-refactor-kana-evidence.md`（順位 10。カナ証拠判定をevidence moduleに集約。946ed08）
+- `archived/2026-10-30-200-refactor-e2e-read-seam.md`（順位 11。closed-shadow読み取りseamとセレクタ辞書をharnessに集約。38603f8）
+- `archived/2026-10-30-201-refactor-tab-scope-memory.md`（順位 12。タブスコープメモリをtab-scope 1所有者に集約。be4bf73）
+
+ラウンド5進行中（残置）:
 - `2026-10-30-202-backlog-tab-send-seam.md`（順位 13。Speculative・残置。次のタブ宛てアクション追加時に着手段階を確認）
-- `2026-10-29-168-feat-nav-count-badges.md`（前セッション断片。設定ナビに登録件数を表示・実装予定）
+- `2026-10-30-00-backlog-arch-round5.md`（ラウンド台帳。202の残置判断が確定したらアーカイブ）
+
+ラウンド5実施前の残務（autonomous-task-closerで実装・検証済み）:
+- `archived/2026-10-29-168-feat-nav-count-badges.md`（前セッション断片。設定ナビに登録件数を表示。a2a5611）
+
+## 進行中からアーカイブ済み（2026-10-30・autonomous-task-closerで実装・検証済み・`make check` green）
+
+- `archived/2026-10-28-161-fix-options-save-split.md`（設定画面の保存分離。実装 commit 37504cc/0a2fbf0）
+- `archived/2026-10-28-162-feat-firstime-sample-data.md`（初回サンプルデータ。実装 commit 5a12dbd/5c02907/bc49133）
+- `archived/2026-10-28-163-fix-profile-delete-last.md`（最終プロファイル削除許可。実装 commit d13bf10）
+- `archived/2026-10-29-164-feat-e2e-options-save-trial.md`（E2E 3件追加。実装 commit fced0f6。e2e実行はユーザー作業）
+- `archived/2026-10-29-165-feat-float-notice-layer.md`（float通知レイヤ。実装 commit 58e9743/9296bd6/9a2a871）
+- `archived/2026-10-29-166-feat-float-guide-autosave.md`（ガイド即時保存。実装 commit 2195ce1）
+- `archived/2026-10-29-167-feat-per-side-trial-guide.md`（片側trialガイド。実装 commit 614b648/f175bd0）
+
+## 進行中（118のみ・残1件）
+
+（118 は対象URL確定がユーザー作業、129 は着手条件未到来で backlog 残置）
+
+- `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
 
 ## 進行中からアーカイブ済み（archラウンド4・2026-10-30に9件実装・検証済み。コードレビューはユーザー作業）
 

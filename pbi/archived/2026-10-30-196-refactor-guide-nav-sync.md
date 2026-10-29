@@ -20,10 +20,10 @@ Scenario: 所有者経由の同期が 1 本
   Then ガイド同期が遷移の所有者経由で 1 回走る（main.ts の手動リスナーなし）
 
 ## 受け入れ基準
-- [ ] main.ts の手動リスナー 2 つ（nav click・hashchange）と順序コメントが消える
-- [ ] nav 遷移の所有者がガイド同期を発火する（コールバック注入で循環 import を回避）
-- [ ] render 内 sync は float ガイドの表示復元のため残る
-- [ ] guide-visibility テストが緑、`make check` が緑
+- [x] main.ts の手動リスナー 2 つ（nav click・hashchange）と順序コメントが消える
+- [x] nav 遷移の所有者がガイド同期を発火する（コールバック注入で循環 import を回避）
+- [x] render 内 sync は float ガイドの表示復元のため残る
+- [x] guide-visibility テストが緑、`make check` が緑
 
 ## テスト戦略
 - 単体: setActivePage で onNavigate コールバックが 1 回走ることを pin
@@ -40,6 +40,6 @@ Scenario: 所有者経由の同期が 1 本
 - nav.ts→guide-controller の直接 import による循環で jsdom の初期化順が崩れ、guide-visibility テストが落ちる（最大の落とし穴）。回避はコールバック注入
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
+- [x] 全BDDシナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み
