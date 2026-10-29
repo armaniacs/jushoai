@@ -20,11 +20,20 @@ export interface ImportTargetIds {
 const PROFILE_BLANK_KEYS = OPTIONS_PROFILE_FIELDS.map((f) => f.key);
 const ADDRESS_BLANK_KEYS = OPTIONS_ADDRESS_FIELDS.filter((f) => f.key !== 'label').map((f) => f.key);
 
+// Single reference for blankness (PBI-182): the trial fill reuses these keys
+// instead of hand-written arrays. Note the prefecture divergence, kept as-is
+// pending spec confirmation (do NOT unify by guess): OPTIONS_ADDRESS_FIELDS
+// already drops the prefecture select row, so ADDRESS_BLANK_KEYS omits
+// prefecture, while the trial fill still covers prefecture (see main.ts).
+export { PROFILE_BLANK_KEYS, ADDRESS_BLANK_KEYS };
+
 const isBlankProfile = (p: Profile): boolean =>
   PROFILE_BLANK_KEYS.every((key) => (p[key] ?? '').trim() === '');
 
 const isBlankAddress = (a: Address): boolean =>
   ADDRESS_BLANK_KEYS.every((key) => (a[key] ?? '').trim() === '');
+
+export { isBlankProfile, isBlankAddress };
 
 export function selectImportTargets(
   profiles: readonly Profile[],

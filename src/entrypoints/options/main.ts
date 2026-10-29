@@ -7,14 +7,11 @@ import {
 } from '../../core/field-catalog';
 import { PREFECTURES } from '../../core/prefectures';
 import { makeSampleAddress, makeSampleProfile } from '../../core/sample-data';
-import {
-  normalizeAddress, normalizeProfile,
-} from '../../core/profile';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
-import { selectImportTargets } from '../../core/import-targets';
+import { ADDRESS_BLANK_KEYS, PROFILE_BLANK_KEYS, selectImportTargets } from '../../core/import-targets';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import { post } from './notice-center';
@@ -23,11 +20,8 @@ import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
 import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
-import {
-  addressErrorsFor, profileErrorsFor, trialToastText,
-} from './save-guide';
 import { createGuideController } from './guide-controller';
-import { ADDRESS_SPEC, PROFILE_SPEC, saveSide } from './save-side';
+import { ADDRESS_SPEC, PROFILE_SPEC, saveBoth, saveSide } from './save-side';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -215,73 +209,120 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
   return page;
 }
 
-function fillTrialProfile(): void {
-  const sampleP = makeSampleProfile();
-  let first = state.profiles[0];
-  if (!first) {
-    first = { ...EMPTY_PROFILE, id: newId() };
-    state.profiles.push(first);
-  }
-  for (const k of Object.keys(sampleP) as (keyof typeof sampleP)[]) {
-    if ((first[k] ?? '').trim() === '' && sampleP[k] !== '') {
-      (first[k] as string) = sampleP[k];
+// Trial fill is pure (PBI-182): blank-only application of the sample onto a
+// card. The previous void-mutate version wrote into state directly; the
+// caller now merges the returned card. The filled keys are the single-sourced
+// BLANK_KEYS shared with the page import (import-targets.ts), plus the
+// documented extras below. Unlike the import, a non-blank first card is
+// filled in place, never forked: forking would leave the old invalid card
+// behind and the trial validation could never pass.
+// prefecture注記: ADDRESS_BLANK_KEYS は OPTIONS_ADDRESS_FIELDS由来で
+// prefecture(select行)を含まないが、trial は従来どおり prefecture の空欄も
+// sample で埋める。import側との不一致であり、仕様確認までは現状維持する
+// (推測で統一しない)。
+function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): Profile {
+  const next = { ...base };
+  for (const key of PROFILE_BLANK_KEYS) {
+    if ((next[key] ?? '').trim() === '' && (sample[key] ?? '') !== '') {
+      next[key] = sample[key];
     }
   }
+  // label/gender は BLANK_KEYS外(id/label/genderは表示行でないため)。trial
+  // sample は label/gender を持つので、従来どおり空欄のみ埋める。
+  if (next.label.trim() === '' && sample.label !== '') next.label = sample.label;
+  if (next.gender.trim() === '' && sample.gender !== '') next.gender = sample.gender;
+  return next;
 }
 
-function fillTrialAddress(): void {
-  const sampleA = makeSampleAddress();
-  let firstAddress = state.addresses[0];
-  if (!firstAddress) {
-    firstAddress = { ...EMPTY_ADDRESS, id: newId(), label: '自宅' };
-    state.addresses.push(firstAddress);
-  }
-  if (firstAddress.label.trim() === '') firstAddress.label = '自宅';
-  for (const k of (['zip', 'prefecture', 'city', 'street', 'building'] as const)) {
-    if ((firstAddress[k] ?? '').trim() === '' && sampleA[k] !== '') {
-      firstAddress[k] = sampleA[k];
+function applyTrialSampleToAddress(base: Address, sample: Omit<Address, 'id' | 'profileId'>): Address {
+  const next = { ...base };
+  for (const key of ADDRESS_BLANK_KEYS) {
+    if ((next[key] ?? '').trim() === '' && (sample[key] ?? '') !== '') {
+      next[key] = sample[key];
     }
   }
+  // prefecture は ADDRESS_BLANK_KEYS外(上記注記)。trial は従来どおり空欄のみ埋める。
+  if (next.prefecture.trim() === '' && sample.prefecture !== '') next.prefecture = sample.prefecture;
+  if (next.label.trim() === '') next.label = '自宅';
+  return next;
+}
+
+// Card ensuring goes through selectImportTargets (PBI-182): the blank flags
+// and the fresh-card construction (EMPTY + new id + default label) are the
+// same as the page import. The merge always repairs the first card instead of
+// forking (see above).
+function withTrialProfile(
+  current: StoredData, sample: Omit<Profile, 'id'>, ids: { profileId: string; addressId: string },
+): StoredData {
+  const targets = selectImportTargets(current.profiles, current.addresses, ids);
+  const base = targets.blankProfile ? targets.target : current.profiles[0]!;
+  const filled = applyTrialSampleToProfile(base, sample);
+  return {
+    profiles: current.profiles.length === 0 ? [filled] : [filled, ...current.profiles.slice(1)],
+    addresses: current.addresses,
+  };
+}
+
+function withTrialAddress(
+  current: StoredData, sample: Omit<Address, 'id' | 'profileId'>, ids: { profileId: string; addressId: string },
+): StoredData {
+  const targets = selectImportTargets(current.profiles, current.addresses, ids);
+  const base = targets.blankAddress ? targets.targetAddress : current.addresses[0]!;
+  const filled = applyTrialSampleToAddress(base, sample);
+  return {
+    profiles: current.profiles,
+    addresses: current.addresses.length === 0 ? [filled] : [filled, ...current.addresses.slice(1)],
+  };
+}
+
+function withTrialBoth(
+  current: StoredData,
+  sampleP: Omit<Profile, 'id'>,
+  sampleA: Omit<Address, 'id' | 'profileId'>,
+  ids: { profileId: string; addressId: string },
+): StoredData {
+  const targets = selectImportTargets(current.profiles, current.addresses, ids);
+  const baseP = targets.blankProfile ? targets.target : current.profiles[0]!;
+  const baseA = targets.blankAddress ? targets.targetAddress : current.addresses[0]!;
+  return {
+    profiles: [
+      applyTrialSampleToProfile(baseP, sampleP),
+      ...(current.profiles.length === 0 ? [] : current.profiles.slice(1)),
+    ],
+    addresses: [
+      applyTrialSampleToAddress(baseA, sampleA),
+      ...(current.addresses.length === 0 ? [] : current.addresses.slice(1)),
+    ],
+  };
 }
 
 async function onTrialSave(): Promise<void> {
-  // Same card-ensuring and blanks-only fill as the old trial input.
-  fillTrialProfile();
-  fillTrialAddress();
-  // Both sides are validated before anything is written, so no unvalidated
-  // value can reach storage from this path.
-  const profiles = state.profiles.map(normalizeProfile);
-  const addresses = state.addresses.map(normalizeAddress);
-  const errors = [...profileErrorsFor(profiles), ...addressErrorsFor(addresses)];
-  if (errors.length > 0) {
-    post({ kind: 'errors', lines: errors });
-    render();
-    return;
-  }
-  state = { profiles, addresses };
-  try {
-    await saveData(state);
-  } catch (e) {
-    console.warn('[JushoAI] save failed', e);
-    post({ kind: 'errors', lines: ['保存に失敗しました。容量不足の可能性があります。'] });
-    render();
-    return;
-  }
-  const savedProfile = profiles[0] ?? { ...EMPTY_PROFILE };
-  const savedAddress = addresses[0] ?? { ...EMPTY_ADDRESS };
-  post({ kind: 'saved', lines: [trialToastText(savedProfile, savedAddress)] });
-  render();
+  // Both sides are validated before anything is written, and memory commits
+  // only on storage success (saveBoth): no pre-assignment, so a failed save
+  // leaves the memory state untouched.
+  const draft = withTrialBoth(state, makeSampleProfile(), makeSampleAddress(), {
+    profileId: newId(), addressId: newId(),
+  });
+  await saveBoth(draft, {
+    setState: (next) => { state = next; },
+    saveData,
+    ui: {
+      showError: (messages) => post({ kind: 'errors', lines: messages }),
+      showToast: (messages) => post({ kind: 'saved', lines: messages }),
+      render,
+    },
+  });
 }
 
 // Single-side trials fill one side, then run that side's normal save
 // (validation, storage discipline, and guide toasts stay in one place).
 async function onTrialSaveProfile(): Promise<void> {
-  fillTrialProfile();
+  state = withTrialProfile(state, makeSampleProfile(), { profileId: newId(), addressId: newId() });
   await onSaveProfiles();
 }
 
 async function onTrialSaveAddress(): Promise<void> {
-  fillTrialAddress();
+  state = withTrialAddress(state, makeSampleAddress(), { profileId: newId(), addressId: newId() });
   await onSaveAddresses();
 }
 
