@@ -1,6 +1,7 @@
 import { addExclusionEntry, EXCLUDED_URLS_MAX, removeExclusionEntry } from '../../core/exclusions';
 import { loadExcludedUrls, saveExcludedUrls } from '../../exclusions-store';
 import { el, notice, textInput } from './dom';
+import { bootListSection } from './list-boot';
 import { applyActivePage, EXCLUSION_SECTION_ID } from './nav';
 
 export interface ExclusionSectionDeps {
@@ -104,8 +105,18 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
     applyActivePage();
   }
 
-  void deps.load().then((list) => {
-    entries = list;
-    render();
-  });
+  // Boot goes through the shared skeleton (list-boot.ts): render runs only
+  // after the load resolves, and a failed load renders the empty skeleton with
+  // the notice instead of surfacing as an unhandled rejection.
+  bootListSection(
+    deps.load,
+    (list) => {
+      entries = list;
+      render();
+    },
+    (failure) => {
+      feedback = failure;
+      render();
+    },
+  );
 }
