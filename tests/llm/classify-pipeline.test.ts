@@ -214,6 +214,28 @@ describe('mergeClassified: merge-only contract (order unchanged)', () => {
   });
 });
 
+describe('mergeClassified: kanaKind attribution (PBI-197)', () => {
+  it('backs a direct LLM kana category with the resolveKana suffix rule', async () => {
+    // The LLM branch carries no kanaKind of its own (PBI-197): the suffix
+    // rule inside resolveKana is the single owner, so a direct LLM answer
+    // like lastNameKana still gets its kind.
+    const items = mergeClassified([pendingMeta('p')], new Map([['p', 'lastNameKana']]));
+    expect(items[0]!.cls).toMatchObject({ category: 'lastNameKana', source: 'llm' });
+    expect(items[0]!.cls.kanaKind).toBe('katakana');
+  });
+
+  it('keeps the kana flip owned by resolveKana for plain LLM name bases', async () => {
+    // With kana evidence on the field, the conversion loop flips the plain
+    // LLM name base and assigns the kind in one seam (PBI-197 keeps it).
+    const items = mergeClassified(
+      [makeMeta({ id: 'p', name: 'xyz-p', placeholder: 'せい' })],
+      new Map([['p', 'lastName']]),
+    );
+    expect(items[0]!.cls.category).toBe('lastNameKana');
+    expect(items[0]!.cls.kanaKind).toBe('hiragana');
+  });
+});
+
 describe('withLegacyThrowFallback: throw path is test-only', () => {
   it('passes attempt-capable classifiers through untouched', () => {
     const classifier = classifierWith(okAttempt());

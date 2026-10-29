@@ -2,7 +2,7 @@ import { asClassifyFailure, type ClassifyFailure } from '../messages';
 import {
   classifyField, classifyRulePipeline, isConfident, refineClassifications,
 } from '../core/classify-rules';
-import { detectKanaKind, resolveKana } from '../core/kana';
+import { resolveKana } from '../core/kana';
 import { applyEnglishPage } from '../core/page-language';
 import { isAllowedRadioCategory } from '../core/radio-policy';
 import { sendSet } from '../core/pending-split';
@@ -66,13 +66,17 @@ export function mergeClassified(
       // PBI-05: radio は性別・年代のみ (方針は isAllowedRadioCategory が所有)。
       // PBI-41 の許容集合をここで守り、それ以外は rule 保持に落とす。
       if (meta.tag !== 'radio' || isAllowedRadioCategory(category)) {
+        // PBI-197: the LLM branch carries no kanaKind of its own. A direct
+        // LLM kana category (lastNameKana and every other *Kana answer) is
+        // backfilled by resolveKana's suffix rule below — the single owner —
+        // so the former category.endsWith('Kana') → detectKanaKind spread,
+        // which that backfill idempotently overwrote, is gone.
         items.push({
           meta,
           cls: {
             category,
             confidence: 0.5,
             source: 'llm',
-            ...(category.endsWith('Kana') ? { kanaKind: detectKanaKind(meta) } : {}),
           },
         });
         continue;

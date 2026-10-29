@@ -156,10 +156,11 @@ export function resolveKana(items: Item[]): Item[] {
   // PBI-160: terminal kana categories (companyNameKana) resolve their own
   // attribution in classifyField and never ride KANA_CATEGORY above, so the
   // conversion loop leaves their category untouched. They still need a
-  // kanaKind, so the suffix rule (mirroring analyze.ts's
-  // category.endsWith('Kana') → detectKanaKind) applies here: every entrance
-  // threading resolveKana (classifyRulePipeline, classifyAll) agrees, and the
-  // assignment is idempotent with the analyze LLM branch (same function).
+  // kanaKind, so the suffix rule applies here as the single owner (PBI-197):
+  // the LLM merge branch's own category.endsWith('Kana') → detectKanaKind
+  // spread is gone, and every entrance threading resolveKana
+  // (classifyRulePipeline, classifyAll, mergeClassified) is backfilled by
+  // this loop alone.
   for (const { item } of flags) {
     if (item.cls.category.endsWith('Kana') && item.cls.kanaKind === undefined) {
       item.cls.kanaKind = detectKanaKind(item.meta);
