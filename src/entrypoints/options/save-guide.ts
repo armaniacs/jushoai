@@ -1,5 +1,6 @@
 import { validateAddress, validateProfile } from '../../core/profile';
 import type { Address, Profile } from '../../core/types';
+import { ADDRESSES_SECTION_ID, PROFILES_SECTION_ID } from './nav';
 
 export function hasValidProfile(profiles: readonly Profile[]): boolean {
   return profiles.some((p) => validateProfile(p).length === 0);
@@ -34,4 +35,22 @@ export function guideTrialMode(profiles: readonly Profile[], addresses: readonly
   if (okProfile && okAddress) return 'none';
   if (!okProfile && !okAddress) return 'both';
   return !okProfile ? 'profile' : 'address';
+}
+
+// Single owner of guide visibility: trial mode plus the page/dismissed gates.
+// Inputs must be normalized first, like guideTrialMode.
+export interface GuideState {
+  visible: boolean;
+  mode: TrialMode;
+}
+
+export function guideState(
+  profiles: readonly Profile[],
+  addresses: readonly Address[],
+  page: string,
+  dismissed: boolean,
+): GuideState {
+  const mode = guideTrialMode(profiles, addresses);
+  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
+  return { visible: !dismissed && relevant && mode !== 'none', mode };
 }

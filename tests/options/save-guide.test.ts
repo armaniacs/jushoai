@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { normalizeAddress, normalizeProfile } from '../../src/core/profile';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import {
-  addressErrorsFor, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+  addressErrorsFor, guideState, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from '../../src/entrypoints/options/save-guide';
 
 const validProfile = normalizeProfile({
@@ -74,5 +74,51 @@ describe('guideTrialMode', () => {
 
   it('offers the address trial when only the address is missing', () => {
     expect(guideTrialMode([validProfile], [blankAddress])).toBe('address');
+  });
+});
+
+describe('guideState', () => {
+  const validProfile = normalizeProfile({
+    ...EMPTY_PROFILE, id: 'p1', label: '個人用', lastName: '山田', firstName: '太郎',
+    lastNameKana: 'ヤマダ', firstNameKana: 'タロウ', email: 'yamada@example.com', tel: '09012345678',
+  });
+  const validAddress = normalizeAddress({
+    ...EMPTY_ADDRESS, id: 'a1', label: '自宅', zip: '1000001', prefecture: '東京都',
+    city: '千代田区', street: '千代田1-1',
+  });
+  const blankProfile = normalizeProfile({ ...EMPTY_PROFILE, id: 'p2' });
+  const blankAddress = normalizeAddress({ ...EMPTY_ADDRESS, id: 'a2', label: '自宅' });
+
+  it('shows with the address mode when only the address is missing', () => {
+    expect(guideState([validProfile], [blankAddress], 'profiles', false)).toEqual({
+      visible: true, mode: 'address',
+    });
+    expect(guideState([validProfile], [blankAddress], 'addresses', false)).toEqual({
+      visible: true, mode: 'address',
+    });
+  });
+
+  it('shows with the profile mode when only the profile is missing', () => {
+    expect(guideState([blankProfile], [validAddress], 'profiles', false)).toEqual({
+      visible: true, mode: 'profile',
+    });
+  });
+
+  it('hides when both sides are valid', () => {
+    expect(guideState([validProfile], [validAddress], 'profiles', false)).toEqual({
+      visible: false, mode: 'none',
+    });
+  });
+
+  it('hides off the profile/address pages even when entries are missing', () => {
+    expect(guideState([blankProfile], [blankAddress], 'ai', false)).toEqual({
+      visible: false, mode: 'both',
+    });
+  });
+
+  it('hides once dismissed for the session', () => {
+    expect(guideState([blankProfile], [blankAddress], 'profiles', true)).toEqual({
+      visible: false, mode: 'both',
+    });
   });
 });

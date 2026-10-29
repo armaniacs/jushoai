@@ -17,16 +17,17 @@ import { applyImportDraft, applyImportToState } from '../../core/import-apply';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
 import {
-  dismissGuideForSession, hideFloatGuide, isGuideDismissed, showFloatError, showFloatGuide, showFloatToast,
+  showFloatError, showFloatToast,
 } from './float-layer';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
 import { mountExclusionSection } from './exclusion-section';
 import { defaultTransferDeps, mountTransferSection } from './transfer-section';
-import { ADDRESSES_SECTION_ID, applyActivePage, getActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
+import { ADDRESSES_SECTION_ID, applyActivePage, mountNav, setActivePage, PROFILES_SECTION_ID, AUDIT_SECTION_ID } from './nav';
 import {
-  addressErrorsFor, guideTrialMode, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
+  addressErrorsFor, hasValidAddress, hasValidProfile, profileErrorsFor, trialToastText,
 } from './save-guide';
+import { createGuideController } from './guide-controller';
 import { mountMappingSection } from './mapping-section';
 
 const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string }[] = [
@@ -40,6 +41,14 @@ const OVERSEAS_FIELDS: { key: keyof Address; label: string; placeholder: string 
 
 const app = document.getElementById('app')!;
 let state: StoredData;
+
+// Guide visibility has a single owner (PBI-170): the controller reads the
+// dismissed flag and the active page itself, so callers only invoke sync().
+const guideController = createGuideController(() => state, {
+  onTrialBoth: () => { void onTrialSave(); },
+  onTrialProfile: () => { void onTrialSaveProfile(); },
+  onTrialAddress: () => { void onTrialSaveAddress(); },
+});
 
 // The export/import section (PBI-117) is mounted once like the audit and
 // exclusion sections; render() re-appends the same holder so the section keeps
@@ -276,53 +285,11 @@ async function onTrialSaveAddress(): Promise<void> {
   await onSaveAddresses();
 }
 
-function trialButtonFor(mode: 'both' | 'profile' | 'address'): HTMLButtonElement {
-  if (mode === 'profile') {
-    return actionButton('架空の名前を作って試す', false, () => { void onTrialSaveProfile(); });
-  }
-  if (mode === 'address') {
-    return actionButton('架空の住所を作って試す', false, () => { void onTrialSaveAddress(); });
-  }
-  return actionButton('架空の名前と住所を作って試す', false, () => { void onTrialSave(); });
-}
-
-function buildGuideNode(): HTMLElement {
-  const wrap = el('div');
-  const head = el('p');
-  head.textContent = '初めてですか？架空の名前と住所で試せます';
-  const mode = guideTrialMode(
-    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
-  );
-  const trial = trialButtonFor(mode === 'none' ? 'both' : mode);
-  const toProfiles = actionButton('名前を登録する', false, () => setActivePage(PROFILES_SECTION_ID));
-  const toAddresses = actionButton('住所を登録する', false, () => setActivePage(ADDRESSES_SECTION_ID));
-  const x = actionButton('×', false, () => dismissGuideForSession());
-  x.classList.add('float-close');
-  const row = el('div');
-  row.className = 'float-row';
-  row.append(trial, toProfiles, toAddresses, x);
-  wrap.append(head, row);
-  return wrap;
-}
-
-function syncGuide(): void {
-  const page = getActivePage();
-  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
-  const mode = guideTrialMode(
-    state.profiles.map(normalizeProfile), state.addresses.map(normalizeAddress),
-  );
-  if (!isGuideDismissed() && relevant && mode !== 'none') {
-    showFloatGuide(buildGuideNode());
-  } else {
-    hideFloatGuide();
-  }
-}
-
 function render() {
   const rerender = () => render();
   const profilePage = renderProfilePage(state.profiles, rerender);
   const addressPage = renderAddressPage(state.addresses, state.profiles, rerender);
-  syncGuide();
+  guideController.sync();
   const title = document.createElement('h1');
   title.textContent = 'JushoAI 設定';
 
@@ -524,18 +491,11 @@ mountNav(document.getElementById('side')!);
 // so sync floating-guide visibility here. Registered after mountNav, so the
 // nav handler runs first and getActivePage() is already updated.
 document.getElementById('side')!.querySelector('nav')!.addEventListener('click', () => {
-  syncGuide();
+  guideController.sync();
 });
 // Tab switches do not re-render (nav only toggles visibility), so sync the
 // floating guide here. Registered after mountNav; both listeners are
 // synchronous and read the already-updated hash.
 window.addEventListener('hashchange', () => {
-  const page = getActivePage();
-  const relevant = page === PROFILES_SECTION_ID || page === ADDRESSES_SECTION_ID;
-  const empty = !hasValidProfile(state.profiles.map(normalizeProfile));
-  if (!isGuideDismissed() && relevant && empty) {
-    render();
-  } else {
-    hideFloatGuide();
-  }
+  guideController.sync();
 });
