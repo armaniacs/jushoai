@@ -1,0 +1,33 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.gis.ac.jp/secondary/international-admissions-inquiry-form/
+  (海外からの入学・編入学お問い合わせフォーム). Field names, table th labels
+  (read as nearby headings), and maxlengths mirror the real page; site chrome
+  is omitted.
+  The enrollment/grade radios (希望する入学・編入時期, 希望する学年, 寮,
+  日本語の学習歴) and the acceptance-sample checkbox stay out of scope; the
+  date field (児童・生徒生年月日, type=date) is out of scan in the real page's
+  markup family, and the hidden wpcf7 fields are send-only.
+-->
+<html lang="ja"><meta charset="utf-8"><title>Contact Form 7 inquiry (international admission)</title>
+<form>
+  <table>
+    <tr><th><p><span class="haveto">必須</span>[01]保護者氏名 / Parent or Guardian Name</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="parent-name"></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[02]メールアドレス / Email Address</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="email" name="your-email"></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[03]児童・生徒氏名 / Student Name</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="student-name"></td></tr>
+    <tr><th><p><span class="any">任意</span>[05]児童・生徒の国籍 / Student Nationality</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="student-nationality"></td></tr>
+    <tr><th><p><span class="any">任意</span>[06]現在の居住国 / Current Country of Residence</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="current-country"></td></tr>
+    <tr><th><p><span class="any">任意</span>[07]現在在籍している学校名 / Current School Name</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="current-school"></td></tr>
+    <tr><th><p><span class="any">任意</span>[08]現在の学年 / Current Grade or Year Level</p></th>
+      <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="current-grade"></td></tr>
+    <tr><th><p><span class="any">任意</span>[15]日本語を学習した教育機関名・学習期間<br>-<br>/ Name of Institution and Period of Japanese Study</p></th>
+      <td><p>該当する場合のみご記入ください。 / Please complete this section if applicable.<input size="40" maxlength="400" value="" type="text" name="name-institution"></p></td></tr>
+  </table>
+</form>
+</html>

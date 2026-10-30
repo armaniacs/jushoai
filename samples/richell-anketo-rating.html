@@ -1,0 +1,16 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://business.form-mailer.jp/lp/61093651176278
+  (リッチェルお客様アンケート). Field ids, names, labels, and patterns mirror the
+  real page; site chrome is omitted.
+  The rating radios (5段階評価×4、10段階×2) are matrix groups that stay
+  unclassified per the radio policy (only gender/decade groups resolve), and the
+  two ご要望・ご感想 textareas are out of scan, so the 受付番号 text field is
+  the only in-scope control.
+-->
+<html lang="ja"><meta charset="utf-8"><title>form-mailer survey (rating radios)</title>
+<form>
+  <label for="field_2953454">（５）受付番号（6桁）を記入してください。</label>
+  <input id="field_2953454" name="field_2953454" type="text" value="" pattern="^\d+$" required>
+</form>
+</html>

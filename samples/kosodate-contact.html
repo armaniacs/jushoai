@@ -1,0 +1,27 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://kosodatehiroba.com/form/contact
+  (お問い合わせフォーム). Field ids, names, labels, placeholders, and options
+  mirror the real page; site chrome is omitted except the two site-search
+  fields (name="s"), which stay unclassified.
+  The 電話番号種別 radios (自宅/携帯/所属先) stay unclassified per the radio
+  policy; the textarea, number, and consent checkbox are out of scope.
+-->
+<html lang="ja"><meta charset="utf-8"><title>wpforms contact (phone-type radios)</title>
+<form>
+  <input name="s" id="search" type="text" value="" placeholder="キーワード入力">
+  <input name="s" id="search" type="text" value="" placeholder="キーワード入力">
+  <label for="wpforms-192-field_6">(01)お名前 *</label>
+  <input name="wpforms[fields][6]" id="wpforms-192-field_6" type="text" value="">
+  <label for="wpforms-192-field_29">(02)お問い合わせ種別 *</label>
+  <select name="wpforms[fields][29]" id="wpforms-192-field_29"><option value="">お問い合わせ種別選択</option><option value="入会について">入会について</option><option value="ひろば保険">ひろば保険</option><option value="研修・セミナー">研修・セミナー</option><option value="その他">その他</option></select>
+  <label for="wpforms-192-field_41">(05)電話番号 *</label>
+  <input name="wpforms[fields][41]" id="wpforms-192-field_41" type="text" value="" placeholder="例：半角で045-531-2888">
+  <label for="wpforms-192-field_12">(06)所属（会社・団体・学校等） *</label>
+  <input name="wpforms[fields][12]" id="wpforms-192-field_12" type="text" value="">
+  <label for="wpforms-192-field_14">メールアドレス</label>
+  <input name="wpforms[fields][14][primary]" id="wpforms-192-field_14" type="email" value="" placeholder="例：半角で×××@××××××.com">
+  <label for="wpforms-192-field_14-secondary">メールアドレスを確認</label>
+  <input name="wpforms[fields][14][secondary]" id="wpforms-192-field_14-secondary" type="email" value="" placeholder="メールアドレス（確認）">
+</form>
+</html>

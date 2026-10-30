@@ -58,3 +58,31 @@ Scenario: pin 更新を忘れると評価が落ちる
 - [ ] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録（2026-10-31）
+
+初回トランチとして 5 fixture を `make addurl` で取り込んだ。URL は web_search で選び、取得前に実フォームの有無を確認した。
+
+取り込んだ URL と fixture:
+- https://business.form-mailer.jp/lp/61093651176278 → samples/richell-anketo-rating.html（リッチェルお客様アンケート。5段階評価×4・10段階×2 の rating radio 群とご要望 textarea が対象外で、受付番号 text が唯一の in-scope 欄）
+- https://kosodatehiroba.com/form/contact → samples/kosodate-contact.html（お問い合わせフォーム。電話番号種別 radio が radio 政策どおり未分類、所属（会社・団体・学校等）は複合ラベルで未分類）
+- https://ssl.form-mailer.jp/fms/a0ed8265668444 → samples/library-theater-apply.html（図書館劇場21第4幕 参加申し込み。氏名/フリガナ fieldset・郵便番号 2 欄・電話 3 欄・会員 radio）
+- https://www.nishimachi.ac.jp/admissions/inquiry-form → samples/nishimachi-inquiry.html（英文の入学相談フォーム。autocomplete token によるローマ字名・Gender radio（Male/Female は日本プロファイル値と不一致で warn）・Date of Birth）
+- https://www.gis.ac.jp/secondary/international-admissions-inquiry-form/ → samples/gis-intl-admission.html（海外からの入学相談フォーム。table th の nearby 見出し・氏名欄・居住国）
+
+選定時に落とした URL:
+- https://rakufo.com/templates/application/event-participation-application-form: テンプレートのプレビューは JS 描画で、実ページにはログイン/登録フォームしかない
+- https://www.chuo-u.ac.jp/english/inquiry/ と https://www.ynu.ac.jp/english/contact/: フォーム入力欄なし（メール窓口のみ）
+- https://member.jbsoc.or.jp/: JS アプリで静的フォームなし
+
+指標の変化（make eval、pin 更新済み）:
+- 直前の pin: 163/33/102（ruleHits/llmFallbacks/fillable）、refineChanged 22、refineDropped 0
+- 実測: 204/46/127、refineChanged 28、refineDropped 0（fixtures 27、fields 247）
+- fixture 別: richell-anketo-rating 0/1/0、kosodate-contact 4/4/4、library-theater-apply 15/3/9、nishimachi-inquiry 16/3/8、gis-intl-admission 6/2/4。library-theater 分で refineChanged +6（氏名/フリガナ fieldset と郵便番号・電話の分割）
+
+語彙の伸びしろ（今回 pin した未分類と誤解釈は語彙追加の候補）:
+- Nishimachi の Gender radio は Male/Female の選択肢が日本プロファイル値と一致しない（matchGenderOption が warn-no-option）
+- School Website が school に、name-institution が fullName に載る（URL・教育機関の語彙なし）
+- 所属（会社・団体・学校等）のような複合ラベルは office 前処理の意図どおり未分類
+
+検証: make test 全緑（samples.test.ts に 5 ケース追加）、make eval 緑（pin 更新後）、privacy test（ページ文字列が報告行に出ない・1 行 200 バイト以内）緑のまま。
