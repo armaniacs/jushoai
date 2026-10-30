@@ -52,7 +52,7 @@ export function chooseMapping(label: string, current: string): Promise<MappingDe
       rememberWrap.append(rememberBox, rememberText);
 
       panel.append(field, wrap, rememberWrap);
-      return '.mfield { margin: 0 0 10px; font-size: 12px; color: #5a6270; }\n.mfield select { width: 100%; padding: 4px; font: inherit; }';
+      return '.mfield { margin: 0 0 10px; font-size: 12px; color: var(--jushoai-muted); }\n.mfield select { width: 100%; padding: 4px; font: inherit; }';
     },
     actions: [
       { label: CANCEL_BUTTON, pick: () => null },

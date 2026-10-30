@@ -60,4 +60,17 @@ describe('OVERLAY_CSS', () => {
       expect(OVERLAY_CSS).toContain(rule);
     }
   });
+
+  it('declares the theme tokens on :host with the light defaults and a dark override (PBI-209)', () => {
+    // Light defaults keep the pre-PBI hexes: light OS appearance is unchanged.
+    expect(OVERLAY_CSS).toMatch(/:host \{[^}]*--jushoai-panel-bg: #fff;/);
+    expect(OVERLAY_CSS).toMatch(/:host \{[^}]*--jushoai-panel-fg: #1a1a1a;/);
+    // The dark override lives in the same <style> block: the host's
+    // all: initial !important keeps page-side :root variables from reaching
+    // the shadow tree, so the tokens cannot come from the page.
+    expect(OVERLAY_CSS).toContain('@media (prefers-color-scheme: dark)');
+    const dark = OVERLAY_CSS.slice(OVERLAY_CSS.indexOf('@media (prefers-color-scheme: dark)'));
+    expect(dark).toMatch(/--jushoai-panel-bg: #212530;/);
+    expect(dark).toMatch(/--jushoai-panel-fg: #e8eaf0;/);
+  });
 });

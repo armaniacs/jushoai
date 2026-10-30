@@ -63,7 +63,7 @@ export function confirmEgress(rows: EgressRow[]): Promise<EgressDecision> {
         note.textContent = `${SUSPECT_MARK}の欄は個人情報らしき文言を含みます。既定では送りません。`;
         panel.append(note);
       }
-      return '.panel { width: min(520px, 92vw); }\n.egress-list { max-height: 40vh; overflow: auto; margin: 8px 0; }\n.egress-row { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; font-size: 12px; }\n.egress-row.suspect { color: #8a4b00; }\n.egress-mark { flex: none; font-weight: bold; }\n.egress-summary { word-break: break-all; }\n.egress-exclude { flex: none; display: flex; gap: 4px; align-items: baseline; }';
+      return '.panel { width: min(520px, 92vw); }\n.egress-list { max-height: 40vh; overflow: auto; margin: 8px 0; }\n.egress-row { display: flex; gap: 8px; align-items: baseline; padding: 4px 0; font-size: 12px; }\n.egress-row.suspect { color: var(--jushoai-warn); }\n.egress-mark { flex: none; font-weight: bold; }\n.egress-summary { word-break: break-all; }\n.egress-exclude { flex: none; display: flex; gap: 4px; align-items: baseline; }';
     },
     actions: [
       { label: RULE_BUTTON, pick: () => ({ mode: 'rule-only' }) },
