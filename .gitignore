@@ -23,6 +23,7 @@ JushoAI_VULNHUNT_RESULTS_*/
 video/ext/
 video/output/
 video/playwright/.work/
+video/playwright/.store-shots/
 video/remotion/node_modules/
 video/remotion/public/*.webm
 video/remotion/public/bgm.*
