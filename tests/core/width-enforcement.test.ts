@@ -58,7 +58,7 @@ describe('width claim detection (PBI-120)', () => {
 });
 
 // レビュー指摘の再現 fixture: pattern の形（文字クラスの内側）を読まず、正規表現
-// 構文の ASCII 文字を根拠にして変換方向を誤る。fixture 先行（CLAUDE.md）。
+// 構文の ASCII 文字を根拠にして変換方向を誤る。fixture 先行（AGENTS.md）。
 describe('width claim detection: class-interior scan (review)', () => {
   it('never reads a negated class as a direction (the page forbids, not requires)', () => {
     expect(detectWidthKind('[^０-９]{7}')).toBe(null);

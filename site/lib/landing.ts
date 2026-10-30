@@ -65,7 +65,7 @@ ${p.lang === 'en' ? `<p class="note ui-note">${e(s.mock.uiNote)}</p>` : ''}
 <section class="block" id="demo"><div class="wrap narrow">
 <h2 class="section-title">${e(s.demo.title)}</h2>
 <p class="section-lead">${e(s.demo.lead)}</p>
-<figure class="demo-gif"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" width="1280" height="800"><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
+<figure class="demo-gif"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" width="1280" height="720"><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
 <div class="video"><iframe src="${VIDEO_EMBED_URL}" title="${e(s.demo.iframeTitle)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
 <p class="note"><a href="${VIDEO_WATCH_URL}" target="_blank" rel="noopener noreferrer">${e(s.demo.link)}</a></p>
 </div></section>

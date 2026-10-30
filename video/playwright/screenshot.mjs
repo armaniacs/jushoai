@@ -13,6 +13,8 @@ const BASE = `http://127.0.0.1:${PORT}/`;
 const W = 1280;
 const H = 800;
 
+if (!fs.existsSync(EXT)) throw new Error(`dist/chrome-mv3 not found; run make build first`);
+
 // Store screenshots (1280x800, max 5) from samples and the options page with
 // the dummy profile. The files are never committed: they are uploaded to each
 // store dashboard by hand (docs/store-listing.md).
@@ -23,13 +25,13 @@ const shot = async (page, name) => {
 };
 const server = await serveStatic([path.join(ROOT, 'samples')], PORT);
 try {
-  // 1) First-time form with the floating guide (no seeded storage).
+  // 1) Pre-fill form with the floating button and its badge (no seeded storage).
   const guide = await launch({ workDir: WORK, extDir: EXT, name: 'shots-guide', seed: false });
   const pg = await guide.ctx.newPage();
   await pg.setViewportSize({ width: W, height: H });
   await pg.goto(BASE + 'demo-registration.html');
   await sleep(3500);
-  await shot(pg, '1-form-guide.png');
+  await shot(pg, '1-form-badge.png');
   await guide.ctx.close();
 
   // 2-3) Preview and filled form with the seeded dummy profile.
@@ -55,6 +57,7 @@ try {
   await shot(page, '4-profile-settings.png');
   const nav = page.locator('a, button, li, div').filter({ hasText: /^AI 判定$/ }).first();
   const b = await nav.boundingBox();
+  if (!b) throw new Error('AI 判定 nav item not found on options.html');
   await page.mouse.click(b.x + b.width / 2, b.y + b.height / 2);
   await sleep(1500);
   await shot(page, '5-ai-settings.png');

@@ -214,7 +214,7 @@ describe('classifyField: birth, school, department', () => {
   });
 });
 
-// レビュー指摘の再現 fixture。fixture 先行（CLAUDE.md）: 先に失敗させてから直す。
+// レビュー指摘の再現 fixture。fixture 先行（AGENTS.md）: 先に失敗させてから直す。
 describe('classifyField: single birthday after the label-only anchor (review)', () => {
   it.each([
     // name/id 連結で anchored 一致が壊れ、同じ欄が birthYear (0.7) に落ちていた:

@@ -36,9 +36,9 @@ JushoAI は Chrome ウェブストア・Edge Add-ons・Firefox AMO の3ストア
 
 ### 1. デモ GIF（README と GitHub Pages の両面）
 
-- 録画は `video/playwright/record.mjs` の仕組みを流用する。samples を自前配信（127.0.0.1:4181）で出すため別ターミナルは不要。README 用には約2分の promo.mp4 から切り出すのではなく、入力からプレビュー承認までの1シーンを 1280x800 で短く録画し直す（鮮明で小さくなる）
+- 録画は `video/playwright/record.mjs` の仕組みを流用する。samples を自前配信（127.0.0.1:4181）で出すため別ターミナルは不要。録画は 1920x1080 で行い、GIF に変換するとき 1280x720 に縮小する（実装は promo.mp4 から切り出すのではなく1シーンを短く録画し直す）
 - 変換は ffmpeg の2段変換（palettegen でパレットを作り paletteuse で書き出す）。目標は 10〜20 秒・約3MB
-- 配置は `site/assets/demo.gif` の1枚のみにする。landing の `#demo` セクションで動画の下に GIF を見せる（動画はクリックが必要、GIF は自動再生の即時プレビューという役割分担）。README からは公開 URL（`https://armaniacs.github.io/jushoai/assets/demo.gif`）で参照する。1枚で両面を満たし、`site/**` の変更なので `pages.yml` が自動デプロイする
+- 配置は `site/assets/demo.gif` の1枚のみにする。landing の `#demo` セクションで動画の上に GIF を見せる（動画はクリックが必要、GIF は自動再生の即時プレビューという役割分担）。README からは公開 URL（`https://armaniacs.github.io/jushoai/assets/demo.gif`）で参照する。1枚で両面を満たし、`site/**` の変更なので `pages.yml` が自動デプロイする
 - README 冒頭（最初の段落の直後）に GIF と動画へのリンクを置く。英語 README（README.en.md）にも同じ GIF を置く（UI が日本語専用である旨の note は既存）
 - landing の文言は `site/i18n` の日英に追加する（日英対応検査・H2 数検査が `make site` で走る）
 

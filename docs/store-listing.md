@@ -160,7 +160,7 @@ Store reviews cannot be replied to. For bugs and feature requests, please open a
 
 1. CHANGELOG の Unreleased を版本として確定する（`docs/release.md` の手順）
 2. ストアの「新着情報」欄に、CHANGELOG の Added/Fixed からユーザー向けの文面を作る。技術用語を落とし、利用者が得る変化を1行ずつ書く（例: 「保存をプロファイルと住所のページ別に分けました」「初めての方に設定の流れを案内するガイドを追加しました」）
-3. X にリリース告知を投稿する。構成は「バージョン番号 + 追加された機能の1行 + ストアまたはサイトへのリンク」。長文ポストの型は `promo/2026-10-10-store-registration/x-post.md` を参照する
+3. X にリリース告知を投稿する。構成は「バージョン番号 + 追加された機能の1行 + ストアまたはサイトへのリンク」。長文ポストの型は `promo/2026-10-10-store-registration/x-post.md`（未追跡・手元にのみある）を参照する
 
 ## プロモーション動画（任意）
 
