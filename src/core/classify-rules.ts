@@ -50,7 +50,10 @@ const NAME_EXCLUDE =
   /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
 const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
 const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［\[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
-const FULL_NAME = /氏名|お名前|名前|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
+// PBI-203: 参加者名 は WPForms の参加者名ラベルで、氏名/名前 の語彙に載らない。
+// (02)参加者名フリガナ もこの語を含むが、kana 帰属は resolveKana が行うため
+// fullNameKana のまま残る（tests/core/classify-rules.test.ts の PBI-203 回帰）。
+const FULL_NAME = /氏名|お名前|名前|参加者名|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
 
 // Priority-ordered dispatch table for classifyField: definition order is the
 // match priority. A new field kind is one entry inserted at the right place;

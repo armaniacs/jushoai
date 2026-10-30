@@ -86,6 +86,7 @@
 ## 進行中（対象 URL 対応・実装済み）
 
 - `2026-10-26-160-feat-company-name-kana.md`（fair.j-lis.go.jp の会社名フリガナ欄に専用カテゴリ companyNameKana で対応、実装済み・PR #16 でmainにマージ）
+- `2026-10-30-203-feat-forum-form-fill.md`（kosodatehiroba.com/form/forum の参加者名欄を fullName 語彙で対応）
 
 ## 進行中（archラウンド2・実装済み）
 

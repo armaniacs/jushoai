@@ -37,9 +37,12 @@ describe('sample corpus metrics (local, no network)', () => {
     // ruleHits +1・llmFallbacks -1（fillable 不変）。141→142 相当の前回 pin 値は
     // registration.html 追加前のもので、同 fixture 分（ruleHits 14・fallbacks 5・
     // fillable 8）を加えた 155/32/97 が親作業時点の正当な基準値。
-    expect(agg.ruleHits).toBe(156);
-    expect(agg.llmFallbacks).toBe(31);
-    expect(agg.fillable).toBe(97);
+    // PBI-203: forum.html（kosodatehiroba.com/form/forum、ruleHits 7・fallbacks 2・
+    // fillable 5。参加者名が FULL_NAME に載り 6/3/4 → 7/2/5）を make addurl で
+    // 加えた 163/33/102 が正当な基準値。
+    expect(agg.ruleHits).toBe(163);
+    expect(agg.llmFallbacks).toBe(33);
+    expect(agg.fillable).toBe(102);
     expect(sum((m) => m.refineChanged)).toBe(22);
     expect(sum((m) => m.refineDropped)).toBe(0);
   });

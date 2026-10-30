@@ -27,6 +27,7 @@ import reinvent from '../../samples/reinvent-registration-contact.html?raw';
 import fmFreeConsult from '../../samples/12fc22bc297429.html?raw';
 import fmCompanyBriefing from '../../samples/2dd1c663300469.html?raw';
 import registration from '../../samples/registration.html?raw';
+import forum from '../../samples/forum.html?raw';
 import { isEnglishPageText } from '../../src/core/page-language';
 
 const SAMPLES: Record<string, string> = {
@@ -51,6 +52,7 @@ const SAMPLES: Record<string, string> = {
   '12fc22bc297429.html': fmFreeConsult,
   '2dd1c663300469.html': fmCompanyBriefing,
   'registration.html': registration,
+  'forum.html': forum,
 };
 
 const profile: Profile = {
@@ -398,5 +400,48 @@ describe('sample forms end to end', () => {
 //   (no name/id) (button): unaddressable (exclude)
 //   (no name/id) (button): unaddressable (exclude)
 //   cms_directory_id (hidden): empty-submit shim or server state, never a fill target (exclude)
+  });
+  it('forum.html fills the in-scope fields', async () => {
+    expect(await planFor('forum.html')).toEqual({
+      // 参加者名・フリガナ欄は placeholder 空 → 結合区切りは detectNameSeparator の
+      // 既定半角スペース（overseas-webform-joshibi の name_kana_last pin と同じ。
+      // single-field-form の全角スペース pin は placeholder 由来なので別物）。
+      'wpforms[fields][55]': '山田 太郎',
+      'wpforms[fields][56]': 'ヤマダ タロウ',
+      'wpforms[fields][67]': '株式会社サンプル',
+      // 都道府県 select: 実ページどおり option value は名称そのもの
+      'wpforms[fields][63]': '東京都',
+      'wpforms[fields][94]': '090-1234-5678',
+      'wpforms[fields][5][primary]': 'yamada@example.com',
+      'wpforms[fields][5][secondary]': 'yamada@example.com',
+    });
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   wpforms[fields][100] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][97] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][80] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][80] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][80] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)
+//   wpforms[fields][8][] (checkbox): out of scope (skip fixed)
+//   wpforms[fields][93][] (checkbox): out of scope (skip fixed)
+//   (no name/id) (button): unaddressable (exclude)
+//   (no name/id) (button): unaddressable (exclude)
+//   wpforms[recaptcha] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   wpforms[id] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   page_title (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   page_url (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   url_referer (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   page_id (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   wpforms[post_id] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   wpforms[submit] (button): action element, never a fill target (exclude)
   });
 });
