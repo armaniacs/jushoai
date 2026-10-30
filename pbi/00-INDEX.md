@@ -1,5 +1,15 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化）
+
+- `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
+- `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
+- `2026-10-31-205-fix-privacy-article-dns-rebinding.md`（順位 2。RICE 50。記事に DNS rebinding 注意書きを1文。206 と同時に1コミット）
+- `2026-10-31-206-fix-privacy-article-audit-retention.md`（順位 2。RICE 50。記事に監査ログ保持期間を1文。205 と同時に1コミット）
+- `2026-10-31-207-feat-pr-template.md`（順位 4。RICE 16。`.github/PULL_REQUEST_TEMPLATE.md` 1枚、日本語のみ）
+- `2026-10-31-208-feat-samples-corpus-growth.md`（順位 5。RICE 8。継続作業の初回トランチ 5 fixture）
+- `2026-10-31-209-feat-dark-mode.md`（順位 6。RICE 6.4。content UI の auto-follow のみ。手動切替は別 PBI）
+
 ## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 
 - `archived/2026-10-30-00-backlog-arch-round5.md`は進行中（残置1件の202が紐づくため未アーカイブ）。ラウンド4適用後の新規摩擦13候補のPBI化・RICE順位確定
