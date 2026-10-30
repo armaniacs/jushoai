@@ -38,9 +38,9 @@ Scenario: 実ページの欄構成が fixture で固定される
 1（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-30）
 - fixture 先行: tests/core/classify-rules.test.ts に (01)参加者名 の text 欄 → fullName の再現 fixture（positives 表）と kana 兄弟欄（(02)参加者名フリガナ）の pipeline 回帰を makeMeta で追加。参加者名欄が null（未分類）で RED を確認してから src/core/classify-rules.ts の FULL_NAME に 参加者名 を足し、GREEN（212 テスト）を確認。kana 欄は resolveKana の帰属で fullNameKana のまま不変。
@@ -48,3 +48,4 @@ Scenario: 実ページの欄構成が fixture で固定される
 - tests/integration/samples.test.ts: forum.html ケースに期待値を固定し、重複していた 's' キー 2 つを削除（検索欄は plan に出ないため）。
 - 期待値の差分: 作業案の 山田　太郎 / ヤマダ　タロウ（全角スペース結合）に対し実値は 山田 太郎 / ヤマダ タロウ（半角スペース結合）。結合区切りは planner が detectNameSeparator(placeholder) で決め、この欄は placeholder 空 → 既定の半角スペース。既存 pin と整合する（overseas-webform-joshibi の name_kana_last ヤマダ タロウ が同一ケース。single-field-form の全角 pin は placeholder 由来なので別物）ため実値を pin した。
 - 検証: make eval は forum.html が ruleHits 6→7・llmFallbacks 3→2・fillable 4→5、集計 162/34/101 → 163/33/102。他 fixture の行は全行不変で劣化なし。tests/eval/corpus.eval.ts の基準値を 163/33/102 に更新。make check は exit 0（173 ファイル・2208 テストと期待失敗 1）。
+- レビュー（2026-10-30）: タスクレビュー（spec 適合 + コード品質）で Approved。Critical・Important なし。2 つの差分（半角結合の pin・corpus.eval.ts 基準値更新）は機構・既存 pin・運用コメントの 3 点から検証済みで正当。残りは cosmetic（報告文の算数、既存 fixture の古い trim コメント、実ページ由来の重複 id="search"）で SDD 台帳に記録。make check の期待失敗 1 は既存の意図的マーカー（it.fails、tests/ai/loopback-octet-range.test.ts）。
