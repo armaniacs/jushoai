@@ -1,11 +1,19 @@
 import { createServer, type Server } from 'node:http';
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { extname, resolve, sep } from 'node:path';
+import { execFile, spawnSync } from 'node:child_process';
+import { promisify } from 'node:util';
 import type { AddressInfo } from 'node:net';
 import { Builder, By, until, type WebDriver, type WebElement } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox.js';
 import chrome from 'selenium-webdriver/chrome.js';
 import { chromeLaunchArgs } from './chrome-flags';
+import {
+  driverVersionFailureMessage, driverVersionStatus, parseMajorVersion,
+  type DriverVersionCheck,
+} from './driver-version';
+
+const execFileAsync = promisify(execFile);
 
 export const GECKO_ID = 'jushoai@armaniacs.github.io';
 // Pinning the UUID makes moz-extension://<uuid>/options.html addressable from the test.
@@ -20,6 +28,28 @@ const FIREFOX_CANDIDATES = [
 function firefoxBinary(): string | undefined {
   return process.env.FIREFOX_BIN ?? FIREFOX_CANDIDATES.find((p) => existsSync(p));
 }
+
+// Chrome override, the counterpart of FIREFOX_BIN: CHROME_BIN wins, then the
+// known install locations (macOS first, then the Debian/Ubuntu paths the CI
+// runners use). An undefined result leaves the binary to chromedriver's own
+// lookup, exactly as before the preflight existed.
+const CHROME_CANDIDATES = [
+  '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
+  '/usr/bin/google-chrome',
+  '/usr/bin/google-chrome-stable',
+  '/opt/google/chrome/chrome',
+];
+
+function chromeBinary(): string | undefined {
+  return process.env.CHROME_BIN ?? CHROME_CANDIDATES.find((p) => existsSync(p));
+}
+
+// Repo-local Selenium Manager cache (PBI-204): pointing SE_CACHE_PATH here
+// before any resolution runs keeps the stale ~/.cache/selenium fallback out of
+// the picture — Selenium Manager can no longer silently serve an old cached
+// chromedriver whose major does not match the installed Chrome. An explicitly
+// set SE_CACHE_PATH wins, so a developer can still pin their own cache.
+const SE_CACHE_DIR = resolve('tmp', 'selenium-cache');
 
 const SESSION_RETRIES = 3;
 const SESSION_RETRY_DELAY_MS = 2_000;
@@ -156,18 +186,132 @@ export async function seedProfile(driver: WebDriver): Promise<void> {
 
 const CHROME_ADDON_DIR = resolve('dist/chrome-mv3');
 
+// ---------------------------------------------------------------------------
+// Chrome driver version preflight (PBI-204)
+// ---------------------------------------------------------------------------
+// The I/O shell of the pure driver-version.ts decision: it collects the two
+// `--version` outputs (installed Chrome and the chromedriver Selenium Manager
+// resolves), then startChromeDriver fails fast on mismatch / unavailable with
+// the repair instructions instead of letting the session die on a silently
+// reused stale cached driver (locally: cached 154 vs installed Chrome 156).
+
+// One `--version` probe. Returns the trimmed stdout, null on any failure
+// (non-zero exit, spawn error, timeout) so the caller decides the policy.
+function binaryVersionOutput(path: string): string | null {
+  const res = spawnSync(path, ['--version'], { encoding: 'utf8', timeout: 20_000 });
+  return res.status === 0 && res.stdout ? res.stdout.trim() : null;
+}
+
+// Resolves the chromedriver through the bundled Selenium Manager CLI — the
+// exact resolution build() performs (same binary, same args, same cache env).
+// Returns the parsed paths, null when the CLI is missing, fails, or does not
+// resolve a driver (offline, no matching cached driver): the caller treats
+// that as "unavailable" rather than falling back to any cached binary.
+function seleniumManagerPaths(chromeBinOverride?: string): { driverPath: string; browserPath: string } | null {
+  const dir = ({
+    darwin: 'macos',
+    win32: 'windows',
+    linux: process.arch === 'arm64' ? 'linux-arm64' : 'linux-x86_64',
+  } as Record<string, string | undefined>)[process.platform] ?? 'macos';
+  const file = process.platform === 'win32' ? 'selenium-manager.exe' : 'selenium-manager';
+  const bin = process.env.SE_MANAGER_PATH ?? resolve('node_modules', 'selenium-webdriver', 'bin', dir, file);
+  if (!existsSync(bin)) return null;
+  const args = ['--browser', 'chrome', '--language-binding', 'javascript', '--output', 'json'];
+  if (chromeBinOverride) args.push('--browser-path', resolve(chromeBinOverride));
+  const res = spawnSync(bin, args, { encoding: 'utf8', timeout: 180_000 });
+  if (res.status !== 0 || !res.stdout) return null;
+  try {
+    const parsed = JSON.parse(res.stdout) as { result?: { driver_path?: string; browser_path?: string } };
+    const driverPath = parsed.result?.driver_path;
+    if (!driverPath) return null;
+    return { driverPath, browserPath: parsed.result?.browser_path ?? '' };
+  } catch {
+    return null;
+  }
+}
+
+// Opt-in repair (JUSHOAI_DRIVER_DOWNLOAD=1): when Selenium Manager cannot
+// resolve a matching driver, @puppeteer/browsers downloads chromedriver@<major>
+// into the wired cache and the resolved binary path comes back. Opt-in because
+// it is a network request beyond Selenium Manager's own resolution.
+async function downloadMatchingDriver(major: string): Promise<string | null> {
+  if (process.env.JUSHOAI_DRIVER_DOWNLOAD !== '1') return null;
+  try {
+    const { stdout } = await execFileAsync(
+      'npx',
+      ['-y', '@puppeteer/browsers', 'install', `chromedriver@${major}`, '--path', process.env.SE_CACHE_PATH ?? SE_CACHE_DIR],
+      { timeout: 180_000, encoding: 'utf8' },
+    );
+    // The install output ends with "chromedriver@<version> <binary path>".
+    const last = stdout.trim().split('\n').pop() ?? '';
+    const binary = last.trim().split(/\s+/).pop() ?? '';
+    return binary && existsSync(binary) ? binary : null;
+  } catch {
+    return null;
+  }
+}
+
+// Collects the version inputs and decides: match → the resolved binary is
+// passed to the session so the verified binary is the used one; mismatch or
+// unavailable → the repair message (the opt-in download runs first when
+// JUSHOAI_DRIVER_DOWNLOAD=1).
+async function checkChromeDriver(): Promise<DriverVersionCheck> {
+  if (!process.env.SE_CACHE_PATH) process.env.SE_CACHE_PATH = SE_CACHE_DIR;
+  const bin = chromeBinary();
+  const sm = seleniumManagerPaths(bin);
+  const chromeBin = bin ?? (sm?.browserPath || undefined);
+  const chromeVersion = chromeBin ? binaryVersionOutput(chromeBin) : null;
+  const smDriverPath = sm?.driverPath ?? null;
+  const driverBin = process.env.CHROMEDRIVER_BIN ?? smDriverPath;
+  let driverPath = driverBin;
+  let driverVersion = driverPath ? binaryVersionOutput(driverPath) : null;
+  let status = driverVersionStatus(chromeVersion, driverVersion);
+  if (status !== 'match') {
+    const major = parseMajorVersion(chromeVersion ?? '');
+    const downloaded = major ? await downloadMatchingDriver(major) : null;
+    const downloadedVersion = downloaded ? binaryVersionOutput(downloaded) : null;
+    if (downloadedVersion && driverVersionStatus(chromeVersion, downloadedVersion) === 'match') {
+      driverPath = downloaded;
+      driverVersion = downloadedVersion;
+      status = 'match';
+    }
+  }
+  return {
+    status,
+    chromeMajor: parseMajorVersion(chromeVersion ?? ''),
+    driverMajor: parseMajorVersion(driverVersion ?? ''),
+    driverPath,
+    cachePath: process.env.SE_CACHE_PATH ?? SE_CACHE_DIR,
+  };
+}
+
 // Chrome: the extension id is assigned at install time, so it is resolved via
 // BiDi webextension.install (no id is written down) and the options page is
 // addressed with the returned id.
 export async function startChromeDriver(): Promise<{ driver: WebDriver; extensionId: string }> {
   if (!existsSync(CHROME_ADDON_DIR)) throw new Error('dist/chrome-mv3 is missing: run `make build` first');
+  // Fail fast on a version mismatch or an unresolved driver (PBI-204): the
+  // message carries both majors and the repair paths instead of letting the
+  // session build die on whatever cached driver Selenium Manager fell back to.
+  const check = await checkChromeDriver();
+  if (check.status !== 'match') {
+    throw new Error(driverVersionFailureMessage(check));
+  }
   const options = new chrome.Options();
   // Flag assembly lives in chrome-flags.ts: --no-sandbox is added only in a
   // container or CI, where the browser sandbox and /dev/shm are unavailable;
   // local runs keep the browser sandbox enabled.
+  const bin = chromeBinary();
+  if (bin) options.setBinaryPath(bin);
   options.addArguments(...chromeLaunchArgs(process.env));
   options.enableBidi();
-  const driver = await new Builder().forBrowser('chrome').setChromeOptions(options).build();
+  const builder = new Builder().forBrowser('chrome').setChromeOptions(options);
+  // The verified binary is the used one: an explicit service path skips the
+  // second Selenium Manager resolution inside build().
+  if (check.driverPath) {
+    builder.setChromeService(new chrome.ServiceBuilder(check.driverPath));
+  }
+  const driver = await builder.build();
   const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
     .installWebExtension(CHROME_ADDON_DIR);
   return { driver, extensionId: ext.id };
@@ -255,6 +399,22 @@ export const OPTIONS_SELECTORS = {
   // Provider select options of the settings page.
   providerOptions: 'select option',
 } as const;
+
+// Dismisses the floating guide through its × 一時非表示 button — the same
+// click dismissGuideForSession binds — when the guide is shown. A no-op when
+// it is absent (guideState hides it once every side has a valid entry or the
+// session flag is set), so a caller can dismiss unconditionally. Deleting a
+// side's last entry re-enters the guide's trial mode, which re-shows the
+// fixed overlay over the page top; a real user clears it before touching the
+// buttons it covers (CI job 123974733509: ElementClickInterceptedError on a
+// covered 保存 click).
+export async function dismissGuideIfPresent(driver: WebDriver): Promise<void> {
+  if ((await driver.findElements(By.css(OPTIONS_SELECTORS.guide))).length === 0) return;
+  await driver.findElement(By.css(OPTIONS_SELECTORS.guideCloseButton)).click();
+  await driver.wait(async () =>
+    (await driver.findElements(By.css(OPTIONS_SELECTORS.guide))).length === 0,
+  10_000, 'guide did not hide');
+}
 
 // ---------------------------------------------------------------------------
 // Closed-shadow read seam

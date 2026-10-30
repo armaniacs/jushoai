@@ -55,3 +55,29 @@ Scenario: 初回向けガイドの浮遊表示が出ていても操作が通る
 - [ ] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録（2026-10-31）
+
+### 実装内容
+
+- 版数整合の事前検査（fail-fast）を tests/e2e/harness.ts の startChromeDriver に追加した。
+  - 判定ロジックは tests/e2e/driver-version.ts に純粋関数として切り出した（parseMajorVersion / driverVersionStatus / driverVersionFailureMessage）。比較は major 版のみで、Selenium Manager が fresh なキャッシュに解決する 156.0.8078.80 と実 Chrome 156.0.8078.76 を「整合」と扱う。
+  - 不一致・取得不能のときは、両 major 版と解決済みバイナリのパス、修復手順（SE_CACHE_PATH を新しいキャッシュに向けてネットワーク付きで再実行 / JUSHOAI_DRIVER_DOWNLOAD=1 の opt-in ダウンロード / npx @puppeteer/browsers install chromedriver@<major> / CHROMEDRIVER_BIN での明示 / Chrome 側の major 揃え）を示したメッセージで失敗する。古いキャッシュへの黙ったフォールバックはしない。
+  - Chrome 側にも Firefox の FIREFOX_BIN に相当する上書き経路を足した（CHROME_BIN。候補は macOS 固有パスと CI ランナーの Debian/Ubuntu パス）。CHROMEDRIVER_BIN でもドライバを明示できる。
+  - 整合していた場合は、検証済みのバイナリを ServiceBuilder 経由でセッションに渡す。build() 内の 2 回目の Selenium Manager 解決をスキップするので、検証したバイナリがそのまま使われる。
+- SE_CACHE_PATH をリポローカル（tmp/selenium-cache/）に寄せる配線を harness に足した。未設定のときだけ harness が設定し、明示設定は尊重する。stale だった ~/.cache/selenium/ の 154 はこの配線で参照されなくなる。harness で配線したのは make e2e-chrome でも vitest の直接実行でも効くため（Makefile 配線は make 経由に限定される）。
+- 自動ダウンロードは JUSHOAI_DRIVER_DOWNLOAD=1 で opt-in の経路を足した。Selenium Manager が解決できないとき、npx @puppeteer/browsers install chromedriver@<major> で一致版を取得し ServiceBuilder 経由で渡す（ネットワーク要求になるため opt-in）。Selenium Manager 自身のダウンロードは既存の解決経路そのままで、opt-in にはしていない。
+- CI Chrome E2E の ElementClickInterceptedError 対処: 失敗 test は CI ログ（job 123974733509、2026-10-30T08:51 の main 実行）から確定した。`chrome: float notice behavior (PBI-165) > keeps the error until closed` の scenarios.ts saveProfileButton（保存）クリックが (280, 86) で横取りされ、別の `<button type="button">` がクリックを受け取っていた。横取り要素は初回向けガイドの浮遊表示と推定（後述の通り座標の再現はローカルで不能）。最後のプロファイルを削除すると guideTrialMode が 'profile' に戻り、ガイドが固定表示（position: fixed + z-index: 1000）でページ最上部に再出現する。シナリオの trial 段階ではガイド自身のボタン（trialBothButton）が必要なため、一時非表示はガイドが役目を終えた後、保存ボタンを触る直前に dismissGuideIfPresent（× クリック、dismissGuideForSession の経路）で行う。本物のユーザー操作に合わせた対処で、プロダクトは弱めていない。
+
+### 検証結果
+
+- 単体: tests/e2e/driver-version.test.ts を先に追加して RED（Failed to resolve import "./driver-version"）を確認し、実装後に GREEN（13 tests）。make test も 2221 passed + 1 expected fail で従来どおり。driver-version.test.ts は vitest.config.ts の tests/**/*.test.ts で回り、chrome-flags.test.ts（7 tests）と同じ配線。
+- 型検査: npm run typecheck（tsc --noEmit）は clean。
+- make test-build: 24 tests passed。両ブラウザの manifest 検査に影響なし。
+- ローカル Chrome E2E: HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome で 24 tests passed。ガイドの一時非表示の修正の有無で両方緑だった（後述の通りローカルでは横取りが再現しない）。E2E_NO_SANDBOX=1 はこの制限付きサンドボックス環境（ブラウザサンドボックスが使えない）でのみ必要で、通常のローカルや CI では不要。
+- 版数 preflight の実測: 実 Chrome 156.0.8078.76、Selenium Manager が fresh な SE_CACHE_PATH に解決した chromedriver は 156.0.8078.80（major 一致、preflight を通ってセッションが作られた）。~/.cache/selenium/chromedriver/mac-arm64/154.0.8037.92/ の stale キャッシュは参照されなくなった。
+
+### ローカルで確認できたこととできなかったこと
+
+- できたこと: 版数 preflight と SE_CACHE_PATH 配線の実動作（24 tests が最後まで緑）、単体 test の RED から GREEN、型検査、make test-build、stale キャッシュ遮断の実測。
+- できなかったこと（CI で確認するもの）: CI の e2e ジョブ chrome マトリクスの緑。修正は push + PR 後でしか確認できない。(280, 86) の横取りのローカル再現もできなかった。macOS は CI（ubuntu）とフォントメトリクスが違い、保存ボタンが viewport 最上部に来る座標がずれるためで、修正の妥当性は CI ログのスタックトレース（saveProfileButton のクリック）と、ガイド再出現のコード経路（guideTrialMode → guideState → showGuide、index.html の fixed + z-index 1000）の読み合わせに依る。横取り要素の特定は推定のまま。

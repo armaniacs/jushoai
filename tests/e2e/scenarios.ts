@@ -2,8 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { Key, type WebDriver } from 'selenium-webdriver';
 import {
   By, HOST_SELECTOR, OPTIONS_SELECTORS, PROFILE_DATA, badgeNotice, bannerHost, bannerWrap,
-  clickApplyButton, clickFillButton, mountedHosts, panelChildTags, reportButton,
-  resultPanelText, until, valueOf,
+  clickApplyButton, clickFillButton, dismissGuideIfPresent, mountedHosts, panelChildTags,
+  reportButton, resultPanelText, until, valueOf,
 } from './harness';
 import type { BrowserAdapter } from './adapter';
 
@@ -517,6 +517,16 @@ export function runFloatNotice(adapter: BrowserAdapter, label: string): void {
         await driver.findElement(
           By.xpath(OPTIONS_SELECTORS.deleteProfileButton),
         ).click();
+        // Deleting the last profile re-enters the guide's trial mode, so the
+        // floating guide re-appears fixed over the page top (z-index 1000)
+        // and covers the save button once it sits high in the viewport: CI
+        // (job 123974733509, 2026-10-30) failed this exact 保存 click with
+        // ElementClickInterceptedError at (280, 86) — a guide button would
+        // receive the click. The trial step above needs the guide shown, so
+        // the dismissal follows real user behavior right where a user would
+        // clear the overlay: after the trial, before touching the button it
+        // covers (× 一時非表示, dismissGuideForSession's click path).
+        await dismissGuideIfPresent(driver);
         await clickOptionsButton(driver, OPTIONS_SELECTORS.saveProfileButton);
         await driver.wait(until.elementLocated(By.css(OPTIONS_SELECTORS.errorToast)), 10_000);
         await driver.sleep(4500);
