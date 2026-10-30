@@ -47,7 +47,7 @@ JushoAI
 3. プレビューを確認して承認します
 
 ソースコードは GitHub で公開しています（GPL）。
-ストアのレビューには返信できないため、不具合や要望は GitHub の Issue（[作成フォーム](https://github.com/armaniacs/jushoai/issues/new/choose)）へお願いします。
+ストアのレビューには返信できないため、不具合や要望は GitHub の Issue（https://github.com/armaniacs/jushoai/issues/new/choose）へお願いします。
 ```
 
 ### 詳細な説明（en）
@@ -77,6 +77,7 @@ How to use
 3. Review the preview and approve
 
 The source code is published on GitHub (GPL).
+Store reviews cannot be replied to. For bugs and feature requests, please open a GitHub issue: https://github.com/armaniacs/jushoai/issues/new/choose
 ```
 
 ### カテゴリ・言語
