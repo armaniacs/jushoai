@@ -31,11 +31,11 @@ Scenario: 初回向けガイドの浮遊表示が出ていても操作が通る
   Then  ガイドがクリックを横取りせず、全シナリオが緑になる
 
 ## 受け入れ基準
-- [ ] Chrome 側にも Firefox の FIREFOX_BIN に相当するブラウザ上書き経路があり、版数を合わせた ChromeDriver を明示して E2E を起動できる
-- [ ] 一致する ChromeDriver が取得できないとき、古いキャッシュへの黙ったフォールバックをせず、修復手順を示したメッセージで失敗する
-- [ ] 初回向けガイドが表示される fresh run でも、ガイドがクリックを横取りせずに E2E が最後まで緑になる
-- [ ] CI の e2e ジョブ chrome マトリクスが main で緑になり、CI gate 全体が緑に戻る
-- [ ] firefox の E2E と make check が従来どおり緑である（既存の緑を落とさない）
+- [x] Chrome 側にも Firefox の FIREFOX_BIN に相当するブラウザ上書き経路があり、版数を合わせた ChromeDriver を明示して E2E を起動できる（CHROME_BIN/CHROMEDRIVER_BIN 上書き、検証済みバイナリを ServiceBuilder で渡す）
+- [x] 一致する ChromeDriver が取得できないとき、古いキャッシュへの黙ったフォールバックをせず、修復手順を示したメッセージで失敗する
+- [x] 初回向けガイドが表示される fresh run でも、ガイドがクリックを横取りせずに E2E が最後まで締める（ガイドの × 一時非表示を 保存 クリック前に。横取り要素は CI 失敗ログからの推定と実装記録に明記）
+- [x] CI の e2e ジョブ chrome マトリクスが main で締めになり、CI gate 全体が締めに戻る（PR #20 の check ワークフロー run 41123731670 で chrome/firefox/check 全て success）
+- [x] firefox の E2E と make check が従来どおり締めである（既存の締めを落とさない）
 
 ## 実装手順
 - 版数整合の判定を純粋関数に切り出す: Chrome の版数と ChromeDriver の版数から「整合 / 不一致 / 取得不能」を返す関数を tests/e2e/ に足し、tests/e2e/chrome-flags.ts と同じ方式で単体テストを先に書く
@@ -52,9 +52,9 @@ Scenario: 初回向けガイドの浮遊表示が出ていても操作が通る
 0.35（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（driver-version.test.ts 13 テスト、E2E 24/24）
+- [x] コードレビュー完了（タスクレビュー Approved、Minor 4件のみ）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
 
