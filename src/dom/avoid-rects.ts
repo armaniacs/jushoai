@@ -2,7 +2,7 @@ import type { Rect } from '../ui/position';
 import { isHidden } from './geometry';
 import { TEXT_TYPES } from './scan-fields';
 
-// Same walk-scan policy as the extension (CLAUDE.md): the scanned control
+// Same walk-scan policy as the extension (AGENTS.md): the scanned control
 // types (TEXT_TYPES, incl. date since PBI-118) are the fields the button must
 // not cover. checkbox/hidden/submit and other types are out of the scan set
 // and out of the blockers.

@@ -1,5 +1,5 @@
 // PBI-122: deterministic building-name abbreviations, fixed by a rule table —
-// never an LLM (CLAUDE.md: LLM classifies, core shapes values). Applied when a
+// never an LLM (AGENTS.md: LLM classifies, core shapes values). Applied when a
 // building-bearing field overflows its maxlength; the planner offers the
 // shortened form as a preview choice and injects it only through the user's
 // explicit approval (NOT-TODO 12: no unapproved truncation or omission).

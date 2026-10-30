@@ -1,12 +1,16 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents when working with code in this repository.
 
 ## プロジェクト概要
 
 日本式フォーム（姓名・フリガナ・分割された住所）を補完する Chrome 拡張機能（Manifest V3）。フィールド分類はルール主体で、判定できない欄だけ AI で補助する（プロバイダはユーザーが選べる）。プロファイルの値は外部に送信しない（AI を使う設定にした場合のみ、欄のメタデータが選択したプロバイダに送られる）。
 
 設計の一次情報は `docs/superpowers/specs/2026-10-03-jushoai-design.md` と `docs/superpowers/specs/2026-10-04-cloud-llm-providers-design.md`、実装手順は `docs/superpowers/plans/2026-10-03-jushoai.md` と `docs/superpowers/plans/2026-10-04-cloud-llm-providers.md`。コードを書く前に読むこと。
+
+## 実装の進め方
+
+実装（実装計画の実行・機能追加・修正）をするときは、必ず「サブエージェント駆動」を選ぶ。`subagent-driven-development` スキルを読み、タスクを 1 つずつサブエージェントに委譲して実装・検証させ、報告を確認してから次のタスクに進める。メインエージェントが自力でコードを書いて一気に実装しない。brief・report・進捗は既存の運用に合わせて `.superpowers/sdd/` に置く。サブエージェントを持たないホストでは、その旨を最初に報告してから自前で進める。
 
 ## コマンド
 

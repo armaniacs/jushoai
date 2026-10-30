@@ -37,7 +37,7 @@ JushoAI の今後の実装方針。設計書・実装プラン・PBI 台帳・CH
 - 動機: 走査対象は現在 text/email/tel/search/select のみ。年月日を 1 input に入れる欄・`type=date` 欄は実在フォームに存在し、現在は注入されない。
 - 範囲: 走査対象の拡大(`type=date`)、注入形式の決定(ISO `YYYY-MM-DD` か、ページの placeholder 例示に従うか。設計時に決める)。
 - 注意: プロファイル設計書の「含めない」を今回の決定(2026-10-17)で解除する変更。既存 `birthday`(ISO 1 本)・和暦導出は無改変で再利用する。
-- 手順: 対象 URL を持つ PBI は `make addurl URL=<url>` から始め、samples への fixture 追加と `tests/integration/samples.test.ts` へのケース追加を必須にする(CLAUDE.md のテスト方針)。
+- 手順: 対象 URL を持つ PBI は `make addurl URL=<url>` から始め、samples への fixture 追加と `tests/integration/samples.test.ts` へのケース追加を必須にする(AGENTS.md のテスト方針)。
 
 ### 5. 会社名・部署の対応(text 欄のみ)
 

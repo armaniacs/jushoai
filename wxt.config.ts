@@ -7,7 +7,7 @@ export default defineConfig({
   zip: {
     excludeSources: [
       'video/**', 'site/**', 'site-dist/**', 'docs/**', 'samples/**', 'tests/**', 'tmp/**',
-      'graphify-out/**', 'pbi/**', 'plans/**', 'scripts/**', 'CLAUDE.md', 'CHANGELOG.md',
+      'graphify-out/**', 'pbi/**', 'plans/**', 'scripts/**', 'AGENTS.md', 'CHANGELOG.md',
       'vitest*.config.ts', '.superpowers/**', '.github/**',
       // AMO reviewers must not receive throwaway scan artifacts (incl. test keys) or promo material.
       'JushoAI_VULNHUNT_*/**', 'promo/**',
