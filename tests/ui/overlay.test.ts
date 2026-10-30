@@ -73,4 +73,38 @@ describe('OVERLAY_CSS', () => {
     expect(dark).toMatch(/--jushoai-panel-bg: #212530;/);
     expect(dark).toMatch(/--jushoai-panel-fg: #e8eaf0;/);
   });
+
+  it('overrides every dark token in the dark palette (PBI-209)', () => {
+    const dark = OVERLAY_CSS.slice(OVERLAY_CSS.indexOf('@media (prefers-color-scheme: dark)'));
+    // The full dark palette is pinned token by token: a silent hex drift in
+    // one entry must fail instead of shipping a half-updated panel.
+    const palette: Array<[string, string]> = [
+      ['--jushoai-panel-bg', '#212530'],
+      ['--jushoai-panel-fg', '#e8eaf0'],
+      ['--jushoai-border', '#3a4152'],
+      ['--jushoai-button-bg', '#2b303c'],
+      ['--jushoai-muted', '#a3abbd'],
+      ['--jushoai-divider', '#2f3441'],
+      ['--jushoai-danger', '#ff8a80'],
+      ['--jushoai-chip-bg', '#262b36'],
+      ['--jushoai-chip-border', '#3a4152'],
+      ['--jushoai-warn', '#ffb74d'],
+      ['--jushoai-input-border', '#565e70'],
+    ];
+    for (const [token, value] of palette) {
+      expect(dark).toContain(`${token}: ${value};`);
+    }
+  });
+
+  it('puts the dark color-scheme override after the light .panel rule (PBI-209)', () => {
+    // Cascade order: both .panel rules have specificity (0,1,0) and the same
+    // origin, so the later one wins in BOTH modes. A dark override placed
+    // before the main rule would pin color-scheme to light even on dark OS,
+    // leaving native selects/inputs/checkboxes light on the dark panel.
+    const darkScheme = OVERLAY_CSS.indexOf('.panel { color-scheme: dark');
+    const lightScheme = OVERLAY_CSS.lastIndexOf('color-scheme: light');
+    expect(darkScheme).toBeGreaterThan(-1);
+    expect(lightScheme).toBeGreaterThan(-1);
+    expect(darkScheme).toBeGreaterThan(lightScheme);
+  });
 });

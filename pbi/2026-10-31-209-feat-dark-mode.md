@@ -68,7 +68,7 @@ Scenario: light OS では見た目が変わらない
 
 ### 変数マッピング
 
-OVERLAY_CSS（src/ui/overlay.ts）に共通トークン 15 個、button.ts にバナー専用トークン 3 個を定義し、各パネルの固定 hex を変数参照へ置き換えた。
+OVERLAY_CSS（src/ui/overlay.ts）に共通トークン 15 個、button.ts にバナー専用トークン 4 個を定義し、各パネルの固定 hex を変数参照へ置き換えた。
 
 | トークン | light | dark | 参照箇所 |
 | --- | --- | --- | --- |
@@ -88,6 +88,7 @@ OVERLAY_CSS（src/ui/overlay.ts）に共通トークン 15 個、button.ts に�
 | --jushoai-warn | #8a4b00 | #ffb74d | egress .egress-row.suspect |
 | --jushoai-input-border | #cfd6e0 | #565e70 | guest .gfield input の罫線 |
 | --jushoai-banner-bg | rgba(36, 87, 214, 0.9) | rgba(28, 45, 100, 0.9) | バナー背景（button.ts） |
+| --jushoai-banner-fg | #fff | 変更なし | バナー文字（button.ts .wrap、レビュー対応で追加。両テーマ同値のため dark エントリなし） |
 | --jushoai-banner-bg-active | #1c46b3 | #1e3a8a | バナー hover / focus / active |
 | --jushoai-banner-error-bg | #b3261e | 変更なし | バナーのエラーバッジ背景 |
 
@@ -117,7 +118,7 @@ dark パネル背景 #212530（相対輝度 0.019）に対する文字色のコ�
 - TDD-first: tests/ui/overlay.test.ts と tests/ui/button.test.ts にトークン構造の assert（light 既定値の pin と `@media (prefers-color-scheme: dark)` の存在）を先に追加して red を確認し、実装後に green を確認した。
 - tests/ui/button.test.ts の 3 つの色 assert は、.wrap と .badge の background が var() 参照になったことに合わせて更新し、light 既定値（rgba(36, 87, 214, 0.9) / #1c46b3 / #b3261e）を pin する assert を足した。既存 assert の意図（半透明 0.9、badge の色固定）は維持。
 - tests/ui/overlay.test.ts の既存の構造 assert（.panel { など）は変更せず green のまま。
-- tests/e2e/scenarios.ts:396 の rgba assert は、getCssValue が var() を解決した計算値を返し light 既定値が変わらないため変更していない（make e2e-chrome で green を確認）。
+- tests/e2e/scenarios.ts:396 の rgba assert は、getCssValue が var() を解決した計算値を返し light 既定値が変わらないため変更していない。実装時の make e2e-chrome は制限付きサンドボックスでは E2E_NO_SANDBOX=1 が渡らず、24 テストすべて skip で green 判定は実行を伴わなかった。その後 20e1235 HEAD で `HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome` を再実行し、24/24 green（scenarios.ts:396 の rgba assert を含む）を確認した。
 - make test（174 ファイル 2233 テスト）と make check が green。
 
 ### 手動確認が必要なこと
@@ -127,3 +128,21 @@ dark パネル背景 #212530（相対輝度 0.019）に対する文字色のコ�
    - 期待: バナーは暗青（rgba(28, 45, 100, 0.9)）、hover / focus / active で #1e3a8a。エラーバッジは #b3261e のまま白文字が読める。
 2. light OS に戻して同じ手順を実行し、本 PBI 以前の見た目（白パネル、#2457d6 の primary ボタン、rgba(36, 87, 214, 0.9) のバナー）と同一であることを確認する。
 3. dark パネルと dark バナーの文字色コントラストを WCAG AA（4.5:1）で実測する（DevTools のコントラスト表示等）。上記の数値は手計算で、実測はこの項目で確定させる。
+
+### レビュー対応（2026-10-31、Important 2 件）
+
+1. カスケード順の不具合: dark 上書きメディアブロック内の `.panel { color-scheme: dark; }` が、後続のメイン `.panel` ルール（末尾に `color-scheme: light`）より前にあった。両ルールは詳細度 (0,1,0) で同順のため、後ろの light が light/dark 両モードで勝ち、dark OS でもパネルの color-scheme が light に固定されていた。ネイティブの select / input / checkbox が dark パネル上で light のまま描画され、手動確認の期待「select と checkbox も dark で描画される」を満たさない。
+   - 修正: `.panel { color-scheme: dark; }` を OVERLAY_CSS 末尾の 2 つ目の `@media (prefers-color-scheme: dark)` ブロックへ移し、メインの `.panel` ルールより後に置いた。メインの light ルールは変更せず、light モードの見た目は不変。
+   - 回帰テスト: tests/ui/overlay.test.ts に順序 assert（dark の color-scheme ルールの位置がメインルールの `color-scheme: light` の位置より後であること）を追加し、修正前に red（`expected 1696 to be greater than 2317`）、修正後に green を確認した。
+2. 実装記録の e2e 記載を実態に合わせて修正した（上記テスト節の該当行）。実装時の make e2e-chrome は制限付きサンドボックスで E2E_NO_SANDBOX=1 が渡らず 24 テストすべて skip で、green は実行を伴わなかった記載になっていた。green は 20e1235 HEAD での `HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome` 再実行によるもので、記録をその事実に直した。
+
+あわせて Minor を 2 件処理した。
+
+- button.ts の `.wrap` の `color: #fff` を `--jushoai-banner-fg` トークンへ寄せ、tests/ui/button.test.ts に pin を追加した。テーマ不変（dark エントリなし）でバナーの見た目は不変。
+- tests/ui/overlay.test.ts の dark トークン pin を 2 個から OVERLAY_CSS の 11 個すべてのループへ拡張した（button.ts 側の dark 2 個は既存テストが pin 済み）。
+
+フォローアップ（未対応、次の機会に）:
+
+- overlay.test.ts / button.test.ts の dark ブロック位置取得が `indexOf` の文字列スライスに依存している。今回の修正で OVERLAY_CSS には dark メディアブロックが 2 つになったが、dark トークンは 1 つ目のブロックのみにあり、スライスは先頭のブロックから文字列末尾までを取るため現行は正しく動く。ブロック単位のパースへ置き換えると配置変更に強くなる。
+
+修正後の検証: npx vitest run tests/ui/overlay.test.ts（8 テスト green）、make test（174 ファイル 2236 テスト、2235 green、expected fail 1 件は従来どおり）、make check（exit 0）、`HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome`（24/24 green、scenarios.ts:396 の rgba assert を含む）。

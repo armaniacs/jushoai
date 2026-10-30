@@ -54,6 +54,9 @@ const CSS = `
     --jushoai-banner-bg: rgba(36, 87, 214, 0.9);
     --jushoai-banner-bg-active: #1c46b3;
     --jushoai-banner-error-bg: #b3261e;
+    /* Theme-invariant: white on the banner clears WCAG AA in both themes
+       (dark resting background blends to 9.7:1), so no dark entry. */
+    --jushoai-banner-fg: #fff;
   }
   @media (prefers-color-scheme: dark) {
     :host {
@@ -62,7 +65,7 @@ const CSS = `
     }
   }
   .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
-    font: 600 13px/1 system-ui, sans-serif; color: #fff;
+    font: 600 13px/1 system-ui, sans-serif; color: var(--jushoai-banner-fg);
     /* PBI-162: the banner background stays translucent so a field it still
        covers remains readable (the placement, PBI-161, cannot always find a
        collision-free spot). 0.9 keeps the page visible through the banner

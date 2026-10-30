@@ -54,20 +54,29 @@ export const OVERLAY_CSS = `
       --jushoai-warn: #ffb74d;
       --jushoai-input-border: #565e70;
     }
-    .panel { color-scheme: dark; }
   }
   .panel { all: initial; display: block; box-sizing: border-box; width: 360px; max-height: 80vh;
     overflow: auto; font: 13px/1.5 system-ui, sans-serif; color: var(--jushoai-panel-fg); background: var(--jushoai-panel-bg);
     border: 1px solid var(--jushoai-border); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25);
     /* color-scheme cannot ride :host (the host's inline all: initial !important
-       beats it for real properties); declared after all: initial in the same
-       block it wins, so native selects/inputs/checkboxes follow the theme. */
+       beats it for real properties); declared after all: initial in this block
+       it wins the light default. The dark override must sit in a media block
+       AFTER this rule: equal specificity (0,1,0) resolves by source order, so
+       an override placed before this rule would lose in BOTH modes. */
     color-scheme: light; }
   h2 { margin: 0 0 8px; font-size: 14px; }
   .actions { display: flex; justify-content: flex-end; gap: 8px; }
   button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--jushoai-border);
     background: var(--jushoai-button-bg); cursor: pointer; }
   button.primary { background: var(--jushoai-primary); border-color: var(--jushoai-primary); color: var(--jushoai-primary-fg); }
+  /* PBI-209: the dark color-scheme override lives in its own media block at
+     the end of OVERLAY_CSS, after the .panel rule above. Equal specificity
+     (0,1,0), same origin: the later rule wins, so on dark OS this lands after
+     color-scheme: light and native selects/inputs/checkboxes follow the dark
+     theme. Declaring it in the media block above would lose in both modes. */
+  @media (prefers-color-scheme: dark) {
+    .panel { color-scheme: dark; }
+  }
 `;
 
 // Capture phase so the panel still sees Escape when the page stops the event.

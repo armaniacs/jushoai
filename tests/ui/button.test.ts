@@ -293,6 +293,9 @@ describe('mountButton', () => {
       // PBI-162 value, so the light banner is unchanged.
       expect(css()).toMatch(/\.wrap \{[^}]*background: var\(--jushoai-banner-bg\)/);
       expect(css()).toMatch(/--jushoai-banner-bg: rgba\(36, 87, 214, 0\.9\)/);
+      // The text color rides its token too (theme-invariant, no dark entry).
+      expect(css()).toMatch(/\.wrap \{[^}]*color: var\(--jushoai-banner-fg\)/);
+      expect(css()).toMatch(/--jushoai-banner-fg: #fff;/);
       // The badge colors are untouched (they carry the status meaning).
       expect(css()).toMatch(/\.badge\[data-status="error"\][^{]*\{ background: var\(--jushoai-banner-error-bg\); \}/);
       expect(css()).toMatch(/--jushoai-banner-error-bg: #b3261e/);
