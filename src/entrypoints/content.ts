@@ -4,6 +4,7 @@ import { fillOneReasonLabel } from '../core/fill-one';
 import { fillOneEntry } from '../content/fill-one-entry';
 import { loadFillOneState, loadRunState } from '../content/flow-state';
 import { createFillSession, classifyWithReason } from '../content-session';
+import type { FillBundle } from '../content/fill-flow';
 import { bindPreview } from '../content/preview-bind';
 import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
@@ -19,22 +20,21 @@ import { upsertMapping } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
 import { matches, recordFor } from '../core/site-approval';
 import { assignedFirst, assignmentFor } from '../core/site-profile';
-import { mergeCarryover } from '../core/carryover';
 import { upsertApproval } from '../approval-store';
 import { upsertAssignment } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
-import { guestProfile, guestAddress, type GuestValues } from '../core/guest';
+import { guestProfile, guestAddress } from '../core/guest';
 import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
 import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
-import { mergeLlmSkip, planEgress, shouldDisableClassifier } from '../core/egress-plan';
+import { mergeLlmSkip, shouldDisableClassifier, type EgressPlan } from '../core/egress-plan';
+import { prepare } from '../core/classify-once';
 import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
 import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
-import type { ClassifyFailure } from '../messages';
 import { isReady, saveLastUsed } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
@@ -46,6 +46,7 @@ import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-ch
 import { createExclusionGate } from '../content/exclusion-gate';
 import { createTabDispatcher } from '../content/tab-dispatch';
 import { persistWrite } from '../content/persist-write';
+import { createTabScopeMemory } from '../content/tab-scope';
 
 // --- PBI-21: sync prefilter -------------------------------------------------
 // sync() is debounced off the MutationObserver, but even a skipped sync pays a
@@ -131,10 +132,6 @@ export default defineContentScript({
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
-    // Last AI failure behind the current status (cleared on success): the
-    // badge guide reads it so a failed-while-available run still points at
-    // the AI判定画面の接続テスト instead of saying "available" alone.
-    let lastFailure: ClassifyFailure | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
     // Single place that tears down open panels: closing one panel must never
@@ -166,14 +163,14 @@ export default defineContentScript({
       lastContextTarget = e.target instanceof Element ? e.target : null;
     }, true);
 
-    // --- PBI-144: one-shot guest values ----------------------------------------
-    // Memory only: set by the guest panel, overlaid onto the session's
-    // throwaway copies at plan time, destroyed with the tab. Never
-    // chrome.storage, never the audit log, never the export/import.
-    let guest: GuestValues | null = null;
-    // PBI-142: the earlier page's approved values for this tab. Content-script
-    // memory only — a tab close destroys it, nothing persists or is sent.
-    let carryover: Record<string, string> = {};
+    // --- PBI-201: tab-scoped memory --------------------------------------------
+    // The one-shot guest (PBI-144), the wizard carryover (PBI-142) and the
+    // last AI failure live behind one owner (../content/tab-scope). Tab
+    // memory only: a tab close destroys them, and they never reach
+    // chrome.storage, the audit log or the export/import — the lifetime
+    // rules (one-shot consumption, snapshot-at-run-start) live in that
+    // module's doc comment.
+    const tabMemory = createTabScopeMemory();
 
     // Rule-only for one field: no LLM, no egress gate. The same planner
     // guards as the full preview (入力済み・readonly/disabled・maxlength超過は
@@ -188,7 +185,7 @@ export default defineContentScript({
         ) ?? null,
         load: () => loadFillOneState(),
         ready: isReady,
-        carryover: () => carryover,
+        carryover: () => tabMemory.carryover(),
         domain: () => hostOf(location.href),
         onNoData: () => { void chrome.runtime.sendMessage({ type: 'open-options' }); },
         showBlocked: (label, reason) => showFillOneBlocked(label, fillOneReasonLabel(reason)),
@@ -250,7 +247,7 @@ export default defineContentScript({
       // PBI-144: the guest bypasses the readiness gate — a one-shot fill needs
       // no saved profile, and the guest values overlay the (empty) stored
       // copies below. No guest and nothing saved stays the settings guidance.
-      if (!isReady(data) && !guest) {
+      if (!isReady(data) && !tabMemory.guest()) {
         void chrome.runtime.sendMessage({ type: 'open-options' });
         return;
       }
@@ -284,16 +281,22 @@ export default defineContentScript({
       // any network. Suspect rows default to excluded; closing the gate
       // (Escape included) resolves as rule-only, so no choice means no send.
       let effectiveClassifier = classifier;
-      // PBI-145: the gate's pending list and the actual send come from the
-      // same split (splitPending, PBI-154), so the gate shows exactly what
-      // classifyAll will send and a taught field's metadata never reaches
-      // the LLM.
+      // PBI-179: one classify pass shared by the gate and the send path. The
+      // bundle below holds the pass's staged artifacts; the gate reads its
+      // plan views and the send path receives it as premade, so the gate
+      // shows exactly what classifyWithReason will send and a taught field's
+      // metadata never reaches the LLM.
       let llmSkip: ReadonlySet<string> | undefined;
-      {
-        const taught = new Set(
+      const prepared = prepare(metas, {
+        taughtKeys: new Set(
           activeMappings.filter((e) => e.domain === hostOf(location.href)).map((e) => e.fieldKey),
-        );
-        const plan = planEgress(metas, taught);
+        ),
+      });
+      // PBI-181: prepare 一本化 — the gate plan is a thin EgressPlan view of
+      // the same bundle the send path receives (no second classify pass, no
+      // hand-built plan literal).
+      const plan: EgressPlan = prepared;
+      {
         llmSkip = plan.taughtIds.size > 0 ? plan.taughtIds : undefined;
         if (classifier && plan.pending.length > 0) {
           closeOpenPanels();
@@ -321,7 +324,10 @@ export default defineContentScript({
       // guest values never mix, so the preview shows exactly what will fill.
       // The stored arrays are never mutated, so chrome.storage stays untouched
       // and the overlay dies with the tab.
-      const activeGuest = guest;
+      // PBI-201: the run keeps the snapshot taken here — the owner's later
+      // writes (a guest set while this run is in flight, the one-shot
+      // consumption below) never change what this run overlays.
+      const activeGuest = tabMemory.guest();
       // PBI-141: the assigned profile becomes the first candidate. A guest fill
       // has a single profile and no assignment.
       const assignedProfileId = activeGuest
@@ -331,25 +337,43 @@ export default defineContentScript({
         ? [guestProfile(activeGuest)]
         : assignedFirst(data.profiles, assignedProfileId);
       const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
-      const session = createFillSession(
-        {
+      // PBI-178: the whole apply transaction (consent→inject→persist→
+      // carryover→feedback→banner＋承認/割当/guest後処理) is assembled here as
+      // one FillFlow bundle. bindPreview below only digests the apply result.
+      const bundle: FillBundle = {
+        input: {
           profiles: sessionProfiles,
           addresses: sessionAddresses,          lastProfileId: last.profileId,
           lastAddressId: last.addressId,
           assignedProfileId,
-          carryover,
+          // PBI-201: the carryover read at bundle-build time. The owner
+          // replaces (never mutates) the map on merge, so this stays the
+          // run's build-time snapshot while the fill-one getter sees the
+          // latest.
+          carryover: tabMemory.carryover(),
           metas,
           metasById,
           englishPage,
           canReanalyze: effectiveClassifier !== null,
+          // PBI-181: the run's shared pass. The session attaches it to every
+          // classify call, so the env below passes it through first-class.
+          run: prepared,
         },
-        {
+        env: {
           // PBI-138: the taught mapping rides as a correction layer on top of
           // whatever classification path ran — the learned pair wins over the
           // rule, and an excluded page never gets here (the session returns
           // excluded before opening any panel).
           classify: (ms, opts) =>
-            classifyWithReason(effectiveClassifier, ms, { ...opts, llmSkip }).then((res) => ({
+            classifyWithReason(effectiveClassifier, ms, {
+              ...opts,
+              llmSkip,
+              // PBI-181: pass through the shared bundle received first-class on
+              // opts.run (attached from input.run by the session). No
+              // metas-identity check: a copied/filtered metas array resolves to
+              // the same pass.
+              premade: opts.run,
+            }).then((res) => ({
               ...res,
               items: applyMapping(res.items, activeMappings, hostOf(location.href)),
             })),
@@ -381,17 +405,48 @@ export default defineContentScript({
           // PBI-142: the filled values merge into this tab's carryover, so the
           // next page re-offers them. Tab-scoped memory only — never storage.
           recordCarryover: (entries) => {
-            carryover = mergeCarryover(carryover, entries);
+            tabMemory.mergeCarryover(entries);
+          },
+          // PBI-128: the per-site approval memory. A record for this host with
+          // the same form shape and selection shortens the preview to the
+          // changed rows; a clean apply records the shape (digests only — no
+          // raw profile value, no raw label).
+          recordApproval: (rows) => {
+            // PBI-153: reported through persistWrite instead of an unhandled
+            // rejection inside the `void` IIFE.
+            persistWrite('サイトごとの承認', async () => {
+              const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
+              if (!record.domain) return;
+              await upsertApproval(record);
+            });
+          },
+          // PBI-141: the profile used on this host is learned from use. Only the
+          // host → profileId pair persists — never a profile value.
+          recordAssignment: (profileId) => {
+            // PBI-153: reported through persistWrite instead of an unhandled
+            // rejection from the bare `void`.
+            persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
+          },
+          // PBI-144: the guest is one-shot — the fill consumes it. Without this
+          // the run would keep overlaying the stored data for every later
+          // press on the same tab (BDD: タブを閉じるか完了する→破棄).
+          onApplied: () => {
+            // Only the run that snapshotted a guest consumes it: a non-guest
+            // run's apply never clears a guest set after its snapshot.
+            tabMemory.consumeGuest(activeGuest);
           },
         },
-      );
+      };
+      const session = createFillSession(bundle.input, bundle.env);
       const started = await session.start();
       if (started.failureReason) {
-        lastFailure = started.failureReason;
         button.showError({ kind: 'transient', text: hintForButton(started.failureReason) });
-      } else {
-        lastFailure = null;
       }
+      // Last AI failure behind the current status (cleared on success): the
+      // badge guide reads it so a failed-while-available run still points at
+      // the AI判定画面の接続テスト instead of saying "available" alone.
+      // Tab-scoped memory only — never persisted (PBI-201).
+      tabMemory.setLastFailure(started.failureReason);
       void getAiStatusViaBackground().then((i) => button.setStatus(i));
 
       // Preview and guide occupy the same fixed corner; opening one must close the other.
@@ -412,7 +467,7 @@ export default defineContentScript({
         feedbackContext: feedbackCtx,
         openFeedbackUrl,
         onClosed: () => { openPreview = null; },
-        onFailure: (reason) => { lastFailure = reason; },
+        onFailure: (reason) => { tabMemory.setLastFailure(reason); },
         // PBI-138: the 分類を直す flow. The correction runs through the session
         // (rule-only re-plan) and the learned pair persists only when the user
         // approved remembering it. The stored pair is a field signature →
@@ -432,35 +487,12 @@ export default defineContentScript({
             });
           });
         },
-        // PBI-128: the per-site approval memory. A record for this host with
-        // the same form shape and selection shortens the preview to the
-        // changed rows; a clean apply records the shape (digests only — no
-        // raw profile value, no raw label).
+        // PBI-128: the per-site approval memory shortens the preview to the
+        // changed rows (view only). The record save rides the FillFlow
+        // transaction (PBI-178: bundle.env.recordApproval above).
         approval: matches(priorApproval, location.href, metas, session.selectedProfileId, session.selectedAddressId)
           ? priorApproval
           : null,
-        recordApproval: (rows) => {
-          // PBI-153: reported through persistWrite instead of an unhandled
-          // rejection inside the `void` IIFE.
-          persistWrite('サイトごとの承認', async () => {
-            const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
-            if (!record.domain) return;
-            await upsertApproval(record);
-          });
-        },
-        // PBI-141: the profile used on this host is learned from use. Only the
-        // host → profileId pair persists — never a profile value.
-        recordAssignment: (profileId) => {
-          // PBI-153: reported through persistWrite instead of an unhandled
-          // rejection from the bare `void`.
-          persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
-        },
-        // PBI-144: the guest is one-shot — the fill consumes it. Without this
-        // the closure would keep overlaying the stored data for every later
-        // press on the same tab (BDD: タブを閉じるか完了する→破棄).
-        onApplied: () => {
-          if (activeGuest) guest = null;
-        },
       });
       openPreview = preview;
     }
@@ -514,7 +546,7 @@ export default defineContentScript({
           (info) => {
             closeOpenPanels();
             openGuide = showAiGuide(
-              buildGuide(info, browser, lastFailure),
+              buildGuide(info, browser, tabMemory.lastFailure()),
               () => {
                 openGuide = null;
               },
@@ -577,15 +609,15 @@ export default defineContentScript({
     });
 
     // PBI-144: the popup's ゲストで入力 button asks the tab to open the one-shot
-    // entry panel. The typed values stay in this script's memory (the tab close
-    // destroys them): never chrome.storage, never the audit log, never the
-    // export/import. An excluded page keeps its opt-out.
+    // entry panel. The typed values stay in the tab memory (../content/tab-scope):
+    // never chrome.storage, never the audit log, never the export/import.
+    // An excluded page keeps its opt-out.
     registerTabMessage(GUEST_MESSAGE_TYPE, {
       handler: (_msg, sendResponse) => {
         sendResponse({ ok: true });
         void confirmGuest().then((decision) => {
           if (!decision) return;
-          guest = decision;
+          tabMemory.setGuest(decision);
           closeOpenPanels();
           const first = detectForms(document)[0];
           const entry = first ? mounted.get(first.container) : undefined;

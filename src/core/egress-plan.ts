@@ -1,6 +1,5 @@
-import { fieldKeyFor } from './domain-mapping';
-import { splitPending, withoutSkipped } from './pending-split';
-import type { FieldMeta } from './types';
+import { prepare } from './classify-once';
+import type { FieldMeta, RunContext } from './types';
 
 // The egress gate's send plan (PBI-124/PBI-145): the gate shows exactly what
 // classifyAll will send. The taught field ids (PBI-138) ride llmSkip itself,
@@ -9,39 +8,23 @@ import type { FieldMeta } from './types';
 // The pending split itself is owned by splitPending (PBI-154): planEgress and
 // classifyAll both go through it.
 
-export interface EgressPlan {
-  // What the gate shows = what classifyAll will send.
-  pending: FieldMeta[];
-  // The ids skipped because the user taught their category (PBI-138).
-  taughtIds: ReadonlySet<string>;
-  // The non-confident count, taught included: the "all skipped" disable check
-  // compares against this, not against the gate's shorter pending list.
-  nonConfidentCount: number;
-}
+// PBI-181: the plan is a thin view of the canonical RunContext (alias, not a
+// redefinition) — the gate display and the send set are identically-typed by
+// construction.
+export type EgressPlan = Pick<RunContext, 'pending' | 'taughtIds' | 'nonConfidentCount'>;
 
 export function planEgress(
   metas: FieldMeta[],
   taughtKeys: ReadonlySet<string>,
 ): EgressPlan {
-  // One splitPending call yields both partitions of the same classify pass
-  // (the pass planEgress used to pay twice, PBI-145): with no skip set,
-  // unconfident and pending start as the same gate list, and the taught ids
-  // derived from unconfident narrow the send side below.
-  const { unconfident, pending } = splitPending(metas);
-  const taughtIds = new Set(
-    unconfident
-      .filter((m) => {
-        const key = fieldKeyFor(m);
-        return key !== null && taughtKeys.has(key);
-      })
-      .map((m) => m.id),
-  );
-  // The gate's send list applies the skip filter (withoutSkipped) — the same
-  // single owner classifyAll's force path goes through.
+  // Delegates to the classify-once bundle (PBI-179): one classify pass whose
+  // views are exactly this plan's fields, so the gate cannot drift from the
+  // pass the send path reads.
+  const bundle = prepare(metas, { taughtKeys });
   return {
-    pending: withoutSkipped(pending, taughtIds),
-    taughtIds,
-    nonConfidentCount: unconfident.length,
+    pending: bundle.pending,
+    taughtIds: bundle.taughtIds,
+    nonConfidentCount: bundle.nonConfidentCount,
   };
 }
 

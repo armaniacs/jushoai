@@ -3,8 +3,8 @@ import clipsAi from './clips-ai.json';
 
 export const FPS = 30;
 // The recorded video lags the script's own clock slightly (the panel shows ~0.2s after the click mark).
-const VIDEO_LAG = 0.2;
-const PAD_BEFORE = 0.2;
+export const VIDEO_LAG = 0.2;
+export const PAD_BEFORE = 0.2;
 const HOOK = 4;
 const BRIDGE = 5;
 const INFO = 6;
@@ -15,10 +15,10 @@ export interface Zoom { from: number; to: number; scale: number; origin: string;
 export interface Segment { src: number; out: number; dur: number; rate: number }
 export interface DemoClip { file: string; start: number; duration: number; subtitles: Subtitle[]; zoom: Zoom; segments?: Segment[] }
 
-interface Marks { ready: number; end: number; [k: string]: number }
+export interface Marks { ready: number; end: number; [k: string]: number }
 
 // Cue times are anchored to the recorded marks so subtitles stay aligned if a clip is re-recorded.
-function build(file: string, m: Marks, cues: [string, string][], zoom: (rel: (t: number) => number) => Zoom): DemoClip {
+export function build(file: string, m: Marks, cues: [string, string][], zoom: (rel: (t: number) => number) => Zoom): DemoClip {
   const start = m.ready - PAD_BEFORE;
   const rel = (t: number) => t + VIDEO_LAG - start;
   const duration = m.end - start;
@@ -31,7 +31,7 @@ function build(file: string, m: Marks, cues: [string, string][], zoom: (rel: (t:
 }
 
 // The preview panel sits in the top-right corner and is too small to read at full frame, so zoom there while it is open.
-const panelZoom = (open: string, close: string) => (m: Marks) => (rel: (t: number) => number): Zoom =>
+export const panelZoom = (open: string, close: string) => (m: Marks) => (rel: (t: number) => number): Zoom =>
   ({ from: rel(m[open]), to: rel(m[close]), scale: 1.6, origin: '100% 0%' });
 
 const A = clips.a as Marks;
@@ -51,7 +51,7 @@ export const DEMOS_RULES: DemoClip[] = [
 
 // Plays a clip piecewise: each bound is [from, to, rate] in recording seconds. Cue and zoom times are given as
 // recording marks and converted to the sped-up scene's own clock.
-function segmented(
+export function segmented(
   file: string, m: Marks, bounds: [number, number, number][], cues: [string, string][],
   zoom: (outOf: (t: number) => number) => Zoom,
 ): DemoClip {

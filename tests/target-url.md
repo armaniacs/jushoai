@@ -12,3 +12,4 @@
 - https://pro.form-mailer.jp/fms/12fc22bc297429 → 12fc22bc297429.html
 - https://pro.form-mailer.jp/lp/2dd1c663300469 → 2dd1c663300469.html
 - https://fair.j-lis.go.jp/registration/ → registration.html
+- https://kosodatehiroba.com/form/forum → forum.html

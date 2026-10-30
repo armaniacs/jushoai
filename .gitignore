@@ -23,9 +23,13 @@ JushoAI_VULNHUNT_RESULTS_*/
 video/ext/
 video/output/
 video/playwright/.work/
+# dummy-profile store captures, uploaded to dashboards by hand, never committed
+video/playwright/.store-shots/
 video/remotion/node_modules/
 video/remotion/public/*.webm
 video/remotion/public/bgm.*
 
 JushoAI_VULNHUNT_*/
-promo/
+# promo drafts stay local; only the template type is tracked
+promo/*
+!promo/README.md

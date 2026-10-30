@@ -1,7 +1,8 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { ProviderKind } from '../../src/ai/types';
 import { ProviderRegistry } from '../../src/llm/provider-registry';
-import type { PublicAiSettings } from '../../src/ai/types';
+import { DEFAULT_AI_SETTINGS, type PublicAiSettings } from '../../src/ai/types';
+import type { LanguageModelStatic } from '../../src/llm/availability';
 import { makeMeta } from '../helpers';
 
 const openaiSettings = {
@@ -57,5 +58,39 @@ describe('provider registry: memory lifetime', () => {
       .toEqual({ ok: false, reason: 'auth' });
     registry.invalidate();
     expect((await registry.status(openaiSettings, secrets)).status).toBe('available');
+  });
+});
+
+describe('provider registry: route-specific unknown mapping (PBI-192)', () => {
+  const builtInSettings = {
+    ...DEFAULT_AI_SETTINGS,
+    provider: 'built-in' as const,
+    hasKey: { openai: false, gemini: false },
+  } as PublicAiSettings;
+  // An unknown (non-HTTP) error: the LanguageModel session fails with a plain
+  // Error, so neither HttpAuthError nor HttpRequestError reaches the fold.
+  const failingLm = (): LanguageModelStatic => ({
+    availability: async () => 'available',
+    create: async () => {
+      throw new Error('boom');
+    },
+  });
+  const registryWithLm = (lm: LanguageModelStatic | null) =>
+    new ProviderRegistry({
+      getLanguageModel: () => lm,
+      hasPermission: async () => true,
+      fetch: vi.fn() as unknown as typeof fetch,
+      audit: { record: async () => {} },
+    });
+
+  it('reports an unknown error as network on the test route (historical asymmetry)', async () => {
+    await expect(registryWithLm(failingLm()).test(builtInSettings, undefined))
+      .resolves.toEqual({ ok: false, reason: 'network' });
+  });
+
+  it('reports the same unknown error as bad-response on the classify route', async () => {
+    await expect(
+      registryWithLm(failingLm()).classify(builtInSettings, undefined, [makeMeta({ id: 'a', label: '姓' })], { purpose: 'classify' }),
+    ).resolves.toEqual({ ok: false, reason: 'bad-response' });
   });
 });

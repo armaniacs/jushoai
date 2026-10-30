@@ -2,10 +2,6 @@
 
 form-mailerの3分割電話で、ルール単体では全滅、再分析で復活する例がありました。
 
-![before: tel単体扱いでmaxlength警告3連](images/before-reanalyze.png)
-
-![after: tel1/tel2/tel3に割れて警告が消えます](images/after-reanalyze.png)
-
 実装視点で、どこが効いたのかを追います。
 
 ## 分類の seam

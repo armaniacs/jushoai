@@ -214,7 +214,7 @@ describe('classifyField: birth, school, department', () => {
   });
 });
 
-// レビュー指摘の再現 fixture。fixture 先行（CLAUDE.md）: 先に失敗させてから直す。
+// レビュー指摘の再現 fixture。fixture 先行（AGENTS.md）: 先に失敗させてから直す。
 describe('classifyField: single birthday after the label-only anchor (review)', () => {
   it.each([
     // name/id 連結で anchored 一致が壊れ、同じ欄が birthYear (0.7) に落ちていた:
@@ -614,6 +614,8 @@ describe('classifyField: Japanese labels', () => {
   const positives: [Parameters<typeof makeMeta>[0], string][] = [
     [{ label: 'お名前' }, 'fullName'],
     [{ label: '氏名' }, 'fullName'],
+    // PBI-203: (01)参加者名 は 名前 語彙に無い WPForms の参加者名ラベル。
+    [{ label: '(01)参加者名 *' }, 'fullName'],
     [{ label: '姓' }, 'lastName'],
     [{ label: '名' }, 'firstName'],
     [{ label: '名 *' }, 'firstName'],
@@ -636,6 +638,18 @@ describe('classifyField: Japanese labels', () => {
   ];
   it.each(positives)('classifies %j as %s', (p, expected) => {
     expect(cat(p)).toBe(expected);
+  });
+
+  // PBI-203: 参加者名 を FULL_NAME に足しても、(02)参加者名フリガナ の kana 欄は
+  // resolveKana の帰属で fullNameKana のまま残る（classifyField は kana-blind のため
+  // pipeline 経由で確かめる）。
+  it('keeps the participant-kana sibling on the fullNameKana route (PBI-203)', () => {
+    const items = classifyRulePipeline([
+      makeMeta({ id: 'a', label: '(01)参加者名 *' }),
+      makeMeta({ id: 'b', label: '(02)参加者名フリガナ *' }),
+    ]);
+    expect(items.map((i) => i.cls.category)).toEqual(['fullName', 'fullNameKana']);
+    expect(items[1]!.cls.kanaKind).toBe('katakana');
   });
 
   const negatives: Parameters<typeof makeMeta>[0][] = [

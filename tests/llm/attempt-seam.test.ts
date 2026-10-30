@@ -6,6 +6,7 @@ import {
 } from '../../src/ai/http-classifiers';
 import type { CappedClassifier, FieldClassifier } from '../../src/core/classifier';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
+import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
 import { PromptApiClassifier } from '../../src/llm/classifier';
 import type { LanguageModelStatic } from '../../src/llm/availability';
 import { makeMeta } from '../helpers';
@@ -20,6 +21,7 @@ vi.stubGlobal('chrome', { runtime: { sendMessage: send } });
 afterEach(() => send.mockReset());
 
 const metas = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}` }));
+const pending = (n: number) => Array.from({ length: n }, (_, i) => makeMeta({ id: `f${i}`, name: `xyz-${i}` }));
 const fields = [makeMeta({ id: 'a', label: '姓' }), makeMeta({ id: 'b', name: 'x' })];
 
 const jsonResponse = (status: number, body: unknown) =>
@@ -75,21 +77,22 @@ describe('truncation and failure ride the seam return (BDD scenario 1)', () => {
     // Typed as the seam (not the concrete class): a schedule must typecheck…
     const capped: CappedClassifier = new BackgroundClassifier();
     const outcome = await capped.attempt(fields, { index: 1, count: 3 });
-    // …and stay out of the gateway's own chunking (single-chunk run).
+    // …and ride the single bounded send through to the wire (PBI-193: the
+    // chunk run is the pipeline's plan, not the gateway's).
     expect(outcome.map.size).toBe(fields.length);
     expect(outcome.failureReason).toBeNull();
     expect(outcome.truncatedCount).toBe(0);
     expect(send).toHaveBeenCalledOnce();
+    expect((send.mock.calls[0]![0] as { chunk?: unknown }).chunk).toEqual({ index: 1, count: 3 });
   });
 
-  it('reports truncation with the capped map on an over-cap background run', async () => {
+  it('reports truncation on an over-cap background run through the canonical run', async () => {
     send.mockImplementation(async (m: { fields: { id: string }[] }) => ({
       ok: true, entries: m.fields.map((f) => [f.id, 'email']),
     }));
-    const outcome = await new BackgroundClassifier().attempt(metas(61));
-    expect(outcome.map.size).toBe(60);
-    expect(outcome.failureReason).toBe('truncated');
-    expect(outcome.truncatedCount).toBe(1);
+    const result = await runClassifyPipeline(new BackgroundClassifier(), pending(61), {});
+    expect(result.items.filter((i) => i.cls.source === 'llm')).toHaveLength(60);
+    expect(result.failureReason).toBe('truncated');
   });
 
   it('reports the provider reason on a failed background attempt', async () => {

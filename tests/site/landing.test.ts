@@ -71,6 +71,14 @@ describe('renderLanding', () => {
     expect(html).not.toContain('www.youtube.com/embed');
   });
 
+  it.each(['ja', 'en'] as const)('shows the demo gif above the video for %s', async (lang) => {
+    const s = await load(lang);
+    const html = renderLanding({ lang, base: '/', s });
+    expect(html).toContain('src="/assets/demo.gif"');
+    expect(html).toContain(`alt="${s.demo.gifAlt}"`);
+    expect(html.indexOf('assets/demo.gif')).toBeLessThan(html.indexOf('class="video"'));
+  });
+
   it('no longer says the extension is unpublished and keeps the Firefox path', async () => {
     const ja = renderLanding({ lang: 'ja', base: '/', s: await load('ja') });
     expect(ja).not.toContain('ストアには公開していません');
@@ -97,6 +105,8 @@ describe('renderLanding', () => {
       (s) => { s.install.store = '<b>x</b>'; },
       (s) => { s.demo.lead = '<b>x</b>'; },
       (s) => { s.demo.iframeTitle = '<b>x</b>'; },
+      (s) => { s.demo.gifAlt = '<b>x</b>'; },
+      (s) => { s.demo.gifCaption = '<b>x</b>'; },
       (s) => { s.providers.items[0]!.body = '<b>x</b>'; },
       (s) => { s.privacy.items[0]!.body = '<b>x</b>'; },
     ];

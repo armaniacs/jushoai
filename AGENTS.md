@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI coding agents when working with code in this repository.
 
 ## プロジェクト概要
 
@@ -8,7 +8,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 設計の一次情報は `docs/superpowers/specs/2026-10-03-jushoai-design.md` と `docs/superpowers/specs/2026-10-04-cloud-llm-providers-design.md`、実装手順は `docs/superpowers/plans/2026-10-03-jushoai.md` と `docs/superpowers/plans/2026-10-04-cloud-llm-providers.md`。コードを書く前に読むこと。
 
+## 実装の進め方
+
+実装（実装計画の実行・機能追加・修正）をするときは、必ず「サブエージェント駆動」を選ぶ。`subagent-driven-development` スキルを読み、タスクを 1 つずつサブエージェントに委譲して実装・検証させ、報告を確認してから次のタスクに進める。メインエージェントが自力でコードを書いて一気に実装しない。brief・report・進捗は既存の運用に合わせて `.superpowers/sdd/` に置く。サブエージェントを持たないホストでは、その旨を最初に報告してから自前で進める。
+
 ## コマンド
+
+シェルで `cd` せず、リポジトリ内のパスは `/Users/yaar/Playground/JushoAI` からの絶対パスで指定する（`tmp/` 配下などで cwd がずれて path-not-found になるため）。
 
 スタックは WXT + TypeScript + Vitest（jsdom）。
 
@@ -30,6 +36,16 @@ make eval                                     # samples の corpus でルール�
 npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```
+
+## ディレクトリ配置
+
+- `src/`: 実装(`core/` 純粋関数、`dom/`、`llm/`、`ai/`、`entrypoints/`)。`tests/` は `src/` と同じ構造で、`tests/core/`、`tests/integration/`、`tests/build/`、`tests/e2e/`
+- `samples/`: 手動確認用のサンプルフォームと fixture
+- `docs/superpowers/{specs,plans}/`: 設計書と実装計画。`pbi/`: PBI 台帳
+- `site/`: ドキュメントサイトのソース、`site-dist/`: 生成物
+- `promo/<日付>-<名前>/`: 記事・告知文(`zenn.md`、`note.md`、`x-post.md`)。`video/` と `tmp/video-store-promo/`: プロモ動画の作業場
+- `dist/chrome-mv3`、`dist/firefox-mv3`: ビルド出力。存在確認は `ls` してから Read する(パスを推測しない)
+- 他に `scripts/`、`public/`、`plans/`、`JushoAI_VULNHUNT_RESULTS_*/`(脆弱性スキャン結果)
 
 ## アーキテクチャ
 

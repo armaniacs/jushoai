@@ -42,6 +42,17 @@ function initialPage(): OptionsPageId {
 
 let activePage: OptionsPageId = initialPage();
 
+// Navigation ownership (PBI-196): page transitions belong to nav.ts, so
+// consumers (the floating-guide sync) register here instead of attaching
+// their own click/hashchange listeners in main.ts. One slot keeps the
+// contract structural: setActivePage notifies exactly once, after the page
+// state and the visibility classes are updated.
+let navigateListener: (() => void) | null = null;
+
+export function onNavigate(fn: () => void): void {
+  navigateListener = fn;
+}
+
 export function getActivePage(): OptionsPageId {
   return activePage;
 }
@@ -54,6 +65,7 @@ export function setActivePage(id: OptionsPageId): void {
     // History is unavailable in some environments.
   }
   applyActivePage();
+  navigateListener?.();
 }
 
 // Shows only the active page and hides the rest. The profile/address
@@ -107,6 +119,9 @@ export function buildNav(root: HTMLElement): HTMLElement {
     const a = el('a', s.label);
     a.setAttribute('href', `#${s.id}`);
     a.dataset.section = s.id;
+    // A count reported before the nav was built rides its stored value.
+    const count = sectionCounts.get(s.id);
+    if (count !== undefined) renderCountBadge(a, count);
     nav.append(a);
   }
   const reportWrap = el('div');
@@ -136,6 +151,37 @@ function markActive(nav: HTMLElement, id: string): void {
       if (a.dataset.section === id) a.setAttribute('aria-current', 'true');
       else a.removeAttribute('aria-current');
     }
+  }
+}
+
+// Count badges (PBI-168): each section label can carry its saved-entry count
+// as a suffix span, so the nav reads "プロファイル (2)". 0 stays visible — an
+// explicit (0) is the signal that nothing is registered — while a section
+// whose count was never set (a failed read) keeps the bare label.
+const sectionCounts = new Map<OptionsPageId, number>();
+
+function renderCountBadge(anchor: HTMLElement, count: number): void {
+  let badge = anchor.querySelector('.nav-count');
+  if (!badge) {
+    badge = document.createElement('span');
+    badge.className = 'nav-count';
+    anchor.append(badge);
+  }
+  badge.textContent = ` (${count})`;
+}
+
+export function setSectionCount(id: OptionsPageId, count: number): void {
+  sectionCounts.set(id, count);
+  // The nav may not exist yet (a count set before mountNav): buildNav renders
+  // the stored count when it runs.
+  const anchor = document.querySelector<HTMLElement>(`#side nav a[data-section="${id}"]`);
+  if (anchor) renderCountBadge(anchor, count);
+}
+
+export function setSectionCounts(counts: Partial<Record<OptionsPageId, number>>): void {
+  for (const id of Object.keys(counts) as OptionsPageId[]) {
+    const count = counts[id];
+    if (count !== undefined) setSectionCount(id, count);
   }
 }
 

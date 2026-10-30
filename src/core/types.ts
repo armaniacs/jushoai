@@ -62,6 +62,34 @@ export interface Item {
   cls: Classification;
 }
 
+// One classify pass over a meta list, possibly null (unruly meta). The staged artifact
+// a classify-once bundle carries so the gate, the send list and the merge all
+// read one pass instead of re-running classifyField per entrance (PBI-179).
+// Lives here for the same cycle reason as Item: pending-split and
+// classify-once both shape it without importing each other.
+export interface RuledField {
+  meta: FieldMeta;
+  cls: Classification | null;
+}
+
+// PBI-181: the canonical shared pass. Bundle (classify-once), EgressPlan
+// (egress-plan), PremadePass (pipeline) and mergeClassified's ruled projection
+// are all views of this one shape — Pick aliases, never redefined — so the
+// gate display and the send set stay identically-typed by construction.
+export interface RunContext {
+  // The single classifyField pass over the metas.
+  ruled: RuledField[];
+  // Non-confident fields (the gate list), before the skip filter.
+  unconfident: FieldMeta[];
+  // The send list: unconfident minus the taught ids.
+  pending: FieldMeta[];
+  // The ids skipped because the user taught their category (PBI-138).
+  taughtIds: ReadonlySet<string>;
+  // The non-confident count, taught included: the "all skipped" disable check
+  // compares against this, not against the shorter pending list.
+  nonConfidentCount: number;
+}
+
 export interface Profile {
   id: string;
   label: string;

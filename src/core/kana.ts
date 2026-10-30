@@ -72,27 +72,72 @@ const hasHiraganaPattern = (m: FieldMeta): boolean => /[ぁ-ゖ]/.test(norm(deco
 
 const hasKatakanaPattern = (m: FieldMeta): boolean => /[ァ-ヶ]/.test(norm(decodedPattern(m)));
 
-// True when the field asks for kana rather than kanji: a kana-only placeholder,
-// kana vocabulary in name/id/label/legend, or a kana-only pattern. A kanji or
-// latin placeholder means the field wants a plain name, whatever the heading says.
+// Kana evidence module: per-source kana evidence for one field, judged in one
+// place so the two wants readings below compose it instead of re-implementing
+// it. Adding a source means adding one judgment here and naming it in each
+// composition, never a second copy of the rule. Clause order is the
+// precedence: the veto wins, then placeholder, own-text, legend, pattern.
+//
+//   full     = placeholderRejectsKana ? false
+//            : placeholderAsksKana || ownTextAsksKana || legendAsksKana
+//              || patternAsksKana
+//   own-meta = placeholderAsksKana || ownTextAsksKana || patternAsksKana
+//
+// The veto and the legend source are named branches of the full reading only;
+// the own-meta reading omits both on purpose:
+// - no veto: wantsKanaOwnMeta feeds resolveKana's sibling guard, which must
+//   still see every row that claims kana for itself even when its placeholder
+//   is a plain name. A veto there would drop that row from the guard's
+//   own-evidence set, the shared legend would stop reading as section
+//   evidence, and the plain-name sibling row would flip to kana (s1/s2-style
+//   forms).
+// - no legend: a legend is shared with sibling rows, so it describes the
+//   section, not the row itself; resolveKana's guard owns that asymmetry.
+
+// Evidence views, the shared pre-fallback contract in one place. pre carries
+// the classifyField entrance views (kanaNormFromViews) so the classify route
+// normalizes nothing here; without it each consulted source norms its own raw
+// string (resolveKana path). Callers pass these views, never raw strings: the
+// judgments below keep the normalized-input contract of the vocabulary
+// queries.
+const placeholderView = (m: FieldMeta, pre?: KanaNorm): string =>
+  stripExample(pre?.placeholder ?? norm(m.placeholder));
+const ownTextView = (m: FieldMeta, pre?: KanaNorm): string =>
+  pre?.nameIdLabel ?? norm([m.name, m.htmlId, m.label].join(' '));
+const legendView = (m: FieldMeta, pre?: KanaNorm): string =>
+  pre?.nearby ?? norm(m.nearby);
+
+// placeholder: a kanji or latin placeholder means the field wants a plain name
+// (the veto), a kana-only one asks for kana.
+const placeholderRejectsKana = (ph: string): boolean =>
+  ph !== '' && /[一-龠a-z]/.test(ph);
+const placeholderAsksKana = (ph: string): boolean =>
+  ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph);
+// own-text: kana vocabulary in name/id/label (full token set).
+const ownTextAsksKana = (normalized: string): boolean => matchFieldOwned(normalized);
+// legend: kana vocabulary in the shared heading (shared tokens only).
+const legendAsksKana = (normalized: string): boolean => matchLegend(normalized);
+// pattern: a kana range in the pattern attribute (decoded and NFKC'd inside).
+const patternAsksKana = (m: FieldMeta): boolean => hasKanaPattern(m);
+
+// True when the field asks for kana rather than kanji: the full reading above.
 // pre carries the classifyField entrance views so the same raw string is not
-// normalized twice; without it each source is normed here (resolveKana path).
+// normalized twice; without it each consulted source is normed here
+// (resolveKana path).
 export function wantsKana(m: FieldMeta, pre?: KanaNorm): boolean {
-  const ph = stripExample(pre?.placeholder ?? norm(m.placeholder));
-  if (ph !== '' && /[一-龠a-z]/.test(ph)) return false;
-  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
-  if (matchFieldOwned(pre?.nameIdLabel ?? norm([m.name, m.htmlId, m.label].join(' ')))) return true;
-  if (matchLegend(pre?.nearby ?? norm(m.nearby))) return true;
-  return hasKanaPattern(m);
+  const ph = placeholderView(m, pre);
+  if (placeholderRejectsKana(ph)) return false;
+  if (placeholderAsksKana(ph)) return true;
+  if (ownTextAsksKana(ownTextView(m, pre))) return true;
+  if (legendAsksKana(legendView(m, pre))) return true;
+  return patternAsksKana(m);
 }
 
-// True when the field itself claims kana through placeholder, name/id/label, or pattern —
-// evidence that belongs to this field, unlike a legend shared with sibling rows.
+// True when the field itself claims kana through placeholder, name/id/label, or
+// pattern: the own-meta reading above — no veto, no legend.
 export function wantsKanaOwnMeta(m: FieldMeta): boolean {
-  const ph = stripExample(norm(m.placeholder));
-  if (ph !== '' && /^[ァ-ヶぁ-ゖー\s　]+$/.test(ph)) return true;
-  if (matchFieldOwned(norm([m.name, m.htmlId, m.label].join(' ')))) return true;
-  return hasKanaPattern(m);
+  const ph = placeholderView(m);
+  return placeholderAsksKana(ph) || ownTextAsksKana(ownTextView(m)) || patternAsksKana(m);
 }
 
 export function detectKanaKind(m: FieldMeta): KanaKind {
@@ -156,10 +201,11 @@ export function resolveKana(items: Item[]): Item[] {
   // PBI-160: terminal kana categories (companyNameKana) resolve their own
   // attribution in classifyField and never ride KANA_CATEGORY above, so the
   // conversion loop leaves their category untouched. They still need a
-  // kanaKind, so the suffix rule (mirroring analyze.ts's
-  // category.endsWith('Kana') → detectKanaKind) applies here: every entrance
-  // threading resolveKana (classifyRulePipeline, classifyAll) agrees, and the
-  // assignment is idempotent with the analyze LLM branch (same function).
+  // kanaKind, so the suffix rule applies here as the single owner (PBI-197):
+  // the LLM merge branch's own category.endsWith('Kana') → detectKanaKind
+  // spread is gone, and every entrance threading resolveKana
+  // (classifyRulePipeline, classifyAll, mergeClassified) is backfilled by
+  // this loop alone.
   for (const { item } of flags) {
     if (item.cls.category.endsWith('Kana') && item.cls.kanaKind === undefined) {
       item.cls.kanaKind = detectKanaKind(item.meta);

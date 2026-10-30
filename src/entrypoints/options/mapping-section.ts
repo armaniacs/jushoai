@@ -1,7 +1,8 @@
 import { loadMappings, saveMappings } from '../../mapping-store';
 import type { MappingEntry } from '../../core/domain-mapping';
-import { el } from './dom';
-import { applyActivePage, AUDIT_SECTION_ID } from './nav';
+import { el, notice } from './dom';
+import { applyActivePage, MAPPING_SECTION_ID, setSectionCount } from './nav';
+import { bootListSection } from './list-boot';
 
 export interface MappingSectionDeps {
   load(): Promise<MappingEntry[]>;
@@ -20,10 +21,34 @@ const defaultDeps = (): MappingSectionDeps => ({
 // signature and the category only — never a profile value.
 export function mountMappingSection(root: HTMLElement, deps: MappingSectionDeps = defaultDeps()): void {
   let entries: MappingEntry[] = [];
+  let feedback: HTMLElement | null = null;
+
+  // The nav badge mirrors the in-memory list (PBI-168): set after a successful
+  // load and after every removal. The failed-load boot path skips it — a count
+  // that could not be read must not render as (0).
+  const syncNavCount = (): void => {
+    setSectionCount(MAPPING_SECTION_ID, entries.length);
+  };
 
   const onRemove = (index: number): void => {
     entries = entries.filter((_, i) => i !== index);
-    void deps.save(entries);
+    // The removal persists immediately (no save button here). A failed save
+    // keeps the removal in the list and reports it through the same
+    // save-failure notice as the exclusion section, instead of surfacing as an
+    // unhandled rejection.
+    void deps.save(entries).then(
+      () => {
+        feedback = null;
+        render();
+      },
+      () => {
+        feedback = notice('errors', ['保存に失敗しました']);
+        render();
+      },
+    );
+    // The in-memory count changed with the removal in both save outcomes, so
+    // the badge updates here rather than per save branch.
+    syncNavCount();
     render();
   };
 
@@ -51,12 +76,28 @@ export function mountMappingSection(root: HTMLElement, deps: MappingSectionDeps 
     const count = el('p', `登録 ${entries.length} 件`);
     count.className = 'exclusion-count';
 
-    root.replaceChildren(title, lead, list, count);
+    // The load/remove failure notice rides after the count, like the exclusion
+    // section's feedback slot.
+    const children: HTMLElement[] = [title, lead, list, count];
+    if (feedback) children.push(feedback);
+    root.replaceChildren(...children);
   }
 
-  void deps.load().then((loaded) => {
-    entries = loaded;
-    render();
-    applyActivePage();
-  });
+  // Boot goes through the shared skeleton (list-boot.ts): render runs only
+  // after the load resolves, and a failed load renders the empty skeleton with
+  // the notice instead of surfacing as an unhandled rejection.
+  bootListSection(
+    deps.load,
+    (loaded) => {
+      entries = loaded;
+      render();
+      syncNavCount();
+      applyActivePage();
+    },
+    (failure) => {
+      feedback = failure;
+      render();
+      applyActivePage();
+    },
+  );
 }

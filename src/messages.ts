@@ -22,8 +22,8 @@ export type TestResponse = { ok: true; category: Category } | { ok: false; reaso
 
 // Failure vocabulary for ai-classify: the TestFailure set, which includes
 // 'unavailable' (built-in AI present in settings but not usable right now),
-// plus 'truncated' (the gateway capped the run at MAX_CLASSIFY_TOTAL and
-// dropped trailing fields). 'truncated' is classify-only: the gateway sets it
+// plus 'truncated' (the transfer capped the run at TRANSFER_TOTAL_CAP and
+// dropped trailing fields). 'truncated' is classify-only: the transfer sets it
 // locally, so it never arrives over the wire and the connection test never
 // returns it (parseTestResponse still rejects it).
 const CLASSIFY_FAILURES = [...TEST_FAILURES, 'truncated'] as const;
@@ -79,24 +79,18 @@ export type VersionlessAiRequest =
   | { type: 'audit-clear' };
 
 export function encodeRequest(req: VersionlessAiRequest | AiRequest): AiRequest {
-  switch (req.type) {
-    case 'ai-status':
-      return { type: 'ai-status', v: AI_REQUEST_VERSION };
-    case 'ai-download':
-      return { type: 'ai-download', v: AI_REQUEST_VERSION };
-    case 'ai-test':
-      return { type: 'ai-test', v: AI_REQUEST_VERSION };
-    case 'open-options':
-      return { type: 'open-options', v: AI_REQUEST_VERSION };
-    case 'audit-clear':
-      return { type: 'audit-clear', v: AI_REQUEST_VERSION };
-    case 'ai-classify': {
-      const chunk = req.chunk;
-      return chunk
-        ? { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields, chunk }
-        : { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields };
-    }
+  // PBI-190: the simple wire types (a table row of only the discriminant) all
+  // share the identical wire shape { type, v }, so one branch encodes them all:
+  // the current version is stamped and stray keys (v, extra) are dropped here.
+  // ai-classify keeps its own arm — the fields passthrough and the optional
+  // chunk (omitted while undefined) have no table row.
+  if (req.type !== 'ai-classify') {
+    return { type: req.type, v: AI_REQUEST_VERSION };
   }
+  const chunk = req.chunk;
+  return chunk
+    ? { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields, chunk }
+    : { type: 'ai-classify', v: AI_REQUEST_VERSION, fields: req.fields };
 }
 
 // Version-stamped builders: senders construct every AiRequest through these so
@@ -129,9 +123,22 @@ const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, MAX_TEXT_LENGTH
 // PBI-46: metadata allow-list の正準はこの内部 seam が持ち、encodeFieldMeta
 // （送信側の射影）と decodeFieldMeta（受信側の再構築）の両端に供給する。
 // キー規律は encode/decode 経由で得ること。
+// PBI-175 の決定: radio/select に要る tag・options は wire に含めない。LLM は
+// メタデータのみで分類し、tag/options は分類対象外と明示する（下の
+// WIRE_EXCLUDED_KEYS を参照）。wire キー集合の変更は tests/messages.test.ts
+// 等が固定しているため、含める場合は別 PBI の wire 形式変更として扱うこと。
 const WIRE_META_KEYS = ['id', 'type', 'name', 'htmlId', 'label', 'placeholder', 'nearby', 'maxLength'] as const;
+// PBI-175: wire に載せないと明示するキー。value（fill 判定専用のページ既存値）
+// は privacy 上の理由で載せない。tag・options（radio/select の形状）は LLM 分類
+// の対象外として載せない — 受信側 decodeFieldMeta は input 形状の搬送体に
+// 再構築し、radio ゲート等の形状依存判定は pipeline 側の元 meta で行う。
+// 黙って潰すのではなく、この除外を契約として宣言する（round-trip の安定性は
+// tests/llm/classify-transport.test.ts が保証する）。
+export const WIRE_EXCLUDED_KEYS = ['tag', 'options', 'value', 'autocomplete', 'pattern', 'readOnly', 'disabled'] as const;
+// 除外キーの型としての公開。wire 変更の検討時はこの集合と WIRE_META_KEYS を対で見直す。
+export type WireExcludedKey = (typeof WIRE_EXCLUDED_KEYS)[number];
 // The metadata allow-list sent to the classifier; the single source shared by the sender
-// (background-gateway), the receiver (decodeFieldMeta) and the prompt builder (buildPrompt).
+// (classify-transport), the receiver (decodeFieldMeta) and the prompt builder (buildPrompt).
 export type MetaWire = Pick<FieldMeta, (typeof WIRE_META_KEYS)[number]>;
 
 // Display width for metadata strings leaving the extension (prompt rows and
@@ -160,6 +167,10 @@ export function encodeFieldMeta(f: FieldMeta): MetaWire {
 // 別経路で維持し、この受信形状では復元しない。
 // PBI-46: 受信側 codec の正準。wire 外のキー（value・tag・autocomplete 等）は
 // 落とす fail-safe 射影で、欠落・不正 id 行は null として呼び出し側が数える。
+// PBI-175: tag は常に 'input' に再構築する。これは黙った潰しではなく宣言された
+// 契約である — tag・options は LLM 分類対象外（WIRE_EXCLUDED_KEYS）として wire
+// に載せないと決めたため、受信側が元の形状を知る手段はない。形状依存の判定
+// （radio ゲート等）は pipeline 側が手元の元 meta で行い、この搬送体では行わない。
 export function decodeFieldMeta(v: unknown): FieldMeta | null {
   if (!isRecord(v)) return null;
   const id = v.id;
@@ -213,36 +224,71 @@ const REQUEST_WIRE_KEYS: Record<AiRequest['type'], readonly string[]> = {
   'ai-classify': ['type', 'fields'],
 };
 const AI_CLASSIFY_CHUNK_KEYS: readonly string[] = [...REQUEST_WIRE_KEYS['ai-classify'], 'chunk'];
+// PBI-190: table membership as a type predicate. A string naming a row is a
+// wire request type, so the decode walk and the encode branch below assemble
+// their { type, v } records without per-type casts. hasOwnProperty (not `in`)
+// keeps prototype keys ('__proto__' etc.) out of the wire vocabulary.
+const isWireRequestType = (v: string): v is AiRequest['type'] =>
+  Object.prototype.hasOwnProperty.call(REQUEST_WIRE_KEYS, v);
 
 const hasOnlyKeys = (keys: string[], allow: readonly string[]): boolean =>
   keys.length === allow.length && keys.every((k) => allow.includes(k));
 
-export function decodeRequest(msg: unknown): DecodedAiRequest | null {
-  if (!isRecord(msg)) return null;
-  if (!checkRequestVersion(msg)) return null;
+// PBI-175: decodeRequest の Result 型化。従来の null 一値は失敗の種類を
+// 区別しないため、呼び出し側は oversize を truncated に、version/形不正を
+// bad-response に写像できなかった。理由語彙は転送の失敗語彙に直結する
+// （decodeErrorToClassifyFailure を参照）。
+export type RequestDecodeError = 'oversize' | 'version' | 'malformed';
+export type DecodedRequestResult =
+  | { ok: true; request: DecodedAiRequest }
+  | { ok: false; reason: RequestDecodeError };
+
+// oversize（backstop 超え）は件数上限由来なので 'truncated' に、
+// version skew と形不正は応答異常として 'bad-response' に写像する。
+// 送信側転送（classify-transport）の失敗語彙と同一にすることで、
+// 受信・送信の両端が同じ理由で記録・表示できる。
+export function decodeErrorToClassifyFailure(reason: RequestDecodeError): ClassifyFailure {
+  return reason === 'oversize' ? 'truncated' : 'bad-response';
+}
+
+export function decodeRequestResult(msg: unknown): DecodedRequestResult {
+  if (!isRecord(msg)) return { ok: false, reason: 'malformed' };
+  if (!checkRequestVersion(msg)) return { ok: false, reason: 'version' };
   // A legacy sender omits `v`; strip it before counting so the strict
   // closed-vocabulary key check below keeps rejecting every other extra key.
+  // The strip must stay ahead of the table walk: hasOnlyKeys compares
+  // keys.length, so a legacy version-less request would fail every row here.
   const keys = Object.keys(msg).filter((k) => k !== 'v');
-  if (msg.type === 'ai-status' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-status']))
-    return { type: 'ai-status', v: AI_REQUEST_VERSION };
-  if (msg.type === 'ai-download' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-download']))
-    return { type: 'ai-download', v: AI_REQUEST_VERSION };
-  if (msg.type === 'ai-test' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['ai-test']))
-    return { type: 'ai-test', v: AI_REQUEST_VERSION };
-  if (msg.type === 'open-options' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['open-options']))
-    return { type: 'open-options', v: AI_REQUEST_VERSION };
-  if (msg.type === 'audit-clear' && hasOnlyKeys(keys, REQUEST_WIRE_KEYS['audit-clear']))
-    return { type: 'audit-clear', v: AI_REQUEST_VERSION };
+  // PBI-190: one arm walks the wire-type table for the simple request types
+  // (every row whose allow-list is only the discriminant), so a new simple
+  // wire type rides its REQUEST_WIRE_KEYS row without a new arm here. The
+  // walk keeps the table-membership guard and assembles the { type, v }
+  // record without a cast; the ai-classify arm below stays outside the table
+  // because its asymmetries (fields array validation, withChunk decision,
+  // oversize backstop, parseSchedule) have no table row.
+  const type = msg.type;
+  if (
+    typeof type === 'string' && isWireRequestType(type) && type !== 'ai-classify' &&
+    hasOnlyKeys(keys, REQUEST_WIRE_KEYS[type])
+  ) {
+    return { ok: true, request: { type, v: AI_REQUEST_VERSION } };
+  }
   if (msg.type === 'ai-classify' && Array.isArray(msg.fields)) {
     const withChunk = keys.length === 3;
-    if (!hasOnlyKeys(keys, withChunk ? AI_CLASSIFY_CHUNK_KEYS : REQUEST_WIRE_KEYS['ai-classify'])) return null;
-    if (msg.fields.length > TRANSFER_BACKSTOP_CAP) return null;
+    if (!hasOnlyKeys(keys, withChunk ? AI_CLASSIFY_CHUNK_KEYS : REQUEST_WIRE_KEYS['ai-classify']))
+      return { ok: false, reason: 'malformed' };
+    if (msg.fields.length > TRANSFER_BACKSTOP_CAP) return { ok: false, reason: 'oversize' };
     const chunk = withChunk ? parseSchedule(msg.chunk) : undefined;
-    if (withChunk && chunk === undefined) return null;
+    if (withChunk && chunk === undefined) return { ok: false, reason: 'malformed' };
     const fields = msg.fields.map(decodeFieldMeta).filter((f): f is FieldMeta => f !== null);
-    return { type: 'ai-classify', v: AI_REQUEST_VERSION, fields, ...(chunk ? { chunk } : {}) };
+    return { ok: true, request: { type: 'ai-classify', v: AI_REQUEST_VERSION, fields, ...(chunk ? { chunk } : {}) } };
   }
-  return null;
+  return { ok: false, reason: 'malformed' };
+}
+
+export function decodeRequest(msg: unknown): DecodedAiRequest | null {
+  const r = decodeRequestResult(msg);
+  return r.ok ? r.request : null;
 }
 
 export function parseClassifyResponse(res: unknown): Map<string, Category> | null {

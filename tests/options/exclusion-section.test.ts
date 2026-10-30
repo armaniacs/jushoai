@@ -103,4 +103,23 @@ describe('mountExclusionSection', () => {
     expect(root.querySelector('.errors')?.textContent).toContain('保存に失敗');
     expect(stored).toEqual([ENTRY]);
   });
+
+  it('renders the empty skeleton with a notice when the load fails', async () => {
+    // A rejected load must settle through the same boot path: the skeleton and
+    // the notice appear, and vitest fails the test on an unhandled rejection.
+    const save = vi.fn(async () => {});
+    mountExclusionSection(root, {
+      load: async () => { throw new Error('storage unavailable'); },
+      save,
+    });
+    await vi.waitFor(() => { if (!root.querySelector('h2')) throw new Error('not rendered'); });
+    expect(root.querySelector('.errors')?.textContent).toContain('読み込めませんでした');
+    expect(items()).toEqual(['まだ登録されていません']);
+    // Saving stays editable after the failed load.
+    type(ENTRY);
+    click(buttonByText('追加'));
+    click(buttonByText('保存'));
+    await vi.waitFor(() => { if (!root.querySelector('.saved')) throw new Error('not saved'); });
+    expect(save).toHaveBeenCalledWith([ENTRY]);
+  });
 });

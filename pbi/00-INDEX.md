@@ -1,5 +1,73 @@
 # PBI 台帳インデックス
 
+## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
+
+- `archived/2026-10-30-00-backlog-arch-round5.md`は進行中（残置1件の202が紐づくため未アーカイブ）。ラウンド4適用後の新規摩擦13候補のPBI化・RICE順位確定
+- `archived/2026-10-30-190-refactor-decode-table.md`（順位 1。decodeをREQUEST_WIRE_KEYS表駆動に。cc4e93e）
+- `archived/2026-10-30-191-refactor-timed-call.md`（順位 2。有界非同期呼び出しをtimed-callに抽出。bd7282d）
+- `archived/2026-10-30-192-refactor-registry-outcome.md`（順位 3。試行→応答の折り畳みをauthFailureに集約しtest()非対称を対応表化。86b233a）
+- `archived/2026-10-30-193-refactor-chunk-run-owner.md`（順位 4。チャンク走をpipeline走に寄せtransportを有界1回の送信に。bd7282d）
+- `archived/2026-10-30-194-refactor-trial-apply.md`（順位 5。with*トリオをwithTrialSample 1関数に統一。2fb0e2a）
+- `archived/2026-10-30-195-fix-section-boot.md`（順位 6。list sectionのboot骨格をlist-bootに集約し読み込み失敗時に通知。40d98a8）
+- `archived/2026-10-30-196-refactor-guide-nav-sync.md`（順位 7。ガイド同期トリガーをnav経由に一方向化。a2a5611）
+- `archived/2026-10-30-197-refactor-kanakind-owner.md`（順位 8。kanaKind付与をresolveKanaに単一化。72a6c13）
+- `archived/2026-10-30-198-refactor-legacy-wrap.md`（順位 9。withLegacyThrowFallbackをpipeline境界に単一化。217a0a2）
+- `archived/2026-10-30-199-refactor-kana-evidence.md`（順位 10。カナ証拠判定をevidence moduleに集約。946ed08）
+- `archived/2026-10-30-200-refactor-e2e-read-seam.md`（順位 11。closed-shadow読み取りseamとセレクタ辞書をharnessに集約。38603f8）
+- `archived/2026-10-30-201-refactor-tab-scope-memory.md`（順位 12。タブスコープメモリをtab-scope 1所有者に集約。be4bf73）
+
+ラウンド5進行中（残置）:
+- `2026-10-30-202-backlog-tab-send-seam.md`（順位 13。Speculative・残置。次のタブ宛てアクション追加時に着手段階を確認）
+- `2026-10-30-00-backlog-arch-round5.md`（ラウンド台帳。202の残置判断が確定したらアーカイブ）
+
+ラウンド5実施前の残務（autonomous-task-closerで実装・検証済み）:
+- `archived/2026-10-29-168-feat-nav-count-badges.md`（前セッション断片。設定ナビに登録件数を表示。a2a5611）
+
+## 進行中からアーカイブ済み（2026-10-30・autonomous-task-closerで実装・検証済み・`make check` green）
+
+- `archived/2026-10-28-161-fix-options-save-split.md`（設定画面の保存分離。実装 commit 37504cc/0a2fbf0）
+- `archived/2026-10-28-162-feat-firstime-sample-data.md`（初回サンプルデータ。実装 commit 5a12dbd/5c02907/bc49133）
+- `archived/2026-10-28-163-fix-profile-delete-last.md`（最終プロファイル削除許可。実装 commit d13bf10）
+- `archived/2026-10-29-164-feat-e2e-options-save-trial.md`（E2E 3件追加。実装 commit fced0f6。e2e実行はユーザー作業）
+- `archived/2026-10-29-165-feat-float-notice-layer.md`（float通知レイヤ。実装 commit 58e9743/9296bd6/9a2a871）
+- `archived/2026-10-29-166-feat-float-guide-autosave.md`（ガイド即時保存。実装 commit 2195ce1）
+- `archived/2026-10-29-167-feat-per-side-trial-guide.md`（片側trialガイド。実装 commit 614b648/f175bd0）
+
+## 進行中（118のみ・残1件）
+
+（118 は対象URL確定がユーザー作業、129 は着手条件未到来で backlog 残置）
+
+- `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
+
+## 進行中からアーカイブ済み（archラウンド4・2026-10-30に9件実装・検証済み。コードレビューはユーザー作業）
+
+- `archived/2026-10-30-00-backlog-arch-round4.md`（ラウンド3適用後の新規摩擦9候補のPBI化・RICE順位確定。ラウンド完結）
+- `archived/2026-10-30-181-refactor-shared-pass.md`（順位 1。b35e058）
+- `archived/2026-10-30-182-refactor-trial-both-saveside.md`（順位 2。176c94c）
+- `archived/2026-10-30-183-refactor-layers-table.md`（順位 3。60ea9c7）
+- `archived/2026-10-30-184-refactor-save-handler-factory.md`（順位 4。3f3fac5）
+- `archived/2026-10-30-185-refactor-send-set-unify.md`（順位 5。dd56f11）
+- `archived/2026-10-30-186-refactor-entry-points-list.md`（順位 6。60ea9c7）
+- `archived/2026-10-30-187-refactor-validator-split.md`（順位 7。dc40b3e）
+- `archived/2026-10-30-188-refactor-adapter-seam.md`（順位 8。8163012）
+- `archived/2026-10-30-189-refactor-float-shim.md`（順位 9。b067dbf）
+
+## 進行中からアーカイブ済み（archラウンド3・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
+
+- `archived/2026-10-29-00-backlog-arch-round3.md`（アーキテクチャレビュー12候補のPBI化・RICE順位確定。ラウンド完結）
+- `archived/2026-10-29-169-refactor-e2e-scenario-unification.md`（順位 1。46496a5）
+- `archived/2026-10-29-170-refactor-guide-controller.md`（順位 2。dabc591）
+- `archived/2026-10-29-171-refactor-save-side-deepen.md`（順位 3。615943f）
+- `archived/2026-10-29-172-refactor-guide-validator.md`（順位 4。d7c46c6）
+- `archived/2026-10-29-173-refactor-import-target-select.md`（順位 5。5d61040）
+- `archived/2026-10-29-174-refactor-classify-pipeline.md`（順位 6。34c8378）
+- `archived/2026-10-29-175-refactor-classify-transport.md`（順位 7。deadb5d）
+- `archived/2026-10-29-176-refactor-notice-center.md`（順位 8。2c6562b）
+- `archived/2026-10-29-177-refactor-shared-fetch-seam.md`（順位 9。bd0b4b8）
+- `archived/2026-10-29-178-refactor-fill-flow.md`（順位 10。4b2bc30）
+- `archived/2026-10-29-179-refactor-classify-once.md`（順位 11。d53901e）
+- `archived/2026-10-29-180-refactor-video-lib-unify.md`（順位 12。12ebbe3）
+
 ## 進行中からアーカイブ済み（2026-10-27・autonomous-task-closerで実装・検証済み・`make check` green）
 
 - `archived/2026-10-27-161-fix-float-button-placement.md`（順位 1。重ねない配置。0ed109c）
@@ -18,6 +86,7 @@
 ## 進行中（対象 URL 対応・実装済み）
 
 - `2026-10-26-160-feat-company-name-kana.md`（fair.j-lis.go.jp の会社名フリガナ欄に専用カテゴリ companyNameKana で対応、実装済み・PR #16 でmainにマージ）
+- `2026-10-30-203-feat-forum-form-fill.md`（kosodatehiroba.com/form/forum の参加者名欄を fullName 語彙で対応）
 
 ## 進行中（archラウンド2・実装済み）
 

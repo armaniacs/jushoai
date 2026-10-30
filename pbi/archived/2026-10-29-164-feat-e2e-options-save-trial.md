@@ -27,7 +27,7 @@ Scenario: 最終削除から復帰できる
 ```
 
 ## 受け入れ基準
-- [ ] ChromeとFirefoxの両E2Eに上記3件を追加する
+- [x] ChromeとFirefoxの両E2Eに上記3件を追加する
 - [ ] `make e2e-chrome` が緑（手元で確認）
 - [ ] `make e2e-firefox` が緑（ユーザー実行で確認）
 
@@ -76,4 +76,4 @@ grep -n "settings page" tests/e2e/chrome.e2e.ts tests/e2e/firefox.e2e.ts
 ## Definition of Done
 - [ ] 両ブラウザのE2Eが緑
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] ドキュメント更新済み
