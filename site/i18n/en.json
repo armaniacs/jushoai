@@ -40,7 +40,9 @@
     "title": "See it in action",
     "lead": "A two-minute demo. It shows the flow from reviewing the preview to filling a form, on real screens.",
     "iframeTitle": "JushoAI demo video",
-    "link": "Watch on YouTube"
+    "link": "Watch on YouTube",
+    "gifAlt": "The flow from clicking the button to approving the preview (GIF)",
+    "gifCaption": "The GIF is about 15 seconds. The full video is below."
   },
   "steps": {
     "title": "Four steps",

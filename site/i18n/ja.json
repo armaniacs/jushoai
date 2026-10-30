@@ -40,7 +40,9 @@
     "title": "動いているところ",
     "lead": "紹介動画（約 2 分）です。プレビューの確認から入力までの流れを、実際の画面で確認できます。",
     "iframeTitle": "JushoAI の紹介動画",
-    "link": "YouTube で見る"
+    "link": "YouTube で見る",
+    "gifAlt": "入力からプレビュー承認までの流れ（GIF）",
+    "gifCaption": "GIF は 15 秒ほど。全文入りの紹介動画は下にあります。"
   },
   "steps": {
     "title": "使い方は 4 ステップ",
