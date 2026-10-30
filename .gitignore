@@ -28,4 +28,5 @@ video/remotion/public/*.webm
 video/remotion/public/bgm.*
 
 JushoAI_VULNHUNT_*/
-promo/
+promo/*
+!promo/README.md
