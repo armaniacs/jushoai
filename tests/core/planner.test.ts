@@ -327,9 +327,35 @@ describe('value pattern fit (PBI-210)', () => {
   // form-mailer.jp pages ship pattern="1"/"5"/"6" as internal check-type codes on
   // novalidate forms (the real pages do not enforce them): a bare literal with no
   // regex structure is page noise, so the fit check skips it and the fill keeps working.
+  // fail-open は意図（PBI-213 で B 採択、2026-11-01）
   it('skips a bare-literal pattern with no regex structure (fail-open)', () => {
     const plan = buildPlan([item('lastName', { pattern: '1' })], { profile, address });
     expect(plan).toEqual([expect.objectContaining({ value: '山田', status: 'ok' })]);
+  });
+
+  // PBI-213: the same fail-open intent for the other shipped codes. "5"/"6" are
+  // the bare literals the form-mailer.jp fixtures carry (12fc22bc297429 /
+  // 2dd1c663300469), pinned so the no-structure skip covers every shipped
+  // variant instead of "1" only.
+  it('skips the bare-literal codes "5" and "6" with no regex structure (fail-open)', () => {
+    expect(buildPlan([item('lastName', { pattern: '5' })], { profile, address })).toEqual([
+      expect.objectContaining({ value: '山田', status: 'ok' }),
+    ]);
+    expect(buildPlan([item('lastName', { pattern: '6' })], { profile, address })).toEqual([
+      expect.objectContaining({ value: '山田', status: 'ok' }),
+    ]);
+  });
+
+  // PBI-213: the tel fields on the form-mailer.jp fixtures carry pattern="^\d+$"
+  // (structural, so the fit check runs on them even though the novalidate pages
+  // never enforce it). A hyphenated tel violates it, which pins the checked side
+  // of the gate for tel — none of the PBI-210 tests above cover the tel type.
+  it('checks a tel field with a structural pattern (warns on a violating value)', () => {
+    const plan = buildPlan(
+      [item('tel', { type: 'tel', pattern: '^\\d+$' })],
+      { profile: { ...profile, tel: '090-1234-5678' }, address },
+    );
+    expect(plan).toEqual([expect.objectContaining({ value: '', display: '090-1234-5678', status: 'warn-pattern' })]);
   });
 
   // The pattern attribute governs text/search/url/tel/email/password only; a
