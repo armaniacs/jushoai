@@ -41,15 +41,15 @@ Scenario: 次の 0.1.30 のリリースノートが半端にならない
   Then 抽出されたノートに 204〜212 の変更がそろって含まれ、数行のみの半端なノートにならない
 
 ## 受け入れ基準
-- [ ] Unreleased に 204〜210 の利用者に見える変更（ダークモードの自動追従 / pattern 違反の注入警告 / E2E のドライバー事前検査 / PR テンプレート / corpus 拡充）が記録され、どれも欠けない
-- [ ] Unreleased の各行が実際の実装コミットと各 PBI の実装記録と一致する（実在しない変更を書かない）
-- [ ] 既に記録済みの PBI-211・212 の 2 行を壊さない（文言・位置を保つ）
-- [ ] Keep a Changelog の構造を維持する（Unreleased の見出しと Added/Changed/Fixed などのセクション分け。バージョン節と末尾のリンク定義に触れない）
-- [ ] 遡及後の Unreleased が `node scripts/release-notes.mjs Unreleased` で抽出でき、エラーにならない（現在の空節で失敗する挙動を壊さない。scripts/ と workflow には触れない。行不足を検出するガードの強化は本 PBI の範囲外）
+- [x] Unreleased に 204〜210 の利用者に見える変更（ダークモードの自動追従 / pattern 違反の注入警告 / E2E のドライバー事前検査 / PR テンプレート / corpus 拡充）が記録され、どれも欠けない
+- [x] Unreleased の各行が実際の実装コミットと各 PBI の実装記録と一致する（実在しない変更を書かない）
+- [x] 既に記録済みの PBI-211・212 の 2 行を壊さない（文言・位置を保つ）
+- [x] Keep a Changelog の構造を維持する（Unreleased の見出しと Added/Changed/Fixed などのセクション分け。バージョン節と末尾のリンク定義に触れない）
+- [x] 遡及後の Unreleased が `node scripts/release-notes.mjs Unreleased` で抽出でき、エラーにならない（現在の空節で失敗する挙動を壊さない。scripts/ と workflow には触れない。行不足を検出するガードの強化は本 PBI の範囲外）
 - [ ] 0.1.30 のタグは遡及コミットが入った push の後に打つ（タグと版上げ自体は本 PBI に含めない）
-- [ ] CHANGELOG.md と PBI 台帳（本 PBI への実装記録）を 1 コミットにまとめる
-- [ ] 文字種チェックが OK（check_docs_chars.py が「OK: no out-of-range characters」を出す。CHANGELOG.md も同様）
-- [ ] `make test` が緑のまま
+- [x] CHANGELOG.md と PBI 台帳（本 PBI への実装記録）を 1 コミットにまとめる
+- [x] 文字種チェックが OK（check_docs_chars.py が「OK: no out-of-range characters」を出す。CHANGELOG.md も同様）
+- [x] `make test` が緑のまま
 
 ## 実装手順
 - 出どころ節の実装コミットと各 PBI の実装記録（pbi/2026-10-31-204 〜 210）から利用者に見える変更を読み取り、Keep a Changelog の区分（Added/Changed/Fixed）ごとに Unreleased への行を起こす。行の文言はこの PBI では決めず、実装時に実在の変更から書く
@@ -93,3 +93,36 @@ python3 /Users/yaar/.agents/skills/docs-charset/scripts/check_docs_chars.py CHAN
 - [ ] CHANGELOG Unreleased に 204〜210 の変更が整い、次の 0.1.30 のタグ運用に備える
 - [ ] 本 PBI に実装記録（区分の判断・PBI-203 と 205・206 の扱い・文字種チェックの結果）を残す
 - [ ] 変更は CHANGELOG.md と PBI 台帳のみで、scripts/・workflow・src/ には触れない
+
+## 実装記録（2026-11-01）
+
+### 区分の判断と各行
+
+Unreleased に Added・Changed・Fixed の3区分を起こした（Keep a Changelog の標準の見出し順）。既存の `### Changed` 見出しと PBI-211・212 の 2 行は文言・位置とも変更していない（新規行は 212 の行の後に置いた）。行の文言は実装コミットと各 PBI の実装記録から書いた。
+
+- Added（4 行）:
+  - ダークモード自動追従（PBI-209、実装 20e1235 + 後追い修正 06846e6）。行文言は「OS のダークモード設定に、ページ上のバナーとパネル（プレビュー・AIガイド・確認ダイアログなど）が自動で追従する（shadow root 内の CSS 変数化と dark パレット。light モードの見た目は不変）」。利用者に見える新機能のため Added。実装と後追い修正（color-scheme のカスケード順）はどちらも未リリースで、利用者が受け取る機能は 1 つのため 1 行にまとめた
+  - PR テンプレート（PBI-207、bbe4cc1）。`.github/PULL_REQUEST_TEMPLATE.md` の新設のため Added。4節構成（概要・内容・検証・注意）は実装記録どおり
+  - corpus 拡充（PBI-208、ee13efa）。行文言は「samples corpus に実ページの fixture 5 件（rating radio 群・電話種別 radio・氏名 fieldset・英文の入学相談・table 見出しの海外フォーム）を追加し、ルール語彙の伸びしろを測れる形にする」。fixture の内訳は実装記録の取り込み 5 件（richell-anketo-rating・kosodate-contact・library-theater-apply・nishimachi-inquiry・gis-intl-admission）どおり。既存の 211 の行（radio 復元）と重複しないよう、追加に限定して書いた
+  - E2E の版数事前検査（PBI-204、5ff42cb）。行文言は「Chrome の E2E に ChromeDriver と Chrome の版数の事前検査を追加する（不一致・取得不能のときは修復手順を示したメッセージで失敗し、古いキャッシュに黙って落ちない。`CHROME_BIN`・`CHROMEDRIVER_BIN` での上書きも可能）」。既存の CHANGELOG で E2E・CI 基盤の追加を Added に載せる運用（0.1.26・0.1.29）に合わせた
+- Changed（新規 1 行。211・212 の 2 行は不変）:
+  - 参加者名語彙（PBI-203、5d10972）。行文言は「参加者名の語彙を分類に足す: 「(01)参加者名」のラベルを持つ欄が氏名として分類され、フォーラム申込フォームで参加者名の氏名が補完される」。212 の英語語彙の行と同種・同調子の文言にし、区分内の位置も 212 の直後にした（判断の理由は下記）
+- Fixed（2 行）:
+  - pattern 違反の注入警告（PBI-210、b57b19c）。行文言は「欄の pattern と合わない値が黙って注入される問題を修正し、maxlength 超過と同じ位置の警告行にして注入しない（preview に「欄のパターンと合わないため入力しません」と表示され、承認しても値は入らない。正規表現の構造を持たない pattern と type=date は検査対象外）」。出どころに「PBI-208 で露呈した実バグ」とあり、黙って注入されて送信が壊れる実害の修正のため Fixed。警告文言（STATUS_NOTE）と対象外の 2 点は実装記録どおり
+  - 初回ガイド横取りの CI 失敗（PBI-204、5ff42cb）。行文言は「初回向けガイドの浮遊表示が保存ボタンのクリックを横取りして CI の Chrome E2E が失敗する問題を修正する（ガイドを一時非表示にしてから本体を操作する）」。PBI-204 の 1 コミットは版数検査の追加と横取り修正の2面のため、区分ごとに分けて書いた
+
+### PBI-203 の参加者名語彙（5d10972）の判断
+
+同一遡及コミットに載せた。理由: 拡張機能自体の利用者に見える分類の変化（参加者名欄が氏名として分類され補完される）で、既存の 212（英語フォームの語彙）と同種の変更。この行を欠かすと、0.1.30 のノートに本 PBI が防ごうとしている「入ったはずの変更が読めない」状態が残る。文言は PBI-203 の実装記録（FULL_NAME 正規表現への追加、samples/forum.html と samples.test.ts の期待値固定、make eval の指標 163/33/102）と一致させた。
+
+### 205・206 の記事の注意書き（714d108）の判断
+
+載せなかった。理由: docs/blog/04-for-users-privacy-design.md への 1 文ずつの追記で、拡張機能の挙動にも同梱されるドキュメント（site/content・README・ユーザー向けガイド）にも触れない読み物向けの変更。CHANGELOG の消費者は release-notes.mjs の抽出を経由してリリースノートを読む利用者で、伝えるべきは拡張機能の変更のため、記事の注意書きは対象外と判断した。同種の blog 記事の追加（eae39f7、0.1.29 以降）も CHANGELOG 未記録で、記事単位の追記を載せない既存の運用に合わせた。
+
+### 検証
+
+- `node scripts/release-notes.mjs Unreleased`: エラーにならず、Added 4 行・Changed 3 行（既存 2 行 + 新規 1 行）・Fixed 2 行を抽出した
+- `python3 /Users/yaar/.agents/skills/docs-charset/scripts/check_docs_chars.py CHANGELOG.md pbi/2026-11-01-214-fix-changelog-unreleased-backfill.md`: 両方 `OK: no out-of-range characters`（EM DASH U+2014 は不使用。横棒が必要な箇所は使っていない）
+- `make test`: 174 ファイル・2255 passed + 1 expected fail（既存の意図的マーカー）で緑。docs のみの変更で、テストの追加・変更はしていない
+- バージョン節（`## [0.1.29]` 以降）と末尾のリンク定義には触れていない。タグ・版上げはしていない
+- 受け入れ基準のうち「0.1.30 のタグは遡及コミットが入った push の後に打つ」は運用項目のため [ ] のまま残す
