@@ -507,6 +507,7 @@ describe('sample forms end to end', () => {
 //   field_976 (text): School Website reads as school (no URL vocabulary yet)
 //   field_944 (text): Prefecture / State reads as the overseas state field (address4)
 //   field_962/946 (radio): Gender groups classify as gender but Male/Female options do not resolve against 女性 (warn-no-option)
+//   field_963 (text): Date of Birth has pattern MM/DD/YYYY but the plan pins the ISO date; intentional pin exposing the pattern-violation injection bug (PBI-210 rationale)
 //   field_923/927/956 (select): grade/year/enrollment selects, stay unclassified (LLM fallback)
 //   field_926 (select): School Year reads as school; a school select has no matching option (warn-no-option)
 //   field_928 (checkbox): out of scope (skip fixed); field_955 (textarea): out of scan

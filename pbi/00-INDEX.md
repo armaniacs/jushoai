@@ -9,6 +9,7 @@
 - `2026-10-31-207-feat-pr-template.md`（順位 4。RICE 16。`.github/PULL_REQUEST_TEMPLATE.md` 1枚、日本語のみ）
 - `2026-10-31-208-feat-samples-corpus-growth.md`（順位 5。RICE 8。継続作業の初回トランチ 5 fixture）
 - `2026-10-31-209-feat-dark-mode.md`（順位 6。RICE 6.4。content UI の auto-follow のみ。手動切替は別 PBI）
+- `2026-10-31-210-feat-pattern-violation-warning.md`（順位未定、次ラウンドの RICE で確定。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
 
 ## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 

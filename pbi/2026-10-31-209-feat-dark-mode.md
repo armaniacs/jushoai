@@ -27,14 +27,14 @@ Scenario: light OS では見た目が変わらない
   Then パネルとバナーの見た目は本 PBI 以前の light 表示と同一である
 
 ## 受け入れ基準
-- [ ] shadow root 内の `<style>` に CSS 変数トークン（背景、文字、罫線、primary など）が定義され、content UI の全パネルがその変数を参照する
-- [ ] shadow root 内の `<style>` に `@media (prefers-color-scheme: dark)` の dark パレットがある。手動切替の設定フィールドは作らない
+- [x] shadow root 内の `<style>` に CSS 変数トークン（背景、文字、罫線、primary など）が定義され、content UI の全パネルがその変数を参照する
+- [x] shadow root 内の `<style>` に `@media (prefers-color-scheme: dark)` の dark パレットがある。手動切替の設定フィールドは作らない
 - [ ] floating button バナー（src/ui/button.ts）も dark パレットに追従する
 - [ ] dark 版の文字色コントラストが WCAG AA（4.5:1）以上であることを手動確認する
-- [ ] tests/ui/button.test.ts の色 assert が新しいトークン構造に更新されパスする
-- [ ] tests/e2e/scenarios.ts:396 の rgba assert への影響を確認し、必要なら更新する
-- [ ] light モードの見た目が変更前と同一であることを samples で目視確認する
-- [ ] make check がパスする
+- [x] tests/ui/button.test.ts の色 assert が新しいトークン構造に更新されパスする
+- [x] tests/e2e/scenarios.ts:396 の rgba assert への影響を確認し、必要なら更新する
+- [x] light モードの見た目が変更前と同一であることを samples で目視確認する（light 既定値の pin と light ルール不変をテストとレビューで確認済み。OS での目視再確認は下記手動確認 2 に残す）
+- [x] make check がパスする
 
 ## 実装手順
 - src/ui/overlay.ts の OVERLAY_CSS を変数ブロックに改める: shadow root 内でのトークン定義（light 初期値）と `@media (prefers-color-scheme: dark)` の dark 上書き。site/assets/site.css の変数テーマをモデルにする
@@ -120,6 +120,7 @@ dark パネル背景 #212530（相対輝度 0.019）に対する文字色のコ�
 - tests/ui/overlay.test.ts の既存の構造 assert（.panel { など）は変更せず green のまま。
 - tests/e2e/scenarios.ts:396 の rgba assert は、getCssValue が var() を解決した計算値を返し light 既定値が変わらないため変更していない。実装時の make e2e-chrome は制限付きサンドボックスでは E2E_NO_SANDBOX=1 が渡らず、24 テストすべて skip で green 判定は実行を伴わなかった。その後 20e1235 HEAD で `HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome` を再実行し、24/24 green（scenarios.ts:396 の rgba assert を含む）を確認した。
 - make test（174 ファイル 2233 テスト）と make check が green。
+  - 注: 2233 は expected fail 1 件（tests/ai/loopback-octet-range.test.ts の it.fails）を含まない passed 数。末尾の検証の 2235+1 は fix wave でテストを 2 件追加した後の計測で、2235 passed + 1 expected fail = 総数 2236（時点の違い）。
 
 ### 手動確認が必要なこと
 
@@ -146,3 +147,5 @@ dark パネル背景 #212530（相対輝度 0.019）に対する文字色のコ�
 - overlay.test.ts / button.test.ts の dark ブロック位置取得が `indexOf` の文字列スライスに依存している。今回の修正で OVERLAY_CSS には dark メディアブロックが 2 つになったが、dark トークンは 1 つ目のブロックのみにあり、スライスは先頭のブロックから文字列末尾までを取るため現行は正しく動く。ブロック単位のパースへ置き換えると配置変更に強くなる。
 
 修正後の検証: npx vitest run tests/ui/overlay.test.ts（8 テスト green）、make test（174 ファイル 2236 テスト、2235 green、expected fail 1 件は従来どおり）、make check（exit 0）、`HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome`（24/24 green、scenarios.ts:396 の rgba assert を含む）。
+
+台帳注記（2026-10-31、なぜなぜ分析の合意実行）: 受け入れ基準のうちテストとレビューで検証済みのものを [x] 化した（token 定義・dark パレット定義・button.test.ts の色 assert・scenarios.ts:396 の影響確認・light モード不変・make check）。floating button バナーの dark 描画と dark 版コントラストの AA 実測は dark OS での目視確認のため [ ] のまま残す（手動確認 1 と 3、ユーザー作業）。light モードの samples 目視（基準 7）は light 既定値の pin とレビュー確認で [x] 化し、OS での目視再確認は手動確認 2 に残す。

@@ -266,6 +266,7 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
   let driverPath = driverBin;
   let driverVersion = driverPath ? binaryVersionOutput(driverPath) : null;
   let status = driverVersionStatus(chromeVersion, driverVersion);
+  // JUSHOAI_DRIVER_DOWNLOAD=1 can silently replace a mismatching explicit CHROMEDRIVER_BIN with the downloaded match below (intentional precedence).
   if (status !== 'match') {
     const major = parseMajorVersion(chromeVersion ?? '');
     const downloaded = major ? await downloadMatchingDriver(major) : null;

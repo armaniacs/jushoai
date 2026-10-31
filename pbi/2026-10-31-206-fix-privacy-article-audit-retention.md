@@ -45,7 +45,7 @@ Scenario: 主張が privacy.md と一致する
 
 ## Definition of Done
 - [x] 全 BDD シナリオが検証手順（docs-charset チェック・privacy.md との文言照合）でパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（タスクレビュー Approved、2026-10-31、`.superpowers/sdd/review-5ff42cb..714d108.diff` 対象のレビュー）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
