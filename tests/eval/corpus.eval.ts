@@ -1,13 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { evalMetricsFor, reportLine, aggregate, type EvalMetrics } from '../../src/eval/metrics';
 import { scanFields } from '../../src/dom/scan-fields';
-
-// Auto-collects every sample fixture (PBI-136): a fixture added via
-// `make addurl` joins the corpus without a list edit, so the eval stays
-// linked to the samples.test.ts procedure with no second registry.
-const corpus = import.meta.glob('../../samples/*.html', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
-
-const fixtureName = (path: string) => path.split('/').pop()!;
+// The corpus (name → html + per-fixture expectations) comes from the shared
+// ledger module (PBI-216): the glob lives there, once, so this file carries
+// no second registry and a fixture added via `make addurl` joins without a
+// list edit here.
+import { corpus } from '../corpus';
 
 // Per-fixture pin table (PBI-215): one row per corpus fixture. Row values are
 // copied from the `make eval` reportLine output, never recomputed by hand.
@@ -74,15 +72,15 @@ async function metricsFor(html: string): Promise<EvalMetrics> {
 
 describe('sample corpus metrics (local, no network)', () => {
   it('measures every fixture, prints one short line per fixture, and pins each row', async () => {
-    const names = Object.keys(corpus).map(fixtureName);
+    const names = Object.keys(corpus);
     expect(names.length).toBeGreaterThan(0);
     const rows: EvalMetrics[] = [];
     const measured = new Map<string, EvalMetrics>();
-    for (const [path, html] of Object.entries(corpus)) {
-      const m = await metricsFor(html);
+    for (const [name, entry] of Object.entries(corpus)) {
+      const m = await metricsFor(entry.html);
       rows.push(m);
-      measured.set(fixtureName(path), m);
-      console.log(reportLine(fixtureName(path), m));
+      measured.set(name, m);
+      console.log(reportLine(name, m));
     }
     const agg = aggregate(rows);
     console.log(`[JushoAI eval] aggregate fixtures=${agg.fixtures} fields=${agg.total} ruleHits=${agg.ruleHits} llmFallbacks=${agg.llmFallbacks} fillable=${agg.fillable}`);
@@ -116,9 +114,9 @@ describe('sample corpus metrics (local, no network)', () => {
 
   it('keeps page content out of every report line', async () => {
     const lines: string[] = [];
-    for (const [path, html] of Object.entries(corpus)) {
-      const m = await metricsFor(html);
-      lines.push(reportLine(fixtureName(path), m));
+    for (const [name, entry] of Object.entries(corpus)) {
+      const m = await metricsFor(entry.html);
+      lines.push(reportLine(name, m));
     }
     const report = lines.join('\n');
     // Fixture file names are fine; page-controlled strings (labels, values,

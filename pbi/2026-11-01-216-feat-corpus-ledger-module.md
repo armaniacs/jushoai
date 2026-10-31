@@ -42,14 +42,14 @@ Scenario: 2 台帳が 1 つに束ねられ収集機構が統一される
   And 全 fixture の期待値と make eval の pin は不変で緑になる
 
 ## 受け入れ基準
-- [ ] samples.test.ts の手動 import 27 本（:9-35）と SAMPLES map（:38-66）が消え、fixture 取得は corpus module 経由になっている
-- [ ] corpus.eval.ts:8 の glob 収集が corpus module 経由になり、収集機構が glob 自動方式に 1 つに統一されている
-- [ ] corpus module が name → html + per-fixture 期待値/除外理由の interface を公開している（pin 表化 215 の置き場所になる）
-- [ ] scripts/add-fixture.mjs の insertImport（:29）・insertSampleEntry（:35）による samples.test.ts ソースへの regex 機械編集が消え、tooling は corpus module の interface を消費している（sync-target-urls.mjs の buildWiring 共有分も同じ経路で直る）
-- [ ] make addurl の手順自体は不変（URL=<url> の 1 コマンドで tests/target-url.md 登録・取得・雛形生成・テスト配線。内部実装だけ interface 消費に替わる）
-- [ ] 台帳の更新が反映されないとき tool は失敗を報告する（replace が黙って no-op したまま「wired a case」と成功を報告する経路が消える）
-- [ ] 全 fixture の期待値は不変（samples.test.ts の各ケースの期待値と、make eval の pin 203/61/125・refineChanged 28・refineDropped 0 が束ね替え前後で不変）
-- [ ] make test + make eval が緑、make check が exit 0
+- [x] samples.test.ts の手動 import 27 本（:9-35）と SAMPLES map（:38-66）が消え、fixture 取得は corpus module 経由になっている
+- [x] corpus.eval.ts:8 の glob 収集が corpus module 経由になり、収集機構が glob 自動方式に 1 つに統一されている
+- [x] corpus module が name → html + per-fixture 期待値/除外理由の interface を公開している（pin 表化 215 の置き場所になる）
+- [x] scripts/add-fixture.mjs の insertImport（:29）・insertSampleEntry（:35）による samples.test.ts ソースへの regex 機械編集が消え、tooling は corpus module の interface を消費している（sync-target-urls.mjs の buildWiring 共有分も同じ経路で直る）
+- [x] make addurl の手順自体は不変（URL=<url> の 1 コマンドで tests/target-url.md 登録・取得・雛形生成・テスト配線。内部実装だけ interface 消費に替わる）
+- [x] 台帳の更新が反映されないとき tool は失敗を報告する（replace が黙って no-op したまま「wired a case」と成功を報告する経路が消える）
+- [x] 全 fixture の期待値は不変（samples.test.ts の各ケースの期待値と、make eval の pin 203/61/125・refineChanged 28・refineDropped 0 が束ね替え前後で不変）
+- [x] make test + make eval が緑、make check が exit 0
 
 ## テスト戦略
 - E2E: なし（本 PBI は tests/ と scripts/ の台帳整理で、ブラウザ上の挙動は触れない）
@@ -90,10 +90,10 @@ grep -rn 'buildWiring\|applyTest' scripts/
 - 212 が samples.test.ts を触っているため rebase が起きやすい。本 PBI は 212 の後に独立コミットとして置く（出どころの開発運用 Top 2 と同じ狙い）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが検証されパスする
-- [ ] make test + make eval + make check が緑（期待値と pin は不変）
+- [x] 全 BDD シナリオが検証されパスする
+- [x] make test + make eval + make check が緑（期待値と pin は不変）
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（実装記録を本 PBI に残す。AGENTS.md の make addurl 手順の記載は不変で、台帳の説明が必要ならその範囲で更新）
+- [x] ドキュメント更新済み（実装記録を本 PBI に残す。AGENTS.md の make addurl 手順の記載は不変で、台帳の説明が必要ならその範囲で更新）
 
 ## 外す条件
 - pin の fixture 単位指標表化と世代コメントの整理（PBI-215、発見 3a/3b）。本 PBI は pin 表の置き場所（corpus module）を確定させるだけで、pin の表化はしない
@@ -101,3 +101,34 @@ grep -rn 'buildWiring\|applyTest' scripts/
 - make addurl の手順変更（tests/target-url.md への登録・fetch・雛形生成の形は不変。変えるのはテスト配線の内部実装だけ）
 - scaffold-fixture.mjs の雛形生成（extractControls・renderFixture・renderTestStub）の変更
 - src/ 実装への変更（触れるのは tests/ と scripts/ の台帳と tooling）
+
+## 実装記録（2026-11-01）
+
+### 台帳 module の配置と interface
+- `tests/corpus.ts`（新規）に corpus 台帳 module を置いた。glob（import.meta.glob）はこの module 内の 1 か所に集約し、corpus.eval.ts からは消えた（PBI-136 の「no second registry」を corpus 全体で実現）。
+- interface は `CorpusEntry`（html + expected? + excluded?）を fixture 名で key に公開。期待値は samples.test.ts の各ケースから移設し（demo-registration / demo-shop-checkout / demo-request-info の 3 件は `TEN_ADDRESS_EXPECTED` を共有）、除外理由コメント行（`//   field_xxx ...`）を `excluded` の entry データに移した（複数行のものは 1 文字列に連結）。
+- 期待値は未収載の fixture では任意: glob 収集は html の追加だけで corpus に載り、台帳 entry の無い fixture は `corpus` に html のみで入る。
+- `CorpusName = keyof typeof LEDGER` で file を受け、台帳から消えた fixture は samples.test.ts の case で typecheck が落ちる（`SAMPLES[file]!` の実行時 TypeError を置き換え）。`corpusEntry()` は fixture html が消えた場合に名指しで throw し、`expectedFor()` が標準 fill ケースの期待値を返す（非 null assertion は使わない）。
+- PBI-215 の pin 表（PIN_TABLE + pinDiff + corpus/pin 両方向の一致検査）は corpus.eval.ts に残す判断にした。pin 値は `make eval` の reportLine 出力から写す eval 固有のデータで、消費者も eval 側だけのため（移しても PBI-215 の基準は保てるが、diff が増えるだけと判断）。pin 値 203/61/125・refineChanged 28・refineDropped 0 は不変。
+
+### 2 台帳統合の形
+- samples.test.ts は手動 import 27 本と SAMPLES map を削除し、`planFor(file: CorpusName)` が corpusEntry から html を受ける。標準 fill ケースは `expectedFor(file)` との比較 1 行になり、anchor 系・radio 復元・demo-ai-ambiguous の LLM 経路の個別検査は台帳の html を消費する従来のケースとして残した（it.each への無理な束ねはしない。落とし穴どおり）。
+- corpus.eval.ts は台帳 module の `corpus` を fixture 名 key で受ける（fixtureName ヘルパーも削除）。pin 表の検査は壊れず、両方向の一致検査も不変。
+
+### add-fixture の変更点
+- insertImport・insertSampleEntry（samples.test.ts ソースへの regex 機械編集）と varNameFromFile を削除した。
+- buildWiring は台帳 entry の雛形（`renderLedgerEntry`。CorpusExtras 形の expected + excluded）を生成し、`applyWiring({ ledger, test })` が LEDGER_ANCHOR コメントの上に entry を挿入してから samples.test.ts に case を挿入する。台帳を先に当てるので、case だけ挿されて台帳に載らない分離した壊れ方は起きない。case stub は台帳 interface を参照する形（`toEqual(expectedFor('...'))`）で add-fixture.mjs 側に生成する。
+- scaffold-fixture.mjs（extractControls・renderFixture・renderTestStub）は雛形生成を不変（外す条件どおり）。
+- buildWiring を共有する sync-target-urls.mjs も同じ経路で直った。`--check`（make addurl-check）の `<expected>` 残存の走査先を samples.test.ts から tests/corpus.ts に替えた（雛形の置き場所が台帳に移ったため）。
+
+### 失敗報告の実装
+- insertLedgerEntry・insertTestCase は anchor が無いとき null を返し、applyWiring はそこで null を返す。CLI は書き込み前に in-memory で当てるため、anchor が無い場合は何も書かずに中断する。
+- CLI（add-fixture.mjs）は書き込み後に台帳とテストを読み戻して entry の在り方を検証し、検証を通った場合のみ成功を報告する。sync-target-urls.mjs も同じ検証を持ち、wiring 失敗をログして残りを続行した上で、失敗が 1 件でもあればコマンド全体を exit 1 にする（成功を偽報告しない）。
+- tests/scripts/add-fixture.test.ts は「1 回だけ入る・2 回目は無変更」に加えて、anchor が無い経路（no match → null）と、台帳が先に失敗したとき samples.test.ts を触らないことを検査する。
+- tests/integration/target-urls.test.ts は旧 import 行（`from '../../samples/...?raw'`）の形を pin していたため、corpus ledger の entry の在り方（`'${file}': {`）で検査する形に替えた（registry の全 URL が配線済み fixture を持つという目的は不変）。
+
+### 検証結果
+- make test: 174 ファイル、2260 passed + 1 expected fail。全 fixture の期待値は束ね替え前後で不変。
+- make eval: fixtures=27、ruleHits=203、llmFallbacks=61、fillable=125、refineChanged 28（pin 表の行合計）、refineDropped 0 で不変。
+- make check: exit 0。
+- make addurl の smoke: 1 fixture（smoke-check.html）で雛形生成 → 台帳 entry の interface 追加（LEDGER_ANCHOR の上）→ case 配線を確認し、検証後に生成物を削除済み。anchor を壊した経路では「wiring failed: ... the corpus ledger anchor ... is missing; fixture not written」を報告して make addurl が失敗し、fixture も台帳 entry も書き込まれないことを手で確認した。
