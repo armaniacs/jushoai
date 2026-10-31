@@ -40,14 +40,14 @@ Scenario: 落ちた pin 検査が分類ルールを触る誘導にならない
   Then 失敗メッセージが動いた fixture 名と pin 表の該当行を示し、「pin 更新か意図しない分類の変化かを fixture に戻って確認する」誘導を載せる。古い「正当な基準値」の数字は表にもコメントにも残らない
 
 ## 受け入れ基準
-- [ ] tests/eval/corpus.eval.ts の pin（ruleHits 203・llmFallbacks 61・fillable 125 の 3 magic number）が fixture 単位の指標表に置き換わっている（1 行 = 1 fixture。行は fixture 名と ruleHits・llmFallbacks・fillable を持つ）
-- [ ] refineChanged/refineDropped の集計 pin（:69-70）も pin 表の合計として誘導され（行に refineChanged・refineDropped を載せる）、集計側の magic number が残っていない
-- [ ] pin がずれたとき、失敗が fixture 名を名指す（どの fixture のどの指標が動いたかがテスト失敗だけで分かる）
-- [ ] corpus（import.meta.glob の fixture 名集合）と pin 表の行が一致することを検査し、行が無い fixture がその名前で失敗する
-- [ ] 世代コメント考古学（PBI-160/203/208/210/211/212 の「正当な基準値」段落）が削除され、「現在の内訳は pin 表を見よ」と pin 更新ルール（該当行を同じコミットで編集する）の 1 行コメントに置き換わっている
-- [ ] make eval が緑（pin 表が実測と一致。203/61/125・refineChanged 28・refineDropped 0 と同じ実測）
-- [ ] src/ 変更なし（src/eval/metrics.ts の EvalMetrics・evalMetricsFor・reportLine・aggregate は触らない）
-- [ ] make check が exit 0
+- [x] tests/eval/corpus.eval.ts の pin（ruleHits 203・llmFallbacks 61・fillable 125 の 3 magic number）が fixture 単位の指標表に置き換わっている（1 行 = 1 fixture。行は fixture 名と ruleHits・llmFallbacks・fillable を持つ）
+- [x] refineChanged/refineDropped の集計 pin（:69-70）も pin 表の合計として誘導され（行に refineChanged・refineDropped を載せる）、集計側の magic number が残っていない
+- [x] pin がずれたとき、失敗が fixture 名を名指す（どの fixture のどの指標が動いたかがテスト失敗だけで分かる）
+- [x] corpus（import.meta.glob の fixture 名集合）と pin 表の行が一致することを検査し、行が無い fixture がその名前で失敗する
+- [x] 世代コメント考古学（PBI-160/203/208/210/211/212 の「正当な基準値」段落）が削除され、「現在の内訳は pin 表を見よ」と pin 更新ルール（該当行を同じコミットで編集する）の 1 行コメントに置き換わっている
+- [x] make eval が緑（pin 表が実測と一致。203/61/125・refineChanged 28・refineDropped 0 と同じ実測）
+- [x] src/ 変更なし（src/eval/metrics.ts の EvalMetrics・evalMetricsFor・reportLine・aggregate は触らない）
+- [x] make check が exit 0
 
 ## 実装手順
 - red 先行: pin 表の行型と表を tests/eval に用意し（corpus.eval.ts 内、または tests/eval/ 配下の 1 module。src/ には置かない）、1 行だけ意図的に古い値を入れて pin 検査を実行する。失敗が fixture 名を名指すことを確認してから、実測値で埋める（表の局所性自体を先に固定する）
@@ -98,3 +98,30 @@ make eval
 - pin が gate 化される（make check / CI で機械検知され、eval レイヤの pin が人の規律で守る対象でなくなる）なら本 PBI は不要。ただし gate 化自体は本 PBI の対象外（候補棚の別枠）で、表化（局所性の付与）自体は gate 化しても意味を失わないため、gate 化 PBI の受け入れ基準に per-fixture の差分報告を載せるかどうかだけ確定する
 - src/eval/metrics.ts の指標の shape 変更（EvalMetrics の単位や集計の定義変更）が伴う場合は本 PBI から外す（本 PBI は src/ を触らない。shape 変更は別 PBI に切り、その後に本 PBI を実施する）
 - pin のずれが意図しない分類の変化を示した場合、src/core/ の分類ルールへの手入れは本 PBI に含めない（その fixture の意図確定を別作業に切る）
+
+## 実装記録（2026-11-01）
+
+### pin 表の初回作成
+
+tests/eval/corpus.eval.ts に pin 表（行型 PinRow と表 PIN_TABLE）を新設した。1 行 = 1 fixture で、行は fixture 名と ruleHits・llmFallbacks・fillable・refineChanged・refineDropped を持つ。unknowns は total - ruleHits で誘導できるため行に載せていない（EvalMetrics には残る）。行の値は手で再計算せず、make eval の reportLine 出力（[JushoAI eval] fixture=... 行）から写した。
+
+pin 表の初回作成コミットは本コミットで、このコミットの表の初回 diff が以後の世代記録の起点になる。以後の pin 更新は表の該当 fixture 行を同じコミットで編集し、表の diff が世代記録になる（古い基準値の追記はしない）。fixture 数は 27（corpus 全体。集計は 203/61/125・refineChanged 28・refineDropped 0 で、PBI-212 実装後の実測と同じ）。
+
+### red 先行の確認
+
+- 実測差分の red: nishimachi-inquiry.html の fillable を意図的に古い値（pin 6、実測 7）にして make eval を実行した。失敗は「nishimachi-inquiry.html: fillable pin=6 実測=7」と fixture 名と動いた指標を名指し、エラーだけでどの fixture のどの指標が動いたか分かった（全 fixture の出力を人手で diff する手順は要らない）。メッセージは「pin 更新か意図しない分類の変化かを fixture に戻って確認する」誘導で、「回帰」という語は置いていない
+- 一致検査の red: pin 表から forum.html の 1 行を外して make eval を実行した。失敗は「forum.html: pin 表に行がありません。make eval の fixture 行から 1 行追加する」と fixture 名で失敗し、fixture 追加・削除が pin 表から黙って外れる形を作らないことを確認した
+
+### 構成
+
+- pin 表の検査は 2 方向。1 行 = 1 fixture の実測照合（pinDiff が指標単位のずれを列挙し、fixture 名と pin 値と実測値を載せる）と、corpus/pin 一致検査（corpus 側の行が無い fixture と pin 表側の残骸行の両方向）
+- 集計 pin（toBe(203)/toBe(61)/toBe(125) と refineChanged/refineDropped の magic number）は廃止し、pin 表の行の合計（pinSum）と aggregate(rows) の実測を比較する形にした。集計側の magic number は残っていない（数字は pin 表の行にしか置かない）
+- 世代コメント（PBI-160/203/208/210/211/212 の「正当な基準値」段落）を削除し、pin 表の先頭に「現在の内訳は pin 表を見よ。pin のずれは表の該当 fixture 行を同じコミットで編集する。表の diff が世代記録になる。古い基準値の追記はしない」のルールコメントを置いた
+- src/ には触れていない（EvalMetrics・evalMetricsFor・reportLine・aggregate は不変）。tests/eval/metrics.test.ts の期待値も不変のまま緑
+
+### 検証
+
+- make eval: 緑（3 tests。pin 表が実測と一致）
+- make test: 緑（174 files、2255 passed、1 expected fail。metrics.test.ts は src/ 変更なしのため期待値不変）
+- make check: exit 0
+- 文字種チェック（check_docs_chars.py）: OK
