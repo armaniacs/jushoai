@@ -1,6 +1,6 @@
 # PBI 台帳インデックス
 
-## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票）
+## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票）
 
 - `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
 - `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
@@ -10,6 +10,9 @@
 - `2026-10-31-208-feat-samples-corpus-growth.md`（順位 5。RICE 8。継続作業の初回トランチ 5 fixture）
 - `2026-10-31-209-feat-dark-mode.md`（順位 6。RICE 6.4。content UI の auto-follow のみ。手動切替は別 PBI）
 - `2026-10-31-210-feat-pattern-violation-warning.md`（順位未定、次ラウンドの RICE で確定。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
+- `2026-10-31-211-feat-corpus-radio-restore.md`（順位未定、次ラウンドの RICE で確定。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
+- `2026-10-31-212-feat-english-form-vocabulary.md`（順位未定、次ラウンドの RICE で確定。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
+- `2026-10-31-213-feat-novalidate-pattern-handling.md`（順位未定、次ラウンドの RICE で確定。novalidate 時の pattern 検査の扱い。調査 + 判断 + 必要なら実装。PBI-210 review 由来）
 
 ## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 

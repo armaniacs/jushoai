@@ -295,6 +295,16 @@ describe('value pattern fit (PBI-210)', () => {
     ]);
   });
 
+  // Both axes fire on one value: the maxlength branch runs first (the branch
+  // order in buildPlan), so the row keeps warn-maxlength and never shifts to
+  // warn-pattern (review Minor: implemented by branch order but untested).
+  it('keeps maxlength ahead when a value both overflows and violates the pattern (warn-maxlength)', () => {
+    const plan = buildPlan([item('birthday', { pattern: mmdd, maxLength: 5 })], { profile, address });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', display: '1990-05-07', status: 'warn-maxlength' }),
+    ]);
+  });
+
   it('keeps a pattern-matching value ok', () => {
     const plan = buildPlan(
       [item('birthday', { pattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}', maxLength: 10 })],

@@ -283,6 +283,9 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
     driverMajor: parseMajorVersion(driverVersion ?? ''),
     driverPath,
     cachePath: process.env.SE_CACHE_PATH ?? SE_CACHE_DIR,
+    // The raw platform rides the check so a fail-safe unknown platform is named
+    // in the repair message instead of staying opaque (PBI-204 review Minor).
+    platform: process.platform,
   };
 }
 

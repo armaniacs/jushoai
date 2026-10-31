@@ -88,6 +88,22 @@ describe('driverVersionFailureMessage', () => {
     expect(message).toContain('CHROMEDRIVER_BIN');
   });
 
+  it('names an unsupported platform instead of staying silent on the fail-safe fallback', () => {
+    // The harness still tries the macOS Selenium Manager dir on an unknown
+    // platform (fail safe); the message must say the platform is unsupported.
+    const message = driverVersionFailureMessage({
+      status: 'unavailable', chromeMajor: '156', driverMajor: null, driverPath: null,
+      cachePath: 'tmp/selenium-cache', platform: 'freebsd',
+    });
+    expect(message).toContain('freebsd');
+    expect(message).toContain('not supported by the bundled Selenium Manager');
+    expect(message).toContain('CHROMEDRIVER_BIN');
+    expect(driverVersionFailureMessage({
+      status: 'unavailable', chromeMajor: '156', driverMajor: null, driverPath: null,
+      cachePath: 'tmp/selenium-cache', platform: 'darwin',
+    })).not.toContain('Platform note');
+  });
+
   it('returns no message for a match', () => {
     expect(driverVersionFailureMessage({
       status: 'match', chromeMajor: '156', driverMajor: '156', driverPath: '/d/chromedriver',

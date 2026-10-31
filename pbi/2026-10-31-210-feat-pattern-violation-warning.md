@@ -116,7 +116,7 @@ grep -rn "warn-maxlength" src/ tests/
 
 - tests/core/planner.test.ts: PBI-210 の describe に 6 fixture を追加（違反 → warn-pattern、適合 → ok、pattern なし → 従来、パース失敗 → fail-open、裸リテラル → fail-open、type=date → 対象外）。違反の 1 件を red 確認してから実装した
 - tests/integration/samples.test.ts: nishimachi ケースの field_963 pin を外し、意図注記コメントを pin の説明として残した
-- make test: 174 ファイル・2240 テスト + 期待失敗 1 件がパス
+- make test: 174 ファイル・2241 テスト + 期待失敗 1 件がパス（実測は 2241 passed | 1 expected fail = 2242。旧記載の 2240 は算数の誤りで、コントローラの再実測で訂正した）
 - make eval: pin 更新後にパス
 - make check: パス
 - HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome: 24/24 パス（preview の警告行追加が既存 E2E に影響しないことを確認）
