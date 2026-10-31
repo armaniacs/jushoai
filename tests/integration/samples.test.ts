@@ -533,4 +533,32 @@ describe('sample forms end to end', () => {
 //   _wpcf7* (hidden): empty-submit shim or server state, never a fill target (exclude)
 //   submit (submit): action element, never a fill target (exclude)
   });
+  // PBI-211: the 4 corpus fixtures carry their real-page radio groups again
+  // (formmailer-anketo-gender.html shape). One field per name, and the radio
+  // policy leaves them unclassified: they never reach a plan row, so the
+  // classified results above stay unchanged.
+  it('restored radio groups are one field per name and stay unclassified', async () => {
+    const expected: Record<string, Record<string, number>> = {
+      'richell-anketo-rating.html': {
+        field_2953447: 5, field_2953448: 5, field_2953449: 5,
+        field_2953450: 5, field_2953452: 10, field_2953453: 10,
+      },
+      'kosodate-contact.html': { 'wpforms[fields][42]': 3 },
+      'library-theater-apply.html': { field_6426354: 2 },
+      'gis-intl-admission.html': {
+        'desired-enrollment': 5, 'desired-grade': 7, 'dormitory-accommodation': 3,
+        'japanese-proficiency': 3, 'jlpt-level': 6, 'studied-japanese': 2,
+      },
+    };
+    for (const [file, groups] of Object.entries(expected)) {
+      document.body.innerHTML = new DOMParser().parseFromString(SAMPLES[file]!, 'text/html').body.innerHTML;
+      const radios = scanFields(document.body).filter((f) => f.meta.tag === 'radio');
+      expect(radios.map((r) => r.meta.name)).toEqual(Object.keys(groups));
+      for (const r of radios) expect(r.meta.options.length).toBe(groups[r.meta.name]!);
+      const items = await classifyAll(radios.map((r) => r.meta), null, {
+        englishPage: isEnglishPageText(document.body.textContent ?? ''),
+      });
+      expect(items.map((i) => i.cls.category)).toEqual(radios.map(() => 'unknown'));
+    }
+  });
 });

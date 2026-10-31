@@ -4,8 +4,11 @@
   (お問い合わせフォーム). Field ids, names, labels, placeholders, and options
   mirror the real page; site chrome is omitted except the two site-search
   fields (name="s"), which stay unclassified.
-  The 電話番号種別 radios (自宅/携帯/所属先) stay unclassified per the radio
-  policy; the textarea, number, and consent checkbox are out of scope.
+  The 電話番号種別 radios (自宅/携帯/所属先) are restored with the real page's
+  wpforms markup: the field label is not associated with the radio inputs, so
+  the scanned group label is the first option's text and the group stays
+  unclassified per the radio policy. The textarea, number, and consent checkbox
+  are out of scope.
 -->
 <html lang="ja"><meta charset="utf-8"><title>wpforms contact (phone-type radios)</title>
 <form>
@@ -16,6 +19,15 @@
   <input name="wpforms[fields][6]" id="wpforms-192-field_6" type="text" value="">
   <label for="wpforms-192-field_29">(02)お問い合わせ種別 *</label>
   <select name="wpforms[fields][29]" id="wpforms-192-field_29"><option value="">お問い合わせ種別選択</option><option value="入会について">入会について</option><option value="ひろば保険">ひろば保険</option><option value="研修・セミナー">研修・セミナー</option><option value="その他">その他</option></select>
+  <!-- (04)電話番号種別: the real page's wpforms radio block (field label is a plain label, radios carry per-option labels) -->
+  <div id="wpforms-192-field_42-container" class="wpforms-field wpforms-field-radio flex_form" data-field-id="42">
+    <label class="wpforms-field-label">(04)電話番号種別 <span class="wpforms-required-label">*</span></label>
+    <ul id="wpforms-192-field_42" class="wpforms-field-required">
+      <li class="choice-1 depth-1"><input type="radio" id="wpforms-192-field_42_1" name="wpforms[fields][42]" value="自宅" required><label class="wpforms-field-label-inline" for="wpforms-192-field_42_1">自宅</label></li>
+      <li class="choice-2 depth-1"><input type="radio" id="wpforms-192-field_42_2" name="wpforms[fields][42]" value="携帯" required><label class="wpforms-field-label-inline" for="wpforms-192-field_42_2">携帯</label></li>
+      <li class="choice-3 depth-1"><input type="radio" id="wpforms-192-field_42_3" name="wpforms[fields][42]" value="所属先" required><label class="wpforms-field-label-inline" for="wpforms-192-field_42_3">所属先</label></li>
+    </ul>
+  </div>
   <label for="wpforms-192-field_41">(05)電話番号 *</label>
   <input name="wpforms[fields][41]" id="wpforms-192-field_41" type="text" value="" placeholder="例：半角で045-531-2888">
   <label for="wpforms-192-field_12">(06)所属（会社・団体・学校等） *</label>

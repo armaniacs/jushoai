@@ -50,8 +50,14 @@ describe('sample corpus metrics (local, no network)', () => {
     // form-mailer.jp 系のダミー pattern（pattern="1" 等）は正規表現の構造を持た
     // ないため検査スキップ（fail-open）で、他 fixture の fillable は不変。
     // 204/46/126 が正当な基準値。
+    // PBI-211: richell-anketo-rating・kosodate-contact・library-theater-apply・
+    // gis-intl-admission の 4 fixture に実ページの radio グループを復元した
+    // （radio 欄 +14、richell 6・kosodate 1・library-theater 1・gis 6。すべ
+    // て radio 政策どおり未分類）。ruleHits・fillable・refineChanged は不変、
+    // llmFallbacks は未分類の radio 欄の分だけ +14。radio-heavy 軸（radio 欄
+    // の数と政策適用範囲）が指標として数えられる。204/60/126 が正当な基準値。
     expect(agg.ruleHits).toBe(204);
-    expect(agg.llmFallbacks).toBe(46);
+    expect(agg.llmFallbacks).toBe(60);
     expect(agg.fillable).toBe(126);
     expect(sum((m) => m.refineChanged)).toBe(28);
     expect(sum((m) => m.refineDropped)).toBe(0);
