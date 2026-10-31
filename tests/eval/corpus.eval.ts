@@ -56,9 +56,16 @@ describe('sample corpus metrics (local, no network)', () => {
     // て radio 政策どおり未分類）。ruleHits・fillable・refineChanged は不変、
     // llmFallbacks は未分類の radio 欄の分だけ +14。radio-heavy 軸（radio 欄
     // の数と政策適用範囲）が指標として数えられる。204/60/126 が正当な基準値。
-    expect(agg.ruleHits).toBe(204);
-    expect(agg.llmFallbacks).toBe(60);
-    expect(agg.fillable).toBe(126);
+    // PBI-212: 英語フォームの語彙追加。nishimachi-inquiry の field_976
+    // （School Website）が website 欄として分類から外れ school → unknown
+    // （ruleHits -1・llmFallbacks +1・fillable 不変）、gis-intl-admission の
+    // name-institution が Institution 語彙で school に載り fullName → school
+    // （ruleHits・llmFallbacks 不変・fillable -1。synthetic profile の school
+    // は空のため warn-no-value）。gender の英語別名（Male/Female）は分類を
+    // 動かさず、radio 政策も不変。203/61/125 が正当な基準値。
+    expect(agg.ruleHits).toBe(203);
+    expect(agg.llmFallbacks).toBe(61);
+    expect(agg.fillable).toBe(125);
     expect(sum((m) => m.refineChanged)).toBe(28);
     expect(sum((m) => m.refineDropped)).toBe(0);
   });

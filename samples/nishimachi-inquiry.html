@@ -6,8 +6,10 @@
   real page; site chrome (2 site-search fields) and the duplicated Child 2 / 3
   and Parent / Guardian B blocks are omitted.
   The Gender radios (Male/Female) are fieldset radio groups: they classify as
-  gender but the English option values do not resolve against a Japanese
-  profile value, so they correctly warn instead of filling. The another-child
+  gender and the English option values resolve against a Japanese profile
+  value through the gender alias (PBI-212). The School Website field is a URL
+  box, so PBI-212 removes website fields from classification instead of riding
+  a school name into it. The another-child
   checkbox and the inquiry textarea are out of scope and must be skipped.
 -->
 <html lang="en"><meta charset="utf-8"><title>Finalsite inquiry form (overseas)</title>

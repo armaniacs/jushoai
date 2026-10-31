@@ -884,6 +884,47 @@ describe('classifyField: bounded input after scan cap', () => {
   });
 });
 
+// PBI-212: 英語フォームの語彙。教育機関名欄（Institution/Institute）は school 前処理の
+// 語彙で先に判定し、氏名（FULL_NAME の name 語）に拾わせない。website 欄（School Website）は
+// 学校名欄より先に判定して分類から外す（URL を入れたい欄に学校名が入る誤補完より不注入が
+// 安全。PBI-208 実装記録の誤解釈候補）。fixture 先行: 先に失敗させてから語彙を足す。
+describe('classifyField: English form vocabulary (PBI-212)', () => {
+  it('classifies the English institution label as school, not fullName', () => {
+    // gis-intl-admission.html:82-83 の [15] 欄（name="name-institution"）。
+    expect(cat({
+      name: 'name-institution',
+      label: '[15]日本語を学習した教育機関名・学習期間 - / Name of Institution and Period of Japanese Study',
+      placeholder: '該当する場合のみご記入ください。 / Please complete this section if applicable.',
+    })).toBe('school');
+  });
+
+  it.each([
+    { name: 'name-institution', label: 'Name of Institution' },
+    { label: 'Institute Name' },
+  ])('keeps %j on the school vocabulary and out of the person-name route', (p) => {
+    expect(cat(p)).toBe('school');
+  });
+
+  it('removes the English website field from classification (School Website)', () => {
+    // nishimachi-inquiry.html:28 の School Website 欄。URL を入れたい欄に
+    // 学校名が入る誤補完より不注入が安全のため分類から外す。
+    expect(cat({ name: 'field_976', label: 'School Website' })).toBeNull();
+  });
+
+  it.each([
+    { label: 'Website' },
+    { label: 'Website URL' },
+  ])('keeps %j outside classification (website vocabulary)', (p) => {
+    expect(cat(p)).toBeNull();
+  });
+
+  it('keeps the school-name vocabulary intact next to the website exclusion', () => {
+    // website 語を持たない学校名欄は school のまま（読み順は変えない）。
+    expect(cat({ label: 'Current or Most Recent School' })).toBe('school');
+    expect(cat({ label: '学校名' })).toBe('school');
+  });
+});
+
 describe('radio group classification', () => {
   const radio = (p: Partial<import('../../src/core/types').FieldMeta>) =>
     makeMeta({ tag: 'radio', type: 'radio', ...p });

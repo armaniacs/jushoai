@@ -71,7 +71,11 @@ const ERA_CTX = /元号|年号|和暦|era|wareki|gengou/;
 // 元号/年号/和暦 alone are era evidence, but romaji hits (generation, operate) and
 // place names sharing era kanji (昭和区) need the ERA_CTX gate above.
 const ERA_NAME = /元号|年号|和暦|令和|平成|昭和|大正|明治/;
-const SCHOOL = /学校|school|univ|college|高校|大学/;
+// PBI-212: 教育機関の英語ラベル（Institution/Institute）を教育機関名欄の語彙に足す。
+// 「Name of Institution ...」を氏名（FULL_NAME の name 語）に拾わせないため、school
+// 前処理の語彙として先に判定する（読み順は変えず、school エントリが氏名の sources
+// より先に返る既存の定義順をそのまま使う。fixture 先行）。
+const SCHOOL = /学校|school|univ|college|高校|大学|institution|institute/;
 const DEPT = /学部|学科|専攻|department|major|faculty/;
 // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す（緩和境界）。
 // カナ文脈（会社名（フリガナ））と誕生文脈（会社の生年月日）は誤注入の恐れが
@@ -114,6 +118,12 @@ const COMPANY_KANA =
 const officeKanaEligible = (own: string, legend: string): boolean =>
   !BIRTH_CTX.test(`${own} ${legend}`) && (COMPANY_KANA.test(own) || COMPANY_KANA.test(legend));
 const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
+// PBI-212: website 欄の語彙（School Website など）。URL を入れたい欄は教育機関名欄
+// （school 名欄）と読み分け、学校名の誤補完より不注入が安全なため分類から外す
+// （PBI-208 実装記録の誤解釈候補。website 欄の語彙は school 名欄より先に判定する）。
+// norm が小文字化するため website は小文字のみ。url は語境界で守る（curl 等の
+// 誤拾いを避ける NAME_EXCLUDE の cc パターンと同型）。
+const WEBSITE = /website|web.?site|(^|[^a-z])url([^a-z]|$)/;
 const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 const COUNTRY = /country/i;
 const ADDR_LINE = /address[_-]?([1-4])/i;
@@ -416,6 +426,12 @@ export function classifyField(m: FieldMeta): Classification | null {
   if (birthOnOwn || birthOnLabel()) {
     return make('birthday', 0.7);
   }
+
+  // PBI-212: website 欄は school 名欄より先に判定して分類から外す（URL を入れたい
+  // 欄に学校名が入る誤補完より不注入が安全）。autocomplete・email・誕生日語の
+  // ページ自身の宣言はこの語彙除外より先に返る（AUTOCOMPLETE の token は語彙に
+  // 勝る既存の約束事と同じ）。unknown のまま置き、URL 欄は JushoAI の補完対象外。
+  if (WEBSITE.test(ownText) || WEBSITE.test(legendText)) return null;
 
   if (!officeField) {
     const ctx: DispatchCtx = {

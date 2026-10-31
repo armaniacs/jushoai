@@ -495,17 +495,19 @@ describe('sample forms end to end', () => {
   it('nishimachi-inquiry.html fills the in-scope fields', async () => {
     expect(await planFor('nishimachi-inquiry.html')).toEqual({
       field_914: 'Taro', field_915: 'Taro Yamada', field_916: 'Yamada',
-      field_972: 'United States',
-      field_922: '都立日比谷高校', field_976: '都立日比谷高校',
+      field_962: 'Female', field_972: 'United States',
+      field_922: '都立日比谷高校',
       field_935: 'Taro', field_936: 'Yamada',
       field_937: 'yamada@example.com', field_938: '090-1234-5678',
-      field_944: 'NEW YORK', field_953: 'United States',
+      field_944: 'NEW YORK', field_946: 'Female', field_953: 'United States',
     });
 //   field_914-916/935-936 (text): romaji names via autocomplete tokens on an English page
 //   field_915 (text): Nickname reads as a full romaji name (no nickname vocabulary yet)
-//   field_976 (text): School Website reads as school (no URL vocabulary yet)
+//   field_962/946 (radio): Gender groups resolve Male/Female against 女性 through the
+//     English alias (PBI-212); the option value Female fills
+//   field_976 (text): School Website is a URL field; PBI-212 removes website fields
+//     from classification (no fill, the school name never rides a URL box)
 //   field_944 (text): Prefecture / State reads as the overseas state field (address4)
-//   field_962/946 (radio): Gender groups classify as gender but Male/Female options do not resolve against 女性 (warn-no-option)
 //   field_963 (text): Date of Birth has pattern MM/DD/YYYY and the ISO birthday does not
 //     match it; PBI-210 turns the row into warn-pattern (value empty, not injected even
 //     on approval), so the former intentional pin '1990-05-07' (PBI-210 rationale) no longer fills
@@ -522,10 +524,13 @@ describe('sample forms end to end', () => {
       'student-name': '山田 太郎',
       'current-country': 'United States',
       'current-school': '都立日比谷高校',
-      'name-institution': '山田 太郎',
+      // PBI-212: Institution 語彙で school に載り、学校プロファイルの値が入る
+      // （従来の fullName 誤検出から意図した分類へ）。
+      'name-institution': '都立日比谷高校',
     });
 //   parent-name/student-name (text): 氏名 labels resolve to fullName
-//   name-institution (text): name-institution reads as a person name (no institution vocabulary yet)
+//   name-institution (text): Institution reads as the school vocabulary (PBI-212),
+//     so the label stops misreading as a person name
 //   student-nationality/current-grade (text): stay unclassified (LLM fallback)
 //   student-birth (date): out of scan in this fixture family
 //   desired-enrollment/desired-grade/dormitory-accommodation/japanese-proficiency/jlpt-level/studied-japanese (radio): bundled per name; stay unclassified (radio policy)
