@@ -44,9 +44,15 @@ describe('sample corpus metrics (local, no network)', () => {
     // kosodate-contact 4/4/4、library-theater-apply 15/3/9、nishimachi-inquiry
     // 16/3/8、gis-intl-admission 6/2/4。library-theater 分の refineChanged +6）
     // を make addurl で加えた 204/46/127 が正当な基準値。
+    // PBI-210: nishimachi-inquiry の field_963（Date of Birth, pattern
+    // MM/DD/YYYY）が ISO birthday と合わず warn-pattern 行になり fillable -1
+    // （8→7）。ruleHits・llmFallbacks・refineChanged・refineDropped は不変。
+    // form-mailer.jp 系のダミー pattern（pattern="1" 等）は正規表現の構造を持た
+    // ないため検査スキップ（fail-open）で、他 fixture の fillable は不変。
+    // 204/46/126 が正当な基準値。
     expect(agg.ruleHits).toBe(204);
     expect(agg.llmFallbacks).toBe(46);
-    expect(agg.fillable).toBe(127);
+    expect(agg.fillable).toBe(126);
     expect(sum((m) => m.refineChanged)).toBe(28);
     expect(sum((m) => m.refineDropped)).toBe(0);
   });

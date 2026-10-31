@@ -280,6 +280,57 @@ describe('birthday', () => {
   });
 });
 
+// PBI-210: the value-pattern-fit axis. The planner checks the value against the
+// page's own pattern attribute (anchored full match, HTML spec) at the same
+// position as the maxlength axis: a violating value becomes a warn row with an
+// empty value (never injected, even on approval), a matching one stays ok.
+describe('value pattern fit (PBI-210)', () => {
+  // The nishimachi Date of Birth field's own pattern (samples/nishimachi-inquiry.html).
+  const mmdd = '[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}';
+
+  it('warns on a pattern-violating value instead of injecting it', () => {
+    const plan = buildPlan([item('birthday', { pattern: mmdd, maxLength: 10 })], { profile, address });
+    expect(plan).toEqual([
+      expect.objectContaining({ value: '', display: '1990-05-07', status: 'warn-pattern' }),
+    ]);
+  });
+
+  it('keeps a pattern-matching value ok', () => {
+    const plan = buildPlan(
+      [item('birthday', { pattern: '[0-9]{4}-[0-9]{2}-[0-9]{2}', maxLength: 10 })],
+      { profile, address },
+    );
+    expect(plan).toEqual([expect.objectContaining({ value: '1990-05-07', status: 'ok' })]);
+  });
+
+  it('keeps fields without a pattern conventional', () => {
+    expect(buildPlan([item('birthday')], { profile, address })).toEqual([
+      expect.objectContaining({ value: '1990-05-07', status: 'ok' }),
+    ]);
+  });
+
+  it('skips an unparseable pattern (fail-open, like the browser)', () => {
+    const plan = buildPlan([item('birthday', { pattern: '([0-9]{4}' })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '1990-05-07', status: 'ok' })]);
+  });
+
+  // form-mailer.jp pages ship pattern="1"/"5"/"6" as internal check-type codes on
+  // novalidate forms (the real pages do not enforce them): a bare literal with no
+  // regex structure is page noise, so the fit check skips it and the fill keeps working.
+  it('skips a bare-literal pattern with no regex structure (fail-open)', () => {
+    const plan = buildPlan([item('lastName', { pattern: '1' })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '山田', status: 'ok' })]);
+  });
+
+  // The pattern attribute governs text/search/url/tel/email/password only; a
+  // type=date value must stay ISO or it stops being a date (the width axis's
+  // own rule), and the browser never enforces a date input's pattern.
+  it('skips a date input whose pattern the browser never enforces', () => {
+    const plan = buildPlan([item('birthday', { type: 'date', pattern: '[０-９]{4}' })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '1990-05-07', status: 'ok' })]);
+  });
+});
+
 describe('school', () => {
   const schooled = { ...profile, school: '都立日比谷高校', department: '普通科' };
 

@@ -83,6 +83,8 @@ const STATUS_NOTE: Record<PlanStatus, string> = {
   ok: '',
   filled: '入力済みのため上書きしません',
   'warn-maxlength': '文字数を超えるため入力しません',
+  // PBI-210: maxlength 超過（文字数）と混ざらない文言。同じ warn 行の調子に寄せる。
+  'warn-pattern': '欄のパターンと合わないため入力しません',
   'warn-no-option': '一致する選択肢がないため入力しません',
   'warn-no-value': 'プロファイルに値がないため入力しません',
 };

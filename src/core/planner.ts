@@ -14,7 +14,7 @@ import { isAllowedRadioCategory } from './radio-policy';
 import type { Address, Category, Classification, FieldMeta, Profile } from './types';
 import { carryoverFor } from './carryover';
 
-export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-no-option' | 'warn-no-value';
+export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-pattern' | 'warn-no-option' | 'warn-no-value';
 
 export interface PlanItem {
   fieldId: string;
@@ -59,6 +59,49 @@ function enforceWidth(value: string, meta: FieldMeta): string {
   if (kind === 'half') return toHalfWidth(value);
   return value;
 }
+
+// PBI-210: the value-pattern-fit axis compiles the page's pattern attribute the
+// way the browser does: an anchored full match (HTML spec's implicit
+// ^(?:...)$) under the v flag. A naive new RegExp(pattern) would be a partial
+// match and under-warn. The check runs only on patterns carrying regex
+// structure (a class, escape, quantifier, group, alternation, anchor or dot):
+// form-mailer.jp pages ship bare literals like pattern="1"/"5"/"6" as internal
+// check-type codes on novalidate forms the browser never enforces, and a bare
+// literal would turn every working fill on those pages into a warning. A
+// pattern that fails to compile is ignored by the browser as well. Both cases
+// fall open (no check) so an unusual pattern style never costs a page its
+// fills (fail-closed は禁止). null means "no check".
+const HAS_REGEX_STRUCTURE = /[\[\]{}()|+*?.^$\\]/;
+// The v flag (ES2024) is the HTML-spec compile mode for the pattern attribute.
+// Feature-detected once: an engine without it falls back to the anchored plain
+// RegExp (vitest は常に非 Firefox で動くが Node の版に依存しないため).
+const V_FLAG_OK = (() => {
+  try { new RegExp('', 'v'); return true; } catch { return false; }
+})();
+
+function valuePatternFor(pattern: string): RegExp | null {
+  if (pattern === '' || !HAS_REGEX_STRUCTURE.test(pattern)) return null;
+  const anchored = `^(?:${pattern})$`;
+  for (const flags of V_FLAG_OK ? ['v'] : ['']) {
+    try { return new RegExp(anchored, flags); } catch { /* fall open: the browser ignores it too */ }
+  }
+  return null;
+}
+
+// PBI-210: the single pattern-fit judgment, judged on the same value the
+// maxlength warning sees (post width conversion, the value the preview shows).
+// The pattern attribute governs text/search/url/tel/email/password inputs only
+// (HTML spec); a type=date value must stay ISO or it stops being a date (the
+// width axis's own rule above), and the browser never enforces a date input's
+// pattern. A null compilation (no pattern, page-noise literal, unparseable)
+// never violates, so the row keeps its conventional status.
+const PATTERN_APPLIABLE = new Set(['text', 'search', 'url', 'tel', 'email', 'password']);
+
+const valuePatternViolates = (value: string, meta: FieldMeta): boolean => {
+  if (meta.tag !== 'input' || !PATTERN_APPLIABLE.has(meta.type)) return false;
+  const re = valuePatternFor(meta.pattern);
+  return re !== null && !re.test(value);
+};
 
 function valueFor(
   cls: Classification,
@@ -348,6 +391,13 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
         status: 'warn-maxlength',
         ...(hasAbbrev(abbreviated) ? { abbrev: abbreviated } : {}),
       });
+    } else if (valuePatternViolates(raw, meta)) {
+      // PBI-210: a value the page's own pattern rejects (anchored full match)
+      // becomes a warn row with an empty value — the same shape and position
+      // as the maxlength axis. The preview shows the reason and the value
+      // never injects, even on approval; no formatting is attempted (整形は
+      // 別軸), so a pattern-violating value cannot silently break the send.
+      plan.push({ ...base, value: '', display: raw, status: 'warn-pattern' });
     } else {
       plan.push({ ...base, value: raw, display: raw, status: 'ok' });
     }
