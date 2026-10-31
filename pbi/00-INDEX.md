@@ -1,6 +1,6 @@
 # PBI 台帳インデックス
 
-## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票）
+## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票。211-212を実装・レビュー済み、アーキテクチャレビューの発見5件のなぜなぜ分析（30本×3立場）→RICE採点で214-216を起票）
 
 - `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
 - `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
@@ -9,10 +9,13 @@
 - `2026-10-31-207-feat-pr-template.md`（順位 4。RICE 16。`.github/PULL_REQUEST_TEMPLATE.md` 1枚、日本語のみ）
 - `2026-10-31-208-feat-samples-corpus-growth.md`（順位 5。RICE 8。継続作業の初回トランチ 5 fixture）
 - `2026-10-31-209-feat-dark-mode.md`（順位 6。RICE 6.4。content UI の auto-follow のみ。手動切替は別 PBI）
-- `2026-10-31-210-feat-pattern-violation-warning.md`（順位未定、次ラウンドの RICE で確定。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
-- `2026-10-31-211-feat-corpus-radio-restore.md`（順位未定、次ラウンドの RICE で確定。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
-- `2026-10-31-212-feat-english-form-vocabulary.md`（順位未定、次ラウンドの RICE で確定。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
-- `2026-10-31-213-feat-novalidate-pattern-handling.md`（順位未定、次ラウンドの RICE で確定。novalidate 時の pattern 検査の扱い。調査 + 判断 + 必要なら実装。PBI-210 review 由来）
+- `2026-10-31-210-feat-pattern-violation-warning.md`（実装済み（b57b19c・レビュー承認・構造ゲート KEEP）。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
+- `2026-10-31-211-feat-corpus-radio-restore.md`（実装済み（e9bfc0f・レビュー承認・kosodate 逸脱 Keep）。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
+- `2026-10-31-212-feat-english-form-vocabulary.md`（実装済み（402def7・レビュー承認・PBI-following 判定）。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
+- `2026-10-31-213-feat-novalidate-pattern-handling.md`（順位 2/8。RICE 10.0。novalidate 時の pattern 検査の扱い。調査 + 判断 + 必要なら実装。PBI-210 review 由来）
+- `2026-11-01-214-fix-changelog-unreleased-backfill.md`（順位 1/8。RICE 10.0。204〜210 の変更を CHANGELOG Unreleased に遡及記録。release-notes.mjs のガードは「空」のみを捕らえ「行の不足」を捕らえないため半端リリース防止が最優先。アーキテクチャ発見 10・開発運用 Top 1）
+- `2026-11-01-215-feat-per-fixture-pin-table.md`（順位 3/8。RICE 5.3。corpus.eval.ts の集計 pin を fixture 単位の指標表に変え、世代コメント考古学（6 世代）を表の差分に置き換える。アーキテクチャ発見 3a/3b・保守担当者 Top 1）
+- `2026-11-01-216-feat-corpus-ledger-module.md`（順位 4/8。RICE 3.2。sample corpus の台帳を 1 module に束ね、add-fixture tooling の regex 機械編集を interface 消費に変える。アーキテクチャ発見 2a/2b・開発運用 Top 2）
 
 ## 進行中からアーカイブ済み（archラウンド5・2026-10-30に12件実装・検証済み。コードレビューはユーザー作業）
 

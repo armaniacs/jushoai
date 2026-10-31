@@ -4,8 +4,8 @@
 「JushoAIで入力」を使う利用者として、ページ自身が検査しないと宣言した pattern（form タグの novalidate）について、拡張機能の pattern 警告の扱いが製品判断として確定していてほしい、なぜなら判断が宙に浮いたままだと、実ページで動いている注入が将来の変更で静かに消えるか、実行されない pattern が誤って警告を出すから
 
 ## 優先度
-- 順位: 未定（次ラウンドの RICE で確定）
-- 根拠: PBI-210 review のフォローアップ（「ゲートの根拠は curl の novalidate 証跡。novalidate を尊重する第 3 の選択肢はフォローアップで判断」）。製品判断（ポリシー決定）が主で、実装は判断の結果に従う
+- 順位: 2 / 8（2026-11-01 の RICE 採点。RICE 10.0（Reach=1.0 / Impact=1 / Confidence=100% / Effort=0.1 人週・調査+記録のみ））
+- 根拠: PBI-210 review のフォローアップ（「ゲートの根拠は curl の novalidate 証跡。novalidate を尊重する第 3 の選択肢はフォローアップで判断」）。製品判断（ポリシー決定）が主で、実装は判断の結果に従う。依存: corpus.eval.ts を触る場合のみ PBI-215/216 の後に実施（同ファイル競合）
 
 ## 出どころ
 - PBI-210 の review（progress.md:169-170、レビュー証跡 review-64d2b63..b57b19c.diff）: curl spot-check of pro.form-mailer.jp/fms/12fc22bc297429 confirms novalidate on form + dummy pattern="1" x4 / pattern="5" x2 + structural pattern x5。novalidate-respect as possible follow-up
