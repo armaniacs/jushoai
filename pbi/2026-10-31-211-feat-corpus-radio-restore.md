@@ -8,7 +8,7 @@
 - 根拠: PBI-208 review Minor（radio restore）。corpus は分類指標の測定基盤で、radio 政策の適用範囲を実測できる形にする間接価値。radio を分類語彙に足す軸（212）の前に、まず計測できる形にする
 
 ## 出どころ
-- PBI-208 の review Minor（progress.md:151、レビュー証跡 review-ee13efa.diff）: radio-policy コメントが fixture に無い radio グループを語る（axis (a) radio coverage gone）。restore radio groups as formmailer-anketo-gender does and re-pin
+- PBI-208 の review Minor（progress.md:151、レビュー証跡 review-f92ce4e..ee13efa.diff）: radio-policy コメントが fixture に無い radio グループを語る（axis (a) radio coverage gone）。restore radio groups as formmailer-anketo-gender does and re-pin
 - 該当 fixture とコメントの証跡（いずれも radio 要素は無く、ヘッダーコメントだけが語っている。2026-10-31 起票時に grep で確認済み）:
   - samples/richell-anketo-rating.html:6-7（rating radios 5段階評価×4・10段階×2 は matrix で未分類。radio 要素は無し、fixture 別指標 0/1/0）
   - samples/kosodate-contact.html:7（電話番号種別 radios 自宅/携帯/所属先）

@@ -8,7 +8,7 @@
 - 根拠: PBI-210 review のフォローアップ（「ゲートの根拠は curl の novalidate 証跡。novalidate を尊重する第 3 の選択肢はフォローアップで判断」）。製品判断（ポリシー決定）が主で、実装は判断の結果に従う
 
 ## 出どころ
-- PBI-210 の review（progress.md:169-170、レビュー証跡 review-b57b19c.diff）: curl spot-check of pro.form-mailer.jp/fms/12fc22bc297429 confirms novalidate on form + dummy pattern="1" x4 / pattern="5" x2 + structural pattern x5。novalidate-respect as possible follow-up
+- PBI-210 の review（progress.md:169-170、レビュー証跡 review-64d2b63..b57b19c.diff）: curl spot-check of pro.form-mailer.jp/fms/12fc22bc297429 confirms novalidate on form + dummy pattern="1" x4 / pattern="5" x2 + structural pattern x5。novalidate-respect as possible follow-up
 - 現行の構造ゲート（HAS_REGEX_STRUCTURE）の証跡: src/core/planner.ts:74（正規表現の構造を持つ pattern だけ検査）・:83（裸のリテラルはスキップ）。PBI-210 の実装記録「適用範囲の決定」節に、novalidate を載せる代替案が意味的には最も正確だが走査・FieldMeta・sample HTML の form タグ修正まで必要なスコープ拡大のため採らなかった旨の記録がある
 - fixture の証跡: samples/12fc22bc297429.html と samples/2dd1c663300469.html に pattern="1" / "5" / "6" のダミー pattern が 11 欄あるが、保存済み fixture の form タグには novalidate が無い（実ページにはある。curl 実測）。samples/formmailer-anketo-gender.html:11 は novalidate を持つ参照 fixture
 - 判断の材料: 2 つの選択肢（A: form タグの novalidate を尊重して pattern 検査をスキップする。B: 現行の構造ゲートのまま）
