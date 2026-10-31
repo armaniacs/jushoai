@@ -132,6 +132,9 @@ export interface FillSummary {
 const PLAN_STATUS_RESULT: Record<Exclude<PlanStatus, 'ok'>, FillResult> = {
   filled: 'skipped-status',
   'warn-maxlength': 'skipped-status',
+  // PBI-210: the pattern-fit warn row never injects, same by-design skip as
+  // the other warn rows (undo untouched: never filled).
+  'warn-pattern': 'skipped-status',
   'warn-no-option': 'skipped-status',
   'warn-no-value': 'skipped-status',
 };

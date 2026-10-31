@@ -40,10 +40,20 @@ describe('sample corpus metrics (local, no network)', () => {
     // PBI-203: forum.html（kosodatehiroba.com/form/forum、ruleHits 7・fallbacks 2・
     // fillable 5。参加者名が FULL_NAME に載り 6/3/4 → 7/2/5）を make addurl で
     // 加えた 163/33/102 が正当な基準値。
-    expect(agg.ruleHits).toBe(163);
-    expect(agg.llmFallbacks).toBe(33);
-    expect(agg.fillable).toBe(102);
-    expect(sum((m) => m.refineChanged)).toBe(22);
+    // PBI-208: radio・海外フォームの 5 fixture（richell-anketo-rating 0/1/0、
+    // kosodate-contact 4/4/4、library-theater-apply 15/3/9、nishimachi-inquiry
+    // 16/3/8、gis-intl-admission 6/2/4。library-theater 分の refineChanged +6）
+    // を make addurl で加えた 204/46/127 が正当な基準値。
+    // PBI-210: nishimachi-inquiry の field_963（Date of Birth, pattern
+    // MM/DD/YYYY）が ISO birthday と合わず warn-pattern 行になり fillable -1
+    // （8→7）。ruleHits・llmFallbacks・refineChanged・refineDropped は不変。
+    // form-mailer.jp 系のダミー pattern（pattern="1" 等）は正規表現の構造を持た
+    // ないため検査スキップ（fail-open）で、他 fixture の fillable は不変。
+    // 204/46/126 が正当な基準値。
+    expect(agg.ruleHits).toBe(204);
+    expect(agg.llmFallbacks).toBe(46);
+    expect(agg.fillable).toBe(126);
+    expect(sum((m) => m.refineChanged)).toBe(28);
     expect(sum((m) => m.refineDropped)).toBe(0);
   });
 

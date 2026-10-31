@@ -1,0 +1,62 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://ssl.form-mailer.jp/fms/a0ed8265668444
+  (図書館劇場21第4幕 参加申し込み). Field ids, names, legends, labels,
+  placeholders, and options mirror the real page; site chrome is omitted.
+  The 会員 radio (なら図書館につどう会　会員: 会員/非会員) stays unclassified
+  per the radio policy (only gender/decade groups resolve).
+-->
+<html lang="ja"><meta charset="utf-8"><title>form-mailer event form (member radio)</title>
+<form>
+  <div role="group" data-fieldset-label="名前">
+    <legend>名前</legend>
+    <label for="field_5755075_sei" class="visually-hidden">名前の姓</label>
+    <input id="field_5755075_sei" name="field_5755075_sei" type="text" value="" maxlength="2500" placeholder="姓" required autocomplete="family-name">
+    <label for="field_5755075_mei" class="visually-hidden">名前の名</label>
+    <input id="field_5755075_mei" name="field_5755075_mei" type="text" value="" maxlength="2500" placeholder="名" required autocomplete="given-name">
+  </div>
+  <div role="group" data-fieldset-label="フリガナ">
+    <legend>フリガナ</legend>
+    <label for="field_5755308_sei" class="visually-hidden">名前の姓</label>
+    <input id="field_5755308_sei" name="field_5755308_sei" type="text" value="" maxlength="2500" placeholder="姓" required autocomplete="family-name">
+    <label for="field_5755308_mei" class="visually-hidden">名前の名</label>
+    <input id="field_5755308_mei" name="field_5755308_mei" type="text" value="" maxlength="2500" placeholder="名" required autocomplete="given-name">
+  </div>
+  <div role="group" data-fieldset-label="住所">
+    <legend>住所</legend>
+    <label for="field_5755078_zip1" class="visually-hidden">郵便番号の上3桁</label>
+    <input id="field_5755078_zip1" name="field_5755078_zip1" value="" type="text" maxlength="3" pattern="^\d{3}$" placeholder="000" required inputmode="numeric">
+    <label for="field_5755078_zip2" class="visually-hidden">郵便番号の下4桁</label>
+    <input id="field_5755078_zip2" name="field_5755078_zip2" value="" type="text" maxlength="4" pattern="^\d{4}$" placeholder="0000" required inputmode="numeric">
+    <label for="field_5755078_pref">都道府県</label>
+    <select id="field_5755078_pref" name="field_5755078_pref" required autocomplete="address-level1">
+      <option value="">選択してください</option>
+      <option value="東京都">東京都</option>
+      <option value="大阪府">大阪府</option>
+      <option value="その他">その他</option>
+    </select>
+    <label for="field_5755078_city">市区町村</label>
+    <input id="field_5755078_city" name="field_5755078_city" value="" maxlength="250" type="text" required autocomplete="address-level2">
+    <label for="field_5755078_block">番地</label>
+    <input id="field_5755078_block" name="field_5755078_block" value="" maxlength="250" type="text" required autocomplete="address-line1">
+    <label for="field_5755078_building">マンション・ビル名</label>
+    <input id="field_5755078_building" name="field_5755078_building" value="" maxlength="250" type="text" autocomplete="address-line2">
+  </div>
+  <div role="group" data-fieldset-label="連絡先">
+    <legend>連絡先</legend>
+    <label for="field_5755079_1" class="visually-hidden">連絡先の市外局番</label>
+    <input id="field_5755079_1" name="field_5755079_1" type="tel" value="" maxlength="4" pattern="^\d+$" placeholder="090" required>
+    <label for="field_5755079_2" class="visually-hidden">連絡先の市内局番</label>
+    <input id="field_5755079_2" name="field_5755079_2" type="tel" value="" maxlength="4" pattern="^\d+$" placeholder="0000" required>
+    <label for="field_5755079_3" class="visually-hidden">連絡先の加入者番号</label>
+    <input id="field_5755079_3" name="field_5755079_3" type="tel" value="" maxlength="4" pattern="^\d+$" placeholder="0000" required>
+  </div>
+  <div role="group" data-fieldset-label="メールアドレス">
+    <legend>メールアドレス</legend>
+    <label for="field_5755076" class="visually-hidden">メールアドレス</label>
+    <input id="field_5755076" name="field_5755076" type="email" value="" maxlength="2500" placeholder="info@example.com" required autocomplete="email">
+    <label for="field_5755076_mcon" class="visually-hidden">メールアドレスの確認用</label>
+    <input id="field_5755076_mcon" name="field_5755076_mcon" type="email" value="" maxlength="2500" placeholder="確認用" required>
+  </div>
+</form>
+</html>

@@ -59,7 +59,7 @@ export function confirmGuest(): Promise<GuestDecision> {
       appendFields(GUEST_ADDRESS_FIELDS, 'address');
 
       panel.append(note, form);
-      return '.gform { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }\n.gfield { display: grid; gap: 2px; font-size: 12px; color: #5a6270; }\n.gfield.wide { grid-column: 1 / -1; }\n.gfield input { font-size: 13px; padding: 6px 8px; border: 1px solid #cfd6e0; border-radius: 6px; }';
+      return '.gform { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 0 0 12px; }\n.gfield { display: grid; gap: 2px; font-size: 12px; color: var(--jushoai-muted); }\n.gfield.wide { grid-column: 1 / -1; }\n.gfield input { font-size: 13px; padding: 6px 8px; border: 1px solid var(--jushoai-input-border); border-radius: 6px; }';
     },
     actions: [
       { label: CANCEL_BUTTON, pick: () => null },

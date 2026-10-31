@@ -28,6 +28,11 @@ import fmFreeConsult from '../../samples/12fc22bc297429.html?raw';
 import fmCompanyBriefing from '../../samples/2dd1c663300469.html?raw';
 import registration from '../../samples/registration.html?raw';
 import forum from '../../samples/forum.html?raw';
+import richellAnketoRating from '../../samples/richell-anketo-rating.html?raw';
+import kosodateContact from '../../samples/kosodate-contact.html?raw';
+import libraryTheaterApply from '../../samples/library-theater-apply.html?raw';
+import nishimachiInquiry from '../../samples/nishimachi-inquiry.html?raw';
+import gisIntlAdmission from '../../samples/gis-intl-admission.html?raw';
 import { isEnglishPageText } from '../../src/core/page-language';
 
 const SAMPLES: Record<string, string> = {
@@ -53,6 +58,11 @@ const SAMPLES: Record<string, string> = {
   '2dd1c663300469.html': fmCompanyBriefing,
   'registration.html': registration,
   'forum.html': forum,
+  'richell-anketo-rating.html': richellAnketoRating,
+  'kosodate-contact.html': kosodateContact,
+  'library-theater-apply.html': libraryTheaterApply,
+  'nishimachi-inquiry.html': nishimachiInquiry,
+  'gis-intl-admission.html': gisIntlAdmission,
 };
 
 const profile: Profile = {
@@ -443,5 +453,84 @@ describe('sample forms end to end', () => {
 //   page_id (hidden): empty-submit shim or server state, never a fill target (exclude)
 //   wpforms[post_id] (hidden): empty-submit shim or server state, never a fill target (exclude)
 //   wpforms[submit] (button): action element, never a fill target (exclude)
+  });
+  it('richell-anketo-rating.html fills the in-scope fields', async () => {
+    expect(await planFor('richell-anketo-rating.html')).toEqual({});
+//   field_2953454 (text): the only in-scope control; 受付番号 stays unclassified (LLM fallback)
+//   field_2953447-2953450, 2953452-2953453 (radio): matrix rating groups, bundled per name; stay unclassified (radio policy)
+//   field_2953451, 2953455 (textarea): out of scan
+//   key/code/validated (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   submit (submit): action element, never a fill target (exclude)
+  });
+  it('kosodate-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('kosodate-contact.html')).toEqual({
+      'wpforms[fields][6]': '山田 太郎',
+      'wpforms[fields][41]': '090-1234-5678',
+      'wpforms[fields][14][primary]': 'yamada@example.com',
+      'wpforms[fields][14][secondary]': 'yamada@example.com',
+    });
+//   s (text): site-search field, stays unclassified (same as forum.html)
+//   wpforms[fields][29] (select): お問い合わせ種別, stays unclassified (LLM fallback)
+//   wpforms[fields][12] (text): 所属（会社・団体・学校等） is a compound office label, stays unclassified (office pre-pass)
+//   wpforms[fields][42] (radio): 電話番号種別 自宅/携帯/所属先, bundled per name; stays unclassified (radio policy)
+//   wpforms[fields][8] (textarea), wpforms[fields][13] (number): out of scan
+//   wpforms[fields][40][] (checkbox): out of scope (skip fixed)
+//   wpforms[recaptcha]/[id]/page_*/url_referer/[post_id] (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   submit (submit): action element, never a fill target (exclude)
+  });
+  it('library-theater-apply.html fills the in-scope fields', async () => {
+    expect(await planFor('library-theater-apply.html')).toEqual({
+      field_5755075_sei: '山田', field_5755075_mei: '太郎',
+      field_5755308_sei: '山田', field_5755308_mei: '太郎',
+      field_5755078_zip1: '100', field_5755078_zip2: '0001',
+      field_5755078_pref: '東京都', field_5755078_city: '千代田区',
+      field_5755078_block: '千代田1-1', field_5755078_building: '千代田ビル101',
+      field_5755079_1: '090', field_5755079_2: '1234', field_5755079_3: '5678',
+      field_5755076: 'yamada@example.com', field_5755076_mcon: 'yamada@example.com',
+    });
+//   field_6426354 (radio): 会員/非会員, bundled per name; stays unclassified (radio policy)
+//   validated (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   submit (submit): action element, never a fill target (exclude)
+  });
+  it('nishimachi-inquiry.html fills the in-scope fields', async () => {
+    expect(await planFor('nishimachi-inquiry.html')).toEqual({
+      field_914: 'Taro', field_915: 'Taro Yamada', field_916: 'Yamada',
+      field_972: 'United States',
+      field_922: '都立日比谷高校', field_976: '都立日比谷高校',
+      field_935: 'Taro', field_936: 'Yamada',
+      field_937: 'yamada@example.com', field_938: '090-1234-5678',
+      field_944: 'NEW YORK', field_953: 'United States',
+    });
+//   field_914-916/935-936 (text): romaji names via autocomplete tokens on an English page
+//   field_915 (text): Nickname reads as a full romaji name (no nickname vocabulary yet)
+//   field_976 (text): School Website reads as school (no URL vocabulary yet)
+//   field_944 (text): Prefecture / State reads as the overseas state field (address4)
+//   field_962/946 (radio): Gender groups classify as gender but Male/Female options do not resolve against 女性 (warn-no-option)
+//   field_963 (text): Date of Birth has pattern MM/DD/YYYY and the ISO birthday does not
+//     match it; PBI-210 turns the row into warn-pattern (value empty, not injected even
+//     on approval), so the former intentional pin '1990-05-07' (PBI-210 rationale) no longer fills
+//   field_923/927/956 (select): grade/year/enrollment selects, stay unclassified (LLM fallback)
+//   field_926 (select): School Year reads as school; a school select has no matching option (warn-no-option)
+//   field_928 (checkbox): out of scope (skip fixed); field_955 (textarea): out of scan
+//   submission_uuid (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   submit (submit): action element, never a fill target (exclude)
+  });
+  it('gis-intl-admission.html fills the in-scope fields', async () => {
+    expect(await planFor('gis-intl-admission.html')).toEqual({
+      'parent-name': '山田 太郎',
+      'your-email': 'yamada@example.com',
+      'student-name': '山田 太郎',
+      'current-country': 'United States',
+      'current-school': '都立日比谷高校',
+      'name-institution': '山田 太郎',
+    });
+//   parent-name/student-name (text): 氏名 labels resolve to fullName
+//   name-institution (text): name-institution reads as a person name (no institution vocabulary yet)
+//   student-nationality/current-grade (text): stay unclassified (LLM fallback)
+//   student-birth (date): out of scan in this fixture family
+//   desired-enrollment/desired-grade/dormitory-accommodation/japanese-proficiency/jlpt-level/studied-japanese (radio): bundled per name; stay unclassified (radio policy)
+//   your-message (textarea): out of scan; acceptance-sample (checkbox): out of scope (skip fixed)
+//   _wpcf7* (hidden): empty-submit shim or server state, never a fill target (exclude)
+//   submit (submit): action element, never a fill target (exclude)
   });
 });

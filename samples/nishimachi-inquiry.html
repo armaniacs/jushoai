@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.nishimachi.ac.jp/admissions/inquiry-form
+  (Nishimachi International School admissions inquiry). Field ids, names,
+  labels (aria-labelledby hints), placeholders, types, and options mirror the
+  real page; site chrome (2 site-search fields) and the duplicated Child 2 / 3
+  and Parent / Guardian B blocks are omitted.
+  The Gender radios (Male/Female) are fieldset radio groups: they classify as
+  gender but the English option values do not resolve against a Japanese
+  profile value, so they correctly warn instead of filling. The another-child
+  checkbox and the inquiry textarea are out of scope and must be skipped.
+-->
+<html lang="en"><meta charset="utf-8"><title>Finalsite inquiry form (overseas)</title>
+<form>
+  <fieldset data-required="true" id="field_913_17047"><legend>Child's Name</legend>
+    <input aria-labelledby="fsFormFieldHint_914_17047" autocomplete="given-name" data-required="true" id="field_914_17047" maxlength="255" name="field_914" type="text"><div id="fsFormFieldHint_914_17047">First Name</div>
+    <input aria-labelledby="fsFormFieldHint_915_17047" autocomplete="nickname" id="field_915_17047" maxlength="255" name="field_915" type="text"><div id="fsFormFieldHint_915_17047">Nickname (optional)</div>
+    <input aria-labelledby="fsFormFieldHint_916_17047" autocomplete="family-name" data-required="true" id="field_916_17047" maxlength="255" name="field_916" type="text"><div id="fsFormFieldHint_916_17047">Last Name</div>
+  </fieldset>
+  <fieldset data-required="true" id="field_962_17047"><legend>Gender</legend>
+    <input data-required="true" id="field_962_17047_1" name="field_962" type="radio" value="Male"><label for="field_962_17047_1">Male</label>
+    <input data-required="true" id="field_962_17047_2" name="field_962" type="radio" value="Female"><label for="field_962_17047_2">Female</label>
+  </fieldset>
+  <label for="field_972_17047">Country of Legal Citizenship(s)<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <input data-required="true" id="field_972_17047" maxlength="255" name="field_972" type="text">
+  <label for="field_922_17047">Current or Most Recent School<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <input data-required="true" id="field_922_17047" maxlength="255" name="field_922" type="text">
+  <label for="field_976_17047">School Website</label>
+  <input id="field_976_17047" maxlength="255" name="field_976" type="text">
+  <label for="field_923_17047">Current or Last Enrolled Grade<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <select data-required="true" id="field_923_17047" name="field_923"><option id="field_923_17047_0" value=""></option><option id="field_923_17047_1" value="Pre-School">Pre-School</option><option id="field_923_17047_3" value="Grade 1">Grade 1</option></select>
+  <label for="field_926_17047">School Year<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <select data-required="true" id="field_926_17047" name="field_926"><option id="field_926_17047_0" value=""></option><option id="field_926_17047_1" value="2022-2023">2022-2023</option></select>
+  <label for="field_927_17047">Grade<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <select data-required="true" id="field_927_17047" name="field_927"><option id="field_927_17047_0" value=""></option><option id="field_927_17047_1" value="Kindergarten">Kindergarten</option></select>
+  <label for="field_956_17047">Enrollment Timing<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <select data-required="true" id="field_956_17047" name="field_956"><option id="field_956_17047_0" value=""></option><option id="field_956_17047_1" value="Fall (Start of School in August)">Fall (Start of School in August)</option></select>
+  <label for="field_963_17047">Date of Birth</label>
+  <input data-required="true" id="field_963_17047" maxlength="10" minlength="8" name="field_963" pattern="[0-9]{1,2}/[0-9]{1,2}/[0-9]{4}" title="Must contain a date in MM/DD/YYYY format" type="text">
+  <fieldset data-required="true" id="field_930_17047"><legend>Parent / Guardian A Name</legend>
+    <input aria-labelledby="fsFormFieldHint_935_17047" autocomplete="given-name" data-required="true" id="field_935_17047" maxlength="255" name="field_935" type="text"><div id="fsFormFieldHint_935_17047">First Name</div>
+    <input aria-labelledby="fsFormFieldHint_936_17047" autocomplete="family-name" data-required="true" id="field_936_17047" maxlength="255" name="field_936" type="text"><div id="fsFormFieldHint_936_17047">Last Name</div>
+  </fieldset>
+  <fieldset data-required="true" id="field_946_17047"><legend>Gender</legend>
+    <input data-required="true" id="field_946_17047_1" name="field_946" type="radio" value="Male"><label for="field_946_17047_1">Male</label>
+    <input data-required="true" id="field_946_17047_2" name="field_946" type="radio" value="Female"><label for="field_946_17047_2">Female</label>
+  </fieldset>
+  <label for="field_937_17047">Email<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <input data-required="true" id="field_937_17047" maxlength="255" name="field_937" type="text">
+  <label for="field_938_17047">Phone Number</label>
+  <input id="field_938_17047" maxlength="255" name="field_938" type="text">
+  <label for="field_944_17047">Prefecture / State<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <input data-required="true" id="field_944_17047" maxlength="255" name="field_944" type="text">
+  <label for="field_953_17047">Country<span aria-hidden="true" class="fsFormFieldRequiredIndicator">*</span></label>
+  <input data-required="true" id="field_953_17047" maxlength="255" name="field_953" type="text">
+</form>
+</html>

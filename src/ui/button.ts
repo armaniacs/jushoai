@@ -42,27 +42,49 @@ const KEY_STEP_LARGE = 64;
 const BANNER_FALLBACK = { width: 220, height: 32 };
 
 const CSS = `
+  :host {
+    /* PBI-209: banner tokens. The banner has its own shadow root (no
+       OVERLAY_CSS), so the tokens and the dark override live here. Light
+       defaults keep the PBI-162 colors; the dark resting background
+       rgba(28, 45, 100, 0.9) blends over a white page (the worst case for
+       white text) to rgb(51, 66, 116) - 9.7:1 against the white text, WCAG
+       AA (4.5:1) - and over black to 13.9:1. The active state #1e3a8a
+       measures 10.4:1. The error badge keeps #b3261e: white on it measures
+       6.6:1 in both themes. */
+    --jushoai-banner-bg: rgba(36, 87, 214, 0.9);
+    --jushoai-banner-bg-active: #1c46b3;
+    --jushoai-banner-error-bg: #b3261e;
+    /* Theme-invariant: white on the banner clears WCAG AA in both themes
+       (dark resting background blends to 9.7:1), so no dark entry. */
+    --jushoai-banner-fg: #fff;
+  }
+  @media (prefers-color-scheme: dark) {
+    :host {
+      --jushoai-banner-bg: rgba(28, 45, 100, 0.9);
+      --jushoai-banner-bg-active: #1e3a8a;
+    }
+  }
   .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
-    font: 600 13px/1 system-ui, sans-serif; color: #fff;
+    font: 600 13px/1 system-ui, sans-serif; color: var(--jushoai-banner-fg);
     /* PBI-162: the banner background stays translucent so a field it still
        covers remains readable (the placement, PBI-161, cannot always find a
        collision-free spot). 0.9 keeps the page visible through the banner
        while the blended background over a white form measures 5.0:1 against
        the white text - WCAG AA (4.5:1). Text and badge keep full opacity;
        hover, focus and active restore the opaque banner for reading and
-       clicking. */
-    background: rgba(36, 87, 214, 0.9);
+       clicking. The color rides --jushoai-banner-bg (PBI-209). */
+    background: var(--jushoai-banner-bg);
     padding: 8px 12px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,.25);
     /* PBI-163: the banner is draggable — the grab cursor and touch-action
        keep the gesture from scrolling the page or reading as a dead zone. */
     touch-action: none; cursor: grab; }
-  .wrap:hover, .wrap:focus-within, .wrap:active { background: #1c46b3; }
+  .wrap:hover, .wrap:focus-within, .wrap:active { background: var(--jushoai-banner-bg-active); }
   .wrap:active { cursor: grabbing; }
   button { all: initial; cursor: inherit; font: inherit; color: inherit; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;
     background: rgba(255,255,255,.22); }
   .badge[data-status="error"], .badge[data-status="not-configured"],
-  .badge[data-status="permission-missing"], .badge[data-status="auth-error"] { background: #b3261e; }
+  .badge[data-status="permission-missing"], .badge[data-status="auth-error"] { background: var(--jushoai-banner-error-bg); }
   .badge[data-status="unavailable"], .badge[data-status="unsupported"],
   .badge[data-status="disabled"] { background: rgba(0,0,0,.3); }
   .hint { position: absolute; width: 1px; height: 1px; overflow: hidden;

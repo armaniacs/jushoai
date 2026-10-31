@@ -83,6 +83,8 @@ const STATUS_NOTE: Record<PlanStatus, string> = {
   ok: '',
   filled: '入力済みのため上書きしません',
   'warn-maxlength': '文字数を超えるため入力しません',
+  // PBI-210: maxlength 超過（文字数）と混ざらない文言。同じ warn 行の調子に寄せる。
+  'warn-pattern': '欄のパターンと合わないため入力しません',
   'warn-no-option': '一致する選択肢がないため入力しません',
   'warn-no-value': 'プロファイルに値がないため入力しません',
 };
@@ -91,23 +93,23 @@ const CSS = `
   select { width: 100%; margin-bottom: 8px; padding: 4px; font: inherit; }
   ul { list-style: none; margin: 0 0 12px; padding: 0; }
   li { display: grid; grid-template-columns: 110px 1fr; gap: 2px 8px; padding: 6px 0;
-    border-bottom: 1px solid #eceef2; }
-  .label { color: #5a6270; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    border-bottom: 1px solid var(--jushoai-divider); }
+  .label { color: var(--jushoai-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .value { word-break: break-all; }
-  .note { grid-column: 2; font-size: 11px; color: #b3261e; }
-  .note.muted { color: #5a6270; }
+  .note { grid-column: 2; font-size: 11px; color: var(--jushoai-danger); }
+  .note.muted { color: var(--jushoai-muted); }
   .abbrev { grid-column: 2; display: inline-flex; align-items: center; gap: 4px;
-    font-size: 11px; color: #5a6270; cursor: pointer; }
+    font-size: 11px; color: var(--jushoai-muted); cursor: pointer; }
   .abbrev input { margin: 0; }
-  .ai { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; color: #fff;
-    background: #8a4fd6; border-radius: 3px; }
-  .empty { color: #5a6270; margin: 0 0 12px; }
+  .ai { display: inline-block; margin-left: 6px; padding: 0 5px; font-size: 10px; color: var(--jushoai-ai-fg);
+    background: var(--jushoai-ai-bg); border-radius: 3px; }
+  .empty { color: var(--jushoai-muted); margin: 0 0 12px; }
   .actions .reanalyze { margin-right: auto; }
   .fix { grid-column: 2; justify-self: start; margin-top: 2px; padding: 1px 6px;
-    font-size: 10px; color: #5a6270; background: #f1f3f7; border: 1px solid #dfe3ea;
+    font-size: 10px; color: var(--jushoai-muted); background: var(--jushoai-chip-bg); border: 1px solid var(--jushoai-chip-border);
     border-radius: 4px; cursor: pointer; }
   .feedback { display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
-    color: #5a6270; cursor: pointer; }
+    color: var(--jushoai-muted); cursor: pointer; }
   .feedback input { margin: 0; }
   button:disabled { opacity: .5; cursor: default; }
 `;

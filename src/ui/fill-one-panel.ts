@@ -28,7 +28,7 @@ export function confirmFillOne(fieldLabel: string, value: string): Promise<FillO
       valueEl.textContent = value;
 
       panel.append(field, valueEl);
-      return '.field { margin: 0 0 8px; font-size: 12px; color: #5a6270; word-break: break-all; }\n.value { margin: 0 0 12px; font-size: 14px; word-break: break-all; }';
+      return '.field { margin: 0 0 8px; font-size: 12px; color: var(--jushoai-muted); word-break: break-all; }\n.value { margin: 0 0 12px; font-size: 14px; word-break: break-all; }';
     },
     actions: [
       { label: CANCEL_BUTTON, pick: () => ({ mode: 'cancel' }) },

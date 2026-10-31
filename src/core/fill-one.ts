@@ -25,6 +25,8 @@ export const FILL_ONE_REASON_LABELS: Record<FillOneReason, string> = {
   inactive: '入力できない欄です',
   filled: '入力済みのため上書きしません',
   'warn-maxlength': '文字数を超えるため入力しません',
+  // PBI-210: preview の STATUS_NOTE に対応する文言。
+  'warn-pattern': '欄のパターンと合わないため入力しません',
   'warn-no-option': '一致する選択肢がないため入力しません',
   'warn-no-value': 'プロファイルに値がないため入力しません',
 };

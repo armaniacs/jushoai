@@ -288,15 +288,38 @@ describe('mountButton', () => {
       const { css } = mount();
       // Background only: the banner lets a still-covered field show through.
       // 0.9 keeps the page visible while the blended background over a white
-      // form measures 5.0:1 against the white text (WCAG AA).
-      expect(css()).toMatch(/\.wrap \{[^}]*background: rgba\(36, 87, 214, 0\.9\)/);
+      // form measures 5.0:1 against the white text (WCAG AA). The color rides
+      // the --jushoai-banner-bg token (PBI-209); its light default keeps the
+      // PBI-162 value, so the light banner is unchanged.
+      expect(css()).toMatch(/\.wrap \{[^}]*background: var\(--jushoai-banner-bg\)/);
+      expect(css()).toMatch(/--jushoai-banner-bg: rgba\(36, 87, 214, 0\.9\)/);
+      // The text color rides its token too (theme-invariant, no dark entry).
+      expect(css()).toMatch(/\.wrap \{[^}]*color: var\(--jushoai-banner-fg\)/);
+      expect(css()).toMatch(/--jushoai-banner-fg: #fff;/);
       // The badge colors are untouched (they carry the status meaning).
-      expect(css()).toMatch(/\.badge\[data-status="error"\][^{]*\{ background: #b3261e; \}/);
+      expect(css()).toMatch(/\.badge\[data-status="error"\][^{]*\{ background: var\(--jushoai-banner-error-bg\); \}/);
+      expect(css()).toMatch(/--jushoai-banner-error-bg: #b3261e/);
     });
 
     it('restores the opaque banner on hover, focus and active', () => {
       const { css } = mount();
-      expect(css()).toMatch(/\.wrap:hover, \.wrap:focus-within, \.wrap:active \{ background: #1c46b3; \}/);
+      expect(css()).toMatch(/\.wrap:hover, \.wrap:focus-within, \.wrap:active \{ background: var\(--jushoai-banner-bg-active\); \}/);
+      expect(css()).toMatch(/--jushoai-banner-bg-active: #1c46b3;/);
+    });
+  });
+
+  describe('dark banner tokens (PBI-209)', () => {
+    it('declares the banner tokens on :host with the light defaults and a dark override', () => {
+      const { css } = mount();
+      // Light defaults keep the PBI-162 banner colors: light OS is unchanged.
+      expect(css()).toMatch(/:host \{[^}]*--jushoai-banner-bg: rgba\(36, 87, 214, 0\.9\)/);
+      expect(css()).toMatch(/:host \{[^}]*--jushoai-banner-bg-active: #1c46b3;/);
+      // The banner has its own shadow root (no OVERLAY_CSS), so the dark
+      // override must ride this <style> block, not the panels'.
+      expect(css()).toContain('@media (prefers-color-scheme: dark)');
+      const dark = css().slice(css().indexOf('@media (prefers-color-scheme: dark)'));
+      expect(dark).toMatch(/--jushoai-banner-bg: rgba\(28, 45, 100, 0\.9\)/);
+      expect(dark).toMatch(/--jushoai-banner-bg-active: #1e3a8a;/);
     });
   });
 
