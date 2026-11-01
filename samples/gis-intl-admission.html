@@ -5,9 +5,12 @@
   (read as nearby headings), and maxlengths mirror the real page; site chrome
   is omitted.
   The enrollment/grade radios (希望する入学・編入時期, 希望する学年, 寮,
-  日本語の学習歴) and the acceptance-sample checkbox stay out of scope; the
-  date field (児童・生徒生年月日, type=date) is out of scan in the real page's
-  markup family, and the hidden wpcf7 fields are send-only.
+  日本語の学習歴) are restored as radio groups carrying the real page's option
+  values; they stay unclassified per the radio policy (the question heading
+  lives in the row th, so each group carries its own legend), and the
+  acceptance-sample checkbox stays out of scope. The date field (児童・生徒
+  生年月日, type=date) is out of scan in the real page's markup family, and the
+  hidden wpcf7 fields are send-only.
 -->
 <html lang="ja"><meta charset="utf-8"><title>Contact Form 7 inquiry (international admission)</title>
 <form>
@@ -26,6 +29,56 @@
       <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="current-school"></td></tr>
     <tr><th><p><span class="any">任意</span>[08]現在の学年 / Current Grade or Year Level</p></th>
       <td><input size="40" maxlength="400" aria-required="true" value="" type="text" name="current-grade"></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[09]希望する入学・編入時期 / Desired Enrollment Date</p></th>
+      <td><div role="group" data-fieldset-label="希望する入学・編入時期">
+        <legend>希望する入学・編入時期</legend>
+        <label><input type="radio" name="desired-enrollment" value="2027年4月 / April 2027">2027年4月 / April 2027</label>
+        <label><input type="radio" name="desired-enrollment" value="2026年度途中 / During the 2026–2027 Academic Year">2026年度途中 / During the 2026–2027 Academic Year</label>
+        <label><input type="radio" name="desired-enrollment" value="2027年度途中 / During the 2027–2028 Academic Year">2027年度途中 / During the 2027–2028 Academic Year</label>
+        <label><input type="radio" name="desired-enrollment" value="未定 / Undecided">未定 / Undecided</label>
+        <label><input type="radio" name="desired-enrollment" value="その他 / Other">その他 / Other</label>
+      </div></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[10]希望する学年 / Desired Grade</p></th>
+      <td><div role="group" data-fieldset-label="希望する学年">
+        <legend>希望する学年</legend>
+        <label><input type="radio" name="desired-grade" value="中学1年 / Junior High School Grade 1">中学1年 / Junior High School Grade 1</label>
+        <label><input type="radio" name="desired-grade" value="中学2年 / Junior High School Grade 2">中学2年 / Junior High School Grade 2</label>
+        <label><input type="radio" name="desired-grade" value="中学3年 / Junior High School Grade 3">中学3年 / Junior High School Grade 3</label>
+        <label><input type="radio" name="desired-grade" value="高校1年 / High School Grade 1">高校1年 / High School Grade 1</label>
+        <label><input type="radio" name="desired-grade" value="高校2年 / High School Grade 2">高校2年 / High School Grade 2</label>
+        <label><input type="radio" name="desired-grade" value="高校3年 / High School Grade 3">高校3年 / High School Grade 3</label>
+        <label><input type="radio" name="desired-grade" value="未定 / Undecided">未定 / Undecided</label>
+      </div></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[11]寮への入寮希望 / Dormitory Accommodation</p></th>
+      <td><div role="group" data-fieldset-label="寮への入寮希望">
+        <legend>寮への入寮希望</legend>
+        <label><input type="radio" name="dormitory-accommodation" value="希望する / Required">希望する / Required</label>
+        <label><input type="radio" name="dormitory-accommodation" value="希望しない / Not required">希望しない / Not required</label>
+        <label><input type="radio" name="dormitory-accommodation" value="未定 / Undecided">未定 / Undecided</label>
+      </div></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[12]日本語能力 / Japanese Language Proficiency</p></th>
+      <td><div role="group" data-fieldset-label="日本語能力">
+        <legend>日本語能力</legend>
+        <label><input type="radio" name="japanese-proficiency" value="日本語での授業および日常会話ともに問題ない / Advanced – Can understand classes taught in Japanese and communicate comfortably in daily life">日本語での授業および日常会話ともに問題ない / Advanced</label>
+        <label><input type="radio" name="japanese-proficiency" value="日常会話は可能だが、日本語での授業理解には不安がある / Conversational – Can communicate in daily life but may have difficulty understanding classes taught in Japanese">日常会話は可能だが、日本語での授業理解には不安がある / Conversational</label>
+        <label><input type="radio" name="japanese-proficiency" value="日本語をほとんど理解できない / Beginner or None – Has little or no understanding of Japanese">日本語をほとんど理解できない / Beginner or None</label>
+      </div></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[13]日本語能力試験 JLPT / JLPT Level</p></th>
+      <td><div role="group" data-fieldset-label="日本語能力試験 JLPT">
+        <legend>日本語能力試験 JLPT</legend>
+        <label><input type="radio" name="jlpt-level" value="N1">N1</label>
+        <label><input type="radio" name="jlpt-level" value="N2">N2</label>
+        <label><input type="radio" name="jlpt-level" value="N3">N3</label>
+        <label><input type="radio" name="jlpt-level" value="N4">N4</label>
+        <label><input type="radio" name="jlpt-level" value="N5">N5</label>
+        <label><input type="radio" name="jlpt-level" value="受験経験なし / Not taken">受験経験なし / Not taken</label>
+      </div></td></tr>
+    <tr><th><p><span class="haveto">必須</span>[14]教育機関における1年以上の日本語学習歴がありますか？<br>-<br>/ Has the student studied Japanese at an educational institution for at least one year?</p></th>
+      <td><div role="group" data-fieldset-label="教育機関における1年以上の日本語学習歴がありますか？">
+        <legend>教育機関における1年以上の日本語学習歴がありますか？</legend>
+        <label><input type="radio" name="studied-japanese" value="はい / Yes">はい / Yes</label>
+        <label><input type="radio" name="studied-japanese" value="いいえ / No">いいえ / No</label>
+      </div></td></tr>
     <tr><th><p><span class="any">任意</span>[15]日本語を学習した教育機関名・学習期間<br>-<br>/ Name of Institution and Period of Japanese Study</p></th>
       <td><p>該当する場合のみご記入ください。 / Please complete this section if applicable.<input size="40" maxlength="400" value="" type="text" name="name-institution"></p></td></tr>
   </table>

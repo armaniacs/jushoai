@@ -33,7 +33,10 @@
 ## 候補棚（次ラウンドの RICE 採点待ち）
 
 - Playwright 移行: tests/e2e/scenarios.ts の WebDriver 主体の大改修（video/playwright/lib.mjs が参照実装）。E2E 実行基盤の候補（PBI-204 の実装手順でスコープ外に記録済み）
-- Firefox 側の geckodriver 版数統一: Chrome 側の版数 preflight（PBI-204）と対になる Firefox 側の版数統一。ローカル/CI とも現在緑のため後回し（PBI-204 の実装手順でスコープ外に記録済み）
+- Firefox 側の geckodriver 版数統一: Chrome 側の版数 preflight（PBI-204）と対になる Firefox 側の版数統一。ローカル/CI とも現在緑のため後回し（PBI-204 の実装手順でスコープ外に記録済み）。受け入れる判断（major-only の機械的移植は geckodriver の非連動版数で誤検知になる。アーキテクチャ候補なぜなぜ分析 2026-10-31）
+- env 契約 module（Chrome driver 解決の 5 env 変数 precedence を driver-version.ts の後ろへ移し、harness.ts:259 の隠れた process.env 書き込みを観測可能にする）: 外す条件: 次に harness を開く候補（E2E 基盤系）が来たときに着手段階を確認する（アーキテクチャ発見 1a/1b・RICE 2.7。なぜなぜ分析 2026-11-01）
+- harness 分割 + seed 二重化の消化（600 行の god node を seam 単位で分割し、adapter.ts:66・:112 の削除条件付き TODO を消化する）: 外す条件: 次に harness を開くときに着手段階を確認する（アーキテクチャ発見 5・RICE 1.6。seed 消化は分割単体より先行。なぜなぜ分析 2026-11-01）
+- drag/click 状態機械の seam 化（src/ui/button.ts の closure 内状態機械を独自の seam の後ろへ置き、mock pile 616 行を解消する）: 外す条件: 実ブラウザ E2E が flaky 化したときに最優先で着手する（アーキテクチャ発見 4a/4b・RICE 0.83・Confidence は e2e 緑が条件。なぜなぜ分析 2026-11-01）
 
 ## 調査で判明した補足
 

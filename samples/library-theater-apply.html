@@ -3,8 +3,8 @@
   Minimal reproduction of https://ssl.form-mailer.jp/fms/a0ed8265668444
   (図書館劇場21第4幕 参加申し込み). Field ids, names, legends, labels,
   placeholders, and options mirror the real page; site chrome is omitted.
-  The 会員 radio (なら図書館につどう会　会員: 会員/非会員) stays unclassified
-  per the radio policy (only gender/decade groups resolve).
+  The 会員 radio (なら図書館につどう会　会員: 会員/非会員) is restored and stays
+  unclassified per the radio policy (only gender/decade groups resolve).
 -->
 <html lang="ja"><meta charset="utf-8"><title>form-mailer event form (member radio)</title>
 <form>
@@ -57,6 +57,11 @@
     <input id="field_5755076" name="field_5755076" type="email" value="" maxlength="2500" placeholder="info@example.com" required autocomplete="email">
     <label for="field_5755076_mcon" class="visually-hidden">メールアドレスの確認用</label>
     <input id="field_5755076_mcon" name="field_5755076_mcon" type="email" value="" maxlength="2500" placeholder="確認用" required>
+  </div>
+  <div role="group" data-fieldset-label="なら図書館につどう会　会員">
+    <legend>なら図書館につどう会　会員</legend>
+    <label for="field_6426354_0"><input id="field_6426354_0" name="field_6426354" type="radio" value="0">会員</label>
+    <label for="field_6426354_1"><input id="field_6426354_1" name="field_6426354" type="radio" value="1">非会員</label>
   </div>
 </form>
 </html>

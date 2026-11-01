@@ -1,6 +1,7 @@
 // Registry-driven fixture sync: read tests/target-url.md, and for every URL
-// without a wired fixture, fetch the page, scaffold the fixture, wire the test,
-// and write the `→ fixture` mapping back to the registry.
+// without a wired fixture, fetch the page, scaffold the fixture, wire the
+// corpus ledger entry (tests/corpus.ts) and the test case, and write the
+// `→ fixture` mapping back to the registry.
 // Static HTML only; expectations stay '<expected>' placeholders for humans.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { buildWiring, fixtureNameFromUrl } from './add-fixture.mjs';
@@ -63,9 +64,9 @@ export function selectTargets(entries, { only = null, all = false } = {}) {
   return [];
 }
 
-// Unfilled scaffold expectations: `renderTestStub` writes `'<expected>'`
-// placeholders that stay red until a human fills them. The check below
-// lists them per file so the remaining work is visible without hunting
+// Unfilled scaffold expectations: the corpus ledger entry carries
+// `'<expected>'` placeholders that stay red until a human fills them. The
+// check below lists them so the remaining work is visible without hunting
 // failures backwards.
 export const EXPECTED_PLACEHOLDER = "'<expected>'";
 
@@ -95,9 +96,11 @@ export function formatExpectedRemnants(remnants) {
 if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
   const { only, all, check } = parseSyncArgs(process.argv.slice(2));
   if (check) {
-    const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
-    const testSource = readFileSync(testPath, 'utf8');
-    const remnants = collectExpectedRemnants({ 'tests/integration/samples.test.ts': testSource });
+    // The '<expected>' placeholders live in the corpus ledger since the
+    // ledger module (tests/corpus.ts) owns the per-fixture expectations.
+    const ledgerPath = new URL('../tests/corpus.ts', import.meta.url);
+    const ledgerSource = readFileSync(ledgerPath, 'utf8');
+    const remnants = collectExpectedRemnants({ 'tests/corpus.ts': ledgerSource });
     console.log(formatExpectedRemnants(remnants));
     process.exit(0);
   }
@@ -107,17 +110,23 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
   }
   const mdPath = new URL('../tests/target-url.md', import.meta.url);
   const testPath = new URL('../tests/integration/samples.test.ts', import.meta.url);
+  const ledgerPath = new URL('../tests/corpus.ts', import.meta.url);
   const md = readFileSync(mdPath, 'utf8');
   let testSource = readFileSync(testPath, 'utf8');
+  let ledgerSource = readFileSync(ledgerPath, 'utf8');
   let updated = md;
+  const wiredNames = [];
+  const failedUrls = [];
   for (const { url, file } of selectTargets(parseRegistry(md), { only, all })) {
-    if (file && testSource.includes(`'${file}'`)) {
+    // Wired means both the case and the ledger entry are in place; a drift in
+    // either file re-wires through the interface below and heals it.
+    if (file && testSource.includes(`'${file}'`) && ledgerSource.includes(`'${file}': {`)) {
       console.log(`skip ${url} (already wired)`);
       continue;
     }
     // Shared apply order with add-fixture.mjs: fetch → buildWiring →
-    // write → applyTest → stamp. Bulk policy: a non-ok fetch logs and
-    // continues with the next URL (single-shot instead exits 1).
+    // applyWiring → write → verify. Bulk policy: a non-ok fetch or a missing
+    // ledger anchor logs and continues with the next URL (single-shot exits 1).
     const page = await fetchPage(url);
     if (!page.ok) {
       const reason = page.status ?? page.error?.name ?? 'error';
@@ -126,12 +135,37 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
     }
     const name = file ?? fixtureNameFromUrl(url);
     const wiring = buildWiring(page.text, url, name);
+    const applied = wiring.applyWiring({ ledger: ledgerSource, test: testSource });
+    if (!applied) {
+      failedUrls.push(url);
+      console.error(`wiring failed: ${url}: the corpus ledger anchor in tests/corpus.ts is missing; fixture not written`);
+      continue;
+    }
     writeFileSync(new URL(`../samples/${name}`, import.meta.url), wiring.fixture);
-    testSource = wiring.applyTest(testSource);
+    testSource = applied.test;
+    ledgerSource = applied.ledger;
     updated = stampRegistry(updated, url, name);
+    wiredNames.push(name);
     console.log(`wired ${url} → samples/${name} (${wiring.controls} controls)`);
   }
   writeFileSync(testPath, testSource);
+  writeFileSync(ledgerPath, ledgerSource);
   writeFileSync(mdPath, updated);
+  // Read back and verify every wired entry, and fail the command when any
+  // wiring did not land: the tool reports failure instead of claiming success.
+  const ledgerAfter = readFileSync(ledgerPath, 'utf8');
+  const testAfter = readFileSync(testPath, 'utf8');
+  const missing = wiredNames.filter((name) =>
+    !ledgerAfter.includes(`'${name}': {`) || !testAfter.includes(`it('${name} fills the in-scope fields'`),
+  );
+  if (missing.length > 0) {
+    console.error(`wiring failed: the corpus ledger or samples.test.ts does not carry: ${missing.join(', ')}`);
+  }
+  if (failedUrls.length > 0) {
+    console.error(`wiring failed for ${failedUrls.length} URL(s): ${failedUrls.join(', ')}`);
+  }
+  if (missing.length > 0 || failedUrls.length > 0) {
+    process.exit(1);
+  }
   console.log('next: trim new fixtures, fill expectations, run vitest.');
 }

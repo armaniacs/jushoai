@@ -3,13 +3,79 @@
   Minimal reproduction of https://business.form-mailer.jp/lp/61093651176278
   (リッチェルお客様アンケート). Field ids, names, labels, and patterns mirror the
   real page; site chrome is omitted.
-  The rating radios (5段階評価×4、10段階×2) are matrix groups that stay
-  unclassified per the radio policy (only gender/decade groups resolve), and the
-  two ご要望・ご感想 textareas are out of scan, so the 受付番号 text field is
-  the only in-scope control.
+  The rating radios (5段階評価×4、10段階×2) are restored matrix groups: the
+  fieldset labels carry the real page's 5/10-point scale wording (the question
+  headings A-D/(3)/(4) are label-only fieldsets on the real page and stay
+  omitted). They stay unclassified per the radio policy (only gender/decade
+  groups resolve), and the two ご要望・ご感想 textareas are out of scan, so the
+  受付番号 text field is the only in-scope control.
 -->
 <html lang="ja"><meta charset="utf-8"><title>form-mailer survey (rating radios)</title>
 <form>
+  <!-- (1)A．対応の早さ -->
+  <div role="group" data-fieldset-label="5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満">
+    <legend>5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満</legend>
+    <label for="field_2953447_0"><input id="field_2953447_0" name="field_2953447" type="radio" value="0" required>5</label>
+    <label for="field_2953447_1"><input id="field_2953447_1" name="field_2953447" type="radio" value="1" required>4</label>
+    <label for="field_2953447_2"><input id="field_2953447_2" name="field_2953447" type="radio" value="2" required>3</label>
+    <label for="field_2953447_3"><input id="field_2953447_3" name="field_2953447" type="radio" value="3" required>2</label>
+    <label for="field_2953447_4"><input id="field_2953447_4" name="field_2953447" type="radio" value="4" required>1</label>
+  </div>
+  <!-- (1)B．原因調査・再発防止対策 -->
+  <div role="group" data-fieldset-label="5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満">
+    <legend>5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満</legend>
+    <label for="field_2953448_0"><input id="field_2953448_0" name="field_2953448" type="radio" value="0" required>5</label>
+    <label for="field_2953448_1"><input id="field_2953448_1" name="field_2953448" type="radio" value="1" required>4</label>
+    <label for="field_2953448_2"><input id="field_2953448_2" name="field_2953448" type="radio" value="2" required>3</label>
+    <label for="field_2953448_3"><input id="field_2953448_3" name="field_2953448" type="radio" value="3" required>2</label>
+    <label for="field_2953448_4"><input id="field_2953448_4" name="field_2953448" type="radio" value="4" required>1</label>
+  </div>
+  <!-- (1)C．説明のわかりやすさ -->
+  <div role="group" data-fieldset-label="5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満">
+    <legend>5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満</legend>
+    <label for="field_2953449_0"><input id="field_2953449_0" name="field_2953449" type="radio" value="0" required>5</label>
+    <label for="field_2953449_1"><input id="field_2953449_1" name="field_2953449" type="radio" value="1" required>4</label>
+    <label for="field_2953449_2"><input id="field_2953449_2" name="field_2953449" type="radio" value="2" required>3</label>
+    <label for="field_2953449_3"><input id="field_2953449_3" name="field_2953449" type="radio" value="3" required>2</label>
+    <label for="field_2953449_4"><input id="field_2953449_4" name="field_2953449" type="radio" value="4" required>1</label>
+  </div>
+  <!-- (1)D．対応内容への納得感 -->
+  <div role="group" data-fieldset-label="5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満">
+    <legend>5：満足、4：まあまあ満足、3：普通、2：やや不満、1：不満</legend>
+    <label for="field_2953450_0"><input id="field_2953450_0" name="field_2953450" type="radio" value="0" required>5</label>
+    <label for="field_2953450_1"><input id="field_2953450_1" name="field_2953450" type="radio" value="1" required>4</label>
+    <label for="field_2953450_2"><input id="field_2953450_2" name="field_2953450" type="radio" value="2" required>3</label>
+    <label for="field_2953450_3"><input id="field_2953450_3" name="field_2953450" type="radio" value="3" required>2</label>
+    <label for="field_2953450_4"><input id="field_2953450_4" name="field_2953450" type="radio" value="4" required>1</label>
+  </div>
+  <!-- (3)今後、当社の商品を購入したいと思いますか？ -->
+  <div role="group" data-fieldset-label="10：今まで以上に購入したいと思う、5：どちらでもない、1：もう購入しないと思う">
+    <legend>10：今まで以上に購入したいと思う、5：どちらでもない、1：もう購入しないと思う</legend>
+    <label for="field_2953452_0"><input id="field_2953452_0" name="field_2953452" type="radio" value="0" required>10</label>
+    <label for="field_2953452_1"><input id="field_2953452_1" name="field_2953452" type="radio" value="1" required>９</label>
+    <label for="field_2953452_2"><input id="field_2953452_2" name="field_2953452" type="radio" value="2" required>８</label>
+    <label for="field_2953452_3"><input id="field_2953452_3" name="field_2953452" type="radio" value="3" required>７</label>
+    <label for="field_2953452_4"><input id="field_2953452_4" name="field_2953452" type="radio" value="4" required>６</label>
+    <label for="field_2953452_5"><input id="field_2953452_5" name="field_2953452" type="radio" value="5" required>５</label>
+    <label for="field_2953452_6"><input id="field_2953452_6" name="field_2953452" type="radio" value="6" required>４</label>
+    <label for="field_2953452_7"><input id="field_2953452_7" name="field_2953452" type="radio" value="7" required>３</label>
+    <label for="field_2953452_8"><input id="field_2953452_8" name="field_2953452" type="radio" value="8" required>２</label>
+    <label for="field_2953452_9"><input id="field_2953452_9" name="field_2953452" type="radio" value="9" required>１</label>
+  </div>
+  <!-- (4)今後、当社の商品をご友人やご家族に薦めようと思いますか？ -->
+  <div role="group" data-fieldset-label="10：非常に薦めたいと思う、5：どちらでもない、1：まったく薦めたいと思わない">
+    <legend>10：非常に薦めたいと思う、5：どちらでもない、1：まったく薦めたいと思わない</legend>
+    <label for="field_2953453_0"><input id="field_2953453_0" name="field_2953453" type="radio" value="0" required>10</label>
+    <label for="field_2953453_1"><input id="field_2953453_1" name="field_2953453" type="radio" value="1" required>９</label>
+    <label for="field_2953453_2"><input id="field_2953453_2" name="field_2953453" type="radio" value="2" required>８</label>
+    <label for="field_2953453_3"><input id="field_2953453_3" name="field_2953453" type="radio" value="3" required>７</label>
+    <label for="field_2953453_4"><input id="field_2953453_4" name="field_2953453" type="radio" value="4" required>６</label>
+    <label for="field_2953453_5"><input id="field_2953453_5" name="field_2953453" type="radio" value="5" required>５</label>
+    <label for="field_2953453_6"><input id="field_2953453_6" name="field_2953453" type="radio" value="6" required>４</label>
+    <label for="field_2953453_7"><input id="field_2953453_7" name="field_2953453" type="radio" value="7" required>３</label>
+    <label for="field_2953453_8"><input id="field_2953453_8" name="field_2953453" type="radio" value="8" required>２</label>
+    <label for="field_2953453_9"><input id="field_2953453_9" name="field_2953453" type="radio" value="9" required>１</label>
+  </div>
   <label for="field_2953454">（５）受付番号（6桁）を記入してください。</label>
   <input id="field_2953454" name="field_2953454" type="text" value="" pattern="^\d+$" required>
 </form>
