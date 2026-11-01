@@ -438,9 +438,10 @@ for (const [path, html] of Object.entries(RAW)) {
 }
 
 // Full corpus keyed by fixture name: every samples/*.html fixture, with the
-// ledger extras merged in for the wired ones. Frozen: both consumers only
-// read it, and an accidental mutation fails instead of silently editing the
-// shared ledger (PBI-216).
+// ledger extras merged in for the wired ones. Shallow-frozen: both consumers
+// only read it, and an accidental entry replacement fails. Nested entry
+// objects (expected/excluded) stay shared with the ledger by reference, so
+// in-place edits inside an entry are not stopped by the freeze (PBI-216).
 const corpusByName: Record<string, CorpusEntry> = {};
 for (const [name, html] of Object.entries(htmlByName)) {
   const extras = LEDGER[name as CorpusName];
