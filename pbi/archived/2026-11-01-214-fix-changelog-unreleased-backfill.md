@@ -88,11 +88,11 @@ python3 /Users/yaar/.agents/skills/docs-charset/scripts/check_docs_chars.py CHAN
 - チェックボックスのチェックと実装記録の追記を CHANGELOG 更新と同じコミットに残す（台帳だけ直すと遡及の記録が台帳と食い違う）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオを検証手順として確認し、パスする（docs のみの PBI で、自動テストの追加はしない。`make test` が緑のまま）
-- [ ] コードレビュー完了
-- [ ] CHANGELOG Unreleased に 204〜210 の変更が整い、次の 0.1.30 のタグ運用に備える
-- [ ] 本 PBI に実装記録（区分の判断・PBI-203 と 205・206 の扱い・文字種チェックの結果）を残す
-- [ ] 変更は CHANGELOG.md と PBI 台帳のみで、scripts/・workflow・src/ には触れない
+- [x] 全 BDD シナリオを検証手順として確認し、パスする（docs のみの PBI で、自動テストの追加はしない。`make test` が緑のまま）
+- [x] コードレビュー完了
+- [x] CHANGELOG Unreleased に 204〜210 の変更が整い、次の 0.1.30 のタグ運用に備える
+- [x] 本 PBI に実装記録（区分の判断・PBI-203 と 205・206 の扱い・文字種チェックの結果）を残す
+- [x] 変更は CHANGELOG.md と PBI 台帳のみで、scripts/・workflow・src/ には触れない
 
 ## 実装記録（2026-11-01）
 

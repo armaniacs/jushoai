@@ -92,7 +92,7 @@ grep -rn 'buildWiring\|applyTest' scripts/
 ## Definition of Done
 - [x] 全 BDD シナリオが検証されパスする
 - [x] make test + make eval + make check が緑（期待値と pin は不変）
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] ドキュメント更新済み（実装記録を本 PBI に残す。AGENTS.md の make addurl 手順の記載は不変で、台帳の説明が必要ならその範囲で更新）
 
 ## 外す条件
