@@ -10,6 +10,7 @@
 
 ## 出どころ
 - PBI-210 の review（progress.md:169-170、レビュー証跡 review-64d2b63..b57b19c.diff）: curl spot-check of pro.form-mailer.jp/fms/12fc22bc297429 confirms novalidate on form + dummy pattern="1" x4 / pattern="5" x2 + structural pattern x5。novalidate-respect as possible follow-up
+- 実ページのダミー 6 個は data-pattern 属性での数え（本物の pattern 属性は構造 5 個のみ。実装記録の「数え方の注記」参照）
 - 現行の構造ゲート（HAS_REGEX_STRUCTURE）の証跡: src/core/planner.ts:74（正規表現の構造を持つ pattern だけ検査）・:83（裸のリテラルはスキップ）。PBI-210 の実装記録「適用範囲の決定」節に、novalidate を載せる代替案が意味的には最も正確だが走査・FieldMeta・sample HTML の form タグ修正まで必要なスコープ拡大のため採らなかった旨の記録がある
 - fixture の証跡: samples/12fc22bc297429.html と samples/2dd1c663300469.html に pattern="1" / "5" / "6" のダミー pattern が 11 欄あるが、保存済み fixture の form タグには novalidate が無い（実ページにはある。curl 実測）。samples/formmailer-anketo-gender.html:11 は novalidate を持つ参照 fixture
 - 判断の材料: 2 つの選択肢（A: form タグの novalidate を尊重して pattern 検査をスキップする。B: 現行の構造ゲートのまま）
@@ -107,6 +108,7 @@ curl -s https://pro.form-mailer.jp/fms/12fc22bc297429 | grep -o 'novalidate\|pat
 ```
 
 - form タグに novalidate 1・ダミー 6 個（pattern="1" x4・pattern="5" x2）・構造 pattern x5（tel ^\d+$ 3 欄 + カナ文字クラス 2 個）
+- ダミー 6 個は grep の部分一致で data-pattern 属性も数えた数（下記の数え方の注記参照）
 - 実ページは novalidate のためブラウザはこれらの pattern を実行しない。現行ゲート（B）は正規表現の構造を持つ pattern を検査するため、tel ^\d+$ 3 欄・生年月日の年 1 欄（fixture 側の構造 pattern）とカナ文字クラス pattern 2 個（実ページのみで fixture には載らない）を検査する。現在の注入値はいずれも pattern と一致するため実害なし
 - 数え方の注記: grep は部分一致のため、実ページのダミー 6 個は data-pattern 属性として数えられる（フリガナ欄 field_4647588_sei/mei は data-pattern="5" と pattern=カナ文字クラスの両方を持つ）。保存済み fixture はフリガナ欄を pattern="5" のみに写している
 

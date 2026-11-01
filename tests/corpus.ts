@@ -437,15 +437,16 @@ for (const [path, html] of Object.entries(RAW)) {
   if (name) htmlByName[name] = html;
 }
 
-const extrasByName: Record<string, CorpusExtras> = { ...LEDGER };
-
 // Full corpus keyed by fixture name: every samples/*.html fixture, with the
-// ledger extras merged in for the wired ones.
-export const corpus: Record<string, CorpusEntry> = {};
+// ledger extras merged in for the wired ones. Frozen: both consumers only
+// read it, and an accidental mutation fails instead of silently editing the
+// shared ledger (PBI-216).
+const corpusByName: Record<string, CorpusEntry> = {};
 for (const [name, html] of Object.entries(htmlByName)) {
-  const extras = extrasByName[name];
-  corpus[name] = extras ? { html, ...extras } : { html };
+  const extras = LEDGER[name as CorpusName];
+  corpusByName[name] = extras ? { html, ...extras } : { html };
 }
+export const corpus: Record<string, CorpusEntry> = Object.freeze(corpusByName);
 
 // Wired entry for the samples.test.ts cases. The file parameter is typed by
 // the LEDGER keys, so a fixture removed from the ledger fails typecheck at

@@ -105,6 +105,7 @@ describe('sample corpus metrics (local, no network)', () => {
     const pinRows = Object.values(PIN_TABLE);
     const pinSum = (pick: (r: PinRow) => number) => pinRows.reduce((acc, r) => acc + pick(r), 0);
     const rowSum = (pick: (m: EvalMetrics) => number) => rows.reduce((acc, m) => acc + pick(m), 0);
+    // pinDiff の一致検査が先に失敗するため、この 5 つは失敗としては論理的に到達しない。pin 表の合計としての誘導と文書化の役割
     expect(agg.ruleHits, 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.ruleHits));
     expect(agg.llmFallbacks, 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.llmFallbacks));
     expect(agg.fillable, 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.fillable));

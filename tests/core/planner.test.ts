@@ -337,7 +337,7 @@ describe('value pattern fit (PBI-210)', () => {
   // the bare literals the form-mailer.jp fixtures carry (12fc22bc297429 /
   // 2dd1c663300469), pinned so the no-structure skip covers every shipped
   // variant instead of "1" only.
-  it('skips the bare-literal codes "5" and "6" with no regex structure (fail-open)', () => {
+  it('skips bare-literal patterns "5" and "6" with no regex structure (fail-open)', () => {
     expect(buildPlan([item('lastName', { pattern: '5' })], { profile, address })).toEqual([
       expect.objectContaining({ value: '山田', status: 'ok' }),
     ]);
