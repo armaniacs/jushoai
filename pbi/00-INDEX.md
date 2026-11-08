@@ -12,6 +12,7 @@
 - `2026-10-31-210-feat-pattern-violation-warning.md`（実装済み（b57b19c・レビュー承認・構造ゲート KEEP）。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
 - `2026-10-31-211-feat-corpus-radio-restore.md`（実装済み（e9bfc0f・レビュー承認・kosodate 逸脱 Keep）。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
 - `2026-10-31-212-feat-english-form-vocabulary.md`（実装済み（402def7・レビュー承認・PBI-following 判定）。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
+- `2026-11-09-217-chore-jsdom-major.md`（jsdom 31 major 対応。テスト基盤の回帰確認付き。fake-indexeddb 6.2.8・vitest 5.1.0 は 2dc2d3d で追従済み）
 
 ## 進行中からアーカイブ済み（2026-11-01・subagent-drivenで4件実装・レビュー済み・`make check` green。コードレビューはreviewerサブエージェントで完了）
 
