@@ -1,0 +1,79 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.bst.ac.jp/inquire
+  (British School in Tokyo admissions inquiry, OpenApply ROI form, English).
+  Field names, labels, and control kinds mirror the real page; site chrome and
+  the duplicated second Parent/Guardian block are omitted.
+  Labels without for= (Email Address, Gender, passport question, nationality
+  selects) reproduce the real nearby-label structure. The Gender radios carry
+  numeric values (1/0) with Male/Female wrapping labels, unlike the
+  Nishimachi field_962/946 radios whose values are the words themselves.
+  Password/loginable/notification hiddens and the password inputs are out of
+  scope and must be skipped.
+-->
+<html lang="en"><meta charset="utf-8"><title>BST admissions inquiry (overseas)</title>
+<form action="/roi?frame=true" method="post">
+  <p><strong>Please complete all information in ENGLISH</strong></p>
+  <div>Parent/Guardian Information</div>
+  <label for="student_parent_0_field_attributes_35477">Title</label>
+  <select id="student_parent_0_field_attributes_35477" name="student[parent][0][field_attributes][35477]"><option value="">--</option></select>
+  <label for="student_parent_0_last_name">Surname</label>
+  <input id="student_parent_0_last_name" name="student[parent][0][last_name]" type="text" value="" maxlength="255">
+  <label for="student_parent_0_first_name">Forename(s)</label>
+  <input id="student_parent_0_first_name" name="student[parent][0][first_name]" type="text" value="" maxlength="255">
+  <label>Email Address</label>
+  <input id="fake_email" name="fake_email[]" type="email" value="" tabindex="-1">
+  <input id="student_parent_0_email" name="student[parent][0][email]" type="email" value="">
+  <label for="student_parent_0_field_attributes_75">Mobile Number</label>
+  <input id="student_parent_0_field_attributes_75" name="student[parent][0][field_attributes][75]" type="tel" value="">
+  <label for="student_parent_0_parent_role">Relation to Child</label>
+  <select id="student_parent_0_parent_role" name="student[parent][0][parent_role]"><option value="">--</option></select>
+  <label>1st Nationality</label>
+  <select name="student[parent][0][field_attributes][84]"><option value="">--</option></select>
+  <label>2nd Nationality</label>
+  <select name="student[parent][0][field_attributes][85]"><option value="">--</option></select>
+  <label>Does either parent hold a valid NON-Japanese passport? We require at least one parent to hold a valid non-Japanese passport</label>
+  <label for="student_field_attributes_234537_1"><input id="student_field_attributes_234537_1" name="student[field_attributes][234537]" type="radio" value="1">Yes</label>
+  <label for="student_field_attributes_234537_0"><input id="student_field_attributes_234537_0" name="student[field_attributes][234537]" type="radio" value="0">No</label>
+  <label>Current Place of Residence</label>
+  <select name="student[field_attributes][231630]"><option value="">--</option><option value="245">Japan</option><option value="230">United Kingdom</option><option value="231">United States</option></select>
+  <label for="student_last_name">Surname/Family Name</label>
+  <input id="student_last_name" name="student[last_name]" type="text" value="" maxlength="255">
+  <label for="student_first_name">Forename</label>
+  <input id="student_first_name" name="student[first_name]" type="text" value="" maxlength="255">
+  <label for="student_field_attributes_6">Middle Name(s)</label>
+  <input id="student_field_attributes_6" name="student[field_attributes][6]" type="text" value="" maxlength="255">
+  <label for="student_preferred_name">Preferred name:</label>
+  <input id="student_preferred_name" name="student[preferred_name]" type="text" value="" maxlength="255">
+  <label>Gender</label>
+  <label for="student_gender_1"><input id="student_gender_1" name="student[gender]" type="radio" value="1">Male</label>
+  <label for="student_gender_0"><input id="student_gender_0" name="student[gender]" type="radio" value="0">Female</label>
+  <label for="student_birth_date">Date of Birth</label>
+  <input id="student_birth_date" name="student[birth_date]" type="text" value="">
+  <label for="student_enrollment_year">Preferred School Year for Entry</label>
+  <select id="student_enrollment_year" name="student[enrollment_year]"><option value="">--</option></select>
+  <label for="student_grade">Preferred Year Group on Entry</label>
+  <select id="student_grade" name="student[grade]"><option value="">--</option></select>
+  <label for="student_field_attributes_221734">Term on Entry</label>
+  <select id="student_field_attributes_221734" name="student[field_attributes][221734]"><option value="">--</option></select>
+  <label for="student_campus_id">Campus</label>
+  <select id="student_campus_id" name="student[campus_id]"><option value="">--</option></select>
+  <label for="student_field_attributes_221735">Reason for Enquiry</label>
+  <select id="student_field_attributes_221735" name="student[field_attributes][221735]"><option value="">--</option></select>
+  <label for="student_field_attributes_231629">Please specify.</label>
+  <input id="student_field_attributes_231629" name="student[field_attributes][231629]" type="text" value="" maxlength="255">
+  <label for="student_field_attributes_17">Applicant&#8217;s Current School/Preschool</label>
+  <input id="student_field_attributes_17" name="student[field_attributes][17]" type="text" value="" maxlength="255">
+  <label for="student_field_attributes_124830">Current Year Group</label>
+  <input id="student_field_attributes_124830" name="student[field_attributes][124830]" type="text" value="" maxlength="255">
+  <label for="student_field_attributes_374968">Where did you hear about our school?</label>
+  <select id="student_field_attributes_374968" name="student[field_attributes][374968]"><option value="">--</option></select>
+  <label for="student_field_attributes_374969">Where do you usually get information or news about Japan?</label>
+  <select id="student_field_attributes_374969" name="student[field_attributes][374969]"><option value="">--</option></select>
+<!-- skip: authenticity_token/convert_token/idempotency_key/trap_input (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: student[parent][1][*] second guardian block: duplicate of the parent block above, trimmed (exclude) -->
+<!-- skip: student[parent][0][password]/[password_confirmation]/fake_input[] (password): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: student[parent][0][notification]/[loginable]/[auto_set_password] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: commit/multi (submit): action element, never a fill target (exclude) -->
+</form>
+</html>

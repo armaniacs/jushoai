@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.ois.ac.jp/contact
+  (Osaka International School inquiry, Elementor form, Japanese).
+  Field names, labels, and control kinds mirror the real page; site chrome
+  (two search boxes), the login/register/password-reset modal forms, and the
+  duplicated second/third child blocks (お子様のお名前2/3) are omitted.
+  The 性別 selects keep their real options (---/男/女). The date inputs
+  (生年月日) are out of scan and the checkbox groups stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>OIS inquiry (school)</title>
+<form method="post" name="New Form">
+  <label for="form-field-name">名前</label>
+  <input size="1" type="text" name="form_fields[name]" id="form-field-name" required="required">
+  <label for="form-field-field_6664910">フリガナ</label>
+  <input size="1" type="text" name="form_fields[field_6664910]" id="form-field-field_6664910" required="required">
+  <label for="form-field-field_9405afa">お子様のお名前1</label>
+  <input size="1" type="text" name="form_fields[field_9405afa]" id="form-field-field_9405afa" required="required">
+  <label for="form-field-field_958d73c">フリガナ</label>
+  <input size="1" type="text" name="form_fields[field_958d73c]" id="form-field-field_958d73c" required="required">
+  <label for="form-field-field_23b7625">性別</label>
+  <select name="form_fields[field_23b7625]" id="form-field-field_23b7625" required="required"><option value="---">---</option><option value="男">男</option><option value="女">女</option></select>
+  <label for="form-field-zipcode">郵便番号</label>
+  <input size="1" type="text" name="form_fields[zipcode]" id="form-field-zipcode" required="required">
+  <label for="form-field-adress">住所</label>
+  <input size="1" type="text" name="form_fields[adress]" id="form-field-adress" required="required">
+  <label for="form-field-field_ac345c0">E-mail</label>
+  <input size="1" type="email" name="form_fields[field_ac345c0]" id="form-field-field_ac345c0" required="required">
+  <label for="form-field-field_0187ee9">Tel</label>
+  <input size="1" type="tel" name="form_fields[field_0187ee9]" id="form-field-field_0187ee9" required="required" pattern="[0-9()#&amp;+*-=.]+">
+  <label for="form-field-field_d05b167">Fax</label>
+  <input size="1" type="text" name="form_fields[field_d05b167]" id="form-field-field_d05b167">
+  <label for="form-field-field_ea27631">紹介者名</label>
+  <input size="1" type="text" name="form_fields[field_ea27631]" id="form-field-field_ea27631">
+<!-- skip: s (text) x2: site-search fields, stay unclassified (same as forum.html) -->
+<!-- skip: cname2/cname3 child blocks (text + furigana + gender select + date): duplicates of the first child block, trimmed (exclude) -->
+<!-- skip: form_fields[field_9820c13]/[field_74cd14c]/[field_8d5ba3e]/[field_790dc68] (date): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: form_fields[field_3ff6f09][] (checkbox): お問い合わせ学部、コース, out of scope (skip fixed) -->
+<!-- skip: form_fields[field_7972aa4][] (checkbox): お問い合わせ項目, out of scope (skip fixed) -->
+<!-- skip: form_fields[field_1ede2d6][] (checkbox): どのようにしてOISをお知りになりましたか？, out of scope (skip fixed) -->
+<!-- skip: form_fields[field_7ae0589] (textarea): お問合せ内容, not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: user_name/user_email/user_login/user_password/remember (login/register/reset modals): separate forms, trimmed (exclude) -->
+<!-- skip: post_id/form_id/referer_title/queried_id/request_type/redirect/nonce (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
+</html>

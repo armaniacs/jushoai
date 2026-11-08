@@ -174,32 +174,55 @@ describe('sample forms end to end', () => {
     expect(await planFor('gis-intl-admission.html')).toEqual(expectedFor('gis-intl-admission.html'));
   });
 
-  // PBI-211: the 4 corpus fixtures carry their real-page radio groups again
-  // (formmailer-anketo-gender.html shape). One field per name, and the radio
-  // policy leaves them unclassified: they never reach a plan row, so the
-  // classified results above stay unchanged.
-  const radioGroups: Array<[CorpusName, Record<string, number>]> = [
+  // PBI-211: the corpus fixtures carry their real-page radio groups again
+  // (formmailer-anketo-gender.html shape). One field per name; each group
+  // pins its option count and its rule category. Non-gender groups stay
+  // unclassified and never reach a plan row, so the classified results above
+  // stay unchanged. Gender groups that resolve are pinned here as gender and
+  // by the fill expectations above.
+  const radioGroups: Array<[CorpusName, Record<string, [number, Category]>]> = [
     ['richell-anketo-rating.html', {
-      field_2953447: 5, field_2953448: 5, field_2953449: 5,
-      field_2953450: 5, field_2953452: 10, field_2953453: 10,
+      field_2953447: [5, 'unknown'], field_2953448: [5, 'unknown'], field_2953449: [5, 'unknown'],
+      field_2953450: [5, 'unknown'], field_2953452: [10, 'unknown'], field_2953453: [10, 'unknown'],
     }],
-    ['kosodate-contact.html', { 'wpforms[fields][42]': 3 }],
-    ['library-theater-apply.html', { field_6426354: 2 }],
+    ['kosodate-contact.html', { 'wpforms[fields][42]': [3, 'unknown'] }],
+    ['library-theater-apply.html', { field_6426354: [2, 'unknown'] }],
     ['gis-intl-admission.html', {
-      'desired-enrollment': 5, 'desired-grade': 7, 'dormitory-accommodation': 3,
-      'japanese-proficiency': 3, 'jlpt-level': 6, 'studied-japanese': 2,
+      'desired-enrollment': [5, 'unknown'], 'desired-grade': [7, 'unknown'], 'dormitory-accommodation': [3, 'unknown'],
+      'japanese-proficiency': [3, 'unknown'], 'jlpt-level': [6, 'unknown'], 'studied-japanese': [2, 'unknown'],
     }],
+    ['bst-inquire.html', {
+      'student[field_attributes][234537]': [2, 'unknown'],
+      'student[gender]': [2, 'gender'],
+    }],
+    ['isi-contact.html', { Residence_in_Japan: [2, 'unknown'], Preferred_Study_Duration: [3, 'unknown'] }],
+    ['kigakuen-briefing.html', { field_5969379: [1, 'unknown'], field_5969384: [2, 'gender'], field_5969388: [2, 'unknown'] }],
   ];
-  it('restored radio groups are one field per name and stay unclassified', async () => {
+  it('restored radio groups are one field per name with pinned categories', async () => {
     for (const [file, groups] of radioGroups) {
       document.body.innerHTML = new DOMParser().parseFromString(corpusEntry(file).html, 'text/html').body.innerHTML;
       const radios = scanFields(document.body).filter((f) => f.meta.tag === 'radio');
       expect(radios.map((r) => r.meta.name)).toEqual(Object.keys(groups));
-      for (const r of radios) expect(r.meta.options.length).toBe(groups[r.meta.name]!);
+      for (const r of radios) expect(r.meta.options.length).toBe(groups[r.meta.name]![0]);
       const items = await classifyAll(radios.map((r) => r.meta), null, {
         englishPage: isEnglishPageText(document.body.textContent ?? ''),
       });
-      expect(items.map((i) => i.cls.category)).toEqual(radios.map(() => 'unknown'));
+      expect(items.map((i) => i.cls.category)).toEqual(radios.map((r) => groups[r.meta.name]![1]));
     }
+  });
+  it('bst-inquire.html fills the in-scope fields', async () => {
+    expect(await planFor('bst-inquire.html')).toEqual(expectedFor('bst-inquire.html'));
+  });
+  it('isi-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('isi-contact.html')).toEqual(expectedFor('isi-contact.html'));
+  });
+  it('ois-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('ois-contact.html')).toEqual(expectedFor('ois-contact.html'));
+  });
+  it('kigakuen-briefing.html fills the in-scope fields', async () => {
+    expect(await planFor('kigakuen-briefing.html')).toEqual(expectedFor('kigakuen-briefing.html'));
+  });
+  it('seedome-openschool.html fills the in-scope fields', async () => {
+    expect(await planFor('seedome-openschool.html')).toEqual(expectedFor('seedome-openschool.html'));
   });
 });

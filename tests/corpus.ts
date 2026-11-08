@@ -421,6 +421,160 @@ const LEDGER = {
       t1: '090', t2: '1234', t3: '5678', m: 'yamada@example.com',
     },
   },
+  'bst-inquire.html': {
+    expected: {
+      'student[parent][0][last_name]': 'Yamada',
+      'student[parent][0][first_name]': 'Taro',
+      // The honeypot rides the nearby Email Address label exactly as on the
+      // real page, so it classifies as email and fills (future honeypot
+      // exclusion candidate; pinned honest, not as desired behavior).
+      'fake_email[]': 'yamada@example.com',
+      'student[parent][0][email]': 'yamada@example.com',
+      'student[parent][0][field_attributes][75]': '09012345678',
+      'student[last_name]': 'Yamada',
+      'student[first_name]': 'Taro',
+      // Middle Name(s) reads as a full romaji name (same as the Nishimachi
+      // Nickname precedent: no middle-name vocabulary yet).
+      'student[field_attributes][6]': 'Taro Yamada',
+      'student[preferred_name]': 'Taro Yamada',
+      // Gender values are numeric (Male=1/Female=0); the English alias
+      // resolves Female against 女性 through the wrapping labels (PBI-212).
+      'student[gender]': '0',
+      'student[birth_date]': '1990-05-07',
+      // Applicant's Current School/Preschool reads as the school vocabulary
+      // (PBI-212 Institution), same as the GIS name-institution row.
+      'student[field_attributes][17]': '都立日比谷高校',
+    },
+    excluded: [
+      'student[parent][0][field_attributes][35477] (select): Title, stays unclassified (LLM fallback)',
+      'student[parent][0][parent_role] (select): Relation to Child, stays unclassified (LLM fallback)',
+      'student[parent][0][field_attributes][84]/[85] (select): 1st/2nd Nationality, stay unclassified (LLM fallback)',
+      'student[field_attributes][234537] (radio): passport Yes/No, bundled per name; stays unclassified (radio policy)',
+      'student[field_attributes][231630] (select): Current Place of Residence country list, stays unclassified (LLM fallback)',
+      'student[enrollment_year]/[grade]/[221734]/[campus_id]/[221735] (select): entry year/group/term/campus/reason, stay unclassified (LLM fallback)',
+      'student[field_attributes][231629]/[124830] (text): Please specify/Current Year Group, stay unclassified (LLM fallback)',
+      'student[field_attributes][374968]/[374969] (select): referral source selects, stay unclassified (LLM fallback)',
+      'student[parent][1][*] second guardian block: duplicate of the parent block above, trimmed (exclude)',
+      'student[parent][0][password]/[password_confirmation]/fake_input[] (password): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'student[parent][0][notification]/[loginable] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'authenticity_token/convert_token/idempotency_key/trap_input (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'commit/multi (submit): action element, never a fill target (exclude)',
+    ],
+  },
+  'isi-contact.html': {
+    expected: {
+      'Last_Name': 'Yamada',
+      'First_Name': 'Taro',
+      'Email': 'yamada@example.com',
+      'Phone': '090-1234-5678',
+    },
+    excluded: [
+      'pardot_extra_field (text): offscreen honeypot with its own Comments label, stays unclassified (LLM fallback)',
+      'SNS/SNS_Id (text): messaging-app handles, no profile value, stay unclassified (LLM fallback)',
+      'Nationality (text): readonly country picker, stays unclassified (LLM fallback)',
+      'Residence_in_Japan (radio): Yes/No, bundled per name; stays unclassified (radio policy)',
+      'Preferred_Study_Duration (radio): Short-term/Long-term/Undecided, bundled per name; stays unclassified (radio policy)',
+      'Purpose_of_Inquiry/Referral_Source (select): stripped options, stay unclassified (LLM fallback)',
+      'Preferred_Intake/Japanese_Learning_History/Educational_Background (select): conditional application blocks hidden until Purpose selects application, trimmed (exclude)',
+      'Preferred_School/Topics_of_Interest (checkbox): conditional blocks hidden until Purpose selects application, out of scope (skip fixed)',
+      'Agent_Name/Other_reason (text): conditional inputs hidden until Referral selects agency/other, trimmed (exclude)',
+      'interested_in_JUQ/Individual_Agency (radio): language-gated disabled blocks, trimmed (exclude)',
+      'Inquries_Details (textarea): conditional block hidden until Purpose selects application, not scanned (scan covers text/email/tel/search + select; exclude)',
+      'form_language/utm_*/Country_Id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
+  'ois-contact.html': {
+    expected: {
+      'form_fields[name]': '山田 太郎',
+      // The two identical フリガナ labels split first→last / second→first
+      // through the same-label path (parent kana rides lastNameKana here).
+      'form_fields[field_6664910]': 'ヤマダ',
+      'form_fields[field_9405afa]': '山田 太郎',
+      'form_fields[field_958d73c]': 'タロウ',
+      'form_fields[field_23b7625]': '女',
+      'form_fields[zipcode]': '1000001',
+      'form_fields[adress]': '東京都千代田区千代田1-1 千代田ビル101',
+      'form_fields[field_ac345c0]': 'yamada@example.com',
+      'form_fields[field_0187ee9]': '09012345678',
+    },
+    excluded: [
+      's (text) x2: site-search fields, stay unclassified (same as forum.html)',
+      'cname2/cname3 child blocks (text + furigana + gender select + date): duplicates of the first child block, trimmed (exclude)',
+      'form_fields[field_9820c13] (date): 生年月日, not scanned (scan covers text/email/tel/search + select; exclude)',
+      'form_fields[field_d05b167] (text): Fax, no profile value, stays unclassified (LLM fallback)',
+      'form_fields[field_ea27631] (text): 紹介者名, stays unclassified (LLM fallback)',
+      'form_fields[field_3ff6f09][] (checkbox): お問い合わせ学部、コース, out of scope (skip fixed)',
+      'form_fields[field_7972aa4][] (checkbox): お問い合わせ項目, out of scope (skip fixed)',
+      'form_fields[field_1ede2d6][] (checkbox): どのようにしてOISをお知りになりましたか？, out of scope (skip fixed)',
+      'form_fields[field_7ae0589] (textarea): お問合せ内容, not scanned (scan covers text/email/tel/search + select; exclude)',
+      'user_name/user_email/user_login (login/register/reset modals): separate forms, trimmed (exclude)',
+      'user_password (password): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'post_id/form_id/referer_title/queried_id/request_type/redirect/nonce (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
+  'kigakuen-briefing.html': {
+    expected: {
+      field_5969382_sei: '山田',
+      field_5969382_mei: '太郎',
+      // The child furigana pair classifies as lastName/firstName (kanji) but
+      // the real katakana-only pattern rejects the kanji plan, so the rows
+      // turn warn-pattern and stay unfilled (PBI-210 semantics, verified by
+      // stripping the pattern). Legend-aware kana classification is the
+      // vocabulary candidate, same shape as library-theater-apply.
+      field_5969384: '1',
+      field_5969385_y: '1990',
+      field_5969387: '都立日比谷高校',
+      field_5969390_sei: '山田',
+      field_5969390_mei: '太郎',
+      field_5969391_zip1: '100',
+      field_5969391_zip2: '0001',
+      field_5969391_pref: '東京都',
+      field_5969391_city: '千代田区',
+      field_5969391_block: '千代田1-1',
+      field_5969391_building: '千代田ビル101',
+      field_5969392_1: '090',
+      field_5969392_2: '1234',
+      field_5969392_3: '5678',
+      field_5969393: 'yamada@example.com',
+      field_5969393_mcon: 'yamada@example.com',
+    },
+    excluded: [
+      'field_5969379 (radio): 実施教室 single option, bundled per name; stays unclassified (radio policy)',
+      'field_5970949 (select): ご来場者数, stays unclassified (LLM fallback)',
+      'field_5969383_sei/mei (text): お子さまのフリガナ, plan blocked by the real katakana pattern (warn-pattern, see expected comment)',
+      'field_5969385_m/_d (select): only a `--` option, correctly warn-no-option',
+      'field_5969386 (select): お子さまの学年, stays unclassified (LLM fallback)',
+      'field_5969388 (radio): 兄弟姉妹 有り/無し, bundled per name; stays unclassified (radio policy)',
+      'field_5969389 (select): 兄弟姉妹学年, stays unclassified (LLM fallback)',
+      'field_5969394 (select): 最寄りの教室, stays unclassified (LLM fallback)',
+      'field_5969395 (select): きっかけ, stays unclassified (LLM fallback)',
+      'field_5969396/5969397/5969398 (text): conditional detail fields, stay unclassified (LLM fallback)',
+      'field_6523584[1] (checkbox): 実施日・時間, out of scope (skip fixed)',
+      'field_5969401[0] (checkbox): 個人情報の取扱いへの同意, out of scope (skip fixed)',
+      'field_5969379/5969384/5969388/6523584 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+      'validated (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
+  'seedome-openschool.html': {
+    expected: {
+      field_1325704_sei: '山田',
+      field_1325704_mei: '太郎',
+      field_1325703: 'yamada@example.com',
+      field_5857817_1: '090',
+      field_5857817_2: '1234',
+      field_5857817_3: '5678',
+    },
+    excluded: [
+      'field_5857810 (text): 参加人数 子どもの年齢, no profile value, stays unclassified (LLM fallback)',
+      'field_1367629[0]/[1] (checkbox): ご希望日 10/24・11/14, out of scope (skip fixed)',
+      'field_7605026[0..6] (checkbox): 説明会参加の目的 7 options, out of scope (skip fixed)',
+      'field_1367629/7605026 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_1325701 (textarea): あなたのことを教えてください, not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+      'validated (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

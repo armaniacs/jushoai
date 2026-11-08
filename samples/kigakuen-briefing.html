@@ -1,0 +1,138 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://business.form-mailer.jp/fms/08ca15c3348737
+  (希学園 学校説明会お申し込みフォーム, Japanese cram school briefing).
+  Field ids, names, fieldset/legend groups, and control kinds mirror the real
+  page. The data-pattern="1" markers on plain text fields are form-mailer
+  internals without a real pattern attribute and are dropped; the katakana
+  field keeps its real pattern, and zip/tel keep their real digit patterns.
+  Selects without profile-meaningful values (来場者数, 教室, 学年, きっかけ)
+  keep only the empty option; the prefecture select keeps real name values.
+  The date checkboxes (実施日・時間) stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>希学園 学校説明会申込 (school)</title>
+<form>
+  <div role="group" data-fieldset-label="実施教室">
+    <legend>実施教室</legend>
+    <label for="field_5969379_0"><input id="field_5969379_0" name="field_5969379" type="radio" value="0">三田教室 札の辻スクエア</label>
+  </div>
+  <div role="group" data-fieldset-label="ご来場者数">
+    <legend>ご来場者数</legend>
+    <label for="field_5970949">ご来場者数</label>
+    <select id="field_5970949" name="field_5970949"><option value="">--</option></select>
+  </div>
+  <div role="group" data-fieldset-label="お子さまのお名前">
+    <legend>お子さまのお名前</legend>
+    <label for="field_5969382_sei">名前の姓</label>
+    <input id="field_5969382_sei" name="field_5969382_sei" type="text" value="" placeholder="姓" autocomplete="family-name">
+    <label for="field_5969382_mei">名前の名</label>
+    <input id="field_5969382_mei" name="field_5969382_mei" type="text" value="" placeholder="名" autocomplete="given-name">
+  </div>
+  <div role="group" data-fieldset-label="お子さまのフリガナ">
+    <legend>お子さまのフリガナ</legend>
+    <label for="field_5969383_sei">名前の姓</label>
+    <input id="field_5969383_sei" name="field_5969383_sei" type="text" value="" placeholder="姓" pattern="^[\u2015\u3000\u30A1-\u30F6\u30FB-\u30FE]+$" autocomplete="family-name">
+    <label for="field_5969383_mei">名前の名</label>
+    <input id="field_5969383_mei" name="field_5969383_mei" type="text" value="" placeholder="名" pattern="^[\u2015\u3000\u30A1-\u30F6\u30FB-\u30FE]+$" autocomplete="given-name">
+  </div>
+  <div role="group" data-fieldset-label="お子さまの性別">
+    <legend>お子さまの性別</legend>
+    <label for="field_5969384_0"><input id="field_5969384_0" name="field_5969384" type="radio" value="0">男</label>
+    <label for="field_5969384_1"><input id="field_5969384_1" name="field_5969384" type="radio" value="1">女</label>
+  </div>
+  <div role="group" data-fieldset-label="生年月日">
+    <legend>生年月日</legend>
+    <label for="field_5969385_y">生年月日の年</label>
+    <input id="field_5969385_y" name="field_5969385_y" type="text" value="" placeholder="2000" pattern="^\d+$">
+    <label for="field_5969385_m">生年月日の月</label>
+    <select id="field_5969385_m" name="field_5969385_m"><option value="">--</option></select>
+    <label for="field_5969385_d">生年月日の日</label>
+    <select id="field_5969385_d" name="field_5969385_d"><option value="">--</option></select>
+  </div>
+  <div role="group" data-fieldset-label="お子さまの学年">
+    <legend>お子さまの学年</legend>
+    <label for="field_5969386">お子さまの学年</label>
+    <select id="field_5969386" name="field_5969386"><option value="">--</option></select>
+  </div>
+  <div role="group" data-fieldset-label="お子さまの在籍小学校名">
+    <legend>お子さまの在籍小学校名</legend>
+    <label for="field_5969387">お子さまの在籍小学校名</label>
+    <input id="field_5969387" name="field_5969387" type="text" value="">
+  </div>
+  <div role="group" data-fieldset-label="希学園塾生に兄弟姉妹">
+    <legend>希学園塾生に兄弟姉妹</legend>
+    <label for="field_5969388_0"><input id="field_5969388_0" name="field_5969388" type="radio" value="0">有り</label>
+    <label for="field_5969388_1"><input id="field_5969388_1" name="field_5969388" type="radio" value="1">無し</label>
+  </div>
+  <div role="group" data-fieldset-label="希学園塾生に兄弟姉妹（有り）学年">
+    <legend>希学園塾生に兄弟姉妹（有り）学年</legend>
+    <label for="field_5969389">希学園塾生に兄弟姉妹（有り）学年</label>
+    <select id="field_5969389" name="field_5969389"><option value="">--</option></select>
+  </div>
+  <div role="group" data-fieldset-label="保護者さまのお名前">
+    <legend>保護者さまのお名前</legend>
+    <label for="field_5969390_sei">名前の姓</label>
+    <input id="field_5969390_sei" name="field_5969390_sei" type="text" value="" placeholder="姓" autocomplete="family-name">
+    <label for="field_5969390_mei">名前の名</label>
+    <input id="field_5969390_mei" name="field_5969390_mei" type="text" value="" placeholder="名" autocomplete="given-name">
+  </div>
+  <div role="group" data-fieldset-label="住所">
+    <legend>住所</legend>
+    <label for="field_5969391_zip1">郵便番号の上3桁</label>
+    <input id="field_5969391_zip1" name="field_5969391_zip1" type="text" value="" placeholder="000" pattern="^\d{3}$">
+    <label for="field_5969391_zip2">郵便番号の下4桁</label>
+    <input id="field_5969391_zip2" name="field_5969391_zip2" type="text" value="" placeholder="0000" pattern="^\d{4}$">
+    <label for="field_5969391_pref">都道府県</label>
+    <select id="field_5969391_pref" name="field_5969391_pref" autocomplete="address-level1">
+      <option value="">選択してください</option>
+      <option value="東京都">東京都</option>
+      <option value="大阪府">大阪府</option>
+      <option value="その他">その他</option>
+    </select>
+    <label for="field_5969391_city">市区町村</label>
+    <input id="field_5969391_city" name="field_5969391_city" type="text" value="" autocomplete="address-level2">
+    <label for="field_5969391_block">番地</label>
+    <input id="field_5969391_block" name="field_5969391_block" type="text" value="" autocomplete="address-line1">
+    <label for="field_5969391_building">マンション・ビル名</label>
+    <input id="field_5969391_building" name="field_5969391_building" type="text" value="" autocomplete="address-line2">
+  </div>
+  <div role="group" data-fieldset-label="電話番号">
+    <legend>電話番号</legend>
+    <label for="field_5969392_1">電話番号の市外局番</label>
+    <input id="field_5969392_1" name="field_5969392_1" type="tel" value="" placeholder="090" pattern="^\d+$">
+    <label for="field_5969392_2">電話番号の市内局番</label>
+    <input id="field_5969392_2" name="field_5969392_2" type="tel" value="" placeholder="0000" pattern="^\d+$">
+    <label for="field_5969392_3">電話番号の加入者番号</label>
+    <input id="field_5969392_3" name="field_5969392_3" type="tel" value="" placeholder="0000" pattern="^\d+$">
+  </div>
+  <label for="field_5969393">Ｅ-mail</label>
+  <input id="field_5969393" name="field_5969393" type="email" value="" placeholder="info@example.com">
+  <label for="field_5969393_mcon">Ｅ-mailの確認用</label>
+  <input id="field_5969393_mcon" name="field_5969393_mcon" type="email" value="" placeholder="確認用">
+  <div role="group" data-fieldset-label="最寄りの教室">
+    <legend>最寄りの教室</legend>
+    <label for="field_5969394">最寄りの教室</label>
+    <select id="field_5969394" name="field_5969394"><option value="">--</option></select>
+  </div>
+  <div role="group" data-fieldset-label="今回のイベントを何でお知りになりましたか？">
+    <legend>今回のイベントを何でお知りになりましたか？</legend>
+    <label for="field_5969395">今回のイベントを何でお知りになりましたか？</label>
+    <select id="field_5969395" name="field_5969395"><option value="">--</option></select>
+  </div>
+  <label for="field_5969396">「他のウェブサイト」を選択した方</label>
+  <input id="field_5969396" name="field_5969396" type="text" value="">
+  <label for="field_5969397">「友人・知人からの紹介」を選択した方</label>
+  <input id="field_5969397" name="field_5969397" type="text" value="">
+  <label for="field_5969398">今回のイベントを何でお知りになりましたか？（その他）</label>
+  <input id="field_5969398" name="field_5969398" type="text" value="">
+<!-- skip: field_6523584[1] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_6523584[1] (checkbox): 実施日・時間 11月19日(木)11:00～11:45 大妻中学校, out of scope (skip fixed) -->
+<!-- skip: field_5969379 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_5969384 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_5969388 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_5969401[0] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_5969401[0] (checkbox): 個人情報の取扱いへの同意, out of scope (skip fixed) -->
+<!-- skip: submit (submit): action element, never a fill target (exclude) -->
+<!-- skip: validated (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
+</html>

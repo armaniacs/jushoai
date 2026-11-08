@@ -1,0 +1,55 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://ssl.form-mailer.jp/fms/b2c99844164312
+  (シードーム オープンスクール＆説明会お申込フォーム, alternative school).
+  Field ids, names, labels, and control kinds mirror the real page. The
+  data-pattern="1" markers on plain text fields are form-mailer internals
+  without a real pattern attribute and are dropped; zip/tel keep their real
+  digit patterns. The date checkboxes (ご希望日) and purpose checkboxes
+  (説明会参加の目的) stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>シードーム オープンスクール申込 (school)</title>
+<form>
+  <div role="group" data-fieldset-label="お名前">
+    <legend>お名前</legend>
+    <label for="field_1325704_sei">名前の姓</label>
+    <input id="field_1325704_sei" name="field_1325704_sei" type="text" value="" placeholder="姓" autocomplete="family-name">
+    <label for="field_1325704_mei">名前の名</label>
+    <input id="field_1325704_mei" name="field_1325704_mei" type="text" value="" placeholder="名" autocomplete="given-name">
+  </div>
+  <label for="field_1325703">メールアドレス</label>
+  <input id="field_1325703" name="field_1325703" type="email" value="" placeholder="info@example.com">
+  <div role="group" data-fieldset-label="携帯電話番号">
+    <legend>携帯電話番号</legend>
+    <label for="field_5857817_1">携帯電話番号の市外局番</label>
+    <input id="field_5857817_1" name="field_5857817_1" type="tel" value="" placeholder="090" pattern="^\d+$">
+    <label for="field_5857817_2">携帯電話番号の市内局番</label>
+    <input id="field_5857817_2" name="field_5857817_2" type="tel" value="" placeholder="0000" pattern="^\d+$">
+    <label for="field_5857817_3">携帯電話番号の加入者番号</label>
+    <input id="field_5857817_3" name="field_5857817_3" type="tel" value="" placeholder="0000" pattern="^\d+$">
+  </div>
+  <label for="field_5857810">参加人数 子どもの年齢</label>
+  <input id="field_5857810" name="field_5857810" type="text" value="">
+<!-- skip: field_1367629[0] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_1367629[0] (checkbox): ご希望日 10/24, out of scope (skip fixed) -->
+<!-- skip: field_1367629[1] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_1367629[1] (checkbox): ご希望日 11/14, out of scope (skip fixed) -->
+<!-- skip: field_7605026[0] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[0] (checkbox): 説明会参加の目的 子どもの居場所を探している, out of scope (skip fixed) -->
+<!-- skip: field_7605026[1] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[1] (checkbox): 説明会参加の目的 シードームのサポーターになりたい, out of scope (skip fixed) -->
+<!-- skip: field_7605026[2] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[2] (checkbox): 説明会参加の目的 サドベリースクールをつくりたい 研究したい, out of scope (skip fixed) -->
+<!-- skip: field_7605026[3] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[3] (checkbox): 説明会参加の目的 将来の子育てに活かしたい, out of scope (skip fixed) -->
+<!-- skip: field_7605026[4] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[4] (checkbox): 説明会参加の目的 今の教育に疑問を持っている, out of scope (skip fixed) -->
+<!-- skip: field_7605026[5] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[5] (checkbox): 説明会参加の目的 興味があるので話を聞きたい, out of scope (skip fixed) -->
+<!-- skip: field_7605026[6] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: field_7605026[6] (checkbox): 説明会参加の目的 その他, out of scope (skip fixed) -->
+<!-- skip: field_1325701 (textarea): 任意 あなたのことを教えてください, not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: submit (submit): action element, never a fill target (exclude) -->
+<!-- skip: validated (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
+</html>

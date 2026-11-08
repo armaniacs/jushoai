@@ -86,3 +86,36 @@ Scenario: pin 更新を忘れると評価が落ちる
 - 所属（会社・団体・学校等）のような複合ラベルは office 前処理の意図どおり未分類
 
 検証: make test 全緑（samples.test.ts に 5 ケース追加）、make eval 緑（pin 更新後）、privacy test（ページ文字列が報告行に出ない・1 行 200 バイト以内）緑のまま。
+
+## 実装記録（Task 3・2026-11-09、第3トランチ 5 fixture）
+
+主軸 (a) 学校・教育問い合わせの語彙化、副軸 (b) 海外フォーム継続で 5 件を `make addurl` で取り込んだ。URL は Bing 検索と DuckDuckGo で選び、取得前に curl で実フォームの有無を確認した。
+
+取り込んだ URL と fixture:
+- https://www.bst.ac.jp/inquire → samples/bst-inquire.html（BST 帰国子女系入学 inquiry。OpenApply ROI 静的フォーム。保護者 Surname/Forename/Email/Mobile、児童 Surname/Forename/Middle/Preferred name、Gender radio（値は 1/0）、Date of Birth、Applicant's Current School/Preschool、passport Yes/No radio）
+- https://www.isi-education.com/contact/ → samples/isi-contact.html（ISI 日本語学校 contact。Pardot + WOVN 日英併記。ローマ字氏名/Email/Phone、SNS、Nationality、Residence 在日 radio、Study Duration radio、Purpose/Referral select。条件表示ブロックは既定非表示のため削り、zh 限定 disabled radio は除外）
+- https://www.ois.ac.jp/contact → samples/ois-contact.html（大阪系インター inquiry。Elementor。保護者名前/フリガナ、子1 名前/フリガナ/性別 select、郵便番号、住所、E-mail、Tel、Fax、紹介者名。子2/3 ブロックと login 系 modal は別フォームのため削り）
+- https://business.form-mailer.jp/fms/08ca15c3348737 → samples/kigakuen-briefing.html（希学園 学校説明会申込。実施教室 radio、来場者数、子 名前/フリガナ/性別 radio（男/女）/生年月日/学年/在籍小学校名、兄弟姉妹 radio、保護者名、住所、電話 3 欄、email 確認付き）
+- https://ssl.form-mailer.jp/fms/b2c99844164312 → samples/seedome-openschool.html（シードーム オープンスクール申込。名前、email、携帯 3 欄、参加人数 子どもの年齢。ご希望日と参加目的の checkbox 群は skip）
+
+選定時に落とした URL:
+- https://www.asij.ac.jp/contact、https://yis.ac.jp/contact/、https://www.seisen.com/contact、https://www.smis.ac.jp/contact: 検索フォームしかない
+- https://www.tuj.ac.jp/contact: 可視欄は検索窓のみ（30 input は hidden）
+- https://www.caj.ac.jp/contact-us、https://www.giis.ac.jp/contact、https://www.kist.ed.jp/admissions/inquiry、https://www.horizon.ac.jp/admissions/inquiry: 到達不能または JS のみ
+- https://www.montessorijapan.com/contact、https://www.marist.ac.jp/contact、https://www.bst.ac.jp/contact-us: 静的だが 2-4 欄と小さいため予備に残した
+- 同系の form-mailer 学校説明会（1b86e5a6、9c708bda、e261e643）は到達確認済みの予備
+
+指標の変化（make eval、pin 更新済み）:
+- 直前の pin: 203/61/125、refineChanged 28、refineDropped 0（fixtures 27、fields 261、corpus.eval.ts 実測と一致）
+- 実測: 259/94/162、refineChanged 39、refineDropped 0（fixtures 32、fields 350）
+- 新 5 件の内訳: bst-inquire 14/13/10、isi-contact 5/7/4、kigakuen-briefing 22/10/11（refineChanged +6）、ois-contact 9/2/6（refineChanged +2）、seedome-openschool 6/1/6（refineChanged +3）。合計 +56/+33/+37、refineChanged +11 で集計と完全一致
+- in-scope 密度はいずれも高く、richell のような 0 件枠なし（ois 9/11、seedome 6/7、kigakuen 22/32）
+
+語彙の伸びしろ（今回 pin した未分類と挙動は語彙追加の候補、src 変更なし）:
+- BST の fake_email ハニーポットが nearby の Email Address ラベルに付いて email 分類され fill する（実ページどおりの構造。ハニーポット除外は将来 PBI の候補）
+- 希学園の子フリガナ対は lastName/firstName 分類だが実カタカナ pattern が漢字 plan を warn-pattern で止めて未注入（PBI-210 どおり。pattern を外すと注入されることを確認済み。legend 参照のカナ分類が語彙候補、library-theater と同形）
+- BST の Middle Name(s) と Preferred name は fullName に載る（nickname 語彙なし、Nishimachi の Nickname 前例と同形）
+- BST の Current Place of Residence、国籍 select 群、Title/Relation、ISI の SNS/Nationality/Purpose/Referral、OIS の Fax/紹介者名はいずれも未分類のまま（LLM fallback）
+- OIS の同一フリガナ 2 欄は same-label 分割で親ヤマダ/子タロウに分かれる（pin 済み）
+
+検証: make test 全緑（174 files、2271 passed、samples.test.ts 36 tests。radio 表は分類つき [件数, 分類] 形式に拡張し BST/Kigakuen の gender 解決も pin）、make eval 緑（pin 更新後、privacy と no-network 含む 3 tests）、make check exit 0。
