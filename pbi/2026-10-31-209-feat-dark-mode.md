@@ -148,4 +148,26 @@ dark パネル背景 #212530（相対輝度 0.019）に対する文字色のコ�
 
 修正後の検証: npx vitest run tests/ui/overlay.test.ts（8 テスト green）、make test（174 ファイル 2236 テスト、2235 green、expected fail 1 件は従来どおり）、make check（exit 0）、`HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome`（24/24 green、scenarios.ts:396 の rgba assert を含む）。
 
+### Task 2 (2026-11-09)
+
+コード確認結果:
+- src/ui/overlay.ts: shadow root 内の :host に共通トークン 15 個の light 既定値を定義し、1 つ目の @media (prefers-color-scheme: dark) で 11 個を上書きしている。light 既定値は PBI 以前の hex と同一で変更なし。
+- src/ui/overlay.ts: 順序規約あり。2 つ目の @media (prefers-color-scheme: dark) ブロックが .panel ルールより後にあり、.panel の color-scheme: dark 上書きが light の color-scheme: light より後に勝つ配置。レビュー対応済みの位置。
+- src/ui/button.ts: 独立した shadow root のため :host にバナー専用トークン 4 個 (banner-bg / banner-bg-active / banner-error-bg / banner-fg) を定義し、@media (prefers-color-scheme: dark) で bg と bg-active の 2 個を上書きしている。.wrap と .badge は var() 参照で、固定 hex の残存なし。
+
+手動確認の実施可否:
+- 未実施。本セッションでは OS の light/dark 切替と実ブラウザでの目視、DevTools でのコントラスト実測ができないため。推測で受け入れ基準の [x] 化はしない。
+- 受け入れ基準のうち [ ] のまま残すもの: floating button バナーの dark 描画、dark 版コントラストの WCAG AA 実測。DoD の BDD・レビュー・文書も [ ] のまま。
+
+AA 計算値 (実装記録の再掲、実測は未確定):
+- dark パネル背景 #212530 に対して panel-fg #e8eaf0 は 12.7:1、muted #a3abbd は 6.7:1、danger #ff8a80 は 6.7:1、warn #ffb74d は 8.8:1、primary #2457d6 の白文字は 6.2:1、ai-bg #8a4fd6 の白文字は 5.0:1。
+- dark バナー既定 rgba(28, 45, 100, 0.9) の白文字は白ページ合成で 9.7:1、黒ページ合成で 13.9:1。hover / focus / active の #1e3a8a は 10.4:1。エラーバッジ #b3261e の白文字は 6.6:1。
+- 実測欄: 未記入 (手動 3 で記入する)。
+
+ユーザー作業として残す手順 (手動 1 -> 3 -> 2 の順):
+1. 手動 1: macOS をダークに切り替えて make dev を実行し、samples/split-form.html を開いて「JushoAI で入力」を押す。期待はプレビュー背景 #212530・文字 #e8eaf0、select と checkbox も dark 描画、バナーは暗青 rgba(28, 45, 100, 0.9) で hover / focus / active は #1e3a8a、エラーバッジは #b3261e のまま白文字が読めること。
+2. 手動 3: 手動 1 の状態で DevTools のコントラスト表示等で dark パネルと dark バナーの文字色を実測し、上記計算値の欄に実測値を追記して 4.5:1 以上を確認する。
+3. 手動 2: macOS をライトに戻して同じ手順を実行し、白パネル・primary #2457d6・バナー rgba(36, 87, 214, 0.9) が本 PBI 以前と同一であることを確認する。
+4. 記録: 実測値を本 PBI の実測欄に追記し、基準 3・4 と DoD を順に [x] 化する。
+
 台帳注記（2026-10-31、なぜなぜ分析の合意実行）: 受け入れ基準のうちテストとレビューで検証済みのものを [x] 化した（token 定義・dark パレット定義・button.test.ts の色 assert・scenarios.ts:396 の影響確認・light モード不変・make check）。floating button バナーの dark 描画と dark 版コントラストの AA 実測は dark OS での目視確認のため [ ] のまま残す（手動確認 1 と 3、ユーザー作業）。light モードの samples 目視（基準 7）は light 既定値の pin とレビュー確認で [x] 化し、OS での目視再確認は手動確認 2 に残す。
