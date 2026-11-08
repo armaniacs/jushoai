@@ -75,7 +75,7 @@ npx vitest run tests/core/classify-rules.test.ts -t 'gender'
 - 語彙追加は make eval の指標（ruleHits・unknowns・fillable）を動かす。pin 更新を片方だけ直すと pin の食い違いが持ち越される
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 

@@ -73,7 +73,7 @@ grep -rn 'radio' samples/richell-anketo-rating.html samples/library-theater-appl
 - label 包みの構造は formmailer-anketo-gender.html どおりに。hidden の request-parameter-default-empty は送信用のため除外（走査除外政策どおり）。checkbox は skip 固定のまま崩さない
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 

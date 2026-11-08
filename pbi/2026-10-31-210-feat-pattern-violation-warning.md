@@ -76,9 +76,9 @@ grep -rn "warn-maxlength" src/ tests/
 - preview の警告文言は maxlength 超過の行と混ざって読めること。行順・調子は既存の warn 行（warn-no-option など）に寄せる
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
 
