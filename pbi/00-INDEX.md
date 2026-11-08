@@ -6,9 +6,9 @@
 - `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
 - `2026-10-31-205-fix-privacy-article-dns-rebinding.md`（順位 2。RICE 50。記事に DNS rebinding 注意書きを1文。206 と同時に1コミット）
 - `2026-10-31-206-fix-privacy-article-audit-retention.md`（順位 2。RICE 50。記事に監査ログ保持期間を1文。205 と同時に1コミット）
-- `2026-10-31-207-feat-pr-template.md`（順位 4。RICE 16。`.github/PULL_REQUEST_TEMPLATE.md` 1枚、日本語のみ）
-- `2026-10-31-208-feat-samples-corpus-growth.md`（順位 5。RICE 8。継続作業の初回トランチ 5 fixture）
-- `2026-10-31-209-feat-dark-mode.md`（順位 6。RICE 6.4。content UI の auto-follow のみ。手動切替は別 PBI）
+- `2026-10-31-207-feat-pr-template.md`（残務記録済み（f4fe570・レビュー1件反映）。静的3点pass、BDD全自動化の断念記録、目視はpush後ユーザー作業）
+- `2026-10-31-208-feat-samples-corpus-growth.md`（第3トランチ実装済み（2ad7a2d・レビュー承認）。32 fixture/350 fields・259/94/162・refine+11、既存27行無変更。honest pin、honeypot除外は将来PBI候補）
+- `2026-10-31-209-feat-dark-mode.md`（残務記録済み（7637081・レビュー承認）。コード確認済みsrc無変更、手動1-3はOS切替要のためユーザー作業）
 - `2026-10-31-210-feat-pattern-violation-warning.md`（実装済み（b57b19c・レビュー承認・構造ゲート KEEP）。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
 - `2026-10-31-211-feat-corpus-radio-restore.md`（実装済み（e9bfc0f・レビュー承認・kosodate 逸脱 Keep）。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
 - `2026-10-31-212-feat-english-form-vocabulary.md`（実装済み（402def7・レビュー承認・PBI-following 判定）。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）

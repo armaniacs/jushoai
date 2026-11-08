@@ -33,11 +33,11 @@ Scenario: pin 更新を忘れると評価が落ちる
   Then pin が合わず評価が RED になり、fixture 追加のたびに pin 更新が必須だと分かる
 
 ## 受け入れ基準
-- [ ] 初回トランチとして samples/ に 5 fixture 程度を追加する。target-URL 由来は make addurl の手順どおり tests/target-url.md に登録し、samples.test.ts にケースを配線する
-- [ ] 各 fixture は最小再現まで削り、in-scope の欄に期待値を埋めてテストを緑にする（radio は name 単位で 1 欄に束ね、性別・年代のみ分類、checkbox は skip 固定のまま崩さない）
-- [ ] fixture 追加と語彙追加に合わせて tests/eval/corpus.eval.ts の pin を更新し、make eval が緑になる（劣化した指標は放置しない）
-- [ ] 追加する fixture は de-identified のみで、privacy test がパスする
-- [ ] make check が exit 0
+- [x] 初回トランチとして samples/ に 5 fixture 程度を追加する。target-URL 由来は make addurl の手順どおり tests/target-url.md に登録し、samples.test.ts にケースを配線する
+- [x] 各 fixture は最小再現まで削り、in-scope の欄に期待値を埋めてテストを緑にする（radio は name 単位で 1 欄に束ね、性別・年代のみ分類、checkbox は skip 固定のまま崩さない）
+- [x] fixture 追加と語彙追加に合わせて tests/eval/corpus.eval.ts の pin を更新し、make eval が緑になる（劣化した指標は放置しない）
+- [x] 追加する fixture は de-identified のみで、privacy test がパスする
+- [x] make check が exit 0
 
 ## 実装手順
 - 台帳から URL を選び make addurl URL=<url> で取り込む（登録・取得・雛形生成・テスト配線まで 1 コマンド）。人は最小再現まで削って期待値を埋めるだけ
@@ -55,9 +55,9 @@ Scenario: pin 更新を忘れると評価が落ちる
 1（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
 
