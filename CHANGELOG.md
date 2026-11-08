@@ -4,6 +4,12 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [Unreleased]
+
+### Added
+
+- samples corpus に実ページの fixture 5 件（英文入学相談・日英併記の学校連絡・インター校相談・学校説明会申込・オープンスクール申込）を追加し、ルール語彙の伸びしろを測れる形にする
+
 ## [0.1.30] - 2026-11-01
 
 ### Added
