@@ -63,3 +63,12 @@ Scenario: テンプレが実 PR の運用と一致する
 - 文字種は CP932 の範囲内（docs-charset のチェックスクリプトで本テンプレと本 PBI の両方を検証し `OK: no out-of-range characters` を確認）。EM DASH（U+2014）は使わず、波ダッシュも避けた
 - 既存の ISSUE_TEMPLATE・workflows には触れていない
 - 残タスク: push 後に新規 PR 作成画面でテンプレが効くことの目視確認（自動テストでは担保できないため受入基準・DoD を未チェックのまま残す）
+
+## 実装記録（2026-11-09 Task 1 静的検査と記録）
+- 静的検査3点を 2026-11-09 に実施し全て pass した
+  - (1) 存在: .github/PULL_REQUEST_TEMPLATE.md あり（19行、ls で確認）
+  - (2) 4節の順序: ## 概要（1行目）/ ## 内容（時系列 or RICE順）（5行目）/ ## 検証（9行目）/ ## 注意（17行目）の順で存在し、grep で確認
+  - (3) CP932: python3 /Users/yaar/.agents/skills/docs-charset/scripts/check_docs_chars.py .github/PULL_REQUEST_TEMPLATE.md pbi/2026-10-31-207-feat-pr-template.md の両方に OK: no out-of-range characters（exit 0）
+- 目視確認は未実施。本セッションでは実行できないためユーザー作業として残す。理由は新規 PR 作成画面の確認が push 後に GitHub 上で開く操作を要するため。手順は push 後に GitHub で New pull request を開き、説明欄に4節が初期値で入ることと検証節のチェックリストを確認し、日時と確認者とブランチ対比とスクショを本 PBI に追記すること。
+- BDD全自動化の断念理由: 新規 PR 作成画面は GitHub Web UI に依存し、自動テストから操作できない。無理に自動化すると保守コストが効果を上回るため、静的検査3点に置換し、初回目視を正式手順とした。このため DoD の自動テスト化とコードレビューは本 Task では未達のまま残す。
+- ISSUE_TEMPLATE と workflows には触れていない。コミットはしていない。
