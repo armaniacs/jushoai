@@ -19,7 +19,11 @@ describe('createShadowHost', () => {
     for (const prop of ['all', 'z-index', 'position']) {
       expect(host.style.getPropertyPriority(prop)).toBe('important');
     }
-    expect(host.style.getPropertyValue('all')).toBe('initial');
+    // jsdom 31 expands `all` into longhands: after the position/z-index
+    // writes above diverge, the `all` shorthand no longer serializes, so
+    // its value reads back '' (jsdom 30 kept the 'initial' text verbatim).
+    // The reset itself still holds with important priority (asserted above).
+    expect(host.style.getPropertyValue('all')).toBe('');
     expect(host.style.getPropertyValue('position')).toBe('fixed');
     expect(host.style.getPropertyValue('z-index')).toBe('2147483647');
   });
