@@ -1,5 +1,14 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-10・発掘ラウンド。PBI化のみ・未実装5件。RICE順）
+
+- `2026-11-10-218-refactor-planner-value-table.md`（順位 1。RICE 9.4。planner 値解決の表化）
+- `2026-11-10-219-refactor-refine-separation.md`（順位 2。RICE 9.3。refineWithDrops の3責務分離）
+- `2026-11-10-220-refactor-options-footer-blank.md`（順位 3。RICE 8.0。Quick Win。options footer 一本化＋blank 分岐の型化。prefecture 仕様統一は別途ユーザー判断）
+- `2026-11-10-221-refactor-run-env-extract.md`（順位 4。RICE 7.0。run env 組み立て抽出）
+- `2026-11-10-222-docs-limit-vocabulary-map.md`（順位 5。RICE 6.0。上限語彙の一覧集約・文書のみ）
+- 出どころ: `.superpowers/sdd/backlog-discovery-2026-11-10.md`。重複棚（129・202・honeypot・Playwright・geckodriver・env契約・harness分割・drag/click・やらない宣言・204〜217）とは重複なし
+
 ## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票。211-212を実装・レビュー済み。アーキテクチャレビューの発見5件のなぜなぜ分析（30本×3立場）→RICE採点で214-216を起票し、213-216は2026-11-01に実装・レビュー・アーカイブ済み）
 
 - `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
