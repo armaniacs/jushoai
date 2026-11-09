@@ -28,9 +28,10 @@ Scenario: run() が短くなる
 
 ## 受け入れ基準
 - [ ] bundle.env の組み立てが buildRunEnv(deps) に切り出される（引数は tabMemory・session 由来の最小依存）
-- [ ] メッセージ登録4種・sync()・fillOne は動かさない
+- [ ] メッセージ登録4種・sync()・fillOne は動かさない（options・messages・鍵管理系への不干渉を含む）
 - [ ] main() 全体の分割・PBI-202 の tab-send 統一は含めない
 - [ ] 既存テスト・E2E が緑のまま、make check が exit 0
+- [ ] 等価テストの fixture は tel3分割・zip2分割・fullName2欄・入力済み混在・呼び順を要件として受入または実装記録に残す
 
 ## テスト戦略
 - 既存テスト・E2E が回帰網になる。新規テストは buildRunEnv の単体テストのみ
@@ -42,6 +43,7 @@ Scenario: run() が短くなる
 ## 技術的考慮事項
 - PBI-202 が tab-send seam を Speculative で見送った判断と同型。束ねるのは env 組み立てだけに留める
 - T1/T2 の後に着手する（依存ではないが変更の干渉を避ける）
+- 性能改善ではない（純粋な構造整理）。利用者の誤期待を防ぐため約束として残す
 
 ## Definition of Done
 - [ ] 全 BDD シナリオが自動テストとして実装されパスする

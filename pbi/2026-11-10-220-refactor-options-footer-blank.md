@@ -6,7 +6,7 @@
 ## 優先度
 - 順位: 3 / 5
 - RICEスコア: 8.0（Reach=2 / Impact=1.5 / Confidence=80% / Effort=0.3人週）
-- 根拠: 設定画面のみの到達だが工数小・確実。Quick Win。仕様判断は分離する前提
+- 根拠: 設定画面のみの到達だが工数小・確実。Quick Win。仕様判断は分離する前提（レビュー指摘：Effort 0.3 は BDD2 の自動テスト化手段が未定義のため楽観的、Impact 1.5 は過大気味。RICE 見直しはユーザー合意で判断）
 
 ## 出どころ
 - 発掘報告書 `.superpowers/sdd/backlog-discovery-2026-11-10.md` テーマ4
@@ -28,9 +28,10 @@ Scenario: blank 判定の分岐が型で読める
 
 ## 受け入れ基準
 - [ ] footer（保存 + 取り込む + 通知）が renderCardFooter 1関数に束ねられる
-- [ ] blank 判定は統一せず、分岐を isBlankAddress の引数（includePrefecture）として型で表現する。呼び出し側（trial=true / import=false）が選ぶ
+- [ ] blank 判定は統一せず、分岐を isBlankAddress の引数（{ includePrefecture: boolean } の必須引数）として型で表現する。呼び出し側（trial=true / import=false）が選ぶ
 - [ ] prefecture の仕様統一自体は本 PBI の範囲外（別途ユーザー判断の PBI に分離）
 - [ ] make check が exit 0
+- [ ] ついでの統一は禁止する。両面一致のテストを追加し、束ね前後の DOM 差分を PR に添付する
 
 ## テスト戦略
 - 既存テストが回帰網になる。footer の描画差分は options 系テストで固定する
@@ -44,6 +45,6 @@ Scenario: blank 判定の分岐が型で読める
 - Quick Win として T1/T2 より先行できる。依存関係はない
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
+- [ ] 全 BDD シナリオのうちシナリオ1が自動テストとして実装されパスする（シナリオ2は自動テスト不能のためレビューのチェックリストで確認する）
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み（本 PBI に実装記録）

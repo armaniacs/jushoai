@@ -6,7 +6,7 @@
 ## 優先度
 - 順位: 5 / 5
 - RICEスコア: 6.0（Reach=2 / Impact=2 / Confidence=60% / Effort=0.4人週）
-- 根拠: 堅牢性の構造改善だが挙動不変・文書中心。確信度はレビュー合意次第
+- 根拠: 堅牢性の構造改善だが挙動不変・文書中心。確信度はレビュー合意次第（Confidence 60% の合意対象は実装前のレビュー合意で明確化する）
 
 ## 出どころ
 - 発掘報告書 `.superpowers/sdd/backlog-discovery-2026-11-10.md` テーマ5
@@ -14,6 +14,7 @@
 - `src/messages.ts:16`（MAX_ID_LENGTH = 100）、`src/messages.ts:145`（META_CLIP_LENGTH = 80）
 - `src/ai/http-classifiers.ts:14`（MAX_RESPONSE_BYTES = 1000000）、`src/ai/http-classifiers.ts:142-163`（readJsonBounded の二重 Content-Length/stream cap）
 - `src/ai/audit-log.ts:11`（AUDIT_MAX_BYTES = 4000000）、`src/ai/audit-log.ts:22`（AUDIT_PAGE_URL_MAX_BYTES = 1024）、`src/ai/audit-log.ts:65-66`（clipAuditResponse）
+- `src/ai/audit-log.ts:4`（AUDIT_MAX_ENTRIES = 1000）、`src/ai/audit-log.ts:62`（AUDIT_RESPONSE_CLIP_LENGTH = 2000）
 
 ## BDD受け入れシナリオ
 Scenario: 上限の一覧が1箇所で読める
@@ -27,10 +28,11 @@ Scenario: 値も挙動も変わらない
   Then すべて緑のまま（定数の移動・統一はしない）
 
 ## 受け入れ基準
-- [ ] 上限の一覧表コメント（経路・定数・所有者）が src/scan-limits.ts に集約される
+- [ ] 上限の一覧表コメント（経路・定数・所有者）が src/scan-limits.ts に集約される（表の列定義を固定し、所有者は人名でなくモジュール＋変える理由で書く）
 - [ ] 新経路向けの選択ガイド（送信=wire、保存=監査予算、表示=clip）が添えられる
 - [ ] 値を変えない。定数の移動・統一はしない（監査予算と応答上限は変わる理由が別）
 - [ ] make check が exit 0
+- [ ] 文字種チェック（docs-charset）が通る
 
 ## テスト戦略
 - 挙動変更なしのため既存テストが回帰網になる。新規テストは不要
@@ -44,6 +46,6 @@ Scenario: 値も挙動も変わらない
 - コメント集約のため docs-charset の範囲文字のみで書く
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
+- [ ] 既存テストがすべてパスする（挙動変更なしのため新規テストは追加しない。文書の確認は目視＋文字種検査で行う）
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み（本 PBI に実装記録）
