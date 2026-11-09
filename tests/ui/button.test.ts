@@ -574,9 +574,13 @@ describe('mountButton', () => {
       // the banner must not chase the cursor.
       fireWrap('pointermove', { clientX: 400, clientY: 200, buttons: 0 });
       const host = document.querySelector<HTMLElement>('[data-jushoai]')!;
-      expect(host.style.left).toBe('');
+      // jsdom 31 expands the host's `all: initial !important` reset into
+      // longhands, so an unwritten coordinate reads back 'initial' (jsdom 30
+      // left it ''). The point stands: no px write happened, so the banner
+      // does not chase the cursor.
+      expect(host.style.left).toBe('initial');
       fireWrap('pointermove', { clientX: 500, clientY: 300 });
-      expect(host.style.left).toBe('');
+      expect(host.style.left).toBe('initial');
       // The release without a drag keeps the click alive.
       fireButton(true);
       expect(onClick).toHaveBeenCalledTimes(1);
