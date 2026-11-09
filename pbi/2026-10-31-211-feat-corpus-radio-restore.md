@@ -74,7 +74,7 @@ grep -rn 'radio' samples/richell-anketo-rating.html samples/library-theater-appl
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（2026-11-10 レビュー Approved。Important 1件は将来PBI候補として追跡）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
@@ -95,3 +95,8 @@ grep -rn 'radio' samples/richell-anketo-rating.html samples/library-theater-appl
 - make check: exit 0
 - 文字種チェック: check_docs_chars.py が OK（本 PBI と CHANGELOG.md）
 - src/ は未変更（fixture の復元・期待値・pin 更新のみ。分類ルールの変更は 212 のスコープ）
+
+### コードレビュー記録（2026-11-10）
+- spec ✅（4 fixture 復元・name 束ね・samples 追加・pin 同時更新、src 無変更）。品質 Approved
+- Important 1件は追跡: gis fixture の legend 付加は実ページ忠実度より分類安定を優先した整形（記録に根拠あり）。素の CF7 構成では school 誤分類し得るため、将来の PBI 候補として残す
+- Minor 3件は追跡: corpus.eval.ts の旧基準値コメント併存、samples.test.ts の plan 非出現の直接 assert なし、kosodate/richell の fixture 整形の合意記録
