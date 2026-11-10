@@ -46,7 +46,7 @@ Scenario: 外部挙動が変わらない
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了（親レビュー待ち）
+- [x] コードレビュー完了（2026-11-10 レビュー Approved。spec ✅。Minor 5件は追跡）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-11-10、work/pbi-218）
@@ -74,3 +74,8 @@ Scenario: 外部挙動が変わらない
   pin 変更なし。行追加時は黄金表に1件追加すること。
 - 等価確認: `make test` 174件・2273テスト緑（期待失敗1件は従来どおり）、
   `make eval` の pin 無変更で緑、`make check` exit 0。
+
+### コードレビュー記録（2026-11-10）
+- spec ✅（要件1〜4反映、外部挙動差分なし）。品質 Approved。Critical/Important なし
+- コントローラ確認: CATEGORIES concrete 41件と VALUE_ROWS 41行が一致、planner.test.ts 67/67 緑、CP932 OK、field-catalog 流儀（列説明コメント＋純粋データ）と一致
+- Minor 5件は追跡（zipPrefecture/City 合流分岐の二重取得、RowReadArgs の cls 全体所有、公開表面の広さ、旧PBI-122由来コメントの消失、黄金テストの単一構成）
