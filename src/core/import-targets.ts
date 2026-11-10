@@ -20,18 +20,35 @@ export interface ImportTargetIds {
 const PROFILE_BLANK_KEYS = OPTIONS_PROFILE_FIELDS.map((f) => f.key);
 const ADDRESS_BLANK_KEYS = OPTIONS_ADDRESS_FIELDS.filter((f) => f.key !== 'label').map((f) => f.key);
 
-// Single reference for blankness (PBI-182): the trial fill reuses these keys
-// instead of hand-written arrays. Note the prefecture divergence, kept as-is
-// pending spec confirmation (do NOT unify by guess): OPTIONS_ADDRESS_FIELDS
-// already drops the prefecture select row, so ADDRESS_BLANK_KEYS omits
-// prefecture, while the trial fill still covers prefecture (see main.ts).
+// Blank key sets (PBI-182): the single reference for blankness, shared by the
+// page import and the trial fill. ADDRESS_BLANK_KEYS derives from
+// OPTIONS_ADDRESS_FIELDS, which drops the prefecture select row (a select, not
+// a plain-text row), so the set omits prefecture; the label row is filtered
+// out because a card with only its default label still counts as blank.
 export { PROFILE_BLANK_KEYS, ADDRESS_BLANK_KEYS };
+
+// Whether prefecture counts toward blankness is a required caller choice
+// (PBI-220), not a default: the import path passes
+// { includePrefecture: false } (selectImportTargets below) and the trial fill
+// passes { includePrefecture: true } (applyTrialSampleToAddress in
+// options/main.ts). Unifying the two is out of scope pending a separate
+// user-judged PBI: this type only moves the branch location from comments
+// into the signature, behavior is unchanged.
+export interface BlankAddressOptions {
+  includePrefecture: boolean;
+}
 
 const isBlankProfile = (p: Profile): boolean =>
   PROFILE_BLANK_KEYS.every((key) => (p[key] ?? '').trim() === '');
 
-const isBlankAddress = (a: Address): boolean =>
-  ADDRESS_BLANK_KEYS.every((key) => (a[key] ?? '').trim() === '');
+// isBlankProfile takes no options: the profile side has no select-row
+// divergence, so the asymmetry with isBlankAddress is intended.
+const isBlankAddress = (a: Address, opts: BlankAddressOptions): boolean => {
+  if (!ADDRESS_BLANK_KEYS.every((key) => (a[key] ?? '').trim() === '')) {
+    return false;
+  }
+  return opts.includePrefecture ? (a.prefecture ?? '').trim() === '' : true;
+};
 
 export { isBlankProfile, isBlankAddress };
 
@@ -46,7 +63,11 @@ export function selectImportTargets(
     ? first ?? { ...EMPTY_PROFILE, id: ids.profileId }
     : { ...EMPTY_PROFILE, id: ids.profileId, label: '新規' };
   const firstAddress = addresses[0];
-  const blankAddress = firstAddress === undefined || isBlankAddress(firstAddress);
+  // The page import does not count prefecture toward blankness
+  // ({ includePrefecture: false }); the trial fill chooses true at its own
+  // call site. Kept divergent pending a separate user-judged spec PBI
+  // (do NOT unify by guess).
+  const blankAddress = firstAddress === undefined || isBlankAddress(firstAddress, { includePrefecture: false });
   const targetAddress = blankAddress
     ? firstAddress ?? { ...EMPTY_ADDRESS, id: ids.addressId, label: '自宅' }
     : { ...EMPTY_ADDRESS, id: ids.addressId, label: '新規' };

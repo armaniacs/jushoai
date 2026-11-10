@@ -73,6 +73,25 @@ export function actionButton(label: string, disabled: boolean, onClick: () => vo
   return button;
 }
 
+// Card footer shared by the profile and address pages (PBI-220): the save +
+// import buttons and their placement (div.row) used to be written twice in
+// main.ts, so a wording or enabled change on one side never reached the other.
+// The failure notice wiring stays with the caller: onImport carries its own
+// rejection handling (e.g. .catch(onImportFailed)), so this function only
+// places the two buttons. Side-specific conditions must be injected via the
+// arguments, never branched inside on a side flag.
+export function renderCardFooter({ onSave, onImport }: {
+  onSave: () => void;
+  onImport: () => void;
+}): HTMLDivElement {
+  const save = actionButton('保存', false, onSave);
+  const importButton = actionButton('フォームから取り込む', false, onImport);
+  const footer = el('div');
+  footer.className = 'row';
+  footer.append(save, importButton);
+  return footer;
+}
+
 // Single source of the saved/errors notice vocabulary for the four options
 // sections: saved renders as one p.saved line (multi-line lines join with br),
 // errors as a ul.errors list, and the truncate rule lives in this module so no
