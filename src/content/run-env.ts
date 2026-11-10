@@ -50,6 +50,13 @@ export interface RunEnvDeps {
   pageHref: string;
   provider: string;
   version: string;
+  // 旧実装 (content.ts の feedbackCtx / recordApproval / recordAssignment /
+  // classify の applyMapping) はいずれも location.href を呼出時に読む遅延
+  // クロージャだった。preview 表示中の SPA 遷移でも呼出時点の URL が使わ
+  // れる意味論を復元するため、呼出元は読み取り口を渡す。未指定時は構築時
+  // snapshot (pageHref / host) に落ちるため既存テストはそのまま通る。
+  getPageHref?: () => string;
+  getHost?: () => string;
   // FillFlow が apply 後に読む選択 (session.selectedProfileId/AddressId)。
   // session は bundle の後に作られるため late-bound getter で受け取る。
   getSelection: () => { profileId: string; addressId: string };
@@ -88,8 +95,11 @@ export function buildRunEnv(deps: RunEnvDeps): FillBundle {
 
   // PBI-55: the same context feeds the apply-time feedback and the
   // post-apply breakdown report, so the report URL cannot drift from it.
+  // 旧実装と同様に呼出時に読み直す (構築時 snapshot を閉じない)。
+  const readHref = deps.getPageHref ?? (() => deps.pageHref);
+  const readHost = deps.getHost ?? (() => deps.host);
   const feedbackCtx = () => ({
-    pageHref: deps.pageHref,
+    pageHref: readHref(),
     provider: deps.provider,
     version: deps.version,
   });
@@ -130,7 +140,7 @@ export function buildRunEnv(deps: RunEnvDeps): FillBundle {
           premade: opts.run,
         }).then((res) => ({
           ...res,
-          items: applyMapping(res.items, deps.activeMappings, deps.host),
+          items: applyMapping(res.items, deps.activeMappings, readHost()),
         })),
       checkConsent,
       injectPlan: (plan: PlanItem[]) => {
@@ -161,7 +171,7 @@ export function buildRunEnv(deps: RunEnvDeps): FillBundle {
         // rejection inside the `void` IIFE.
         persist('サイトごとの承認', async () => {
           const sel = deps.getSelection();
-          const record = recordFor(deps.pageHref, deps.metas, rows, sel.profileId, sel.addressId);
+          const record = recordFor(readHref(), deps.metas, rows, sel.profileId, sel.addressId);
           if (!record.domain) return;
           await doUpsertApproval(record);
         });
@@ -171,7 +181,7 @@ export function buildRunEnv(deps: RunEnvDeps): FillBundle {
       recordAssignment: (profileId) => {
         // PBI-153: reported through persistWrite instead of an unhandled
         // rejection from the bare `void`.
-        persist('サイトごとの割当て', () => doUpsertAssignment(deps.host, profileId));
+        persist('サイトごとの割当て', () => doUpsertAssignment(readHost(), profileId));
       },
       // PBI-144: the guest is one-shot — the fill consumes it. Without this
       // the run would keep overlaying the stored data for every later

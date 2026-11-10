@@ -357,6 +357,11 @@ export default defineContentScript({
         pageHref: location.href,
         provider: info.provider,
         version: chrome.runtime.getManifest().version,
+        // 旧実装は feedbackCtx / recordApproval / recordAssignment /
+        // classify の host を呼出時に location.href から読んでいた。preview
+        // 表示中の SPA 遷移でも呼出時点の URL が使われるよう遅延読みを渡す。
+        getPageHref: () => location.href,
+        getHost: () => hostOf(location.href),
         getSelection: () => ({ profileId: session.selectedProfileId, addressId: session.selectedAddressId }),
         isExcluded: () => gate.isExcluded(),
         mergeCarryover: (entries) => { tabMemory.mergeCarryover(entries); },

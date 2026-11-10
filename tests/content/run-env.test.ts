@@ -212,3 +212,54 @@ describe('buildRunEnv: 呼び順', () => {
     expect(consumed).toEqual([guest]);
   });
 });
+
+describe('buildRunEnv: 遅延読み (旧 feedbackCtx と等価)', () => {
+  // 旧実装は location.href を呼出時に読む遅延クロージャだった。preview
+  // 表示中の SPA 遷移でも呼出時点の href/host が使われることを固定する。
+  it('feedbackContext・承認・割当・classify が呼出時点の href/host を使う', async () => {
+    const { hostOf } = await import('../../src/core/domain-mapping');
+    let currentHref = 'https://before.example/form';
+    const metas = [
+      makeMeta({ id: 'm1', label: 'メール', type: 'email', name: 'mail-field' }),
+    ];
+    const writes: Array<() => Promise<void>> = [];
+    let approvedDomain: string | undefined;
+    let assignedHost: string | undefined;
+    const bundle = buildRunEnv({
+      profiles: [profile], addresses: [address],
+      assignedProfileId: null, carryover: {}, metas,
+      metasById: new Map(metas.map((m) => [m.id, m])),
+      englishPage: false, canReanalyze: false,
+      run: { ruled: [], unconfident: [], pending: [], taughtIds: new Set<string>(), nonConfidentCount: 0 },
+      activeMappings: [
+        { domain: 'after.example', fieldKey: 'mail-field', category: 'tel1' },
+      ],
+      host: 'before.example',
+      effectiveClassifier: null, activeGuest: null,
+      controlsById: new Map(metas.map((m) => [m.id, fakeControl()])),
+      pageHref: 'https://before.example/form', provider: 'none', version: '0.0.0-test',
+      getPageHref: () => currentHref,
+      getHost: () => hostOf(currentHref),
+      isExcluded: () => false,
+      checkConsent: () => ({ ok: true as const }),
+      persist: (_what, write) => { writes.push(write); },
+      upsertApproval: async (record) => { approvedDomain = record.domain; },
+      upsertAssignment: async (host) => { assignedHost = host; },
+      getSelection: () => ({ profileId: 'p1', addressId: 'a1' }),
+    });
+    // preview 表示中の SPA 遷移を再現: 組み立て後に href が変わる。
+    // 遷移前は after 側の mapping が当たらない (rule 分類のまま)。
+    expect((await bundle.env.classify(metas, {})).items[0]!.cls.category).not.toBe('tel1');
+    currentHref = 'https://after.example/other';
+    expect(bundle.env.feedbackContext().pageHref).toBe('https://after.example/other');
+    // classify は呼出時点の host で mapping を当てる (after 側が勝つ)。
+    const res = await bundle.env.classify(metas, {});
+    expect(res.items[0]!.cls.category).toBe('tel1');
+    bundle.env.recordApproval!([]);
+    await writes[0]!();
+    expect(approvedDomain).toBe('after.example');
+    bundle.env.recordAssignment!('p1');
+    await writes[1]!();
+    expect(assignedHost).toBe('after.example');
+  });
+});
