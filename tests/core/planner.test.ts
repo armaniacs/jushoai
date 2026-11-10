@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildPlan, applyAbbrevApprovals } from '../../src/core/planner';
+import { buildPlan, applyAbbrevApprovals, VALUE_ROWS } from '../../src/core/planner';
 import type { Address, Category, FieldMeta, Item, KanaKind, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -628,5 +628,95 @@ describe('carryover (PBI-142)', () => {
     expect(plan).toEqual([
       expect.objectContaining({ value: '', status: 'warn-no-value' }),
     ]);
+  });
+});
+
+// PBI-218: the value-row table pins. The golden test enumerates every row's
+// resolved value for the shared domestic fixtures, so adding a row forces
+// exactly one pin addition here; the structural test pins that the read,
+// assist and abbreviatable columns drive the plan (not parallel switches).
+describe('value row table (PBI-218)', () => {
+  const goldenToday = new Date(2026, 9, 5);
+
+  it('resolves the golden value for every row (pin; record a reason when changing it)', () => {
+    const golden: Readonly<Record<string, string>> = {
+      lastName: '山田',
+      firstName: '太郎',
+      fullName: '山田 太郎',
+      lastNameKana: 'ヤマダ',
+      firstNameKana: 'タロウ',
+      fullNameKana: 'ヤマダ タロウ',
+      lastNameRomaji: 'Yamada',
+      firstNameRomaji: 'Taro',
+      fullNameRomaji: 'Taro Yamada',
+      email: 'yamada@example.com',
+      tel: '09012345678',
+      tel1: '090',
+      tel2: '1234',
+      tel3: '5678',
+      zip: '1000001',
+      zip1: '100',
+      zip2: '0001',
+      prefecture: '東京都',
+      city: '千代田区',
+      street: '千代田1-1 千代田ビル101',
+      building: '千代田ビル101',
+      addressNoPref: '千代田区千代田1-1 千代田ビル101',
+      addressFull: '東京都千代田区千代田1-1 千代田ビル101',
+      birthYear: '1990',
+      birthMonth: '05',
+      birthDay: '07',
+      birthEra: '平成',
+      birthday: '1990-05-07',
+      school: '都立日比谷高校',
+      department: '普通科',
+      company: '株式会社サンプル',
+      companyDepartment: '開発部',
+      companyNameKana: 'カブシキガイシャサンプル',
+      gender: '女性',
+      ageDecade: '30代',
+      country: '',
+      address1: '',
+      address2: '',
+      address3: '',
+      address4: '',
+      postalCode: '',
+    };
+    const got: Record<string, string> = {};
+    for (const row of VALUE_ROWS) {
+      const plan = buildPlan([item(row.category)], { profile, address, today: goldenToday });
+      expect(plan).toHaveLength(1);
+      got[row.category] = plan[0]!.value;
+    }
+    expect(got).toEqual(golden);
+  });
+
+  it('covers every concrete category once and owns read/assist/abbreviatable columns', () => {
+    const categories = VALUE_ROWS.map((r) => r.category);
+    expect(new Set(categories).size).toBe(categories.length);
+    expect([...categories].sort()).toEqual(
+      ['lastName', 'firstName', 'fullName', 'lastNameKana', 'firstNameKana', 'fullNameKana',
+        'lastNameRomaji', 'firstNameRomaji', 'fullNameRomaji', 'gender', 'ageDecade',
+        'country', 'address1', 'address2', 'address3', 'address4', 'postalCode',
+        'email', 'tel', 'tel1', 'tel2', 'tel3', 'zip', 'zip1', 'zip2',
+        'prefecture', 'city', 'street', 'building', 'addressFull', 'addressNoPref',
+        'birthYear', 'birthMonth', 'birthDay', 'birthEra', 'birthday',
+        'school', 'department', 'company', 'companyDepartment', 'companyNameKana'].sort(),
+    );
+    const byCat = new Map(VALUE_ROWS.map((r) => [r.category, r] as const));
+    // The old ABBREVIATABLE set, now the abbreviatable column.
+    expect(VALUE_ROWS.filter((r) => r.abbreviatable).map((r) => r.category).sort()).toEqual(
+      ['addressFull', 'addressNoPref', 'building', 'street'],
+    );
+    // The old ASSISTABLE set, now the assist column (null = no assist).
+    expect(VALUE_ROWS.filter((r) => r.assist !== null).map((r) => r.category).sort()).toEqual(
+      ['city', 'firstNameKana', 'fullNameKana', 'lastNameKana', 'prefecture'],
+    );
+    expect(byCat.get('prefecture')!.assist).toBe('zipPrefecture');
+    expect(byCat.get('city')!.assist).toBe('zipCity');
+    expect(byCat.get('lastNameKana')!.assist).toBe('surname');
+    // A new row is one table entry: read resolves through buildPlan with no
+    // switch fallback even for a category the old code never assisted.
+    expect(byCat.get('companyNameKana')!.assist).toBe(null);
   });
 });
