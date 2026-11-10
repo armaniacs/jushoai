@@ -59,3 +59,4 @@ Scenario: 各責務が単体で検証できる
 - 新規テストは切り出した2関数の単体テストのみ。dropLeftovers 7件（単独維持・同キー unknown 化・別キー維持・分割済みと対象外の不変・空キー unknown 化・付帯情報保持・入力不変）。narrowAddress 5件（単独維持・同一スコープ絞り込みと city 優先・別スコープ不変・city/prefecture 不変・入力不変）。
 - 検証: make check が exit 0（typecheck + 全テスト 2285 件パス + 両ブラウザ build + manifest 検査 + web-ext lint。lint 警告 2 件は Firefox 最小版由来の既存のもので、変更と無関係）。
 - コードレビュー: 実装者による diff レビュー済み（split 部は同一、leftover/narrow は逐語移設、dropped 除外の前倒しは等価であることを確認。呼び出し側の署名は不変）。結合時の別視点レビューは次工程に委ねる。
+- タスクレビューゲート（2026-11-10）承認。spec ✅・品質 Approved、Critical/Important なし。コントローラが classify-rules.test.ts 231/231 緑を再確認した。
