@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { selectImportTargets } from '../../src/core/import-targets';
+import { isBlankAddress, isPrefectureBlank, selectImportTargets } from '../../src/core/import-targets';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 
 const ids = () => ({ profileId: 'p-new', addressId: 'a-new' });
@@ -74,5 +74,63 @@ describe('selectImportTargets (PBI-173)', () => {
     expect(targets.blankAddress).toBe(true);
     expect(targets.target).toBe(first);
     expect(targets.targetAddress).toBe(firstAddress);
+  });
+});
+
+// PBI-220: the prefecture branch is a required caller choice, not a default.
+// The import path chooses { includePrefecture: false } (selectImportTargets),
+// the trial fill chooses true (applyTrialSampleToAddress in options/main.ts).
+// Behavior is unchanged: only the branch location moved from comments to type.
+describe('isBlankAddress includePrefecture (PBI-220)', () => {
+  const prefectureOnly = { ...EMPTY_ADDRESS, id: 'a1', label: '実家', prefecture: '沖縄県' };
+
+  it('import choice (false): a prefecture-only card still counts as blank', () => {
+    expect(isBlankAddress(prefectureOnly, { includePrefecture: false })).toBe(true);
+  });
+
+  it('trial choice (true): the same card does not count as blank', () => {
+    expect(isBlankAddress(prefectureOnly, { includePrefecture: true })).toBe(false);
+  });
+
+  it('a fully blank card is blank under both choices', () => {
+    const blank = { ...EMPTY_ADDRESS, id: 'a1' };
+    expect(isBlankAddress(blank, { includePrefecture: false })).toBe(true);
+    expect(isBlankAddress(blank, { includePrefecture: true })).toBe(true);
+  });
+
+  it('a card with a text key filled is non-blank under both choices', () => {
+    const filled = { ...EMPTY_ADDRESS, id: 'a1', label: '自宅', city: '千代田区' };
+    expect(isBlankAddress(filled, { includePrefecture: false })).toBe(false);
+    expect(isBlankAddress(filled, { includePrefecture: true })).toBe(false);
+  });
+
+  it('selectImportTargets keeps the import choice (prefecture-only counts as blank)', () => {
+    const targets = selectImportTargets([], [prefectureOnly], ids());
+    expect(targets.blankAddress).toBe(true);
+    expect(targets.targetAddress).toBe(prefectureOnly);
+  });
+});
+
+// PBI-220 follow-up: the trial fill checks the prefecture field alone via
+// isPrefectureBlank instead of synthesizing a mostly-blank card for
+// isBlankAddress, so EMPTY_ADDRESS defaults cannot break the equivalence.
+describe('isPrefectureBlank (PBI-220 follow-up)', () => {
+  it('empty string counts as blank', () => {
+    expect(isPrefectureBlank('')).toBe(true);
+  });
+
+  it('whitespace-only counts as blank', () => {
+    expect(isPrefectureBlank('   ')).toBe(true);
+  });
+
+  it('a set prefecture does not count as blank', () => {
+    expect(isPrefectureBlank('東京都')).toBe(false);
+  });
+
+  it('agrees with the isBlankAddress trial choice on a fully blank card', () => {
+    const blank = { ...EMPTY_ADDRESS, id: 'a1' };
+    expect(isPrefectureBlank(blank.prefecture)).toBe(
+      isBlankAddress(blank, { includePrefecture: true }),
+    );
   });
 });
