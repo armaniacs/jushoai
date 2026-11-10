@@ -3,25 +3,22 @@ import { isEnglishPageText } from '../core/page-language';
 import { fillOneReasonLabel } from '../core/fill-one';
 import { fillOneEntry } from '../content/fill-one-entry';
 import { loadFillOneState, loadRunState } from '../content/flow-state';
-import { createFillSession, classifyWithReason } from '../content-session';
-import type { FillBundle } from '../content/fill-flow';
+import { createFillSession, type FillSession } from '../content-session';
+import { buildRunEnv } from '../content/run-env';
 import { bindPreview } from '../content/preview-bind';
 import { KvStoreReadError } from '../kv-store';
 import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
-import { fillPlan, targetsFromControls } from '../dom/fill-plan';
 import { collectAvoidRects } from '../dom/avoid-rects';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
 import { scanFields } from '../dom/scan-fields';
 import { fillField } from '../dom/fill';
 import { draftFromMetas } from '../core/import-draft';
-import { fieldKeyFor, hostOf, applyMapping } from '../core/domain-mapping';
+import { fieldKeyFor, hostOf } from '../core/domain-mapping';
 import { upsertMapping } from '../mapping-store';
 import { chooseMapping } from '../ui/mapping-panel';
-import { matches, recordFor } from '../core/site-approval';
+import { matches } from '../core/site-approval';
 import { assignedFirst, assignmentFor } from '../core/site-profile';
-import { upsertApproval } from '../approval-store';
-import { upsertAssignment } from '../assignment-store';
 import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress } from '../core/guest';
 import { GUEST_MESSAGE_TYPE } from '../guest-message';
@@ -35,14 +32,13 @@ import { confirmFillOne, showFillOneBlocked } from '../ui/fill-one-panel';
 import { FILL_ONE_MESSAGE } from '../context-menu';
 import { BackgroundClassifier, getAiStatusViaBackground, requestDownloadViaBackground } from '../llm/background-gateway';
 import { hintForButton } from '../ai/failure-text';
-import { isReady, saveLastUsed } from '../storage';
+import { isReady } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { attachRepositionTracking } from '../ui/panel';
 import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
-import { applyIfConsented, defaultConsentCheckDeps } from '../content/consent-check';
 import { createExclusionGate } from '../content/exclusion-gate';
 import { createTabDispatcher } from '../content/tab-dispatch';
 import { persistWrite } from '../content/persist-write';
@@ -239,6 +235,9 @@ export default defineContentScript({
     // Raw statuses never leave the single table in ../ai/failure-text;
     // only these coarse guidance lines do.
     async function run(container: Element, button: ButtonHandle) {
+      // PBI-221: run() の骨格は loadRunState → prepare → buildRunEnv →
+      // createFillSession の4行で読む。その前後の status・egress gate・
+      // preview 配線は動かさない。
       // PBI-159: the run flow's whole state bundle comes from the one loader
       // (../content/flow-state) behind a single batched read — the profile
       // data, the last-used selection and the per-site learned state. Which
@@ -312,14 +311,6 @@ export default defineContentScript({
       }
       const englishPage = isEnglishPageText(document.body?.innerText ?? '');
       const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
-      // PBI-55: the same context feeds the apply-time feedback and the
-      // post-apply breakdown report, so the report URL cannot drift from it.
-      const feedbackCtx = () => ({
-        pageHref: location.href,
-        provider: info.provider,
-        version: chrome.runtime.getManifest().version,
-      });
-      const openFeedbackUrl = (url: string): void => { window.open(url, '_blank', 'noopener'); };
       // PBI-144: the guest REPLACES the stored data for that fill — stored and
       // guest values never mix, so the preview shows exactly what will fill.
       // The stored arrays are never mutated, so chrome.storage stays untouched
@@ -337,107 +328,46 @@ export default defineContentScript({
         ? [guestProfile(activeGuest)]
         : assignedFirst(data.profiles, assignedProfileId);
       const sessionAddresses = activeGuest ? [guestAddress(activeGuest)] : data.addresses;
-      // PBI-178: the whole apply transaction (consent→inject→persist→
-      // carryover→feedback→banner＋承認/割当/guest後処理) is assembled here as
-      // one FillFlow bundle. bindPreview below only digests the apply result.
-      const bundle: FillBundle = {
-        input: {
-          profiles: sessionProfiles,
-          addresses: sessionAddresses,          lastProfileId: last.profileId,
-          lastAddressId: last.addressId,
-          assignedProfileId,
-          // PBI-201: the carryover read at bundle-build time. The owner
-          // replaces (never mutates) the map on merge, so this stays the
-          // run's build-time snapshot while the fill-one getter sees the
-          // latest.
-          carryover: tabMemory.carryover(),
-          metas,
-          metasById,
-          englishPage,
-          canReanalyze: effectiveClassifier !== null,
-          // PBI-181: the run's shared pass. The session attaches it to every
-          // classify call, so the env below passes it through first-class.
-          run: prepared,
-        },
-        env: {
-          // PBI-138: the taught mapping rides as a correction layer on top of
-          // whatever classification path ran — the learned pair wins over the
-          // rule, and an excluded page never gets here (the session returns
-          // excluded before opening any panel).
-          classify: (ms, opts) =>
-            classifyWithReason(effectiveClassifier, ms, {
-              ...opts,
-              llmSkip,
-              // PBI-181: pass through the shared bundle received first-class on
-              // opts.run (attached from input.run by the session). No
-              // metas-identity check: a copied/filtered metas array resolves to
-              // the same pass.
-              premade: opts.run,
-            }).then((res) => ({
-              ...res,
-              items: applyMapping(res.items, activeMappings, hostOf(location.href)),
-            })),
-          checkConsent: (p) => {
-            let verdict: { ok: true } | { ok: false; reason: string } = { ok: false, reason: '' };
-            // applyIfConsented reports through callbacks; the no-op apply keeps the
-            // check side-effect free while reusing the single consent vocabulary.
-            applyIfConsented(
-              defaultConsentCheckDeps(() => p.getApplyPoint(), undefined, () => p.getHost()),
-              () => { verdict = { ok: true }; },
-              (reason) => { verdict = { ok: false, reason }; },
-            );
-            return verdict;
-          },
-          injectPlan: (plan) => {
-            const report = fillPlan(plan, targetsFromControls(byId, fillField));
-            // Developer record (PBI-82/94): countable breakdown by reason.
-            // Display decisions stay with onApply so the partial banner cannot
-            // clobber the AI failure hint; the happy path stays silent.
-            console.debug('[JushoAI] fill outcomes', report.summary);
-            return report;
-          },
-          // PBI-153: a failed write is reported instead of becoming an
-          // unhandled rejection; the typed error keeps it identifiable.
-          persistSelection: (sel) => { persistWrite('最終使用状態', () => saveLastUsed(sel)); },
-          openUrl: openFeedbackUrl,
-          feedbackContext: feedbackCtx,
-          isExcluded: () => gate.isExcluded(),
-          // PBI-142: the filled values merge into this tab's carryover, so the
-          // next page re-offers them. Tab-scoped memory only — never storage.
-          recordCarryover: (entries) => {
-            tabMemory.mergeCarryover(entries);
-          },
-          // PBI-128: the per-site approval memory. A record for this host with
-          // the same form shape and selection shortens the preview to the
-          // changed rows; a clean apply records the shape (digests only — no
-          // raw profile value, no raw label).
-          recordApproval: (rows) => {
-            // PBI-153: reported through persistWrite instead of an unhandled
-            // rejection inside the `void` IIFE.
-            persistWrite('サイトごとの承認', async () => {
-              const record = recordFor(location.href, metas, rows, session.selectedProfileId, session.selectedAddressId);
-              if (!record.domain) return;
-              await upsertApproval(record);
-            });
-          },
-          // PBI-141: the profile used on this host is learned from use. Only the
-          // host → profileId pair persists — never a profile value.
-          recordAssignment: (profileId) => {
-            // PBI-153: reported through persistWrite instead of an unhandled
-            // rejection from the bare `void`.
-            persistWrite('サイトごとの割当て', () => upsertAssignment(hostOf(location.href), profileId));
-          },
-          // PBI-144: the guest is one-shot — the fill consumes it. Without this
-          // the run would keep overlaying the stored data for every later
-          // press on the same tab (BDD: タブを閉じるか完了する→破棄).
-          onApplied: () => {
-            // Only the run that snapshotted a guest consumes it: a non-guest
-            // run's apply never clears a guest set after its snapshot.
-            tabMemory.consumeGuest(activeGuest);
-          },
-        },
-      };
-      const session = createFillSession(bundle.input, bundle.env);
+      // PBI-221: the whole apply transaction (consent→inject→persist→
+      // carryover→feedback→banner＋承認/割当/guest後処理) is assembled by
+      // buildRunEnv. The backbone reads as four calls in order:
+      // loadRunState → prepare → buildRunEnv → createFillSession.
+      // bindPreview below only digests the apply result. recordApproval
+      // reads the session selection at apply time, but the session only
+      // exists after the bundle — hence the late-bound getter.
+      let session: FillSession;
+      const bundle = buildRunEnv({
+        profiles: sessionProfiles,
+        addresses: sessionAddresses,
+        lastProfileId: last.profileId,
+        lastAddressId: last.addressId,
+        assignedProfileId,
+        carryover: tabMemory.carryover(),
+        metas,
+        metasById,
+        englishPage,
+        canReanalyze: effectiveClassifier !== null,
+        run: prepared,
+        host: hostOf(location.href),
+        activeMappings,
+        effectiveClassifier,
+        llmSkip,
+        activeGuest,
+        controlsById: byId,
+        pageHref: location.href,
+        provider: info.provider,
+        version: chrome.runtime.getManifest().version,
+        // 旧実装は feedbackCtx / recordApproval / recordAssignment /
+        // classify の host を呼出時に location.href から読んでいた。preview
+        // 表示中の SPA 遷移でも呼出時点の URL が使われるよう遅延読みを渡す。
+        getPageHref: () => location.href,
+        getHost: () => hostOf(location.href),
+        getSelection: () => ({ profileId: session.selectedProfileId, addressId: session.selectedAddressId }),
+        isExcluded: () => gate.isExcluded(),
+        mergeCarryover: (entries) => { tabMemory.mergeCarryover(entries); },
+        consumeGuest: (snapshot) => { tabMemory.consumeGuest(snapshot); },
+      });
+      session = createFillSession(bundle.input, bundle.env);
       const started = await session.start();
       if (started.failureReason) {
         button.showError({ kind: 'transient', text: hintForButton(started.failureReason) });
@@ -464,8 +394,10 @@ export default defineContentScript({
         addresses: sessionAddresses,
         profiles: sessionProfiles,
         reanalyzable: effectiveClassifier !== null,
-        feedbackContext: feedbackCtx,
-        openFeedbackUrl,
+        // PBI-221: preview 表示用の context/URL 開口も bundle 由来で使い回す
+        // (run() 側に同一値の二重定義を残さない)。
+        feedbackContext: bundle.env.feedbackContext,
+        openFeedbackUrl: bundle.env.openUrl,
         onClosed: () => { openPreview = null; },
         onFailure: (reason) => { tabMemory.setLastFailure(reason); },
         // PBI-138: the 分類を直す flow. The correction runs through the session
