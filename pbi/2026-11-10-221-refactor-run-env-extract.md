@@ -47,7 +47,7 @@ Scenario: run() が短くなる
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [x] コードレビュー完了
+- [x] コードレビュー完了（2026-11-11 再レビューゲート Approved。独立レビューによる充足）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録 (2026-11-10, work/pbi-221)
@@ -61,9 +61,10 @@ Scenario: run() が短くなる
   組み立て時に DOM・chrome・tabMemory を読まない純粋組み立てにした。
 - session は bundle の後に作られるため recordApproval 用の選択取得だけ
   late-bound getter (getSelection) で受け、apply 時の値を読む等価性を保つ。
-- pageHref/host/version は bundle 構築時の snapshot を閉じる。旧実装は
-  apply 時に読み直していたが、preview 表示中の SPA 遷移は started.excluded
-  と detached 判定で既に無効化される通常系のため、等価と判断した。
+- pageHref/host は呼出時に読み直す（遅延読み）。レビュー指摘で構築時 snapshot
+  をやめ、getPageHref/getHost の getter 化で旧意味論を復元した（provider/version
+  は実行中に変わらない固定値のため snapshot のまま）。等価テストで SPA 遷移時の
+  呼出時点値の使用を固定した。
 - run() の骨格は loadRunState → prepare → buildRunEnv → createFillSession の
   順に読める構成にした。egress gate・status・preview 配線・sync・fillOne・
   メッセージ登録4種・main 全体には触れていない。
