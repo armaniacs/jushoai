@@ -11,7 +11,7 @@ import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
-import { ADDRESS_BLANK_KEYS, PROFILE_BLANK_KEYS, isBlankAddress, selectImportTargets } from '../../core/import-targets';
+import { ADDRESS_BLANK_KEYS, PROFILE_BLANK_KEYS, isPrefectureBlank, selectImportTargets } from '../../core/import-targets';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
 import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, renderCardFooter } from './dom';
 import { post } from './notice-center';
@@ -241,14 +241,11 @@ export function applyTrialSampleToAddress(base: Address, sample: Omit<Address, '
       next[key] = sample[key];
     }
   }
-  // trial は prefecture を空判定に含める ({ includePrefecture: true })。
-  // import 側は selectImportTargets で含めない (false)。ADDRESS_BLANK_KEYS
-  // 外の prefecture だけを見るため、他の key が空の素カードと見なして判定する。
+  // trial は prefecture を空判定に含める (isBlankAddress の { includePrefecture: true }
+  // の選択に対応)。ADDRESS_BLANK_KEYS 外の prefecture 単欄だけを見るため、
+  // 単欄ヘルパーを直接呼び、素カード合成はしない (EMPTY_ADDRESS の既定値に依存しない)。
   // 仕様統一は別 PBI の範囲であり、ここでは分岐の所在を型に移すだけ。
-  const prefectureBlank = isBlankAddress(
-    { ...EMPTY_ADDRESS, prefecture: next.prefecture },
-    { includePrefecture: true },
-  );
+  const prefectureBlank = isPrefectureBlank(next.prefecture);
   if (prefectureBlank && sample.prefecture !== '') next.prefecture = sample.prefecture;
   if (next.label.trim() === '') next.label = '自宅';
   return next;

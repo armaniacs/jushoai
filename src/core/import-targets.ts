@@ -38,6 +38,13 @@ export interface BlankAddressOptions {
   includePrefecture: boolean;
 }
 
+// Single-field prefecture blankness (PBI-220 follow-up): the trial fill checks
+// only this field, so it calls this helper directly instead of synthesizing a
+// mostly-blank card for isBlankAddress. isBlankAddress with
+// { includePrefecture: true } delegates here, so both stay one definition.
+export const isPrefectureBlank = (prefecture: string): boolean =>
+  (prefecture ?? '').trim() === '';
+
 const isBlankProfile = (p: Profile): boolean =>
   PROFILE_BLANK_KEYS.every((key) => (p[key] ?? '').trim() === '');
 
@@ -47,7 +54,7 @@ const isBlankAddress = (a: Address, opts: BlankAddressOptions): boolean => {
   if (!ADDRESS_BLANK_KEYS.every((key) => (a[key] ?? '').trim() === '')) {
     return false;
   }
-  return opts.includePrefecture ? (a.prefecture ?? '').trim() === '' : true;
+  return opts.includePrefecture ? isPrefectureBlank(a.prefecture) : true;
 };
 
 export { isBlankProfile, isBlankAddress };
