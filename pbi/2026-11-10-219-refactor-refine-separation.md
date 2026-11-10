@@ -28,10 +28,10 @@ Scenario: 各責務が単体で検証できる
   Then mock なしの単体テストで振る舞いが固定される
 
 ## 受け入れ基準
-- [ ] (c) leftover unknown 化が dropLeftovers、(d) 住所絞り込みが narrowAddress の純粋関数に切り出される
-- [ ] (a) 分割retag・(b) drop は splitBy 所有のまま残す
-- [ ] refineClassifications は split→leftover→narrow の順序固定の合成になり、意味論は不変
-- [ ] 既存テスト・pin 無変更で緑、make check が exit 0
+- [x] (c) leftover unknown 化を dropLeftovers、(d) 住所絞り込みを narrowAddress の純粋関数に切り出す
+- [x] (a) 分割retag・(b) drop は splitBy 所有のまま残す
+- [x] refineClassifications は split→leftover→narrow の順序固定の合成になり、意味論は不変
+- [x] 既存テスト・pin 無変更で緑、make check が exit 0
 
 ## テスト戦略
 - 既存テストが回帰網になる。新規テストは切り出した2関数の単体テストのみ
@@ -46,6 +46,16 @@ Scenario: 各責務が単体で検証できる
 - 切り出した関数の try/catch・ガードの移設は旧所在から新所在の移設表を PR に添付して明示する（ガードの欠落は欠陥扱い）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録
+- 実施日: 2026-11-10。ブランチ work/pbi-219。変更は src/core/classify-rules.ts と tests/core/classify-rules.test.ts のみ。
+- (c) を dropLeftovers、(d) を narrowAddress として切り出した。どちらも入力を変えず新しい配列を返す純粋関数である。同ラベル系の grouping キー sameLabel は splitBy と dropLeftovers で共有する単一定義に引き上げ、書式の drift を防ぐ。(a) 分割 retag・(b) drop は splitBy のまま残した。
+- refineWithDrops は split→leftover→narrow の順序固定の合成になった。refineClassifications は items だけを取り出す入口のままで、意味論は不変である。
+- ガードの移設表: at の範囲 throw・retag の有無判定・inPartOrder の連続性判定は splitBy 側に残留。leftover の `if (it)` narrowing と narrow の `g?.hasCity` / `g?.hasPref` スコープ不在判定は新所在に同形で移設。旧 leftover の droppedIds 除外は合成側の kept フィルタに置き換えた。dropped 欄は city/prefecture/addressFull になり得ないため scope 判定に影響せず、群の数え方も等価である。try/catch は旧所在になかったため移設対象なし。
+- pin 更新はなし。意味論変更の疑いが出なかったため停止規約の発動なし。
+- 新規テストは切り出した2関数の単体テストのみ。dropLeftovers 7件（単独維持・同キー unknown 化・別キー維持・分割済みと対象外の不変・空キー unknown 化・付帯情報保持・入力不変）。narrowAddress 5件（単独維持・同一スコープ絞り込みと city 優先・別スコープ不変・city/prefecture 不変・入力不変）。
+- 検証: make check が exit 0（typecheck + 全テスト 2285 件パス + 両ブラウザ build + manifest 検査 + web-ext lint。lint 警告 2 件は Firefox 最小版由来の既存のもので、変更と無関係）。
+- コードレビュー: 実装者による diff レビュー済み（split 部は同一、leftover/narrow は逐語移設、dropped 除外の前倒しは等価であることを確認。呼び出し側の署名は不変）。結合時の別視点レビューは次工程に委ねる。
