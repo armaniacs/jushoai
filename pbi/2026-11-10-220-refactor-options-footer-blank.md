@@ -52,7 +52,7 @@ Scenario: blank 判定の分岐が型で読める
 ## 実装記録
 - 実施日: 2026-11-10。ブランチ work/pbi-220。変更は src/core/import-targets.ts、src/entrypoints/options/dom.ts、src/entrypoints/options/main.ts、tests/core/import-targets.test.ts、新規 tests/options/footer-parity.test.ts、tests/options/footer-render-parity.test.ts。
 - footer 一本化: dom.ts に renderCardFooter({ onSave, onImport }) を追加し、profile 面と address 面の手書き複製を置き換えた。保存と取込の 2 ボタンと div.row 配置が 1 関数に束ねられる。通知の生成所有は呼び出し側に残し、onImport が従来どおり .catch(onImportFailed) を担う。面別条件は引数で注入し、関数内に面分岐を書かない。
-- blank 分岐の型化: isBlankAddress(a, { includePrefecture: boolean }) を必須引数にした。省略時は TS2554 で落ちることを確認した。import 側は selectImportTargets で false、trial 側は applyTrialSampleToAddress の prefecture 補充で true を選ぶ。仕様統一はせず、振る舞いは不変である。isBlankProfile に引数はない (profile 側に select 行由来の分岐がないため)。
+- blank 分岐の型化: isBlankAddress(a, { includePrefecture: boolean }) を必須引数にした。省略時は TS2554 で落ちることを確認した。import 側は selectImportTargets で false、trial 側は単欄ヘルパー isPrefectureBlank の直接判定（レビュー指摘で素カード合成を排除）。仕様統一はせず、振る舞いは不変である。isBlankProfile に引数はない (profile 側に select 行由来の分岐がないため)。
 - 束ね前後の DOM 差分: 束ね前は両面とも div.row に 保存 と フォームから取り込む の 2 ボタン (同形)。束ね後は `<div class="row"><button type="button">保存</button><button type="button">フォームから取り込む</button></div>` で両面一致し、差分なし。新規テストがこの外形を固定する。
 - 新規テスト 9 件: footer-parity 3 件 (束ね前オラクルとの DOM 一致、両面の構造同一、押下時の配線)、footer-render-parity 1 件 (実レンダーの両面 footer 一致)、import-targets 5 件 (両呼出値の組合せと selectImportTargets の import 選択)。
 - 検証: make check が exit 0 (typecheck と全テスト 2294 件パスと期待失敗 1 件、両ブラウザ build、manifest 検査、web-ext lint。lint 警告 2 件は Firefox 最小版由来の既存のもので、変更と無関係)。スコープ内テスト 80 件も緑。tsc 単体も exit 0。

@@ -217,7 +217,7 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
 // filled in place, never forked: forking would leave the old invalid card
 // behind and the trial validation could never pass.
 // prefecture注記 (PBI-220): prefecture が空判定に入るかは型で選ぶ。trial は
-// 下の applyTrialSampleToAddress で { includePrefecture: true } を渡し、
+// 下の applyTrialSampleToAddress で単欄ヘルパー isPrefectureBlank を直接呼び、
 // import は selectImportTargets で false を渡す。仕様統一までは現状維持する
 // (推測で統一しない)。
 export function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): Profile {
