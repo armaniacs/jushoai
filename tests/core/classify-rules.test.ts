@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, classifyRulePipeline, isConfident, refineClassifications, refineWithDrops,
+  ACCEPT_THRESHOLD, classifyField, classifyRulePipeline, dropLeftovers, isConfident,
+  narrowAddress, refineClassifications, refineWithDrops,
 } from '../../src/core/classify-rules';
 import { detectKanaKind, matchFieldOwned, matchLegend, resolveKana, wantsKana } from '../../src/core/kana';
 import { buildPlan } from '../../src/core/planner';
@@ -592,6 +593,125 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     // ブロック帰属を判定できないため、複製注入より不注入を選ぶ仕様の固定。
     const items = ['a', 'b'].map((id) => item('tel', id));
     expect(cats(refineClassifications(items))).toEqual(['unknown', 'unknown']);
+  });
+});
+
+describe('dropLeftovers (PBI-219)', () => {
+  const item = (category: Category, id: string) => ({
+    meta: makeMeta({ id }),
+    cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+  });
+  const cats = (items: Item[]) => items.map((i) => i.cls.category);
+
+  it('単独tel・単独zipは変えない', () => {
+    expect(cats(dropLeftovers([item('tel', 'a')]))).toEqual(['tel']);
+    expect(cats(dropLeftovers([item('zip', 'z')]))).toEqual(['zip']);
+  });
+
+  it('同キーtel 2欄・zip 2欄をunknown化する', () => {
+    const tel = ['a', 'b'].map((id) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
+    }));
+    expect(cats(dropLeftovers(tel))).toEqual(['unknown', 'unknown']);
+    const zip = ['c', 'd'].map((id) => ({
+      ...item('zip', id),
+      meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
+    }));
+    expect(cats(dropLeftovers(zip))).toEqual(['unknown', 'unknown']);
+  });
+
+  it('別キーのtel群は変えない', () => {
+    const items = [
+      { ...item('tel', 'a'), meta: makeMeta({ id: 'a', label: '自宅電話' }) },
+      { ...item('tel', 'b'), meta: makeMeta({ id: 'b', label: '携帯電話' }) },
+    ];
+    expect(cats(dropLeftovers(items))).toEqual(['tel', 'tel']);
+  });
+
+  it('正常分割済み・対象外カテゴリは触らない', () => {
+    const items = [item('tel1', 'a'), item('tel2', 'b'), item('tel3', 'c'), item('email', 'e')];
+    expect(cats(dropLeftovers(items))).toEqual(['tel1', 'tel2', 'tel3', 'email']);
+  });
+
+  it('空キー群（label・nearbyとも空）もunknown化する', () => {
+    const items = ['a', 'b'].map((id) => item('tel', id));
+    expect(cats(dropLeftovers(items))).toEqual(['unknown', 'unknown']);
+  });
+
+  it('分類の付帯情報（confidence・source）を保つ', () => {
+    const items = ['a', 'b'].map((id) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
+    }));
+    expect(dropLeftovers(items).map((i) => i.cls)).toEqual([
+      { category: 'unknown', confidence: 0.8, source: 'rule' },
+      { category: 'unknown', confidence: 0.8, source: 'rule' },
+    ]);
+  });
+
+  it('入力を変えない', () => {
+    const input = ['a', 'b'].map((id) => ({
+      ...item('tel', id),
+      meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
+    }));
+    dropLeftovers(input);
+    expect(input.map((i) => i.cls.category)).toEqual(['tel', 'tel']);
+  });
+});
+
+describe('narrowAddress (PBI-219)', () => {
+  const item = (category: Category, id: string) => ({
+    meta: makeMeta({ id }),
+    cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+  });
+  const scoped = (category: Category, id: string, nearby: string) => ({
+    meta: makeMeta({ id, nearby }),
+    cls: { category, confidence: 0.8, source: 'rule' } as Classification,
+  });
+  const cats = (items: Item[]) => items.map((i) => i.cls.category);
+
+  it('addressFull単独は維持する', () => {
+    expect(cats(narrowAddress([item('addressFull', 'a')]))).toEqual(['addressFull']);
+  });
+
+  it('同一スコープのprefecture・cityで絞る（city優先）', () => {
+    expect(cats(narrowAddress([
+      scoped('prefecture', 'p', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ]))).toEqual(['prefecture', 'addressNoPref']);
+    expect(cats(narrowAddress([
+      scoped('city', 'c', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ]))).toEqual(['city', 'street']);
+    expect(cats(narrowAddress([
+      scoped('prefecture', 'p', 'ご住所'),
+      scoped('city', 'c', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ]))).toEqual(['prefecture', 'city', 'street']);
+  });
+
+  it('別スコープのprefecture・cityでは絞らない', () => {
+    expect(cats(narrowAddress([
+      scoped('prefecture', 'op', '注文者住所'),
+      scoped('city', 'oc', '注文者住所'),
+      scoped('addressFull', 'oa', '注文者住所'),
+      scoped('addressFull', 'da', 'お届け先住所'),
+    ]))).toEqual(['prefecture', 'city', 'street', 'addressFull']);
+  });
+
+  it('city・prefecture自体は変えない', () => {
+    expect(cats(narrowAddress([item('city', 'c'), item('prefecture', 'p')])))
+      .toEqual(['city', 'prefecture']);
+  });
+
+  it('入力を変えない', () => {
+    const input = [
+      scoped('city', 'c', 'ご住所'),
+      scoped('addressFull', 'a', 'ご住所'),
+    ];
+    narrowAddress(input);
+    expect(input.map((i) => i.cls.category)).toEqual(['city', 'addressFull']);
   });
 });
 
