@@ -337,4 +337,7 @@ describe('sample forms end to end', () => {
   it('arakawa-mailform.html fills the in-scope fields', async () => {
     expect(await planFor('arakawa-mailform.html')).toEqual(expectedFor('arakawa-mailform.html'));
   });
+  it('2000033.html fills the in-scope fields', async () => {
+    expect(await planFor('2000033.html')).toEqual(expectedFor('2000033.html'));
+  });
 });

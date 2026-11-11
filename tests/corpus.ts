@@ -1917,6 +1917,20 @@ const LEDGER = {
       'btnConfirm (submit): action element, never a fill target (exclude)',
     ],
   },
+  '2000033.html': {
+    expected: {
+      // 板橋区 CMS メールアドレス確認ステップ。type=text のため email 解決せず
+      // full-address 値が fill される (honest pin。email-via-label 候補)。
+      'MailAddress': '東京都千代田区千代田1-1 千代田ビル101',
+      'MailAddressKakunin': '東京都千代田区千代田1-1 千代田ビル101',
+    },
+    excluded: [
+      // header の Google CSE 検索 form (q/cx/ie) は別 form のため trimmed (exclude)。
+      'Token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'PathBase (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__RequestVerificationToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

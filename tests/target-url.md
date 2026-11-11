@@ -60,3 +60,4 @@
 - https://www.lib.city.katsushika.lg.jp/mailform → mailform.html
 - https://www.koto-lib.tokyo.jp/viewer/opinion.html → opinion-html.html
 - https://www.library.city.arakawa.tokyo.jp/mailform → arakawa-mailform.html
+- https://www.city.itabashi.tokyo.jp/cgi-crm/CRM030/CRM030_004/G7507000000/2000033 → 2000033.html
