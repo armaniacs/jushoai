@@ -111,3 +111,23 @@
 | 98 | https://www.mitsui.com/jp/ja/contact/ | 除外 | フォームなし (三井物産8031。HTTP 200ハブ。静的formは検索のみ。実フォームは `form.mitsui.com`→No.174で検証) |
 | 99 | https://www.sumitomocorp.com/ja/jp/contact/ | 除外 | 到達不能 (住友商事8053。HTTP 404。静的formは検索のみ) |
 | 100 | https://www.mitsubishicorp.com/jp/ja/contact/ | 除外 | フォームなし (三菱商事8058。HTTP 200「資料請求」頁だが静的formは検索のみ。実フォームは krs.bz→No.175で検証) |
+| 101 | https://www.mos.co.jp/contact/ | 除外 | フォームなし (モスフード8153。HTTP 404「会社情報」頁。静的formなし。実窓口は `mos.jp/contact/` 別導線) |
+| 102 | https://www.srs-holdings.co.jp/contact/ | 除外 | フォームなし (SRS-HD8163。Shopify英語頁に転送。静的formはログイン・検索のみ。住所・氏名欄なし) |
+| 103 | https://www.royal-holdings.co.jp/contact/ | 除外 | フォームなし (ロイヤルHD8179。HTTP 200ハブだが静的formなし。FAQ詳細のみ) |
+| 104 | https://www.yoshinoya-holdings.com/contact/ | 除外 | フォームなし (吉野家HD9861。HTTP 200ハブだが静的formなし。実フォームは `/contact/storeform/`→No.176で検証) |
+| 105 | https://www.kfc.co.jp/contact/ | 除外 | 到達不能 (日本KFC9873。HTTP 404「ページがありません」。静的formなし) |
+| 106 | https://www.yellowhat.jp/contact/ | 除外 | フォームなし (イエローハット9882。HTTP 200ハブ。静的formは空。実フォームは SMP→No.177で検証) |
+| 107 | https://www.matsuyafoods.co.jp/contact/ | 除外 | 到達不能 (松屋フーズ9887。HTTP 503「サービス停止のお知らせ」) |
+| 108 | https://www.plenus.co.jp/contact/ | 除外 | フォームなし (プレナス9945。HTTP 200ハブ。静的formは検索のみ。実窓口はブランド別 contact) |
+| 109 | https://www.ministop.co.jp/contact/ | 除外 | 到達不能 (ミニストップ9946。HTTP 404。実窓口は `/inquiry/` 別導線) |
+| 110 | https://www.misumi.co.jp/contact/ | 除外 | フォームなし (ミスミG本社9962。HTTP 200ハブだが静的formなし。実窓口は `jp.misumi-ec.com`→No.178で検証) |
+| 111 | https://www.belluna.co.jp/contact/ | 除外 | 到達不能 (ベルーナ9997。HTTP 403) |
+| 112 | https://www.smfg.co.jp/contact/ | 除外 | 到達不能 (SMFG8316。HTTP 404。静的formは検索のみ) |
+| 113 | https://www.daiwa-grp.jp/contact/ | 除外 | 到達不能 (大和証券G8601。HTTP 404。静的formは検索のみ。実フォームは `/inquiry/`→No.179で検証) |
+| 114 | https://www.nomura.com/jp/contact/ | 除外 | 到達不能 (野村HD8604。HTTP 404) |
+| 115 | https://www.matsui.co.jp/contact/ | 除外 | 到達不能 (松井証券8628。HTTP 404。静的formなし。実窓口は `/support/contact/` 別導線) |
+| 116 | https://www.jpx.co.jp/contact/ | 除外 | フォームなし (日本取引所G8697。HTTP 200ハブ。静的formは検索のみ。実フォームは `form.jpx.co.jp`→No.180で検証) |
+| 117 | https://www.ms-ad-hd.com/ja/contact/ | 除外 | フォームなし (MS&AD8725。HTTP 200ハブ。静的formは検索のみ) |
+| 118 | https://www.dai-ichi-life.co.jp/contact/ | 除外 | 到達不能 (第一生命8750。HTTP 404・文字化けタイトル) |
+| 119 | https://www.tokiomarinehd.com/contact/ | 除外 | 到達不能 (東京海上8766。HTTP 404) |
+| 120 | https://www.mec.co.jp/contact/ | 除外 | 到達不能 (三菱地所8802。HTTP 404 size 479) |
