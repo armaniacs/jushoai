@@ -111,3 +111,23 @@
 | 98 | https://www.city.hiroshima.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
 | 99 | https://www.jrhokkaido.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`jrherror/404-jrhp.html`。formなし) |
 | 100 | https://www.jrkyushu.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索+運行情報selectのみ。実フォームはkintoneapp→No.167で検証) |
+| 101 | https://www.keio.co.jp/contact/ | 除外 | フォームなし (HTTP 200「よくあるご質問/お問合せ」+検索(text:s)のみ) |
+| 102 | https://www.keikyu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 103 | https://www.odakyu.jp/contact/ | 除外 | 到達不能 (HTTP 404「URLが変わりました」告知頁。静的formは検索のみ) |
+| 104 | https://www.hankyu.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`404.html`。静的formは検索のみ) |
+| 105 | https://www.kintetsu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 106 | https://www.meitetsu.co.jp/contact/ | 除外 | 到達不能 (HTTP 200だがsize 3063の404内容頁。formなし) |
+| 107 | https://www.nitto.co.jp/contact/ | 除外 | フォームなし (HTTP 301→`nitto.com`トップに転送。連絡先頁なし) |
+| 108 | https://www.tdk.com/ja/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 109 | https://www.omron.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 110 | https://www.yamaha.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 111 | https://www.casio.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし) |
+| 112 | https://www.epson.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。text 1欄(actionなし)のみ。実フォームはcform別導線→No.145-146で検証) |
+| 113 | https://www.brother.co.jp/contact/index.aspx | 除外 | フォームなし (HTTP 200「お問い合わせ(総合)」リンク集。静的formなし。実フォームは `business.brother.co.jp`→No.155で検証) |
+| 114 | https://www.konicaminolta.com/jp-ja/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし。実フォームはenq別導線→No.148-149で検証) |
+| 115 | https://www.ricoh.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。form actionなし。実フォームはwebform別導線→No.151-152で検証) |
+| 116 | https://www.suntory.co.jp/customer/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 117 | https://www.asahibeer.co.jp/customer/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 118 | https://www.kirin.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `kirinholdings` 検索のみ) |
+| 119 | https://www.nestle.co.jp/contact/ | 除外 | 到達不能 (HTTP 403。checkbox 1のみのbotチャレンジ頁とみられる) |
+| 120 | https://www.yakult.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`/maintenance/`。メンテナンス中) |
