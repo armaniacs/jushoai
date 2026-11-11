@@ -55,3 +55,4 @@
 - https://www.taiheiyo-cement.co.jp/contact/ → taiheiyo-cement-contact-form.html
 - https://www.ngk.co.jp/contact/input?form_type=3 → ngk-contact-form.html
 - https://inquiry.lixil.co.jp/regist/is?SMPFORM=naoj-lctgtj-defd68f97cffa36b3ed5f3bcd2c68ca6&qcat=18 → lixil-inquiry-form.html
+- https://www.city.sapporo.jp/city/iken-hp/index.html → sapporo-iken-form.html

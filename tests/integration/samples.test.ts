@@ -321,4 +321,7 @@ describe('sample forms end to end', () => {
   it('lixil-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('lixil-inquiry-form.html')).toEqual(expectedFor('lixil-inquiry-form.html'));
   });
+  it('sapporo-iken-form.html fills the in-scope fields', async () => {
+    expect(await planFor('sapporo-iken-form.html')).toEqual(expectedFor('sapporo-iken-form.html'));
+  });
 });
