@@ -261,4 +261,7 @@ describe('sample forms end to end', () => {
   it('ff-webmaster-form.html fills the in-scope fields', async () => {
     expect(await planFor('ff-webmaster-form.html')).toEqual(expectedFor('ff-webmaster-form.html'));
   });
+  it('ff-procurement-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ff-procurement-form.html')).toEqual(expectedFor('ff-procurement-form.html'));
+  });
 });
