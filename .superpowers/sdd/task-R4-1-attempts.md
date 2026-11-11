@@ -71,3 +71,23 @@
 | 58 | https://www.city.fukuoka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
 | 59 | https://www.city.kyoto.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `google.com/cse` 検索のみ) |
 | 60 | https://www.pref.osaka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 61 | https://www.pref.kanagawa.jp/contact/ | 除外 | 到達不能 (HTTP 404「エラー404」。静的formは検索のみ) |
+| 62 | https://www.city.kawasaki.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 63 | https://www.city.saitama.jp/contact/ | 除外 | 到達不能 (HTTP 404→`.lg.jp`。静的formは検索のみ) |
+| 64 | https://www.city.chiba.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 65 | https://www.city.kobe.lg.jp/contact/ | 除外 | フォームなし (HTTP 200「神戸市：お問い合わせ」ハブ。静的formは検索2件のみ。実フォームは `contact.city.kobe.lg.jp` Webフォーム→No.139で検証) |
+| 66 | https://www.yodobashi.com/ec/support/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 67 | https://www.biccamera.com/bc/support/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 68 | https://www.zozo.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 69 | https://www.rakuten.co.jp/contact/ | 除外 | フォームなし (HTTP 200だが実体は楽天市場の店舗頁「ユーカ」。静的formは商品検索のみ。無関係頁) |
+| 70 | https://www.amazon.co.jp/gp/help/customer/contact-us | 除外 | 到達不能 (HTTP 403・bot遮断。本文空。ログイン必須の可能性あり) |
+| 71 | https://www.nissen.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。NPSアンケート radio×11+textareaはあるが住所・氏名欄なしのため対象外) |
+| 72 | https://www.bellemaison.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 73 | https://www.felissimo.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 74 | https://www.his-j.com/contact/ | 除外 | 到達不能 (HTTP 404・文字化けタイトル。formなし) |
+| 75 | https://www.jtb.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`Error/404Error.asp`。formなし) |
+| 76 | https://www.gurunavi.com/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 77 | https://www.ncgm.go.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formはGoogle検索のみ) |
+| 78 | https://www.ncc.go.jp/jp/contact/ | 除外 | 到達不能 (HTTP 404「リニューアル」。静的formは検索のみ) |
+| 79 | https://www.hosp.keio.ac.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 80 | https://www.mhlw.go.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
