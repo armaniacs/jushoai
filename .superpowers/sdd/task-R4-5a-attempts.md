@@ -91,3 +91,23 @@
 | 78 | https://www.city.hiroshima.lg.jp/living/soudan/1025721/1016736.html | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的formは検索のみ) |
 | 79 | https://www.city.hiroshima.lg.jp/shisei/kouchou/index.html | 除外 | フォームなし (HTTP 200「広聴」。静的formは検索のみ) |
 | 80 | https://www.city.hiroshima.lg.jp/living/soudan/index.html | 除外 | フォームなし (HTTP 200「市民相談」。静的formは検索のみ) |
+| 81 | https://www.city.kitakyushu.lg.jp/cgi-bin/form/event.php?f=event.html | 除外 | フォームなし (HTTP 200「イベントカレンダー」。静的formはキーワード・地域・分類selectの絞込検索のみ。申込欄なし) |
+| 82 | https://www.city.kitakyushu.lg.jp/kurashi/menu01_0611.html | 除外 | フォームなし (HTTP 200「相談・窓口」。静的formはページID検索のみ) |
+| 83 | https://www.city.kitakyushu.lg.jp/shisei/menu004_00002.html | 除外 | フォームなし (HTTP 200「広報・広聴」。静的formはページID検索のみ) |
+| 84 | https://faq-call-center-city.kitakyushu.life/ | 除外 | JS描画のみ (HTTP 200「よくあるご質問」。form・inputなし。FAQ検索はJS) |
+| 85 | https://www.city.kitakyushu.lg.jp/page/dch/madoguchi_sisetsu/ | 除外 | JS描画のみ (HTTP 200「スマらく窓口」。form・inputなし。窓口・施設予約は外部JS導線) |
+| 86 | https://www.city.fukuoka.lg.jp/shisei/iken-teian/index.html | 除外 | フォームなし (HTTP 200「意見募集・市政への提案」。form・inputなし。本体フォームは No.91) |
+| 87 | https://www.city.fukuoka.lg.jp/lifeinformation/net-tetsuduki/index.html | 除外 | フォームなし (HTTP 200「ネットで手続き」。form・inputなし。手続き案内のみ) |
+| 88 | https://www.city.fukuoka.lg.jp/lifeinformation/net-tetsuduki/downloadservice/index.html | 除外 | フォームなし (HTTP 200「申請書ダウンロードサービス」。form・inputなし。様式DL案内のみ) |
+| 89 | https://www.city.fukuoka.lg.jp/lifeinformation/shohiseikatsu-sodan/index.html | 除外 | フォームなし (HTTP 200「相談・消費生活トップ」。form・inputなし) |
+| 90 | https://www.city.fukuoka.lg.jp/shicho/koho/event/weekend_event.html | 除外 | フォームなし (HTTP 200「今週末のおでかけ情報」。form・inputなし) |
+| 91 | https://shiminnnokoe.city.fukuoka.lg.jp/teian/ | 有望 P1 | 静的実フォーム (HTTP 200「市政への提案」。`action=confirm.php`、input 17・textarea 1・select 2。`name/kana/sex/age/zipcode`・住所分割 `ku/choumei/ban/gou`・`phone/email`・`m_title/m_data`。多様性◎) |
+| 92 | https://shiminnnokoe.city.fukuoka.lg.jp/index.php | 除外 | フォームなし (HTTP 200「寄せられた市民の声」。form・inputなし。閲覧のみ) |
+| 93 | https://www.city.fukuoka.lg.jp/shimin/shohiseikatsu/life/syouhiseikatusentauhoumupeiji/internetsoudan/internetsoudan_2.html | 除外 | フォームなし (HTTP 200「インターネット消費生活相談ご利用案内」。form・inputなし。相談本体は別導線) |
+| 94 | https://www.city.kumamoto.jp/list04456.html | 除外 | フォームなし (HTTP 200「市政へのご意見・ご提案(市民の声)」一覧。静的formはCMS検索ポストバック `__VIEWSTATE` のみ。機構を記録) |
+| 95 | https://higomaru-call.jp/faq/CCFaqIndex.asp | 除外 | フォームなし (HTTP 200「ひごまるコール」FAQ。静的formは `txtS` のFAQ検索 `CCFaqList.asp` のみ) |
+| 96 | https://www.city.kumamoto.jp/kiji00372590/index.html | 除外 | フォームなし (HTTP 200「総合相談窓口」。静的formはCMS検索ポストバックのみ) |
+| 97 | https://www.city.kumamoto.jp/kiji00372166/index.html | 除外 | フォームなし (HTTP 200「義援金・寄附金受付」。静的formはCMS検索ポストバックのみ) |
+| 98 | https://www.city.sendai.jp/webkoho/information/index.html | 除外 | フォームなし (HTTP 200「よく利用される情報一覧」。静的formは検索のみ) |
+| 99 | https://www.city.saitama.lg.jp/001/001/007/p016829.html | 除外 | フォームなし (HTTP 200「区役所の休日窓口」。静的formは検索のみ) |
+| 100 | https://saitama.rsv.ws-scs.jp/web/ | 除外 | JS描画のみ (HTTP 200「さいたま市公共施設予約」。form・inputなし。予約はJS導線) |
