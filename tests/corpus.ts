@@ -1036,6 +1036,32 @@ const LEDGER = {
       'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'ff-compliance-hotline-form.html': {
+    expected: {
+      // Same Drupal form family as ff-csr but without address/company/tel
+      // fields: 姓/名 labels each read as a full name; pinned honest.
+      'name[first]': '山田 太郎',
+      'name[last]': '山田 太郎',
+      'name_kana[first]': 'ヤマダ タロウ',
+      'name_kana[last]': 'ヤマダ タロウ',
+      'e_mailatoresu[mail_1]': 'yamada@example.com',
+      'e_mailatoresu[mail_2]': 'yamada@example.com',
+    },
+    excluded: [
+      'inquiry_title (text): 件名, no profile value, correctly unfilled',
+      '(no name/id) (button): unaddressable (exclude)',
+      'inquiry_body (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'captcha_sid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'captcha_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'captcha_response (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'is_recaptcha_v3 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'agreement_check (checkbox): out of scope (skip fixed)',
+      'op (submit): action element, never a fill target (exclude)',
+      'form_build_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

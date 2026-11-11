@@ -36,3 +36,4 @@
 - https://go6.global.toshiba/GX/contactform → toshiba-gx-contact-form.html
 - https://www.fujifilm.com/jp/ja/form/FF-Webmaster-Ja → ff-webmaster-form.html
 - https://www.fujifilm.com/jp/ja/form/FF-Procurement-Tokyo → ff-procurement-form.html
+- https://holdings.fujifilm.com/ja/form/compliance-hotline → ff-compliance-hotline-form.html

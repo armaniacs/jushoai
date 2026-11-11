@@ -264,4 +264,7 @@ describe('sample forms end to end', () => {
   it('ff-procurement-form.html fills the in-scope fields', async () => {
     expect(await planFor('ff-procurement-form.html')).toEqual(expectedFor('ff-procurement-form.html'));
   });
+  it('ff-compliance-hotline-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ff-compliance-hotline-form.html')).toEqual(expectedFor('ff-compliance-hotline-form.html'));
+  });
 });
