@@ -39,3 +39,23 @@
 | 18 | https://www.library.toshima.tokyo.jp/contents?pid=221 | 除外 | フォームなし (HTTP 200「お問い合わせ」。form・inputなしの問合せ先案内頁) |
 | 19 | https://www.library.city.arakawa.tokyo.jp/ | 除外 | hub・検索窓のみ (HTTP 200「トップページ」。静的form 1は文字サイズ切替のみ) |
 | 20 | https://www.library.city.arakawa.tokyo.jp/mailform | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせ」。`action=./mailform`、text `textName/textAddress/textMail/textTel`・radio `groupKind/groupReply`・textarea `textMessage`。LiCS系。氏名/住所/mail/tel+本文で多様性◎) |
+| 21 | https://www.lib.city.katsushika.lg.jp/ | 除外 | hub・検索窓のみ (HTTP 200「トップページ」。静的form 3は文字サイズ切替・蔵書検索導線のみ) |
+| 22 | https://www.lib.city.katsushika.lg.jp/menucontents?pid=38 | 除外 | フォームなし (HTTP 200「レファレンスサービス」。静的form 1は文字サイズ切替のみの案内頁) |
+| 23 | https://www.lib.city.katsushika.lg.jp/mailform | 有望 P1 | 静的実フォーム (HTTP 200「【利用登録のない方】Ｅメールレファレンスの入力はこちら」。`action=./mailform`、text `txtName/txtKana/txtMail/txtTel`・radio `radioReply`・textarea `txtQtext`。LiCS系。氏名/カナ/mail/tel+本文で多様性◎。ログイン不要版のため取込容易) |
+| 24 | https://www.lib.city.ota.tokyo.jp/ | 除外 | hub・検索窓のみ (HTTP 200「トップページ」。静的form 2は文字サイズ切替・蔵書検索導線のみ) |
+| 25 | https://www.lib.city.ota.tokyo.jp/bookinguserlist | 除外 | ログイン必須 (HTTP 200「利用者メニュー」。静的form 2は `./login` 宛ログインのみ。座席予約 `すわろっか` も認証壁内) |
+| 26 | https://www.lib.city.ota.tokyo.jp/contents?pid=537 | 除外 | フォームなし (HTTP 200「登録・貸出・予約など」。form・inputなしの案内頁) |
+| 27 | https://www.lib.city.shibuya.tokyo.jp/ | 除外 | hub・検索窓のみ (HTTP 200。静的form 2は `site-search/` 宛サイト内検索のみ) |
+| 28 | https://www.lib.city.shibuya.tokyo.jp/guidance/requests/ | 除外 | フォームなし (HTTP 200「予約・リクエストについて」。静的form 2は `site-search/` 宛検索のみの案内頁) |
+| 29 | https://www.lib.city.shibuya.tokyo.jp/guidance/reference-service/ | 除外 | フォームなし (HTTP 200「レファレンスサービス」。館内formは検索のみ。`frmMain` は外部・国会図書館レファレンス共同DB検索窓で当館フォームではない) |
+| 30 | https://www.lib.city.shibuya.tokyo.jp/guidance/volunteer/ | 除外 | フォームなし (HTTP 200「図書館ボランティア」。静的form 2は `site-search/` 宛検索のみの案内頁) |
+| 31 | https://www.library.city.suginami.tokyo.jp/ | 除外 | hub・検索窓のみ (HTTP 200。静的form 1は `/search/` 宛サイト内検索のみ) |
+| 32 | https://www.library.city.suginami.tokyo.jp/guidance/registration/ | 除外 | フォームなし (HTTP 200「図書館利用登録」。静的form 1は `/search/` 宛検索のみの案内頁) |
+| 33 | https://www.library.city.suginami.tokyo.jp/guidance/reservation/ | 除外 | フォームなし (HTTP 200「予約・リクエスト」。静的form 1は `/search/` 宛検索のみの案内頁) |
+| 34 | https://www.library.city.suginami.tokyo.jp/guidance/group/ | 除外 | フォームなし (HTTP 200「団体利用」。静的form 1は `/search/` 宛検索のみの案内頁) |
+| 35 | https://www.library.city.suginami.tokyo.jp/research/reference/ | 除外 | フォームなし (HTTP 200「レファレンス (資料探しの相談など)」。静的form 1は `/search/` 宛検索のみの案内頁) |
+| 36 | https://library.city.tokyo-nakano.lg.jp/ | 除外 | OPAC検索窓のみ (HTTP 200「中野区立図書館」。静的form 2はOPAC検索 `kn.licsre-saas.jp/.../searchinp` とイベント絞込 `/event` のみ) |
+| 37 | https://library.city.tokyo-nakano.lg.jp/guide/ | 除外 | フォームなし (HTTP 200「利用案内」。form・inputなしの案内頁) |
+| 38 | https://library.city.tokyo-nakano.lg.jp/guide/regist.html | 除外 | フォームなし (HTTP 200「利用者登録」。form・inputなしの案内頁) |
+| 39 | https://library.city.tokyo-nakano.lg.jp/reference/ | 除外 | フォームなし (HTTP 200「調べもの相談」。館内formは外部・国会図書館レファレンス共同DB検索窓のみ) |
+| 40 | https://library.city.tokyo-nakano.lg.jp/contact/ | 除外 | フォームなし (HTTP 200「お問合せ」。formなし。mailto `toshokan@nakano-library.jp`・電話/FAX・区民の声リンクの案内頁) |
