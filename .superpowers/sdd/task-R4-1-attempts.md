@@ -51,3 +51,23 @@
 | 38 | https://www.tepco.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `search-tepco.dga.jp` 検索のみ) |
 | 39 | https://www.tokyo-gas.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「該当ページがございません」。formなし) |
 | 40 | https://www.docomo.ne.jp/support/inquiry/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だが実体は検索2件+ページ評価アンケート(radio survey_q1/q5・checkbox15・select1、`action=#` JS送信)。住所・氏名欄なしのため対象外) |
+| 41 | https://www.au.com/support/inquiry/ | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的form 8件すべて検索/FAQ検索系。実窓口は別導線→No.182で検証) |
+| 42 | https://www.softbank.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `/search_result/` 検索のみ) |
+| 43 | https://www.mizuho-fg.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 44 | https://www.smbc.co.jp/contact/ | 除外 | JS描画のみ (HTTP 200・size 1976・文字化けタイトル。静的formなし) |
+| 45 | https://www.bk.mufg.jp/contact/ | 除外 | 到達不能 (HTTP 404「ファイルが見つかりません」) |
+| 46 | https://www.japanpost.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `/search/` 検索のみ) |
+| 47 | https://www.kuronekoyamato.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/ytc/contact/`「お問い合わせ」ハブ。静的formは検索のみ。実フォームは `business.kuronekoyamato.co.jp/contact/form/`→No.161で検証) |
+| 48 | https://www.sagawa-exp.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ。実窓口はe-service→No.163で検証) |
+| 49 | https://www.nhk.or.jp/contact/ | 除外 | 到達不能 (HTTP 404「エラーが発生、もしくはページにアクセスできません」。formなし) |
+| 50 | https://www.ntv.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 51 | https://www.metro.tokyo.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404「お探しのページは見つかりません」。formなし) |
+| 52 | https://www.city.shibuya.tokyo.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 53 | https://www.city.shinjuku.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 54 | https://www.city.yokohama.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 55 | https://www.city.osaka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 56 | https://www.city.nagoya.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 57 | https://www.city.sapporo.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 58 | https://www.city.fukuoka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 59 | https://www.city.kyoto.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `google.com/cse` 検索のみ) |
+| 60 | https://www.pref.osaka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
