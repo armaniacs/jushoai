@@ -300,4 +300,7 @@ describe('sample forms end to end', () => {
   it('auhikari-callback-form.html fills the in-scope fields', async () => {
     expect(await planFor('auhikari-callback-form.html')).toEqual(expectedFor('auhikari-callback-form.html'));
   });
+  it('hamamatsu-kocho-form.html fills the in-scope fields', async () => {
+    expect(await planFor('hamamatsu-kocho-form.html')).toEqual(expectedFor('hamamatsu-kocho-form.html'));
+  });
 });

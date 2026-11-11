@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.city.hamamatsu.shizuoka.jp/koho2/kocho/form.html
+  (浜松市 お問い合わせフォーム).
+  Field names, labels, maxlengths, and control kinds mirror the real page.
+  Bare labels are kept: the real page's th memo spans (（全角）/（全角ひらがな）/
+  （半角数字）/（半角英数）) were verified to leave classification unchanged
+  (a tr/th/td variant pinned identical values), so the table chrome is dropped.
+  The item_3 (性別) / item_4 (年代) / item_5 (ご職業) radio groups stay dropped:
+  their fieldset legend is the bare word 選択肢 and the names are coded, so
+  they stay unclassified (radio policy). item_12 (問い合わせ内容 textarea)
+  stays dropped (not scanned).
+-->
+<html lang="ja"><meta charset="utf-8"><title>浜松市 お問い合わせフォーム (municipal)</title>
+<form>
+      <label for="item_1">1.お名前（必須）</label>
+      <input name="item_1" id="item_1" type="text" value="" maxlength="20">
+      <label for="item_2">2.ふりがな</label>
+      <input name="item_2" id="item_2" type="text" value="">
+      <label for="item_6">6.郵便番号</label>
+      <input name="item_6" id="item_6" type="text" value="" maxlength="10">
+      <label for="item_7">7.ご住所</label>
+      <input name="item_7" id="item_7" type="text" value="" maxlength="250">
+      <label for="item_8">8.電話番号</label>
+      <input name="item_8" id="item_8" type="text" value="">
+      <label for="item_9">9.ファクス</label>
+      <input name="item_9" id="item_9" type="text" value="">
+      <label for="item_10">10.メールアドレス（必須）</label>
+      <input name="item_10" id="item_10" type="text" value="" maxlength="250">
+      <label for="item_11">11.問い合わせ件名（必須）</label>
+      <input name="item_11" id="item_11" type="text" value="">
+<!-- skip: item_3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_4 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_5 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item_12 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: page_id / page_title / page_url / item_cnt / form_type / discrimination_number (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: publish_ssl_flg (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: label_* / nes_* / desc_mail_* / mail_* / reply_mail_* per-item shims (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: code / dept / page / ENQ_RETURN_MAIL_SEND_FLG (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: (no name/id) (reset): unaddressable (exclude) -->
+<!-- skip: (no name/id) (image): unaddressable (exclude) -->
+</form>
