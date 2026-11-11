@@ -26,3 +26,4 @@
 - https://www.fujifilm.com/jp/ja/form/FF-CSR → ff-csr.html
 - https://www.otsuka.co.jp/contacts/opinion/form → otsuka-opinion-form.html
 - https://www.mitsuihome.co.jp/support/sonota/form.php → mitsuihome-sonota-form.html
+- https://www.mitsui-reform.com/ssl/catalog/select.html → mitsui-reform-catalog-form.html

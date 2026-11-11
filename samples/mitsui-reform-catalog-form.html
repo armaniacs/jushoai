@@ -1,0 +1,114 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.mitsui-reform.com/ssl/catalog/select.html
+  (三井リフォーム 資料請求 入力).
+  Field ids, names, placeholders, and control kinds mirror the real page. The
+  real page lays its rows out as dl/dt/dd, and the scanner reads the dt text
+  as nearby (grouping key for the split/leftover refine), so the headings are
+  kept verbatim while the radio/checkbox/textarea rows stay skipped. pref and
+  address are readonly on the real page (AjaxZip3 auto-fill, JS behavior out
+  of scope); the readonly marker itself is dropped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>三井リフォーム 資料請求 (housing)</title>
+<form>
+<dl>
+<div><dt>お名前</dt><dd>
+      <input name="name_1" id="name_1" type="text" value="" placeholder="例）三井">
+      <input name="name_2" id="name_2" type="text" value="" placeholder="例）太郎">
+</dd></div>
+<div><dt>フリガナ</dt><dd>
+      <input name="kana_1" id="kana_1" type="text" value="" placeholder="例）ミツイ">
+      <input name="kana_2" id="kana_2" type="text" value="" placeholder="例）タロウ">
+</dd></div>
+<div><dt>電話番号</dt><dd>
+      <input name="tel" id="tel" type="tel" value="" placeholder="例）0000000000" maxlength="12">
+</dd></div>
+<div><dt>電話番号2</dt><dd>
+      <input name="tel2" id="tel2" type="tel" value="" placeholder="例）0000000000" maxlength="12">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="email" id="email" type="email" value="" placeholder="例）example@mitsui-reform.com">
+</dd></div>
+<div><dt>メールアドレス2</dt><dd>
+      <input name="email_2" id="email_2" type="email" value="" placeholder="例）dummy@mitsui-reform.com">
+</dd></div>
+<div><dt>現在お住まいのご住所</dt><dd>
+      <input name="post" id="post" type="text" value="" placeholder="例）1040061" maxlength="7">
+      <input name="pref" id="pref" type="text" value="">
+      <input name="address" id="address" type="text" value="">
+      <input name="address2" id="address02" type="text" value="" placeholder="例）銀座6-17-1">
+      <input name="address3" id="address03" type="text" value="" placeholder="例）銀座6丁⽬-SQUARE">
+      <input name="address4" id="address04" type="text" value="" placeholder="例）101号室">
+</dd></div>
+<div><dt>ご計画建物のご住所</dt><dd>
+      <input name="place_zip" id="place-post" type="text" value="" placeholder="例）1040061" maxlength="7">
+      <input name="place_pref" id="place-pref" type="text" value="">
+      <input name="place_address1" id="place-address" type="text" value="">
+      <input name="place_address2" id="place-address02" type="text" value="" placeholder="例）銀座6-17-1">
+      <input name="place_address3" id="place-address03" type="text" value="" placeholder="例）銀座6丁⽬-SQUARE">
+      <input name="place_address4" id="place-address04" type="text" value="" placeholder="例）101号室">
+</dd></div>
+<div><dt>LOOP会員番号</dt><dd>
+      <input name="loop_number" id="loop_number" type="text" value="" placeholder="例）1234567890" maxlength="10">
+</dd></div>
+<div><dt>お住まいのご希望エリア</dt><dd>
+      <input name="purchase_area_1" id="" type="text" value="" placeholder="例）東京都世田谷区">
+      <input name="purchase_area_2" id="" type="text" value="" placeholder="例）東京都世田谷区">
+      <input name="purchase_area_3" id="" type="text" value="" placeholder="例）東京都世田谷区">
+</dd></div>
+<div><dt>ご希望の物件形態</dt><dd>
+      <input name="purchase_type_other" id="" type="text" value="">
+</dd></div>
+<div><dt>ご予算</dt><dd>
+      <input name="purchase_budget_home_b" id="" type="text" value="">
+      <input name="purchase_budget_home_t" id="" type="text" value="">
+      <input name="purchase_budget_reform_b" id="" type="text" value="">
+      <input name="purchase_budget_reform_t" id="" type="text" value="">
+</dd></div>
+</dl>
+<!-- skip: form_type (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: genre (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: reform_menu (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: reform_sheet (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: purchase_sheet (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: recaptchaResponse (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: init_time (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: privacy (checkbox): out of scope (skip fixed) -->
+<!-- skip: place_reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: place_reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: place_reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: construction_type_detail (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_situation (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_situation (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_situation (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_situation (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: building_situation (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: reform (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: loop (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: loop (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: loop (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: purchase_comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: check (button): action element, never a fill target (exclude) -->
+</form>
