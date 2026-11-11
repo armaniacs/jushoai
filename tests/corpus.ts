@@ -1629,6 +1629,34 @@ const LEDGER = {
       'btn2 (button): action element, never a fill target (exclude)',
     ],
   },
+  'fukuoka-teian-form.html': {
+    expected: {
+      // 氏名/フリガナ nearby + name/kana: fullName + fullNameKana (katakana)。
+      // placeholder 空のため結合区切りは既定半角スペース (otsuka と同形)。
+      'name': '山田 太郎',
+      'kana': 'ヤマダ タロウ',
+      // maxlength=7 のため undashed (dashed 8字は入らない)。
+      'zipcode': '1000001',
+      // ku (区 select) は未分類のまま、choumei が都道府県付き連結を fill。
+      'choumei': '東京都千代田区千代田1-1',
+      // アパートマンション reads as building.
+      'apartname': '千代田ビル101',
+      'phone': '090-1234-5678',
+      'email': 'yamada@example.com',
+      // 年齢 select: 実選択肢の 30代 (value 30) に解決 (profile 1990年生)。
+      'age': '30',
+    },
+    excluded: [
+      'm_title (text): 件名, no profile value, correctly unfilled',
+      'ku (select): 区 select (―-/中央区/…/不明 実選択肢), stays unclassified (LLM fallback; prefecture/ward-select candidate, same as kobe ANSWER4)',
+      'choume/ban/gou + sex radios: HTML comments on the real page (phantom, never scanned; dropped from the fixture)',
+      'm_data (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'maxlength (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'sex (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   'tokyo-steel-contact-form.html': {
     expected: {
       'department': '普通科',
