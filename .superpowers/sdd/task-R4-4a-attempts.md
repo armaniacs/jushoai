@@ -51,3 +51,23 @@
 | 38 | https://www.max-ltd.co.jp/contact/ | 除外 | 到達不能 (マックス6454。HTTP 404。実窓口は `/toiawase/` 別導線) |
 | 39 | https://www.glory.co.jp/contact/ | 除外 | フォームなし (グローリー6457。HTTP 200ハブ。静的formは検索のみ。実フォームは `form.glory.co.jp`→No.163で検証) |
 | 40 | https://www.segasammy.co.jp/contact/ | 除外 | 到達不能 (セガサミーHD6460。HTTP 404。実フォームは `webcomms.segasammy.co.jp`→No.164で検証) |
+| 41 | https://www.hoshizaki.co.jp/contact/ | 除外 | フォームなし (ホシザキ6465。`/contact/contact.pdf` に転送。PDFのみで静的formなし) |
+| 42 | https://www.nsk.com/contact/ | 除外 | 到達不能 (日本精工6471。HTTP 404) |
+| 43 | https://www.ntn.co.jp/contact/ | 除外 | 到達不能 (NTN6472。HTTP 403 Cloudflare) |
+| 44 | https://www.jtekt.co.jp/contact/ | 除外 | フォームなし (ジェイテクト6473。トップ頁に転送。静的formは検索のみ。実窓口は `/support/contact.html`→No.165で検証) |
+| 45 | https://www.nachi-fujikoshi.co.jp/contact/ | 除外 | フォームなし (不二越6474。HTTP 200ハブ。静的formは検索のみ。実フォームは `/contact/*.html` 別導線) |
+| 46 | https://www.minebea.co.jp/contact/ | 除外 | 到達不能 (ミネベアミツミ6479。curl失敗・code=000) |
+| 47 | https://www.thk.com/jp/contact/ | 除外 | フォームなし (THK6481。トップ頁に転送。静的formは製品検索のみ) |
+| 48 | https://www.fuji.co.jp/contact/ | 除外 | フォームなし (FUJI6504。HTTP 200ハブ。静的formは検索のみ。実フォームは IR系→No.166で検証) |
+| 49 | https://www.yaskawa.co.jp/contact/ | 除外 | フォームなし (安川電機6506。HTTP 200ハブ。静的formは検索のみ) |
+| 50 | https://www.meidensha.co.jp/contact/ | 除外 | フォームなし (明電舎6508。HTTP 200ハブ。静的formは検索のみ) |
+| 51 | https://www.nidec.com/jp/contact/ | 除外 | 到達不能 (ニデック6594。HTTP 404。静的formなし) |
+| 52 | https://www.jvckenwood.com/jp/contact/ | 除外 | 到達不能 (JVCケンウッド6632。HTTP 404「Sorry」頁。静的入力欄はタブ切替用のみ。実窓口は `/jp/inquiry/` 別導線) |
+| 53 | https://www.eizo.co.jp/contact/ | 除外 | フォームなし (EIZO6737。HTTP 200ハブ。静的formは google検索のみ。実窓口は採用エントリー等別導線) |
+| 54 | https://www.nohmi.co.jp/contact/ | 除外 | 到達不能 (能美防災6744。HTTP 404。静的formは検索のみ) |
+| 55 | https://www.elecom.co.jp/contact/ | 除外 | 到達不能 (エレコム6750。HTTP 403 Access Denied) |
+| 56 | https://www.anritsu.com/ja-jp/contact/ | 除外 | 到達不能 (アンリツ6754。HTTP 404→Anritsu America頁。国選択のみで実フォームなし) |
+| 57 | https://www.fujitsu-general.com/jp/contact/ | 除外 | フォームなし (富士通ゼネラル6755。HTTP 200だが静的formなし。実窓口は `/jp/contact/*.html` 別導線) |
+| 58 | https://www.alpsalpine.com/j/contact/ | 除外 | 到達不能 (アルプスアルパイン6770。HTTP 403) |
+| 59 | https://www.hirose.com/jp/contact/ | 除外 | 到達不能 (ヒロセ電機6806。HTTP 404。静的formなし) |
+| 60 | https://www.maxell.co.jp/contact/ | 除外 | 到達不能 (マクセル6810。HTTP 404。実窓口は `/contacts/` 別導線) |
