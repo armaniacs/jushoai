@@ -49,3 +49,4 @@
 - https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08 → aeon-voice-form.html
 - https://form-auhikari.kddi.com/cgi-bin/callback/form.cgi → auhikari-callback-form.html
 - https://www.city.hamamatsu.shizuoka.jp/koho2/kocho/form.html → hamamatsu-kocho-form.html
+- https://com.city.okayama.jp/mailform/inquiry.cgi?so=532dba13cf0d370e939aeb7c15b7805de6a29ab8&ref=https%3A%2F%2Fwww.city.okayama.jp%2Fshisei%2F0000001222.html → okayama-inquiry-form.html

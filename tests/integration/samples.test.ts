@@ -303,4 +303,7 @@ describe('sample forms end to end', () => {
   it('hamamatsu-kocho-form.html fills the in-scope fields', async () => {
     expect(await planFor('hamamatsu-kocho-form.html')).toEqual(expectedFor('hamamatsu-kocho-form.html'));
   });
+  it('okayama-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('okayama-inquiry-form.html')).toEqual(expectedFor('okayama-inquiry-form.html'));
+  });
 });

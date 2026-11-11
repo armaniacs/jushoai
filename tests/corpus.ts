@@ -1593,6 +1593,42 @@ const LEDGER = {
       'publish_ssl_flg (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'okayama-inquiry-form.html': {
+    expected: {
+      // ふりがな label + hurigana name reads as fullNameKana (hiragana);
+      // placeholder 空のため結合区切りは既定半角スペース (hamamatsu item_2 と同形)。
+      'namae': '山田 太郎',
+      'hurigana': 'やまだ たろう',
+      'jyusyo': '東京都千代田区千代田1-1 千代田ビル101',
+      // denwa_no name は dashed 値 (hamamatsu item_8 の bare 名は undashed。N4系)。
+      'denwa_no': '090-1234-5678',
+      'mail': 'yamada@example.com',
+      'mail2': 'yamada@example.com',
+    },
+    excluded: [
+      'q x4 (text): header/footer/article-ID site-search boxes (検索キーワード/記事ID検索), stay unclassified (same as forum.html s)',
+      'fax_no (text): ファクス番号, stays unclassified (LLM fallback; hamamatsu item_9 と同形。ff-csr fax は name=fax + type=tel で tel 値を fill しており非対称)',
+      'taitoru (text): 件名, no profile value, correctly unfilled',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'search_button (button): action element, never a fill target (exclude)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'search_button_sp (button): action element, never a fill target (exclude)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'search_button3 (button): action element, never a fill target (exclude)',
+      'naiyou (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'so (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ref (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'btn2 (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
