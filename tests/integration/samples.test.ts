@@ -297,4 +297,7 @@ describe('sample forms end to end', () => {
   it('aeon-voice-form.html fills the in-scope fields', async () => {
     expect(await planFor('aeon-voice-form.html')).toEqual(expectedFor('aeon-voice-form.html'));
   });
+  it('auhikari-callback-form.html fills the in-scope fields', async () => {
+    expect(await planFor('auhikari-callback-form.html')).toEqual(expectedFor('auhikari-callback-form.html'));
+  });
 });

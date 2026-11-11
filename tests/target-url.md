@@ -47,3 +47,4 @@
 - https://form.kikkoman.co.jp/m/media → kikkoman-media-form.html
 - https://form.kikkoman.co.jp/m/works → kikkoman-works-form.html
 - https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08 → aeon-voice-form.html
+- https://form-auhikari.kddi.com/cgi-bin/callback/form.cgi → auhikari-callback-form.html

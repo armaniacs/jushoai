@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form-auhikari.kddi.com/cgi-bin/callback/form.cgi
+  (auひかり 各サービスご相談のお申し込み).
+  Field names, maxlengths, readonly, and control kinds mirror the real page.
+  The real page lays each row out as table tr with a th heading, and the
+  scanner reads that th as nearby, so the rows are kept as minimal tr/th/td
+  (required markers dropped, same as the tokyu-land dl/dt/dd fixtures).
+  The 住所 row's lookup button and add1-4 hidden results stay skipped; the
+  q1/q2 radios and week/time checkboxes stay skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>auひかり 各サービスご相談のお申し込み (telecom)</title>
+<form>
+<table>
+<tr><th>お申し込み者氏名</th><td>
+      <input name="name1" id="" type="text" value="">
+      <input name="name2" id="" type="text" value="">
+</td></tr>
+<tr><th>お申し込み者氏名カナ</th><td>
+      <input name="kana1" id="" type="text" value="">
+      <input name="kana2" id="" type="text" value="">
+</td></tr>
+<tr><th>連絡先電話番号</th><td>
+      <input name="tel1_1" id="" type="text" value="" maxlength="5">
+      <input name="tel1_2" id="" type="text" value="" maxlength="5">
+      <input name="tel1_3" id="" type="text" value="" maxlength="5">
+</td></tr>
+<tr><th>郵便番号</th><td>
+      <input name="zip_1" id="" type="text" value="" maxlength="3">
+      <input name="zip_2" id="" type="text" value="" maxlength="4">
+</td></tr>
+<tr><th>住所</th><td>
+      <input name="label_add1234" id="" type="text" value="" readonly>
+</td></tr>
+<tr><th>番地・号</th><td>
+      <input name="add5" id="" type="text" value="" maxlength="60">
+</td></tr>
+<tr><th>マンション／棟名</th><td>
+      <input name="add6" id="" type="text" value="" maxlength="100">
+</td></tr>
+<tr><th>部屋番号</th><td>
+      <input name="add7" id="" type="text" value="" maxlength="10">
+</td></tr>
+<tr><th>連絡先メールアドレス</th><td>
+      <input name="email" id="" type="text" value="">
+</td></tr>
+</table>
+<!-- skip: mode (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: sid (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: tel2_1 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: tel2_2 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: tel2_3 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q1 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: add (button): action element, never a fill target (exclude) -->
+<!-- skip: add_cd (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: add1 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: add2 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: add3 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: add4 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: week1 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week2 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week3 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week4 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week5 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week6 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week7 (checkbox): out of scope (skip fixed) -->
+<!-- skip: week8 (checkbox): out of scope (skip fixed) -->
+<!-- skip: time1 (checkbox): out of scope (skip fixed) -->
+<!-- skip: time2 (checkbox): out of scope (skip fixed) -->
+<!-- skip: time3 (checkbox): out of scope (skip fixed) -->
+<!-- skip: time4 (checkbox): out of scope (skip fixed) -->
+<!-- skip: time5 (checkbox): out of scope (skip fixed) -->
+<!-- skip: quest (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+</form>
