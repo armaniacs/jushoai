@@ -74,3 +74,4 @@
 - https://www.kyutech.ac.jp/contact/ → contact.html
 - https://www.uoeh-u.ac.jp/Exam/inquiry.html → inquiry-html.html
 - https://www.postin-svr.com/entry/showa-u/index.asp → index-asp.html
+- https://request.admission-logi.jp/form/doc/9015/1/6932/ → 6932.html

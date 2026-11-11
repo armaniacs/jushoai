@@ -1,0 +1,287 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://request.admission-logi.jp/form/doc/9015/1/6932/
+  (福岡大学資料請求, admission-logi 外部フォーム).
+  Labels follow their inputs on the real page (floating labels); group
+  headings are plain divs the scanner never reads, so only the for=
+  labels are kept. school_ken/pref keep their real 48 options (numeric
+  values 11-57, the +10 scheme, first option 都道府県). school is
+  genuinely a single 高校選択 option (JS-populated after school_ken
+  choice). birthday_y/m/d keep their real ranges (2014-1964/1-12/1-31).
+  freetext is a single 高校フリー入力; the second freetext in the
+  tooling scaffold came from a commented-out JS line, trimmed.
+  sex (男性/女性) is a gender group, restored as real radios. stage
+  (学年 12 options) and dm are not gender/decade, stay bundled skips.
+  buzai[] (資料 11) and value_1[] (学部アンケート 12) are checkbox
+  groups, out of scope. The form has no email field on the real page.
+  In-scope controls: 16 + the sex gender pair.
+-->
+<html lang="ja"><meta charset="utf-8"><title>福岡大学資料請求</title>
+<form>
+<input name="first-name" id="feedback-2-first-name" type="text" value="">
+<label for="feedback-2-first-name">姓</label>
+<input name="last-name" id="feedback-2-last-name" type="text" value="">
+<label for="feedback-2-last-name">名</label>
+<input name="kana_1" id="kana_1" type="text" value="">
+<label for="kana_1">セイ</label>
+<input name="kana_2" id="kana_2" type="text" value="">
+<label for="kana_2">メイ</label>
+<select name="school_ken" id="school_ken">
+<option value="">都道府県</option>
+<option value="11">北海道</option>
+<option value="12">青森県</option>
+<option value="13">岩手県</option>
+<option value="14">宮城県</option>
+<option value="15">秋田県</option>
+<option value="16">山形県</option>
+<option value="17">福島県</option>
+<option value="18">茨城県</option>
+<option value="19">栃木県</option>
+<option value="20">群馬県</option>
+<option value="21">埼玉県</option>
+<option value="22">千葉県</option>
+<option value="23">東京都</option>
+<option value="24">神奈川県</option>
+<option value="25">新潟県</option>
+<option value="26">富山県</option>
+<option value="27">石川県</option>
+<option value="28">福井県</option>
+<option value="29">山梨県</option>
+<option value="30">長野県</option>
+<option value="31">岐阜県</option>
+<option value="32">静岡県</option>
+<option value="33">愛知県</option>
+<option value="34">三重県</option>
+<option value="35">滋賀県</option>
+<option value="36">京都府</option>
+<option value="37">大阪府</option>
+<option value="38">兵庫県</option>
+<option value="39">奈良県</option>
+<option value="40">和歌山県</option>
+<option value="41">鳥取県</option>
+<option value="42">島根県</option>
+<option value="43">岡山県</option>
+<option value="44">広島県</option>
+<option value="45">山口県</option>
+<option value="46">徳島県</option>
+<option value="47">香川県</option>
+<option value="48">愛媛県</option>
+<option value="49">高知県</option>
+<option value="50">福岡県</option>
+<option value="51">佐賀県</option>
+<option value="52">長崎県</option>
+<option value="53">熊本県</option>
+<option value="54">大分県</option>
+<option value="55">宮崎県</option>
+<option value="56">鹿児島県</option>
+<option value="57">沖縄県</option>
+</select>
+<select name="school" id="school"><option value="">高校選択</option></select>
+<input name="freetext" id="freetext" type="text" value="">
+<select name="birthday_y">
+<option value=""></option>
+<option value="2014">2014</option>
+<option value="2013">2013</option>
+<option value="2012">2012</option>
+<option value="2011">2011</option>
+<option value="2010">2010</option>
+<option value="2009">2009</option>
+<option value="2008">2008</option>
+<option value="2007">2007</option>
+<option value="2006">2006</option>
+<option value="2005">2005</option>
+<option value="2004">2004</option>
+<option value="2003">2003</option>
+<option value="2002">2002</option>
+<option value="2001">2001</option>
+<option value="2000">2000</option>
+<option value="1999">1999</option>
+<option value="1998">1998</option>
+<option value="1997">1997</option>
+<option value="1996">1996</option>
+<option value="1995">1995</option>
+<option value="1994">1994</option>
+<option value="1993">1993</option>
+<option value="1992">1992</option>
+<option value="1991">1991</option>
+<option value="1990">1990</option>
+<option value="1989">1989</option>
+<option value="1988">1988</option>
+<option value="1987">1987</option>
+<option value="1986">1986</option>
+<option value="1985">1985</option>
+<option value="1984">1984</option>
+<option value="1983">1983</option>
+<option value="1982">1982</option>
+<option value="1981">1981</option>
+<option value="1980">1980</option>
+<option value="1979">1979</option>
+<option value="1978">1978</option>
+<option value="1977">1977</option>
+<option value="1976">1976</option>
+<option value="1975">1975</option>
+<option value="1974">1974</option>
+<option value="1973">1973</option>
+<option value="1972">1972</option>
+<option value="1971">1971</option>
+<option value="1970">1970</option>
+<option value="1969">1969</option>
+<option value="1968">1968</option>
+<option value="1967">1967</option>
+<option value="1966">1966</option>
+<option value="1965">1965</option>
+<option value="1964">1964</option>
+</select>
+<select name="birthday_m">
+<option value=""></option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7">7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+<option value="11">11</option>
+<option value="12">12</option>
+</select>
+<select name="birthday_d">
+<option value=""></option>
+<option value="1">1</option>
+<option value="2">2</option>
+<option value="3">3</option>
+<option value="4">4</option>
+<option value="5">5</option>
+<option value="6">6</option>
+<option value="7">7</option>
+<option value="8">8</option>
+<option value="9">9</option>
+<option value="10">10</option>
+<option value="11">11</option>
+<option value="12">12</option>
+<option value="13">13</option>
+<option value="14">14</option>
+<option value="15">15</option>
+<option value="16">16</option>
+<option value="17">17</option>
+<option value="18">18</option>
+<option value="19">19</option>
+<option value="20">20</option>
+<option value="21">21</option>
+<option value="22">22</option>
+<option value="23">23</option>
+<option value="24">24</option>
+<option value="25">25</option>
+<option value="26">26</option>
+<option value="27">27</option>
+<option value="28">28</option>
+<option value="29">29</option>
+<option value="30">30</option>
+<option value="31">31</option>
+</select>
+<input name="zipcode" id="zipcode" type="text" value="">
+<label for="zipcode">000-0000</label>
+<select name="pref">
+<option value="">都道府県</option>
+<option value="11">北海道</option>
+<option value="12">青森県</option>
+<option value="13">岩手県</option>
+<option value="14">宮城県</option>
+<option value="15">秋田県</option>
+<option value="16">山形県</option>
+<option value="17">福島県</option>
+<option value="18">茨城県</option>
+<option value="19">栃木県</option>
+<option value="20">群馬県</option>
+<option value="21">埼玉県</option>
+<option value="22">千葉県</option>
+<option value="23">東京都</option>
+<option value="24">神奈川県</option>
+<option value="25">新潟県</option>
+<option value="26">富山県</option>
+<option value="27">石川県</option>
+<option value="28">福井県</option>
+<option value="29">山梨県</option>
+<option value="30">長野県</option>
+<option value="31">岐阜県</option>
+<option value="32">静岡県</option>
+<option value="33">愛知県</option>
+<option value="34">三重県</option>
+<option value="35">滋賀県</option>
+<option value="36">京都府</option>
+<option value="37">大阪府</option>
+<option value="38">兵庫県</option>
+<option value="39">奈良県</option>
+<option value="40">和歌山県</option>
+<option value="41">鳥取県</option>
+<option value="42">島根県</option>
+<option value="43">岡山県</option>
+<option value="44">広島県</option>
+<option value="45">山口県</option>
+<option value="46">徳島県</option>
+<option value="47">香川県</option>
+<option value="48">愛媛県</option>
+<option value="49">高知県</option>
+<option value="50">福岡県</option>
+<option value="51">佐賀県</option>
+<option value="52">長崎県</option>
+<option value="53">熊本県</option>
+<option value="54">大分県</option>
+<option value="55">宮崎県</option>
+<option value="56">鹿児島県</option>
+<option value="57">沖縄県</option>
+</select>
+<input name="city" id="city" type="text" value="" placeholder="〇〇市〇〇区〇〇">
+<input name="address" id="address" type="text" value="">
+<label for="address">１－２－３</label>
+<input name="build" id="build" type="text" value="">
+<label for="build">◯◯マンション１０１号室</label>
+<input name="tel" id="tel" type="text" value="">
+<label for="tel">0000-0000-0000</label>
+<label><input type="radio" name="sex" value="男性">男性</label>
+<label><input type="radio" name="sex" value="女性">女性</label>
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: stage (radio): 学年 12 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: buzai[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: dm (radio): DM希望 2 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: dm (radio): DM希望 2 options, bundled per name; stays unclassified (radio policy) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: value_1[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: viewmode (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: dai_cd (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: edano (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: seccode (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
