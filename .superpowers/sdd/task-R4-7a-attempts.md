@@ -172,3 +172,23 @@
 | 158 | https://www.juntendo.ac.jp/admission/contact/ | 順天堂大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
 | 159 | https://www.yamagata-u.ac.jp/admission/contact/ | 山形大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
 | 160 | https://www.soka.ac.jp/admission/contact/ | 創価大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 161 | https://www.obihiro.ac.jp/contact-info | 帯広畜産大学 | 除外 | フォームなし (HTTP 200「教務窓口案内 &#8211; 国立大学法人北海道国立大学機構 帯広畜」。静的form2件はサイト内検索のみ。教務窓口案内) |
+| 162 | https://www.yamaguchi-u.ac.jp/nyushi/ | 山口大学 | 除外 | フォームなし (HTTP 200「」。静的form1件はサイト内検索のみ。入試ハブ) |
+| 163 | https://www.kitakyu-u.ac.jp/entrance-exam/event/opencampus.html | 北九州市立大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / 公立大学法人北九州市立大学」。静的form1件はサイト内検索のみ。OC頁だが検索のみ) |
+| 164 | https://www.chuo-u.ac.jp/admission/contact/ | 中央大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 165 | https://www.nara-wu.ac.jp/admission/contact/ | 奈良女子大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 166 | https://www.tokushima-u.ac.jp/admission/contact/ | 徳島大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 167 | https://www.u-fukui.ac.jp/contact/ | 福井大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 168 | https://www.kobe-cufs.ac.jp/admission/contact/ | 神戸市外国語大学 | 除外 | フォームなし (HTTP 200「ページが見つかりません｜神戸市外国語大学」。静的form1件はサイト内検索のみ。実質404: HTTP 200だが「ページが見つかりません」内容) |
+| 169 | https://www.gakushuin.ac.jp/admission/contact/ | 学習院大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 170 | https://www.ehime-u.ac.jp/entrance/open-campus/ | 愛媛大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / 入試 / 愛媛大学」。静的form1件はサイト内検索のみ。OC頁だが検索のみ) |
+| 171 | https://www.gifu-u.ac.jp/admission/contact/ | 岐阜大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 入試・入学案内 / 岐阜大学」。静的form2件はサイト内検索のみ。入試問合せ頁だが検索のみ) |
+| 172 | https://www.hirosaki-u.ac.jp/contact/ | 弘前大学 | 除外 | フォームなし (HTTP 200「お問い合わせ - 弘前大学」。静的formなし) |
+| 173 | https://www.iwate-u.ac.jp/admission/iwateuniv/open-campus.html | 岩手大学 | 除外 | フォームなし (HTTP 200「岩手大学オープンキャンパス｜国立大学法人 岩手大学」。静的formなし。OC案内) |
+| 174 | https://www.miyazaki-u.ac.jp/admission/contact/ | 宮崎大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 175 | https://www.kansaigaidai.ac.jp/information-request/ | 関西外国語大学 | 除外 | フォームなし (HTTP 200「資料請求 / 関西外国語大学」。静的form2件はサイト内検索のみ。資料請求頁だが検索のみ) |
+| 176 | https://www.kindai.ac.jp/admission/contact/ | 近畿大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 177 | https://www.u-toyama.ac.jp/admission/contact/ | 富山大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 178 | https://www.kochi-tech.ac.jp/admission/contact/ | 高知工科大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 179 | https://www.toyo.ac.jp/nyushi/contact/ | 東洋大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 180 | https://www.utsunomiya-u.ac.jp/admission/contact/ | 宇都宮大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
