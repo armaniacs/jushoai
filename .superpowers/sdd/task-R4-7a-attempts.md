@@ -52,3 +52,23 @@
 | 38 | https://www.tus.ac.jp/access/inquiry/ | 東京理科大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜東京理科大学」。静的form3件はサイト内検索のみ。総合問合せハブ) |
 | 39 | https://www.rikkyo.ac.jp/contact/index.html | 立教大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 立教大学」。静的form2件はサイト内検索のみ。総合問合せハブ) |
 | 40 | https://www.tut.ac.jp/about/overview/contact.html | 豊橋技術科学大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 豊橋技術科学大学」。静的formなし。問合せハブ) |
+| 41 | https://www.doshisha.ac.jp/contact/index.html | 同志社大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧 ｜同志社大学」。静的formなし。問合せ一覧リンク集) |
+| 42 | https://www.uec.ac.jp/about/inquiry/ | 電気通信大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 国立大学法人 電気通信大学」。静的form1件はサイト内検索のみ。問合せハブ) |
+| 43 | https://www.yokohama-cu.ac.jp/univ/inquiry.html | 横浜市立大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 横浜市立大学 YOKOHAMA CITY UNIV」。静的form1件はサイト内検索のみ。問合せハブ) |
+| 44 | https://www.kwansei.ac.jp/contact/ | 関西学院大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜関西学院大学」。静的formなし。問合せハブ) |
+| 45 | https://www.niigata-u.ac.jp/university/contact/ | 新潟大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 大学案内 / 新潟大学」。静的form1件はサイト内検索のみ。問合せハブ) |
+| 46 | https://www.meiji.ac.jp/koho/information/inquiry/index.html | 明治大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧 / 明治大学」。静的formなし。問合せ一覧) |
+| 47 | https://www.fw-u.ac.jp/contact/ | 福岡女子大学 | 除外 | 到達不能 (curl失敗・code=000。curl失敗 (code=000。再試行・UA変更でも到達不能。bot遮断の可能性)) |
+| 48 | https://www.aoyama.ac.jp/inquiry/ | 青山学院大学 | 除外 | フォームなし (HTTP 200「お問い合わせ・窓口（1/2） / 青山学院大学」。静的form2件はサイト内検索のみ。実窓口はform-mailer外部フォーム (No.199-200で検証)) |
+| 49 | https://www.nitech.ac.jp/contact/index.html | 名古屋工業大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜国立大学法人名古屋工業大学」。静的formなし。入試問合せ頁だが静的formなし) |
+| 50 | https://www.saga-u.ac.jp/inquiry/ | 佐賀大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜国立大学法人佐賀大学」。静的form1件はサイト内検索のみ。総合問合せハブ) |
+| 51 | https://www.kansai-u.ac.jp/ja/info/contact | 関西大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧｜関西大学」。静的formなし。問合せ一覧) |
+| 52 | https://www.akita-u.ac.jp/contact/ | 秋田大学 | 除外 | フォームなし (HTTP 200「404 Not Found｜国立大学法人 秋田大学」。静的form1件はサイト内検索のみ。実質404: HTTP 200だがタイトル404。出願はe-apply外部システム) |
+| 53 | https://www.hosei.ac.jp/toiawase | 法政大学 | 除外 | フォームなし (HTTP 200「お問い合わせ :: 法政大学」。静的formなし。総合問合せハブ) |
+| 54 | https://www.kagoshima-u.ac.jp/about/inquiry.html | 鹿児島大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 国立大学法人 鹿児島大学～進取の気風にあふれる総合」。静的formなし。問合せハブ) |
+| 55 | https://www.gunma-u.ac.jp/contact | 群馬大学 | 除外 | フォームなし (HTTP 200「お問合せ / 国立大学法人群馬大学」。静的form2件はサイト内検索のみ。問合せハブ) |
+| 56 | https://www.nanzan-u.ac.jp/Information/toiawase.html | 南山大学 | 除外 | フォームなし (HTTP 200「組織・問い合わせ先｜南山大学」。静的formなし。組織・問合せ先案内) |
+| 57 | https://www.slcn.ac.jp/contact/ | 聖路加国際大学 | 除外 | 到達不能 (curl失敗・code=000。https接続失敗 (code=000。httpは301→httpsへ転送。bot遮断の可能性)) |
+| 58 | https://www.shinshu-u.ac.jp/inquiry/ | 信州大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 信州大学」。静的form1件はサイト内検索のみ。総合問合せハブ (相談系はGoogleフォーム外部)) |
+| 59 | https://www.juntendo.ac.jp/contact/ | 順天堂大学 | 除外 | 到達不能 (curl失敗・code=000。https接続失敗 (code=000。httpは空応答)) |
+| 60 | https://www.yamagata-u.ac.jp/jp/inquiry/ | 山形大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜国立大学法人 山形大学」。静的form1件はサイト内検索のみ。問合せハブ) |
