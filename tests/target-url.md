@@ -29,3 +29,4 @@
 - https://www.mitsui-reform.com/ssl/catalog/select.html → mitsui-reform-catalog-form.html
 - https://www.tokyu-land.co.jp/form/contact/ → tokyu-land-contact-form.html
 - https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do → kobe-city-contact-form.html
+- https://cform.epson.jp/form5/pub/e040/1009009009015109731 → epson-csr-form.html

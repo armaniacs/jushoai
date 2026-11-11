@@ -819,6 +819,34 @@ const LEDGER = {
       'submit-btn (submit): action element, never a fill target (exclude)',
     ],
   },
+  'epson-csr-form.html': {
+    expected: {
+      // Coded c_q names carry no classification signal without labels, so
+      // only the citycode names read as city. The rest is LLM-fallback
+      // territory (same shape as the benesse enquete precedent in R4-1).
+      'c_q14_citycode': '千代田区',
+      'c_q15_citycode': '千代田区',
+    },
+    excluded: [
+      'c_q1/c_q1_confirm (text): 1.Eメールアドレス with no label or placeholder signal, stay unclassified (LLM fallback)',
+      'c_q3_first/second (text): 2.お名前 姓/名, stay unclassified (LLM fallback; coded-name person fields)',
+      'c_q4_first/second (text): 3.フリガナ セイ/メイ, stay unclassified (LLM fallback; coded-name kana fields)',
+      'c_q5_left/right (text): 4.郵便番号 split, stay unclassified (LLM fallback; left/right-split zip candidate)',
+      'c_q6 (select): 5.都道府県 options restored verbatim, stays unclassified (LLM fallback)',
+      'c_q7 (text): 6.市郡区町村, stays unclassified (LLM fallback)',
+      'c_q8 (text): 7.町域, stays unclassified (LLM fallback)',
+      'c_q10 (text): 8.番地, stays unclassified (LLM fallback)',
+      'c_q9 (text): 9.ビル・マンション名, stays unclassified (LLM fallback; coded-name building field)',
+      'c_q14_areacode/subscribercode (text): 10.電話番号 outer parts, stay unclassified (LLM fallback; areacode-split tel candidate)',
+      'c_q15_areacode/subscribercode (text): 11.FAX番号 outer parts, stay unclassified (LLM fallback)',
+      'c_q11 (text): 12.会社名・団体名, stays unclassified (LLM fallback; coded-name company field)',
+      '__pid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__pageId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'searchAddr_c_q5 (submit): action element, never a fill target (exclude)',
+      'c_q16 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'wcf5start (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

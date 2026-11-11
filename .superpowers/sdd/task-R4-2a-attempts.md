@@ -14,3 +14,4 @@
 | 4 | https://www.mitsui-reform.com/ssl/catalog/select.html | 成功 | mitsui-reform-catalog-form.html (29 controls。実ページの dl/dt/dd 構造を復元して nearby を再現。honest pin: tel/tel2 とも undashed 全値、現住所・計画地の二重住所、post・LOOP番号・購入希望系は未分類) |
 | 5 | https://www.tokyu-land.co.jp/form/contact/ | 成功 | tokyu-land-contact-form.html (10 controls。1行1dl構造を復元。honest pin: 市区町村は都道府県付き連結値、番地・建物名→building、zip・email確認2欄解決; q・pref は未分類/warn) |
 | 6 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 成功 | kobe-city-contact-form.html (9 controls + 居住区select実選択肢復元。honest pin: フリガナのみ解決、他は未分類。最も thin な1欄fixture) |
+| 7 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 成功 | epson-csr-form.html (20 controls + 都道府県select実選択肢復元。honest pin: citycode 2欄のみ解決、他はコード化名で未分類) |

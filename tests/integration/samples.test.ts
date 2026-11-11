@@ -243,4 +243,7 @@ describe('sample forms end to end', () => {
   it('kobe-city-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('kobe-city-contact-form.html')).toEqual(expectedFor('kobe-city-contact-form.html'));
   });
+  it('epson-csr-form.html fills the in-scope fields', async () => {
+    expect(await planFor('epson-csr-form.html')).toEqual(expectedFor('epson-csr-form.html'));
+  });
 });
