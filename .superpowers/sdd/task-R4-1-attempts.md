@@ -171,3 +171,23 @@
 | 158 | https://form.kikkoman.co.jp/m/works | 有望 P2 | 静的実フォーム (HTTP 200「採用お問い合わせ」。No.156と同系・tel 3分割あり) |
 | 159 | https://customer.kikkoman.co.jp/hc/ja/requests/new?ticket_form_id=4415358851993 | 除外 | 到達不能 (HTTP 403相当・Cloudflare "Just a moment"。bot遮断) |
 | 160 | https://www.kikkoman.co.jp/mail/ | 除外 | フォームなし (HTTP 200「メールマガジン登録」案内頁。静的formは検索のみ) |
+| 161 | https://business.kuronekoyamato.co.jp/contact/form/ | 除外 | JS描画のみ (HTTP 200「お問い合わせフォーム」だが静的formは `/searchresult/` 検索のみ。入力欄はJS生成とみられる) |
+| 162 | https://bmypage.kuronekoyamato.co.jp/bmypage/SV0201_applyPage.htm?utm_source=contact&utm_medium=kakeuri&utm_id=corporate | 除外 | JS描画のみ/ログイン必須の可能性 (HTTP 200・size 6107・文字化け。静的formなし。掛売り申込で会員系導線) |
+| 163 | https://www.e-service.sagawa-exp.co.jp/portal/do/cr-user/apply/show?pattern=s48 | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 164 | https://www.sagawa-exp.co.jp/customer/receive/mail/ | 除外 | フォームなし (HTTP 200「配達予定通知を受け取る」案内頁。静的formは検索のみ) |
+| 165 | https://www.sagawa-exp.co.jp/business/receive/mail/ | 除外 | フォームなし (HTTP 200。No.164の法人版。静的formは検索のみ) |
+| 166 | https://www.jrkyushu.co.jp/yoyaku/ | 除外 | JS描画のみ (HTTP 200「ネット予約でQRチケレス」。formなし・select 4のみ。予約はJS) |
+| 167 | https://3d2e2826.form.kintoneapp.com/public/goikengoyoubou-jrkyushu | 除外 | JS描画のみ (HTTP 200「JR九州へのご意見・ご要望」。size 8362・formなし。kintone公開フォームはJS描画) |
+| 168 | https://www.keio.co.jp/train/sasazuka-sengawa/order/ | 除外 | フォームなし (HTTP 200だが「工事の順序」案内頁。formなし。無関係頁) |
+| 169 | https://area31.smp.ne.jp/area/is?SMPFORM=qcrc-mcldsd-95bb156300186458a5d681e60ccadfa&type=ac | 有望 P1 | 静的実フォーム (HTTP 200。`action=/area/Reg2`、氏名 `name`・フリガナ `furigana`・会社・email確認2欄・tel・郵便2分割 `zip1:a/t`・`address1/2`・都道府県select `pref`・`inqDetail`。SMP(住友不系)フォーム。多様性◎) |
+| 170 | https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/regist/Reg2`、氏名 `name1/2`・カナ `kana1/2`・郵便2分割・`address2/3`・都道府県select・tel/fax・email確認・`content`。SMPフォーム。多様性◎) |
+| 171 | https://go6.global.toshiba/GX/contactform | 有望 P1 | 静的実フォーム (HTTP 200。Pardotフォーム、姓/名 `lastname/firstname`・分類radio・郵便 `zip`・州/市/番地 `state/city/addressone`・tel・email確認・会社・部署・`description`・select 4。外資系形式と日本住所の混在。多様性◎) |
+| 172 | https://www.baseq.jp/form/inquery/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 173 | https://www.celestinehotels.jp/form/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だがformなし。予約はJSとみられる) |
+| 174 | https://support.sequencehotels.com/hc/ja/requests/new?ticket_form_id=360000545692&hoteltag=sequence-administration-headquarters | 除外 | 到達不能 (HTTP 403相当・Cloudflare "Just a moment"。bot遮断) |
+| 175 | https://www.jasso.go.jp/about/toiawase/index.html | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧」。formなし・リンク集) |
+| 176 | https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08 | 有望 P2 | 静的実フォーム (HTTP 200。Salesforceサイト、氏名 `name_field`・email・radio 3・checkbox・`comment`。小売の声フォーム。多様性○。hidden項目が多く取込時に要精査) |
+| 177 | https://www.npa.go.jp/bureau/cyber/soudan.html | 除外 | フォームなし (HTTP 200「サイバー事案相談窓口」案内頁。formなし。電話・リンク案内中心) |
+| 178 | https://www.jtb.co.jp/luxurytravel/ordermade/ | 除外 | JS描画のみ (HTTP 200だがformなし。オーダーメイド旅行のJS導線とみられる) |
+| 179 | https://waigaya.honda.co.jp/user/enquete.do?grp=bugreport&no=200511 | 有望 P3 | 要精査 (HTTP 200。text 5・checkbox 10・select 2・textarea。販売店アンケート系で住所・氏名欄の有無は取込時に確認。予備P3) |
+| 180 | https://www.mazda.co.jp/purchase/webcatalog/ | 除外 | フォームなし (HTTP 200「ウェブカタログのご紹介」。静的formは検索のみ) |
