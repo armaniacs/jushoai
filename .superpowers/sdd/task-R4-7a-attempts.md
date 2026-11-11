@@ -112,3 +112,23 @@
 | 98 | https://www.nufs.ac.jp/outline/inquiry/ | 名古屋外国語大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 大学案内 / 名古屋外国語大学 The World」。静的form1件はサイト内検索のみ。問合せハブ) |
 | 99 | https://www.shiga-med.ac.jp/admission/contact | 滋賀医科大学 | 除外 | フォームなし (HTTP 200「その他 / 滋賀医科大学」。静的form1件はサイト内検索のみ。入試問合せハブ (Drupal)) |
 | 100 | https://www.tnc.tohoku.ac.jp/contact/ | 東北大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 101 | https://www.isct.ac.jp/ja/inquiries | 東京科学大学 | 除外 | フォームなし (HTTP 200「総合お問い合わせ / Science Tokyo - 東京科学大学」。静的form1件はサイト内検索のみ) |
+| 102 | https://www.u-tokyo.ac.jp/ja/admissions/contact.html | 東京大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 103 | https://www.kyoto-u.ac.jp/ja/contact | 京都大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 京都大学」。静的form1件はサイト内検索のみ) |
+| 104 | https://www.kyushu-u.ac.jp/ja/contact | 九州大学 | 除外 | フォームなし (HTTP 200「九州大学（KYUSHU UNIVERSITY）」。静的form2件はサイト内検索のみ) |
+| 105 | https://www.osaka-u.ac.jp/ja/admissions/contact | 大阪大学 | 除外 | フォームなし (HTTP 200「」。静的formなし) |
+| 106 | https://www.nagoya-u.ac.jp/admission/contact/ | 名古屋大学 | 除外 | フォームなし (HTTP 200「名古屋大学 受験生応援サイト / NU START GUIDE」。静的formなし) |
+| 107 | https://www.hokudai.ac.jp/admission/contact/ | 北海道大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 108 | https://soudan.sec.tsukuba.ac.jp/sogosodan/ | 筑波大学 | 除外 | フォームなし (HTTP 200「総合相談窓口 &#8211; 筑波大学学生相談室」。静的form2件はサイト内検索のみ。総合相談窓口頁だが実体は案内・リンク中心) |
+| 109 | https://admission.aiu.ac.jp/event/opencampus/ | 国際教養大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス - 国際教養大学 受験生応援サイト」。静的form2件はサイト内検索のみ。OC予約は受験生サイトの別システム導線とみられる) |
+| 110 | https://www.icu.ac.jp/about/contact/ | 国際基督教大学 | 除外 | フォームなし (HTTP 200「本学への取材について｜国際基督教大学（ICU）」。静的formなし。取材案内リンク集) |
+| 111 | https://www.keio.ac.jp/ja/admissions/contact/ | 慶應義塾大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 112 | https://www.hiroshima-u.ac.jp/nyugaku/soudan | 広島大学 | 除外 | フォームなし (HTTP 200「相談窓口 / 広島大学」。静的formなし。相談窓口案内) |
+| 113 | https://www.waseda.jp/inst/admission/contact/ | 早稲田大学 | 除外 | フォームなし (HTTP 200「お問い合わせ &#8211; 早稲田大学 入学センター」。静的form1件はサイト内検索のみ。入学センター問合せ頁だが検索のみ) |
+| 114 | https://www.kobe-u.ac.jp/admission/contact/ | 神戸大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 115 | https://www.chiba-u.ac.jp/admission/contact/ | 千葉大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 116 | https://www.hit-u.ac.jp/admission/contact/ | 一橋大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 117 | https://www.kanazawa-u.ac.jp/admission/contact/ | 金沢大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 118 | https://www.okayama-u.ac.jp/tp/admission/seikyuu_shiryo.html | 岡山大学 | 除外 | フォームなし (HTTP 200「大学案内等の請求方法 - 国立大学法人 岡山大学」。静的form1件はサイト内検索のみ。資料請求案内頁だが請求導線は別 (テレメール等の外部とみられる)) |
+| 119 | https://www.tuat.ac.jp/admission/nyushi_gakubu/seikyu/ | 東京農工大学 | 除外 | フォームなし (HTTP 200「入試関係資料請求 / 学部：入試情報 / 入試情報 / 国立大学法人」。静的form1件はサイト内検索のみ。資料請求頁だが検索のみ。請求本体はテレメール外部サービス) |
+| 120 | https://www.apumate.net/event/opencampus/ | 立命館アジア太平洋大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / イベント / 受験生サイト APUmate.」。静的formなし。OC予約はAPUmate外部イベントシステム導線とみられる) |
