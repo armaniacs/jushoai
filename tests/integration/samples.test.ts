@@ -258,4 +258,7 @@ describe('sample forms end to end', () => {
   it('toshiba-gx-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('toshiba-gx-contact-form.html')).toEqual(expectedFor('toshiba-gx-contact-form.html'));
   });
+  it('ff-webmaster-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ff-webmaster-form.html')).toEqual(expectedFor('ff-webmaster-form.html'));
+  });
 });

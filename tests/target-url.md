@@ -34,3 +34,4 @@
 - https://form.kikkoman.co.jp/m/website → kikkoman-website-form.html
 - https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2 → smp-regist-inquiry-form.html
 - https://go6.global.toshiba/GX/contactform → toshiba-gx-contact-form.html
+- https://www.fujifilm.com/jp/ja/form/FF-Webmaster-Ja → ff-webmaster-form.html
