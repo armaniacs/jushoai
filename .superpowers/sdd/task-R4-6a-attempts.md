@@ -99,3 +99,23 @@
 | 78 | https://www.city.setagaya.lg.jp/02261/9017.html | 除外 | フォームなし (HTTP 200「烏山図書館」。静的form 3は区サイト内検索のみの分館案内頁) |
 | 79 | https://www.city.setagaya.lg.jp/02261/9022.html | 除外 | フォームなし (HTTP 200「経堂図書館」。同上の分館案内頁) |
 | 80 | https://www.koto-lib.tokyo.jp/ | 除外 | OPAC検索窓のみ (HTTP 200。静的form 3は館内検索 `viewer/search/info.html` とOPAC検索 `OPWSRCHLIST.CSP` のみ) |
+| 81 | https://www.koto-lib.tokyo.jp/viewer/info.html?id=2265 | 除外 | フォームなし (HTTP 200「亀戸図書館ボランティア募集」。館内formは検索2+問合せ1のみ。申込方法はカウンター・電話) |
+| 82 | https://www.koto-lib.tokyo.jp/viewer/opinion.html | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせ送信フォーム」。TRC系、`item0` 氏名・`item1` 住所・`item2_0/1/2` tel3分割・`item3/4`・textarea `item5`・radio `item6`。氏名/住所/tel分割+本文で多様性◎) |
+| 83 | https://ebwebreserve7.tackport.co.jp/eboothweb_itbs2/areainfo/login | 除外 | JS描画のみ (HTTP 200「板橋区立中央図書館WEB予約」。form・inputなし。座席予約はJS+認証壁内) |
+| 84 | https://opc.library.shinjuku.tokyo.jp/winj/opac/login.do?lang=ja&dispatch=/opac/mylibrary.do | 除外 | ログイン必須 (HTTP 200。`LoginForm` は利用者番号/パスワードのみの認証壁) |
+| 85 | https://opc.library.shinjuku.tokyo.jp/winj/opac/search-detail.do?lang=ja | 除外 | OPAC検索窓のみ (HTTP 200。`SearchDetailForm` は蔵書詳細検索で実フォームなし。input 98・select 18は検索条件) |
+| 86 | https://opc.library.chiyoda.tokyo.jp/winj/opac/search-standard.do?lang=ja | 除外 | OPAC検索窓のみ (HTTP 200。`SearchForm/SearchDetailForm` は蔵書検索で実フォームなし) |
+| 87 | https://library.city.tokyo-nakano.lg.jp/event | 除外 | 絞込のみ (HTTP 200「イベント」。館内form 1は `evt_filter` カレンダー絞込 hidden のみ) |
+| 88 | https://www.lib.nerima.tokyo.jp/viewer/info.html?id=2904 | 除外 | フォームなし (HTTP 200「ボランティアの時間」。静的form 2は館内検索のみの告知頁) |
+| 89 | https://www.library.sumida.tokyo.jp/info?pid=5352 | 除外 | 申込受付終了 (HTTP 200まちかどコンサート申込案内。`bookingPanel` formは「満員」表示のみで入力欄なし。LiCSイベント予約は認証壁内の機構として記録) |
+| 90 | https://www.lib.city.ota.tokyo.jp/info?pid=616 | 除外 | フォームなし (HTTP 200読み聞かせボランティア講座。form・inputなしの告知頁。申込は別手段) |
+| 91 | https://www.library.city.suginami.tokyo.jp/library/koenji/ | 除外 | 検索のみ (HTTP 200「高円寺図書館」。館内formはサイト内検索と館選択selectのみの分館案内頁) |
+| 92 | https://www.library.city.chuo.tokyo.jp/login | 除外 | ログイン必須 (HTTP 200「ログイン」。`loginPage` は利用者番号/パスワードのみの認証壁) |
+| 93 | https://www.koto-lib.tokyo.jp/opw/OPW/OPWSRCHLIST.CSP | 除外 | フォームなし (HTTP 200「検索結果一覧」。直GETは結果頁でformなし。OPAC検索窓の到達先) |
+| 94 | https://www.lib-minato.jp/news/?id=309 | 除外 | フォームなし (HTTP 200図書館アンケート告知。静的form 3は検索のみ。実回答は別導線) |
+| 95 | https://www.city.adachi.tokyo.jp/toshokan/chiikibunka/toshokan/1129hotsuka.html | 除外 | フォームなし (HTTP 200保塚図書館イベント。静的form 2は区サイト内検索のみの告知頁) |
+| 96 | https://www.city.adachi.tokyo.jp/toshokan/chiikibunka/toshokan/100111241.html | 除外 | 検索+起動ボタンのみ (HTTP 200江南コミュニティ図書館イベント。館内formは検索とメールフォーム起動POSTのみ→No.68) |
+| 97 | https://www.city.setagaya.lg.jp/02261/9029.html | 除外 | フォームなし (HTTP 200「下馬図書館」。静的form 3は区サイト内検索のみの分館案内頁) |
+| 98 | https://library.city.tokyo-nakano.lg.jp/facility/chuo.html | 除外 | フォームなし (HTTP 200「中央図書館」。form・inputなしの施設案内頁) |
+| 99 | https://www.city.itabashi.tokyo.jp/library/bologna/fair/2000287/2000998.html | 除外 | フォームなし (HTTP 200ボローニャ絵本展。静的form 1はサイト内検索のみの展示案内頁) |
+| 100 | https://www.library.city.kita.lg.jp/viewer/info.html?id=468 | 除外 | フォームなし (HTTP 200パソコン席Web予約のお知らせ。館内formは検索2+問合せ(→No.45と同様404)のみ。実予約は認証壁) |
