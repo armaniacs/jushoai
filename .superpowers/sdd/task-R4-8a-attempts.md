@@ -91,4 +91,24 @@
 | 78 | https://www.schoolie-net.jp/sp/contact/ | スクールIE | 除外 | 到達先にformなし (sp/contact→トップに転送) |
 | 79 | https://www.meikogijuku.jp/contact/entry | 明光義塾 | 有望 P1 | 静的実フォーム (Drupal。氏名・カナ・住所addr1/2・email・tel・学校。多様性◎) |
 | 80 | https://www.meikogijuku.jp/taiken/entry | 明光義塾 | 有望 P2 | 静的実フォーム (無料体験。同型2件目のためP2) |
+| 81 | https://www.meikogijuku.jp/qa/taiken/ | 明光義塾 | 除外 | フォームなし (FAQ。静的formは教室検索のみ) |
+| 82 | https://www.meikogijuku.jp/qa/soudan/ | 明光義塾 | 除外 | フォームなし (同上) |
+| 83 | https://s1.kyoshin.co.jp/taiken/ | 京進スクール・ワン | 除外 | フォームなし (体験案内。input1は教室検索のみ・実申込はSMP別導線No.84) |
+| 84 | https://reg18.smp.ne.jp/regist/is?SMPFORM=mjqd-maraob-3de8341d99c0daa975f12ed6ea3415de | 京進スクール・ワン | 有望 P1 | 静的実フォーム (SMP。保護者+生徒氏名・住所・email確認・tel。多様性◎) |
+| 85 | https://kyoshin.co.jp/contact/ | 京進グループ | 除外 | 対象外 (グループIR問合せ・塾問合せでない。formなし) |
+| 86 | https://www.with-us.co.jp/business/b-cram-school/ | ウィザス | 除外 | フォームなし (事業紹介頁。実窓口は第一ゼミ/ファロス別導線) |
+| 87 | https://www.daiichisemi.net/contact/info/ | 第一ゼミナール | 除外 | JS描画のみ (静的inputはtokenのみ。name[first]・住所・email等の実欄はJS生成) |
+| 88 | https://www.daiichisemi.net/contact/trial/ | 第一ゼミナール | 除外 | JS描画のみ (同上) |
+| 89 | https://www.pharos21.net/ | ファロス個別指導学院 | 除外 | フォームなし (ブランドトップ。formなし) |
+| 90 | https://www.rinkaiseminar.co.jp/contact/shiryo | 臨海セミナー | 有望 P1 | 静的実フォーム (CF7。住所・tel・email・学年。多様性◎) |
+| 91 | https://www.rinkaiseminar.co.jp/contact/taiken | 臨海セミナー | 有望 P2 | 静的実フォーム (無料体験。No.90と同系・体験日等のためP2) |
+| 92 | https://www.rinkaiseminar.co.jp/contact/support/ | 臨海セミナー | 有望 P2 | 静的実フォーム (ご意見・要望。radio+textarea。住所系薄めのためP2) |
+| 93 | https://www.rinkaiselect.com/contact/shiryo | 臨海セレクト | 有望 P3 | 静的実フォーム (セレクト資料請求。CF7同系5件目のため予備P3) |
+| 94 | https://www.rinkaiselect.com/contact/taiken | 臨海セレクト | 有望 P3 | 静的実フォーム (セレクト体験。同系6件目のため予備P3) |
+| 95 | https://www.sanaru.co.jp/contact/ | 佐鳴予備校 | 有望 P1 | 静的実フォーム (idata[name/kana/address/pref/email確認]・tel/fax3分割。多様性◎) |
+| 96 | https://www.sanaru.co.jp/shiryo/ | 佐鳴予備校 | 除外 | 到達不能 (HTTP 404) |
+| 97 | https://www.sapix.co.jp/shiryou/ | SAPIX | 除外 | フォームなし (資料請求ハブ。静的formは検索のみ) |
+| 98 | https://request.sapix.com/shiryou/sapix-juniorhighschool | SAPIX | 除外 | 到達先にformなし (request導線→shiryouハブに転送) |
+| 99 | https://www.sapix.co.jp/entrance/ | SAPIX | 除外 | フォームなし (入室案内。検索のみ) |
+| 100 | https://www.y-sapix.com/request/ | Y-SAPIX | 除外 | フォームなし (入室案内) |
 <!--APPEND-->
