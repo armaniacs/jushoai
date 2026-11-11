@@ -58,3 +58,4 @@
 - https://www.city.sapporo.jp/city/iken-hp/index.html → sapporo-iken-form.html
 - https://global.engine.kubota.co.jp/ja/contact/input.php?fid=01 → kubota-engine-contact-form.html
 - https://www.lib.city.katsushika.lg.jp/mailform → mailform.html
+- https://www.koto-lib.tokyo.jp/viewer/opinion.html → opinion-html.html

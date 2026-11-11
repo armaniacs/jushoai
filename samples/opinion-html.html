@@ -1,0 +1,28 @@
+<!-- Minimal reproduction of https://www.koto-lib.tokyo.jp/viewer/opinion.html (opinion-input form only; header/footer search forms and login form trimmed). Values stripped. -->
+<form>
+      <label for="item0">お名前 (必須 )</label>
+      <input name="item0" id="item0" type="text" value="" maxlength="20">
+      <label for="item1">住所 (必須 )</label>
+      <input name="item1" id="item1" type="text" value="" maxlength="100">
+      <label for="item2">電話番号 (必須 )</label>
+      <input name="item2_0" id="item2" type="text" value="" maxlength="4">
+      <input name="item2_1" id="" type="text" value="" maxlength="4">
+      <input name="item2_2" id="" type="text" value="" maxlength="4">
+      <label for="item3">メールアドレス (必須 )</label>
+      <input name="item3" id="item3" type="text" value="" maxlength="100">
+      <label for="item4">件名 (必須 )</label>
+      <input name="item4" id="item4" type="text" value="" maxlength="100">
+<!-- skip: item5 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: item6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: item6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: B_Reset (button): action element, never a fill target (exclude) -->
+<!-- skip: B_Submit (submit): action element, never a fill target (exclude) -->
+<!-- skip: idSubTop (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: formId (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: preview (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: httpReferer (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: T_Id_s (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: T_IdCnt (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: T_IdFaq (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: totalFileLimit (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

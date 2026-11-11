@@ -1863,6 +1863,34 @@ const LEDGER = {
       'btnReset (submit): action element, never a fill target (exclude)',
     ],
   },
+  'opinion-html.html': {
+    expected: {
+      // 江東区立図書館ご意見フォーム (TRC系)。氏名/住所/email が fill。
+      // item1 は「住所」単独 label のため full address の結合値 (honest pin)。
+      'item0': '山田 太郎',
+      'item1': '東京都千代田区千代田1-1 千代田ビル101',
+      'item3': 'yamada@example.com',
+    },
+    excluded: [
+      // header/footer の検索 form (T_Keyword/B_Search/T_File/T_* hidden) と
+      // login form (login/password/option) は別 form のため trimmed (exclude)。
+      'item2_0/item2_1/item2_2 (text): 電話番号 bare 3-split with no label/id signal per part, stay unclassified (LLM fallback; tel-split-by-name candidate, same as kobe ANSWER6)',
+      'item4 (text): 件名, no profile value, correctly unfilled',
+      'item5 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'item6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'item6 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'B_Reset (button): action element, never a fill target (exclude)',
+      'B_Submit (submit): action element, never a fill target (exclude)',
+      'idSubTop (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'formId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'preview (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'httpReferer (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'T_Id_s (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'T_IdCnt (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'T_IdFaq (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'totalFileLimit (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
