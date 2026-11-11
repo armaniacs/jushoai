@@ -91,3 +91,23 @@
 | 78 | https://www.ncc.go.jp/jp/contact/ | 除外 | 到達不能 (HTTP 404「リニューアル」。静的formは検索のみ) |
 | 79 | https://www.hosp.keio.ac.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
 | 80 | https://www.mhlw.go.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 81 | https://www.jrc.or.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 82 | https://www.suumo.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 83 | https://www.homes.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは物件検索 `freeword/cond` のみ) |
+| 84 | https://www.athome.co.jp/contact/ | 除外 | 到達不能 (HTTP 404→`asp.athome.jp`。formなし) |
+| 85 | https://www.sekisuihouse.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは入力欄なし) |
+| 86 | https://www.daiwahouse.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 87 | https://www.mitsuihome.co.jp/contact/ | 除外 | フォームなし (HTTP 200はトップ頁。静的formは検索のみ。実フォームは `/support/sonota/form.php`→No.130で検証) |
+| 88 | https://www.sumitomo-rd.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ。実フォームはSMP別導線→No.169-170で検証) |
+| 89 | https://www.tokyu-land.co.jp/contact/ | 除外 | フォームなし (HTTP 200「各種お問い合わせ」ハブ。静的formは検索のみ。実フォームは `/form/*`→No.132-135で検証) |
+| 90 | https://www.nomura-re.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし) |
+| 91 | https://www.mitsuifudosan.co.jp/contact/ | 除外 | フォームなし (HTTP 200「総合お問い合わせ」ハブ。静的formは検索のみ。実フォームはenquete別導線→No.136-138で検証) |
+| 92 | https://www.recruit.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ) |
+| 93 | https://www.mynavi.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 94 | https://www.jasso.go.jp/contact/ | 除外 | フォームなし (HTTP 200→`notfound.html`経由トップ。formなし。実窓口は `/about/toiawase/`→No.174で検証) |
+| 95 | https://www.benesse.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧」リンク集。静的formなし。実フォームはenquete別導線→No.143で検証) |
+| 96 | https://www.z-kai.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 97 | https://www.city.sendai.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 98 | https://www.city.hiroshima.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 99 | https://www.jrhokkaido.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`jrherror/404-jrhp.html`。formなし) |
+| 100 | https://www.jrkyushu.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索+運行情報selectのみ。実フォームはkintoneapp→No.167で検証) |
