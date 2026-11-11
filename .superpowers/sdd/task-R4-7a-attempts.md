@@ -132,3 +132,23 @@
 | 118 | https://www.okayama-u.ac.jp/tp/admission/seikyuu_shiryo.html | 岡山大学 | 除外 | フォームなし (HTTP 200「大学案内等の請求方法 - 国立大学法人 岡山大学」。静的form1件はサイト内検索のみ。資料請求案内頁だが請求導線は別 (テレメール等の外部とみられる)) |
 | 119 | https://www.tuat.ac.jp/admission/nyushi_gakubu/seikyu/ | 東京農工大学 | 除外 | フォームなし (HTTP 200「入試関係資料請求 / 学部：入試情報 / 入試情報 / 国立大学法人」。静的form1件はサイト内検索のみ。資料請求頁だが検索のみ。請求本体はテレメール外部サービス) |
 | 120 | https://www.apumate.net/event/opencampus/ | 立命館アジア太平洋大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / イベント / 受験生サイト APUmate.」。静的formなし。OC予約はAPUmate外部イベントシステム導線とみられる) |
+| 121 | https://www.kumamoto-u.ac.jp/nyuushi | 熊本大学 | 除外 | フォームなし (HTTP 200「入試案内 / 熊本大学」。静的form1件はサイト内検索のみ。入試案内頁 (空form)) |
+| 122 | https://www.sophia.ac.jp/jpn/admissions/contact/ | 上智大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 123 | https://www.tufs.ac.jp/admission/contact/ | 東京外国語大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 124 | https://www.nagasaki-u.ac.jp/nyugaku/contact/ | 長崎大学 | 除外 | フォームなし (HTTP 200「大学・学部パンフレット＆資料請求｜長崎大学 受験生の入試情報サイト」。静的form1件はサイト内検索のみ。資料請求頁だが検索のみ。請求本体はテレメール外部サービス) |
+| 125 | https://www.u-aizu.ac.jp/admission/contact/ | 会津大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 126 | https://www.ritsumei.jp/admission/contact/ | 立命館大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
+| 127 | https://www.nagaokaut.ac.jp/admissions/request-information/ | 長岡技術科学大学 | 除外 | フォームなし (HTTP 200「資料請求 / 長岡技術科学大学」。静的formなし。資料請求頁だが静的formなし。請求本体はテレメール外部サービス) |
+| 128 | https://www.ynu.ac.jp/admission/contact/ | 横浜国立大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 129 | https://www.kit.ac.jp/admission/contact/ | 京都工芸繊維大学 | 除外 | フォームなし (HTTP 200「Contact Us - 国立大学法人 京都工芸繊維大学」。静的form1件はサイト内検索のみ) |
+| 130 | https://www.shibaura-it.ac.jp/admission/contact/ | 芝浦工業大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 131 | https://www.omu.ac.jp/admission/contact/ | 大阪公立大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 132 | https://www.nagoya-cu.ac.jp/admission/contact/ | 名古屋市立大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 133 | https://www.kuis.ac.jp/admissions/contact/ | 神田外語大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
+| 134 | https://www.kaiyodai.ac.jp/campuslife/inquirycounter/ | 東京海洋大学 | 除外 | フォームなし (HTTP 200「相談窓口 / 学生生活 / 国立大学法人 東京海洋大学」。静的formなし。相談窓口案内 (入力は表示切替checkboxのみ)) |
+| 135 | https://www.kyutech.ac.jp/admission/contact/ | 九州工業大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 136 | https://www.ocha.ac.jp/ao/contact.html | お茶の水女子大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 137 | https://www.tus.ac.jp/admissions/university/entry/ | 東京理科大学 | 除外 | フォームなし (HTTP 200「出願案内｜東京理科大学」。静的form3件はサイト内検索のみ。出願案内頁) |
+| 138 | https://www.rikkyo.ac.jp/admissions/visit/opencampus/index.html | 立教大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / 立教大学」。静的form2件はサイト内検索のみ。OC頁だが検索のみ) |
+| 139 | https://www.tut.ac.jp/admission/contact/ | 豊橋技術科学大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 140 | https://www.doshisha.ac.jp/admissions/contact/ | 同志社大学 | 除外 | フォームなし (HTTP 200「お探しのページがみつかりません ｜同志社大学」。静的formなし。実質404: HTTP 200だが「お探しのページ」内容。静的formなし) |
