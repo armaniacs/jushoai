@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://inquiry.lixil.co.jp/regist/is?SMPFORM=naoj-lctgtj-defd68f97cffa36b3ed5f3bcd2c68ca6&qcat=18
+  (LIXIL5938・SMP).
+  Field names, placeholders, maxlengths, and control kinds mirror the real
+  page (Shift_JIS decoded to UTF-8). The real page lays each row out as table
+  tr with a th heading, and the scanner reads that th as nearby, so the rows
+  are kept as minimal tr/th/td (auhikari-kocho 前例). The three selects carry
+  the real options. question textarea, file inputs, privacy checkbox, and the
+  hidden shims stay skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>LIXIL お問い合わせ (SMP)</title>
+<form>
+<table>
+<tr><th>タイトル【必須】</th><td><input name="title" id="title" type="text" value="" placeholder="例）〇〇〇〇〇〇〇〇〇〇" maxlength="64"></td></tr>
+<tr><th>問合せカテゴリー【必須】</th><td><select name="category" id="category"><option value="">----- お選びください -----</option><option value="1">トイレ</option><option value="2">浴室</option><option value="4">キッチン</option><option value="5">洗面化粧室</option><option value="6">給湯機器</option><option value="7">水栓金具</option><option value="8">業務用設備器具</option><option value="9">タイル建材</option><option value="10">木造用サッシ・シャッター</option><option value="11">玄関ドア引戸・ドア引戸錠</option><option value="12">ビル・マンション用サッシ</option><option value="13">エクステリア</option><option value="14">インテリア建材</option><option value="15">商品以外のお問い合わせ</option></select></td></tr>
+<tr><th>商品名</th><td><input name="item_name" id="item_name" type="text" value="" placeholder="例）〇〇〇〇〇〇〇〇〇〇" maxlength="64"></td></tr>
+<tr><th>品番</th><td><input name="item_no" id="item_no" type="text" value="" placeholder="例）0123456" maxlength="64"></td></tr>
+<tr><th>お客さま分類【必須】</th><td><select name="work" id="work"><option value="">----- お選びください -----</option><option value="1">一般のお客さま</option><option value="2">販売店・特約店・代理店</option><option value="3">工務店・工事店</option><option value="4">ハウスメーカー</option><option value="5">設計事務所</option><option value="6">量販店・ホームセンター</option><option value="7">リフォーム会社</option><option value="8">ゼネコン</option><option value="9">同業他社</option><option value="10">不動産会社・管理会社</option><option value="11">その他</option></select></td></tr>
+<tr><th>会社名・団体名【必須】</th><td><input name="company" id="company" type="text" value="" placeholder="例）〇〇〇〇〇〇〇〇会社" maxlength="64"></td></tr>
+<tr><th>お名前【必須】</th><td><input name="name_sei" id="name_sei" type="text" value="" placeholder="例）山田" maxlength="16"><input name="name_mei" id="name_mei" type="text" value="" placeholder="例）太郎" maxlength="16"></td></tr>
+<tr><th>フリガナ【必須】</th><td><input name="kokyaku_sei_kana" id="kokyaku_sei_kana" type="text" value="" placeholder="例）ヤマダ" maxlength="16"><input name="kokyaku_mei_kana" id="kokyaku_mei_kana" type="text" value="" placeholder="例）タロウ" maxlength="16"></td></tr>
+<tr><th>郵便番号【必須】</th><td><input name="post:a" id="post_1" type="text" value="" maxlength="3"><input name="post:t" id="post_2" type="text" value="" maxlength="4"></td></tr>
+<tr><th>都道府県【必須】</th><td><select name="pref_name" id="pref_name"><option value="">----- お選びください -----</option><option value="北海道">北海道</option><option value="青森県">青森県</option><option value="岩手県">岩手県</option><option value="宮城県">宮城県</option><option value="秋田県">秋田県</option><option value="山形県">山形県</option><option value="福島県">福島県</option><option value="茨城県">茨城県</option><option value="栃木県">栃木県</option><option value="群馬県">群馬県</option><option value="埼玉県">埼玉県</option><option value="千葉県">千葉県</option><option value="東京都">東京都</option><option value="神奈川県">神奈川県</option><option value="新潟県">新潟県</option><option value="富山県">富山県</option><option value="石川県">石川県</option><option value="福井県">福井県</option><option value="山梨県">山梨県</option><option value="長野県">長野県</option><option value="岐阜県">岐阜県</option><option value="静岡県">静岡県</option><option value="愛知県">愛知県</option><option value="三重県">三重県</option><option value="滋賀県">滋賀県</option><option value="京都府">京都府</option><option value="大阪府">大阪府</option><option value="兵庫県">兵庫県</option><option value="奈良県">奈良県</option><option value="和歌山県">和歌山県</option><option value="鳥取県">鳥取県</option><option value="島根県">島根県</option><option value="岡山県">岡山県</option><option value="広島県">広島県</option><option value="山口県">山口県</option><option value="徳島県">徳島県</option><option value="香川県">香川県</option><option value="愛媛県">愛媛県</option><option value="高知県">高知県</option><option value="福岡県">福岡県</option><option value="佐賀県">佐賀県</option><option value="長崎県">長崎県</option><option value="熊本県">熊本県</option><option value="大分県">大分県</option><option value="宮崎県">宮崎県</option><option value="鹿児島県">鹿児島県</option><option value="沖縄県">沖縄県</option></select></td></tr>
+<tr><th>市区町村</th><td><input name="address1" id="" type="text" value="" placeholder="例）〇〇市" maxlength="30"></td></tr>
+<tr><th>町域以下</th><td><input name="address2" id="" type="text" value="" placeholder="例）〇〇町" maxlength="50"></td></tr>
+<tr><th>建物名</th><td><input name="address3" id="" type="text" value="" placeholder="例）〇〇マンション" maxlength="30"></td></tr>
+<tr><th>部屋番号</th><td><input name="address4" id="" type="text" value="" placeholder="例）000号室" maxlength="30"></td></tr>
+<tr><th>電話番号【必須】</th><td><input name="telephone" id="telephone" type="text" value="" placeholder="例）01234567890" maxlength="14"></td></tr>
+<tr><th>メールアドレス【必須】</th><td><input name="mail" id="mail" type="text" value="" placeholder="例）test@co.jp" maxlength="129"><input name="mail:cf" id="mail_2" type="text" value="" maxlength="129"></td></tr>
+</table>
+<!-- skip: question (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: f012876605 (file): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: f012876606 (file): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: f012876607 (file): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: f012876608 (file): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: f013047598 (file): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: post (button): action element, never a fill target (exclude) -->
+<!-- skip: privacy (checkbox): out of scope (skip fixed) -->
+<!-- skip: privacy (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: detect (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: qcat (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: mode (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: pref_name_no (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: work_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: work_val (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: category_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: category_val (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: customer_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: pref_name_v (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: hc_val (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: hc_result (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: hc_sum (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: submit (submit): action element, never a fill target (exclude) -->
+</form>
