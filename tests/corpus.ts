@@ -924,6 +924,39 @@ const LEDGER = {
       'submit (submit): action element, never a fill target (exclude)',
     ],
   },
+  'toshiba-gx-contact-form.html': {
+    expected: {
+      // Pardot romaji-style names resolve to Japanese person names; the
+      // hyphenated 例 placeholders drive dashed zip/tel.
+      'lastname': '山田',
+      'firstname': '太郎',
+      'zip': '100-0001',
+      'state': '東京都',
+      'city': '千代田区',
+      // 町名・番地 fills the full concatenation (honest pin of the
+      // address row, cf. mitsuihome address3).
+      'addressone': '東京都千代田区千代田1-1 千代田ビル101',
+      'phone': '090-1234-5678',
+      'email': 'yamada@example.com',
+      'mailConfirm': 'yamada@example.com',
+      // 部署名 reads as the school department, so 普通科 fills (honest pin;
+      // companyDepartment 開発部 is not used — department-reading candidate).
+      'department': '普通科',
+    },
+    excluded: [
+      'type (select): options restored verbatim, stays unclassified (LLM fallback; inquiry-kind select)',
+      'company (text): 所属企業・団体名 with a 株式会社 placeholder, stays unclassified (LLM fallback; company-by-heading candidate, same as otsuka/mitsuihome)',
+      'industry/departmentCategory/jobtitleCategory (select): options restored verbatim, stay unclassified (LLM fallback; no profile value)',
+      'subject (text): 件名, no profile value, correctly unfilled',
+      'InquiryClassification (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'InquiryClassification (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'description (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'Inquiry[agree] (checkbox): out of scope (skip fixed)',
+      'Inquiry[agree] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'Inquiry[agree] (checkbox): out of scope (skip fixed)',
+      'OptInAccept (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

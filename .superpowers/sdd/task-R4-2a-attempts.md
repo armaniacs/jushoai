@@ -19,3 +19,4 @@
 | 9 | https://form.kikkoman.co.jp/m/website | 成功 | kikkoman-website-form.html (12 controls + 性別select実選択肢復元。honest pin: 姓/名・せい/めい・tel3分割が解決; タイトル・URL・性別・email確認2欄は未分類) |
 | 10 | https://area31.smp.ne.jp/area/is?SMPFORM=qcrc-mcldsd-95bb156300186458a5d681e60ccadfa&type=ac | 失敗 | 404 (SMPFORM トークン失効。R4-1時は HTTP 200。target-url.md の行は revert 済み。無理せず次へ) |
 | 11 | https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2 | 成功 | smp-regist-inquiry-form.html (13 controls + 都道府県select実選択肢復元。Shift_JIS文字化けplaceholderを復元、dl/dt/dd構造を復元。honest pin: 氏名・zip分割・住所・tel/fax・email確認2欄が解決; ふりがな・都道府県selectは未分類) |
+| 12 | https://go6.global.toshiba/GX/contactform | 成功 | toshiba-gx-contact-form.html (16 controls + 4 select実選択肢復元。dl/dt/dd構造を復元。honest pin: 姓/名・zip・州/市/番地・tel・email確認2欄が解決、部署名→普通科(誤分類pin)、company・業種系select・件名は未分類) |

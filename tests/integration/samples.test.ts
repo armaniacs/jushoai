@@ -255,4 +255,7 @@ describe('sample forms end to end', () => {
   it('smp-regist-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('smp-regist-inquiry-form.html')).toEqual(expectedFor('smp-regist-inquiry-form.html'));
   });
+  it('toshiba-gx-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('toshiba-gx-contact-form.html')).toEqual(expectedFor('toshiba-gx-contact-form.html'));
+  });
 });
