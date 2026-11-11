@@ -1,0 +1,195 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.postin-svr.com/entry/showa-u/index.asp
+  (昭和大学資料請求・問合せ, postin-svr 外部フォーム).
+  The real page is Shift_JIS with td (not th) headings, so the scanner
+  reads none of them (brother precedent: plain td/div headings are
+  unread, bare is equivalent). Field names carry the signal (kanzi_sei,
+  kana_mei, yubin, jusho1/2/3, PCmail, phone1 with a ハイフンなし hint).
+  state keeps its real 49 options (numeric values 00-48), school_1 its
+  real 49 (高校所在地県名, name values + その他), school_2 its real 44
+  kana, grade its real 8. koukou is genuinely empty on the real page
+  (JS-populated). seibetsu1 (男性/女性) is a gender group, restored as
+  real radios. m_maga is not gender/decade, stays a bundled skip.
+  In-scope controls: 18 + the seibetsu1 gender pair.
+-->
+<html lang="ja"><meta charset="utf-8"><title>昭和大学資料請求・問合せ</title>
+<form>
+<input name="kanzi_sei" id="kanzi_sei5" type="text" value="">
+<input name="kanzi_mei" id="kanzi_mei5" type="text" value="">
+<input name="kana_sei" id="kana_sei5" type="text" value="">
+<input name="kana_mei" id="kana_mei5" type="text" value="">
+<label><input type="radio" name="seibetsu1" value="男性">男性</label>
+<label><input type="radio" name="seibetsu1" value="女性">女性</label>
+<input name="yubin" id="yubin" type="tel" value="" placeholder="1234567" maxlength="8">
+<select name="state" id="state">
+<option value="00">選択してください</option>
+<option value="01">北海道</option>
+<option value="02">青森県</option>
+<option value="03">岩手県</option>
+<option value="04">宮城県</option>
+<option value="05">秋田県</option>
+<option value="06">山形県</option>
+<option value="07">福島県</option>
+<option value="08">茨城県</option>
+<option value="09">栃木県</option>
+<option value="10">群馬県</option>
+<option value="11">埼玉県</option>
+<option value="12">千葉県</option>
+<option value="13">東京都</option>
+<option value="14">神奈川県</option>
+<option value="15">新潟県</option>
+<option value="16">富山県</option>
+<option value="17">石川県</option>
+<option value="18">福井県</option>
+<option value="19">山梨県</option>
+<option value="20">長野県</option>
+<option value="21">岐阜県</option>
+<option value="22">静岡県</option>
+<option value="23">愛知県</option>
+<option value="24">三重県</option>
+<option value="25">滋賀県</option>
+<option value="26">京都府</option>
+<option value="27">大阪府</option>
+<option value="28">兵庫県</option>
+<option value="29">奈良県</option>
+<option value="30">和歌山県</option>
+<option value="31">鳥取県</option>
+<option value="32">島根県</option>
+<option value="33">岡山県</option>
+<option value="34">広島県</option>
+<option value="35">山口県</option>
+<option value="36">徳島県</option>
+<option value="37">香川県</option>
+<option value="38">愛媛県</option>
+<option value="39">高知県</option>
+<option value="40">福岡県</option>
+<option value="41">佐賀県</option>
+<option value="42">長崎県</option>
+<option value="43">熊本県</option>
+<option value="44">大分県</option>
+<option value="45">宮崎県</option>
+<option value="46">鹿児島県</option>
+<option value="47">沖縄県</option>
+<option value="48">その他</option>
+</select>
+<input name="jusho1" type="text" value="">
+<input name="jusho2" type="text" value="">
+<input name="jusho3" id="jusho35" type="text" value="">
+<input name="phone1" type="text" value="" maxlength="15">
+<select name="school_1" id="select14">
+<option value="" selected>選択してください</option>
+<option value="北海道">北海道</option>
+<option value="青森県">青森県</option>
+<option value="岩手県">岩手県</option>
+<option value="宮城県">宮城県</option>
+<option value="秋田県">秋田県</option>
+<option value="山形県">山形県</option>
+<option value="福島県">福島県</option>
+<option value="茨城県">茨城県</option>
+<option value="栃木県">栃木県</option>
+<option value="群馬県">群馬県</option>
+<option value="埼玉県">埼玉県</option>
+<option value="千葉県">千葉県</option>
+<option value="東京都">東京都</option>
+<option value="神奈川県">神奈川県</option>
+<option value="新潟県">新潟県</option>
+<option value="富山県">富山県</option>
+<option value="石川県">石川県</option>
+<option value="福井県">福井県</option>
+<option value="山梨県">山梨県</option>
+<option value="長野県">長野県</option>
+<option value="岐阜県">岐阜県</option>
+<option value="静岡県">静岡県</option>
+<option value="愛知県">愛知県</option>
+<option value="三重県">三重県</option>
+<option value="滋賀県">滋賀県</option>
+<option value="京都府">京都府</option>
+<option value="大阪府">大阪府</option>
+<option value="兵庫県">兵庫県</option>
+<option value="奈良県">奈良県</option>
+<option value="和歌山県">和歌山県</option>
+<option value="鳥取県">鳥取県</option>
+<option value="島根県">島根県</option>
+<option value="岡山県">岡山県</option>
+<option value="広島県">広島県</option>
+<option value="山口県">山口県</option>
+<option value="徳島県">徳島県</option>
+<option value="香川県">香川県</option>
+<option value="愛媛県">愛媛県</option>
+<option value="高知県">高知県</option>
+<option value="福岡県">福岡県</option>
+<option value="佐賀県">佐賀県</option>
+<option value="長崎県">長崎県</option>
+<option value="熊本県">熊本県</option>
+<option value="大分県">大分県</option>
+<option value="宮崎県">宮崎県</option>
+<option value="鹿児島県">鹿児島県</option>
+<option value="沖縄県">沖縄県</option>
+<option value="その他">その他</option>
+</select>
+<select name="school_2" id="select15">
+<option>あ</option>
+<option>い</option>
+<option>う</option>
+<option>え</option>
+<option>お</option>
+<option>か</option>
+<option>き</option>
+<option>く</option>
+<option>け</option>
+<option>こ</option>
+<option>さ</option>
+<option>し</option>
+<option>す</option>
+<option>せ</option>
+<option>そ</option>
+<option>た</option>
+<option>ち</option>
+<option>つ</option>
+<option>て</option>
+<option>と</option>
+<option>な</option>
+<option>に</option>
+<option>ぬ</option>
+<option>ね</option>
+<option>の</option>
+<option>は</option>
+<option>ひ</option>
+<option>ふ</option>
+<option>へ</option>
+<option>ほ</option>
+<option>ま</option>
+<option>み</option>
+<option>む</option>
+<option>め</option>
+<option>も</option>
+<option>や</option>
+<option>ゆ</option>
+<option>よ</option>
+<option>ら</option>
+<option>り</option>
+<option>る</option>
+<option>れ</option>
+<option>ろ</option>
+<option>わ</option>
+</select>
+<select name="koukou" id="select16">
+</select>
+<select name="grade" id="select17">
+<option value="" selected>選択してください</option>
+<option value="高校１年生">高校１年生</option>
+<option value="高校２年生">高校２年生</option>
+<option value="高校３年生">高校３年生</option>
+<option value="既卒者">既卒者</option>
+<option value="中学生以下">中学生以下</option>
+<option value="社会人">社会人</option>
+<option value="その他">その他</option>
+</select>
+<input name="yobikou" id="yobikou" type="text" value="">
+<input name="yobikou_k" id="yobikou_k" type="text" value="">
+<input name="PCmail" id="PCmail6" type="text" value="" maxlength="50">
+<input name="jyouken14_2" id="jyouken14_2" type="text" value="">
+<!-- skip: m_maga (radio): bundled per name; 希望する/希望しない, stays unclassified (radio policy) -->
+<!-- skip: m_maga (radio): bundled per name; 希望する/希望しない, stays unclassified (radio policy) -->
+</form>

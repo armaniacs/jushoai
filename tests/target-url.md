@@ -73,3 +73,4 @@
 - https://www.tonami.co.jp/contact/luggage/ → tonami-luggage-form.html
 - https://www.kyutech.ac.jp/contact/ → contact.html
 - https://www.uoeh-u.ac.jp/Exam/inquiry.html → inquiry-html.html
+- https://www.postin-svr.com/entry/showa-u/index.asp → index-asp.html
