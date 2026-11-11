@@ -71,4 +71,24 @@
 | 58 | https://www.tomas.co.jp/contact/trial_lesson/ | TOMAS | 有望 P1 | 静的実フォーム (Laravel。保護者+生徒氏名カナ・住所pref/city・email・学年。多様性◎) |
 | 59 | https://www.tomas.co.jp/contact/curriculum/ | TOMAS | 除外 | フォームなし (同上ハブ) |
 | 60 | https://meimonkai.co.jp/request/ | 名門会 | 有望 P2 | 静的実フォーム (Formidable。input46・ta1・sel5。項目名item_metaコード化のためP2) |
+| 61 | https://meimonkai.co.jp/event/ | 名門会 | 除外 | フォームなし (セミナー案内) |
+| 62 | https://www.shingakai.co.jp/experience/ | 伸芽会 | 除外 | フォームなし (合格者体験談) |
+| 63 | https://www.shingakai.co.jp/news/event/ | 伸芽会 | 除外 | フォームなし (イベント案内) |
+| 64 | https://www.trygroup.co.jp/request/ | 家庭教師のトライ | 除外 | フォームなし (資料請求案内。formなし・申込はJS導線とみられる) |
+| 65 | https://www.trygroup.co.jp/experience/ | 家庭教師のトライ | 除外 | フォームなし (合格体験談) |
+| 66 | https://www.kobekyo.com/contact/ | 個別教室のトライ | 除外 | JS描画のみ (JSアプリ殻+計測のみ・静的formなし) |
+| 67 | https://www.kobekyo.com/ | 個別教室のトライ | 除外 | フォームなし (ブランドトップ。formなし) |
+| 68 | https://www.try-gakuin.com/toiawase/ | トライ式高等学院 | 除外 | フォームなし (問合せ案内。formなし) |
+| 69 | https://www.try-gakuin.com/reserve/ | トライ式高等学院 | 有望 P1 | 静的実フォーム (予約フォーム。input292。reserve[name_sei/mei]・email・tel・pref・希望日。多様性◎。action空の段階式疑いも静的欄が極めて豊か) |
+| 70 | https://www.yarukiswitch.jp/inquiry/ | やる気スイッチグループ | 除外 | フォームなし (グループ問合せハブ) |
+| 71 | https://www.yarukiswitch.jp/inquiry/other/ | やる気スイッチグループ | 有望 P2 | 静的実フォーム (氏名name01/02・email確認・tel・child_name。住所欄なしのためP2) |
+| 72 | https://www.yarukiswitch.jp/inquiry/fc/ | やる気スイッチグループ | 有望 P2 | 静的実フォーム (FC加盟。会社・郵便・住所・email確認。B2BのためP2) |
+| 73 | https://www.schoolie-net.jp/entry/ | スクールIE | 除外 | フォームなし (入塾の流れ案内) |
+| 74 | https://www.schoolie-net.jp/search/request/ | スクールIE | 除外 | フォームなし (教室検索postal/stationのみ。実申込は後段) |
+| 75 | https://www.schoolie-net.jp/search/trial/ | スクールIE | 除外 | フォームなし (同上) |
+| 76 | https://www.winbe.co.jp/contact | WinBe | 除外 | フォームなし (CONTACT頁。formなし・JS導線とみられる) |
+| 77 | https://www.ninja9.jp/forms/contact/ | 忍者ナイン | 有望 P2 | 静的実フォーム (無料体験申込。child_name_kana・email・tel・zip。住所はzipのみのためP2) |
+| 78 | https://www.schoolie-net.jp/sp/contact/ | スクールIE | 除外 | 到達先にformなし (sp/contact→トップに転送) |
+| 79 | https://www.meikogijuku.jp/contact/entry | 明光義塾 | 有望 P1 | 静的実フォーム (Drupal。氏名・カナ・住所addr1/2・email・tel・学校。多様性◎) |
+| 80 | https://www.meikogijuku.jp/taiken/entry | 明光義塾 | 有望 P2 | 静的実フォーム (無料体験。同型2件目のためP2) |
 <!--APPEND-->
