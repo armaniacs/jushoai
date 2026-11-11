@@ -2199,6 +2199,25 @@ const LEDGER = {
       'submit (button): action element, never a fill target (exclude)',
     ],
   },
+  'toyoda-gosei-form.html': {
+    expected: {
+      'name': '山田 太郎',
+      'name2': 'やまだ たろう',
+      'zip1': '100',
+      'zip2': '0001',
+      'adr1': '千代田1-1 千代田ビル101',
+      'tel': '090-1234-5678',
+      'email': 'yamada@example.com',
+      'email2': 'yamada@example.com',
+    },
+    excluded: [
+      '_form_id_ (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'token_seihin_form (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'matter (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submit (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
