@@ -1062,6 +1062,50 @@ const LEDGER = {
       'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'tokyu-land-kojin-form.html': {
+    expected: {
+      // One dl per row on the real page (no <label> association); the dt
+      // texts are kept as the scanner's nearby (same as tokyu-land-contact).
+      'name': '山田 太郎',
+      'kana': 'ヤマダ タロウ',
+      'zip': '1000001',
+      // Both 市区町村 rows (物件条件 + 現住所) fill the prefecture-prefixed
+      // concatenation; both 番地・建物名 rows read as building (duplicate
+      // fill across the two address blocks, honest pin).
+      'address1_house': '東京都千代田区千代田1-1',
+      'address2_house': '千代田ビル101',
+      'address1': '東京都千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      // type=text so the value stays undashed (honest pin).
+      'tel': '09012345678',
+      'mail': 'yamada@example.com',
+      'mail2': 'yamada@example.com',
+    },
+    excluded: [
+      'q x2 (search): header/footer site-search fields, stay unclassified (same as tokyu-land-contact)',
+      'pref_house (select): only a `--` option, correctly warn-no-option (same as tokyu-land-contact)',
+      'min_price/max_price (text): 売却・購入希望価格, no profile value, correctly unfilled',
+      'land/bill (text): 物件面積, no profile value, correctly unfilled',
+      'pref (select): only a `--` option, correctly warn-no-option',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'flow (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'type[] (checkbox): out of scope (skip fixed)',
+      'type[] (checkbox): out of scope (skip fixed)',
+      'type[] (checkbox): out of scope (skip fixed)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
