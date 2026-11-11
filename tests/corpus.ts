@@ -765,6 +765,33 @@ const LEDGER = {
       'check (button): action element, never a fill target (exclude)',
     ],
   },
+  'tokyu-land-contact-form.html': {
+    expected: {
+      // One dl per row on the real page (no <label> association); the dt
+      // texts are kept as the scanner's nearby.
+      'name': '山田 太郎',
+      'kana': 'ヤマダ タロウ',
+      'zip': '1000001',
+      // 市区町村 fills the prefecture-prefixed concatenation (honest pin of
+      // the address row; 番地・建物名 reads as building).
+      'address1': '東京都千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      'mail': 'yamada@example.com',
+      'mail2': 'yamada@example.com',
+    },
+    excluded: [
+      'q x2 (search): header/footer site-search fields, stay unclassified (same as forum.html s)',
+      'pref (select): only a `--` option, correctly warn-no-option',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'flow (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

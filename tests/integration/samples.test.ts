@@ -237,4 +237,7 @@ describe('sample forms end to end', () => {
   it('mitsui-reform-catalog-form.html fills the in-scope fields', async () => {
     expect(await planFor('mitsui-reform-catalog-form.html')).toEqual(expectedFor('mitsui-reform-catalog-form.html'));
   });
+  it('tokyu-land-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('tokyu-land-contact-form.html')).toEqual(expectedFor('tokyu-land-contact-form.html'));
+  });
 });
