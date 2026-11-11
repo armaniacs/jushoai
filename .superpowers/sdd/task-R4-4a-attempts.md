@@ -131,3 +131,23 @@
 | 118 | https://www.dai-ichi-life.co.jp/contact/ | 除外 | 到達不能 (第一生命8750。HTTP 404・文字化けタイトル) |
 | 119 | https://www.tokiomarinehd.com/contact/ | 除外 | 到達不能 (東京海上8766。HTTP 404) |
 | 120 | https://www.mec.co.jp/contact/ | 除外 | 到達不能 (三菱地所8802。HTTP 404 size 479) |
+| 121 | https://www.tatemono.com/contact/ | 除外 | 到達不能 (東京建物8804。HTTP 404。静的formは検索のみ。実窓口は `tatemono.com/inquiry/` 別導線) |
+| 122 | https://www.leopalace21.co.jp/contact/ | 除外 | フォームなし (レオパレス218848 → (レオパレス8848。HTTP 200ハブ。静的formは検索のみ。実フォームは forms.office.com等別導線) |
+| 123 | https://www.starts.co.jp/contact/ | 除外 | フォームなし (スターツ8850。HTTP 200ハブだが静的formなし。実フォームは `/contact/*` 別導線) |
+| 124 | https://www.goldcrest.co.jp/contact/ | 除外 | 到達不能 (ゴールドクレスト8871。HTTP 403) |
+| 125 | https://www.tokyu.co.jp/contact/ | 除外 | 到達不能 (東急9005。HTTP 404。静的formは google検索のみ。実窓口は `/railway/contact/` 等別導線) |
+| 126 | https://www.keisei.co.jp/contact/ | 除外 | 到達不能 (京成9009。HTTP 403) |
+| 127 | https://www.westjr.co.jp/contact/ | 除外 | 到達不能 (JR西9021。文字化け404。静的formは検索のみ) |
+| 128 | https://www.senko.co.jp/contact/ | 除外 | 到達不能 (センコーGHD9069。HTTP 404) |
+| 129 | https://www.tonami.co.jp/contact/ | 除外 | フォームなし (トナミ運輸9070。HTTP 200ハブ。静的formは検索のみ。実フォームは `/contact/luggage/`→No.181で検証) |
+| 130 | https://www.seino.co.jp/contact/ | 除外 | 到達不能 (セイノーHD9076。HTTP 404) |
+| 131 | https://www.nyk.com/contact/ | 除外 | 到達不能 (日本郵船9101。HTTP 404。静的formは検索のみ。実窓口は `/scripts/contact_oth_jp/index.asp` 別導線) |
+| 132 | https://www.mol.co.jp/contact/ | 除外 | フォームなし (商船三井9104。HTTP 200ハブだが静的formなし。実フォームは `/contact/*` 別導線) |
+| 133 | https://www.kline.co.jp/contact/ | 除外 | 到達不能 (川崎汽船9107。HTTP 404) |
+| 134 | https://www.nittsu.co.jp/contact/ | 除外 | フォームなし (NX-HD9147。`nipponexpress.com` 総合問合せハブに転送。静的formは検索のみ。実フォームは `/form/ja/*`→No.182で検証) |
+| 135 | https://www.starflyer.jp/contact/ | 除外 | フォームなし (スターフライヤー9206。HTTP 404だが予約検索formあり。実フォームは `request-form.starflyer.jp`→No.183で検証) |
+| 136 | https://www.ntt.co.jp/contact/ | 除外 | 到達不能 (NTT9432。HTTP 410 Site Has Moved) |
+| 137 | https://group.softbank/jp/contact/ | 除外 | 到達不能 (ソフトバンクG9984。HTTP 404。静的formは検索のみ) |
+| 138 | https://www.hikari.co.jp/contact/ | 有望 P2 | 要精査 (光通信9435。HTTP 200。静的入力欄 input 11・textarea 1: `inquiry_type`・`inquiry_text`・`reply_type`・`name`・`email`・`tel`・`agreement`。`action` 空=JS送信の可能性あり。取込時確認のためP2) |
+| 139 | https://www.kadokawa.co.jp/contact/ | 除外 | 到達不能 (KADOKAWA9468。HTTP 404。静的formは検索のみ) |
+| 140 | https://www.zenrin.co.jp/contact/ | 除外 | フォームなし (ゼンリン9474。HTTP 200ハブ。静的formは markeinfo検索のみ。実フォームは `/contact/index.html` 別導線) |
