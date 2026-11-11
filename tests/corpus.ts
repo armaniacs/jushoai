@@ -1675,6 +1675,27 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'ngk-contact-form.html': {
+    expected: {
+      'name': '山田 太郎',
+      'name-kana': 'やまだ たろう',
+      'zip': '1000001',
+      'address': '東京都千代田区千代田1-1 千代田ビル101',
+      'tel': '090-1234-5678',
+      'mail': 'yamada@example.com',
+      'department': '普通科',
+    },
+    excluded: [
+      '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agree (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'agree (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '_Token[fields] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

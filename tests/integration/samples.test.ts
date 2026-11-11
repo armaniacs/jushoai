@@ -312,4 +312,7 @@ describe('sample forms end to end', () => {
   it('taiheiyo-cement-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('taiheiyo-cement-contact-form.html')).toEqual(expectedFor('taiheiyo-cement-contact-form.html'));
   });
+  it('ngk-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ngk-contact-form.html')).toEqual(expectedFor('ngk-contact-form.html'));
+  });
 });
