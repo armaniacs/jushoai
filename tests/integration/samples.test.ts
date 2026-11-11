@@ -279,4 +279,7 @@ describe('sample forms end to end', () => {
   it('mitsui-chintai-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('mitsui-chintai-inquiry-form.html')).toEqual(expectedFor('mitsui-chintai-inquiry-form.html'));
   });
+  it('epson-ir-form.html fills the in-scope fields', async () => {
+    expect(await planFor('epson-ir-form.html')).toEqual(expectedFor('epson-ir-form.html'));
+  });
 });
