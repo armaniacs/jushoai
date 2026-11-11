@@ -23,3 +23,4 @@
 - https://www.ois.ac.jp/contact → ois-contact.html
 - https://business.form-mailer.jp/fms/08ca15c3348737 → kigakuen-briefing.html
 - https://ssl.form-mailer.jp/fms/b2c99844164312 → seedome-openschool.html
+- https://www.fujifilm.com/jp/ja/form/FF-CSR → ff-csr.html

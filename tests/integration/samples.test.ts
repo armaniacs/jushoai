@@ -225,4 +225,7 @@ describe('sample forms end to end', () => {
   it('seedome-openschool.html fills the in-scope fields', async () => {
     expect(await planFor('seedome-openschool.html')).toEqual(expectedFor('seedome-openschool.html'));
   });
+  it('ff-csr.html fills the in-scope fields', async () => {
+    expect(await planFor('ff-csr.html')).toEqual(expectedFor('ff-csr.html'));
+  });
 });

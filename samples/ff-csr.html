@@ -1,0 +1,56 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.fujifilm.com/jp/ja/form/FF-CSR
+  (富士フイルム CSRお問い合わせ).
+  Field ids, names, labels, and control kinds mirror the real page. Three
+  name attributes arrive ASCII-folded by the scaffolder (e_mailatoresu,
+  qinwuxianxuexiaoming, jianwuming); the Japanese labels beside them are
+  verbatim and carry the classification signal. The prefecture select keeps
+  its real single `--` option. The contactto radios stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>富士フイルム CSRお問い合わせ (manufacturer)</title>
+<form>
+      <label for="edit-inquiry-title">件名</label>
+      <input name="inquiry_title" id="edit-inquiry-title" type="text" value="" maxlength="255">
+      <label for="edit-name-first">姓</label>
+      <input name="name[first]" id="edit-name-first" type="text" value="" maxlength="255">
+      <label for="edit-name-last">名</label>
+      <input name="name[last]" id="edit-name-last" type="text" value="" maxlength="255">
+      <label for="edit-name-kana-first">セイ</label>
+      <input name="name_kana[first]" id="edit-name-kana-first" type="text" value="" maxlength="255">
+      <label for="edit-name-kana-last">メイ</label>
+      <input name="name_kana[last]" id="edit-name-kana-last" type="text" value="" maxlength="255">
+      <label for="edit-e-mailatoresu-mail-1">E-mailアドレス</label>
+      <input name="e_mailatoresu[mail_1]" id="edit-e-mailatoresu-mail-1" type="email" value="" maxlength="254">
+      <label for="edit-e-mailatoresu-mail-2">E-mailアドレスの確認</label>
+      <input name="e_mailatoresu[mail_2]" id="edit-e-mailatoresu-mail-2" type="email" value="" maxlength="254">
+      <label for="edit-qinwuxianxuexiaoming">勤務先・学校名</label>
+      <input name="qinwuxianxuexiaoming" id="edit-qinwuxianxuexiaoming" type="text" value="" maxlength="255">
+      <label for="edit-organization-unit-name">部署名</label>
+      <input name="organization_unit_name" id="edit-organization-unit-name" type="text" value="" maxlength="255">
+      <label for="edit-postal-code">郵便番号</label>
+      <input name="postal_code" id="edit-postal-code" type="text" value="" maxlength="255">
+      <label for="edit-state-province-list">都道府県</label>
+      <select name="state_province_list" id="edit-state-province-list"><option value="">--</option></select>
+      <label for="edit-city">市区町村・番地</label>
+      <input name="city" id="edit-city" type="text" value="" maxlength="255">
+      <label for="edit-jianwuming">建物名</label>
+      <input name="jianwuming" id="edit-jianwuming" type="text" value="" maxlength="255">
+      <label for="edit-tel">TEL</label>
+      <input name="tel" id="edit-tel" type="tel" value="" maxlength="128">
+      <label for="edit-fax">FAX</label>
+      <input name="fax" id="edit-fax" type="tel" value="" maxlength="128">
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: inquiry_body (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: contactto (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contactto (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: captcha_sid (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: captcha_token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: captcha_response (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: is_recaptcha_v3 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: agreement_check (checkbox): out of scope (skip fixed) -->
+<!-- skip: op (submit): action element, never a fill target (exclude) -->
+<!-- skip: form_build_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: form_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

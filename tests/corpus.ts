@@ -575,6 +575,46 @@ const LEDGER = {
       'validated (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'ff-csr.html': {
+    expected: {
+      // 姓/名 labels each read as a full name (no first/last split applied);
+      // pinned honest, same shape as the ois-contact kana pair.
+      'name[first]': '山田 太郎',
+      'name[last]': '山田 太郎',
+      'name_kana[first]': 'ヤマダ タロウ',
+      'name_kana[last]': 'ヤマダ タロウ',
+      'e_mailatoresu[mail_1]': 'yamada@example.com',
+      'e_mailatoresu[mail_2]': 'yamada@example.com',
+      // 勤務先・学校名 compound reads as the school vocabulary (PBI-212
+      // Institution), so the school profile value fills.
+      'qinwuxianxuexiaoming': '都立日比谷高校',
+      'postal_code': '100-0001',
+      'city': '千代田区',
+      'jianwuming': '千代田ビル101',
+      'tel': '090-1234-5678',
+      // FAX has no profile value; the rule fills the tel value (honest pin,
+      // fax-vocabulary candidate).
+      'fax': '090-1234-5678',
+    },
+    excluded: [
+      'inquiry_title (text): 件名, no profile value, correctly unfilled',
+      'organization_unit_name (text): 部署名, stays unclassified (LLM fallback; 部署 vocabulary candidate)',
+      'state_province_list (select): only a `--` option, correctly warn-no-option',
+      '(no name/id) (button): unaddressable (exclude)',
+      'inquiry_body (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'contactto (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contactto (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'captcha_sid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'captcha_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'captcha_response (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'is_recaptcha_v3 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'agreement_check (checkbox): out of scope (skip fixed)',
+      'op (submit): action element, never a fill target (exclude)',
+      'form_build_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
