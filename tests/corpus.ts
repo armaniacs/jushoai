@@ -2251,6 +2251,27 @@ const LEDGER = {
       'f (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'yoshinoya-store-form.html': {
+    expected: {
+      'name': '山田太郎',
+      'kana': 'ヤマダタロウ',
+      'zip1': '100',
+      'zip2': '0001',
+      'pref': '東京都',
+      'address': '千代田区千代田1-1 千代田ビル101',
+      'tel': '090-1234-5678',
+      'mail': 'yamada@example.com',
+      'store_name': '山田太郎',
+    },
+    excluded: [
+      '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'request (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'data_agree (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'recaptchaToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

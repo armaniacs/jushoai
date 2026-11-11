@@ -1,0 +1,29 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.yoshinoya-holdings.com/contact/storeform/
+  (吉野家HD9861・店舗意見).
+  Field names, ids, placeholders, maxlengths, and control kinds mirror the
+  real page. Rows are kept as minimal dl/dt/dd since the scanner reads dd>dt
+  as nearby (kubota-engine-contact-form.html 前例). aria-labels duplicate
+  the placeholders and are dropped as non-signals. request textarea and
+  data_agree checkbox stay skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>吉野家 店舗ご意見 (yoshinoya)</title>
+<form>
+<dl>
+<dt>お名前必須</dt><dd><input type="text" name="name" id="name" value="" placeholder="吉野家太郎" maxlength="100"></dd>
+<dt>フリガナ必須</dt><dd><input type="text" name="kana" id="kana" value="" placeholder="ヨシノヤタロウ" maxlength="100"></dd>
+<dt>ご住所</dt><dd><input type="text" name="zip1" id="contact_zip1" value="" placeholder="000" maxlength="3"><input type="text" name="zip2" id="contact_zip2" value="" placeholder="0000" maxlength="4"><input type="text" name="pref" id="pref" value="" placeholder="東京都" maxlength="10"><input type="text" name="address" id="address" value="" placeholder="中央区日本橋箱崎町36番2号 Daiwaリバーゲート18階" maxlength="64"></dd>
+<dt>お電話番号</dt><dd><input type="text" name="tel" id="tel" value="" placeholder="000-0000-0000"></dd>
+<dt>メールアドレス必須</dt><dd><input type="text" name="mail" id="mail" value="" placeholder="example@example.co.jp" maxlength="100"></dd>
+<dt>ご利用ブランド必須</dt><dd><input type="text" name="store_brand" value="" placeholder="吉野家" maxlength="100"></dd>
+<dt>ご利用店舗名必須</dt><dd><input type="text" name="store_name" value="" placeholder="店舗名をご記入ください" maxlength="100"></dd>
+<dt>ご利用日時必須</dt><dd><input type="text" name="use_date" value="" placeholder="ご利用日時をご入力ください" maxlength="100"></dd>
+</dl>
+<!-- skip: _csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: request (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: data_agree (checkbox): out of scope (skip fixed) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: recaptchaToken (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

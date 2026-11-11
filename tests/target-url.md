@@ -69,3 +69,4 @@
 - https://reg34.smp.ne.jp/regist/is?SMPFORM=pfsd-lgqblb-eadedf16d2d1b0d8725c37ca6ad1a2e6 → lasertec-inquiry-form.html
 - https://www.toyoda-gosei.co.jp/contact/seihin_form/ → toyoda-gosei-form.html
 - https://krs.bz/toktprf/m/materials_request_ja → mitsubishi-materials-form.html
+- https://www.yoshinoya-holdings.com/contact/storeform/ → yoshinoya-store-form.html
