@@ -346,4 +346,7 @@ describe('sample forms end to end', () => {
   it('azbil-kikubari-form.html fills the in-scope fields', async () => {
     expect(await planFor('azbil-kikubari-form.html')).toEqual(expectedFor('azbil-kikubari-form.html'));
   });
+  it('keyence-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('keyence-inquiry-form.html')).toEqual(expectedFor('keyence-inquiry-form.html'));
+  });
 });

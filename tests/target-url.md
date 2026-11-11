@@ -64,3 +64,4 @@
 - https://www.city.shinjuku.lg.jp/soshiki/tosyo_00001.html → tosyo-00001-html.html
 
 - https://form.azbil.com/form/pub/contact/kikubari_contact → azbil-kikubari-form.html
+- https://www.keyence.co.jp/inquiry/askKeyence/ → keyence-inquiry-form.html
