@@ -92,3 +92,23 @@
 | 78 | https://www.u-toyama.ac.jp/contact/inquiry/ | 富山大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧 &#8211; 富山大学」。静的formなし。問合せ一覧) |
 | 79 | https://www.kochi-tech.ac.jp/about/contact/ | 高知工科大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 大学案内 / 高知工科大学」。静的form1件はサイト内検索のみ。問合せハブ) |
 | 80 | https://www.toyo.ac.jp/contact/ | 東洋大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 81 | https://www.utsunomiya-u.ac.jp/convenient/inquiry.php | 宇都宮大学 | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧 / 宇都宮大学」。静的formなし。問合せ先一覧) |
+| 82 | https://www.tottori-u.ac.jp/opencampus/ | 鳥取大学 | 除外 | フォームなし (HTTP 200「OPEN CAMPUS/鳥取大学」。静的form1件はサイト内検索のみ。OC案内 (ASP.NETの検索formのみ)) |
+| 83 | https://www.shizuoka.ac.jp/inquiry/ | 静岡大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜静岡大学」。静的form2件はサイト内検索のみ。総合問合せハブ) |
+| 84 | https://www.mie-u.ac.jp/contact/top.html | 三重大学 | 除外 | フォームなし (HTTP 200「三重大学 / お問い合わせ」。静的form4件はサイト内検索のみ。総合問合せハブ) |
+| 85 | https://www.u-ryukyu.ac.jp/contact/ | 琉球大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 86 | https://www.shimane-u.ac.jp/inquiry/1/ | 島根大学 | 有望 P2 | 静的実フォーム `/inquiry/1/confirm_answers` (POST)。text2・email・select・textarea・captcha画像認証。項目名は `question_answers[N]` とコード化・住所欄なしのためP2 |
+| 87 | https://www.uoeh-u.ac.jp/Exam/inquiry.html | 産業医科大学 | 有望 P1 | 入試問合せの静的実フォーム (POST)。氏名(漢字・カナ各姓/名)・郵便 `query_post_7`・tel・email・都道府県select `query_pref_8`・本文textarea。欄構成豊かで即取込推奨 |
+| 88 | https://www.oita-u.ac.jp/category/f01toiawase.html | 大分大学 | 除外 | フォームなし (HTTP 200「お問合せ｜国立大学法人 大分大学」。静的form1件はサイト内検索のみ。お問合せハブ) |
+| 89 | https://www.kochi-u.ac.jp/contact/ | 高知大学 | 除外 | フォームなし (HTTP 200「お問い合わせ - 高知大学」。静的formなし。問合せハブ (入力は文字サイズ/テーマ切替のみ)) |
+| 90 | https://www.kpu.ac.jp/guidance/inquiry | 京都府立大学 | 除外 | フォームなし (HTTP 200「各種お問い合わせ / 大学案内 / 京都府立大学」。静的form1件はサイト内検索のみ。各種問合せ案内) |
+| 91 | https://nyushi.adb.fukushima-u.ac.jp/ | 福島大学 | 除外 | フォームなし (HTTP 200「入試情報｜福島大学」。静的form1件はサイト内検索のみ。入試情報ハブ。資料請求はテレメール外部) |
+| 92 | https://www.fukuoka-u.ac.jp/help/inquiry/ | 福岡大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / ご案内 / 福岡大学」。静的form2件はサイト内検索のみ。問合せハブ) |
+| 93 | https://www.meio-u.ac.jp/contact/ | 名桜大学 | 除外 | フォームなし (HTTP 200「お問い合わせ・証明書｜名桜大学」。静的formなし。問合せ・証明書案内) |
+| 94 | https://www.u-hyogo.ac.jp/contact/ | 兵庫県立大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜兵庫県立大学 University of Hyogo」。静的form3件はサイト内検索のみ。問合せハブ) |
+| 95 | https://www.musashi.ac.jp/about/contact.html | 武蔵大学 | 除外 | フォームなし (HTTP 200「武蔵大学に関するお問い合わせ / 武蔵大学」。静的form2件はサイト内検索のみ。大学問合せハブ) |
+| 96 | https://www.postin-svr.com/entry/showa-u/index.asp | 昭和大学 | 有望 P1 | postin-svr外部資料請求・問合せフォーム (POST `confirm.asp`)。漢字氏名・カナ・郵便・住所 `jusho35`・電話・メール・志望学科checkbox・資料種別checkbox。欄構成豊かで即取込推奨 |
+| 97 | https://www.meijigakuin.ac.jp/admission/contact/ | 明治学院大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 98 | https://www.nufs.ac.jp/outline/inquiry/ | 名古屋外国語大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 大学案内 / 名古屋外国語大学 The World」。静的form1件はサイト内検索のみ。問合せハブ) |
+| 99 | https://www.shiga-med.ac.jp/admission/contact | 滋賀医科大学 | 除外 | フォームなし (HTTP 200「その他 / 滋賀医科大学」。静的form1件はサイト内検索のみ。入試問合せハブ (Drupal)) |
+| 100 | https://www.tnc.tohoku.ac.jp/contact/ | 東北大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
