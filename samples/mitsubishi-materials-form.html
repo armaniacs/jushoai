@@ -1,0 +1,38 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://krs.bz/toktprf/m/materials_request_ja
+  (三菱商事8058・資料請求).
+  Field names, ids, placeholders, maxlengths, and control kinds mirror the
+  real page. Rows are kept as minimal tr/th since the scanner reads tr>th as
+  nearby (lixil-inquiry-form.html 前例). The (姓)/(名) inline spans are
+  answer-cell spans the scanner does not read (dropped, brother 前例).
+  The email placeholder's space after 例 is U+3000 on the real page (kept
+  verbatim, hexdump verified; mitsui-chintai/aeon 前例). The 住所検索 button
+  and 資料 checkboxes stay skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>三菱商事 資料請求 (materials)</title>
+<form>
+<table>
+<tr><th>氏名必須</th><td><input type="text" name="e_8552" id="name_family" value="" size="40" placeholder="三菱"><input type="text" name="e_8553" id="name_first" value="" size="40" placeholder="太郎"></td></tr>
+<tr><th>氏名（カナ）必須</th><td><input type="text" name="e_8554" id="e_8554" value="" size="40" placeholder="ミツビシ"><input type="text" name="e_8555" id="e_8555" value="" size="40" placeholder="タロウ"></td></tr>
+<tr><th>メールアドレス必須</th><td><input type="text" name="e_8556" id="e_8556" value="" size="40" placeholder="例　****@ ****.jp"></td></tr>
+<tr><th>メールアドレス（確認）必須</th><td><input type="text" name="e_8556_re" id="e_8556_re" value="" size="40" placeholder="例　****@ ****.jp"></td></tr>
+<tr><th>電話番号必須</th><td><input type="tel" name="e_8564[tel1]" id="e_8564[tel1]" value="" size="5" maxlength="5">-<input type="tel" name="e_8564[tel2]" id="e_8564[tel2]" value="" size="4" maxlength="4">-<input type="tel" name="e_8564[tel3]" id="e_8564[tel3]" value="" size="4" maxlength="4"></td></tr>
+<tr><th>FAX番号</th><td><input type="tel" name="e_8565[tel1]" id="e_8565[tel1]" value="" size="5" maxlength="5">-<input type="tel" name="e_8565[tel2]" id="e_8565[tel2]" value="" size="4" maxlength="4">-<input type="tel" name="e_8565[tel3]" id="e_8565[tel3]" value="" size="4" maxlength="4"></td></tr>
+<tr><th>郵便番号必須</th><td><input type="text" name="e_8561[zip1]" id="post[zip1]" value="" size="3" maxlength="3">-<input type="text" name="e_8561[zip2]" id="post[zip2]" value="" size="4" maxlength="4"></td></tr>
+<tr><th>住所（都道府県 / 市区町村）必須</th><td><input type="text" name="e_8562" id="e_8562" value="" size="60" placeholder="例　東京都千代田区丸の内"></td></tr>
+<tr><th>住所（丁目・番地）必須</th><td><input type="text" name="e_8563" id="e_8563" value="" size="60" placeholder="例　2-3-1"></td></tr>
+<tr><th>住所（ビル・マンション名）</th><td><input type="text" name="e_8591" id="e_8591" value="" size="30" placeholder="例　三菱商事ビルディング"></td></tr>
+<tr><th>会社名</th><td><input type="text" name="e_8558" id="e_8558" value="" size="40"></td></tr>
+<tr><th>部署名</th><td><input type="text" name="e_8559" id="e_8559" value="" size="40"></td></tr>
+</table>
+<!-- skip: e_8569[value][] (checkbox): out of scope (skip fixed) -->
+<!-- skip: e_8569[value][] (checkbox): out of scope (skip fixed) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: __send (submit): action element, never a fill target (exclude) -->
+<!-- skip: __search_e_8561 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: e_8557 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: e_8560 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: __name (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: f (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

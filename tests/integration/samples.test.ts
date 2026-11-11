@@ -358,4 +358,7 @@ describe('sample forms end to end', () => {
   it('toyoda-gosei-form.html fills the in-scope fields', async () => {
     expect(await planFor('toyoda-gosei-form.html')).toEqual(expectedFor('toyoda-gosei-form.html'));
   });
+  it('mitsubishi-materials-form.html fills the in-scope fields', async () => {
+    expect(await planFor('mitsubishi-materials-form.html')).toEqual(expectedFor('mitsubishi-materials-form.html'));
+  });
 });
