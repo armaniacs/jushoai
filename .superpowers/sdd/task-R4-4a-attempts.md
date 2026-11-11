@@ -151,3 +151,23 @@
 | 138 | https://www.hikari.co.jp/contact/ | 有望 P2 | 要精査 (光通信9435。HTTP 200。静的入力欄 input 11・textarea 1: `inquiry_type`・`inquiry_text`・`reply_type`・`name`・`email`・`tel`・`agreement`。`action` 空=JS送信の可能性あり。取込時確認のためP2) |
 | 139 | https://www.kadokawa.co.jp/contact/ | 除外 | 到達不能 (KADOKAWA9468。HTTP 404。静的formは検索のみ) |
 | 140 | https://www.zenrin.co.jp/contact/ | 除外 | フォームなし (ゼンリン9474。HTTP 200ハブ。静的formは markeinfo検索のみ。実フォームは `/contact/index.html` 別導線) |
+| 141 | https://www.shochiku.co.jp/contact/ | 除外 | フォームなし (松竹9601。HTTP 200ハブ。静的input 13は `action` なし。実フォームは `form.shochiku.co.jp`→No.184で検証) |
+| 142 | https://www.toho.co.jp/contact/ | 除外 | 到達不能 (東宝9602。HTTP 404) |
+| 143 | https://www.toei.co.jp/contact/ | 除外 | 到達不能 (東映9605。HTTP 404。実フォームは `f.msgs.jp`→No.185で検証) |
+| 144 | https://www.nttdata.com/jp/ja/contact/ | 除外 | 到達不能 (NTTデータ9613。HTTP 404。静的formは検索のみ。実窓口は `/jp/ja/contact-us` 別導線) |
+| 145 | https://www.square-enix.com/jp/contact/ | 除外 | 到達不能 (スクエニHD9684。HTTP 404) |
+| 146 | https://www.capcom.co.jp/contact/ | 除外 | 到達不能 (カプコン9697。HTTP 202・空応答 size 0) |
+| 147 | https://www.konami.com/contact/ | 除外 | 到達不能 (コナミG9766。HTTP 404) |
+| 148 | https://www.secom.co.jp/contact/ | 除外 | フォームなし (セコム9735。HTTP 404だが店舗検索selectあり。実フォームは `/contact/shop/`→No.186で検証) |
+| 149 | https://www.sagami.co.jp/contact/ | 除外 | 到達不能 (サガミHD9900。HTTP 404。実フォームは `form.sagami-holdings.co.jp/contact/` 別導線) |
+| 150 | https://www.sandrug.co.jp/contact/ | 除外 | 到達不能 (サンドラッグ9989。curl失敗・code=000) |
+| 151 | https://www.suzuken.co.jp/contact/ | 除外 | 到達不能 (スズケン9987。HTTP 404。実フォームは SMP別導線) |
+| 152 | https://www.hakuyosha.co.jp/contact/ | 除外 | フォームなし (白洋舍9731。HTTP 200ハブ。静的formは検索のみ。実フォームは `/contact/` 別導線) |
+| 153 | https://www.fujita-kanko.co.jp/contact/ | 除外 | 到達不能 (藤田観光9722。HTTP エラー頁。実窓口は `/inquiry/index.html` 別導線) |
+| 154 | https://www.tokyodome.co.jp/contact/ | 除外 | 到達不能 (東京ドーム9681。curl失敗・code=000) |
+| 155 | https://www.nomura-kougei.co.jp/contact/ | 除外 | 到達不能 (乃村工藝社9716。curl失敗・code=000) |
+| 156 | https://www.trans-cosmos.co.jp/contact/ | 除外 | フォームなし (トランスコスモス9715。HTTP 200ハブだが静的formなし。実フォームは `transcosmos.com/ja-jp/contact` 別導線) |
+| 157 | https://www.ngk.co.jp/contact/input?form_type=3 | 有望 P1 | 静的実フォーム (日本ガイシ5333・製品別窓口。HTTP 200。`action=/contact/input?form_type=3`、input 13・textarea 1。`name`・`name-kana`・`zip`・`address`・`tel`・`mail`・`business`・`department`・`inquiry`+同意。住所分割あり。多様性◎) |
+| 158 | https://inquiry.lixil.co.jp/regist/is?SMPFORM=naoj-lctgtj-defd68f97cffa36b3ed5f3bcd2c68ca6&qcat=18 | 有望 P1 | 静的実フォーム (LIXIL5938・SMP。HTTP 200。`action=/regist/Reg2`、input 40・textarea 1・select 3。`company`・`name_sei`・`name_mei`・`kokyaku_sei_kana`・`kokyaku_mei_kana`・`post:a/t`・`pref_name`・`address1-4`・`telephone`・`mail`確認2欄。R4-1のSMP系と同型。多様性◎) |
+| 159 | https://contact01.shi.co.jp/m?f=199 | 有望 P2 | 静的実フォーム (住友重機械6302。HTTP 200。input 15・textarea 1・select 1。`e_19823[zip]`+住所検索・`e_19826/27[tel]`分割あり。項目名コード化のためP2) |
+| 160 | https://global.engine.kubota.co.jp/ja/contact/input.php?fid=01 | 有望 P1 | 静的実フォーム (クボタ6326エンジン事業部。HTTP 200。`action=confirm.php`、input 32・textarea 1・select 2。`last_name`・`last_kana`・`zipCode`・`pref_name`・`address`・`phone`・`email`確認2欄・`companyName`・`department`。g-recaptcha併設だが静的。多様性◎) |
