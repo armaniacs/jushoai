@@ -32,3 +32,23 @@
 | 18 | https://area26.smp.ne.jp/area/is?SMPFORM=tat-qhrdp-7e5459ab8b659b0c939c54f52e94ab55 | 住友不動産/SMP | 有望 P3 | 静的実フォーム (HTTP 200。`action=/area/Reg2`、input 17・select 2・textarea 1。命名欄が少なく取込時要精査のため予備P3) |
 | 19 | https://reg18.smp.ne.jp/regist/is?SMPFORM=ocnd-ldlirf-9c66cded2761f122279b692570e8a021 | 住友不動産/SMPオープンハウス系 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/regist/Reg2`、input 26。`name`・`name_kana`・`zipcode:a/t`・`address`・`phone:a/e/n`・`mail`確認・`privacy`。命名が素直で多様性◎) |
 | 20 | https://residence.sumitomo-latour.jp/inquiry/ | 住友不動産/ラ・トゥール見学予約 | 有望 P1 | 静的実フォーム (HTTP 200「お問合せ/見学予約」。`action=/inquiry/check.php`、input 18・select 14。`name`・`name_ruby`・`postcode1`・都道府県select `address1`・`tel`・`mail`確認・予算/間取りselect群。多様性◎) |
+| 21 | https://sumifu-step-form.spiral-site.com/otoiawase | 住友不動産/すみふの仲介ステップ | 有望 P1 | 静的実フォーム (SPIRAL。input 25。`name`・`name_kana`・`zip01/02`・`address01`・都道府県 `pref`・`tel`・`email`確認2欄・`company`。仲介問合せ。多様性◎) |
+| 22 | https://office.sumitomo-rd.co.jp/contact/ | 住友不動産/賃貸オフィスビル | 有望 P2 | 静的実フォーム (SPIRAL。input 31。`contact_name`・`company_name`・`tel`・`email`・面積/従業員数等の法人条件欄。一部 `f0*` コード化のためP2) |
+| 23 | https://www.proud-web.jp/module/inquiry/contactForm | 野村不動産/プラウド各種問合せ | 除外 | JS描画のみ (HTTP 200「各種お問い合わせ」ハブ。静的formなし。実フォームは物件別JS導線とみられる) |
+| 24 | https://www.proud-web.jp/module/inquiry/procedureForm.xphp | 野村不動産/プラウド住所変更・発送停止 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/module/inquiryConfirm/procedureForm`、input 31。`last_name/first_name` 新旧対照・`zip_code`・`address1-4`・`tel_num`・`email` 新旧・`consumer_number`。対照型の珍しい構成で多様性◎) |
+| 25 | https://krs.bz/nomura-re/m/structure/ | 野村不動産/マンション再生相談 | 有望 P2 | 静的実フォーム (krs.bz。input 25。郵便 `e_12013[zip1/2]`・tel 3分割 `e_12035[tel1/2/3]`・email確認・checkbox群。項目名コード化のためP2) |
+| 26 | https://krs.bz/nomura-re/m/tochikatsuyo/ | 野村不動産/土地活用問合せ | 有望 P2 | 静的実フォーム (krs.bz。input 34・select 4。郵便/tel 3分割・email確認・土地条件欄。コード化のためP2。No.25と同機構) |
+| 27 | https://www.nomura-re.co.jp/english/contact/ | 野村不動産/英文Contact | 除外 | フォームなし (HTTP 200だが静的formなし。メール窓口案内のみ) |
+| 28 | https://www.tokyu-land.co.jp/form/branz_ad/ | 東急不動産/BRANZ広告営業 | 有望 P2 | 静的実フォーム (HTTP 200。`action=./index.php`、input 20。`name`・`kana`・`zip`・`address1/2`・`tel`・`mail`確認・`company_name`。B2B向けのためP2。取込済み4 formとは別path) |
+| 29 | https://www.tokyu-land.co.jp/form/branz_owner/ | 東急不動産/BRANZオーナー | 有望 P1 | 静的実フォーム (HTTP 200。input 29。`name`・`kana`・`zip`・`address1/2`・`tel`・`mail`確認・`mansion_name`・`room_no`。物件特定欄つきで多様性◎) |
+| 30 | https://www.tokyu-land.co.jp/form/commercial/ | 東急不動産/商業施設 | 有望 P1 | 静的実フォーム (HTTP 200。input 31・select 3。氏名/カナ/住所/email確認に加え自宅・土地・ビル等の条件分岐欄。分岐型で多様性◎) |
+| 31 | https://www.tokyu-land.co.jp/form/cre/ | 東急不動産/CREコンサル | 有望 P1 | 静的実フォーム (HTTP 200。input 37。No.30と同系・CRE条件欄。法人+個人の複合構成で多様性◎) |
+| 32 | https://www.tokyu-land.co.jp/form/student_residence/ | 東急不動産/学生レジデンス | 有望 P2 | 静的実フォーム (HTTP 200。input 14。`name`・`kana`・`zip`・`address1/2`・`mail`確認。欄が小さめのためP2) |
+| 33 | https://www.tokyu-land.co.jp/form/tatekae/ | 東急不動産/マンション建替え | 有望 P2 | 静的実フォーム (HTTP 200。input 15。`name`・`kana`・住所・`tel`・`company`。建替え相談の特殊窓口のためP2) |
+| 34 | https://www.tokyu-land.co.jp/form/global_contact/ | 東急不動産/海外事業 | 有望 P2 | 静的実フォーム (HTTP 200。input 23。`name`・`kana`・住所・`tel`・`company`・`title`。海外事業窓口のためP2) |
+| 35 | https://tatemono.com/inquiry/ | 東京建物 | 除外 | フォームなし (HTTP 200「お問い合わせ」だが静的formは `search.tatemono.com` 宛検索のみ) |
+| 36 | https://fmt.e-state.ne.jp/brillia-support/contact/ | 東京建物/ブリリア住まい相談 | 有望 P1 | 静的実フォーム (e-state。input 48・select 5。`family_name/first_name`・カナ対・`email`・希望日 `day1a/2a`・`enquete*` 群。相談予約型で多様性◎) |
+| 37 | https://brillia.com/contact/ | 東京建物/ブリリア | 除外 | 到達不能 (HTTP 404 NOT FOUND頁。formなし) |
+| 38 | https://www.tatemono.com/toiawase/ | 東京建物 | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 39 | https://www.lions-mansion.jp/inquiry/ | 大京/ライオンズ | 除外 | JS描画のみ (HTTP 200「お問い合わせ」だが静的formなし。実フォームは `contact.daikyo.co.jp` cgi=No.40に分離) |
+| 40 | https://contact.daikyo.co.jp/cgi-bin/info/inquiry.cgi | 大京/総合問合せcgi | 有望 P3 | 静的実フォーム (HTTP 200。input 9。email分割 `email_head/fut`・tel 3分割・`naiyou`。欄が小さいため予備P3) |
