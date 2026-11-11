@@ -1106,6 +1106,40 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'tokyu-land-tenant-form.html': {
+    expected: {
+      // One dl per row on the real page (no <label> association); the dt
+      // texts are kept as the scanner's nearby (same as tokyu-land-contact).
+      'name': '山田 太郎',
+      'kana': 'ヤマダ タロウ',
+      'zip': '1000001',
+      // 市区町村 fills the prefecture-prefixed concatenation; 番地・建物名
+      // reads as building (same as tokyu-land-contact).
+      'address1': '東京都千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      // type=text so the value stays undashed (honest pin, same as kojin).
+      'tel': '09012345678',
+      'mail': 'yamada@example.com',
+      'mail2': 'yamada@example.com',
+    },
+    excluded: [
+      'q x2 (search): header/footer site-search fields, stay unclassified (same as tokyu-land-contact)',
+      'park/cate/land (text): 出店施設・業種・面積, no profile value, correctly unfilled',
+      'company (text): 貴社名, stays unclassified (LLM fallback; 会社語彙 candidate, same as R4-2a C3)',
+      'team (text): 部署名, stays unclassified (部署 vocabulary candidate)',
+      'job (text): 役職, stays unclassified (LLM fallback)',
+      'pref (select): only a `--` option, correctly warn-no-option',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'flow (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'shopdetail (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

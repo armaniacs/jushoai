@@ -1,0 +1,72 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.tokyu-land.co.jp/form/tenant/
+  (東急不動産 テナント出店お問い合わせ).
+  Field ids, names, and control kinds mirror the real page. The real page
+  lays each row out as its own dl/dt/dd (no <label> association), and the
+  scanner reads the dt text as nearby, so the per-field headings are kept
+  verbatim (section-only headings dropped, same as tokyu-land-contact).
+  The pref select keeps the scaffold's single `--` option (same as the
+  tokyu-land-contact sibling fixture). The contact radios stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東急不動産 テナント出店お問い合わせ (real-estate)</title>
+<form>
+      <input name="q" id="q1" type="search" value="" placeholder="サイト内検索">
+      <input name="q" id="q2" type="search" value="" placeholder="サイト内検索">
+<dl>
+<div><dt>出店したい商業施設</dt><dd>
+      <input name="park" id="" type="text" value="">
+</dd></div>
+<div><dt>出店したい業種・業態</dt><dd>
+      <input name="cate" id="cate" type="text" value="">
+</dd></div>
+<div><dt>ご希望の面積</dt><dd>
+      <input name="land" id="land" type="text" value="">
+</dd></div>
+<div><dt>お名前</dt><dd>
+      <input name="name" id="name" type="text" value="">
+</dd></div>
+<div><dt>フリガナ</dt><dd>
+      <input name="kana" id="kana" type="text" value="">
+</dd></div>
+<div><dt>貴社名（法人の場合）</dt><dd>
+      <input name="company" id="" type="text" value="">
+</dd></div>
+<div><dt>部署名</dt><dd>
+      <input name="team" id="" type="text" value="">
+</dd></div>
+<div><dt>役職</dt><dd>
+      <input name="job" id="" type="text" value="">
+</dd></div>
+<div><dt>郵便番号</dt><dd>
+      <input name="zip" id="zip" type="text" value="">
+</dd></div>
+<div><dt>都道府県</dt><dd>
+      <select name="pref" id="pref"><option value="">--</option></select>
+</dd></div>
+<div><dt>市区町村</dt><dd>
+      <input name="address1" id="" type="text" value="">
+</dd></div>
+<div><dt>番地・建物名</dt><dd>
+      <input name="address2" id="" type="text" value="">
+</dd></div>
+<div><dt>電話番号</dt><dd>
+      <input name="tel" id="tel" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="mail" id="mail" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス（確認用）</dt><dd>
+      <input name="mail2" id="mail2" type="text" value="">
+</dd></div>
+</dl>
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: flow (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: shopdetail (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+</form>

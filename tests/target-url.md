@@ -38,3 +38,4 @@
 - https://www.fujifilm.com/jp/ja/form/FF-Procurement-Tokyo → ff-procurement-form.html
 - https://holdings.fujifilm.com/ja/form/compliance-hotline → ff-compliance-hotline-form.html
 - https://www.tokyu-land.co.jp/form/kojin/ → tokyu-land-kojin-form.html
+- https://www.tokyu-land.co.jp/form/tenant/ → tokyu-land-tenant-form.html
