@@ -1,0 +1,35 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do
+  (神戸市 お問い合わせフォーム, Struts Webフォーム).
+  Field names, ids, placeholders, and control kinds mirror the real page. The
+  real page numbers its questions in table cells with no <label> association
+  (１．お名前 / ２．フリガナ / ３．メールアドレス / ４．居住区 / ５．住所 /
+  ６．電話番号3分割 / ７．きっかけcheckbox / ８．タイトル / ９．内容textarea /
+  privacy checkbox), so the scanner sees the same placeholder-only text fields
+  as here. The ANSWER4 ward options are restored verbatim (the scaffolder
+  strips select options to `--`; formmailer-anketo-gender.html precedent).
+-->
+<html lang="ja"><meta charset="utf-8"><title>神戸市 お問い合わせフォーム (government)</title>
+<form>
+      <input name="singleAnswer(ANSWER1)" id="" type="text" value="" placeholder="神戸　太郎">
+      <input name="singleAnswer(ANSWER2)" id="" type="text" value="" placeholder="コウベ　タロウ">
+      <input name="singleAnswer(ANSWER3)" id="" type="text" value="" placeholder="例）sample@mail.com">
+      <select name="singleAnswer(ANSWER4)" id="residence"><option value="0">---お選びください---</option><option value="1">東灘区</option><option value="2">灘区</option><option value="3">中央区</option><option value="4">兵庫区</option><option value="5">北区</option><option value="6">長田区</option><option value="7">須磨区</option><option value="8">垂水区</option><option value="9">西区</option><option value="10">市外</option></select>
+      <input name="singleAnswer(ANSWER5)" id="" type="text" value="" placeholder="例）市内：加納町／市外：大阪市北区中之島">
+      <input name="singleAnswer(ANSWER6-1)" id="" type="text" value="">
+      <input name="singleAnswer(ANSWER6-2)" id="" type="text" value="">
+      <input name="singleAnswer(ANSWER6-3)" id="" type="text" value="">
+      <input name="singleAnswer(ANSWER8)" id="reference" type="text" value="" placeholder="タイトル名（ホームページ、イベント等）">
+<!-- skip: org.apache.struts.taglib.html.TOKEN (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed) -->
+<!-- skip: multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed) -->
+<!-- skip: multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed) -->
+<!-- skip: multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed) -->
+<!-- skip: singleAnswer(ANSWER9) (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: multiAnswer(ANSWER10) (checkbox): out of scope (skip fixed) -->
+<!-- skip: submit-btn (submit): action element, never a fill target (exclude) -->
+</form>

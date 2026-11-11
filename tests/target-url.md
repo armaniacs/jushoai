@@ -28,3 +28,4 @@
 - https://www.mitsuihome.co.jp/support/sonota/form.php → mitsuihome-sonota-form.html
 - https://www.mitsui-reform.com/ssl/catalog/select.html → mitsui-reform-catalog-form.html
 - https://www.tokyu-land.co.jp/form/contact/ → tokyu-land-contact-form.html
+- https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do → kobe-city-contact-form.html

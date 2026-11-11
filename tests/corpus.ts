@@ -792,6 +792,33 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'kobe-city-contact-form.html': {
+    expected: {
+      // Only the katakana placeholder resolves (fullNameKana, same as the
+      // single-field-form furigana pin). Everything else rides numbered
+      // table-cell headings the scanner never reads.
+      'singleAnswer(ANSWER2)': 'ヤマダ　タロウ',
+    },
+    excluded: [
+      'singleAnswer(ANSWER1) (text): １．お名前 placeholder 神戸 太郎, stays unclassified (LLM fallback; kanji person-name placeholder does not infer fullName)',
+      'singleAnswer(ANSWER3) (text): type=text with an email placeholder, stays unclassified (LLM fallback; email-via-placeholder candidate, same as otsuka mail)',
+      'singleAnswer(ANSWER4) (select): ４．居住区 ward options restored verbatim, stays unclassified (LLM fallback)',
+      'singleAnswer(ANSWER5) (text): ５．住所 with a 市内/市外 example placeholder, stays unclassified (LLM fallback)',
+      'singleAnswer(ANSWER6-1/2/3) (text): ６．電話番号 bare 3-split with no label or placeholder signal, stay unclassified (LLM fallback; tel-split-by-name candidate)',
+      'singleAnswer(ANSWER8) (text): ８．タイトル, no profile value, correctly unfilled',
+      'org.apache.struts.taglib.html.TOKEN (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed)',
+      'multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed)',
+      'multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed)',
+      'multiAnswer(ANSWER7) (checkbox): out of scope (skip fixed)',
+      'singleAnswer(ANSWER9) (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'multiAnswer(ANSWER10) (checkbox): out of scope (skip fixed)',
+      'submit-btn (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
