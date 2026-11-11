@@ -62,3 +62,5 @@
 - https://www.library.city.arakawa.tokyo.jp/mailform → arakawa-mailform.html
 - https://www.city.itabashi.tokyo.jp/cgi-crm/CRM030/CRM030_004/G7507000000/2000033 → 2000033.html
 - https://www.city.shinjuku.lg.jp/soshiki/tosyo_00001.html → tosyo-00001-html.html
+
+- https://form.azbil.com/form/pub/contact/kikubari_contact → azbil-kikubari-form.html
