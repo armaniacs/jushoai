@@ -65,3 +65,4 @@
 
 - https://form.azbil.com/form/pub/contact/kikubari_contact → azbil-kikubari-form.html
 - https://www.keyence.co.jp/inquiry/askKeyence/ → keyence-inquiry-form.html
+- https://www.sysmex.co.jp/contact/input?inquiry_type=1 → sysmex-contact-form.html

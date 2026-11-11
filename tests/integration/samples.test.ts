@@ -349,4 +349,7 @@ describe('sample forms end to end', () => {
   it('keyence-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('keyence-inquiry-form.html')).toEqual(expectedFor('keyence-inquiry-form.html'));
   });
+  it('sysmex-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('sysmex-contact-form.html')).toEqual(expectedFor('sysmex-contact-form.html'));
+  });
 });

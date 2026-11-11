@@ -2145,6 +2145,33 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'sysmex-contact-form.html': {
+    expected: {
+      'name': '山田 太郎',
+      'name_furigana': 'やまだ たろう',
+      'facility_company': '株式会社サンプル',
+      'zip': '1000001',
+      'pref': '13',
+      'city': '千代田区',
+      'building': '千代田ビル101',
+      'tel': '09012345678',
+      'fax': '09012345678',
+      'email': 'yamada@example.com',
+    },
+    excluded: [
+      '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'inquiry_other (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'inquiry_other (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'inquiry_other (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'inquiry_other (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'inquiry_type (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '_Token[fields] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
