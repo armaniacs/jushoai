@@ -25,3 +25,4 @@
 - https://ssl.form-mailer.jp/fms/b2c99844164312 → seedome-openschool.html
 - https://www.fujifilm.com/jp/ja/form/FF-CSR → ff-csr.html
 - https://www.otsuka.co.jp/contacts/opinion/form → otsuka-opinion-form.html
+- https://www.mitsuihome.co.jp/support/sonota/form.php → mitsuihome-sonota-form.html

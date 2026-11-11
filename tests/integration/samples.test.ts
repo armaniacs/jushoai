@@ -231,4 +231,7 @@ describe('sample forms end to end', () => {
   it('otsuka-opinion-form.html fills the in-scope fields', async () => {
     expect(await planFor('otsuka-opinion-form.html')).toEqual(expectedFor('otsuka-opinion-form.html'));
   });
+  it('mitsuihome-sonota-form.html fills the in-scope fields', async () => {
+    expect(await planFor('mitsuihome-sonota-form.html')).toEqual(expectedFor('mitsuihome-sonota-form.html'));
+  });
 });

@@ -640,6 +640,49 @@ const LEDGER = {
       '_Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'mitsuihome-sonota-form.html': {
+    expected: {
+      // Name/kana split by the _1/_2 suffix (same-label path); zip split
+      // stays silent here (no label or placeholder signal on post1/post2).
+      'name_1': '山田',
+      'name_2': '太郎',
+      'name_kana_1': 'ヤマダ',
+      'name_kana_2': 'タロウ',
+      'address1': '千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      // address3 duplicates the address1 value (honest pin of the refine row).
+      'address3': '千代田区千代田1-1',
+      'tel': '090-1234-5678',
+      'mail': 'yamada@example.com',
+    },
+    excluded: [
+      'kw x2 (text): header/footer site-search fields, stay unclassified (same as forum.html s)',
+      'syozoku/shimei/company/busho (text): 所属・指名・会社・部署 with no label association, stay unclassified (LLM fallback; company/department-by-name candidates)',
+      'post1/post2 (text): bare 郵便番号 split with no label signal, stay unclassified (LLM fallback; post-prefix zip candidate)',
+      'pref (select): only a `--` option, correctly warn-no-option',
+      'koukoku_paper/magazine/site (select): only a `--` option, correctly warn-no-option',
+      'koukoku_paper_else/magazine_else/site_else (text): conditional detail fields, stay unclassified (LLM fallback)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'agree (checkbox): out of scope (skip fixed)',
+      'contents (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'tantou (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'tantou (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'koukoku[] (checkbox): out of scope (skip fixed)',
+      'TOKEN_GENERAL (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
