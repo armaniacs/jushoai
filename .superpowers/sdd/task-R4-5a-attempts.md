@@ -51,3 +51,23 @@
 | 38 | https://www.city.kawasaki.jp/kodomo/category/270-0-0-0-0-0-0-0-0-0.html | 除外 | フォームなし (HTTP 200「こどもの相談・手当・助成」。静的formは検索のみ) |
 | 39 | https://tetsuzuki.city.sagamihara.kanagawa.jp/?from=top.life.events | 除外 | JS描画のみ (HTTP 200「相模原市わたしの手続案内」。form・inputなし。手続案内はJS) |
 | 40 | https://www.city.sagamihara.kanagawa.jp/lifeevent/1012104.html | 除外 | フォームなし (HTTP 200「妊娠・出産」。静的formは検索のみ) |
+| 41 | https://www.city.sagamihara.kanagawa.jp/kurashi/shisetsu/index.html | 除外 | フォームなし (HTTP 200「施設マップ」。静的formはサイト内検索+施設検索のみ) |
+| 42 | https://www.city.niigata.lg.jp/shisetsu/index.html | 除外 | フォームなし (HTTP 200「施設案内」。form・inputなし) |
+| 43 | https://www.city.niigata.lg.jp/life_event/nayami/index.html | 除外 | フォームなし (HTTP 200「悩み・相談」。form・inputなし。相談は電話・面談導線) |
+| 44 | https://www.city.niigata.lg.jp/life_event/todokede/index.html | 除外 | フォームなし (HTTP 200「証明・税金・保険・年金」。form・inputなし) |
+| 45 | https://www.city.niigata.lg.jp/life_event/hikkoshi/index.html | 除外 | フォームなし (HTTP 200「引越し」。form・inputなし) |
+| 46 | https://www.city.niigata.lg.jp/event/index.html | 除外 | フォームなし (HTTP 200「各種講座・催し」。form・inputなし) |
+| 47 | https://www.city.niigata.lg.jp/kosodate/ninshin/life_stage/azuketai/ninnkahoikushisetsu/R09nyuen.html | 除外 | フォームなし (HTTP 200「認可保育施設への入園」。form・inputなし。申込は別導線) |
+| 48 | https://niigata-ipc.or.jp/seminar_event/30138/ | 除外 | フォームなし (HTTP 200。新潟IPCセミナー案内頁。静的formは検索のみ。参加申込は別導線) |
+| 49 | https://furusato-forgood.jp/projects/000545 | 除外 | フォームなし (HTTP 200。新潟市案件の寄附カート頁。静的formは金額・返礼品選択 `amount/return_gift_code` のみで氏名・住所欄なし。寄附者情報は後段JS導線) |
+| 50 | https://www.city.shizuoka.lg.jp/faq/p009731.html | 除外 | フォームなし (HTTP 200「寄せられた市政へのご意見・ご提案」。静的formは検索のみ) |
+| 51 | https://www.city.shizuoka.lg.jp/cgi-bin/event_cal_multi/calendar.cgi | 除外 | フォームなし (HTTP 200「イベント情報」。静的formは検索+年月・地域・対象selectの絞込のみ。申込欄なし) |
+| 52 | https://www.city.hamamatsu.shizuoka.jp/voice/ | 除外 | フォームなし (HTTP 200「ご意見・お問い合わせ」。静的formはページレビューradio `feedback.cgi` のみ。本体フォームは No.57) |
+| 53 | https://yoyacool.e-harp.jp/hamamatsu | 除外 | ログイン必須・JS描画のみ (HTTP 200「浜松市スポーツ・文化施設予約システムまつぼっくり」。formタグなし・`fvnm/fvno` 等のJS用inputのみ。予約はJS+ログイン導線) |
+| 54 | https://www.city.hamamatsu.shizuoka.jp/shinse/index.html | 除外 | フォームなし (HTTP 200「申請や手続きから探す」。form・inputなし。手続き案内のみ) |
+| 55 | https://www.city.hamamatsu.shizuoka.jp/event/ | 除外 | フォームなし (HTTP 200「イベント・お知らせ情報」。静的formは検索のみ) |
+| 56 | https://www.city.hamamatsu.shizuoka.jp/shisetsu-annai/index.html | 除外 | フォームなし (HTTP 200「施設」。静的formは検索+ページレビューradioのみ) |
+| 57 | https://www.city.hamamatsu.shizuoka.jp/koho2/kocho/form.html | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせフォーム」。`action=/cgi-bin/question/question.cgi`、input 92・textarea 1。お名前・ふりがな・性別radio・年代radio・ご職業radio・郵便番号・ご住所・電話番号・ファクス・メールアドレス・件名・内容の12項目。多様性◎) |
+| 58 | https://www.city.hamamatsu.shizuoka.jp/voice/index.html | 除外 | フォームなし (HTTP 200。No.52と同一内容「ご意見・お問い合わせ」。静的formはページレビューradioのみ) |
+| 59 | https://www.city.nagoya.jp/about/1017974.html | 除外 | フォームなし (HTTP 200「ご意見・お問い合わせ」。静的formは検索のみ。問合せは担当課別導線) |
+| 60 | https://www.city.nagoya.jp/kurashi/index.html | 除外 | フォームなし (HTTP 200「くらし・手続き」。静的formは検索のみ) |
