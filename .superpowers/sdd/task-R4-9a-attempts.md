@@ -72,3 +72,23 @@
 | 58 | https://www.op-house.com/contact/ | オープンハウス(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
 | 59 | https://mirarth.co.jp/contact/ | MIRARTHホールディングス | 有望 P2 | 静的実フォーム (HTTP 200。input 9。`name`・`namekana`・`tel`・`email`・`company`・`department`。欄小さめのためP2) |
 | 60 | https://mirarth.co.jp/ir/contact/ | MIRARTH/IR | 除外 | フォームなし (HTTP 200だが静的form 2件は `action=/search/` の検索のみ) |
+| 61 | https://www.leben.co.jp/contact/ | タカラレーベン | 有望 P2 | 静的実フォーム (HTTP 200。input 7。`name`・`kana`・`mail`・`tel`・`company`。欄小さめのためP2) |
+| 62 | https://www.lebenhomes.jp/contact/ | レーベン(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 63 | https://www.anabuki.ne.jp/contact/form.php?contact_type=1 | 穴吹興産/総合問合せ | 有望 P1 | 静的実フォーム (HTTP 200。`action=/contact/form.php`、input 15。`name`・`kana`・`zip`・`address`・`tel`・email確認・`company`・`business_type`。命名素直で多様性◎) |
+| 64 | https://www.anabuki.ne.jp/contact/form.php?contact_type=3 | 穴吹興産/分譲関連 | 有望 P2 | 静的実フォーム (HTTP 200。No.63と同型・種別違い。同機構2件目のためP2) |
+| 65 | https://www.anabuki.ne.jp/contact/landuse/?contact_type=7 | 穴吹興産/土地活用 | 有望 P1 | 静的実フォーム (HTTP 200。input 32。No.63系+ `site_zip`・`site_address`・`site_area`・建物規模/構造 `[]`・`counseling_type[]`。土地条件の複合構成で多様性◎) |
+| 66 | https://www.anabuki-style.com/contact/ | アルファあなぶきStyle(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 67 | https://www.slead.co.jp/contact/ | エスリード | 除外 | 到達不能 (DNS解決失敗・curl code=6。bot遮断またはドメイン異常。R4-1 precedentの到達不能に準じる) |
+| 68 | https://www.slead.co.jp/inquiry/ | エスリード(推測) | 除外 | 到達不能 (同上・curl code=6) |
+| 69 | https://reg34.smp.ne.jp/regist/is?SMPFORM=ncmf-ldtirg-a37edba46696efadf95511994fa07517 | 長谷工G/SMP | 有望 P2 | 静的実フォーム (HTTP 200。`action=/regist/Reg2`、input 55・select 5。SMP系 `f00*` コード化の大規模フォーム。コード化のためP2) |
+| 70 | https://reg34.smp.ne.jp/regist/is?SMPFORM=qdqd-mbkbmd-f4f7841cb5935c1b0c9a59939d710091 | 長谷工G/SMP | 有望 P2 | 静的実フォーム (HTTP 200。input 37。No.69と同機構・別窓口。コード化のためP2) |
+| 71 | https://www.haseko.co.jp/hc/contact/input | 長谷工コーポレーション | 有望 P1 | 静的実フォーム (HTTP 200「入力」。`action=/hc/contact/input`、input 18。`name01/02`・`mail01/02`・`post`・`tel`・`company`・`transfer`。素直な命名で多様性◎) |
+| 72 | https://haseko-systems-contactpage.spiral-site.com/contact | 長谷工システムズ | 有望 P3 | 静的実フォーム (SPIRAL。input 18。`f0*` コード化+email確認。命名の手がかりが薄いため予備P3) |
+| 73 | https://www.haseko-hln.com/form/ | 長谷工ライブネット | 除外 | フォームなし (HTTP 200だが静的formは `mt-search.cgi` 宛物件検索のみ) |
+| 74 | https://www.cigr.co.jp/forms/cigr/ir/contact/ | コスモスイニシア/IR | 有望 P1 | 静的実フォーム (HTTP 200。`action=/forms/cigr/ir/contact/confirm/`、input 16。`user_name_sei/mei`・カナ対・email確認・`address_zip`・`address_municipality`・`address_lotnumber`・`tel`。分割住所型で多様性◎) |
+| 75 | https://www.cigr.co.jp/irinfo/contact/ | コスモスイニシア/IR案内 | 除外 | フォームなし (HTTP 200だが静的formなし。実フォームはNo.74に分離) |
+| 76 | https://www.cigr.co.jp/contact/ | コスモスイニシア(推測) | 除外 | 到達不能 (HTTP 403 Forbidden・bot遮断) |
+| 77 | https://es-con.co.jp/contact | エスコン | 有望 P3 | 静的実フォーム (HTTP 200。mw-wp-form、input 10。`mail-name`・フリガナ `mail-name-pronoun`・mail確認。頁titleが「エス・コンサルタント」で対象社との同一性に疑義があるため予備P3・取込時要確認) |
+| 78 | https://www.es-con.co.jp/contact/ | エスコン(www別名) | 除外 | 除外 (HTTP 200だがNo.77と同一内容。重複のため除外) |
+| 79 | https://www.hoosiers.co.jp/contact/ | フージャースHD | 除外 | 到達不能 (HTTP 403 Forbidden・bot遮断) |
+| 80 | https://www.hoosiers.co.jp/inquiry/ | フージャースHD(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
