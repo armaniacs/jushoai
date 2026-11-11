@@ -111,4 +111,57 @@
 | 98 | https://request.sapix.com/shiryou/sapix-juniorhighschool | SAPIX | 除外 | 到達先にformなし (request導線→shiryouハブに転送) |
 | 99 | https://www.sapix.co.jp/entrance/ | SAPIX | 除外 | フォームなし (入室案内。検索のみ) |
 | 100 | https://www.y-sapix.com/request/ | Y-SAPIX | 除外 | フォームなし (入室案内) |
-<!--APPEND-->
+| 101 | https://www.nichinoken.co.jp/request/ | 日能研 | 除外 | フォームなし (問合せ/資料請求ハブ) |
+| 102 | https://www.nichinoken.co.jp/contents/contact/app/view/contact/ContactEntryView.php | 日能研 | 有望 P2 | 静的実フォーム (fullName・email確認・message・種別。欄が小さいためP2) |
+| 103 | https://www.nichinoken.co.jp/event/trial/ | 日能研 | 除外 | フォームなし (イベント案内) |
+| 104 | https://www.julius.ne.jp/request.html | 個別指導ユリウス | 除外 | フォームなし (資料請求案内。実フォームはcontact→apply別導線) |
+| 105 | https://www.julius.ne.jp/contact/ | 個別指導ユリウス | 除外 | 実欄なし (apply/entry初段は同意ボタンのみ・実欄は後段JS) |
+| 106 | https://www.ichishin.co.jp/shiryo/tabid/300/Default.html | 市進学院 | 除外 | 到達不能 (HTTP 404「ページが見つかりません」) |
+| 107 | https://www.ichishin.co.jp/nyukai/tabid/301/Default.aspx | 市進学院 | 除外 | 実欄なし (DNN postback。inputはVIEWSTATE等のみ) |
+| 108 | https://reg18.smp.ne.jp/regist/is?SMPFORM=ncpd-mbtgrh-140da6f466b94a6cd5f8054138f03923 | 市進学院 | 有望 P1 | 静的実フォーム (SMP。input121・ta3・sel12。保護者+生徒氏名カナ・住所・email確認。多様性◎) |
+| 109 | https://www.kotaro-juku.co.jp/contact/ | 個太郎塾 | 有望 P2 | 静的実フォーム (postmail.cgi。日本語項目名・住所・郵便・email・tel。FC窓口のためP2) |
+| 110 | https://www.kotaro-juku.co.jp/request/ | 個太郎塾 | 有望 P3 | 静的実フォーム (FC資料請求。B2B予備のためP3) |
+| 111 | https://www.ena.co.jp/request_form/ | ena | 有望 P1 | 静的実フォーム (CF7。input56・ta2・sel5。住所・tel・email。多様性◎) |
+| 112 | https://www.ena.co.jp/contact/ | ena | 有望 P2 | 静的実フォーム (CF7ご相談・お問合せ。同系2件目のためP2) |
+| 113 | https://www.ena.co.jp/eventform/ | ena | 有望 P2 | 静的実フォーム (CF7イベント申込。同系3件目のためP2) |
+| 114 | https://www.eishinkan.net/inquiry/place/ | 英進館 | 除外 | フォームなし (教場一覧。静的formはGoogle検索のみ・実申込はSMP別導線No.116) |
+| 115 | https://www.eishinkan.net/inquiry/free.php | 英進館 | 除外 | フォームなし (体験案内。同上) |
+| 116 | https://reg34.smp.ne.jp/regist/is?SMPFORM=qcnc-maphkb-0db25bb6f4a5b6785732327ff044c78c | 英進館 | 有望 P1 | 静的実フォーム (SMP。保護者氏名カナ・住所・email確認・tel・性別。多様性◎) |
+| 117 | https://www.hamagakuen.co.jp/others/inquiry/ | 浜学園 | 除外 | フォームなし (問合せ案内) |
+| 118 | https://www.hamagakuen.co.jp/entrance/experience/ | 浜学園 | 除外 | フォームなし (合格体験記+検索) |
+| 119 | https://axis-kobetsu.jp/contact/inquiry | 個別指導Axis | 有望 P1 | 静的実フォーム (firstName/kana・住所・email・tel・dob・学年。多様性◎) |
+| 120 | https://axis-kobetsu.jp/contact/trial | 個別指導Axis | 有望 P2 | 静的実フォーム (体験申込。同系2件目のためP2) |
+| 121 | https://www.wao-corp.com/contact/ | 能開センター | 除外 | フォームなし (企業問合せ案内。formなし) |
+| 122 | https://www.stepnet.co.jp/beginner/apply.html | ステップ | 除外 | 実欄なし (入会手続=口座振替登録。yokohamabank欄のみ・氏名住所欄なし・外部決済導線) |
+| 123 | https://www.stepnet.co.jp/beginner/trial.html | ステップ | 除外 | フォームなし (体験案内) |
+| 124 | https://www.mabuchi.co.jp/ | 馬渕教室 | 除外 | JS描画のみ (size2371・formなし) |
+| 125 | https://www.gakken-signone.jp/ | 進学塾サイン・ワン | 除外 | 到達不能 (公式ドメイン特定不能・推測URL到達不能 curl code=000) |
+| 126 | https://www.waseda-school.jp/ | 早稲田スクール | 除外 | 到達不能 (同上) |
+| 127 | https://member.wasedajuku.com/Event/Application.aspx?type=05 | 早稲田塾 | 有望 P2 | 要精査 (ASP.NET説明会申込。txtTextBox・zip・combo等42inputs。項目名コード化+postbackのためP2) |
+| 128 | https://www.yotsuyaotsuka.com/lform/yotsuya_tsujuku_form/yotsuya123-tsujuku/input | 四谷大塚 | 有望 P2 | 静的実フォーム (1-3年リトル。児童漢字/カナ・住所・fax3分割。No.7と同系3件目のためP2) |
+| 129 | https://www.yotsuyaotsuka.com/lform/yotsuya_tsujuku_form/yotsuya456-tsujuku/input | 四谷大塚 | 有望 P3 | 静的実フォーム (4-6年通塾。No.128と同型4件目のため予備P3) |
+| 130 | https://www.yotsuyaotsuka.com/pform/iws/little_club/input | 四谷大塚 | 有望 P1 | 静的実フォーム (pform系。EMAIL確認・保護者カナ・GAKKO_NM・生年月日。多様性◎) |
+| 131 | https://www.yotsuyaotsuka.com/pform/iws/shingaku_club/input | 四谷大塚 | 有望 P2 | 静的実フォーム (同型・進学クラブ。No.130と同系のためP2) |
+
+## 塾フォームの機構メモ (R4-8b以降の取込時の参考)
+
+- 自社CakePHP系: 東進 sform (`_csrfToken`・address1-3)、四谷大塚 lform/pform (児童+保護者・email確認)、森塾・RED 自社 (`kinds[]`・name1/kana1・token)、TOMAS Laravel (`_token`)、明光 Drupal (`form_build_id`)、日能研自社 (ContactEntryView)、個太郎 postmail.cgi (日本語項目名)、Axis自社 (camelCase firstName等)。
+- WordPress CF7系: 臨海セミナー/セレクト・ena (`_wpcf7`・form_* 系)。静的で欄が豊富。
+- SMP系 (`reg*.smp.ne.jp`): 京進・市進・英進館。`SMPFORM` トークンごとに別フォーム。保護者+生徒・住所・email確認と欄が豊か。
+- 申込基盤系: 早稲田アカデミー `reg.waseda-ac.co.jp/public/application/*` (番号ごとに別フォーム)、栄光 eforms (`keycode` ごとに別フォーム)、名門会 Formidable (`item_meta` コード化)、早稲田塾 member ASP.NET postback (項目名コード化)。
+- 要精査系: 東京個別 Next.js SSR (静的欄あり・actionなし)、トライ式高等学院 reserve (action空の段階式・欄292)、ユリウス apply/entry (初段は同意のみ)。
+- JS描画のみで除外: 第一ゼミナール (実欄はJS生成)、個別教室のトライ kobekyo (JSアプリ殻)、馬渕教室トップ、駿台入学説明会申込。
+- 教室検索のみで除外が多発: 公文・スクールIE・eishinkan体験案内などは教室検索が静的formの実体。実申込は後段フロー。
+
+## 集計
+
+- 試行総数: 131件 (No.1-131。要求100件以上を満たす)
+- 有望: 47件 (P1 21件・P2 21件・P3 5件)
+  - P1 (21): No.1, 4, 7, 16, 22, 33, 36, 49, 51, 53, 58, 69, 79, 84, 90, 95, 108, 111, 116, 119, 130
+  - P2 (21): No.2, 3, 34, 38, 50, 54, 60, 71, 72, 77, 80, 91, 92, 102, 109, 112, 113, 120, 127, 128, 131
+  - P3 (5): No.39, 93, 94, 110, 129
+- 除外: 84件 (フォームなし 65・JS描画のみ 5・到達不能 7・到達先にformなし 3・実欄なし 3・対象外 1)
+- 既存分 (`tests/target-url.md`) との重複: なし (全件URL照合。SMP系は同一ホストだがトークン別フォーム)
+- R4-1の183件との重複: なし (全件URL照合)
+- ブランドカバー: brief記載の20グループ+準大手の全グループからURLを取得。有望ゼロのブランド: 駿台・鉄緑会・サイン・ワン・早稲田スクール・第一ゼミナール/ファロス・SAPIX/Y-SAPIX・浜学園・能開・ステップ・馬渕・関西個別 (静的実フォームなし/JS/到達不能のため。R4-8b以降でJS描画系の再検討余地あり)
+
