@@ -119,3 +119,27 @@
 | 98 | https://library.city.tokyo-nakano.lg.jp/facility/chuo.html | 除外 | フォームなし (HTTP 200「中央図書館」。form・inputなしの施設案内頁) |
 | 99 | https://www.city.itabashi.tokyo.jp/library/bologna/fair/2000287/2000998.html | 除外 | フォームなし (HTTP 200ボローニャ絵本展。静的form 1はサイト内検索のみの展示案内頁) |
 | 100 | https://www.library.city.kita.lg.jp/viewer/info.html?id=468 | 除外 | フォームなし (HTTP 200パソコン席Web予約のお知らせ。館内formは検索2+問合せ(→No.45と同様404)のみ。実予約は認証壁) |
+| 101 | https://www.lib.city.ota.tokyo.jp/contents?pid=593 | 除外 | フォームなし (HTTP 200座席予約システム「すわろっか」。form・inputなしの案内頁。実予約は認証壁内) |
+| 102 | https://www.library.sumida.tokyo.jp/login | 除外 | ログイン必須 (HTTP 200「ログイン」。`loginPage` は利用者番号/パスワードのみの認証壁) |
+| 103 | https://www.library.city.arakawa.tokyo.jp/login | 除外 | ログイン必須 (HTTP 200「ログイン」。`loginPage` は利用者番号/パスワードのみの認証壁) |
+| 104 | https://www.lib.city.katsushika.lg.jp/login | 除外 | ログイン必須 (HTTP 200「ログイン」。`loginPage` は利用者番号/パスワードのみの認証壁) |
+| 105 | https://www.library.toshima.tokyo.jp/menucontents?pid=23 | 除外 | フォームなし (HTTP 200「利用案内」。form・inputなしの案内頁) |
+| 106 | https://www.library.toshima.tokyo.jp/menucontents?pid=39 | 除外 | フォームなし (HTTP 200「図書館案内」。form・inputなしの案内頁) |
+| 107 | https://www.city.toshima.lg.jp/142/bunka/shogai/toshokan/2211201521.html | 除外 | フォームなし (HTTP 200「豊島の図書館 (統計)」。formなしの区統計頁) |
+| 108 | https://www.library.toshima.tokyo.jp/rentallist | 除外 | ログイン必須 (HTTP 200「ログイン」。貸出利用状況照会は `loginPage` 認証壁内) |
+| 109 | https://www.library.city.edogawa.tokyo.jp/opac/ | 除外 | 到達不能相当 (HTTP 200→`/toshow/errpage.html` に転送。OPACパスなし。`winj/opac/search-standard.do` も同一エラー頁。江戸川のOPACは館サイト外導線) |
+| 110 | https://www.nakano-lib.jp/0000000041.html | 除外 | 対象外 (HTTP 200「パスワードについて」。ドメイン `nakano-lib.jp` は長野県中野市立図書館で、東京都中野区ではない。同ドメインのトップも中野市。混同注意として記録。正規の中野区立図書館は `library.city.tokyo-nakano.lg.jp`→No.36-40) |
+
+## 集計
+
+- 試行総数: 110件 (No.1-110。要求100件以上を満たす)
+- 有望: 5件 (P1 3件・P2 1件・P3 1件)
+  - P1 (3): No.20 (荒川 mailform・氏名/住所/mail/tel+本文)、No.23 (葛飾 Eメールレファレンス・氏名/カナ/mail/tel+本文)、No.82 (江東 opinion・氏名/住所/tel3分割+本文/radio)
+  - P2 (1): No.56 (板橋 CRM・MailAddress確認2欄。後続ステップ要確認)
+  - P3 (1): No.10 (新宿 fb.php・radio小規模。区CMSゲートウェイ)
+- 除外: 105件 (内訳: フォームなし・検索窓のみ 71 / ログイン必須 10 / 到達不能・404 9 / JS描画のみ 1 / POSTゲートウェイ・受付終了等その他 12 / 対象外1・重複疑義0)
+- 既存44件 (`tests/target-url.md`) との重複: なし (全110件をドメイン・パス照合。既存は学校・企業・自治体総合窓口中心で区立図書館ドメインなし)
+- R4-1試行済み183件との重複: なし (全110件を照合。R4-1は企業・中央官庁・政令市中心で23区図書館ドメインなし。なお中野区/中野市の表記ゆれはNo.110で明示)
+- 区別件数 (23区まんべんなく3件以上): 千代田5・中央5・港5・新宿6・文京4・台東3・墨田4・江東4・品川5・目黒4・大田5・世田谷4・渋谷4・中野9・杉並6・豊島6・北5・荒川3・板橋4・練馬5・足立5・葛飾4・江戸川4 (+対象外1)
+- 有望の多様性: LiCS系mailform (荒川・葛飾) / TRC系opinion (江東) / 区CMSゲートウェイ (板橋CRM・新宿fb)。いずれも氏名・住所/tel・メール・本文の組合せで、既存corpus (学校・企業中心) と機構が異なる。葛飾はログイン不要版レファレンスのため取込容易性が高い
+- 機構メモ: 東京都共同電子申請・s-kantan (品川)・LoGoフォーム (目黒・文京アンケート) はいずれも認証壁/bot遮断でcurl不可。足立 `simple_faq/form.cgi` はPOSTゲートウェイ。北・練馬のTRC系opinionは直GETで404 (セッション依存)
