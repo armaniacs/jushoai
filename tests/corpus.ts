@@ -2369,6 +2369,45 @@ const LEDGER = {
       'ACMS_POST_Form_Confirm (button): action element, never a fill target (exclude)',
     ],
   },
+  'inquiry-html.html': {
+    expected: {
+      // お名前 pair: the first reads fullName, the second lastName
+      // (same-label grouping shape; pinned honest).
+      'query[1][0]': '山田 太郎',
+      'query[1][1]': '山田',
+      // ふりがな pair: the first reads hiragana full, the second kanji
+      // firstName (classification drift; pinned honest, not as desired).
+      'query[2][0]': 'やまだ たろう',
+      'query[2][1]': '太郎',
+      'query[7]': '100-0001',
+      'query[8]': '東京都',
+      'query[9]': '千代田区',
+      'query[10]': '千代田ビル101',
+      // maxlength=24 fits the dashed form (dash-condition candidate,
+      // same as R4-2b N4 aeon vs kojin).
+      'query[11]': '090-1234-5678',
+      'query[3]': 'yamada@example.com',
+      // 高校名 reads as the school vocabulary.
+      'query[1035]': '都立日比谷高校',
+    },
+    excluded: [
+      'query[1027] (select): 志望学科 with real options, stays unclassified (LLM fallback)',
+      'dummy (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'stage (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'check (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__query_token__ (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'query[1030] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1030] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1030] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1030] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1030] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1028] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1028] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[1028] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'query[22] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

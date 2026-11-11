@@ -72,3 +72,4 @@
 - https://www.yoshinoya-holdings.com/contact/storeform/ → yoshinoya-store-form.html
 - https://www.tonami.co.jp/contact/luggage/ → tonami-luggage-form.html
 - https://www.kyutech.ac.jp/contact/ → contact.html
+- https://www.uoeh-u.ac.jp/Exam/inquiry.html → inquiry-html.html
