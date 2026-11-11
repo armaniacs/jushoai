@@ -79,3 +79,23 @@
 | 58 | https://www.city.taito.lg.jp/library/download/index.html | 除外 | フォームなし (HTTP 200「申請書ダウンロード」。静的form 2は Google CSE のみ。申請書DL案内頁) |
 | 59 | https://www.city.taito.lg.jp/library/service/sonota/reference.html | 除外 | フォームなし (HTTP 200「中央図書館レファレンス休止」。静的form 2は Google CSE のみのお知らせ頁) |
 | 60 | https://www.city.meguro.tokyo.jp/kosodatekyouiku/shakaikyouiku/library/index.html | 除外 | 検索窓のみ (HTTP 200「目黒区立図書館」。静的form 2は区サイト内検索のみ) |
+| 61 | https://www.city.meguro.tokyo.jp/contact.html | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的form 2は区サイト内検索のみ。区の連絡先ディレクトリ頁) |
+| 62 | https://www.city.meguro.tokyo.jp/kouhou/kusei/kouchou/homepage.html | 除外 | フォームなし (HTTP 200「目黒区公式ウェブサイト利用者アンケート」。静的form 2は区サイト内検索のみ。実アンケートは外部LoGo→No.63) |
+| 63 | https://logoform.jp/form/KeTk/51125 | 除外 | 到達不能 (HTTP 403 bot遮断。本文空。目黒区サイトアンケートのLoGoフォーム。自治体LoGoフォーム機構の利用例として記録) |
+| 64 | https://logoform.jp/f/bFtSC | 除外 | 到達不能 (HTTP 403 bot遮断。本文空。文京区立図書館利用者アンケートのLoGoフォーム→No.65の回答先。機構記録) |
+| 65 | https://www.lib.city.bunkyo.tokyo.jp/viewer/info.html?id=901 | 除外 | フォームなし (HTTP 200「令和8年度文京区立図書館利用者アンケート」。静的form 2は館内検索のみ。実回答は外部LoGo→No.64) |
+| 66 | https://www.city.adachi.tokyo.jp/bunka/library/index.html | 除外 | 検索+起動ボタンのみ (HTTP 200「足立区立図書館トップページ」。館内formは検索とメールフォーム起動POST `simple_faq/form.cgi` のみ。実フォームはPOSTゲートウェイ内→No.68) |
+| 67 | https://www.city.adachi.tokyo.jp/toshokan/tikyuunoarukikata.html | 除外 | 検索+起動ボタンのみ (HTTP 200トークイベント頁。館内formは検索とメールフォーム起動POSTのみ。問合せ先は中央図書館利用サービス係・電話/FAX併記) |
+| 68 | https://www.city.adachi.tokyo.jp/cgi-bin/simple_faq/form.cgi | 除外 | 到達不能相当 (HTTP 200「入力エラー」。直GETは「許可されていないサイトからのアクセス」。リファラ/POST必須の区メールフォームゲートウェイ。足立区の機構として記録) |
+| 69 | https://www.library.city.edogawa.tokyo.jp/ (→/toshow/index.php) | 除外 | フォームなし (HTTP 200「江戸川区立図書館ホームページ」。formなし。PDFお知らせと電子図書・指定管理案内へのリンク集→No.70/71) |
+| 70 | https://www.library.city.edogawa.tokyo.jp/toshow/edogawa_library_e_book_service.html | 除外 | フォームなし (HTTP 200電子図書案内。form・inputなし) |
+| 71 | https://www.library.city.edogawa.tokyo.jp/toshow/sitei_kanri.html | 除外 | フォームなし (HTTP 200指定管理案内。form・inputなし) |
+| 72 | https://library.city.shinagawa.tokyo.jp/ | 除外 | postbackのみ (HTTP 200。静的form 1はDNN `__VIEWSTATE` 系postbackのみ。実問合せは区連絡先→No.76・電子申請→No.75) |
+| 73 | https://library.city.shinagawa.tokyo.jp/tabid/171/Default.aspx | 除外 | フォームなし (HTTP 200「よくある質問 (ボランティア)」。formは `__VIEWSTATE` 系postbackのみのFAQ頁) |
+| 74 | https://library.city.shinagawa.tokyo.jp/tabid/173/Default.aspx | 除外 | フォームなし (HTTP 200「よくある質問 (予約)」。同上FAQ頁) |
+| 75 | https://s-kantan.jp/city-shinagawa-u/profile/userLogin_initDisplay.action | 除外 | ログイン必須 (HTTP 200「品川区電子申請サービス：利用者ログイン」。`userLoginForm` はID/パスワードのみ。レファレンス申込等の実手続は認証壁内。s-kantan機構の記録) |
+| 76 | https://www.city.shinagawa.tokyo.jp/contacts/kyoikuiinkai/1004815.html | 除外 | フォームなし (HTTP 200「教育委員会事務局品川図書館」。静的form 1は区サイト内検索のみ。連絡先案内頁) |
+| 77 | https://www.city.setagaya.lg.jp/shisetsu/library/category/12004.html | 除外 | 検索窓のみ (HTTP 200「図書館」。静的form 3は区サイト内検索のみ。分館一覧の案内頁→No.78/79) |
+| 78 | https://www.city.setagaya.lg.jp/02261/9017.html | 除外 | フォームなし (HTTP 200「烏山図書館」。静的form 3は区サイト内検索のみの分館案内頁) |
+| 79 | https://www.city.setagaya.lg.jp/02261/9022.html | 除外 | フォームなし (HTTP 200「経堂図書館」。同上の分館案内頁) |
+| 80 | https://www.koto-lib.tokyo.jp/ | 除外 | OPAC検索窓のみ (HTTP 200。静的form 3は館内検索 `viewer/search/info.html` とOPAC検索 `OPWSRCHLIST.CSP` のみ) |
