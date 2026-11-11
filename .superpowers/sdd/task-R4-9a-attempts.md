@@ -112,3 +112,42 @@
 | 98 | https://www.geo.gr.jp/contact/ | 阪急阪神/ジオ(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。geo.gr.jp自体がcurl不通) |
 | 99 | https://www.kintetsu-re.co.jp/contact/ | 近鉄不動産 | 除外 | 到達不能 (HTTP 503「緊急メンテナンスのお知らせ」。調査時点では到達不能) |
 | 100 | https://www.kintetsu-laurel.jp/contact/ | 近鉄/ローレル(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 101 | https://www.kintetsu-re.co.jp/inquiry/ | 近鉄不動産(推測) | 除外 | 到達不能 (HTTP 503メンテナンス中。No.99と同一内容) |
+| 102 | https://www.jrwd.co.jp/contact/ | JR西日本不動産開発(推測) | 除外 | 到達不能 (HTTP 404 NotFound頁。URL推測の失敗) |
+| 103 | https://www.jgran.jp/contact/ | JR西日本G/ジェイグラン(推測) | 除外 | 到達不能 (HTTP 404。ブランドサイトに該当pathなし) |
+| 104 | https://www.odakyu-fudosan.co.jp/inquiry/ | 小田急不動産 | 除外 | フォームなし (HTTP 200だが静的formはサイト内検索のみ。問合せ実体は `ambassador-cloud.biz`=No.105へ分離) |
+| 105 | https://odakyu-fudosan.ambassador-cloud.biz/contact | 小田急不動産/アンバサダー | 除外 | JS描画のみ (HTTP 200だが本文3805バイト・formなし。ambassador-cloudはJS描画とみられる) |
+| 106 | https://www.leafia.jp/contact/ | 小田急/リーフィア(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 107 | https://form.keihan-kiss.co.jp/contact/opinion/ | 京阪電鉄不動産/ご意見 | 除外 | JS描画のみ (HTTP 200だがtitle空・formなし。入力欄はJS生成とみられる) |
+| 108 | https://www.keihan-kiss.co.jp/contact/ | 京阪電鉄不動産(推測) | 除外 | 到達不能 (HTTP 403 Forbidden・bot遮断) |
+| 109 | https://www.nnr.co.jp/contact/ | 西日本鉄道(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 110 | https://www.nnr-mansion.jp/contact/ | 西鉄/サンリヤン(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 111 | https://www.nskre.co.jp/contact/ | 日鉄興和不動産(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 112 | https://www.livio.jp/contact/ | 日鉄興和/リビオ(推測) | 除外 | 到達不能 (HTTP 404頁。静的formは検索のみ) |
+| 113 | https://www.nttud.co.jp/contact/nttud_inquiry/ | NTT都市開発/総合問合せ | 有望 P1 | 静的実フォーム (HTTP 200。`action=/mt/mt-contactform.cgi`、input 16。`form_name`・`form_name_kana`・`form_company`・`form_division`・`form_tel`・`form_mail`。命名素直で多様性◎) |
+| 114 | https://www.nttud.co.jp/contact/site_inquiry/ | NTT都市開発/用地問合せ | 有望 P2 | 静的実フォーム (HTTP 200。No.113と同系・用地宛。同機構2件目のためP2) |
+| 115 | https://www.nttud.co.jp/business/residential/inquiry/index.html | NTT都市開発/住宅問合せ | 有望 P2 | 静的実フォーム (HTTP 200。No.113と同系・住宅宛。同機構3件目のためP2) |
+| 116 | https://www.kanden-rd.co.jp/contact/ | 関電不動産開発 | 除外 | フォームなし (HTTP 200「お問い合わせ」だが本文4428バイト・formなし。シエリア等へのリンク集とみられる) |
+| 117 | https://www.cielia.com/contact/ | 関電/シエリア(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 118 | https://www.ipd.co.jp/contact/ | 伊藤忠都市開発(推測転送) | 有望 P2 | 静的実フォーム (HTTP 200→`www.ji-red.co.jp/contact/` に転送。「JR東日本伊藤忠不動産開発」。`name`・`ruby`・`address01-03`・`tel`・`fax`・`email`・`inquiry_title`。転送先法人が対象とずれる疑義のためP2・取込時要確認) |
+| 119 | https://www.crevia.jp/contact/ | 伊藤忠/クレヴィア(推測) | 除外 | 到達不能 (curl timeout・code=28。bot遮断または応答なし) |
+| 120 | https://www.daiwahouse.co.jp/toiawase/ | 大和ハウス工業 | 除外 | 到達不能 (HTTP 403 Access Denied・bot遮断) |
+| 121 | https://www.daiwahouse.co.jp/mansion/contact/ | 大和ハウス/プレミスト(推測) | 除外 | 到達不能 (HTTP 403 Access Denied・bot遮断) |
+| 122 | https://www.daiwahouse.co.jp/kodate/request/ | 大和ハウス/戸建(推測) | 除外 | 到達不能 (HTTP 403 Access Denied・bot遮断) |
+| 123 | https://www.sekisuihouse.co.jp/cgi-bin/request/catalog.cgi | 積水ハウス/カタログ請求 | 有望 P1 | 静的実フォーム (HTTP 200。input 90・select 8。`address2`・`planned_zip1/2`・`birthday`・`company1/2`・`employeename`・`office`・希望条件群。最大規模で多様性◎) |
+| 124 | https://www.sekisuihouse.co.jp/cgi-bin/inquiry/form.cgi | 積水ハウス/総合問合せ | 有望 P1 | 静的実フォーム (HTTP 200。input 46。`zip1/2`・`addr2`・tel 3分割・`birth-year`・`shop`・`privacy`。命名素直で多様性◎) |
+| 125 | https://www.sekisuihouse.co.jp/mail/form.html | 積水ハウス/メール問合せ | 有望 P1 | 静的実フォーム (mpmail。input 24。`name-kanji1/2`・`name-kana1/2`・`zip1/2`・tel 3分割・`mailaddress`・`inq-subject`。素直な分割構成で多様性◎) |
+| 126 | https://www.asahi-kasei.co.jp/atlas/contact/ | 旭化成/アトラス(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 127 | https://www.asahi-kasei.co.jp/j-koho/contact.html | 旭化成/広報(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+
+## 集計
+
+- 試行総数: 127件 (No.1-127。要求100件以上を満たす)
+- 有望: 50件 (P1 21件・P2 23件・P3 6件)
+  - P1 (21): No.19, 20, 21, 24, 29, 30, 31, 36, 43, 47, 55, 63, 65, 71, 74, 92, 97, 113, 123, 124, 125
+  - P2 (23): No.6, 8, 15, 22, 25, 26, 28, 32, 33, 34, 44, 45, 46, 48, 50, 59, 61, 64, 69, 70, 114, 115, 118
+  - P3 (6): No.16, 17, 18, 40, 72, 77 (予備)
+- 除外: 77件 (到達不能 43・フォームなし 23・JS描画のみ 7・ログイン必須 3・重複 1)
+- 既存分 (`tests/target-url.md` 81行) および R4-1 の183件との重複: なし (全127件をURL完全一致で照合。同一ドメインでもpath・クエリが異なるURLのみ採用。R4-1と同機構のSMP/Pardot/東急formもSMPFORM・form pathが異なる別URL)
+- 有望の多様性: 戸建・マンション資料請求/来場予約 (積水・ブリリア・ラトゥール) / 賃貸仲介・オフィス (住友) / 再生・土地活用・建替え・CRE (野村・長谷工・東急) / 通報・IR・株主 (森ビル・ヒューリック・コスモス) / 地方有力 (穴吹・和田興産・阪急阪神不動産・NTT都市開発)。学校系ゼロで既存corpusと重複しない
+- デベロッパー特有の機構メモ: 物件エントリー・来場予約はブランドサイト側がJS描画 (proud・lions・geo・svy・ambassador) で静的formを持たないことが多く、コーポレート側の静的問合せ (cgi・SMP・Pardot・webcas・SPIRAL・krs.bz・e-state・Struts・mpmail・mt-contactform) が取込の主戦場。取込時はブランド物件頁ではなく本ログの静的URLを `make addurl` すること
