@@ -59,3 +59,23 @@
 | 38 | https://library.city.tokyo-nakano.lg.jp/guide/regist.html | 除外 | フォームなし (HTTP 200「利用者登録」。form・inputなしの案内頁) |
 | 39 | https://library.city.tokyo-nakano.lg.jp/reference/ | 除外 | フォームなし (HTTP 200「調べもの相談」。館内formは外部・国会図書館レファレンス共同DB検索窓のみ) |
 | 40 | https://library.city.tokyo-nakano.lg.jp/contact/ | 除外 | フォームなし (HTTP 200「お問合せ」。formなし。mailto `toshokan@nakano-library.jp`・電話/FAX・区民の声リンクの案内頁) |
+| 41 | https://www.city.tokyo-nakano.lg.jp/kusei/public/goiken/kuseihenogoiken.html | 除外 | フォームなし (HTTP 200「区政へのご意見・ご要望をお寄せください」。formなしの広聴案内頁。実窓口は提案箱アーカイブ→No.42) |
+| 42 | https://www.city.tokyo-nakano.lg.jp/kusei/public/goiken/teianbako/index.html | 除外 | フォームなし (HTTP 200「区政への提案箱」。formなし。過去の提案・回答の公表アーカイブ) |
+| 43 | https://www.library.city.kita.lg.jp/ | 除外 | OPAC検索窓のみ (HTTP 200。静的form 3は館内検索 `viewer/search/info.html` とOPAC検索 `OPWSRCHLIST.CSP` のみ) |
+| 44 | https://www.library.city.kita.lg.jp/viewer/info.html?id=344 | 除外 | フォームなし (HTTP 200「北区メールマガジン登録」。館内formは検索2+問合せ1だが、問合せ `opinion.html` は直GETで404→No.45。告知頁自体に静的フォームなし) |
+| 45 | https://www.library.city.kita.lg.jp/viewer/opinion.html | 除外 | 到達不能 (HTTP 404。TRC系ご意見フォーム。info頁のformは `method=get action=../viewer/opinion.html` だがcurl直GET・クエリ付きともに404。セッション依存とみられる) |
+| 46 | https://www.library.city.kita.lg.jp/viewer/info.html?id=87 | 除外 | フォームなし (HTTP 200「予約取置等連絡用メールアドレスについて」。館内formは検索2+問合せ(→No.45と同様404)のみ) |
+| 47 | https://www.lib.nerima.tokyo.jp/index.html | 除外 | OPAC検索窓のみ (HTTP 200。静的form 3は館内検索 `viewer/search/info.html` とOPAC検索 `OPWSRCHLIST.CSP` のみ) |
+| 48 | https://www.lib.nerima.tokyo.jp/viewer/info.html?id=2939 | 除外 | フォームなし (HTTP 200「図書館利用者アンケート」。静的form 2は館内検索のみ。回答は別導線の告知頁) |
+| 49 | https://www.lib.nerima.tokyo.jp/viewer/info.html?id=2248 | 除外 | フォームなし (HTTP 200「大泉図書館 ボランティア部」。静的form 2は館内検索のみの案内頁) |
+| 50 | https://www.lib.nerima.tokyo.jp/viewer/opinion.html | 除外 | 到達不能 (HTTP 404。TRC系ご意見フォームなし。No.45と同形) |
+| 51 | https://www.lib-minato.jp/ | 除外 | 検索窓のみ (HTTP 200。静的form 4は Google CSE とOPAC検索 `licsxp-opac/WOpac*` のみ) |
+| 52 | https://www.lib-minato.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的form 3は Google CSE とOPAC検索のみ。実問合せはOPAC/電話導線) |
+| 53 | https://www.lib-minato.jp/reserve | 除外 | OPAC検索窓のみ (HTTP 200「蔵書検索・予約」。静的form 3は Google CSE とOPAC検索のみ。予約自体はOPAC認証壁内) |
+| 54 | https://www.lib-minato.jp/news2/?id=319 | 除外 | フォームなし (HTTP 200「電子申請サービス再開のお知らせ」。静的form 3は検索のみ。電子申請本体は外部・認証壁) |
+| 55 | https://www.city.itabashi.tokyo.jp/library/index.html | 除外 | 検索窓のみ (HTTP 200「板橋区立図書館」。静的form 2はサイト内検索CSEと蔵書検索 `SearchForm` のみ) |
+| 56 | https://www.city.itabashi.tokyo.jp/cgi-crm/CRM030/CRM030_004/G7507000000/2000033 | 有望 P2 | 静的フォーム (HTTP 200「教育委員会事務局中央図書館への問い合わせ」。区CMSゲートウェイ、text `MailAddress/MailAddressKakunin`(email確認2欄)+Token。メールアドレス確認ステップの実フォーム。後続ステップ要確認のためP2) |
+| 57 | https://www.city.taito.lg.jp/library/index.html | 除外 | OPAC検索窓のみ (HTTP 200「台東区立図書館」。静的form 1はOPAC検索 `OPWSRCHLIST.CSP` のみ) |
+| 58 | https://www.city.taito.lg.jp/library/download/index.html | 除外 | フォームなし (HTTP 200「申請書ダウンロード」。静的form 2は Google CSE のみ。申請書DL案内頁) |
+| 59 | https://www.city.taito.lg.jp/library/service/sonota/reference.html | 除外 | フォームなし (HTTP 200「中央図書館レファレンス休止」。静的form 2は Google CSE のみのお知らせ頁) |
+| 60 | https://www.city.meguro.tokyo.jp/kosodatekyouiku/shakaikyouiku/library/index.html | 除外 | 検索窓のみ (HTTP 200「目黒区立図書館」。静的form 2は区サイト内検索のみ) |
