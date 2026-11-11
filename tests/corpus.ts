@@ -1931,6 +1931,33 @@ const LEDGER = {
       '__RequestVerificationToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'tosyo-00001-html.html': {
+    // 新宿区 中央図書館ページのページ評価ミニ survey (区CMS fb.php)。
+    // in-scope の fill 対象なし (radio のみで性別・年代群に該当せず)。
+    // richell-anketo-rating.html と同型の thin fixture。
+    expected: {},
+    excluded: [
+      // q2「本ページの情報は役に立ちましたか」/ q3「見つけやすかったですか」:
+      // いずれも性別・年代群ではないため bundled のまま stay unclassified (radio policy)。
+      'widgetCloseButton (button): action element, never a fill target (exclude)',
+      'widgetCloseButtonSp (button): action element, never a fill target (exclude)',
+      'email (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'code (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'pgid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'url (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'baseurl (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'q1 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'q1 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'q2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'q3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'q3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'q3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'send (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
