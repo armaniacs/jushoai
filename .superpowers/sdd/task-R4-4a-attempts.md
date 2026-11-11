@@ -71,3 +71,23 @@
 | 58 | https://www.alpsalpine.com/j/contact/ | 除外 | 到達不能 (アルプスアルパイン6770。HTTP 403) |
 | 59 | https://www.hirose.com/jp/contact/ | 除外 | 到達不能 (ヒロセ電機6806。HTTP 404。静的formなし) |
 | 60 | https://www.maxell.co.jp/contact/ | 除外 | 到達不能 (マクセル6810。HTTP 404。実窓口は `/contacts/` 別導線) |
+| 61 | https://www.furuno.co.jp/contact/ | 除外 | フォームなし (古野電気6814。HTTP 200だが静的入力欄は `__VIEWSTATE` 系のみ。実入力欄なし。実フォームは `/contact/cnt_marine*.html` 別導線) |
+| 62 | https://www.yokogawa.co.jp/contact/ | 除外 | フォームなし (横河電機6841。HTTP 200ハブ。静的formは検索3件のみ) |
+| 63 | https://www.azbil.com/jp/contact/ | 除外 | 到達不能 (アズビル6845。HTTP 404。静的formは検索のみ。実フォームは `form.azbil.com`→No.168で検証) |
+| 64 | https://www.horiba.com/jp/contact/ | 除外 | 到達不能 (堀場製作所6856。curlタイムアウト・code=000) |
+| 65 | https://www.advantest.com/ja/contact/ | 有望 P1 | 静的実フォーム (アドバンテスト6857。HTTP 200。`action=./`、input 8・textarea 2・select 1。`lname`・`fname`・`address`・`email`・`company`・`section`・`phone`・`subject`・`message`。半導体検査装置。多様性◎) |
+| 66 | https://www.keyence.co.jp/contact/ | 除外 | フォームなし (キーエンス6861。HTTP 404「エラー」頁。静的formは検索のみ。実フォームは `/inquiry/*`→No.169で検証) |
+| 67 | https://www.hioki.co.jp/contact/ | 除外 | フォームなし (HIOKI6866。製品頁に転送。静的formは検索のみ。実窓口は zendesk別導線) |
+| 68 | https://www.sysmex.co.jp/contact/ | 除外 | フォームなし (シスメックス6869。HTTP 200ハブ。静的formは検索のみ。実フォームは `/contact/input?inquiry_type=N`→No.170で検証) |
+| 69 | https://www.lasertec.co.jp/contact/ | 除外 | フォームなし (レーザーテック6920。HTTP 200ハブ。静的formは検索のみ。実フォームは SMP→No.171で検証) |
+| 70 | https://www.stanley.co.jp/contact/ | 除外 | フォームなし (スタンレー電気6923。企業頁に転送。静的formは検索のみ。実窓口は `/jp/inquiry/` 別導線) |
+| 71 | https://www.ushio.co.jp/jp/contact/ | 除外 | 到達不能 (ウシオ電機6925。HTTP 404。実窓口は `/jp/inquiry_menu.html` 別導線) |
+| 72 | https://www.fanuc.co.jp/contact/ | 除外 | 到達不能 (ファナック6954。HTTP 404) |
+| 73 | https://www.rohm.co.jp/contactus/ | 有望 P2 | 要精査 (ローム6963。HTTP 200。Liferay contactusポートレット静的form (`last_name`・`first_name` ほか)。項目名はコード化・ログイン導線併設のためP2。取込時確認) |
+| 74 | https://www.hamamatsu.com/jp/ja/contact.html | 除外 | 到達不能 (浜松ホトニクス6965。HTTP 404。実窓口は `/all/en/support/inquiry/` 別導線) |
+| 75 | https://www.kyocera.co.jp/contact/ | 除外 | 到達不能 (京セラ6971。HTTP 404。静的formは検索のみ) |
+| 76 | https://www.murata.com/ja-jp/contact/ | 除外 | 到達不能 (村田製作所6981。HTTP 404。静的formは検索のみ。実窓口は `/ja-jp/support/contact` 別導線) |
+| 77 | https://www.nichicon.co.jp/contact/ | 除外 | フォームなし (ニチコン6996。HTTP 200ハブ。静的formなし(selectのみ)。実フォームは `/contact/` 別導線) |
+| 78 | https://www.isuzu.co.jp/contact/ | 除外 | 到達不能 (いすゞ7202。HTTP 404。静的formは検索のみ。実窓口は `/inquiry/` 別導線) |
+| 79 | https://www.hino.co.jp/contact/ | 除外 | 到達不能 (日野自動車7205。HTTP 404。静的formは検索のみ。実窓口は `/inquiry/` 別導線) |
+| 80 | https://www.mitsubishi-motors.com/jp/contact/ | 除外 | 到達不能 (三菱自動車7211。HTTP 404。静的formは検索のみ) |
