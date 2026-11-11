@@ -1339,6 +1339,29 @@ const LEDGER = {
       'use_recaptcha (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'kikkoman-media-form.html': {
+    expected: {
+      // [tel1/2/3] suffix splits like the kikkoman-website e_25028 precedent.
+      // The personal/company fields are bare coded names (the real page has
+      // no placeholder attributes and table-cell headings the scanner never
+      // reads), so nothing else resolves by rule.
+      'e_29115[tel1]': '090',
+      'e_29115[tel2]': '1234',
+      'e_29115[tel3]': '5678',
+    },
+    excluded: [
+      'e_29111 (text): 貴社名, stays unclassified (LLM fallback; coded-name company field)',
+      'e_29112 (text): 媒体名, no profile value, correctly unfilled',
+      'e_29113 (text): お名前 with no label or placeholder signal, stays unclassified (LLM fallback)',
+      'e_29114 (text): お名前（ふりがな）, stays unclassified (LLM fallback; coded-name kana field)',
+      'e_29116/_re (text): type=text with メールアドレス headings, stay unclassified (LLM fallback; email-via-heading candidate, same as kikkoman-website e_25031)',
+      'e_29110 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '__send (submit): action element, never a fill target (exclude)',
+      '__name (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

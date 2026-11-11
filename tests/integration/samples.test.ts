@@ -288,4 +288,7 @@ describe('sample forms end to end', () => {
   it('brother-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('brother-inquiry-form.html')).toEqual(expectedFor('brother-inquiry-form.html'));
   });
+  it('kikkoman-media-form.html fills the in-scope fields', async () => {
+    expect(await planFor('kikkoman-media-form.html')).toEqual(expectedFor('kikkoman-media-form.html'));
+  });
 });
