@@ -285,4 +285,7 @@ describe('sample forms end to end', () => {
   it('ricoh-vulnerability-form.html fills the in-scope fields', async () => {
     expect(await planFor('ricoh-vulnerability-form.html')).toEqual(expectedFor('ricoh-vulnerability-form.html'));
   });
+  it('brother-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('brother-inquiry-form.html')).toEqual(expectedFor('brother-inquiry-form.html'));
+  });
 });

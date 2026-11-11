@@ -1,0 +1,97 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://business.brother.co.jp/public/application/add/113
+  (ブラザー 法人向けお問い合わせ).
+  Field names, the three select option lists (restored verbatim), maxlengths,
+  and control kinds mirror the real page. The real page carries its headings
+  (会社名/部署名/姓/名/…) in plain divs with no <label>/th/dt/legend
+  association, which the scanner never reads as nearby, so the scanner sees
+  the same bare inputs as here. Only the 16 in-scope controls are kept (the
+  rest is hidden state + checkbox/radio groups + textareas).
+-->
+<html lang="ja"><meta charset="utf-8"><title>ブラザー 法人向けお問い合わせ (manufacturer)</title>
+<form>
+      <input name="Public::Application::Userenquete_D__P__D_company_name" id="" type="text" value="" maxlength="100">
+      <input name="Public::Application::Userenquete_D__P__D_division" id="" type="text" value="" maxlength="100">
+      <input name="Public::Application::Userenquete_D__P__D_name1" id="" type="text" value="" maxlength="20">
+      <input name="Public::Application::Userenquete_D__P__D_name2" id="" type="text" value="" maxlength="20">
+      <input name="Public::Application::Userenquete_D__P__D_zip1" id="" type="text" value="" maxlength="8">
+      <select name="Public::Application::Userenquete_D__P__D_prefecture_master_id" id=""><option value=""></option><option value="1">北海道</option><option value="2">青森県</option><option value="3">岩手県</option><option value="4">宮城県</option><option value="5">秋田県</option><option value="6">山形県</option><option value="7">福島県</option><option value="8">埼玉県</option><option value="9">千葉県</option><option value="10">東京都</option><option value="11">神奈川県</option><option value="12">茨城県</option><option value="13">栃木県</option><option value="14">群馬県</option><option value="15">山梨県</option><option value="16">長野県</option><option value="17">新潟県</option><option value="18">富山県</option><option value="19">石川県</option><option value="20">福井県</option><option value="21">岐阜県</option><option value="22">静岡県</option><option value="23">愛知県</option><option value="24">三重県</option><option value="25">滋賀県</option><option value="26">京都府</option><option value="27">大阪府</option><option value="28">兵庫県</option><option value="29">奈良県</option><option value="30">和歌山県</option><option value="31">鳥取県</option><option value="32">島根県</option><option value="33">岡山県</option><option value="34">広島県</option><option value="35">山口県</option><option value="36">徳島県</option><option value="37">香川県</option><option value="38">愛媛県</option><option value="39">高知県</option><option value="40">福岡県</option><option value="41">佐賀県</option><option value="42">長崎県</option><option value="43">熊本県</option><option value="44">大分県</option><option value="45">宮崎県</option><option value="46">鹿児島県</option><option value="47">沖縄県</option><option value="49">海外</option></select>
+      <input name="Public::Application::Userenquete_D__P__D_address1" id="" type="text" value="" maxlength="100">
+      <input name="Public::Application::Userenquete_D__P__D_tel" id="" type="text" value="" maxlength="20">
+      <input name="Public::Application::Userenquete_D__P__D_email" id="" type="text" value="" maxlength="100">
+      <select name="Public::Application::Userenquete_D__P__D_Enquete.attribute141" id=""><option value="0"></option><option value="1">見積希望</option><option value="4">機種選定希望</option></select>
+      <input name="Public::Application::Userenquete_D__P__D_Enquete.attribute4064_plus_text" id="" type="text" value="">
+      <input name="Public::Application::Userenquete_D__P__D_Enquete.attribute142" id="" type="text" value="">
+      <input name="Public::Application::Userenquete_D__P__D_Enquete.attribute465_plus_text" id="" type="text" value="">
+      <input name="Public::Application::Userenquete_D__P__D_Enquete.attribute343" id="" type="text" value="">
+      <select name="Public::Application::Userenquete_D__P__D_Enquete.attribute145" id=""><option value="0"></option><option value="1">製造</option><option value="2">医療・研究</option><option value="3">物流・倉庫</option><option value="4">卸・小売</option><option value="5">飲食</option><option value="6">金融・保険・不動産</option><option value="7">建築関連</option><option value="8">システム開発</option></select>
+      <input name="Public::Application::Userenquete_D__P__D_Enquete.attribute148_plus_text" id="" type="text" value="">
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: csrf_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_VisitorData.attribute391 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute4064 (checkbox): out of scope (skip fixed) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute465 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute341 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute342 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute146 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute148 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute149 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_Enquete.attribute796 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: selected_action (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: cart_delete (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: action (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: serialkey (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: Public::Application::Userenquete_D__P__D_language_master_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: use_recaptcha (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
