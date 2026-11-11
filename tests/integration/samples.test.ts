@@ -324,4 +324,7 @@ describe('sample forms end to end', () => {
   it('sapporo-iken-form.html fills the in-scope fields', async () => {
     expect(await planFor('sapporo-iken-form.html')).toEqual(expectedFor('sapporo-iken-form.html'));
   });
+  it('kubota-engine-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('kubota-engine-contact-form.html')).toEqual(expectedFor('kubota-engine-contact-form.html'));
+  });
 });

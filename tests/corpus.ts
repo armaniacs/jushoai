@@ -1818,6 +1818,31 @@ const LEDGER = {
       'page (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'kubota-engine-contact-form.html': {
+    expected: {
+      'last_name': '山田',
+      'last_kana': 'やまだたろう',
+      'zipCode': '1000001',
+      'pref_name': '東京都',
+      'address': '千代田区千代田1-1 千代田ビル101',
+      'phone': '090-1234-5678',
+      'email': 'yamada@example.com',
+      'email_confirm': 'yamada@example.com',
+      'department': '普通科',
+    },
+    excluded: [
+      'fid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cno (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'referer (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'g-recaptcha-response (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'check (checkbox): out of scope (skip fixed)',
+      '(no name/id) (reset): unaddressable (exclude)',
+      'subBtn (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
