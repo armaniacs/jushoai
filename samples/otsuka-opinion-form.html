@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.otsuka.co.jp/contacts/opinion/form
+  (大塚製薬 ご意見窓口).
+  Field ids, names, placeholders, and control kinds mirror the real page.
+  The real page carries its headings (お名前/ご所属/メールアドレス/性別/…)
+  in table header cells with no <label> association, so the scanner sees the
+  same placeholder-only text fields as here. The sex radios are restored with
+  their real option labels (男/女, bst-inquire.html shape): the name itself
+  matches the gender rule.
+-->
+<html lang="ja"><meta charset="utf-8"><title>大塚製薬 ご意見窓口 (pharma)</title>
+<form>
+      <input name="name" id="" type="text" value="" placeholder="例）大塚 太郎" maxlength="50">
+      <input name="name_kana" id="" type="text" value="" placeholder="例）オオツカ タロウ" maxlength="50">
+      <input name="company" id="" type="text" value="" placeholder="例）大塚製薬株式会社" maxlength="50">
+      <input name="mail" id="" type="text" value="" placeholder="例）abc@otsuka.com" maxlength="256">
+      <input name="tel[1]" id="" type="text" value="" placeholder="例）03" maxlength="6">
+      <input name="tel[2]" id="" type="text" value="" placeholder="6717" maxlength="5">
+      <input name="tel[3]" id="" type="text" value="" placeholder="1400" maxlength="5">
+      <input name="age" id="" type="text" value="" maxlength="3">
+      <label for="sex1"><input id="sex1" name="sex" type="radio" value="1">男</label>
+      <label for="sex2"><input id="sex2" name="sex" type="radio" value="2">女</label>
+<!-- skip: _csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: agree (checkbox): out of scope (skip fixed) -->
+<!-- skip: contents (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: _Token[fields] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: _Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

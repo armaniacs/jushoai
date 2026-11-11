@@ -615,6 +615,31 @@ const LEDGER = {
       'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'otsuka-opinion-form.html': {
+    expected: {
+      // Placeholder-only text fields (no <label> on the real page either):
+      // the 例） placeholders carry the name readings.
+      'name': '山田 太郎',
+      'name_kana': 'ヤマダ タロウ',
+      'tel[1]': '090',
+      'tel[2]': '1234',
+      'tel[3]': '5678',
+      // The sex name itself matches the gender rule; 女 (value 2) resolves
+      // against 女性 (same as the bst-inquire Male/Female precedent).
+      'sex': '2',
+    },
+    excluded: [
+      'company (text): ご所属 placeholder 例）大塚製薬株式会社, stays unclassified (LLM fallback; company-by-placeholder candidate)',
+      'mail (text): type=text named mail with an email placeholder, stays unclassified (LLM fallback; email-via-placeholder candidate)',
+      'age (text): bare 年齢 field with no label or placeholder, no profile value, correctly unfilled',
+      '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'agree (checkbox): out of scope (skip fixed)',
+      'contents (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '_Token[fields] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

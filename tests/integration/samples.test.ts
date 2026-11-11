@@ -228,4 +228,7 @@ describe('sample forms end to end', () => {
   it('ff-csr.html fills the in-scope fields', async () => {
     expect(await planFor('ff-csr.html')).toEqual(expectedFor('ff-csr.html'));
   });
+  it('otsuka-opinion-form.html fills the in-scope fields', async () => {
+    expect(await planFor('otsuka-opinion-form.html')).toEqual(expectedFor('otsuka-opinion-form.html'));
+  });
 });
