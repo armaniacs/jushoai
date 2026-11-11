@@ -31,3 +31,23 @@
 | 18 | https://www.shiseido.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
 | 19 | https://www.kao.com/jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `kao.com/global/en/search/` 検索のみ) |
 | 20 | https://www.kose.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 21 | https://www.muji.com/jp/ja/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 22 | https://www.nitori-hd.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 23 | https://www.fastretailing.com/jp/about/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 24 | https://www.seven-eleven.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 25 | https://www.aeon.info/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だが静的formは `action=/` の検索(text:s)のみ。実窓口はSalesforce別導線→No.176で検証) |
+| 26 | https://www.ito-yokado.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 27 | https://www.ajinomoto.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「お探しのページが見つかりません」。静的formは `/jp/search/` 検索のみ) |
+| 28 | https://www.meiji.co.jp/customer/ | 除外 | 到達不能 (HTTP 404。静的formは `search.meiji.co.jp` 検索のみ) |
+| 29 | https://www.morinaga.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/faq/`「お問い合わせ窓口」。静的formは検索/FAQ絞込5件のみ。実窓口は別導線) |
+| 30 | https://www.kikkoman.co.jp/customer/ | 除外 | フォームなし (HTTP 200「お客様相談センター」。静的formは `/search/` 検索のみ。実フォームは `form.kikkoman.co.jp`→No.156-158で検証) |
+| 31 | https://www.jreast.co.jp/info/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 32 | https://www.jr-central.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 33 | https://www.tokyometro.jp/support/inquiry/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 34 | https://www.tobu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「404エラー」。formなし) |
+| 35 | https://www.seibu-group.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 36 | https://www.ana.co.jp/ja/jp/support/contact/ | 除外 | 到達不能 (HTTP 404「指定されたページが見つかりません」。静的formは `search.ana.co.jp` 検索のみ) |
+| 37 | https://www.jal.co.jp/jp/ja/support/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 38 | https://www.tepco.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `search-tepco.dga.jp` 検索のみ) |
+| 39 | https://www.tokyo-gas.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「該当ページがございません」。formなし) |
+| 40 | https://www.docomo.ne.jp/support/inquiry/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だが実体は検索2件+ページ評価アンケート(radio survey_q1/q5・checkbox15・select1、`action=#` JS送信)。住所・氏名欄なしのため対象外) |
