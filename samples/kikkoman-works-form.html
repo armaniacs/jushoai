@@ -1,0 +1,30 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form.kikkoman.co.jp/m/works
+  (キッコーマン 採用お問い合わせ).
+  Field names, ids, placeholders, maxlengths, and control kinds mirror the
+  real page (same family as kikkoman-website-form). The 性別 select options
+  are restored verbatim (男性/女性/その他 order on this page). Only the 11
+  in-scope controls are kept.
+-->
+<html lang="ja"><meta charset="utf-8"><title>キッコーマン 採用お問い合わせ (food)</title>
+<form>
+      <input name="e_26138" id="e_26138" type="text" value="">
+      <input name="e_26139" id="e_26139" type="text" value="" placeholder="姓">
+      <input name="e_26140" id="e_26140" type="text" value="" placeholder="名">
+      <input name="e_26141" id="e_26141" type="text" value="" placeholder="せい">
+      <input name="e_26142" id="e_26142" type="text" value="" placeholder="めい">
+<select name="e_26144" id="e_26144"><option value="">選択してください</option><option value="1">男性</option><option value="2">女性</option><option value="3">その他</option></select>
+      <input name="e_26145[tel1]" id="e_26145[tel1]" type="text" value="" maxlength="5">
+      <input name="e_26145[tel2]" id="e_26145[tel2]" type="text" value="" maxlength="4">
+      <input name="e_26145[tel3]" id="e_26145[tel3]" type="text" value="" maxlength="4">
+      <input name="e_25071" id="e_25071" type="text" value="">
+      <input name="e_25071_re" id="e_25071_re" type="text" value="">
+<!-- skip: e_26143 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: agreement (checkbox): out of scope (skip fixed) -->
+<!-- skip: __send (submit): action element, never a fill target (exclude) -->
+<!-- skip: commit_agreement (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: __name (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: f (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

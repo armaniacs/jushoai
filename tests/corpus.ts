@@ -1362,6 +1362,32 @@ const LEDGER = {
       'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'kikkoman-works-form.html': {
+    expected: {
+      // 姓/名 placeholders split kanji; せい/めい placeholders read hiragana
+      // (same as kikkoman-website-form).
+      'e_26139': '山田',
+      'e_26140': '太郎',
+      'e_26141': 'やまだ',
+      'e_26142': 'たろう',
+      // [tel1/2/3] suffix splits like the kikkoman-website e_25028 precedent.
+      'e_26145[tel1]': '090',
+      'e_26145[tel2]': '1234',
+      'e_26145[tel3]': '5678',
+    },
+    excluded: [
+      'e_26138 (text): お問い合わせタイトル, no profile value, correctly unfilled',
+      'e_26144 (select): 性別 options restored verbatim, stays unclassified (LLM fallback; coded-name gender-select candidate, same as kikkoman-website e_25042)',
+      'e_25071/_re (text): type=text with メールアドレス headings, stay unclassified (LLM fallback; email-via-heading candidate, same as kikkoman-website e_25031)',
+      'e_26143 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agreement (checkbox): out of scope (skip fixed)',
+      '__send (submit): action element, never a fill target (exclude)',
+      'commit_agreement (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__name (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

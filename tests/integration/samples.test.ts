@@ -291,4 +291,7 @@ describe('sample forms end to end', () => {
   it('kikkoman-media-form.html fills the in-scope fields', async () => {
     expect(await planFor('kikkoman-media-form.html')).toEqual(expectedFor('kikkoman-media-form.html'));
   });
+  it('kikkoman-works-form.html fills the in-scope fields', async () => {
+    expect(await planFor('kikkoman-works-form.html')).toEqual(expectedFor('kikkoman-works-form.html'));
+  });
 });
