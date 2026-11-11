@@ -39,3 +39,4 @@
 - https://holdings.fujifilm.com/ja/form/compliance-hotline → ff-compliance-hotline-form.html
 - https://www.tokyu-land.co.jp/form/kojin/ → tokyu-land-kojin-form.html
 - https://www.tokyu-land.co.jp/form/tenant/ → tokyu-land-tenant-form.html
+- https://enquete.benesse.ne.jp/forms/o/we040f7618/form → benesse-inquiry-form.html

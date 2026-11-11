@@ -1140,6 +1140,46 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'benesse-inquiry-form.html': {
+    expected: {
+      // Coded names, but the 姓/名 and せい/めい labels drive the split
+      // (pinned honest).
+      'q01001001': '山田',
+      'q01001002': '太郎',
+      'q01002001': 'ヤマダ',
+      'q01002002': 'タロウ',
+      // type=tel with maxlength=11; stays undashed (honest pin).
+      'q01007001': '09012345678',
+      // Email via the zemi@benesse.co.jp placeholder (email-via-placeholder
+      // resolves here, unlike the kobe/otsuka bare cases).
+      'q01008001': 'yamada@example.com',
+      'q01008002': 'yamada@example.com',
+    },
+    excluded: [
+      'q01005001/2/3 (tel): 会員番号 bare 3-split with digit-example placeholders, stay unclassified (LLM fallback; tel-split-by-name candidate, same as kobe ANSWER6)',
+      'q90001001 (select): お問い合わせの分野 content question with real options, stays unclassified (LLM fallback)',
+      'csrfmiddlewaretoken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'action_flg (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'plan_param_flg (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'child_disp_flg2 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'child_disp_flg3 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'child_disp_flg4 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'child_disp_flg5 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'address_judge_area_cd (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'address_judge_msg_cd (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'address_judge_fst_warn (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'hdn_plan_cd (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'serial_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'remove_controlqa_list (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'all_controlqa_list (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'pattern_question_disp_list (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mail_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'q90003001 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'is_tablet (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

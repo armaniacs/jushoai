@@ -273,4 +273,7 @@ describe('sample forms end to end', () => {
   it('tokyu-land-tenant-form.html fills the in-scope fields', async () => {
     expect(await planFor('tokyu-land-tenant-form.html')).toEqual(expectedFor('tokyu-land-tenant-form.html'));
   });
+  it('benesse-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('benesse-inquiry-form.html')).toEqual(expectedFor('benesse-inquiry-form.html'));
+  });
 });
