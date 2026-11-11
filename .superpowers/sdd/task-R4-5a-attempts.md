@@ -111,3 +111,35 @@
 | 98 | https://www.city.sendai.jp/webkoho/information/index.html | 除外 | フォームなし (HTTP 200「よく利用される情報一覧」。静的formは検索のみ) |
 | 99 | https://www.city.saitama.lg.jp/001/001/007/p016829.html | 除外 | フォームなし (HTTP 200「区役所の休日窓口」。静的formは検索のみ) |
 | 100 | https://saitama.rsv.ws-scs.jp/web/ | 除外 | JS描画のみ (HTTP 200「さいたま市公共施設予約」。form・inputなし。予約はJS導線) |
+| 101 | https://www.city.kawasaki.jp/main/event2/curr.html | 除外 | フォームなし (HTTP 200「イベント・講座」。静的formは `frmSearch` の種類・対象・地域チェックボックス絞込のみ。申込欄なし) |
+| 102 | https://www.city.kawasaki.jp/kurashi/category/256-0-0-0-0-0-0-0-0-0.html | 除外 | フォームなし (HTTP 200「相談窓口」。静的formは検索のみ) |
+| 103 | https://www.city.sagamihara.kanagawa.jp/lifeevent/1012105.html | 除外 | フォームなし (HTTP 200「入園・入学」。静的formは検索のみ) |
+| 104 | https://www.city.sagamihara.kanagawa.jp/lifeevent/1012106.html | 除外 | フォームなし (HTTP 200「結婚・離婚」。静的formは検索のみ) |
+| 105 | https://www.city.shizuoka.lg.jp/s004405.html | 除外 | フォームなし (HTTP 200「バナー広告募集」。静的formは検索+問合せボタンPOSTリンク+ページレビューradioのみ) |
+| 106 | https://www.city.chiba.jp/kodomomirai/kodomomirai/kikaku/kodomosyuukanevent.html | 除外 | フォームなし (HTTP 200「こどもまんなかフォーラム」。静的formは検索+ページレビューradioのみ) |
+| 107 | https://www.city.chiba.jp/sogoseisaku/sogoseisaku/identitysuishin/900th_eventparade.html | 除外 | フォームなし (HTTP 200「千葉開府900年記念パレード」。静的formは検索+ページレビューradioのみ) |
+| 108 | https://www.sankeien.or.jp/event/ | 除外 | フォームなし (HTTP 200「三溪園イベント情報」。静的formはサイト内検索のみ。市外郭団体) |
+| 109 | https://www.city.yokohama.lg.jp/city-info/koho-kocho/press/index.html | 除外 | フォームなし (HTTP 200「記者発表」。静的formは検索のみ) |
+| 110 | https://www.city.niigata.lg.jp/life_event/kekkon/index.html | 除外 | フォームなし (HTTP 200「結婚・離婚」。form・inputなし) |
+| 111 | https://www.city.niigata.lg.jp/kanko/kanko/promotion/eventschedule.html | 除外 | フォームなし (HTTP 200「大規模イベントスケジュール」。静的formはページ評価投票 `vote.cgi`(useful1/2)のみ。申込欄なし) |
+| 112 | https://www.city.hamamatsu.shizuoka.jp/kurashi-tetsuzuki/index.html | 除外 | フォームなし (HTTP 200「手続き・くらし」。form・inputなし) |
+| 113 | https://www.city.okayama.jp/soshiki_list.html | 除外 | フォームなし (HTTP 200「各課の窓口」。静的formはサイト内検索のみ) |
+| 114 | https://www.city.sendai.jp/sesakukoho/gaiyo/shichoshitsu/kaiken/oshirase.html | 除外 | フォームなし (HTTP 200「市長定例記者会見」。静的formは検索のみ) |
+| 115 | https://www.city.hiroshima.lg.jp/faq/index.html | 除外 | フォームなし (HTTP 200「よくある質問と回答」。静的formは検索のみ) |
+| 116 | https://www.city.osaka.lg.jp/event/news/curr.html | 除外 | フォームなし (HTTP 200「新着情報(イベント・観光)」。静的formは検索のみ) |
+| 117 | https://s-kantan.jp/city-shizuoka-u/ | 除外 | 到達不能 (HTTP 404。`apply.e-tumo.jp/city-shizuoka-u/` に転送されるが同所も404。静岡市の電子申請は別導線) |
+| 118 | https://apply.e-tumo.jp/city-nagoya-u/ | 除外 | 到達不能 (HTTP 404。名古屋市の電子申請は別導線) |
+| 119 | https://apply.e-tumo.jp/city-saitama-u/offer/offerList_initDisplay | 除外 | フォームなし (HTTP 200。No.13のリダイレクト先と同一の手続き検索頁 `_csrf/topDetail`。申請手続きはログイン/JS導線) |
+
+## 集計
+
+- 試行総数: 119件 (No.1-119。要求100件以上を満たす)
+- 有望: 4件 (P1 3件・P2 1件・P3 0件)
+  - P1 (3): No.57 (浜松市お問い合わせフォーム。氏名・ふりがな・性別・年代・職業radio・郵便・住所・電話・FAX・メール・件名・内容の12項目)、No.76 (岡山市メールフォーム。namae・hurigana・jyusyo・denwa・fax・mail確認・taitoru・naiyou)、No.91 (福岡市市政への提案。name/kana/sex/age/zipcode・住所分割ku/choumei/ban/gou・phone/email・件名・内容)
+  - P2 (1): No.1 (札幌市HPへのご意見・ご提案。ご意見textarea・お名前・メールの3欄のみ)
+- 除外: 115件 (フォームなし 96・JS描画のみ 12・ログイン必須 2・到達不能 5。重複頁の内容一致 2件—No.52/58、No.13/119—は別URLのため各1件として計数)
+- 市別件数 (19市・神戸市除外): 札幌8・仙台13・さいたま5・千葉8・横浜10・川崎6・相模原5・新潟9・静岡4・浜松8・名古屋4・京都5・大阪4・堺5・岡山4・広島4・北九州5・福岡8・熊本4 (各市4件以上で偏りなし)
+- 既存 (`tests/target-url.md`) との重複: なし (全119件を照合。既存の神戸市 `contact.city.kobe.lg.jp` とも重複なし)
+- R4-1試行済み183件との重複: なし (全119件を照合。R4-1の `/contact` 推測URL群ともパス不一致)
+- 有望の多様性: 自治体広聴フォーム (浜松・岡山・福岡) + 自治体HP意見フォーム (札幌)。いずれも氏名・住所・連絡先・内容を持つ日本式行政フォームで、既存corpus (学校・企業中心) と重複しない
+- 傾向メモ: 政令市のCMS頁は静的formが検索・FAQ検索・ページレビューradioに限られることが大半。実フォームは `cgi-bin/question/question.cgi` 系 (浜松)・`mailform/inquiry.cgi` 系 (岡山)・`shiminnnokoe` 独自PHP (福岡) など広聴系サブシステムに集中。電子申請 (横浜・さいたまe-tumo・相模原)・施設予約 (札幌・さいたま・浜松・北九州スマらく) はログイン/JS導線で静的到達不可。s-kantan/e-tumoの他市流用URL推測 (大阪・静岡・名古屋) はいずれも404で、各市の電子申請は別導線
