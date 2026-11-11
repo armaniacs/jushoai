@@ -1,0 +1,19 @@
+<!-- Minimal reproduction of https://www.lib.city.katsushika.lg.jp/mailform. Values stripped; trim further before committing. -->
+<form>
+      <label for="txtName">氏名 ※必須</label>
+      <input name="txtName" id="txtName" type="text" value="" maxlength="20">
+      <label for="txtKana">氏名（ふりがな） ※必須</label>
+      <input name="txtKana" id="txtKana" type="text" value="" maxlength="40">
+      <label for="txtMail">メールアドレス ※必須</label>
+      <input name="txtMail" id="txtMail" type="text" value="" maxlength="30">
+      <label for="txtTel">電話番号</label>
+      <input name="txtTel" id="txtTel" type="text" value="" maxlength="20">
+<!-- skip: ddBig:btnBig (submit): action element, never a fill target (exclude) -->
+<!-- skip: ddMiddle:btnMiddle (submit): action element, never a fill target (exclude) -->
+<!-- skip: ddSmall:btnSmall (submit): action element, never a fill target (exclude) -->
+<!-- skip: radioReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: radioReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: txtQtext (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: btnConfirm (submit): action element, never a fill target (exclude) -->
+<!-- skip: btnReset (submit): action element, never a fill target (exclude) -->
+</form>

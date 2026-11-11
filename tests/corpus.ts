@@ -1843,6 +1843,26 @@ const LEDGER = {
       'subBtn (submit): action element, never a fill target (exclude)',
     ],
   },
+  'mailform.html': {
+    expected: {
+      // 葛飾区立図書館 Eメールレファレンス (LiCS系)。氏名/ふりがな/email/tel。
+      // txtKana は「ふりがな」label のため hiragana の結合値 (honest pin)。
+      'txtName': '山田 太郎',
+      'txtKana': 'やまだ たろう',
+      'txtMail': 'yamada@example.com',
+      'txtTel': '090-1234-5678',
+    },
+    excluded: [
+      'ddBig:btnBig (submit): action element, never a fill target (exclude)',
+      'ddMiddle:btnMiddle (submit): action element, never a fill target (exclude)',
+      'ddSmall:btnSmall (submit): action element, never a fill target (exclude)',
+      'radioReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'radioReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'txtQtext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'btnConfirm (submit): action element, never a fill target (exclude)',
+      'btnReset (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

@@ -327,4 +327,8 @@ describe('sample forms end to end', () => {
   it('kubota-engine-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('kubota-engine-contact-form.html')).toEqual(expectedFor('kubota-engine-contact-form.html'));
   });
+  it('mailform.html fills the in-scope fields', async () => {
+    expect(await planFor('mailform.html')).toEqual(expectedFor('mailform.html'));
+  });
+  });
 });

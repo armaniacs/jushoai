@@ -57,3 +57,4 @@
 - https://inquiry.lixil.co.jp/regist/is?SMPFORM=naoj-lctgtj-defd68f97cffa36b3ed5f3bcd2c68ca6&qcat=18 → lixil-inquiry-form.html
 - https://www.city.sapporo.jp/city/iken-hp/index.html → sapporo-iken-form.html
 - https://global.engine.kubota.co.jp/ja/contact/input.php?fid=01 → kubota-engine-contact-form.html
+- https://www.lib.city.katsushika.lg.jp/mailform → mailform.html
