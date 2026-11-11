@@ -52,3 +52,23 @@
 | 38 | https://www.tatemono.com/toiawase/ | 東京建物 | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
 | 39 | https://www.lions-mansion.jp/inquiry/ | 大京/ライオンズ | 除外 | JS描画のみ (HTTP 200「お問い合わせ」だが静的formなし。実フォームは `contact.daikyo.co.jp` cgi=No.40に分離) |
 | 40 | https://contact.daikyo.co.jp/cgi-bin/info/inquiry.cgi | 大京/総合問合せcgi | 有望 P3 | 静的実フォーム (HTTP 200。input 9。email分割 `email_head/fut`・tel 3分割・`naiyou`。欄が小さいため予備P3) |
+| 41 | https://www.daikyo.co.jp/contact.html | 大京 | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし。実フォームはNo.40のcgiに分離) |
+| 42 | https://www.daikyo-anabuki.co.jp/contact/ | 大京穴吹不動産 | 除外 | フォームなし (HTTP 200だが静的form 2件は検索系のみ。問合せ実体は別導線) |
+| 43 | https://www.hulic.co.jp/business/inquiry/entry?subject=developPlan | ヒューリック/不動産開発 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/business/inquiry/confirm`、input 28。`name1/2`・`kana1/2`・`zip`・`address`・`tel`・`mail`確認・`company_name`・`building`。命名素直で多様性◎) |
+| 44 | https://www.hulic.co.jp/contact/entry?subject=hotel | ヒューリック/ホテル | 有望 P2 | 静的実フォーム (HTTP 200。input 21。No.43と同系・ホテル宛。`fax` 欄あり。同機構2件目のためP2) |
+| 45 | https://www.hulic.co.jp/contact/other/entry | ヒューリック/その他 | 有望 P2 | 静的実フォーム (HTTP 200。input 18。No.43と同系・その他宛。`gender`・`age`・`title` 欄が特徴。同機構3件目のためP2) |
+| 46 | https://www.hulic.co.jp/ir/inquiry/entry | ヒューリック/IR | 有望 P2 | 静的実フォーム (HTTP 200。input 18。No.43と同系・IR宛。同機構4件目のためP2) |
+| 47 | https://mori.webcas.net/form/pub/f008/contact | 森ビル/総合問合せ | 有望 P1 | 静的実フォーム (webcas。input 16。姓/名 `c_q10_first/second`・カナ対 `c_q28`・email確認 `c_q27(_confirm)`・tel 3分割・住所 `c_q29`・`c_q30`。R4-1のcform群と同機構で多様性◎) |
+| 48 | https://mori.webcas.net/form/pub/f006/compliance | 森ビル/取引先通報窓口 | 有望 P2 | 静的実フォーム (webcas。input 23。`c_q*` 系・tel 3分割あり。通報窓口で住所欄は要確認のためP2) |
+| 49 | https://www.hillsform.com/inquiry | 森ビル/ヒルズフォーム | 除外 | ログイン必須 (HTTP 404→`/login?auto_login=1` に転送。会員系導線) |
+| 50 | https://f.msgs.jp/webapp/form/13445_dxt_1080/index.do | 森ビル/問合せStruts | 有望 P2 | 静的実フォーム (HTTP 200「お問い合わせ/Inquires」。Struts Webフォーム、input 6・select 2・textarea 1。R4-1神戸市formと同機構。欄小さめのためP2) |
+| 51 | https://www.sacravia.co.jp/contact/form.html | 森ビルグループ/サクラビア | 除外 | 到達不能 (HTTP 503。formなし) |
+| 52 | https://www.mori-trust.co.jp/contact/ | 森トラスト | 除外 | フォームなし (HTTP 200「お問い合わせ」だが静的formなし。窓口別リンク集で実フォームは外部導線) |
+| 53 | https://mt-rs.co.jp/contact/ | 森トラスト・レジデンシャルサービス | 除外 | フォームなし (HTTP 200だが静的formなし。案内頁) |
+| 54 | https://www.mori-trust.co.jp/business/contact/ | 森トラスト/事業 | 除外 | 到達不能 (HTTP 200だが実体は404頁。formなし。URL推測の失敗) |
+| 55 | https://openhouse-group.co.jp/support/contact.html | オープンハウスG/顧客相談窓口 | 有望 P1 | 静的実フォーム (HTTP 200。`action=https://reg18.smp.ne.jp/regist/Reg2` のSMP直結、input 54。`family_name/given_name`・カナ対・`zip_code`・都道府県 `prefecture`・`street`・`phone_number`・email・`inquiry_text`。命名素直で多様性◎) |
+| 56 | https://openhouse-group.co.jp/ir/ircontact/ | オープンハウスG/IR | 除外 | フォームなし (HTTP 200だが静的formなし。IR問合せは別導線とみられる) |
+| 57 | https://ohd.openhouse-group.com/contact/ | オープンハウス・ディベロップメント | 除外 | 到達不能 (HTTP 404 NotFound頁。formなし) |
+| 58 | https://www.op-house.com/contact/ | オープンハウス(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 59 | https://mirarth.co.jp/contact/ | MIRARTHホールディングス | 有望 P2 | 静的実フォーム (HTTP 200。input 9。`name`・`namekana`・`tel`・`email`・`company`・`department`。欄小さめのためP2) |
+| 60 | https://mirarth.co.jp/ir/contact/ | MIRARTH/IR | 除外 | フォームなし (HTTP 200だが静的form 2件は `action=/search/` の検索のみ) |
