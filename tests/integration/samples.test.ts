@@ -330,7 +330,6 @@ describe('sample forms end to end', () => {
   it('mailform.html fills the in-scope fields', async () => {
     expect(await planFor('mailform.html')).toEqual(expectedFor('mailform.html'));
   });
-  });
   it('opinion-html.html fills the in-scope fields', async () => {
     expect(await planFor('opinion-html.html')).toEqual(expectedFor('opinion-html.html'));
   });
@@ -366,5 +365,8 @@ describe('sample forms end to end', () => {
   });
   it('tonami-luggage-form.html fills the in-scope fields', async () => {
     expect(await planFor('tonami-luggage-form.html')).toEqual(expectedFor('tonami-luggage-form.html'));
+  });
+  it('contact.html fills the in-scope fields', async () => {
+    expect(await planFor('contact.html')).toEqual(expectedFor('contact.html'));
   });
 });
