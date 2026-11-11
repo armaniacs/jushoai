@@ -15,3 +15,4 @@
 | 5 | https://www.tokyu-land.co.jp/form/contact/ | 成功 | tokyu-land-contact-form.html (10 controls。1行1dl構造を復元。honest pin: 市区町村は都道府県付き連結値、番地・建物名→building、zip・email確認2欄解決; q・pref は未分類/warn) |
 | 6 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 成功 | kobe-city-contact-form.html (9 controls + 居住区select実選択肢復元。honest pin: フリガナのみ解決、他は未分類。最も thin な1欄fixture) |
 | 7 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 成功 | epson-csr-form.html (20 controls + 都道府県select実選択肢復元。honest pin: citycode 2欄のみ解決、他はコード化名で未分類) |
+| 8 | https://webform.ricoh.com/form/pub/e00103/risb | 成功 | ricoh-risb-form.html (7 controls。epson と同 cform 系。honest pin: citycode 1欄のみ解決、他は未分類) |

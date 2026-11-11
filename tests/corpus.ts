@@ -847,6 +847,23 @@ const LEDGER = {
       'wcf5start (submit): action element, never a fill target (exclude)',
     ],
   },
+  'ricoh-risb-form.html': {
+    expected: {
+      // Same cform family as epson-csr-form: coded names, no labels, so only
+      // the citycode name reads as city.
+      'c_q3_citycode': '千代田区',
+    },
+    excluded: [
+      'c_q1_first/second (text): お名前 姓/名 with no label or placeholder signal, stay unclassified (LLM fallback)',
+      'c_q70/_confirm (text): メールアドレス確認再入力, stay unclassified (LLM fallback; coded-name email fields)',
+      'c_q3_areacode/subscribercode (text): 電話番号 outer parts, stay unclassified (LLM fallback)',
+      '__pid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__pageId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'c_q4 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'wcf5start (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

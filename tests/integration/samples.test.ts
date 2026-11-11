@@ -246,4 +246,7 @@ describe('sample forms end to end', () => {
   it('epson-csr-form.html fills the in-scope fields', async () => {
     expect(await planFor('epson-csr-form.html')).toEqual(expectedFor('epson-csr-form.html'));
   });
+  it('ricoh-risb-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ricoh-risb-form.html')).toEqual(expectedFor('ricoh-risb-form.html'));
+  });
 });
