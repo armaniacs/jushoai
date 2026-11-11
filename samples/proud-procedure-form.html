@@ -1,0 +1,45 @@
+<!-- Minimal reproduction of https://www.proud-web.jp/module/inquiry/procedureForm.xphp. Values stripped; trim further before committing. -->
+<form>
+      <input name="consumer_number" id="consumer_number" type="text" value="" placeholder="例：12345678">
+      <input name="company" id="company" type="text" value="" placeholder="例：野村不動産株式会社">
+      <label for="last_name">姓</label>
+      <input name="last_name" id="last_name" type="text" value="" placeholder="例：野村" maxlength="45">
+      <label for="first_name">名</label>
+      <input name="first_name" id="first_name" type="text" value="" placeholder="例：太郎" maxlength="45">
+      <input name="last_name_new" id="last_name_new" type="text" value="" placeholder="例：野村" maxlength="45">
+      <input name="first_name_new" id="first_name_new" type="text" value="" placeholder="例：太郎" maxlength="45">
+      <label for="zip_code">郵便番号</label>
+      <input name="zip_code" id="zip_code" type="text" value="" placeholder="例：1058341" maxlength="7">
+      <select name="pref_name" id="prefectures_name"><option value="">--</option></select>
+      <input name="address1" id="city_name" type="text" value="" placeholder="例：港区" maxlength="30">
+      <input name="address2" id="town_name" type="text" value="" placeholder="例：芝浦" maxlength="100">
+      <label for="address3">アパート・マンション名（該当する方はこちらにご入力ください。）</label>
+      <input name="address3" id="address3" type="text" value="" placeholder="例：1-1-1-101" maxlength="75">
+      <input name="address4" id="address4" type="text" value="" placeholder="例：プラウド○○" maxlength="150">
+      <label for="zip_code_new">郵便番号</label>
+      <input name="zip_code_new" id="zip_code_new" type="text" value="" placeholder="例：1058341" maxlength="7">
+      <select name="pref_name_new" id="prefectures_name_new"><option value="">--</option></select>
+      <input name="address1_new" id="city_name_new" type="text" value="" placeholder="例：港区" maxlength="30">
+      <input name="address2_new" id="town_name_new" type="text" value="" placeholder="例：芝浦" maxlength="100">
+      <label for="address3_new">アパート・マンション名（該当する方はこちらにご入力ください。）</label>
+      <input name="address3_new" id="address3_new" type="text" value="" placeholder="例：1-1-1-101" maxlength="75">
+      <input name="address4_new" id="address4_new" type="text" value="" placeholder="例：プラウド○○" maxlength="150">
+      <input name="tel_num" id="tel_num" type="text" value="" placeholder="例：0312345678">
+      <input name="tel_num_new" id="tel_num_new" type="text" value="" placeholder="例：0312345678">
+      <input name="email" id="email" type="text" value="" placeholder="例：proud@nomura-re.co.jp">
+      <input name="email_new" id="email_new" type="text" value="" placeholder="例：proud@nomura-re.co.jp">
+<!-- skip: sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: is_domestic (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: is_domestic (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: search_address (button): action element, never a fill target (exclude) -->
+<!-- skip: is_domestic_new (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: is_domestic_new (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: search_address_new (button): action element, never a fill target (exclude) -->
+<!-- skip: about_reply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: about_reply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: personal (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: FormAssist_submit (button): action element, never a fill target (exclude) -->
+</form>

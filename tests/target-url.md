@@ -82,3 +82,4 @@
 - https://reg18.smp.ne.jp/regist/is?SMPFORM=ocnd-ldlirf-9c66cded2761f122279b692570e8a021 → smp-openhouse-inquiry.html
 - https://residence.sumitomo-latour.jp/inquiry/ → sumitomo-latour-inquiry.html
 - https://sumifu-step-form.spiral-site.com/otoiawase → sumifu-step-otoiawase.html
+- https://www.proud-web.jp/module/inquiry/procedureForm.xphp → proud-procedure-form.html

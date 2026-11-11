@@ -2792,6 +2792,50 @@ const LEDGER = {
       'session (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'proud-procedure-form.html': {
+    expected: {
+      // プラウド住所変更・発送停止 (旧・新の対照型)。label 姓/名は素直に分割。
+      'last_name': '山田',
+      'first_name': '太郎',
+      'last_name_new': '山田',
+      'first_name_new': '太郎',
+      // email は placeholder 例：proud@nomura-re.co.jp で解決 (type=text)。
+      'email': 'yamada@example.com',
+      'email_new': 'yamada@example.com',
+      // 旧・新の郵便2欄は 3+4 分割対に載る (honest pin。新旧対照の誤結合が候補)。
+      'zip_code': '100',
+      'zip_code_new': '0001',
+      // 住所4行×旧新は refine の行分割に載る (honest pin)。
+      'address1': '#123 Central Apartment',
+      'address1_new': '#123 Central Apartment',
+      'address2': '千代田ビル101',
+      'address2_new': '千代田ビル101',
+      'address3': '千代田区千代田1-1',
+      'address3_new': '千代田区千代田1-1',
+      'address4': '千代田区千代田1-1',
+      'address4_new': '千代田区千代田1-1',
+    },
+    excluded: [
+      'consumer_number (text): お客様番号 placeholder 例：12345678, no profile value, correctly unfilled',
+      'company (text): placeholder 例：野村不動産株式会社, stays unclassified (LLM fallback; company-by-placeholder candidate)',
+      'tel_num/tel_num_new (text): placeholder 例：0312345678, stay unclassified (LLM fallback; tel-by-name/placeholder candidate)',
+      'pref_name/pref_name_new (select): only a `--` option, correctly warn-no-option',
+      'sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'sub_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'is_domestic (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'is_domestic (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'search_address (button): action element, never a fill target (exclude)',
+      'is_domestic_new (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'is_domestic_new (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'search_address_new (button): action element, never a fill target (exclude)',
+      'about_reply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'about_reply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'personal (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'FormAssist_submit (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
