@@ -378,4 +378,7 @@ describe('sample forms end to end', () => {
   it('6932.html fills the in-scope fields', async () => {
     expect(await planFor('6932.html')).toEqual(expectedFor('6932.html'));
   });
+  it('kit-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('kit-contact-form.html')).toEqual(expectedFor('kit-contact-form.html'));
+  });
 });
