@@ -91,3 +91,23 @@
 | 78 | https://www.isuzu.co.jp/contact/ | 除外 | 到達不能 (いすゞ7202。HTTP 404。静的formは検索のみ。実窓口は `/inquiry/` 別導線) |
 | 79 | https://www.hino.co.jp/contact/ | 除外 | 到達不能 (日野自動車7205。HTTP 404。静的formは検索のみ。実窓口は `/inquiry/` 別導線) |
 | 80 | https://www.mitsubishi-motors.com/jp/contact/ | 除外 | 到達不能 (三菱自動車7211。HTTP 404。静的formは検索のみ) |
+| 81 | https://www.nok.co.jp/contact/ | 除外 | フォームなし (NOK7240。`nokgrp.com` に転送。静的formなし。実フォームは `/contact/*` 別導線) |
+| 82 | https://www.kyb.co.jp/contact/ | 除外 | 到達不能 (KYB7242。HTTP 404) |
+| 83 | https://www.aisin.com/jp/contact/ | 除外 | フォームなし (アイシン7259。HTTP 200ハブ。静的formは検索のみ。実フォームは製品別 contact 別導線) |
+| 84 | https://www.yamaha-motor.co.jp/contact/ | 除外 | 到達不能 (ヤマハ発動機7272。HTTP 404。静的formなし) |
+| 85 | https://www.koito.co.jp/contact/ | 除外 | フォームなし (小糸製作所7276。HTTP 200ハブ。静的formは google検索のみ) |
+| 86 | https://www.exedy.co.jp/contact/ | 除外 | 到達不能 (エクセディ7278。curl失敗・code=000) |
+| 87 | https://www.toyoda-gosei.co.jp/contact/ | 除外 | フォームなし (豊田合成7282。HTTP 200ハブだが静的formなし。実フォームは `/contact/seihin_form/`→No.172で検証) |
+| 88 | https://www.shimano.com/jp/contact/ | 除外 | 到達不能 (シマノ7309。HTTP 403 Access Denied) |
+| 89 | https://www.topcon.co.jp/contact/ | 除外 | フォームなし (トプコン7732。`/contact-us/` 転送のハブ一覧。静的formなし。実フォームは `/contact/*.php` 別導線) |
+| 90 | https://www.olympus.co.jp/contact/ | 除外 | 到達不能 (オリンパス7733。HTTP 404。静的formは検索のみ) |
+| 91 | https://www.hoya.com/contact/ | 除外 | フォームなし (HOYA7741。`hoya.com` トップ転送。静的formは検索のみ。実窓口は `/contact/` 別導線) |
+| 92 | https://www.citizen.co.jp/contact/ | 除外 | フォームなし (シチズン7762。HTTP 200ハブだが静的formなし) |
+| 93 | https://www.menicon.co.jp/contact/ | 除外 | 到達不能 (メニコン7780。HTTP 404。静的formは検索のみ。実窓口は `/contact/` 別導線) |
+| 94 | https://www.itochu.co.jp/ja/contact/ | 除外 | 到達不能 (伊藤忠商事8001。HTTP 404。静的formは検索のみ) |
+| 95 | https://www.marubeni.com/jp/contact/ | 除外 | 到達不能 (丸紅8002。HTTP 404。静的formは検索のみ。実フォームは `/jp/contact_form/`→No.173で検証) |
+| 96 | https://www.toyotsu.co.jp/contact/ | 除外 | 到達不能 (豊田通商8015。curl失敗・code=000) |
+| 97 | https://www.kanematsu.co.jp/contact/ | 除外 | 到達不能 (兼松8020。HTTP 404。静的formは検索のみ。実窓口は `/inquiry` 別導線) |
+| 98 | https://www.mitsui.com/jp/ja/contact/ | 除外 | フォームなし (三井物産8031。HTTP 200ハブ。静的formは検索のみ。実フォームは `form.mitsui.com`→No.174で検証) |
+| 99 | https://www.sumitomocorp.com/ja/jp/contact/ | 除外 | 到達不能 (住友商事8053。HTTP 404。静的formは検索のみ) |
+| 100 | https://www.mitsubishicorp.com/jp/ja/contact/ | 除外 | フォームなし (三菱商事8058。HTTP 200「資料請求」頁だが静的formは検索のみ。実フォームは krs.bz→No.175で検証) |
