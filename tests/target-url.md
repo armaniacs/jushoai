@@ -51,3 +51,4 @@
 - https://www.city.hamamatsu.shizuoka.jp/koho2/kocho/form.html → hamamatsu-kocho-form.html
 - https://com.city.okayama.jp/mailform/inquiry.cgi?so=532dba13cf0d370e939aeb7c15b7805de6a29ab8&ref=https%3A%2F%2Fwww.city.okayama.jp%2Fshisei%2F0000001222.html → okayama-inquiry-form.html
 - https://www.tokyosteel.co.jp/contact/ → tokyo-steel-contact-form.html
+- https://www.taiheiyo-cement.co.jp/contact/ → taiheiyo-cement-contact-form.html

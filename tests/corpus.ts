@@ -1645,6 +1645,36 @@ const LEDGER = {
       'entry (button): action element, never a fill target (exclude)',
     ],
   },
+  'taiheiyo-cement-contact-form.html': {
+    expected: {
+      'name': '山田太郎',
+      'kana': '山田太郎',
+      'email': 'yamada@example.com',
+      'emailConfirm': 'yamada@example.com',
+      'postal': '1000001',
+      'address': '東京都千代田区千代田1-1 千代田ビル101',
+      'tel': '09012345678',
+      'department': '普通科',
+    },
+    excluded: [
+      '_formrun_redirect (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      '(no name/id) (textarea): unaddressable (exclude)',
+      'message (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

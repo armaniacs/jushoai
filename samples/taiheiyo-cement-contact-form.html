@@ -1,0 +1,58 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.taiheiyo-cement.co.jp/contact/
+  (太平洋セメント5233お問い合わせ。form.run).
+  Field names, labels, placeholders, maxlengths, and control kinds mirror the
+  real page. The real page renders each text control twice (desktop input +
+  nameless mobile mirror textarea synced by JS); the fixture keeps the named
+  input only and the mirrors stay documented as skips. gotcha honeypot and
+  its English label are real (CSS-hidden div). The three selects carry the
+  real options (category 8種 / title 31種 / industry 23種).
+-->
+<html lang="ja"><meta charset="utf-8"><title>太平洋セメント お問い合わせ (cement)</title>
+<form>
+      <label for="inquiry-category">カテゴリ必須</label>
+      <select name="category" id="inquiry-category"><option value="">カテゴリを選択してください</option><option value="製品・サービス">製品・サービス</option><option value="研究開発全般">研究開発全般</option><option value="IR情報・決算情報">IR情報・決算情報</option><option value="サステナビリティ・統合報告書">サステナビリティ・統合報告書</option><option value="採用情報">採用情報</option><option value="ニュース">ニュース</option><option value="技術情報誌『CEM'S』">技術情報誌『CEM'S』</option><option value="その他">その他</option></select>
+      <label for="inquiry-title">タイトル必須</label>
+      <select name="title" id="inquiry-title"><option value="">タイトルを選択してください</option><option value="セメント（製品・お取引・出荷場所等）">セメント（製品・お取引・出荷場所等）</option><option value="セメント系固化材">セメント系固化材</option><option value="超高強度繊維補強コンクリート">超高強度繊維補強コンクリート</option><option value="資源製品">資源製品</option><option value="土壌ソリューション">土壌ソリューション</option><option value="高機能材料">高機能材料</option><option value="廃棄物処理サービス">廃棄物処理サービス</option><option value="都市ごみのセメント資源化">都市ごみのセメント資源化</option><option value="ー">ー</option><option value="ー">ー</option><option value="ー">ー</option><option value="ー">ー</option><option value="ー">ー</option><option value="ー">ー</option><option value="ー">ー</option><option value="ポルトランドセメント(普通、早強、超早強、中庸熱、低熱、耐硫酸塩)">ポルトランドセメント(普通、早強、超早強、中庸熱、低熱、耐硫酸塩)</option><option value="ホワイトセメント">ホワイトセメント</option><option value="高炉セメントA種・B種">高炉セメントA種・B種</option><option value="高炉セメントC種">高炉セメントC種</option><option value="普通エコセメント">普通エコセメント</option><option value="シリカフュームプレミックスセメント">シリカフュームプレミックスセメント</option><option value="GRCセメント">GRCセメント</option><option value="セメント系固化材(ジオセット200、ジオセット220シリーズ、ジオセット211、ジオセット248、ジオセット300)">セメント系固化材(ジオセット200、ジオセット220シリーズ、ジオセット211、ジオセット248、ジオセット300)</option><option value="セメント石灰複合系固化材(ジオセット275)">セメント石灰複合系固化材(ジオセット275)</option><option value="防塵型固化材(ジオセット260シリーズ)">防塵型固化材(ジオセット260シリーズ)</option><option value="発塵抑制型固化材(ジオセット280シリーズ)">発塵抑制型固化材(ジオセット280シリーズ)</option><option value="ハードキープ P-310">ハードキープ P-310</option><option value="ハードキープ P-400シリーズ">ハードキープ P-400シリーズ</option><option value="ハードキープ P-500シリーズ">ハードキープ P-500シリーズ</option><option value="ハードキープ P-730">ハードキープ P-730</option><option value="ハードキープ LD">ハードキープ LD</option></select>
+      <label for="inquiry-name">お名前必須</label>
+      <input name="name" id="inquiry-name" type="text" value="" placeholder="全角でお名前をご入力ください">
+      <label for="inquiry-kana">ふりがな必須</label>
+      <input name="kana" id="inquiry-kana" type="text" value="" placeholder="全角ひらがなでお名前をご入力ください">
+      <label for="inquiry-email">メールアドレス必須</label>
+      <input name="email" id="inquiry-email" type="email" value="" placeholder="メールアドレスをご入力ください">
+      <label for="inquiry-email-confirm">メールアドレス（確認用）必須</label>
+      <input name="emailConfirm" id="inquiry-email-confirm" type="email" value="" placeholder="確認用に再度メールアドレスをご入力ください">
+      <label for="inquiry-postal">郵便番号任意</label>
+      <input name="postal" id="inquiry-postal" type="text" value="" placeholder="郵便番号をご入力ください" maxlength="7">
+      <label for="inquiry-address">住所任意</label>
+      <input name="address" id="inquiry-address" type="text" value="" placeholder="住所をご入力ください">
+      <label for="inquiry-tel">電話番号必須</label>
+      <input name="tel" id="inquiry-tel" type="text" value="" placeholder="半角数字で電話番号をご入力ください" maxlength="12">
+      <label for="inquiry-fax">FAX番号任意</label>
+      <input name="fax" id="inquiry-fax" type="text" value="" placeholder="半角数字でFAX番号をご入力ください" maxlength="12">
+      <label for="inquiry-industry">業種必須</label>
+      <select name="industry" id="inquiry-industry"><option value="">業種を選択してください</option><option value="農業">農業</option><option value="漁業">漁業</option><option value="建設">建設</option><option value="食品">食品</option><option value="繊維">繊維</option><option value="紙パ">紙パ</option><option value="化学">化学</option><option value="石油">石油</option><option value="建材">建材</option><option value="鉄鋼">鉄鋼</option><option value="非鉄金属">非鉄金属</option><option value="鋳物製造">鋳物製造</option><option value="機械加工">機械加工</option><option value="自動車">自動車</option><option value="電気・電子">電気・電子</option><option value="電力">電力</option><option value="印刷">印刷</option><option value="商業">商業</option><option value="自治体">自治体</option><option value="コンサルタント">コンサルタント</option><option value="廃棄物中間処理業">廃棄物中間処理業</option><option value="廃棄物収集運搬業">廃棄物収集運搬業</option><option value="その他">その他</option></select>
+      <label for="inquiry-organization">所属会社・団体・学校名必須</label>
+      <input name="organization" id="inquiry-organization" type="text" value="" placeholder="所属会社・団体・学校名をご入力ください">
+      <label for="inquiry-department">所属部署任意</label>
+      <input name="department" id="inquiry-department" type="text" value="" placeholder="所属部署をご入力ください">
+      <label for="_formrun_gotcha">If you are a human, ignore this field</label>
+      <input name="_formrun_gotcha" id="_formrun_gotcha" type="text" value="">
+<!-- skip: _formrun_redirect (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: (no name/id) (textarea): unaddressable (exclude) -->
+<!-- skip: message (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+</form>

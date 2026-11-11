@@ -309,4 +309,7 @@ describe('sample forms end to end', () => {
   it('tokyo-steel-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('tokyo-steel-contact-form.html')).toEqual(expectedFor('tokyo-steel-contact-form.html'));
   });
+  it('taiheiyo-cement-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('taiheiyo-cement-contact-form.html')).toEqual(expectedFor('taiheiyo-cement-contact-form.html'));
+  });
 });
