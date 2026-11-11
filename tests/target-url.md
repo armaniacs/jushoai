@@ -46,3 +46,4 @@
 - https://business.brother.co.jp/public/application/add/113 → brother-inquiry-form.html
 - https://form.kikkoman.co.jp/m/media → kikkoman-media-form.html
 - https://form.kikkoman.co.jp/m/works → kikkoman-works-form.html
+- https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08 → aeon-voice-form.html

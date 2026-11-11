@@ -1,0 +1,40 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08
+  (イオン お客様の声フォーム, Salesforce Visualforce).
+  The 9 in-scope text controls mirror the real page: five JS-mirror backing
+  fields (page:apexForm1:hidden_* — type=text in a display:none form,
+  populated from the visible inputs on submit) plus the four visible inputs
+  (labels carry numeric entities on the real page, decoded here). The
+  form-field-radio group (性別 + 法人/団体/その他) stays skipped per the radio
+  policy even though its options read as gender values (honest pin).
+-->
+<html lang="ja"><meta charset="utf-8"><title>イオン お客様の声フォーム (retail)</title>
+<form>
+      <input name="page:apexForm1:hidden_name" id="page:apexForm1:hidden_name" type="text" value="">
+      <input name="page:apexForm1:hidden_sex" id="page:apexForm1:hidden_sex" type="text" value="">
+      <input name="page:apexForm1:hidden_email" id="page:apexForm1:hidden_email" type="text" value="">
+      <input name="page:apexForm1:hidden_phone" id="page:apexForm1:hidden_phone" type="text" value="">
+      <input name="page:apexForm1:hidden_shop" id="page:apexForm1:hidden_shop" type="text" value="">
+      <label for="name_field">お名前 必須</label>
+      <input name="name_field" id="name_field" type="text" value="" placeholder="イオン　ハナコ" maxlength="20">
+      <label for="email">メールアドレス 必須</label>
+      <input name="email" id="email" type="email" value="" maxlength="50">
+      <label for="phone">電話番号</label>
+      <input name="phone" id="phone" type="text" value="" maxlength="15">
+      <label for="shop">店舗名</label>
+      <input name="shop" id="shop" type="text" value="" maxlength="50">
+<!-- skip: page:apexForm1 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: page:apexForm1:hidden_submitBtn (button): action element, never a fill target (exclude) -->
+<!-- skip: page:apexForm1:hidden_comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: page:apexForm1:hidden_isStoreRequired (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: page:apexForm1:hidden_clientParam (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: com.salesforce.visualforce.ViewState (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: com.salesforce.visualforce.ViewStateVersion (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: com.salesforce.visualforce.ViewStateMAC (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: form-field-checkbox (checkbox): out of scope (skip fixed) -->
+<!-- skip: comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+</form>

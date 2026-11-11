@@ -1388,6 +1388,40 @@ const LEDGER = {
       'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'aeon-voice-form.html': {
+    expected: {
+      // Salesforce mirror fields (type=text in a display:none form,
+      // JS-populated from the visible inputs on submit): the scanner sees
+      // them, so they pin honest too.
+      'page:apexForm1:hidden_name': '山田 太郎',
+      'page:apexForm1:hidden_sex': '女性',
+      'page:apexForm1:hidden_email': 'yamada@example.com',
+      // Undashed here while the visible phone fills dashed (honest pin).
+      'page:apexForm1:hidden_phone': '09012345678',
+      // The イオン ハナコ placeholder infers fullNameKana (same shape as the
+      // kobe singleAnswer(ANSWER2) pin, U+3000 separator kept).
+      'name_field': 'ヤマダ　タロウ',
+      'email': 'yamada@example.com',
+      'phone': '090-1234-5678',
+    },
+    excluded: [
+      'page:apexForm1:hidden_shop (text): 店舗名 mirror, stays unclassified (no profile value for shop)',
+      'shop (text): 店舗名, no profile value, correctly unfilled',
+      'page:apexForm1 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'page:apexForm1:hidden_submitBtn (button): action element, never a fill target (exclude)',
+      'page:apexForm1:hidden_comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'page:apexForm1:hidden_isStoreRequired (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'page:apexForm1:hidden_clientParam (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'com.salesforce.visualforce.ViewState (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'com.salesforce.visualforce.ViewStateVersion (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'com.salesforce.visualforce.ViewStateMAC (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'form-field-checkbox (checkbox): out of scope (skip fixed)',
+      'comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form-field-radio (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
