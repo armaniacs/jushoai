@@ -32,3 +32,23 @@
 | 18 | https://www.kanazawa-u.ac.jp/inquiry | 金沢大学 | 除外 | フォームなし (HTTP 200「大学に関するお問い合わせ &#8211; 金沢大学」。静的form1件はサイト内検索のみ。大学問合せハブ) |
 | 19 | https://www.okayama-u.ac.jp/tp/contact/index.html | 岡山大学 | 除外 | フォームなし (HTTP 200「お問い合わせ - 国立大学法人 岡山大学」。静的form1件はサイト内検索のみ。総合問合せハブ) |
 | 20 | https://www.tuat.ac.jp/contact/ | 東京農工大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧 / お問い合わせ / 国立大学法人 東京農工大学」。静的form1件はサイト内検索のみ。問合せ一覧ハブ) |
+| 21 | https://www.apu.ac.jp/home/contents/contact.html/ | 立命館アジア太平洋大学 | 除外 | フォームなし (HTTP 200「お問い合わせ - 立命館アジア太平洋大学」。静的form2件はサイト内検索のみ。総合問合せハブ) |
+| 22 | https://www.kumamoto-u.ac.jp/contact | 熊本大学 | 除外 | フォームなし (HTTP 200「お問い合わせ一覧 / 熊本大学」。静的form1件はサイト内検索のみ。問合せ一覧リンク集) |
+| 23 | https://www.sophia.ac.jp/jpn/contact/ | 上智大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜上智大学」。静的form1件はサイト内検索のみ。推測パスで到達した問合せハブ) |
+| 24 | https://www.tufs.ac.jp/abouttufs/contactus/contact.html | 東京外国語大学 | 除外 | フォームなし (HTTP 200「問い合わせ先一覧 / キャンパス・お問い合わせ / 大学案内 / 東」。静的formなし。問合せ先一覧) |
+| 25 | https://www.nagasaki-u.ac.jp/ja/contact/ | 長崎大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜長崎大学」。静的form4件はサイト内検索のみ。総合問合せハブ) |
+| 26 | https://www.u-aizu.ac.jp/inquiry/ | 会津大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜会津大学 - University of Aizu」。静的form1件はサイト内検索のみ。問合せハブ) |
+| 27 | https://www.ritsumei.jp/contact/ | 立命館大学 | 除外 | 到達不能 (curl失敗・code=000。https接続失敗 (code=000。再試行・UA変更・http試行でも到達不能。bot遮断の可能性)) |
+| 28 | https://www.nagaokaut.ac.jp/contact/ | 長岡技術科学大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 長岡技術科学大学」。静的formなし。問合せハブ) |
+| 29 | https://www.ynu.ac.jp/inquiry/ | 横浜国立大学 | 除外 | フォームなし (HTTP 200「お問い合わせ - 横浜国立大学」。静的formなし。問合せハブ) |
+| 30 | https://www.kit.ac.jp/contact | 京都工芸繊維大学 | 有望 P2 | 静的実フォーム `toiawase_form` (POST)。問合せ種別radio約20・氏名 `sei/mei`・カナ `sei_kana/mei_kana`・所属 `org/unit`・tel・email確認2欄・本文textarea。住所欄なしのためP2 |
+| 31 | https://www.shibaura-it.ac.jp/inquiry/ | 芝浦工業大学 | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧｜芝浦工業大学」。静的formなし。問合せ先一覧) |
+| 32 | https://www.omu.ac.jp/contact/ | 大阪公立大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 大阪公立大学」。静的formなし。総合問合せハブ) |
+| 33 | https://www.nagoya-cu.ac.jp/inquiry/ | 名古屋市立大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 名古屋市立大学」。静的form1件はサイト内検索のみ。総合問合せハブ) |
+| 34 | https://www.kuis.ac.jp/contact/ | 神田外語大学 | 除外 | 到達不能 (curl失敗・code=000。curl失敗 (code=000。再試行・UA変更でも到達不能。bot遮断の可能性)) |
+| 35 | https://www.kaiyodai.ac.jp/overview/contact/ | 東京海洋大学 | 除外 | フォームなし (HTTP 200「お問合せ / 東京海洋大学について / 国立大学法人 東京海洋大学」。静的formなし。お問合せ案内 (selectは言語切替等)) |
+| 36 | https://www.kyutech.ac.jp/contact/ | 九州工業大学 | 有望 P1 | 静的実フォーム (POST, multipart)。氏名 `name1/2`・カナ `kana1/2`・郵便2分割 `zip1/2`・都道府県select `pref_code`・住所 `address1/2`・tel・email・本文。言語select併設。欄構成豊かで即取込推奨 |
+| 37 | https://www.ocha.ac.jp/about/contact.html | お茶の水女子大学 | 除外 | フォームなし (HTTP 200「お問合せ / お茶の水女子大学」。静的form1件はサイト内検索のみ。お問合せハブ) |
+| 38 | https://www.tus.ac.jp/access/inquiry/ | 東京理科大学 | 除外 | フォームなし (HTTP 200「お問い合わせ｜東京理科大学」。静的form3件はサイト内検索のみ。総合問合せハブ) |
+| 39 | https://www.rikkyo.ac.jp/contact/index.html | 立教大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 立教大学」。静的form2件はサイト内検索のみ。総合問合せハブ) |
+| 40 | https://www.tut.ac.jp/about/overview/contact.html | 豊橋技術科学大学 | 除外 | フォームなし (HTTP 200「お問い合わせ / 豊橋技術科学大学」。静的formなし。問合せハブ) |
