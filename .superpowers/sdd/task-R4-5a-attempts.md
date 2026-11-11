@@ -71,3 +71,23 @@
 | 58 | https://www.city.hamamatsu.shizuoka.jp/voice/index.html | 除外 | フォームなし (HTTP 200。No.52と同一内容「ご意見・お問い合わせ」。静的formはページレビューradioのみ) |
 | 59 | https://www.city.nagoya.jp/about/1017974.html | 除外 | フォームなし (HTTP 200「ご意見・お問い合わせ」。静的formは検索のみ。問合せは担当課別導線) |
 | 60 | https://www.city.nagoya.jp/kurashi/index.html | 除外 | フォームなし (HTTP 200「くらし・手続き」。静的formは検索のみ) |
+| 61 | https://www.city.nagoya.jp/about/1045105.html | 除外 | フォームなし (HTTP 200「質問する」。静的formは検索のみ) |
+| 62 | https://www.city.kyoto.lg.jp/main/site_policy/0000000011.html | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的formはGoogle CSE検索のみ) |
+| 63 | https://www.city.kyoto.lg.jp/templates/pubcomment/0-Curr.html | 除外 | フォームなし (HTTP 200「市民意見の募集」。静的formはGoogle CSE検索のみ) |
+| 64 | https://www.city.kyoto.lg.jp/sogo/page/0000012821.html | 除外 | フォームなし (HTTP 200「京都いつでもコール」。静的formはGoogle CSE検索のみ) |
+| 65 | https://www.call3755.city.kyoto.lg.jp/faq_p/P000.aspx | 除外 | フォームなし (HTTP 200「京都いつでもコール」FAQ。静的formはASP.NETポストバック `__VIEWSTATE/txtKeyword` のFAQ検索のみ。機構を記録) |
+| 66 | https://furusato-kyoto.jp/ | 除外 | JS描画のみ (HTTP 200「京都市ふるさと納税特設サイト」。form actionなし・selectのみ。寄附申込はJS導線) |
+| 67 | https://www.osaka-city-callcenter.jp/faq/index.aspx | 除外 | フォームなし (HTTP 200「大阪市総合コールセンター」FAQ。静的formはASP.NETポストバックのFAQ検索のみ。機構を記録) |
+| 68 | https://www.city.osaka.lg.jp/event/index.html | 除外 | フォームなし (HTTP 200「イベント・観光」。静的formは検索のみ) |
+| 69 | https://s-kantan.jp/city-osaka-u/ | 除外 | 到達不能 (HTTP 404。`apply.e-tumo.jp/city-osaka-u/` に転送されるが同所も404。大阪市の電子申請は別導線) |
+| 70 | https://www.city.sakai.lg.jp/aboutweb/ikenboshu.html | 除外 | フォームなし (HTTP 200「市政・ホームページへのご意見・ご提案」。form・inputなし。意見提出は別導線) |
+| 71 | https://www.city.sakai.lg.jp/aboutweb/banner_boshu.html | 除外 | フォームなし (HTTP 200「バナー広告募集」。form・inputなし) |
+| 72 | https://www.city.sakai.lg.jp/shievent/calendar/list_calendar.html | 除外 | フォームなし (HTTP 200「市イベント情報カレンダー」。form・inputなし) |
+| 73 | https://www.city.sakai.lg.jp/sangyo/nosui/event/nogyosai.html | 除外 | フォームなし (HTTP 200「堺市農業祭」。form・inputなし) |
+| 74 | https://www.city.sakai.lg.jp/kanko/hakubutsukan/unesco/renkei/mukeir8.html | 除外 | フォームなし (HTTP 200「無形文化遺産関連事業」。form・inputなし。セミナー参加者募集の申込は別導線) |
+| 75 | https://www.city.okayama.jp/shisei/0000001222.html | 除外 | フォームなし (HTTP 200「ご意見・ご提案」。静的formはサイト内検索のみ。本体フォームは No.76) |
+| 76 | https://com.city.okayama.jp/mailform/inquiry.cgi?so=532dba13cf0d370e939aeb7c15b7805de6a29ab8&ref=https%3A%2F%2Fwww.city.okayama.jp%2Fshisei%2F0000001222.html | 有望 P1 | 静的実フォーム (HTTP 200「広報広聴課広聴担当へのお問い合わせ」。`action=inquiry.cgi`、input 24・textarea 1。`namae`・`hurigana`・`jyusyo`・`denwa_no`・`fax_no`・`mail/mail2`(確認)・`taitoru`・`naiyou`。岡山市メールフォーム機構。多様性◎) |
+| 77 | https://www.city.okayama.jp/faq/ | 除外 | フォームなし (HTTP 200「よくある質問」。静的formは `txtFaqKey` のFAQ検索のみ) |
+| 78 | https://www.city.hiroshima.lg.jp/living/soudan/1025721/1016736.html | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的formは検索のみ) |
+| 79 | https://www.city.hiroshima.lg.jp/shisei/kouchou/index.html | 除外 | フォームなし (HTTP 200「広聴」。静的formは検索のみ) |
+| 80 | https://www.city.hiroshima.lg.jp/living/soudan/index.html | 除外 | フォームなし (HTTP 200「市民相談」。静的formは検索のみ) |
