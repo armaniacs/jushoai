@@ -252,4 +252,7 @@ describe('sample forms end to end', () => {
   it('kikkoman-website-form.html fills the in-scope fields', async () => {
     expect(await planFor('kikkoman-website-form.html')).toEqual(expectedFor('kikkoman-website-form.html'));
   });
+  it('smp-regist-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('smp-regist-inquiry-form.html')).toEqual(expectedFor('smp-regist-inquiry-form.html'));
+  });
 });

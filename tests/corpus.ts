@@ -891,6 +891,39 @@ const LEDGER = {
       'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'smp-regist-inquiry-form.html': {
+    expected: {
+      // dl/dt/dd rows restore the real headings as nearby (mitsui-reform
+      // shape): name/zip splits resolve, and phone/faxnumber sit under
+      // different dts so the PBI-09 empty-key leftover rule does not group
+      // them — both classify as tel and wantsHyphen fits the undashed value
+      // into maxlength=11 (FAX takes the tel value, same honest shape as
+      // the ff-csr fax pin).
+      'name1': '山田',
+      'name2': '太郎',
+      'postalCode1:a': '100',
+      'postalCode1:t': '0001',
+      'address2': '千代田ビル101',
+      'address3': '東京都千代田区千代田1-1',
+      'phone': '09012345678',
+      'faxnumber': '09012345678',
+      'mail': 'yamada@example.com',
+      'mail:cf': 'yamada@example.com',
+    },
+    excluded: [
+      'kana1/kana2 (text): ふりがな nearby with parenthesized 例 placeholders, stay unclassified (LLM fallback; bare せい/めい resolved in kikkoman, the parens+例 prefix does not)',
+      'address1 (select): 都道府県 nearby with verbatim 名称 options, stays unclassified (LLM fallback; prefecture-select-by-nearby candidate)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'zipcodeBtn (button): action element, never a fill target (exclude)',
+      'content (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'detect (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'smpsk (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

@@ -17,3 +17,5 @@
 | 7 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 成功 | epson-csr-form.html (20 controls + 都道府県select実選択肢復元。honest pin: citycode 2欄のみ解決、他はコード化名で未分類) |
 | 8 | https://webform.ricoh.com/form/pub/e00103/risb | 成功 | ricoh-risb-form.html (7 controls。epson と同 cform 系。honest pin: citycode 1欄のみ解決、他は未分類) |
 | 9 | https://form.kikkoman.co.jp/m/website | 成功 | kikkoman-website-form.html (12 controls + 性別select実選択肢復元。honest pin: 姓/名・せい/めい・tel3分割が解決; タイトル・URL・性別・email確認2欄は未分類) |
+| 10 | https://area31.smp.ne.jp/area/is?SMPFORM=qcrc-mcldsd-95bb156300186458a5d681e60ccadfa&type=ac | 失敗 | 404 (SMPFORM トークン失効。R4-1時は HTTP 200。target-url.md の行は revert 済み。無理せず次へ) |
+| 11 | https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2 | 成功 | smp-regist-inquiry-form.html (13 controls + 都道府県select実選択肢復元。Shift_JIS文字化けplaceholderを復元、dl/dt/dd構造を復元。honest pin: 氏名・zip分割・住所・tel/fax・email確認2欄が解決; ふりがな・都道府県selectは未分類) |

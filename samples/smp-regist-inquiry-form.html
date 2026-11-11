@@ -1,0 +1,59 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2
+  (SMP 資料請求フォーム).
+  Field names, ids, types, maxlengths, and control kinds mirror the real page.
+  The real page is Shift_JIS; the fetcher decoded the 例 placeholders as
+  mojibake, so they are restored here in UTF-8 verbatim. Rows are dl/dt/dd
+  and the scanner reads the dt text as nearby (the split/leftover grouping
+  key), so the headings are kept verbatim (mitsui-reform-catalog-form.html
+  shape). The address1 prefecture options are restored verbatim — option value
+  is the name itself (forum.html shape).
+-->
+<html lang="ja"><meta charset="utf-8"><title>SMP 資料請求フォーム (housing)</title>
+<form>
+<dl>
+<div><dt>お名前</dt><dd>
+      <input name="name1" id="" type="text" value="" placeholder="(例：山田)">
+      <input name="name2" id="" type="text" value="" placeholder="(例：太郎)">
+</dd></div>
+<div><dt>ふりがな</dt><dd>
+      <input name="kana1" id="" type="text" value="" placeholder="(例：やまだ)">
+      <input name="kana2" id="" type="text" value="" placeholder="(例：たろう)">
+</dd></div>
+<div><dt>郵便番号</dt><dd>
+      <input name="postalCode1:a" id="" type="tel" value="" maxlength="3">
+      <input name="postalCode1:t" id="" type="tel" value="" maxlength="4">
+</dd></div>
+<div><dt>都道府県</dt><dd>
+      <select name="address1" id=""><option value="">選択してください</option><option value="北海道">北海道</option><option value="青森県">青森県</option><option value="岩手県">岩手県</option><option value="宮城県">宮城県</option><option value="秋田県">秋田県</option><option value="山形県">山形県</option><option value="福島県">福島県</option><option value="茨城県">茨城県</option><option value="栃木県">栃木県</option><option value="群馬県">群馬県</option><option value="埼玉県">埼玉県</option><option value="千葉県">千葉県</option><option value="東京都">東京都</option><option value="神奈川県">神奈川県</option><option value="新潟県">新潟県</option><option value="富山県">富山県</option><option value="石川県">石川県</option><option value="福井県">福井県</option><option value="山梨県">山梨県</option><option value="長野県">長野県</option><option value="岐阜県">岐阜県</option><option value="静岡県">静岡県</option><option value="愛知県">愛知県</option><option value="三重県">三重県</option><option value="滋賀県">滋賀県</option><option value="京都府">京都府</option><option value="大阪府">大阪府</option><option value="兵庫県">兵庫県</option><option value="奈良県">奈良県</option><option value="和歌山県">和歌山県</option><option value="鳥取県">鳥取県</option><option value="島根県">島根県</option><option value="岡山県">岡山県</option><option value="広島県">広島県</option><option value="山口県">山口県</option><option value="徳島県">徳島県</option><option value="香川県">香川県</option><option value="愛媛県">愛媛県</option><option value="高知県">高知県</option><option value="福岡県">福岡県</option><option value="佐賀県">佐賀県</option><option value="長崎県">長崎県</option><option value="熊本県">熊本県</option><option value="大分県">大分県</option><option value="宮崎県">宮崎県</option><option value="鹿児島県">鹿児島県</option><option value="沖縄県">沖縄県</option></select>
+</dd></div>
+<div><dt>市区町村番地</dt><dd>
+      <input name="address2" id="" type="text" value="" placeholder="(例：千葉県印西市吉田456)">
+</dd></div>
+<div><dt>マンション名・建物名</dt><dd>
+      <input name="address3" id="" type="text" value="">
+</dd></div>
+<div><dt>電話番号 (ハイフンなし)</dt><dd>
+      <input name="phone" id="" type="tel" value="" placeholder="(例：05031124000)" maxlength="11">
+</dd></div>
+<div><dt>FAX番号 (ハイフンなし)</dt><dd>
+      <input name="faxnumber" id="" type="tel" value="" placeholder="(例：0476991215)" maxlength="11">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="mail" id="" type="email" value="" placeholder="(例：sample@XX.co.jp)">
+</dd></div>
+<div><dt>メールアドレス(確認用)</dt><dd>
+      <input name="mail:cf" id="" type="email" value="" placeholder="(例：sample@XX.co.jp)">
+</dd></div>
+</dl>
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: zipcodeBtn (button): action element, never a fill target (exclude) -->
+<!-- skip: content (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: detect (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: smpsk (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: mode (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: submit (submit): action element, never a fill target (exclude) -->
+</form>
