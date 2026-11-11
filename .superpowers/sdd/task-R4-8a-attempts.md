@@ -31,4 +31,24 @@
 | 18 | https://www.kawai-juku.ac.jp/apply/ | 河合塾 | 除外 | フォームなし (申込案内。静的formはサイト内検索のみ) |
 | 19 | https://www.kawai-juku.ac.jp/trial-exam/ | 河合塾 | 除外 | フォームなし (模試案内。検索のみ) |
 | 20 | https://www.kawaijuku.jp/inquiry.html | 河合塾グループ | 除外 | フォームなし (グループ問合せ案内。検索のみ) |
+| 21 | https://www.kawai-trial.jp/ | 河合塾 | 除外 | フォームなし (共通テストトライアルLP) |
+| 22 | https://www.manavis.com/contact/shiryou.php | 河合塾マナビス | 有望 P1 | 静的実フォーム (資料請求入力。氏名・カナ・住所・email確認・学校・学年。多様性◎) |
+| 23 | https://www.manavis.com/contact/taiken.php | 河合塾マナビス | 除外 | 到達先にformなし (taiken.php→トップに転送) |
+| 24 | https://www.manavis.com/contact/top.html | 河合塾マナビス | 除外 | フォームなし (問合せハブ。input2はhidden系のみ) |
+| 25 | https://www2.sundai.ac.jp/yobi/sv/faq/toiawase.html | 駿台予備学校 | 除外 | フォームなし (問合せ先一覧。静的formは検索のみ) |
+| 26 | https://www2.sundai.ac.jp/ap/admission-information-session.html | 駿台 | 除外 | JS描画のみ (size2703・formなし。申込欄はJS生成とみられる) |
+| 27 | https://www2.sundai.ac.jp/yobi/sv/eventsel/index.html | 駿台予備学校 | 除外 | フォームなし (イベント検索3件のみ) |
+| 28 | https://www.zkai.co.jp/home/entry/ | Z会 | 除外 | フォームなし (入会案内。静的formは検索のみ・申込は会員フロー) |
+| 29 | https://www.zkai.co.jp/home/inquiry/ | Z会 | 除外 | フォームなし (同上) |
+| 30 | https://www.zkai.co.jp/high/entry/ | Z会 | 除外 | フォームなし (同上) |
+| 31 | https://www.zkai.co.jp/ca/request-information-form/ | Z会 | 除外 | フォームなし (資料請求案内。検索のみ) |
+| 32 | https://www.zkai.co.jp/el/entry/ | Z会 | 除外 | フォームなし (同上) |
+| 33 | https://www.eikoh.co.jp/eforms/user/app.php?keycode=477_p9cn520by1 | 栄光ゼミナール | 有望 P1 | 静的実フォーム (eforms総合資料請求。氏名・カナ・email・tel・現学校。多様性◎) |
+| 34 | https://www.eikoh.co.jp/eforms/user/app.php?keycode=488_g2914w2klz | 栄光ゼミナール | 有望 P2 | 静的実フォーム (授業体験申込。No.33と同型) |
+| 35 | https://www.eikoh.co.jp/taikendan/ | 栄光ゼミナール | 除外 | フォームなし (合格体験談+検索) |
+| 36 | https://www.shozemi.com/contact/ | 湘南ゼミナール | 有望 P1 | 静的実フォーム (氏名・カナ・住所zip・tel・email・学年・目的。多様性◎) |
+| 37 | https://www.shozemi.com/taiken/ | 湘南ゼミナール | 除外 | フォームなし (体験案内。申込はcontact別導線) |
+| 38 | https://www.kobetsu.co.jp/contact/ | 東京個別指導学院 | 有望 P2 | 要精査 (Next.js SSR。氏名sei/mei・email・tel・学年・radioが静的に存在もform actionなし→JS送信疑いのためP2) |
+| 39 | https://www.kobetsu.co.jp/inquiry/ | 東京個別指導学院 | 有望 P3 | 要精査・予備 (No.38と同系・総合問合せ) |
+| 40 | https://www.kobetsu.co.jp/taiken/ | 東京個別指導学院 | 除外 | フォームなし (合格実績頁。無関係) |
 <!--APPEND-->
