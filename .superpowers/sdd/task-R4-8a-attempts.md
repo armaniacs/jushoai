@@ -51,4 +51,24 @@
 | 38 | https://www.kobetsu.co.jp/contact/ | 東京個別指導学院 | 有望 P2 | 要精査 (Next.js SSR。氏名sei/mei・email・tel・学年・radioが静的に存在もform actionなし→JS送信疑いのためP2) |
 | 39 | https://www.kobetsu.co.jp/inquiry/ | 東京個別指導学院 | 有望 P3 | 要精査・予備 (No.38と同系・総合問合せ) |
 | 40 | https://www.kobetsu.co.jp/taiken/ | 東京個別指導学院 | 除外 | フォームなし (合格実績頁。無関係) |
+| 41 | https://www.kobetsu.co.jp/kansai/ | 関西個別指導学院 | 除外 | フォームなし (地域トップ。formなし) |
+| 42 | https://www.tetsuryokukai.co.jp/pamphlet.html | 鉄緑会 | 除外 | フォームなし (資料請求案内。telリンクのみ) |
+| 43 | https://www.tetsuryokukai.co.jp/inquiry.html | 鉄緑会 | 除外 | 到達不能 (HTTP 404) |
+| 44 | https://www.gakken.co.jp/ja/contact.html | 学研ホールディングス | 除外 | フォームなし (HD問合せハブ。静的formは検索のみ) |
+| 45 | https://www.889100.com/inquiry_tokens/new | 学研教室 | 除外 | フォームなし (教室検索頁。formなし) |
+| 46 | https://www.sozogakuen.co.jp/contact/ | 創造学園 | 除外 | 到達不能 (HTTP 404) |
+| 47 | https://www.waseda-ac.co.jp/inquiry/ | 早稲田アカデミー | 除外 | フォームなし (相談案内。静的formは校舎検索+サイト検索のみ) |
+| 48 | https://www.waseda-ac.co.jp/entrance/ | 早稲田アカデミー | 除外 | フォームなし (入塾案内。同上) |
+| 49 | https://reg.waseda-ac.co.jp/public/application/add/1397 | 早稲田アカデミー | 有望 P1 | 静的実フォーム (申込基盤public/application。input44・ta2・sel11。NY校問合せ・資料請求。多様性◎) |
+| 50 | https://reg.waseda-ac.co.jp/public/application/add/479 | 早稲田アカデミー | 有望 P2 | 静的実フォーム (学習相談予約。同系2件目のためP2) |
+| 51 | https://www.morijuku.com/contact/ | 森塾 | 有望 P1 | 静的実フォーム (氏名・カナ・住所zip/pref・tel・email。多様性◎) |
+| 52 | https://www.morijuku.com/join/freetrial/ | 森塾 | 除外 | フォームなし (体験案内。申込はcontact別導線) |
+| 53 | https://www.jiritsu-red.jp/contact/ | 自立学習RED | 有望 P1 | 静的実フォーム (森塾と同系基盤。氏名・カナ・住所・tel・email。多様性◎) |
+| 54 | https://www.jiritsu-red.jp/fccontact/ | 自立学習RED | 有望 P2 | 静的実フォーム (FC加盟募集。法人・担当者カナ・tel・住所。B2BのためP2) |
+| 55 | https://www.sprix.jp/ | スプリックス | 除外 | 到達不能 (curl code=000。森塾・REDでグループカバー) |
+| 56 | https://www.tomas.co.jp/contact/ | TOMAS | 除外 | フォームなし (問合せハブ。formなし・実フォームはtrial_lesson別導線) |
+| 57 | https://www.tomas.co.jp/contact/request/ | TOMAS | 除外 | フォームなし (同上ハブ) |
+| 58 | https://www.tomas.co.jp/contact/trial_lesson/ | TOMAS | 有望 P1 | 静的実フォーム (Laravel。保護者+生徒氏名カナ・住所pref/city・email・学年。多様性◎) |
+| 59 | https://www.tomas.co.jp/contact/curriculum/ | TOMAS | 除外 | フォームなし (同上ハブ) |
+| 60 | https://meimonkai.co.jp/request/ | 名門会 | 有望 P2 | 静的実フォーム (Formidable。input46・ta1・sel5。項目名item_metaコード化のためP2) |
 <!--APPEND-->
