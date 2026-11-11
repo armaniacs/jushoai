@@ -2644,6 +2644,39 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'aoyama-sagamihara-career.html': {
+    expected: {
+      'field_7341167_sei': '山田',
+      'field_7341167_mei': '太郎',
+      'field_7341168': 'yamada@example.com',
+      'field_7341168_mcon': 'yamada@example.com',
+      // 学部・学科、研究科 reads as the school vocabulary (same as the
+      // ff-csr 勤務先・学校名 pin).
+      'field_7341181': '都立日比谷高校',
+    },
+    excluded: [
+      'field_7341173 (text): 学生番号 / Student ID Number, no profile value, correctly unfilled',
+      'field_7341180 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_7341180 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341180 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341180 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341182 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_7341185 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+      'validated (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

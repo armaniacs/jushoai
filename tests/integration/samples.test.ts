@@ -387,4 +387,7 @@ describe('sample forms end to end', () => {
   it('aoyama-campus-inquiry.html fills the in-scope fields', async () => {
     expect(await planFor('aoyama-campus-inquiry.html')).toEqual(expectedFor('aoyama-campus-inquiry.html'));
   });
+  it('aoyama-sagamihara-career.html fills the in-scope fields', async () => {
+    expect(await planFor('aoyama-sagamihara-career.html')).toEqual(expectedFor('aoyama-sagamihara-career.html'));
+  });
 });

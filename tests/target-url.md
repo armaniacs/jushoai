@@ -78,3 +78,4 @@
 - https://www.kit.ac.jp/contact → kit-contact-form.html
 - https://www.shimane-u.ac.jp/inquiry/1/ → shimane-inquiry-form.html
 - https://business.form-mailer.jp/fms/25b2d0e0137776 → aoyama-campus-inquiry.html
+- https://ssl.form-mailer.jp/fms/08ff74b0839409 → aoyama-sagamihara-career.html
