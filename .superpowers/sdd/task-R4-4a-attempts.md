@@ -191,3 +191,19 @@
 | 178 | https://jp.misumi-ec.com/contents/contact/ | 除外 | フォームなし (ミスミ9962・EC問合せ。HTTP 200だが静的formなし) |
 | 179 | https://www.daiwa-grp.jp/inquiry/ | 除外 | フォームなし (大和証券G8601。HTTP 200ハブ。静的formは検索のみ。実フォームは `/inquiry_other.html`・IR系別導線) |
 | 180 | https://form.jpx.co.jp/webapp/form/18913_lzbb_13/index.do | 有望 P2 | 静的実フォーム (日本取引所G8697・Struts。HTTP 200。input 11・textarea 1・select 2。`singleAnswer(ANSWER*)`・`multiAnswer` コード化。コード化のためP2) |
+| 181 | https://www.tonami.co.jp/contact/luggage/ | 有望 P1 | 静的実フォーム (トナミ運輸9070・Contact Form 7。HTTP 200。input 25・textarea 1・select 1。`company_name_s`・`name-sei`・`name-mei`・`post_code`・`prefectures`・`address1/2`・`phone_number`・`email`確認2欄・同意。住所分割あり。多様性◎) |
+| 182 | https://www.nipponexpress.com/form/ja/corporate_sora/ | 除外 | JS描画のみ (NX-HD9147。HTTP 200だが静的入力欄は `privacy_agree`・honeypot等のみ。実入力欄はJS生成とみられる) |
+| 183 | https://request-form.starflyer.jp/webapp/form/22355_vbhb_2/index.do | 有望 P2 | 静的実フォーム (スターフライヤー9206・Struts。HTTP 200。input 19・select 8。`singleAnswer(ANSWER*)` コード化。コード化のためP2) |
+| 184 | https://form.shochiku.co.jp/form/pub/contact/recruit | 有望 P2 | 静的実フォーム (松竹9601。HTTP 200。input 9・textarea 1・select 1。`c_q*` コード化。コード化のためP2) |
+| 185 | https://f.msgs.jp/webapp/form/10670_kup_774/index.do | 有望 P2 | 静的実フォーム (東映9605・msgs系。HTTP 200。input 18・textarea 1・select 2。`singleAnswer(ANSWER*)`・`multiAnswer` コード化。コード化のためP2) |
+| 186 | https://www.secom.co.jp/contact/shop/ | 除外 | フォームなし (セコム9735。HTTP 200だが静的formは店舗検索selectのみ。実フォームは `portal.secom.co.jp` 等別導線) |
+
+## 集計
+
+- 候補: 186件 (No.1-156 基本 + No.157-186 ハブ頁からのフォーム導線フォロー)
+- 有望: 28件 (P1: 14 / P2: 13 / P3: 1)
+  - P1: No.3, 13, 65, 157, 158, 160, 168, 169, 170, 171, 172, 175, 176, 181
+  - P2: No.73, 138, 159, 162, 163, 164, 167, 174, 177, 180, 183, 184, 185
+  - P3: No.33
+- 除外: 158件 (到達不能404/403等・ハブ頁・JS描画のみ)
+- 重複: tests/target-url.md の44件および R4-1 の183件との完全重複なし (URL照合済み)
