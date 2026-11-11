@@ -16,3 +16,4 @@
 | 6 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 成功 | kobe-city-contact-form.html (9 controls + 居住区select実選択肢復元。honest pin: フリガナのみ解決、他は未分類。最も thin な1欄fixture) |
 | 7 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 成功 | epson-csr-form.html (20 controls + 都道府県select実選択肢復元。honest pin: citycode 2欄のみ解決、他はコード化名で未分類) |
 | 8 | https://webform.ricoh.com/form/pub/e00103/risb | 成功 | ricoh-risb-form.html (7 controls。epson と同 cform 系。honest pin: citycode 1欄のみ解決、他は未分類) |
+| 9 | https://form.kikkoman.co.jp/m/website | 成功 | kikkoman-website-form.html (12 controls + 性別select実選択肢復元。honest pin: 姓/名・せい/めい・tel3分割が解決; タイトル・URL・性別・email確認2欄は未分類) |

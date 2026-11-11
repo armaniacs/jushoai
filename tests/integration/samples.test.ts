@@ -249,4 +249,7 @@ describe('sample forms end to end', () => {
   it('ricoh-risb-form.html fills the in-scope fields', async () => {
     expect(await planFor('ricoh-risb-form.html')).toEqual(expectedFor('ricoh-risb-form.html'));
   });
+  it('kikkoman-website-form.html fills the in-scope fields', async () => {
+    expect(await planFor('kikkoman-website-form.html')).toEqual(expectedFor('kikkoman-website-form.html'));
+  });
 });

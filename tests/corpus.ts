@@ -864,6 +864,33 @@ const LEDGER = {
       'wcf5start (submit): action element, never a fill target (exclude)',
     ],
   },
+  'kikkoman-website-form.html': {
+    expected: {
+      // 姓/名 placeholders split kanji; せい/めい placeholders read hiragana
+      // (same-label path, ois-contact kana-pair shape in hiragana).
+      'e_25020': '山田',
+      'e_25021': '太郎',
+      'e_25022': 'やまだ',
+      'e_25023': 'たろう',
+      // [tel1/2/3] suffix splits like the otsuka tel[1/2/3] precedent.
+      'e_25028[tel1]': '090',
+      'e_25028[tel2]': '1234',
+      'e_25028[tel3]': '5678',
+    },
+    excluded: [
+      'e_25018 (text): お問い合わせタイトル, no profile value, correctly unfilled',
+      'e_26455 (text): page-URL field, no URL fill (PBI-212 website-field exclusion precedent, same as nishimachi field_976)',
+      'e_25042 (select): 性別 options restored verbatim, stays unclassified (LLM fallback; coded-name gender-select candidate — cf. gender-select-form which relies on the sex name/label)',
+      'e_25031/_re (text): type=text with a メールアドレス heading, stay unclassified (LLM fallback; email-via-heading candidate, same as otsuka mail)',
+      'e_25045 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agreement (checkbox): out of scope (skip fixed)',
+      '__send (submit): action element, never a fill target (exclude)',
+      'commit_agreement (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__name (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'gtmkr (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

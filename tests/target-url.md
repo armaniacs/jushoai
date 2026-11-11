@@ -31,3 +31,4 @@
 - https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do → kobe-city-contact-form.html
 - https://cform.epson.jp/form5/pub/e040/1009009009015109731 → epson-csr-form.html
 - https://webform.ricoh.com/form/pub/e00103/risb → ricoh-risb-form.html
+- https://form.kikkoman.co.jp/m/website → kikkoman-website-form.html
