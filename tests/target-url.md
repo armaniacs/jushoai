@@ -40,3 +40,4 @@
 - https://www.tokyu-land.co.jp/form/kojin/ → tokyu-land-kojin-form.html
 - https://www.tokyu-land.co.jp/form/tenant/ → tokyu-land-tenant-form.html
 - https://enquete.benesse.ne.jp/forms/o/we040f7618/form → benesse-inquiry-form.html
+- https://form.mitsui-chintai.co.jp/webapp/form/19959_rndb_66/index.do → mitsui-chintai-inquiry-form.html

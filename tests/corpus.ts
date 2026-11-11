@@ -1180,6 +1180,24 @@ const LEDGER = {
       'is_tablet (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'mitsui-chintai-inquiry-form.html': {
+    expected: {
+      // Only the katakana placeholder resolves (fullNameKana, same as the
+      // kobe singleAnswer(ANSWER2) pin). Everything else rides numbered
+      // Struts headings the scanner never reads.
+      'singleAnswer(ANSWER1862)': 'ヤマダ　タロウ',
+    },
+    excluded: [
+      'singleAnswer(ANSWER1861) (text): お名前 placeholder 例）三井 太郎, stays unclassified (LLM fallback; kanji person-name placeholder does not infer fullName, same as kobe ANSWER1)',
+      'singleAnswer(ANSWER1863) (text): type=text with an email placeholder, stays unclassified (LLM fallback; email-via-placeholder candidate, same as kobe ANSWER3)',
+      'singleAnswer(ANSWER1864) (text): type=text with a phone-number placeholder, stays unclassified (LLM fallback)',
+      'singleAnswer(ANSWER1880) (text): ご希望物件名 placeholder, no profile value, correctly unfilled',
+      'org.apache.struts.taglib.html.TOKEN (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'multiAnswer(ANSWER1860) (checkbox): out of scope (skip fixed)',
+      'singleAnswer(ANSWER1883) (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
