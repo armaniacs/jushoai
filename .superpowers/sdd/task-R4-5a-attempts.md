@@ -31,3 +31,23 @@
 | 18 | https://www.city.chiba.jp/cgi-bin/event_cal/calendar.cgi | 除外 | フォームなし (HTTP 200「イベントカレンダー」。静的formは検索+年月・区selectの絞込のみ。申込欄なし) |
 | 19 | https://www.city.chiba.jp/zaiseikyoku/zaisei/shikin/furusatokihukin.html?top | 除外 | フォームなし (HTTP 200「ふるさと納税お申込み方法」。静的formは検索+ページレビューradioのみ。申込は外部ポータル導線) |
 | 20 | https://www.city.chiba.jp/sogoseisaku/shichokoshitsu/kohokocho/callcenter.html | 除外 | フォームなし (HTTP 200「市役所コールセンター」。静的formは検索+問合せボタン+ページレビューradioのみ) |
+| 21 | https://www.city.sapporo.jp/somu/demaekoza/index.html | 除外 | フォームなし (HTTP 200「出前講座」。静的formは検索+問合せボタンPOSTリンクのみ) |
+| 22 | https://www.city.sapporo.jp/shisetsuannai/index.html | 除外 | フォームなし (HTTP 200「施設案内」。静的formは検索+問合せボタンPOSTリンクのみ) |
+| 23 | https://www.city.sapporo.jp/inuneko/main/event.html | 除外 | フォームなし (HTTP 200「イベント情報」。静的formは検索+問合せボタンPOSTリンクのみ) |
+| 24 | https://www.city.sendai.jp/miyagino-shinko/event/startup.html | 除外 | フォームなし (HTTP 200。体験会案内頁。静的formは検索+問合せボタンPOSTリンクのみ) |
+| 25 | https://www.city.sendai.jp/ninyo/shise/shokuin/saiyo/shikenjoho/index.html | 除外 | フォームなし (HTTP 200「仙台市職員採用情報」。静的formは検索のみ) |
+| 26 | https://www.city.sendai.jp/kikaku-suishin/diversity-event2026.html | 除外 | フォームなし (HTTP 200。イベント案内頁。静的formは検索+問合せボタンPOSTリンクのみ) |
+| 27 | https://www.city.yokohama.lg.jp/city-info/koho-kocho/kocho/teian/index.html | 除外 | フォームなし (HTTP 200「市民からの提案」。静的formは検索のみ。提案は別導線) |
+| 28 | https://www.city.yokohama.lg.jp/city-info/koho-kocho/kocho/public/index.html | 除外 | フォームなし (HTTP 200「パブリックコメント・意見募集」。静的formは検索のみ。意見提出は案件別導線) |
+| 29 | https://shinsei.city.yokohama.lg.jp/cu/141003/ea/residents/portal/home | 除外 | ログイン必須 (HTTP 200「横浜市電子申請・届出システム」。静的formなし、`loginIdTextBox/passwordTextBox` のログイン欄のみ。本文はJS) |
+| 30 | https://www.atrium.city.yokohama.lg.jp/event/ | 除外 | フォームなし (HTTP 200「横浜市役所アトリウム催事案内」。form・inputなし) |
+| 31 | https://www.city.yokohama.lg.jp/faq/index.html | 除外 | フォームなし (HTTP 200「Q＆Aよくある質問集」。静的formは検索のみ) |
+| 32 | https://www.city.yokohama.lg.jp/kocho/teian.html | 除外 | フォームなし (HTTP 200「市民からの提案」(旧URL)。静的formは検索のみ) |
+| 33 | https://www.city.yokohama.lg.jp/kanko-bunka/kanko-event/eventannai/calendar/list_calendar.html | 除外 | フォームなし (HTTP 200「イベントカレンダー」。静的formは検索のみ) |
+| 34 | https://furusato-yokohama.jp/expo2027 | 除外 | JS描画のみ (HTTP 200「横浜市ふるさと納税」。form・inputなし。寄附申込はJS導線) |
+| 35 | https://www.sodai.city.kawasaki.jp/eco/view/kawasaki/top.html | 除外 | フォームなし (HTTP 200「川崎市粗大ごみインターネット受付」トップ。Struts系 `jsessionid` セッション遷移の申込メニューボタン `Form:doCarry/doCollect` 等のみで氏名・住所欄なし。実申込は後段セッション遷移のため静的到達不可。機構を記録) |
+| 36 | https://www.city.kawasaki.jp/kurashi/category/16-24-1-0-0-0-0-0-0-0.html | 除外 | フォームなし (HTTP 200「オンライン手続かわさき」。静的formは検索のみ。手続きは外部システム導線) |
+| 37 | https://www.city.kawasaki.jp/shisei/category/286-0-0-0-0-0-0-0-0-0.html | 除外 | フォームなし (HTTP 200「広聴・パブリックコメント」。静的formは検索のみ) |
+| 38 | https://www.city.kawasaki.jp/kodomo/category/270-0-0-0-0-0-0-0-0-0.html | 除外 | フォームなし (HTTP 200「こどもの相談・手当・助成」。静的formは検索のみ) |
+| 39 | https://tetsuzuki.city.sagamihara.kanagawa.jp/?from=top.life.events | 除外 | JS描画のみ (HTTP 200「相模原市わたしの手続案内」。form・inputなし。手続案内はJS) |
+| 40 | https://www.city.sagamihara.kanagawa.jp/lifeevent/1012104.html | 除外 | フォームなし (HTTP 200「妊娠・出産」。静的formは検索のみ) |
