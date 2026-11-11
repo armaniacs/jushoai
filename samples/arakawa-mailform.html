@@ -1,0 +1,25 @@
+<!-- Minimal reproduction of https://www.library.city.arakawa.tokyo.jp/mailform. Values stripped; trim further before committing. -->
+<form>
+      <label for="textName">お名前</label>
+      <input name="textName" id="textName" type="text" value="" maxlength="20">
+      <label for="textAddress">ご住所</label>
+      <input name="textAddress" id="textAddress" type="text" value="" maxlength="50">
+      <label for="textMail">メールアドレス</label>
+      <input name="textMail" id="textMail" type="text" value="" maxlength="50">
+      <label for="textTel">お電話番号</label>
+      <input name="textTel" id="textTel" type="text" value="" maxlength="13">
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: big (button): action element, never a fill target (exclude) -->
+<!-- skip: middle (button): action element, never a fill target (exclude) -->
+<!-- skip: small (button): action element, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: textMessage (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: groupReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: groupReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: btnConfirm (submit): action element, never a fill target (exclude) -->
+</form>

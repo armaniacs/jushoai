@@ -1891,6 +1891,32 @@ const LEDGER = {
       'totalFileLimit (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'arakawa-mailform.html': {
+    expected: {
+      // 荒川区立図書館お問い合わせ (LiCS系)。氏名/住所/mail/tel が fill。
+      // textAddress は「ご住所」単独 label のため full address の結合値 (honest pin)。
+      'textName': '山田 太郎',
+      'textAddress': '東京都千代田区千代田1-1 千代田ビル101',
+      'textMail': 'yamada@example.com',
+      'textTel': '090-1234-5678',
+    },
+    excluded: [
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'big (button): action element, never a fill target (exclude)',
+      'middle (button): action element, never a fill target (exclude)',
+      'small (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'groupKind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'textMessage (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'groupReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'groupReply (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'btnConfirm (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
