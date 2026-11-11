@@ -1226,6 +1226,28 @@ const LEDGER = {
       'wcf5start (submit): action element, never a fill target (exclude)',
     ],
   },
+  'ricoh-vulnerability-form.html': {
+    // Same cform family as ricoh-risb-form: coded names with table-cell
+    // headings the scanner never reads, so nothing resolves by rule. The
+    // thinnest fixture so far (0 in-scope fills); pinned honest, same shape
+    // as the richell-anketo-rating.html empty-expected precedent.
+    expected: {},
+    excluded: [
+      'c_q73 (text): 会社名, stays unclassified (LLM fallback; coded-name company field)',
+      'c_q74 (text): 組織名, stays unclassified (LLM fallback)',
+      'c_q1_first/second (text): お名前 姓/名 with no label or placeholder signal, stay unclassified (LLM fallback; coded-name person fields)',
+      'c_q10_first/second (text): お名前 ふりがな せい/めい, stay unclassified (LLM fallback; coded-name kana fields)',
+      'c_q70/_confirm (text): メールアドレス確認再入力, stay unclassified (LLM fallback; coded-name email fields)',
+      'c_q41 (select): 製品カテゴリー options restored verbatim, stays unclassified (LLM fallback)',
+      'c_q72 (text): 製品名, stays unclassified (LLM fallback)',
+      '__pid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__pageId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'c_q71 (checkbox): out of scope (skip fixed)',
+      'c_q4 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'wcf5start (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

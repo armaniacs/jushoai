@@ -282,4 +282,7 @@ describe('sample forms end to end', () => {
   it('epson-ir-form.html fills the in-scope fields', async () => {
     expect(await planFor('epson-ir-form.html')).toEqual(expectedFor('epson-ir-form.html'));
   });
+  it('ricoh-vulnerability-form.html fills the in-scope fields', async () => {
+    expect(await planFor('ricoh-vulnerability-form.html')).toEqual(expectedFor('ricoh-vulnerability-form.html'));
+  });
 });
