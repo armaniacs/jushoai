@@ -2272,6 +2272,37 @@ const LEDGER = {
       'recaptchaToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'tonami-luggage-form.html': {
+    expected: {
+      'position': '開発部',
+      'name-sei': '山田',
+      'name-mei': '太郎',
+      'post_code': '100-0001',
+      'prefectures': '東京都',
+      'address1': '東京都千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      'phone_number': '090-1234-5678',
+      'email': 'yamada@example.com',
+      'email_confirm': 'yamada@example.com',
+    },
+    excluded: [
+      '(no name/id) (submit): unaddressable (exclude)',
+      '_wpcf7 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_version (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_locale (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_unit_tag (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_container_post (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_posted_data_hash (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_cf7msm_multistep_tag (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cf7msm-no-ss (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'radio-type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'radio-type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'zip-btn (button): action element, never a fill target (exclude)',
+      'textarea1 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agree (checkbox): out of scope (skip fixed)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

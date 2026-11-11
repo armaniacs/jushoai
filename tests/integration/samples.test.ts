@@ -364,4 +364,7 @@ describe('sample forms end to end', () => {
   it('yoshinoya-store-form.html fills the in-scope fields', async () => {
     expect(await planFor('yoshinoya-store-form.html')).toEqual(expectedFor('yoshinoya-store-form.html'));
   });
+  it('tonami-luggage-form.html fills the in-scope fields', async () => {
+    expect(await planFor('tonami-luggage-form.html')).toEqual(expectedFor('tonami-luggage-form.html'));
+  });
 });

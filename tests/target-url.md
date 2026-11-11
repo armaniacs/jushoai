@@ -70,3 +70,4 @@
 - https://www.toyoda-gosei.co.jp/contact/seihin_form/ → toyoda-gosei-form.html
 - https://krs.bz/toktprf/m/materials_request_ja → mitsubishi-materials-form.html
 - https://www.yoshinoya-holdings.com/contact/storeform/ → yoshinoya-store-form.html
+- https://www.tonami.co.jp/contact/luggage/ → tonami-luggage-form.html
