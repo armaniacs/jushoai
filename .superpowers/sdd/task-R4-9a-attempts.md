@@ -92,3 +92,23 @@
 | 78 | https://www.es-con.co.jp/contact/ | エスコン(www別名) | 除外 | 除外 (HTTP 200だがNo.77と同一内容。重複のため除外) |
 | 79 | https://www.hoosiers.co.jp/contact/ | フージャースHD | 除外 | 到達不能 (HTTP 403 Forbidden・bot遮断) |
 | 80 | https://www.hoosiers.co.jp/inquiry/ | フージャースHD(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 81 | https://www.duo-hills.jp/contact/ | フージャース/デュオヒルズ(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 82 | https://www.meiwaestate.com/contact/ | 明和地所(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。bot遮断またはドメイン異常の可能性) |
+| 83 | https://www.clio-mansion.jp/contact/ | 明和地所/クリオ(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 84 | https://www.fjnext.com/contact/ | FJネクスト(推測) | 除外 | 到達不能 (curl timeout・code=28。bot遮断または応答なし) |
+| 85 | https://www.fjnext.com/inquiry/ | FJネクスト(推測) | 除外 | 到達不能 (同上・code=28) |
+| 86 | https://www.nisshin-group.co.jp/contact/ | 日神G(推測) | 除外 | 到達不能 (HTTP 200だが本文613バイトの空頁。formなし。URL推測の失敗) |
+| 87 | https://www.palestage.jp/contact/ | 日神/パレステージ(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
+| 88 | https://goldcrest.svy.ooo/ng/answers/inquiry_mansion/ | ゴールドクレスト/分譲検討 | 除外 | JS描画のみ (HTTP 200だが静的formなし・input 1のみ。svy.oooはJS描画フォームとみられる) |
+| 89 | https://goldcrest.svy.ooo/ng/answers/inquiry_ir/ | ゴールドクレスト/IR | 除外 | JS描画のみ (同上。静的formなし) |
+| 90 | https://www.goldcrest.co.jp/reserve/kvt/ | ゴールドクレスト/来場予約(推測) | 除外 | 到達不能 (HTTP 404。URL推測の失敗) |
+| 91 | https://www.goldcrest.co.jp/formmail_survey02/contact.html | ゴールドクレスト/旧formmail(推測) | 除外 | 到達不能 (HTTP 404。旧formmailは廃止とみられる) |
+| 92 | https://www.wadakohsan.co.jp/inquiry/ | 和田興産/ワコーレ | 有望 P1 | 静的実フォーム (mw-wp-form。input 16。`your-name`・`your-hurigana`・`your-post-code`・`your-address`・`your-tel`・email確認・`your-company`。命名素直で多様性◎) |
+| 93 | https://www.wadakohsan.co.jp/contact.html | 和田興産(別名) | 除外 | フォームなし (HTTP 200だが `wadakohsan.info` へ転送され静的formなし) |
+| 94 | https://www.wadakohsan.co.jp/investors/information/enq | 和田興産/株主アンケート | 除外 | フォームなし (HTTP 200だが静的formは `google.com/cse` 検索主体。株主アンケートで住所欄なしのため対象外) |
+| 95 | https://www.hankyu-hanshin.co.jp/contact/ | 阪急阪神HD | 除外 | フォームなし (HTTP 200「お問い合わせ」だが静的formなし。グループ各社へのリンク集) |
+| 96 | https://www.hanshin.co.jp/inquiry/ | 阪神電気鉄道 | 除外 | JS描画のみ (HTTP 200だが静的form 2件は乗換/運賃検索、3件目は `action=""` のJS送信。問合せ実体はJSとみられる) |
+| 97 | https://www.hhp.co.jp/inquiry/site/index/ | 阪急阪神不動産 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/inquiry/Site`、input 19。`data[Question][name1/2]`・`kana1/2`・`zip1/2`・`add2-4`・tel 3分割・mail確認・`privacy`。CakePHP系の素直な分割構成で多様性◎) |
+| 98 | https://www.geo.gr.jp/contact/ | 阪急阪神/ジオ(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。geo.gr.jp自体がcurl不通) |
+| 99 | https://www.kintetsu-re.co.jp/contact/ | 近鉄不動産 | 除外 | 到達不能 (HTTP 503「緊急メンテナンスのお知らせ」。調査時点では到達不能) |
+| 100 | https://www.kintetsu-laurel.jp/contact/ | 近鉄/ローレル(推測) | 除外 | 到達不能 (DNS解決失敗・curl code=6。ドメイン推測の失敗) |
