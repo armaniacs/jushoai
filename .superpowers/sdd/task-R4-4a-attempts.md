@@ -171,3 +171,23 @@
 | 158 | https://inquiry.lixil.co.jp/regist/is?SMPFORM=naoj-lctgtj-defd68f97cffa36b3ed5f3bcd2c68ca6&qcat=18 | 有望 P1 | 静的実フォーム (LIXIL5938・SMP。HTTP 200。`action=/regist/Reg2`、input 40・textarea 1・select 3。`company`・`name_sei`・`name_mei`・`kokyaku_sei_kana`・`kokyaku_mei_kana`・`post:a/t`・`pref_name`・`address1-4`・`telephone`・`mail`確認2欄。R4-1のSMP系と同型。多様性◎) |
 | 159 | https://contact01.shi.co.jp/m?f=199 | 有望 P2 | 静的実フォーム (住友重機械6302。HTTP 200。input 15・textarea 1・select 1。`e_19823[zip]`+住所検索・`e_19826/27[tel]`分割あり。項目名コード化のためP2) |
 | 160 | https://global.engine.kubota.co.jp/ja/contact/input.php?fid=01 | 有望 P1 | 静的実フォーム (クボタ6326エンジン事業部。HTTP 200。`action=confirm.php`、input 32・textarea 1・select 2。`last_name`・`last_kana`・`zipCode`・`pref_name`・`address`・`phone`・`email`確認2欄・`companyName`・`department`。g-recaptcha併設だが静的。多様性◎) |
+| 161 | https://form.run/@amano-request-j-form | 除外 | JS描画のみ (アマノ6436・form.run。HTTP 200だが静的formは `authenticity_token` のみ。実入力欄はJS生成とみられる) |
+| 162 | https://www.juki.co.jp/industrial_j/contact_j/contact_form.php | 有望 P2 | 要精査 (JUKI6440・工業用ミシン。HTTP 200。input 24・textarea 1・select 7。`contact_category`・`country`・`company_name`・`company_kana`・`name1` ほか。`action` なし=JS送信の可能性あり。取込時確認のためP2) |
+| 163 | https://form.glory.co.jp/webapp/form/20383_zdeb_12/index.do?p=1 | 有望 P2 | 静的実フォーム (グローリー6457・Struts。HTTP 200。input 23・textarea 1・select 4。`singleAnswer(ANSWER*)` コード化。R4-1のStruts系と同型。コード化のためP2) |
+| 164 | https://webcomms.segasammy.co.jp/contact/ja | 有望 P2 | 静的実フォーム (セガサミーHD6460。HTTP 200。input 15・textarea 1・select 2。`f01-08`・`f09`確認2欄・`f013` ほかコード化。コード化のためP2) |
+| 165 | https://www.jtekt.co.jp/support/contact.html | 除外 | フォームなし (ジェイテクト6473。HTTP 200ハブ。静的formは検索のみ。実フォームは `contact_pro1_1.html` 等別導線) |
+| 166 | https://www.fuji.co.jp/ir/individual/form/input.html | 除外 | フォームなし (FUJI6504・IR窓口。HTTP 200だが静的formは検索のみ) |
+| 167 | https://inquiry-fec-form.spiral-site.com/ir | 有望 P2 | 静的実フォーム (古河電工5801・IR。HTTP 200。input 16・textarea 1・select 1。`f01-f013` コード化+`__conf`。spiral-site系。コード化のためP2) |
+| 168 | https://form.azbil.com/form/pub/contact/kikubari_contact | 有望 P1 | 静的実フォーム (アズビル6845・きくばり資料請求。HTTP 200。input 100・textarea 1・select 1。氏名分割 `c_q1_first/second`・`c_q2`・郵便 `c_q3`+住所検索・`c_q8_areacode` tel分割・`email`確認。R4-1のリコー系と同型。多様性◎) |
+| 169 | https://www.keyence.co.jp/inquiry/askKeyence/ | 有望 P1 | 静的実フォーム (キーエンス6861。HTTP 200。input 80・textarea 1・select 4。`lastName`・`firstName`・`emailAddress`・`companyName`・`zipCode`・`stateID`・`address1/2`・`department`・`phoneNumber`。一部enqコード化あるが住所分割あり。多様性◎) |
+| 170 | https://www.sysmex.co.jp/contact/input?inquiry_type=1 | 有望 P1 | 静的実フォーム (シスメックス6869。HTTP 200。`action=/contact/input`、input 19・textarea 1・select 1。`name`・`name_furigana`・`zip`・`pref`・`city`・`building`・`tel`・`fax`・`email`。住所分割あり。多様性◎) |
+| 171 | https://reg34.smp.ne.jp/regist/is?SMPFORM=pfsd-lgqblb-eadedf16d2d1b0d8725c37ca6ad1a2e6 | 有望 P1 | 静的実フォーム (レーザーテック6920・SMP。HTTP 200。`action=/regist/Reg2`、input 18・textarea 1・select 2。`seiName`・`meiName`・カナ・`company`・`post:a/t`・`pref`・`address`・`phone:a`。R4-1のSMP系と同型。多様性◎) |
+| 172 | https://www.toyoda-gosei.co.jp/contact/seihin_form/ | 有望 P1 | 静的実フォーム (豊田合成7282・自動車部品。HTTP 200。input 14・textarea 1。`matter`・`name`・`name2`・`company`・`affiliation`・`zip1/2`・`adr1`・`tel`・`fax`・`email`。郵便2分割あり。多様性◎) |
+| 173 | https://www.marubeni.com/jp/contact_form/ | 除外 | フォームなし (丸紅8002。HTTP 200だが静的formは検索のみ。実フォームは `f.msgs.jp` 別導線) |
+| 174 | https://form.mitsui.com/webapp/form/16694_csy_1/index.do | 有望 P2 | 静的実フォーム (三井物産8031・Struts。HTTP 200。input 24・textarea 1・select 1。`singleAnswer(ANSWER*)`・`multiAnswer` コード化。コード化のためP2) |
+| 175 | https://krs.bz/toktprf/m/materials_request_ja | 有望 P1 | 静的実フォーム (三菱商事8058・資料請求。HTTP 200。input 28。tel 3分割×2組 `e_8564/65[tel1/2/3]`・`e_8561[zip1]`・`e_8556`確認2欄。外資系フォーム基盤だが住所・電話分割あり。多様性◎) |
+| 176 | https://www.yoshinoya-holdings.com/contact/storeform/ | 有望 P1 | 静的実フォーム (吉野家HD9861・店舗意見。HTTP 200。input 14・textarea 1。`name`・`kana`・`zip1/2`・`pref`・`address`・`tel`・`mail`・`store_brand`・`store_name`。郵便2分割あり。多様性◎) |
+| 177 | https://reg34.smp.ne.jp/regist/is?SMPFORM=oepa-leqgpb-aec99e58f753abc2fb514bdb407d4aab | 有望 P2 | 静的実フォーム (イエローハット9882・SMP。HTTP 200。input 13・textarea 1・select 1。`inquiryCategory`・`name`・`mail`確認2欄・`phone1`・`request`。住所欄なしのためP2。文字化けあるが欄構造明確) |
+| 178 | https://jp.misumi-ec.com/contents/contact/ | 除外 | フォームなし (ミスミ9962・EC問合せ。HTTP 200だが静的formなし) |
+| 179 | https://www.daiwa-grp.jp/inquiry/ | 除外 | フォームなし (大和証券G8601。HTTP 200ハブ。静的formは検索のみ。実フォームは `/inquiry_other.html`・IR系別導線) |
+| 180 | https://form.jpx.co.jp/webapp/form/18913_lzbb_13/index.do | 有望 P2 | 静的実フォーム (日本取引所G8697・Struts。HTTP 200。input 11・textarea 1・select 2。`singleAnswer(ANSWER*)`・`multiAnswer` コード化。コード化のためP2) |
