@@ -151,3 +151,23 @@
 | 138 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=ed02503e1fc8cf0ba77096f75542f896 | 除外 | 到達不能 (同上・エラー画面) |
 | 139 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 有望 P1 | 静的実フォーム (HTTP 200「神戸市：お問い合わせフォーム」。Struts Webフォーム、text 8・checkbox 5・textarea・select。自治体。多様性◎) |
 | 140 | https://www.city.kobe.lg.jp/a06814/kurashi/registration/application.html | 除外 | フォームなし (HTTP 200「電子申請」案内頁。静的formは検索のみ) |
+| 141 | https://www.city.kobe.lg.jp/a63551/kurashi/sodan/window/siminsoudan01/index.html | 除外 | フォームなし (HTTP 200「市民相談室」案内頁。静的formは検索のみ) |
+| 142 | https://www.city.kobe.lg.jp/a57337/toiawase/callrecording.html | 除外 | フォームなし (HTTP 200「通話録音方針」説明頁。静的formは検索+hiddenのみ) |
+| 143 | https://enquete.benesse.ne.jp/forms/o/we040f7618/form | 有望 P2 | 静的実フォーム (HTTP 200「ベネッセコーポレーションへのお問い合わせ」。input 28・textarea・select。項目名は `q01001001` 等コード化。教育系。多様性○) |
+| 144 | https://form.mitsui-chintai.co.jp/webapp/form/19959_rndb_66/index.do | 有望 P2 | 静的実フォーム (HTTP 200「パークアクシスお問合せ」。Struts Webフォーム、text 5・checkbox・textarea。賃貸不動産。多様性○) |
+| 145 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 有望 P1 | 静的実フォーム (HTTP 200「CSR・環境活動お問い合わせ」。`c_q` 系19欄・郵便3分割 `areacode/citycode/subscribercode`・住所検索ボタン・select・textarea。メーカー。多様性◎) |
+| 146 | https://cform.epson.jp/form5/pub/e040/3009009007012109727 | 有望 P2 | 静的実フォーム (HTTP 200「IRお問い合わせ」。No.145と同型cform) |
+| 147 | https://www.epson-tcform.co.jp/ja/ | 除外 | フォームなし (HTTP 200だが企業情報頁。formなし) |
+| 148 | https://enq.konicaminolta.com/n/form/yjlb/365Lbza7mEsxhGmFJFxAV | 除外 | フォームなし (HTTP 200だが「サステナビリティについて」無関係頁に転送。formなし。enqトークン失効とみられる) |
+| 149 | https://enq.konicaminolta.com/n/form/yjlb/Fxe2avU65Uk8xbfJCyUzh | 除外 | フォームなし (HTTP 200だが「光学製品」無関係頁に転送。formなし。同上) |
+| 150 | https://www.konicaminolta.com/jp-ja/explainablekansei/contact/form/ | 除外 | 到達不能 (HTTP 403。本文なし) |
+| 151 | https://webform.ricoh.com/form/pub/e00103/risb | 有望 P1 | 静的実フォーム (HTTP 200「リコー経済社会研究所問合せ」。氏名分割 `c_q1_first/second`・email確認2欄・tel 3分割・textarea。メーカー系シンクタンク。多様性◎) |
+| 152 | https://webform.ricoh.com/form/pub/e00134/vulnerability_inq | 有望 P2 | 静的実フォーム (HTTP 200「脆弱性お問い合わせ」。No.151と同系+select。セキュリティ窓口) |
+| 153 | https://www.ricoh.co.jp/contact/pro-mail | 除外 | フォームなし (HTTP 200「メールでのお問い合わせ」案内頁。form actionなし・inputなし) |
+| 154 | https://jp.ricoh.com/about/request | 除外 | フォームなし (HTTP 200「企業紹介映像・冊子」案内頁。入力欄なし) |
+| 155 | https://business.brother.co.jp/public/application/add/113 | 有望 P2 | 静的実フォーム (HTTP 200「ブラザーWEBお問い合わせ」。input 77・radio 46・checkbox 11・textarea 2・select 3。項目名はコード化だが大規模。メーカーB2B。多様性○) |
+| 156 | https://form.kikkoman.co.jp/m/website | 有望 P1 | 静的実フォーム (HTTP 200。tel 3分割 `e_25028[tel1/2/3]`・email確認2欄・textarea・select。食品メーカー。多様性◎) |
+| 157 | https://form.kikkoman.co.jp/m/media | 有望 P2 | 静的実フォーム (HTTP 200「取材お問い合わせ」。No.156と同系・tel 3分割あり。報道向け) |
+| 158 | https://form.kikkoman.co.jp/m/works | 有望 P2 | 静的実フォーム (HTTP 200「採用お問い合わせ」。No.156と同系・tel 3分割あり) |
+| 159 | https://customer.kikkoman.co.jp/hc/ja/requests/new?ticket_form_id=4415358851993 | 除外 | 到達不能 (HTTP 403相当・Cloudflare "Just a moment"。bot遮断) |
+| 160 | https://www.kikkoman.co.jp/mail/ | 除外 | フォームなし (HTTP 200「メールマガジン登録」案内頁。静的formは検索のみ) |
