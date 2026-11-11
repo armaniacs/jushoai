@@ -2677,6 +2677,42 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'smp-openhouse-inquiry.html': {
+    expected: {
+      // 住友不動産 SMP オープンハウス系。label 結合なし・name 語彙のみで分類。
+      'name': '山田 太郎',
+      'name_kana': 'ヤマダ タロウ',
+      'phone:a': '090',
+      'phone:e': '1234',
+      'phone:n': '5678',
+      'zipcode:a': '100',
+      'zipcode:t': '0001',
+      'address': '東京都千代田区千代田1-1 千代田ビル101',
+      // department は学校の学科に載り普通科が入る (honest pin。部署語彙が候補)。
+      'department': '普通科',
+    },
+    excluded: [
+      'contact (select): only a `--` option, correctly warn-no-option',
+      'todofuken (select): only a `--` option, correctly warn-no-option',
+      'mail/mail:cf (text): type=text named mail with no email signal, stay unclassified (LLM fallback; email-via-name candidate, same as otsuka mail)',
+      'company (text): bare company name with no label association, stays unclassified (LLM fallback; company-by-name candidate)',
+      'facility (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'facility (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'facility (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'facility (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'gender (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'gender (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'gender (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'gender (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'privacy (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'detect (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

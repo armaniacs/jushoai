@@ -390,4 +390,7 @@ describe('sample forms end to end', () => {
   it('aoyama-sagamihara-career.html fills the in-scope fields', async () => {
     expect(await planFor('aoyama-sagamihara-career.html')).toEqual(expectedFor('aoyama-sagamihara-career.html'));
   });
+  it('smp-openhouse-inquiry.html fills the in-scope fields', async () => {
+    expect(await planFor('smp-openhouse-inquiry.html')).toEqual(expectedFor('smp-openhouse-inquiry.html'));
+  });
 });
