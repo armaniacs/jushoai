@@ -352,4 +352,7 @@ describe('sample forms end to end', () => {
   it('sysmex-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('sysmex-contact-form.html')).toEqual(expectedFor('sysmex-contact-form.html'));
   });
+  it('lasertec-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('lasertec-inquiry-form.html')).toEqual(expectedFor('lasertec-inquiry-form.html'));
+  });
 });

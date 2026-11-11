@@ -66,3 +66,4 @@
 - https://form.azbil.com/form/pub/contact/kikubari_contact → azbil-kikubari-form.html
 - https://www.keyence.co.jp/inquiry/askKeyence/ → keyence-inquiry-form.html
 - https://www.sysmex.co.jp/contact/input?inquiry_type=1 → sysmex-contact-form.html
+- https://reg34.smp.ne.jp/regist/is?SMPFORM=pfsd-lgqblb-eadedf16d2d1b0d8725c37ca6ad1a2e6 → lasertec-inquiry-form.html

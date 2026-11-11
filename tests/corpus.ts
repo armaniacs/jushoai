@@ -2172,6 +2172,33 @@ const LEDGER = {
       '_Token[unlocked] (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'lasertec-inquiry-form.html': {
+    expected: {
+      'seiName': '山田',
+      'meiName': '太郎',
+      'seiNameKana': 'ヤマダ',
+      'meiNameKana': 'タロウ',
+      'department': '普通科',
+      'post:a': '100',
+      'post:t': '0001',
+      'pref': '東京都',
+      'address': '千代田区',
+      'address2': '千代田ビル101',
+      'address3': 'Long Island City',
+      'phone:a': '090',
+      'phone:e': '1234',
+      'phone:n': '5678',
+      'mail': 'yamada@example.com',
+    },
+    excluded: [
+      '(no name/id) (button): unaddressable (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'detect (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submit (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
