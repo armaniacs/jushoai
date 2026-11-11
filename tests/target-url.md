@@ -80,3 +80,4 @@
 - https://business.form-mailer.jp/fms/25b2d0e0137776 → aoyama-campus-inquiry.html
 - https://ssl.form-mailer.jp/fms/08ff74b0839409 → aoyama-sagamihara-career.html
 - https://reg18.smp.ne.jp/regist/is?SMPFORM=ocnd-ldlirf-9c66cded2761f122279b692570e8a021 → smp-openhouse-inquiry.html
+- https://residence.sumitomo-latour.jp/inquiry/ → sumitomo-latour-inquiry.html

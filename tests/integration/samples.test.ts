@@ -393,4 +393,7 @@ describe('sample forms end to end', () => {
   it('smp-openhouse-inquiry.html fills the in-scope fields', async () => {
     expect(await planFor('smp-openhouse-inquiry.html')).toEqual(expectedFor('smp-openhouse-inquiry.html'));
   });
+  it('sumitomo-latour-inquiry.html fills the in-scope fields', async () => {
+    expect(await planFor('sumitomo-latour-inquiry.html')).toEqual(expectedFor('sumitomo-latour-inquiry.html'));
+  });
 });

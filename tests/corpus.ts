@@ -2713,6 +2713,40 @@ const LEDGER = {
       'submit (submit): action element, never a fill target (exclude)',
     ],
   },
+  'sumitomo-latour-inquiry.html': {
+    expected: {
+      // ラ・トゥール見学予約。label 結合あり。住所2欄は refine の分割で
+      // extended_address→addressNoPref・address2→building に載る (honest pin)。
+      'name': '山田 太郎',
+      'name_ruby': 'ヤマダ タロウ',
+      'postcode1': '100-0001',
+      'address2': '千代田ビル101',
+      'extended_address': '東京都千代田区千代田1-1',
+      'mail': 'yamada@example.com',
+      'mailConfirm': 'yamada@example.com',
+      'tel': '09012345678',
+    },
+    excluded: [
+      'keyword (search): 物件検索 box (placeholder 例）中野 1LDK), stays unclassified (LLM fallback; in-form search-box candidate)',
+      'address1/sel_area[]/sel_building[]/sel_building_dummy/budget_lower/budget_higher/space_lower/space_higher/season_year/season_month/time/birthday_year/birthday_month/birthday_day (select): only a `--` option, correctly warn-no-option',
+      'gnaviBtn (button): action element, never a fill target (exclude)',
+      'gnaviClose (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'form_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'building_delete (button): action element, never a fill target (exclude)',
+      'building_add (button): action element, never a fill target (exclude)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'layout[] (checkbox): out of scope (skip fixed)',
+      'postcode_search (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'comment (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agreement (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
