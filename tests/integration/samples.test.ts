@@ -384,4 +384,7 @@ describe('sample forms end to end', () => {
   it('shimane-inquiry-form.html fills the in-scope fields', async () => {
     expect(await planFor('shimane-inquiry-form.html')).toEqual(expectedFor('shimane-inquiry-form.html'));
   });
+  it('aoyama-campus-inquiry.html fills the in-scope fields', async () => {
+    expect(await planFor('aoyama-campus-inquiry.html')).toEqual(expectedFor('aoyama-campus-inquiry.html'));
+  });
 });

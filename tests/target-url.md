@@ -77,3 +77,4 @@
 - https://request.admission-logi.jp/form/doc/9015/1/6932/ → 6932.html
 - https://www.kit.ac.jp/contact → kit-contact-form.html
 - https://www.shimane-u.ac.jp/inquiry/1/ → shimane-inquiry-form.html
+- https://business.form-mailer.jp/fms/25b2d0e0137776 → aoyama-campus-inquiry.html

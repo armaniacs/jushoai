@@ -2605,6 +2605,45 @@ const LEDGER = {
       'current_url_title (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'aoyama-campus-inquiry.html': {
+    expected: {
+      // 名前の姓/名 labels with 姓/名 placeholders drive the split.
+      'field_2295359_sei': '山田',
+      'field_2295359_mei': '太郎',
+      'field_2295420': 'yamada@example.com',
+      'field_2295420_mcon': 'yamada@example.com',
+      // 連絡先 3-split with 市外局番/市内局番/加入者番号 labels.
+      'field_2295364_1': '090',
+      'field_2295364_2': '1234',
+      'field_2295364_3': '5678',
+    },
+    excluded: [
+      'field_2295371 (text): 学生番号, no profile value, correctly unfilled',
+      'field_2295375 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295375 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_2295410 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295410 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'field_2295416[0] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295416[0] (checkbox): out of scope (skip fixed)',
+      'field_2295418[0] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[0] (checkbox): out of scope (skip fixed)',
+      'field_2295418[1] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[1] (checkbox): out of scope (skip fixed)',
+      'field_2295418[2] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[2] (checkbox): out of scope (skip fixed)',
+      'field_2295418[3] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[3] (checkbox): out of scope (skip fixed)',
+      'field_2295418[4] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[4] (checkbox): out of scope (skip fixed)',
+      'field_2295418[5] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'field_2295418[5] (checkbox): out of scope (skip fixed)',
+      'field_2295366 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+      'validated (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
