@@ -2580,6 +2580,31 @@ const LEDGER = {
       'hid_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'shimane-inquiry-form.html': {
+    expected: {
+      // Coded names; the 氏名 label drives fullName.
+      'question_answers[1]': '山田 太郎',
+      // 企業・団体名 resolves to company (unlike the bare tenant C3 case).
+      'question_answers[2]': '株式会社サンプル',
+      'question_answers[3]': 'yamada@example.com',
+    },
+    excluded: [
+      'question_answers[4] (select): お問い合わせ区分 with real numbered options, stays unclassified (LLM fallback)',
+      'captcha (text): 画像認証, no profile value, correctly unfilled',
+      'q (text): header site-search field in a separate form, trimmed (exclude; same as forum.html s)',
+      'language (select): header JP/EN switcher in a separate form, trimmed (exclude)',
+      'ie/oe/hl/domains (hidden): header search-form state, trimmed with the form (exclude)',
+      'sitesearch (radio): header search-scope radios (display:none), trimmed with the form (exclude)',
+      'sitesearch (radio): header search-scope radios (display:none), trimmed with the form (exclude)',
+      '(no name/id) (submit): header search submit, trimmed with the form (exclude)',
+      'authenticity_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'question_answers[5] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'captcha_key (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'commit (submit): action element, never a fill target (exclude)',
+      'current_url (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'current_url_title (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

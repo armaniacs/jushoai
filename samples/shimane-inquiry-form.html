@@ -1,0 +1,57 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.shimane-u.ac.jp/inquiry/1/
+  (島根大学お問い合わせ).
+  The header search form (q + sitesearch radios + language switcher) is
+  a separate form of site chrome, trimmed. The inquiry form keeps its 5
+  in-scope controls: 氏名/企業・団体名/email text fields, the
+  お問い合わせ区分 select with its real 19 options (numbered values
+  like "1,広報について" verbatim), and the captcha text field.
+  question_answers[5] is a textarea, out of scan.
+  In-scope controls: 5.
+-->
+<html lang="ja"><meta charset="utf-8"><title>島根大学お問い合わせ</title>
+<form>
+<label for="question_answers_1">氏名 ※必須</label>
+<input name="question_answers[1]" id="question_answers_1" type="text" value="">
+<label for="question_answers_2">企業・団体名</label>
+<input name="question_answers[2]" id="question_answers_2" type="text" value="">
+<label for="question_answers_3">メールアドレス ※必須</label>
+<input name="question_answers[3]" id="question_answers_3" type="email" value="">
+<label for="question_answers_4">お問い合わせ区分 ※必須</label>
+<select name="question_answers[4]" id="question_answers_4">
+<option value="" label=" "></option>
+<option value="1,広報について">1,広報について</option>
+<option value="2,情報公開について">2,情報公開について</option>
+<option value="3,就職について">3,就職について</option>
+<option value="4,学生生活について">4,学生生活について</option>
+<option value="5,授業料免除・奨学金について">5,授業料免除・奨学金について</option>
+<option value="6,履修について">6,履修について</option>
+<option value="7,地域貢献について">7,地域貢献について</option>
+<option value="8,公開講座について">8,公開講座について</option>
+<option value="9,共同研究について">9,共同研究について</option>
+<option value="10,科学技術相談について">10,科学技術相談について</option>
+<option value="11,留学生及び留学について">11,留学生及び留学について</option>
+<option value="12,国際交流について">12,国際交流について</option>
+<option value="13,物品の調達について（松江キャンパス）">13,物品の調達について（松江キャンパス）</option>
+<option value="14,大学の施設利用について">14,大学の施設利用について</option>
+<option value="15,図書館の利用について">15,図書館の利用について</option>
+<option value="16,法律相談について">16,法律相談について</option>
+<option value="17,学生のボランティアについて">17,学生のボランティアについて</option>
+<option value="18,その他">18,その他</option>
+</select>
+<label for="captcha">画像認証</label>
+<input name="captcha" id="captcha" type="text" value="" autocomplete="off">
+<!-- skip: q (text): header site-search field in a separate form, trimmed (exclude; same as forum.html s) -->
+<!-- skip: language (select): header JP/EN switcher in a separate form, trimmed (exclude) -->
+<!-- skip: ie/oe/hl/domains (hidden): header search-form state, trimmed with the form (exclude) -->
+<!-- skip: sitesearch (radio): header search-scope radios (display:none), trimmed with the form (exclude) -->
+<!-- skip: sitesearch (radio): header search-scope radios (display:none), trimmed with the form (exclude) -->
+<!-- skip: (no name/id) (submit): header search submit, trimmed with the form (exclude) -->
+<!-- skip: authenticity_token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: question_answers[5] (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: captcha_key (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: commit (submit): action element, never a fill target (exclude) -->
+<!-- skip: current_url (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: current_url_title (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
