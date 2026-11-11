@@ -31,3 +31,23 @@
 | 18 | https://www.rinnai.co.jp/contact/ | 除外 | フォームなし (リンナイ5947。HTTP 200ハブ。静的formは検索のみ) |
 | 19 | https://www.okuma.co.jp/contact/ | 除外 | 到達不能 (オークマ6103。HTTP 404。静的formは google検索のみ) |
 | 20 | https://www.amada.co.jp/contact/ | 除外 | 到達不能 (アマダ6113。HTTP 404) |
+| 21 | https://www.dmgmori.co.jp/contact/ | 除外 | 到達不能 (DMG森精機6141。HTTP 404) |
+| 22 | https://www.disco.co.jp/contact/ | 除外 | フォームなし (ディスコ6146。`/index.html` に転送。静的formなし) |
+| 23 | https://www.toyota-shokki.co.jp/contact/ | 除外 | フォームなし (豊田自動織機6201。HTTP 200だが静的formなし。実窓口は豊田自動織機外・繊維機械系別導線) |
+| 24 | https://www.smcworld.com/contact/ | 除外 | 到達不能 (SMC6273。HTTP 403 bot遮断) |
+| 25 | https://www.komatsu.jp/contact/ | 除外 | 到達不能 (コマツ6301。HTTP 404「お探しのページ」。静的formは検索のみ。実窓口は `/ja/inquiry` 別導線) |
+| 26 | https://www.shi.co.jp/contact/ | 除外 | フォームなし (住友重機械6302。HTTP 200ハブ。静的formは検索のみ。実フォームは `contact01.shi.co.jp`→No.159で検証) |
+| 27 | https://www.hitachicm.com/contact/ | 除外 | 到達不能 (日立建機6305。HTTP 404) |
+| 28 | https://www.kubota.co.jp/contact/ | 除外 | フォームなし (クボタ6326。HTTP 200ハブ。静的formは検索のみ。実フォームはエンジン事業部→No.160で検証) |
+| 29 | https://www.ebara.co.jp/contact/ | 除外 | 到達不能 (荏原6361。`ebara.com` 転送後 HTTP 403 Access Denied) |
+| 30 | https://www.daikin.co.jp/contact/ | 除外 | フォームなし (ダイキン6367。HTTP 200「総合」ハブ。静的formは検索のみ。実窓口は `/contact/consumer` 等別導線) |
+| 31 | https://www.kurita.co.jp/contact/ | 除外 | 到達不能 (栗田工業6370。curl失敗・code=000) |
+| 32 | https://www.daifuku.com/jp/contact/ | 除外 | フォームなし (ダイフク6383。HTTP 200だが静的formなし。実フォームは `inquiry.daifuku.com` 別導線) |
+| 33 | https://www.tadano.co.jp/contact/ | 有望 P3 | 要精査 (タダノ6395。HTTP 200。静的欄あり input 16・textarea 1・select 2: `inquirytype`・`name`・`name-pronunciation`・`company-or-school-name`・`zip`・`in_prefecture`・`in_address`〜`3`・`tel`・`email`。ただし `action=#contact-form-container` でJS送信の可能性。取込時確認のため予備P3) |
+| 34 | https://www.fujitec.co.jp/contact/ | 除外 | 到達不能 (フジテック6406。HTTP 404) |
+| 35 | https://www.ckd.co.jp/contact/ | 除外 | 到達不能 (CKD6407。HTTP 404。静的formは検索のみ) |
+| 36 | https://www.amano.co.jp/contact/ | 除外 | フォームなし (アマノ6436。HTTP 200ハブ。静的formは検索のみ。実フォームは form.run→No.161で検証) |
+| 37 | https://www.juki.co.jp/contact/ | 除外 | フォームなし (JUKI6440。HTTP 200ハブだが静的formなし。実フォームは工業用ミシン系→No.162で検証) |
+| 38 | https://www.max-ltd.co.jp/contact/ | 除外 | 到達不能 (マックス6454。HTTP 404。実窓口は `/toiawase/` 別導線) |
+| 39 | https://www.glory.co.jp/contact/ | 除外 | フォームなし (グローリー6457。HTTP 200ハブ。静的formは検索のみ。実フォームは `form.glory.co.jp`→No.163で検証) |
+| 40 | https://www.segasammy.co.jp/contact/ | 除外 | 到達不能 (セガサミーHD6460。HTTP 404。実フォームは `webcomms.segasammy.co.jp`→No.164で検証) |
