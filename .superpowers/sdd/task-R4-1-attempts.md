@@ -191,3 +191,18 @@
 | 178 | https://www.jtb.co.jp/luxurytravel/ordermade/ | 除外 | JS描画のみ (HTTP 200だがformなし。オーダーメイド旅行のJS導線とみられる) |
 | 179 | https://waigaya.honda.co.jp/user/enquete.do?grp=bugreport&no=200511 | 有望 P3 | 要精査 (HTTP 200。text 5・checkbox 10・select 2・textarea。販売店アンケート系で住所・氏名欄の有無は取込時に確認。予備P3) |
 | 180 | https://www.mazda.co.jp/purchase/webcatalog/ | 除外 | フォームなし (HTTP 200「ウェブカタログのご紹介」。静的formは検索のみ) |
+| 181 | https://nba.docomo.ne.jp/lp/entry001 | 除外 | フォームなし (HTTP 200だがNBA特設頁。formなし。無関係頁) |
+| 182 | https://form-auhikari.kddi.com/cgi-bin/callback/form.cgi | 有望 P2 | 静的実フォーム (HTTP 200「各サービスご相談のお申し込み」。`action=form2.cgi`、input 56・radio 17・checkbox 13・textarea。通信・折り返し相談。多様性○) |
+| 183 | http://scala-com.jp/i-ask/ | 除外 | フォームなし (HTTP 200「i-ask」だが静的formは `/search-result/` 検索のみ。製品検索頁) |
+
+## 集計
+
+- 試行総数: 183件 (No.1-183。要求100件以上を満たす)
+- 有望: 28件 (P1 12件・P2 14件・P3 2件)
+  - P1 (12): No.124, 129, 130, 131, 132, 139, 145, 151, 156, 169, 170, 171
+  - P2 (14): No.125, 126, 127, 133, 134, 143, 144, 146, 152, 155, 157, 158, 176, 182
+  - P3 (2): No.135, 179
+- 除外: 155件
+- 既存19件 (`tests/target-url.md`) との重複: なし (全183件をドメイン・パス照合。既存は学校・form-mailer中心、本リストは企業・自治体・不動産・SMP/Pardot/Salesforce系で重複ドメイン自体なし)
+- 有望の多様性: メーカー (富士フイルム・大塚製薬・キッコーマン・エプソン・リコー・ブラザー・東芝) / 住宅・不動産 (三井ホーム・三井リフォーム・東急不動産・三井賃貸・SMP) / 自治体 (神戸市) / 教育 (ベネッセ) / 小売 (イオン) / 通信 (au)。学校系ゼロで既存corpusと重複しない
+
