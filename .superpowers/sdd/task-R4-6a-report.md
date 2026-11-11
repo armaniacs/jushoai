@@ -23,12 +23,12 @@
 4. 混同注意: `nakano-lib.jp` は長野県中野市立図書館 (No.110で除外記録済み)。中野区立は `library.city.tokyo-nakano.lg.jp`
 5. 並行タスクへの影響: なし。commitはすべて `git add -f .superpowers/sdd/task-R4-6a-attempts.md` に限定し、他タスクのファイル (AGENTS.md・tests・samples等) に触れていない。pushなし
 
-## commits
+## commits (full SHA)
 
-- `4e6fec2` R4-6a 試行ログ No.1-20
-- `e3a492e` R4-6a 試行ログ No.21-40
-- `864dab9` R4-6a 試行ログ No.41-60
-- `e68a5ec` R4-6a 試行ログ No.61-80
-- `c283c1a` R4-6a 試行ログ No.81-100
-- `4ceea22` R4-6a 試行ログ No.101-110 +集計
-- (本レポートのcommitは下記検証後に追加)
+- `4e6fec2d359b38f7844d714938460cbb88882e54` R4-6a 試行ログ No.1-20
+- `e3a492e227d4f75b2226261e9db0c67bb67979ae` R4-6a 試行ログ No.21-40
+- `864dab95e71b48959362cd769db2715b8565bde0` R4-6a 試行ログ No.41-60
+- `e68a5ece3512b996722529450f854d8aa1131ba1` R4-6a 試行ログ No.61-80
+- `c283c1a6c72ea5981f09e8bbfdccf3bd9275bf15` R4-6a 試行ログ No.81-100
+- `4ceea2254eb83a31d8349c95e82ef4fa237eb2d0` R4-6a 試行ログ No.101-110 +集計
+- `9dd282b82ff1e700a2717ce0533e9848e752026f` R4-6a フルレポート
