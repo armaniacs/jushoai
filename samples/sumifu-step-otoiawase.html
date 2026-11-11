@@ -1,0 +1,38 @@
+<!-- Minimal reproduction of https://sumifu-step-form.spiral-site.com/otoiawase. Values stripped; trim further before committing. -->
+<form>
+      <select name="sendTarget" id=""><option value="">--</option></select>
+      <input name="name" id="" type="text" value="" placeholder="(例) 住友 太郎">
+      <input name="name_kana" id="" type="text" value="" placeholder="(例) スミトモ タロウ">
+      <input name="company" id="" type="text" value="" placeholder="(例) 住友不動産ステップ株式会社">
+      <input name="department" id="" type="text" value="" placeholder="(例) 総務部">
+      <input name="position" id="" type="text" value="" placeholder="(例) 部長">
+      <input name="email" id="" type="email" value="" placeholder="(例) example@example.co.jp">
+      <input name="email:reenter" id="" type="email" value="" placeholder="(例) 確認のためもう一度入力してください">
+      <input name="tel" id="" type="tel" value="" placeholder="(例) 03-9999-9999">
+      <input name="" id="zipCode" type="text" value="" placeholder="(例) 163-0820" maxlength="8">
+      <select name="pref" id=""><option value="">--</option></select>
+      <input name="address01" id="" type="text" value="" placeholder="(例) 新宿区西新宿2-6-1　新宿住友ビル">
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: zip01 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: zip02 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: message (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: privacy (checkbox): out of scope (skip fixed) -->
+<!-- skip: action (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: IpAddress (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: UserAgent (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: f01 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: sendTarget (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: f011 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: pref (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: f015 (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: privacy (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: deploymentId (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: session (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

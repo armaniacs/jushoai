@@ -396,4 +396,7 @@ describe('sample forms end to end', () => {
   it('sumitomo-latour-inquiry.html fills the in-scope fields', async () => {
     expect(await planFor('sumitomo-latour-inquiry.html')).toEqual(expectedFor('sumitomo-latour-inquiry.html'));
   });
+  it('sumifu-step-otoiawase.html fills the in-scope fields', async () => {
+    expect(await planFor('sumifu-step-otoiawase.html')).toEqual(expectedFor('sumifu-step-otoiawase.html'));
+  });
 });

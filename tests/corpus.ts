@@ -2747,6 +2747,51 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'sumifu-step-otoiawase.html': {
+    expected: {
+      // すみふの仲介ステップ (SPIRAL)。placeholder の例）が分類信号。
+      // name/name_kana 対は姓/名分割に載り name→山田・name_kana→太郎
+      // (カナ欄に漢字が入る honest pin。placeholder 対の分割が候補)。
+      'name': '山田',
+      'name_kana': '太郎',
+      'email': 'yamada@example.com',
+      'email:reenter': 'yamada@example.com',
+      'tel': '090-1234-5678',
+      // name なし・id のみ (zipCode) も placeholder 例）163-0820 で解決。
+      'zipCode': '100-0001',
+      'address01': '千代田区千代田1-1 千代田ビル101',
+      // department は学校の学科に載り普通科が入る (honest pin。部署語彙が候補)。
+      'department': '普通科',
+    },
+    excluded: [
+      'sendTarget/pref (select): only a `--` option, correctly warn-no-option',
+      'company (text): placeholder 例）住友不動産ステップ株式会社, stays unclassified (LLM fallback; company-by-placeholder candidate, same as otsuka company)',
+      'position (text): 役職 placeholder 例）部長, no profile value, correctly unfilled (same as registration jobTxt)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'zip01 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'zip02 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'message (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'IpAddress (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'UserAgent (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f01 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'sendTarget (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f011 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'pref (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'f015 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'privacy (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'deploymentId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'session (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
