@@ -131,3 +131,23 @@
 | 118 | https://www.kirin.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `kirinholdings` 検索のみ) |
 | 119 | https://www.nestle.co.jp/contact/ | 除外 | 到達不能 (HTTP 403。checkbox 1のみのbotチャレンジ頁とみられる) |
 | 120 | https://www.yakult.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`/maintenance/`。メンテナンス中) |
+| 121 | https://www.housefoods.co.jp/customer/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 122 | https://www.nissin.com/jp/customer/ | 除外 | フォームなし (HTTP 200「お客さま窓口」ハブ。静的formは検索のみ。実フォームは `/jp/customer/form/`→No.128で検証) |
+| 123 | https://www.otsuka.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/contacts/`「お問い合わせ窓口」ハブ。静的formは検索のみ。実フォームは `/contacts/opinion/form`→No.129で検証) |
+| 124 | https://www.fujifilm.com/jp/ja/form/FF-CSR | 有望 P1 | 静的実フォーム (HTTP 200。`action=/jp/ja/form/FF-CSR`、input 24・textarea 1・select 1。氏名分割 `name[first/last]`・カナ `name_kana[first/last]`・email確認2欄・郵便番号 `postal_code`・`city`・都道府県select・tel/fax・`inquiry_body`。企業CSR窓口。多様性◎) |
+| 125 | https://www.fujifilm.com/jp/ja/form/FF-Webmaster-Ja | 有望 P2 | 静的実フォーム (HTTP 200。No.124と同型・宛先違い。氏名/カナ分割・住所・email確認あり) |
+| 126 | https://www.fujifilm.com/jp/ja/form/FF-Procurement-Tokyo | 有望 P2 | 静的実フォーム (HTTP 200。No.124と同型・資材購買宛。textarea 2) |
+| 127 | https://holdings.fujifilm.com/ja/form/compliance-hotline | 有望 P2 | 静的実フォーム (HTTP 200。氏名/カナ分割・email確認2欄・`inquiry_body`。住所欄なしのためP2) |
+| 128 | https://www.nissin.com/jp/customer/form/ | 除外 | JS描画のみ (HTTP 200だが静的formは `/jp/search/` 検索+空formのみ。入力欄はJS生成とみられる) |
+| 129 | https://www.otsuka.co.jp/contacts/opinion/form | 有望 P1 | 静的実フォーム (HTTP 200。`name`・`name_kana`・`company`・`mail`・tel 3分割 `tel[1/2/3]`・性別radio・年齢・`contents`。製薬ご意見窓口。多様性◎) |
+| 130 | https://www.mitsuihome.co.jp/support/sonota/form.php | 有望 P1 | 静的実フォーム (HTTP 200。同意checkbox・担当radio・所属・氏名 `name_1/2`・カナ `name_kana_1/2`・郵便 `post1/2`・`address1`・都道府県select `pref`・`contents`。住宅・不動産。多様性◎) |
+| 131 | https://www.mitsui-reform.com/ssl/catalog/select.html | 有望 P1 | 静的実フォーム (HTTP 200「資料請求 入力」。`action=index.php`、input 71・radio 33。氏名 `name_1/2`・カナ `kana_1/2`・tel・email確認2欄・郵便 `post`。資料請求系。多様性◎) |
+| 132 | https://www.tokyu-land.co.jp/form/contact/ | 有望 P1 | 静的実フォーム (HTTP 200。`action=./index.php`、氏名 `name`・カナ `kana`・郵便 `zip`・`address1/2`・email確認2欄・都道府県select `pref`・`contenttext`。不動産総合窓口。多様性◎) |
+| 133 | https://www.tokyu-land.co.jp/form/kojin/ | 有望 P2 | 静的実フォーム (HTTP 200。No.132と同系・個人客向け。`pref_house` 等物件条件欄あり) |
+| 134 | https://www.tokyu-land.co.jp/form/tenant/ | 有望 P2 | 静的実フォーム (HTTP 200。No.132と同系・テナント出店用。会社・部署・役職欄あり。B2B色) |
+| 135 | https://www.tokyu-land.co.jp/form/branz_form/ | 有望 P3 | 静的実フォーム (HTTP 200。No.132と同系・BRANZ契約者用。同一サイト4件目のため予備P3) |
+| 136 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=2099dacc175d6c916c073494dd1533c0 | 除外 | 到達不能 (HTTP 200「エラー画面」。form空。事前遷移なしの直アクセスは不可) |
+| 137 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=31fc0115ff55ff8b08bf6edeaf4704f1 | 除外 | 到達不能 (同上・エラー画面) |
+| 138 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=ed02503e1fc8cf0ba77096f75542f896 | 除外 | 到達不能 (同上・エラー画面) |
+| 139 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 有望 P1 | 静的実フォーム (HTTP 200「神戸市：お問い合わせフォーム」。Struts Webフォーム、text 8・checkbox 5・textarea・select。自治体。多様性◎) |
+| 140 | https://www.city.kobe.lg.jp/a06814/kurashi/registration/application.html | 除外 | フォームなし (HTTP 200「電子申請」案内頁。静的formは検索のみ) |
