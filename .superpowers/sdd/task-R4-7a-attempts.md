@@ -152,3 +152,23 @@
 | 138 | https://www.rikkyo.ac.jp/admissions/visit/opencampus/index.html | 立教大学 | 除外 | フォームなし (HTTP 200「オープンキャンパス / 立教大学」。静的form2件はサイト内検索のみ。OC頁だが検索のみ) |
 | 139 | https://www.tut.ac.jp/admission/contact/ | 豊橋技術科学大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
 | 140 | https://www.doshisha.ac.jp/admissions/contact/ | 同志社大学 | 除外 | フォームなし (HTTP 200「お探しのページがみつかりません ｜同志社大学」。静的formなし。実質404: HTTP 200だが「お探しのページ」内容。静的formなし) |
+| 141 | https://www.uec.ac.jp/admission/contact/ | 電気通信大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 142 | https://www.yokohama-cu.ac.jp/admission/contact/ | 横浜市立大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 143 | https://www.kwansei.ac.jp/admissions/contact/ | 関西学院大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 144 | https://www.niigata-u.ac.jp/admission/contact/ | 新潟大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 145 | https://www.meiji.ac.jp/exam/contact/ | 明治大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 146 | https://www.fw-u.ac.jp/admission/contact/ | 福岡女子大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
+| 147 | https://www.aoyama.ac.jp/admission/contact/ | 青山学院大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 148 | https://www.nitech.ac.jp/examination/contact.html | 名古屋工業大学 | 除外 | フォームなし (HTTP 200「入試に関するお問い合わせ｜国立大学法人名古屋工業大学」。静的formなし。入試問合せ頁だが静的formなし) |
+| 149 | https://www.saga-u.ac.jp/koho/corp_contact.html | 佐賀大学 | 除外 | フォームなし (HTTP 200「取材申し込み ｜ 佐賀大学広報室」。静的form1件はサイト内検索のみ。取材申込頁だが検索のみ。申込本体はGoogleフォーム外部) |
+| 150 | https://www.kansai-u.ac.jp/admission/contact/ | 関西大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 151 | https://www.akita-u.ac.jp/nyushi/contact/ | 秋田大学 | 除外 | フォームなし (HTTP 200「404 Not Found｜国立大学法人 秋田大学」。静的form1件はサイト内検索のみ。同上 (実質404)) |
+| 152 | https://www.hosei.ac.jp/admission/contact/ | 法政大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 153 | https://www.kagoshima-u.ac.jp/admission/contact/ | 鹿児島大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 154 | https://www.gunma-u.ac.jp/admission/contact/ | 群馬大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 155 | https://www.nanzan-u.ac.jp/admission/contact/ | 南山大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 156 | https://www.slcn.ac.jp/admission/contact/ | 聖路加国際大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
+| 157 | https://www.shinshu-u.ac.jp/admission/contact/ | 信州大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 158 | https://www.juntendo.ac.jp/admission/contact/ | 順天堂大学 | 除外 | 到達不能 (curl失敗・code=000。同上 (code=000)) |
+| 159 | https://www.yamagata-u.ac.jp/admission/contact/ | 山形大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 160 | https://www.soka.ac.jp/admission/contact/ | 創価大学 | 除外 | 到達不能 (HTTP 404。当該パスなし) |
