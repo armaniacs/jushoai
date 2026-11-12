@@ -121,7 +121,10 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
     // Success only after a read-back: the ledger and the test source must
     // actually carry the new entry (a silent no-op never reports success).
     const ledgerWired = readFileSync(ledgerPath, 'utf8').includes(`'${wiring.file}': {`);
-    const testWired = readFileSync(testPath, 'utf8').includes(`it('${wiring.file} fills the in-scope fields'`);
+    // samples.test.ts aggregates the定型 cases in one it.each file list, so the
+    // read-back matches the quoted file name (satisfied by both a list entry
+    // and a singly appended `it('... fills the in-scope fields')` stub).
+    const testWired = readFileSync(testPath, 'utf8').includes(`'${wiring.file}'`);
     if (!ledgerWired || !testWired) {
       console.error('wiring failed: read back tests/corpus.ts and samples.test.ts but the new entry is not there.');
       process.exit(1);

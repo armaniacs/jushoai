@@ -146,32 +146,126 @@ describe('sample forms end to end', () => {
     }
   });
 
-  it('12fc22bc297429.html fills the in-scope fields', async () => {
-    expect(await planFor('12fc22bc297429.html')).toEqual(expectedFor('12fc22bc297429.html'));
-  });
-  it('2dd1c663300469.html fills the in-scope fields', async () => {
-    expect(await planFor('2dd1c663300469.html')).toEqual(expectedFor('2dd1c663300469.html'));
-  });
-  it('registration.html fills the in-scope fields', async () => {
-    expect(await planFor('registration.html')).toEqual(expectedFor('registration.html'));
-  });
-  it('forum.html fills the in-scope fields', async () => {
-    expect(await planFor('forum.html')).toEqual(expectedFor('forum.html'));
-  });
-  it('richell-anketo-rating.html fills the in-scope fields', async () => {
-    expect(await planFor('richell-anketo-rating.html')).toEqual(expectedFor('richell-anketo-rating.html'));
-  });
-  it('kosodate-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('kosodate-contact.html')).toEqual(expectedFor('kosodate-contact.html'));
-  });
-  it('library-theater-apply.html fills the in-scope fields', async () => {
-    expect(await planFor('library-theater-apply.html')).toEqual(expectedFor('library-theater-apply.html'));
-  });
-  it('nishimachi-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('nishimachi-inquiry.html')).toEqual(expectedFor('nishimachi-inquiry.html'));
-  });
-  it('gis-intl-admission.html fills the in-scope fields', async () => {
-    expect(await planFor('gis-intl-admission.html')).toEqual(expectedFor('gis-intl-admission.html'));
+  const inScopeFixtures: CorpusName[] = [
+    '12fc22bc297429.html',
+    '2dd1c663300469.html',
+    'registration.html',
+    'forum.html',
+    'richell-anketo-rating.html',
+    'kosodate-contact.html',
+    'library-theater-apply.html',
+    'nishimachi-inquiry.html',
+    'gis-intl-admission.html',
+    'bst-inquire.html',
+    'isi-contact.html',
+    'ois-contact.html',
+    'kigakuen-briefing.html',
+    'seedome-openschool.html',
+    'ff-csr.html',
+    'otsuka-opinion-form.html',
+    'mitsuihome-sonota-form.html',
+    'mitsui-reform-catalog-form.html',
+    'tokyu-land-contact-form.html',
+    'kobe-city-contact-form.html',
+    'epson-csr-form.html',
+    'ricoh-risb-form.html',
+    'kikkoman-website-form.html',
+    'smp-regist-inquiry-form.html',
+    'toshiba-gx-contact-form.html',
+    'ff-webmaster-form.html',
+    'ff-procurement-form.html',
+    'ff-compliance-hotline-form.html',
+    'tokyu-land-kojin-form.html',
+    'tokyu-land-tenant-form.html',
+    'benesse-inquiry-form.html',
+    'mitsui-chintai-inquiry-form.html',
+    'epson-ir-form.html',
+    'ricoh-vulnerability-form.html',
+    'brother-inquiry-form.html',
+    'kikkoman-media-form.html',
+    'kikkoman-works-form.html',
+    'aeon-voice-form.html',
+    'auhikari-callback-form.html',
+    'hamamatsu-kocho-form.html',
+    'okayama-inquiry-form.html',
+    'fukuoka-teian-form.html',
+    'tokyo-steel-contact-form.html',
+    'taiheiyo-cement-contact-form.html',
+    'ngk-contact-form.html',
+    'lixil-inquiry-form.html',
+    'sapporo-iken-form.html',
+    'kubota-engine-contact-form.html',
+    'mailform.html',
+    'opinion-html.html',
+    'arakawa-mailform.html',
+    '2000033.html',
+    'tosyo-00001-html.html',
+    'azbil-kikubari-form.html',
+    'keyence-inquiry-form.html',
+    'sysmex-contact-form.html',
+    'lasertec-inquiry-form.html',
+    'toyoda-gosei-form.html',
+    'mitsubishi-materials-form.html',
+    'yoshinoya-store-form.html',
+    'tonami-luggage-form.html',
+    'contact.html',
+    'inquiry-html.html',
+    'index-asp.html',
+    '6932.html',
+    'kit-contact-form.html',
+    'shimane-inquiry-form.html',
+    'aoyama-campus-inquiry.html',
+    'aoyama-sagamihara-career.html',
+    'smp-openhouse-inquiry.html',
+    'sumitomo-latour-inquiry.html',
+    'sumifu-step-otoiawase.html',
+    'proud-procedure-form.html',
+    'tokyu-branz-owner-form.html',
+    'tokyu-commercial-form.html',
+    'tokyu-cre-form.html',
+    'brillia-support-contact.html',
+    'hulic-develop-plan.html',
+    'mori-webcas-contact.html',
+    'openhouse-customer-contact.html',
+    'anabuki-general-contact.html',
+    'anabuki-landuse-contact.html',
+    'haseko-contact-input.html',
+    'toshin-shiryo-form.html',
+    'toshin-mendan-form.html',
+    'yotsuya-nyujuku-form.html',
+    'kumon-annai-form.html',
+    'manavis-shiryo-form.html',
+    'eikoh-shiryo-form.html',
+    'cigr-ir-contact.html',
+    'shozemi-contact-form.html',
+    'waseda-ac-form.html',
+    'morijuku-contact-form.html',
+    'wadakohsan-inquiry.html',
+    'jiritsu-red-contact-form.html',
+    'hhp-site-inquiry.html',
+    'nttud-inquiry.html',
+    'sekisui-catalog-request.html',
+    'tomas-trial-form.html',
+    'try-gakuin-reserve-form.html',
+    'meiko-contact-form.html',
+    'sekisui-inquiry-form.html',
+    'keishin-contact-form.html',
+    'sekisui-mail-form.html',
+    'rinkai-shiryo-form.html',
+    'sanaru-contact-form.html',
+    'ichishin-contact-form.html',
+    'ena-request-form.html',
+    'eishinkan-contact-form.html',
+    'axis-inquiry-form.html',
+    'yotsuya-littleclub-form.html',
+    'fujita-contact.html',
+    'yamada-holdings-contact.html',
+    'apaman-contact.html',
+    'jpaa-contact.html',
+    'nkanzai-contact.html',
+  ];
+  it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
+    expect(await planFor(file)).toEqual(expectedFor(file));
   });
 
   // PBI-211: the corpus fixtures carry their real-page radio groups again
@@ -209,326 +303,5 @@ describe('sample forms end to end', () => {
       });
       expect(items.map((i) => i.cls.category)).toEqual(radios.map((r) => groups[r.meta.name]![1]));
     }
-  });
-  it('bst-inquire.html fills the in-scope fields', async () => {
-    expect(await planFor('bst-inquire.html')).toEqual(expectedFor('bst-inquire.html'));
-  });
-  it('isi-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('isi-contact.html')).toEqual(expectedFor('isi-contact.html'));
-  });
-  it('ois-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('ois-contact.html')).toEqual(expectedFor('ois-contact.html'));
-  });
-  it('kigakuen-briefing.html fills the in-scope fields', async () => {
-    expect(await planFor('kigakuen-briefing.html')).toEqual(expectedFor('kigakuen-briefing.html'));
-  });
-  it('seedome-openschool.html fills the in-scope fields', async () => {
-    expect(await planFor('seedome-openschool.html')).toEqual(expectedFor('seedome-openschool.html'));
-  });
-  it('ff-csr.html fills the in-scope fields', async () => {
-    expect(await planFor('ff-csr.html')).toEqual(expectedFor('ff-csr.html'));
-  });
-  it('otsuka-opinion-form.html fills the in-scope fields', async () => {
-    expect(await planFor('otsuka-opinion-form.html')).toEqual(expectedFor('otsuka-opinion-form.html'));
-  });
-  it('mitsuihome-sonota-form.html fills the in-scope fields', async () => {
-    expect(await planFor('mitsuihome-sonota-form.html')).toEqual(expectedFor('mitsuihome-sonota-form.html'));
-  });
-  it('mitsui-reform-catalog-form.html fills the in-scope fields', async () => {
-    expect(await planFor('mitsui-reform-catalog-form.html')).toEqual(expectedFor('mitsui-reform-catalog-form.html'));
-  });
-  it('tokyu-land-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-land-contact-form.html')).toEqual(expectedFor('tokyu-land-contact-form.html'));
-  });
-  it('kobe-city-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kobe-city-contact-form.html')).toEqual(expectedFor('kobe-city-contact-form.html'));
-  });
-  it('epson-csr-form.html fills the in-scope fields', async () => {
-    expect(await planFor('epson-csr-form.html')).toEqual(expectedFor('epson-csr-form.html'));
-  });
-  it('ricoh-risb-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ricoh-risb-form.html')).toEqual(expectedFor('ricoh-risb-form.html'));
-  });
-  it('kikkoman-website-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kikkoman-website-form.html')).toEqual(expectedFor('kikkoman-website-form.html'));
-  });
-  it('smp-regist-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('smp-regist-inquiry-form.html')).toEqual(expectedFor('smp-regist-inquiry-form.html'));
-  });
-  it('toshiba-gx-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('toshiba-gx-contact-form.html')).toEqual(expectedFor('toshiba-gx-contact-form.html'));
-  });
-  it('ff-webmaster-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ff-webmaster-form.html')).toEqual(expectedFor('ff-webmaster-form.html'));
-  });
-  it('ff-procurement-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ff-procurement-form.html')).toEqual(expectedFor('ff-procurement-form.html'));
-  });
-  it('ff-compliance-hotline-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ff-compliance-hotline-form.html')).toEqual(expectedFor('ff-compliance-hotline-form.html'));
-  });
-  it('tokyu-land-kojin-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-land-kojin-form.html')).toEqual(expectedFor('tokyu-land-kojin-form.html'));
-  });
-  it('tokyu-land-tenant-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-land-tenant-form.html')).toEqual(expectedFor('tokyu-land-tenant-form.html'));
-  });
-  it('benesse-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('benesse-inquiry-form.html')).toEqual(expectedFor('benesse-inquiry-form.html'));
-  });
-  it('mitsui-chintai-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('mitsui-chintai-inquiry-form.html')).toEqual(expectedFor('mitsui-chintai-inquiry-form.html'));
-  });
-  it('epson-ir-form.html fills the in-scope fields', async () => {
-    expect(await planFor('epson-ir-form.html')).toEqual(expectedFor('epson-ir-form.html'));
-  });
-  it('ricoh-vulnerability-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ricoh-vulnerability-form.html')).toEqual(expectedFor('ricoh-vulnerability-form.html'));
-  });
-  it('brother-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('brother-inquiry-form.html')).toEqual(expectedFor('brother-inquiry-form.html'));
-  });
-  it('kikkoman-media-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kikkoman-media-form.html')).toEqual(expectedFor('kikkoman-media-form.html'));
-  });
-  it('kikkoman-works-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kikkoman-works-form.html')).toEqual(expectedFor('kikkoman-works-form.html'));
-  });
-  it('aeon-voice-form.html fills the in-scope fields', async () => {
-    expect(await planFor('aeon-voice-form.html')).toEqual(expectedFor('aeon-voice-form.html'));
-  });
-  it('auhikari-callback-form.html fills the in-scope fields', async () => {
-    expect(await planFor('auhikari-callback-form.html')).toEqual(expectedFor('auhikari-callback-form.html'));
-  });
-  it('hamamatsu-kocho-form.html fills the in-scope fields', async () => {
-    expect(await planFor('hamamatsu-kocho-form.html')).toEqual(expectedFor('hamamatsu-kocho-form.html'));
-  });
-  it('okayama-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('okayama-inquiry-form.html')).toEqual(expectedFor('okayama-inquiry-form.html'));
-  });
-  it('fukuoka-teian-form.html fills the in-scope fields', async () => {
-    expect(await planFor('fukuoka-teian-form.html')).toEqual(expectedFor('fukuoka-teian-form.html'));
-  });
-  it('tokyo-steel-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyo-steel-contact-form.html')).toEqual(expectedFor('tokyo-steel-contact-form.html'));
-  });
-  it('taiheiyo-cement-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('taiheiyo-cement-contact-form.html')).toEqual(expectedFor('taiheiyo-cement-contact-form.html'));
-  });
-  it('ngk-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ngk-contact-form.html')).toEqual(expectedFor('ngk-contact-form.html'));
-  });
-  it('lixil-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('lixil-inquiry-form.html')).toEqual(expectedFor('lixil-inquiry-form.html'));
-  });
-  it('sapporo-iken-form.html fills the in-scope fields', async () => {
-    expect(await planFor('sapporo-iken-form.html')).toEqual(expectedFor('sapporo-iken-form.html'));
-  });
-  it('kubota-engine-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kubota-engine-contact-form.html')).toEqual(expectedFor('kubota-engine-contact-form.html'));
-  });
-  it('mailform.html fills the in-scope fields', async () => {
-    expect(await planFor('mailform.html')).toEqual(expectedFor('mailform.html'));
-  });
-  it('opinion-html.html fills the in-scope fields', async () => {
-    expect(await planFor('opinion-html.html')).toEqual(expectedFor('opinion-html.html'));
-  });
-  it('arakawa-mailform.html fills the in-scope fields', async () => {
-    expect(await planFor('arakawa-mailform.html')).toEqual(expectedFor('arakawa-mailform.html'));
-  });
-  it('2000033.html fills the in-scope fields', async () => {
-    expect(await planFor('2000033.html')).toEqual(expectedFor('2000033.html'));
-  });
-  it('tosyo-00001-html.html fills the in-scope fields', async () => {
-    expect(await planFor('tosyo-00001-html.html')).toEqual(expectedFor('tosyo-00001-html.html'));
-  });
-  it('azbil-kikubari-form.html fills the in-scope fields', async () => {
-    expect(await planFor('azbil-kikubari-form.html')).toEqual(expectedFor('azbil-kikubari-form.html'));
-  });
-  it('keyence-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('keyence-inquiry-form.html')).toEqual(expectedFor('keyence-inquiry-form.html'));
-  });
-  it('sysmex-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('sysmex-contact-form.html')).toEqual(expectedFor('sysmex-contact-form.html'));
-  });
-  it('lasertec-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('lasertec-inquiry-form.html')).toEqual(expectedFor('lasertec-inquiry-form.html'));
-  });
-  it('toyoda-gosei-form.html fills the in-scope fields', async () => {
-    expect(await planFor('toyoda-gosei-form.html')).toEqual(expectedFor('toyoda-gosei-form.html'));
-  });
-  it('mitsubishi-materials-form.html fills the in-scope fields', async () => {
-    expect(await planFor('mitsubishi-materials-form.html')).toEqual(expectedFor('mitsubishi-materials-form.html'));
-  });
-  it('yoshinoya-store-form.html fills the in-scope fields', async () => {
-    expect(await planFor('yoshinoya-store-form.html')).toEqual(expectedFor('yoshinoya-store-form.html'));
-  });
-  it('tonami-luggage-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tonami-luggage-form.html')).toEqual(expectedFor('tonami-luggage-form.html'));
-  });
-  it('contact.html fills the in-scope fields', async () => {
-    expect(await planFor('contact.html')).toEqual(expectedFor('contact.html'));
-  });
-  it('inquiry-html.html fills the in-scope fields', async () => {
-    expect(await planFor('inquiry-html.html')).toEqual(expectedFor('inquiry-html.html'));
-  });
-  it('index-asp.html fills the in-scope fields', async () => {
-    expect(await planFor('index-asp.html')).toEqual(expectedFor('index-asp.html'));
-  });
-  it('6932.html fills the in-scope fields', async () => {
-    expect(await planFor('6932.html')).toEqual(expectedFor('6932.html'));
-  });
-  it('kit-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kit-contact-form.html')).toEqual(expectedFor('kit-contact-form.html'));
-  });
-  it('shimane-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('shimane-inquiry-form.html')).toEqual(expectedFor('shimane-inquiry-form.html'));
-  });
-  it('aoyama-campus-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('aoyama-campus-inquiry.html')).toEqual(expectedFor('aoyama-campus-inquiry.html'));
-  });
-  it('aoyama-sagamihara-career.html fills the in-scope fields', async () => {
-    expect(await planFor('aoyama-sagamihara-career.html')).toEqual(expectedFor('aoyama-sagamihara-career.html'));
-  });
-  it('smp-openhouse-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('smp-openhouse-inquiry.html')).toEqual(expectedFor('smp-openhouse-inquiry.html'));
-  });
-  it('sumitomo-latour-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('sumitomo-latour-inquiry.html')).toEqual(expectedFor('sumitomo-latour-inquiry.html'));
-  });
-  it('sumifu-step-otoiawase.html fills the in-scope fields', async () => {
-    expect(await planFor('sumifu-step-otoiawase.html')).toEqual(expectedFor('sumifu-step-otoiawase.html'));
-  });
-  it('proud-procedure-form.html fills the in-scope fields', async () => {
-    expect(await planFor('proud-procedure-form.html')).toEqual(expectedFor('proud-procedure-form.html'));
-  });
-  it('tokyu-branz-owner-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-branz-owner-form.html')).toEqual(expectedFor('tokyu-branz-owner-form.html'));
-  });
-  it('tokyu-commercial-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-commercial-form.html')).toEqual(expectedFor('tokyu-commercial-form.html'));
-  });
-  it('tokyu-cre-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tokyu-cre-form.html')).toEqual(expectedFor('tokyu-cre-form.html'));
-  });
-  it('brillia-support-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('brillia-support-contact.html')).toEqual(expectedFor('brillia-support-contact.html'));
-  });
-  it('hulic-develop-plan.html fills the in-scope fields', async () => {
-    expect(await planFor('hulic-develop-plan.html')).toEqual(expectedFor('hulic-develop-plan.html'));
-  });
-  it('mori-webcas-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('mori-webcas-contact.html')).toEqual(expectedFor('mori-webcas-contact.html'));
-  });
-  it('openhouse-customer-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('openhouse-customer-contact.html')).toEqual(expectedFor('openhouse-customer-contact.html'));
-  });
-  it('anabuki-general-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('anabuki-general-contact.html')).toEqual(expectedFor('anabuki-general-contact.html'));
-  });
-  it('anabuki-landuse-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('anabuki-landuse-contact.html')).toEqual(expectedFor('anabuki-landuse-contact.html'));
-  });
-  it('haseko-contact-input.html fills the in-scope fields', async () => {
-    expect(await planFor('haseko-contact-input.html')).toEqual(expectedFor('haseko-contact-input.html'));
-  });
-  it('toshin-shiryo-form.html fills the in-scope fields', async () => {
-    expect(await planFor('toshin-shiryo-form.html')).toEqual(expectedFor('toshin-shiryo-form.html'));
-  });
-  it('toshin-mendan-form.html fills the in-scope fields', async () => {
-    expect(await planFor('toshin-mendan-form.html')).toEqual(expectedFor('toshin-mendan-form.html'));
-  });
-  it('yotsuya-nyujuku-form.html fills the in-scope fields', async () => {
-    expect(await planFor('yotsuya-nyujuku-form.html')).toEqual(expectedFor('yotsuya-nyujuku-form.html'));
-  });
-  it('kumon-annai-form.html fills the in-scope fields', async () => {
-    expect(await planFor('kumon-annai-form.html')).toEqual(expectedFor('kumon-annai-form.html'));
-  });
-  it('manavis-shiryo-form.html fills the in-scope fields', async () => {
-    expect(await planFor('manavis-shiryo-form.html')).toEqual(expectedFor('manavis-shiryo-form.html'));
-  });
-  it('eikoh-shiryo-form.html fills the in-scope fields', async () => {
-    expect(await planFor('eikoh-shiryo-form.html')).toEqual(expectedFor('eikoh-shiryo-form.html'));
-  });
-  it('cigr-ir-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('cigr-ir-contact.html')).toEqual(expectedFor('cigr-ir-contact.html'));
-  });
-  it('shozemi-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('shozemi-contact-form.html')).toEqual(expectedFor('shozemi-contact-form.html'));
-  });
-  it('waseda-ac-form.html fills the in-scope fields', async () => {
-    expect(await planFor('waseda-ac-form.html')).toEqual(expectedFor('waseda-ac-form.html'));
-  });
-  it('morijuku-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('morijuku-contact-form.html')).toEqual(expectedFor('morijuku-contact-form.html'));
-  });
-  it('wadakohsan-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('wadakohsan-inquiry.html')).toEqual(expectedFor('wadakohsan-inquiry.html'));
-  });
-  it('jiritsu-red-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('jiritsu-red-contact-form.html')).toEqual(expectedFor('jiritsu-red-contact-form.html'));
-  });
-  it('hhp-site-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('hhp-site-inquiry.html')).toEqual(expectedFor('hhp-site-inquiry.html'));
-  });
-  it('nttud-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('nttud-inquiry.html')).toEqual(expectedFor('nttud-inquiry.html'));
-  });
-  it('sekisui-catalog-request.html fills the in-scope fields', async () => {
-    expect(await planFor('sekisui-catalog-request.html')).toEqual(expectedFor('sekisui-catalog-request.html'));
-  });
-  it('tomas-trial-form.html fills the in-scope fields', async () => {
-    expect(await planFor('tomas-trial-form.html')).toEqual(expectedFor('tomas-trial-form.html'));
-  });
-  it('try-gakuin-reserve-form.html fills the in-scope fields', async () => {
-    expect(await planFor('try-gakuin-reserve-form.html')).toEqual(expectedFor('try-gakuin-reserve-form.html'));
-  });
-  it('meiko-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('meiko-contact-form.html')).toEqual(expectedFor('meiko-contact-form.html'));
-  });
-  it('sekisui-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('sekisui-inquiry-form.html')).toEqual(expectedFor('sekisui-inquiry-form.html'));
-  });
-  it('keishin-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('keishin-contact-form.html')).toEqual(expectedFor('keishin-contact-form.html'));
-  });
-  it('sekisui-mail-form.html fills the in-scope fields', async () => {
-    expect(await planFor('sekisui-mail-form.html')).toEqual(expectedFor('sekisui-mail-form.html'));
-  });
-  it('rinkai-shiryo-form.html fills the in-scope fields', async () => {
-    expect(await planFor('rinkai-shiryo-form.html')).toEqual(expectedFor('rinkai-shiryo-form.html'));
-  });
-  it('sanaru-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('sanaru-contact-form.html')).toEqual(expectedFor('sanaru-contact-form.html'));
-  });
-  it('ichishin-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ichishin-contact-form.html')).toEqual(expectedFor('ichishin-contact-form.html'));
-  });
-  it('ena-request-form.html fills the in-scope fields', async () => {
-    expect(await planFor('ena-request-form.html')).toEqual(expectedFor('ena-request-form.html'));
-  });
-  it('eishinkan-contact-form.html fills the in-scope fields', async () => {
-    expect(await planFor('eishinkan-contact-form.html')).toEqual(expectedFor('eishinkan-contact-form.html'));
-  });
-  it('axis-inquiry-form.html fills the in-scope fields', async () => {
-    expect(await planFor('axis-inquiry-form.html')).toEqual(expectedFor('axis-inquiry-form.html'));
-  });
-  it('yotsuya-littleclub-form.html fills the in-scope fields', async () => {
-    expect(await planFor('yotsuya-littleclub-form.html')).toEqual(expectedFor('yotsuya-littleclub-form.html'));
-  });
-  it('fujita-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('fujita-contact.html')).toEqual(expectedFor('fujita-contact.html'));
-  });
-  it('yamada-holdings-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('yamada-holdings-contact.html')).toEqual(expectedFor('yamada-holdings-contact.html'));
-  });
-  it('apaman-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('apaman-contact.html')).toEqual(expectedFor('apaman-contact.html'));
-  });
-  it('jpaa-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('jpaa-contact.html')).toEqual(expectedFor('jpaa-contact.html'));
-  });
-  it('nkanzai-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('nkanzai-contact.html')).toEqual(expectedFor('nkanzai-contact.html'));
   });
 });

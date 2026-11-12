@@ -155,8 +155,10 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
   // wiring did not land: the tool reports failure instead of claiming success.
   const ledgerAfter = readFileSync(ledgerPath, 'utf8');
   const testAfter = readFileSync(testPath, 'utf8');
+  // samples.test.ts aggregates the定型 cases in one it.each file list, so the
+  // read-back matches the quoted file name instead of the old per-case title.
   const missing = wiredNames.filter((name) =>
-    !ledgerAfter.includes(`'${name}': {`) || !testAfter.includes(`it('${name} fills the in-scope fields'`),
+    !ledgerAfter.includes(`'${name}': {`) || !testAfter.includes(`'${name}'`),
   );
   if (missing.length > 0) {
     console.error(`wiring failed: the corpus ledger or samples.test.ts does not carry: ${missing.join(', ')}`);
