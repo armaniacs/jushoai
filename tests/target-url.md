@@ -93,4 +93,4 @@
 - https://www.anabuki.ne.jp/contact/form.php?contact_type=1 → anabuki-general-contact.html
 - https://www.anabuki.ne.jp/contact/landuse/?contact_type=7 → anabuki-landuse-contact.html
 - https://www.haseko.co.jp/hc/contact/input → haseko-contact-input.html
-- https://www.toshin.com/sform/shiryo-seikyu/input?form_action=shiryo → input.html
+- https://www.toshin.com/sform/shiryo-seikyu/input?form_action=shiryo → toshin-shiryo-form.html
