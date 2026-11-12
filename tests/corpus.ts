@@ -3568,6 +3568,34 @@ const LEDGER = {
       '(no name/id) (text): unaddressable (exclude)',
     ],
   },
+  'shozemi-contact-form.html': {
+    expected: {
+      // 湘南ゼミナール。氏名2行は実ページどおり dt/dd 見出しを復元
+      // (mitsuihome 前例)。name 起点で解決し placeholder とは逆対応になる
+      // (first_name=姓欄に太郎。honest pin)。
+      'first_name': '太郎',
+      'last_name': '山田',
+      'katakana_first_name': 'タロウ',
+      'katakana_last_name': 'ヤマダ',
+      'tel': '09012345678',
+      'email': 'yamada@example.com',
+      'zip': '100-0001',
+      'address': '千代田1-1 千代田ビル101',
+    },
+    excluded: [
+      'gakunen/purpose/area_prefecture_req/area_city/area_school/area_prefecture (select): only a `--` option, correctly warn-no-option',
+      'referer_url (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'content[] (checkbox): out of scope (skip fixed)',
+      'content[] (checkbox): out of scope (skip fixed)',
+      'content[] (checkbox): out of scope (skip fixed)',
+      'content[] (checkbox): out of scope (skip fixed)',
+      'content[] (checkbox): out of scope (skip fixed)',
+      'Form__addressBtn (button): action element, never a fill target (exclude)',
+      'request (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'Form__submitButton (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

@@ -1,0 +1,35 @@
+<!-- Minimal reproduction of https://www.shozemi.com/contact/. Values stripped; trim further before committing. -->
+<form>
+      <select name="gakunen" id="gakunen"><option value="">--</option></select>
+      <dl>
+      <dt>お子様のお名前</dt>
+      <dd>
+      <input name="first_name" id="first-name" type="text" value="" placeholder="姓" maxlength="255">
+      <input name="last_name" id="last-name" type="text" value="" placeholder="名" maxlength="255">
+      </dd>
+      <dt>お子様のお名前（フリガナ）</dt>
+      <dd>
+      <input name="katakana_first_name" id="katakana-first-name" type="text" value="" placeholder="セイ" maxlength="255">
+      <input name="katakana_last_name" id="katakana-last-name" type="text" value="" placeholder="メイ" maxlength="255">
+      </dd>
+      </dl>
+      <input name="tel" id="phone" type="tel" value="" placeholder="08012345678" maxlength="11">
+      <input name="email" id="email" type="email" value="" placeholder="shonan@sample.com" maxlength="255">
+      <select name="purpose" id="purpose"><option value="">--</option></select>
+      <select name="area_prefecture_req" id="area-prefecture-req"><option value="">--</option></select>
+      <select name="area_city" id="area-city"><option value="">--</option></select>
+      <select name="area_school" id="area-school"><option value="">--</option></select>
+      <input name="zip" id="zip" type="tel" value="" placeholder="1506222" maxlength="8">
+      <select name="area_prefecture" id="area-prefecture"><option value="">--</option></select>
+      <input name="address" id="address" type="text" value="" placeholder="東京都渋谷区桜丘町1-1">
+<!-- skip: referer_url (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: _token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: content[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: content[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: content[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: content[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: content[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: Form__addressBtn (button): action element, never a fill target (exclude) -->
+<!-- skip: request (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: Form__submitButton (button): action element, never a fill target (exclude) -->
+</form>
