@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.toyoda-gosei.co.jp/contact/seihin_form/
+  (豊田合成7282・製品お問い合わせ).
+  Field names, placeholders, maxlengths, and control kinds mirror the real
+  page. Rows are kept as minimal tr/th since the scanner reads tr>th as
+  nearby (lixil-inquiry-form.html 前例). The email placeholder was numeric
+  character references on the real page, decoded to UTF-8 (aeon 前例).
+  matter textarea stays skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>豊田合成 製品お問い合わせ (gosei)</title>
+<form>
+<table>
+<tr><th>必須お名前</th><td><input type="text" name="name" id="name1" value="" placeholder="例）合成 太郎" maxlength="128"></td></tr>
+<tr><th>必須ふりがな</th><td><input type="text" name="name2" id="name2" value="" placeholder="例）ごうせい たろう" maxlength="128"></td></tr>
+<tr><th>勤務先</th><td><input type="text" name="company" value="" placeholder="例）豊田合成株式会社" maxlength="128"></td></tr>
+<tr><th>所属</th><td><input type="text" name="affiliation" value="" maxlength="128"></td></tr>
+<tr><th>ご住所</th><td><input type="text" name="zip1" value="" placeholder="例）452" maxlength="3"><input type="text" name="zip2" value="" placeholder="例）8564" maxlength="4"><input type="text" name="adr1" value="" placeholder="例）愛知県清須市春日長畑1番地" maxlength="256"></td></tr>
+<tr><th>お電話番号</th><td><input type="text" name="tel" value="" placeholder="例）1234567891" maxlength="32"></td></tr>
+<tr><th>FAX</th><td><input type="text" name="fax" value="" placeholder="例）1234567891" maxlength="32"></td></tr>
+<tr><th>必須メールアドレス</th><td><input type="text" name="email" id="email" value="" placeholder="例）taro@sample.co.jp" maxlength="254"></td></tr>
+<tr><th>必須メールアドレス確認用</th><td><input type="text" name="email2" id="email2" value="" placeholder="例）taro@sample.co.jp" maxlength="254"></td></tr>
+</table>
+</form>

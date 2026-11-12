@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form.kikkoman.co.jp/m/website
+  (キッコーマン お問い合わせ).
+  Field names, ids, placeholders, maxlengths, and control kinds mirror the
+  real page. The real page carries its headings (お問い合わせタイトル /
+  お名前 姓・名 / ふりがな せい・めい / 性別 / 電話番号 / メールアドレス確認
+  再入力) in table cells with no <label> association (the single label on the
+  page belongs to the agreement checkbox), so the scanner sees the same
+  placeholder-only inputs as here. The 性別 select options are restored
+  verbatim (the scaffolder strips select options to `--`;
+  gender-select-form.html precedent).
+-->
+<html lang="ja"><meta charset="utf-8"><title>キッコーマン お問い合わせ (food)</title>
+<form>
+      <input name="e_25018" id="e_25018" type="text" value="">
+      <input name="e_26455" id="e_26455" type="text" value="">
+      <input name="e_25020" id="e_25020" type="text" value="" placeholder="姓">
+      <input name="e_25021" id="e_25021" type="text" value="" placeholder="名">
+      <input name="e_25022" id="e_25022" type="text" value="" placeholder="せい">
+      <input name="e_25023" id="e_25023" type="text" value="" placeholder="めい">
+      <select name="e_25042" id="e_25042"><option value="">選択してください</option><option value="1">女性</option><option value="2">男性</option><option value="3">その他</option></select>
+      <input name="e_25028[tel1]" id="e_25028[tel1]" type="text" value="" maxlength="5">
+      <input name="e_25028[tel2]" id="e_25028[tel2]" type="text" value="" maxlength="4">
+      <input name="e_25028[tel3]" id="e_25028[tel3]" type="text" value="" maxlength="4">
+      <input name="e_25031" id="e_25031" type="text" value="">
+      <input name="e_25031_re" id="e_25031_re" type="text" value="">
+</form>

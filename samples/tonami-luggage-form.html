@@ -1,0 +1,28 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.tonami.co.jp/contact/luggage/
+  (トナミ運輸9070・Contact Form 7).
+  Field names, placeholders, maxlengths, and control kinds mirror the real
+  contact form only. The header site-search form (name=s) is a separate form
+  and is dropped (kubota search-form 前例). Rows are kept as minimal dl/dt/dd
+  since the scanner reads dd>dt as nearby (yoshinoya-store-form.html 前例).
+  The prefectures select carries the real options. radio-type is 個人/法人
+  (not gender/decade) and stays skipped; textarea/agree stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>トナミ運輸 お問い合わせ (tonami)</title>
+<form>
+<dl>
+<dt>個人 / 法人 必須</dt><dd></dd>
+<dt>会社名（法人のみ） 任意</dt><dd><input name="company_name_s" type="text" value="" placeholder="例：トナミ運輸株式会社" maxlength="400"></dd>
+<dt>部署・役職 任意</dt><dd><input name="position" type="text" value="" maxlength="400"></dd>
+<dt>お名前（全角） 必須</dt><dd><label for="name1_1">姓</label><input name="name-sei" id="name1_1" type="text" value="" placeholder="砺波" maxlength="400"><label for="name1_2">名</label><input name="name-mei" id="name1_2" type="text" value="" placeholder="太郎" maxlength="400"></dd>
+<dt>郵便番号 任意</dt><dd><label for="post_code">〒</label><input name="post_code" id="post_code" type="text" value="" placeholder="例：933-8566" maxlength="400"></dd>
+<dt>都道府県 必須</dt><dd><select name="prefectures" id=""><option value="選択してください">選択してください</option><option value="北海道">北海道</option><option value="青森県">青森県</option><option value="岩手県">岩手県</option><option value="宮城県">宮城県</option><option value="秋田県">秋田県</option><option value="山形県">山形県</option><option value="福島県">福島県</option><option value="茨城県">茨城県</option><option value="栃木県">栃木県</option><option value="群馬県">群馬県</option><option value="埼玉県">埼玉県</option><option value="千葉県">千葉県</option><option value="東京都">東京都</option><option value="神奈川県">神奈川県</option><option value="新潟県">新潟県</option><option value="富山県">富山県</option><option value="石川県">石川県</option><option value="福井県">福井県</option><option value="山梨県">山梨県</option><option value="長野県">長野県</option><option value="岐阜県">岐阜県</option><option value="静岡県">静岡県</option><option value="愛知県">愛知県</option><option value="三重県">三重県</option><option value="滋賀県">滋賀県</option><option value="京都府">京都府</option><option value="大阪府">大阪府</option><option value="兵庫県">兵庫県</option><option value="奈良県">奈良県</option><option value="和歌山県">和歌山県</option><option value="鳥取県">鳥取県</option><option value="島根県">島根県</option><option value="岡山県">岡山県</option><option value="広島県">広島県</option><option value="山口県">山口県</option><option value="徳島県">徳島県</option><option value="香川県">香川県</option><option value="愛媛県">愛媛県</option><option value="高知県">高知県</option><option value="福岡県">福岡県</option><option value="佐賀県">佐賀県</option><option value="長崎県">長崎県</option><option value="熊本県">熊本県</option><option value="大分県">大分県</option><option value="宮崎県">宮崎県</option><option value="鹿児島県">鹿児島県</option><option value="沖縄県">沖縄県</option></select></dd>
+<dt>市区町村 必須</dt><dd><input name="address1" type="text" value="" placeholder="例：高岡市昭和町" maxlength="400"></dd>
+<dt>番地、建物名 必須</dt><dd><input name="address2" type="text" value="" placeholder="例：3丁目2番12号" maxlength="400"></dd>
+<dt>電話番号 必須</dt><dd><input name="phone_number" type="text" value="" placeholder="例：0766-21-1073" maxlength="400"></dd>
+<dt>メールアドレス 必須</dt><dd><input name="email" type="email" value="" placeholder="例：tonami1073@tonami-tonami.com" maxlength="400"></dd>
+<dt>確認用メールアドレス 必須</dt><dd><input name="email_confirm" type="email" value="" placeholder="例：tonami1073@tonami-tonami.com" maxlength="400"></dd>
+<dt>お問い合わせ番号 任意</dt><dd><input name="tracking_number" type="text" value="" placeholder="例：0123456789" maxlength="400"></dd>
+</dl>
+</form>

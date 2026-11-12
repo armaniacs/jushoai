@@ -1,0 +1,19 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://webform.ricoh.com/form/pub/e00103/risb
+  (リコー経済社会研究所お問い合わせ, same cform family as epson-csr-form).
+  Field names, ids, maxlengths, and control kinds mirror the real page. The
+  real page carries its headings (お名前 姓/名 / メールアドレス確認再入力 /
+  電話番号3分割) in table cells with no <label> association and no placeholder
+  attributes, so the scanner sees the same bare inputs as here.
+-->
+<html lang="ja"><meta charset="utf-8"><title>リコー経済社会研究所お問い合わせ (manufacturer)</title>
+<form>
+      <input name="c_q1_first" id="c_q1_first" type="text" value="" maxlength="100">
+      <input name="c_q1_second" id="c_q1_second" type="text" value="" maxlength="100">
+      <input name="c_q70" id="c_q70" type="text" value="" maxlength="255">
+      <input name="c_q70_confirm" id="c_q70_confirm" type="text" value="" maxlength="255">
+      <input name="c_q3_areacode" id="c_q3_areacode" type="text" value="" maxlength="5">
+      <input name="c_q3_citycode" id="c_q3_citycode" type="text" value="" maxlength="4">
+      <input name="c_q3_subscribercode" id="c_q3_subscribercode" type="text" value="" maxlength="4">
+</form>

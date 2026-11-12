@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://cform.epson.jp/form5/pub/e040/1009009009015109731
+  (エプソン CSR・環境活動お問い合わせ).
+  Field names, ids, maxlengths, and control kinds mirror the real page. The
+  real page numbers its questions in table cells with no <label> or th
+  association (1.Eメールアドレス確認再入力 / 2.お名前 姓・名 / 3.フリガナ
+  セイ・メイ / 4.郵便番号 / 5.都道府県 / 6.市郡区町村 / 7.町域 / 8.番地 /
+  9.ビル・マンション名 / 10.電話番号3分割 / 11.FAX番号3分割 / 12.会社名・団体名),
+  so the scanner sees the same bare inputs as here. The c_q6 prefecture
+  options are restored verbatim (the scaffolder strips select options to `--`;
+  formmailer-anketo-gender.html precedent). The 住所検索ボタン and
+  c_q16 textarea stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>エプソン CSR・環境活動お問い合わせ (manufacturer)</title>
+<form>
+      <input name="c_q1" id="c_q1" type="text" value="" maxlength="160">
+      <input name="c_q1_confirm" id="c_q1_confirm" type="text" value="" maxlength="160">
+      <input name="c_q3_first" id="c_q3_first" type="text" value="" maxlength="10">
+      <input name="c_q3_second" id="c_q3_second" type="text" value="" maxlength="10">
+      <input name="c_q4_first" id="c_q4_first" type="text" value="" maxlength="20">
+      <input name="c_q4_second" id="c_q4_second" type="text" value="" maxlength="20">
+      <input name="c_q5_left" id="c_q5_left" type="text" value="" maxlength="3">
+      <input name="c_q5_right" id="c_q5_right" type="text" value="" maxlength="4">
+      <select name="c_q6" id="c_q6"><option value="">お選びください</option><option value="0">北海道</option><option value="1">青森県</option><option value="2">岩手県</option><option value="3">宮城県</option><option value="4">秋田県</option><option value="5">山形県</option><option value="6">福島県</option><option value="7">茨城県</option><option value="8">栃木県</option><option value="9">群馬県</option><option value="10">埼玉県</option><option value="11">千葉県</option><option value="12">東京都</option><option value="13">神奈川県</option><option value="14">新潟県</option><option value="15">富山県</option><option value="16">石川県</option><option value="17">福井県</option><option value="18">山梨県</option><option value="19">長野県</option><option value="20">岐阜県</option><option value="21">静岡県</option><option value="22">愛知県</option><option value="23">三重県</option><option value="24">滋賀県</option><option value="25">京都府</option><option value="26">大阪府</option><option value="27">兵庫県</option><option value="28">奈良県</option><option value="29">和歌山県</option><option value="30">鳥取県</option><option value="31">島根県</option><option value="32">岡山県</option><option value="33">広島県</option><option value="34">山口県</option><option value="35">徳島県</option><option value="36">香川県</option><option value="37">愛媛県</option><option value="38">高知県</option><option value="39">福岡県</option><option value="40">佐賀県</option><option value="41">長崎県</option><option value="42">熊本県</option><option value="43">大分県</option><option value="44">宮崎県</option><option value="45">鹿児島県</option><option value="46">沖縄県</option></select>
+      <input name="c_q7" id="c_q7" type="text" value="" maxlength="50">
+      <input name="c_q8" id="c_q8" type="text" value="" maxlength="50">
+      <input name="c_q10" id="c_q10" type="text" value="" maxlength="50">
+      <input name="c_q9" id="c_q9" type="text" value="" maxlength="50">
+      <input name="c_q14_areacode" id="c_q14_areacode" type="text" value="" maxlength="5">
+      <input name="c_q14_citycode" id="c_q14_citycode" type="text" value="" maxlength="4">
+      <input name="c_q14_subscribercode" id="c_q14_subscribercode" type="text" value="" maxlength="4">
+      <input name="c_q15_areacode" id="c_q15_areacode" type="text" value="" maxlength="5">
+      <input name="c_q15_citycode" id="c_q15_citycode" type="text" value="" maxlength="4">
+      <input name="c_q15_subscribercode" id="c_q15_subscribercode" type="text" value="" maxlength="4">
+      <input name="c_q11" id="c_q11" type="text" value="" maxlength="50">
+</form>

@@ -1,0 +1,50 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form.azbil.com/form/pub/contact/kikubari_contact
+  (アズビル6845・きくばり資料請求).
+  Field names, ids, maxlengths, and control kinds mirror the real page.
+  The real page carries its questions in plain td.fm-question cells with no
+  <label> association, so the scanner sees the same bare inputs as here
+  (epson-ir-form.html / ricoh-vulnerability-form.html 前例). The c_q4
+  prefecture select carries the real options (numeric values 0-46).
+  None of the radio groups is gender/decade (all matrix/choice), so every
+  radio stays skipped per policy. The c_q1/c_q2 姓/名/せい/めい inline texts
+  are answer-cell spans the scanner does not read (dropped, brother 前例).
+  question textarea, file inputs, checkboxes, and the hidden shims stay
+  skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>アズビル きくばり資料請求 (azbil)</title>
+<form>
+      <input name="c_q1_first" id="c_q1_first" type="text" value="" maxlength="100">
+      <input name="c_q1_second" id="c_q1_second" type="text" value="" maxlength="100">
+      <input name="c_q2_first" id="c_q2_first" type="text" value="" maxlength="100">
+      <input name="c_q2_second" id="c_q2_second" type="text" value="" maxlength="100">
+      <input name="c_q3_left" id="c_q3_left" type="text" value="" maxlength="3">
+      <input name="c_q3_right" id="c_q3_right" type="text" value="" maxlength="4">
+      <select name="c_q4" id="c_q4"><option value=""></option><option value="0">北海道</option><option value="1">青森県</option><option value="2">岩手県</option><option value="3">宮城県</option><option value="4">秋田県</option><option value="5">山形県</option><option value="6">福島県</option><option value="7">茨城県</option><option value="8">栃木県</option><option value="9">群馬県</option><option value="10">埼玉県</option><option value="11">千葉県</option><option value="12">東京都</option><option value="13">神奈川県</option><option value="14">新潟県</option><option value="15">富山県</option><option value="16">石川県</option><option value="17">福井県</option><option value="18">山梨県</option><option value="19">長野県</option><option value="20">岐阜県</option><option value="21">静岡県</option><option value="22">愛知県</option><option value="23">三重県</option><option value="24">滋賀県</option><option value="25">京都府</option><option value="26">大阪府</option><option value="27">兵庫県</option><option value="28">奈良県</option><option value="29">和歌山県</option><option value="30">鳥取県</option><option value="31">島根県</option><option value="32">岡山県</option><option value="33">広島県</option><option value="34">山口県</option><option value="35">徳島県</option><option value="36">香川県</option><option value="37">愛媛県</option><option value="38">高知県</option><option value="39">福岡県</option><option value="40">佐賀県</option><option value="41">長崎県</option><option value="42">熊本県</option><option value="43">大分県</option><option value="44">宮崎県</option><option value="45">鹿児島県</option><option value="46">沖縄県</option></select>
+      <input name="c_q5" id="c_q5" type="text" value="" maxlength="255">
+      <input name="c_q7" id="c_q7" type="text" value="" maxlength="255">
+      <input name="c_q8_areacode" id="c_q8_areacode" type="tel" value="" maxlength="5">
+      <input name="c_q8_citycode" id="c_q8_citycode" type="tel" value="" maxlength="4">
+      <input name="c_q8_subscribercode" id="c_q8_subscribercode" type="tel" value="" maxlength="4">
+      <input name="c_q9" id="c_q9" type="text" value="" placeholder="(例)******＠kikubari.com" maxlength="255">
+      <input name="c_q13_areacode" id="c_q13_areacode" type="tel" value="" maxlength="5">
+      <input name="c_q13_citycode" id="c_q13_citycode" type="tel" value="" maxlength="4">
+      <input name="c_q13_subscribercode" id="c_q13_subscribercode" type="tel" value="" maxlength="4">
+      <input name="c_q14" id="c_q14" type="text" value="" placeholder="(例)******＠kikubari.com" maxlength="255">
+      <input name="c_q15" id="c_q15" type="text" value="" maxlength="255">
+      <input name="c_q17_areacode" id="c_q17_areacode" type="tel" value="" maxlength="5">
+      <input name="c_q17_citycode" id="c_q17_citycode" type="tel" value="" maxlength="4">
+      <input name="c_q17_subscribercode" id="c_q17_subscribercode" type="tel" value="" maxlength="4">
+      <input name="c_q18" id="c_q18" type="text" value="" placeholder="(例)******＠kikubari.com" maxlength="255">
+      <input name="c_q23_etc_text" id="c_q23_etc_text" type="text" value="" maxlength="255">
+      <input name="c_q24_etc_text" id="c_q24_etc_text" type="text" value="" maxlength="255">
+      <input name="c_q26_etc_text" id="c_q26_etc_text" type="text" value="" maxlength="255">
+      <input name="c_q27" id="c_q27" type="text" value="" maxlength="255">
+      <input name="c_q29" id="c_q29" type="text" value="" maxlength="255">
+      <input name="c_q30" id="c_q30" type="text" value="" maxlength="255">
+      <input name="c_q31" id="c_q31" type="text" value="" maxlength="255">
+      <input name="c_q32" id="c_q32" type="text" value="" maxlength="255">
+      <input name="c_q33" id="c_q33" type="text" value="" maxlength="255">
+      <input name="c_q34" id="c_q34" type="text" value="" maxlength="255">
+</form>

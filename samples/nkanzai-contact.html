@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.nkanzai.co.jp/contact/
+  (日本管財総合窓口).
+  The real page is dl/dt/dd rows with no <label> association: dt headings
+  carry the signal (scanner reads dt as nearby, same as apaman/mitsui-reform).
+  The SP-only contactselect is a tab switcher outside the form (redirects to
+  sibling contact pages), and q is header/footer site search: both trimmed as
+  site chrome. agree is a privacy checkbox (skip fixed). 住所・電話欄なし.
+  In-scope controls: 4 (contact_subject, contact_name, contact_mail,
+  contact_mail_r).
+-->
+<html lang="ja"><meta charset="utf-8"><title>日本管財お問い合わせ</title>
+<form name="contact" action="./confirm/" method="post">
+<dl>
+<dt class="required">件名必須</dt>
+<dd><input type="text" name="contact_subject" placeholder="例）サービス内容について" maxlength="50"></dd>
+</dl>
+<dl>
+<dt class="required">氏名必須</dt>
+<dd><input type="text" name="contact_name" placeholder="例）日本 太郎" maxlength="255"></dd>
+</dl>
+<dl>
+<dt class="required">メールアドレス必須</dt>
+<dd><input type="text" name="contact_mail" placeholder="例）contact@nkanzai.co.jp" maxlength="255"></dd>
+</dl>
+<dl>
+<dt class="required">メールアドレス（確認用）必須</dt>
+<dd><input type="text" name="contact_mail_r" placeholder="例）contact@nkanzai.co.jp" maxlength="255"></dd>
+</dl>
+</form>
+</html>

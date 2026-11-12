@@ -1,0 +1,23 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form.kikkoman.co.jp/m/media
+  (キッコーマン 報道関係者向け取材お問い合わせ).
+  Field names, ids, maxlengths, and control kinds mirror the real page. The
+  real page has no placeholder attributes and carries its headings (貴社名 /
+  媒体名 / お名前 / ふりがな / 電話番号 / メールアドレス確認再入力) in table
+  cells with no <label> association (same family as kikkoman-website-form),
+  so the scanner sees the same bare inputs as here. Only the 9 in-scope
+  text controls are kept.
+-->
+<html lang="ja"><meta charset="utf-8"><title>キッコーマン 報道関係者向け取材お問い合わせ (food)</title>
+<form>
+      <input name="e_29111" id="e_29111" type="text" value="">
+      <input name="e_29112" id="e_29112" type="text" value="">
+      <input name="e_29113" id="e_29113" type="text" value="">
+      <input name="e_29114" id="e_29114" type="text" value="">
+      <input name="e_29115[tel1]" id="e_29115[tel1]" type="text" value="" maxlength="5">
+      <input name="e_29115[tel2]" id="e_29115[tel2]" type="text" value="" maxlength="4">
+      <input name="e_29115[tel3]" id="e_29115[tel3]" type="text" value="" maxlength="4">
+      <input name="e_29116" id="e_29116" type="text" value="">
+      <input name="e_29116_re" id="e_29116_re" type="text" value="">
+</form>

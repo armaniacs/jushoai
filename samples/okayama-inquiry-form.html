@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://com.city.okayama.jp/mailform/inquiry.cgi?so=532dba13cf0d370e939aeb7c15b7805de6a29ab8&ref=https%3A%2F%2Fwww.city.okayama.jp%2Fshisei%2F0000001222.html
+  (岡山市 広報広聴課広聴担当へのお問い合わせ, mailform inquiry.cgi).
+  Field names, labels, maxlengths, and control kinds mirror the real page.
+  The four q inputs are the header/footer/article-ID site-search boxes
+  (Google CSE 検索キーワード / 記事ID検索, same as forum.html s); they stay
+  in the fixture and unclassified. naiyou (textarea) stays dropped (not scanned).
+-->
+<html lang="ja"><meta charset="utf-8"><title>岡山市 お問い合わせ (municipal)</title>
+<form>
+      <input name="q" id="" type="text" value="">
+      <input name="q" id="" type="text" value="" placeholder="記事ID検索">
+      <input name="q" id="" type="text" value="">
+      <input name="q" id="" type="text" value="" placeholder="記事ID検索">
+      <label for="namae">名前</label>
+      <input name="namae" id="namae" type="text" value="" maxlength="100">
+      <label for="hurigana">ふりがな</label>
+      <input name="hurigana" id="hurigana" type="text" value="" maxlength="100">
+      <label for="jyusyo">住所</label>
+      <input name="jyusyo" id="jyusyo" type="text" value="" maxlength="100">
+      <label for="denwa_no">電話番号</label>
+      <input name="denwa_no" id="denwa_no" type="text" value="" maxlength="100">
+      <label for="fax_no">ファクス番号</label>
+      <input name="fax_no" id="fax_no" type="text" value="" maxlength="100">
+      <label for="mail">メールアドレス（英数半角）</label>
+      <input name="mail" id="mail" type="text" value="" maxlength="320">
+      <label for="mail2">メールアドレス（確認のためもう一度入力してください）</label>
+      <input name="mail2" id="mail2" type="text" value="" maxlength="320">
+      <label for="taitoru">件名</label>
+      <input name="taitoru" id="taitoru" type="text" value="" maxlength="100">
+</form>

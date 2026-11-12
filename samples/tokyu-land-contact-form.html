@@ -1,0 +1,41 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.tokyu-land.co.jp/form/contact/
+  (東急不動産 総合お問い合わせ).
+  Field ids, names, and control kinds mirror the real page. The real page
+  lays each row out as its own dl/dt/dd (no <label> association), and the
+  scanner reads the dt text as nearby, so the headings are kept verbatim.
+  The type radios carry real option labels but are not gender/decade, so
+  they stay skipped. The q pair are header/footer site-search boxes.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東急不動産 総合お問い合わせ (real-estate)</title>
+<form>
+      <input name="q" id="q1" type="search" value="" placeholder="サイト内検索">
+      <input name="q" id="q2" type="search" value="" placeholder="サイト内検索">
+<dl>
+<div><dt>お名前</dt><dd>
+      <input name="name" id="name" type="text" value="">
+</dd></div>
+<div><dt>フリガナ</dt><dd>
+      <input name="kana" id="kana" type="text" value="">
+</dd></div>
+<div><dt>住所（資料送付をご希望の方は必ずご記入ください）</dt><dd>
+      <input name="zip" id="zip" type="text" value="">
+</dd></div>
+<div><dt>都道府県</dt><dd>
+      <select name="pref" id="pref"><option value="">--</option></select>
+</dd></div>
+<div><dt>市区町村</dt><dd>
+      <input name="address1" id="" type="text" value="">
+</dd></div>
+<div><dt>番地・建物名</dt><dd>
+      <input name="address2" id="" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="mail" id="mail" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス（確認用）</dt><dd>
+      <input name="mail2" id="mail2" type="text" value="">
+</dd></div>
+</dl>
+</form>

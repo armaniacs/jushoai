@@ -1,0 +1,18 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://form.mitsui-chintai.co.jp/webapp/form/19959_rndb_66/index.do
+  (三井不動産リアルティ パークアクシスお問い合わせ, Struts Webフォーム).
+  Field names, ids, placeholders, and control kinds mirror the real page. The
+  real page numbers its questions with no <label> association (same Struts
+  family as kobe-city-contact-form.html), so the scanner sees the same
+  placeholder-only text fields as here. Only 5 in-scope controls (the rest
+  is hidden state + checkbox + textarea).
+-->
+<html lang="ja"><meta charset="utf-8"><title>三井不動産リアルティ パークアクシスお問い合わせ (real-estate)</title>
+<form>
+      <input name="singleAnswer(ANSWER1861)" id="form-detail-name-203" type="text" value="" placeholder="例）三井　太郎">
+      <input name="singleAnswer(ANSWER1862)" id="form-detail-name-204" type="text" value="" placeholder="例）ミツイ　タロウ">
+      <input name="singleAnswer(ANSWER1863)" id="form-detail-name-186" type="text" value="" placeholder="例）info@mitsui-chintai.co.jp">
+      <input name="singleAnswer(ANSWER1864)" id="form-detail-name-205" type="text" value="" placeholder="例）0312345678">
+      <input name="singleAnswer(ANSWER1880)" id="form-detail-name-203" type="text" value="" placeholder="例）パークアクシス豊洲">
+</form>

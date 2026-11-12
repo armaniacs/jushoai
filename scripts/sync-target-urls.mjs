@@ -4,18 +4,30 @@
 // `→ fixture` mapping back to the registry.
 // Static HTML only; expectations stay '<expected>' placeholders for humans.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { buildWiring, fixtureNameFromUrl } from './add-fixture.mjs';
+import { buildWiring, fixtureNameFromUrl, isFixtureWired } from './add-fixture.mjs';
 import { FETCH_TIMEOUT_MS, fetchPage } from './shared-fetch.mjs';
 
 // Re-exported so existing importers keep working; the implementation lives in
 // scripts/shared-fetch.mjs, the single fetch seam for both fixture CLIs.
 export { FETCH_TIMEOUT_MS, fetchPage };
 
+// Single registry-line parser (S6 unification): one regex serves both the
+// reader (parseRegistry) and the writer (stampRegistry), so the `→`/`->`
+// arrow shape cannot drift between them. Group 1 keeps the exact `- ` prefix
+// (leading whitespace included) so stamping preserves the original layout.
+export const REGISTRY_LINE_RE = /^(\s*-\s*)(\S+)(?:\s*(?:→|->)\s*(\S+))?\s*$/;
+
+export function parseRegistryLine(line) {
+  const m = line.match(REGISTRY_LINE_RE);
+  if (!m) return null;
+  return { prefix: m[1], url: m[2], file: m[3] ?? null };
+}
+
 export function parseRegistry(md) {
   const out = [];
   for (const line of md.split('\n')) {
-    const m = line.match(/^\s*-\s*(\S+)(?:\s*(?:→|->)\s*(\S+))?\s*$/);
-    if (m) out.push({ url: m[1], file: m[2] ?? null });
+    const parsed = parseRegistryLine(line);
+    if (parsed) out.push({ url: parsed.url, file: parsed.file });
   }
   return out;
 }
@@ -24,10 +36,14 @@ export function stampRegistry(md, url, file) {
   const lines = md.split('\n');
   let touched = false;
   const next = lines.map((line) => {
-    const m = line.match(/^(\s*-\s*\S+?)((?:\s*(?:→|->)\s*\S+)?)\s*$/);
-    if (m && m[1].trim().slice(2) === url && !m[2]) {
+    const parsed = parseRegistryLine(line);
+    // Pre-S6 strictness (`m[1].trim().slice(2) === url`): only a prefix with a
+    // single whitespace char after the dash is stampable (leading indent
+    // tolerated, `-  url` double-space is not). The reader stays tolerant;
+    // only the writer is strict, as before.
+    if (parsed && parsed.url === url && !parsed.file && /^\s*-\s$/.test(parsed.prefix)) {
       touched = true;
-      return `${m[1]} → ${file}`;
+      return `${parsed.prefix}${url} → ${file}`;
     }
     return line;
   });
@@ -119,8 +135,10 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
   const failedUrls = [];
   for (const { url, file } of selectTargets(parseRegistry(md), { only, all })) {
     // Wired means both the case and the ledger entry are in place; a drift in
-    // either file re-wires through the interface below and heals it.
-    if (file && testSource.includes(`'${file}'`) && ledgerSource.includes(`'${file}': {`)) {
+    // either file re-wires through the interface below and heals it. The test
+    // side matches the array element line (or a legacy stub), never a bare
+    // quoted-name contains-match (see isFixtureWired in add-fixture.mjs).
+    if (file && isFixtureWired(testSource, file) && ledgerSource.includes(`'${file}': {`)) {
       console.log(`skip ${url} (already wired)`);
       continue;
     }
@@ -155,8 +173,11 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
   // wiring did not land: the tool reports failure instead of claiming success.
   const ledgerAfter = readFileSync(ledgerPath, 'utf8');
   const testAfter = readFileSync(testPath, 'utf8');
+  // samples.test.ts aggregates the定型 cases in one it.each file list, so the
+  // read-back matches the array element line (or a legacy stub title), never
+  // a bare quoted-name contains-match.
   const missing = wiredNames.filter((name) =>
-    !ledgerAfter.includes(`'${name}': {`) || !testAfter.includes(`it('${name} fills the in-scope fields'`),
+    !ledgerAfter.includes(`'${name}': {`) || !isFixtureWired(testAfter, name),
   );
   if (missing.length > 0) {
     console.error(`wiring failed: the corpus ledger or samples.test.ts does not carry: ${missing.join(', ')}`);

@@ -503,6 +503,63 @@ const SPLIT_POLICIES: SplitPolicy[] = [
   { from: 'zip', to: ['zip1', 'zip2'], grouping: 'partOrder', parts: ZIP_PARTS },
 ];
 
+// PBI-219: 同ラベル系の grouping キー。splitBy の label 分岐と dropLeftovers
+// で共有する単一の定義で、書式の drift を防ぐ（空キーの畳み込みを含む）。
+const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby}`;
+
+// PBI-09: exact不一致で残った同ラベル系tel/zip群は、plannerが欄ごとに
+// 完全値を複製しないようunknown化する。単独欄・正常分割済みは対象外。
+// 空キー群（label・nearbyとも空）もunknown化する：ブロック帰属を判定できず、
+// 複製注入（誤注入）と不注入（手入力）の二択では後者を選ぶのが本プロジェクトの
+// 方針のため。tests/core/classify-rules.test.ts の空キー回帰で固定。
+// PBI-219: refineWithDrops の (c) leftover unknown 化を切り出した純粋関数。
+// 入力は変えず、新しい配列を返す。dropped 済み欄は合成側で先に取り除くため、
+// 旧所在の droppedIds ガードは引数ではなく合成順序で引き継ぐ。
+export function dropLeftovers(items: Item[]): Item[] {
+  const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  for (const leftover of ['tel', 'zip'] as const) {
+    const groups = new Map<string, number[]>();
+    out.forEach((it, i) => {
+      if (it.cls.category !== leftover) return;
+      const k = sameLabel(it.meta);
+      groups.set(k, [...(groups.get(k) ?? []), i]);
+    });
+    for (const idx of groups.values()) {
+      if (idx.length >= 2) {
+        for (const i of idx) {
+          const it = out[i];
+          if (it) it.cls.category = 'unknown';
+        }
+      }
+    }
+  }
+  return out;
+}
+
+// PBI-12: 住所絞り込みはnearby単位（ブロック単位）で判定する。全体判定だと
+// 別ブロックのprefecture/cityを理由に届け先addressFullがstreet化されるため。
+// nearbyが空の欄はすべて同一スコープに畳まれる（単一ブロック挙動は不変・回帰済み）。
+// 見出しを持たない複数ブロックでは従来の全体判定と等価になる制限がある。
+// PBI-219: refineWithDrops の (d) 住所絞り込みを切り出した純粋関数。
+// 入力は変えず、新しい配列を返す。
+export function narrowAddress(items: Item[]): Item[] {
+  const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
+  for (const it of out) {
+    const g = scopeOf.get(it.meta.nearby) ?? { hasCity: false, hasPref: false };
+    if (it.cls.category === 'city') g.hasCity = true;
+    if (it.cls.category === 'prefecture') g.hasPref = true;
+    scopeOf.set(it.meta.nearby, g);
+  }
+  for (const it of out) {
+    if (it.cls.category !== 'addressFull') continue;
+    const g = scopeOf.get(it.meta.nearby);
+    if (g?.hasCity) it.cls.category = 'street';
+    else if (g?.hasPref) it.cls.category = 'addressNoPref';
+  }
+  return out;
+}
+
 export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   // outはmapで作ったdenseな実体配列であり、indices()産の添字は常に有効。
@@ -546,7 +603,6 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
     }
   };
   const exactSize = (idx: number[], size: number): boolean => idx.length === size;
-  const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby}`;
   // Only consecutive fields under one heading whose labels arrive in part order
   // qualify; anything else keeps the current unsplit protection.
   const partRank = (label: string, parts: RegExp[]): number => {
@@ -573,51 +629,18 @@ export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitD
     }
   }
 
-  // PBI-09: exact不一致で残った同ラベル系tel/zip群は、plannerが欄ごとに
-  // 完全値を複製しないようunknown化する。単独欄・正常分割済み・droppedは対象外。
-  // 空キー群（label・nearbyとも空）もunknown化する：ブロック帰属を判定できず、
-  // 複製注入（誤注入）と不注入（手入力）の二択では後者を選ぶのが本プロジェクトの
-  // 方針のため。tests/core/classify-rules.test.ts の空キー回帰で固定。
+  // PBI-219: 順序固定の合成 split→leftover→narrow。(a) 分割retag・(b) drop は
+  // 上の splitBy が所有し、(c) は dropLeftovers、(d) は narrowAddress が担う。
+  // dropped 済み欄は leftover/narrow の前に取り除く：旧所在では droppedIds
+  // ガードで走査から外していたのと等価（dropped 欄は city/prefecture/
+  // addressFull になり得ないため scope 判定にも影響しない）。
   const droppedIds = new Set(dropped.map((d) => d.fieldId));
-  for (const leftover of ['tel', 'zip'] as const) {
-    const groups = new Map<string, number[]>();
-    out.forEach((it, i) => {
-      if (it.cls.category !== leftover || droppedIds.has(it.meta.id)) return;
-      const k = sameLabel(it.meta);
-      groups.set(k, [...(groups.get(k) ?? []), i]);
-    });
-    for (const idx of groups.values()) {
-      if (idx.length >= 2) {
-        for (const i of idx) {
-          const it = out[i];
-          if (it) it.cls.category = 'unknown';
-        }
-      }
-    }
-  }
-
-  // PBI-12: 住所絞り込みはnearby単位（ブロック単位）で判定する。全体判定だと
-  // 別ブロックのprefecture/cityを理由に届け先addressFullがstreet化されるため。
-  // nearbyが空の欄はすべて同一スコープに畳まれる（単一ブロック挙動は不変・回帰済み）。
-  // 見出しを持たない複数ブロックでは従来の全体判定と等価になる制限がある。
-  const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
-  for (const it of out) {
-    const g = scopeOf.get(it.meta.nearby) ?? { hasCity: false, hasPref: false };
-    if (it.cls.category === 'city') g.hasCity = true;
-    if (it.cls.category === 'prefecture') g.hasPref = true;
-    scopeOf.set(it.meta.nearby, g);
-  }
-  for (const it of out) {
-    if (it.cls.category !== 'addressFull') continue;
-    const g = scopeOf.get(it.meta.nearby);
-    if (g?.hasCity) it.cls.category = 'street';
-    else if (g?.hasPref) it.cls.category = 'addressNoPref';
-  }
-  const keptIds = new Set(out.map((it) => it.meta.id));
-  for (const d of dropped) keptIds.delete(d.fieldId);
-  return { items: out.filter((it) => keptIds.has(it.meta.id)), dropped };
+  const kept = out.filter((it) => !droppedIds.has(it.meta.id));
+  return { items: narrowAddress(dropLeftovers(kept)), dropped };
 }
 
+// PBI-219: split→leftover→narrow の順序固定の合成は refineWithDrops が担い、
+// 本関数は items だけを取り出す入口である（意味論不変）。
 export function refineClassifications(items: Item[]): Item[] {
   return refineWithDrops(items).items;
 }

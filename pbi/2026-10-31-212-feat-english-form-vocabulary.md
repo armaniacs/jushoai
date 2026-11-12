@@ -76,7 +76,7 @@ npx vitest run tests/core/classify-rules.test.ts -t 'gender'
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（2026-11-10 レビュー Approved。指摘なし）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
@@ -100,3 +100,6 @@ npx vitest run tests/core/classify-rules.test.ts -t 'gender'
 - make check: exit 0
 - 文字種チェック: check_docs_chars.py が OK（本 PBI と CHANGELOG.md）
 - tests/integration/samples.test.ts: nishimachi に field_962/946 に Female（warn-no-option → 英文選択肢の解決）、field_976 の期待値を削除、gis の name-institution に都立日比谷高校。nishimachi fixture のヘッダーコメントも最終状態の文言に更新
+
+### コードレビュー記録（2026-11-10）
+- spec ✅（受入7件、過剰なし）。品質 Approved。指摘事項なし

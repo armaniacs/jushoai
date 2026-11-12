@@ -1,0 +1,64 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://go6.global.toshiba/GX/contactform
+  (東芝 GXお問い合わせ, Pardotフォーム).
+  Field names, ids, types, maxlengths, and control kinds mirror the real page.
+  Rows are dl/dt/dd and the scanner reads the dt text as nearby, so the
+  headings are kept verbatim (mitsui-reform-catalog-form.html shape).
+  Text inputs carry no <label> association (姓/名 spans are bare text). The
+  four selects are wrapped in <label class="select"> on the real page and
+  their options are restored verbatim (the scaffolder strips select options
+  to `--`; gender-select-form.html precedent). The InquiryClassification
+  radios (個人/企業・団体) are not gender/decade, so they stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東芝 GXお問い合わせ (manufacturer)</title>
+<form>
+<dl>
+<div><dt>お名前</dt><dd>
+      <input name="lastname" id="lastname" type="text" value="" placeholder="例）東芝" maxlength="50">
+      <input name="firstname" id="firstname" type="text" value="" placeholder="例）太郎" maxlength="50">
+</dd></div>
+<div><dt>お問い合わせ内容</dt><dd>
+      <select name="type" id="type"><option value="">選択してください</option><option value="東芝のGXサービス">東芝のGXサービス</option><option value="TOSHIBA SPINEX for Energy">TOSHIBA SPINEX for Energy</option><option value="その他（出展依頼等）">その他（出展依頼等）</option></select>
+</dd></div>
+<div><dt>郵便番号</dt><dd>
+      <input name="zip" id="zip" type="text" value="" placeholder="例：000-0000" maxlength="8">
+</dd></div>
+<div><dt>都道府県</dt><dd>
+      <input name="state" id="state" type="text" value="" placeholder="例）東京都" maxlength="255">
+</dd></div>
+<div><dt>市区群</dt><dd>
+      <input name="city" id="city" type="text" value="" placeholder="例）港区" maxlength="255">
+</dd></div>
+<div><dt>町名・番地</dt><dd>
+      <input name="addressone" id="addressone" type="text" value="" placeholder="例）芝浦1-1-1" maxlength="255">
+</dd></div>
+<div><dt>電話番号</dt><dd>
+      <input name="phone" id="phone" type="text" value="" placeholder="例：03-1234-1234" maxlength="20">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="email" id="email" type="email" value="" placeholder="例：taro.suzuki@toshiba.co.jp" maxlength="255">
+</dd></div>
+<div><dt>メールアドレス（確認用）</dt><dd>
+      <input name="mailConfirm" id="emailConfirm" type="text" value="" placeholder="例：taro.suzuki@toshiba.co.jp" maxlength="255">
+</dd></div>
+<div><dt>所属企業・団体名</dt><dd>
+      <input name="company" id="company" type="text" value="" placeholder="例：株式会社東芝" maxlength="255">
+</dd></div>
+<div><dt>部署名</dt><dd>
+      <input name="department" id="department" type="text" value="" placeholder="例：Webサービス事業部" maxlength="255">
+</dd></div>
+<div><dt>業種</dt><dd>
+      <select name="industry" id="industry"><option value="">選択してください　個人の場合は「その他」を選択ください</option><option value="官公庁・団体">官公庁・団体</option><option value="流通">流通</option><option value="放送サービス・映像コンテンツ">放送サービス・映像コンテンツ</option><option value="調査・コンサルティング">調査・コンサルティング</option><option value="電子部品・電子デバイス">電子部品・電子デバイス</option><option value="製造・機械・精密機械">製造・機械・精密機械</option><option value="出版・広告・印刷">出版・広告・印刷</option><option value="インターネットサービス・Webコンテンツ">インターネットサービス・Webコンテンツ</option><option value="医療用機器・健康用機器">医療用機器・健康用機器</option><option value="その他の製造">その他の製造</option><option value="自動車・輸送用機器">自動車・輸送用機器</option><option value="住宅・建設・不動産">住宅・建設・不動産</option><option value="化学・素材">化学・素材</option><option value="電子情報通信機器">電子情報通信機器</option><option value="IT関連流通販売">IT関連流通販売</option><option value="IT関連貿易・商社">IT関連貿易・商社</option><option value="サービス">サービス</option><option value="教育・学習支援（学校、社会教育機関）">教育・学習支援（学校、社会教育機関）</option><option value="スポーツ・玩具">スポーツ・玩具</option><option value="情報処理・情報サービス">情報処理・情報サービス</option><option value="エネルギー">エネルギー</option><option value="繊維・アパレル・服飾雑貨">繊維・アパレル・服飾雑貨</option><option value="通信サービス">通信サービス</option><option value="自治体">自治体</option><option value="ゲーム・アミューズメント">ゲーム・アミューズメント</option><option value="ソフトウェア">ソフトウェア</option><option value="金融・証券・保険">金融・証券・保険</option><option value="運輸">運輸</option><option value="農業・農林・水産">農業・農林・水産</option><option value="観光・レジャー">観光・レジャー</option><option value="物流">物流</option><option value="学生">学生</option><option value="一般">一般</option><option value="その他">その他</option></select>
+</dd></div>
+<div><dt>職域</dt><dd>
+      <select name="departmentCategory" id="departmentCategory"><option value="">選択してください　個人の場合は「その他の職種」を選択ください</option><option value="経営・管理・総務・経理">経営・管理・総務・経理</option><option value="調査・企画・マーケティング">調査・企画・マーケティング</option><option value="エンジニア・設計・デザイン・クリエイティブ">エンジニア・設計・デザイン・クリエイティブ</option><option value="コンサルタント">コンサルタント</option><option value="生産・製造・検査">生産・製造・検査</option><option value="営業">営業</option><option value="広報・宣伝">広報・宣伝</option><option value="研究・開発">研究・開発</option><option value="販売">販売</option><option value="購買・資材・バイヤー">購買・資材・バイヤー</option><option value="システム管理・保守">システム管理・保守</option><option value="情報処理・オペレーション">情報処理・オペレーション</option><option value="報道（記者・ライター・撮影スタッフ）">報道（記者・ライター・撮影スタッフ）</option><option value="学生">学生</option><option value="一般">一般</option><option value="その他の職種">その他の職種</option></select>
+</dd></div>
+<div><dt>役職</dt><dd>
+      <select name="jobtitleCategory" id="jobtitleCategory"><option value="">選択してください　個人の場合は「その他」を選択ください</option><option value="経営者・役員">経営者・役員</option><option value="管理職">管理職</option><option value="その他">その他</option></select>
+</dd></div>
+<div><dt>件名</dt><dd>
+      <input name="subject" id="subject" type="text" value="" maxlength="255">
+</dd></div>
+</dl>
+</form>

@@ -1,0 +1,208 @@
+# Task R4-1 試行ログ — PBI-208 Round4 候補URLリスト (再送)
+
+- 目的: 就活人気・東証上場・日本TOP10000サイトの範囲で実フォーム持ち静的ページ候補を100件以上リスト化し、curl で実フォーム有無を事前確認する (addurl 取り込みは R4-2 以降)。
+- 判定基準 (PBI-208 precedent): JS描画のみ・ログイン必須・フォームなし・到達不能は除外。除外URLは理由を記録。
+- 既存19件 (`tests/target-url.md` @ base 39d2aaf) との重複なし (全件ドメイン・パス照合済み)。
+- 確認方法: `curl -sL --max-time 25` + Chrome UA で取得し、`<form`・`input`・`textarea`・`select` の有無と action・欄種を目視/計数。動的取得フォーム (JS描画) は「除外: JS描画のみ」。
+- 有望の優先順位: P1 (多様性が高く欄構成が豊か・即取込推奨) > P2 (有望だが欄が小さい/外部フォーム依存) > P3 (予備)。
+- 本ファイルのみ変更。`tests/target-url.md` への登録は R4-2 以降が `make addurl` で行う。
+
+## 試行ログ
+
+| # | URL | 判定 | 除外理由 / フォーム概要 |
+|---|-----|------|--------------------------|
+| 1 | https://www.toyota.co.jp/inquiry/ | 除外 | 到達不能 (HTTP 404。当該パスなし) |
+| 2 | https://www.honda.co.jp/customer/ | 除外 | フォームなし (HTTP 200「Q＆A・お問い合わせ」だが静的formは `action=/customer/qa-search/` の検索(search:q)1欄のみ。実窓口は別導線) |
+| 3 | https://www.nissan.co.jp/INQUIRY/ | 除外 | 到達不能 (HTTP 404) |
+| 4 | https://www.mazda.co.jp/inquiry/ | 除外 | フォームなし (HTTP 200→`/siteinfo/`「このサイトについて」に転送。静的formは `sitesearch.mazda.jp` 宛検索2件のみ) |
+| 5 | https://www.subaru.co.jp/customer/ | 除外 | 到達不能 (HTTP 404「Page Not Found」。静的formは検索のみ) |
+| 6 | https://www.suzuki.co.jp/about/contact/ | 除外 | 到達不能 (HTTP 200→`/error/404.html`「お探しのページがみつかりません」。formなし) |
+| 7 | https://www.panasonic.com/jp/about/contact.html | 除外 | 到達不能 (HTTP 403 Access Denied・bot遮断) |
+| 8 | https://www.sharp.co.jp/support/contact/ | 除外 | 到達不能 (curl失敗・code=000。接続不可/タイムアウト) |
+| 9 | https://www.canon.jp/contact | 除外 | 到達不能 (curl失敗・code=000) |
+| 10 | https://www.nikon.co.jp/support/contact/ | 除外 | 到達不能 (HTTP 404「ページが見つかりません」。formなし) |
+| 11 | https://www.fujifilm.com/jp/ja/contact | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formなし。実フォームは `/jp/ja/form/*` 別導線→No.124-126で検証) |
+| 12 | https://www.sony.com/ja/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 13 | https://www.toshiba.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`global.toshiba/jp/contact/corporate.html`「お問い合わせ」ハブ。checkbox 1のみ。実フォームは外部 `go6.global.toshiba/GX/contactform`→No.168で検証) |
+| 14 | https://www.mitsubishi-electric.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 15 | https://www.hitachi.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 16 | https://www.fujitsu.com/jp/contact/ | 除外 | 到達不能 (HTTP 429 Vercel Security Checkpoint・bot/rate遮断) |
+| 17 | https://www.nec.com/ja-jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 18 | https://www.shiseido.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 19 | https://www.kao.com/jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `kao.com/global/en/search/` 検索のみ) |
+| 20 | https://www.kose.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 21 | https://www.muji.com/jp/ja/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 22 | https://www.nitori-hd.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 23 | https://www.fastretailing.com/jp/about/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 24 | https://www.seven-eleven.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 25 | https://www.aeon.info/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だが静的formは `action=/` の検索(text:s)のみ。実窓口はSalesforce別導線→No.176で検証) |
+| 26 | https://www.ito-yokado.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 27 | https://www.ajinomoto.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「お探しのページが見つかりません」。静的formは `/jp/search/` 検索のみ) |
+| 28 | https://www.meiji.co.jp/customer/ | 除外 | 到達不能 (HTTP 404。静的formは `search.meiji.co.jp` 検索のみ) |
+| 29 | https://www.morinaga.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/faq/`「お問い合わせ窓口」。静的formは検索/FAQ絞込5件のみ。実窓口は別導線) |
+| 30 | https://www.kikkoman.co.jp/customer/ | 除外 | フォームなし (HTTP 200「お客様相談センター」。静的formは `/search/` 検索のみ。実フォームは `form.kikkoman.co.jp`→No.156-158で検証) |
+| 31 | https://www.jreast.co.jp/info/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 32 | https://www.jr-central.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 33 | https://www.tokyometro.jp/support/inquiry/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 34 | https://www.tobu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「404エラー」。formなし) |
+| 35 | https://www.seibu-group.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 36 | https://www.ana.co.jp/ja/jp/support/contact/ | 除外 | 到達不能 (HTTP 404「指定されたページが見つかりません」。静的formは `search.ana.co.jp` 検索のみ) |
+| 37 | https://www.jal.co.jp/jp/ja/support/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 38 | https://www.tepco.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `search-tepco.dga.jp` 検索のみ) |
+| 39 | https://www.tokyo-gas.co.jp/contact/ | 除外 | 到達不能 (HTTP 404「該当ページがございません」。formなし) |
+| 40 | https://www.docomo.ne.jp/support/inquiry/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だが実体は検索2件+ページ評価アンケート(radio survey_q1/q5・checkbox15・select1、`action=#` JS送信)。住所・氏名欄なしのため対象外) |
+| 41 | https://www.au.com/support/inquiry/ | 除外 | フォームなし (HTTP 200「お問い合わせ」。静的form 8件すべて検索/FAQ検索系。実窓口は別導線→No.182で検証) |
+| 42 | https://www.softbank.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `/search_result/` 検索のみ) |
+| 43 | https://www.mizuho-fg.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 44 | https://www.smbc.co.jp/contact/ | 除外 | JS描画のみ (HTTP 200・size 1976・文字化けタイトル。静的formなし) |
+| 45 | https://www.bk.mufg.jp/contact/ | 除外 | 到達不能 (HTTP 404「ファイルが見つかりません」) |
+| 46 | https://www.japanpost.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `/search/` 検索のみ) |
+| 47 | https://www.kuronekoyamato.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/ytc/contact/`「お問い合わせ」ハブ。静的formは検索のみ。実フォームは `business.kuronekoyamato.co.jp/contact/form/`→No.161で検証) |
+| 48 | https://www.sagawa-exp.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ。実窓口はe-service→No.163で検証) |
+| 49 | https://www.nhk.or.jp/contact/ | 除外 | 到達不能 (HTTP 404「エラーが発生、もしくはページにアクセスできません」。formなし) |
+| 50 | https://www.ntv.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 51 | https://www.metro.tokyo.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404「お探しのページは見つかりません」。formなし) |
+| 52 | https://www.city.shibuya.tokyo.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 53 | https://www.city.shinjuku.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 54 | https://www.city.yokohama.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 55 | https://www.city.osaka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 56 | https://www.city.nagoya.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 57 | https://www.city.sapporo.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 58 | https://www.city.fukuoka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 59 | https://www.city.kyoto.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `google.com/cse` 検索のみ) |
+| 60 | https://www.pref.osaka.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 61 | https://www.pref.kanagawa.jp/contact/ | 除外 | 到達不能 (HTTP 404「エラー404」。静的formは検索のみ) |
+| 62 | https://www.city.kawasaki.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 63 | https://www.city.saitama.jp/contact/ | 除外 | 到達不能 (HTTP 404→`.lg.jp`。静的formは検索のみ) |
+| 64 | https://www.city.chiba.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 65 | https://www.city.kobe.lg.jp/contact/ | 除外 | フォームなし (HTTP 200「神戸市：お問い合わせ」ハブ。静的formは検索2件のみ。実フォームは `contact.city.kobe.lg.jp` Webフォーム→No.139で検証) |
+| 66 | https://www.yodobashi.com/ec/support/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 67 | https://www.biccamera.com/bc/support/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 68 | https://www.zozo.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 69 | https://www.rakuten.co.jp/contact/ | 除外 | フォームなし (HTTP 200だが実体は楽天市場の店舗頁「ユーカ」。静的formは商品検索のみ。無関係頁) |
+| 70 | https://www.amazon.co.jp/gp/help/customer/contact-us | 除外 | 到達不能 (HTTP 403・bot遮断。本文空。ログイン必須の可能性あり) |
+| 71 | https://www.nissen.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。NPSアンケート radio×11+textareaはあるが住所・氏名欄なしのため対象外) |
+| 72 | https://www.bellemaison.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 73 | https://www.felissimo.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 74 | https://www.his-j.com/contact/ | 除外 | 到達不能 (HTTP 404・文字化けタイトル。formなし) |
+| 75 | https://www.jtb.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`Error/404Error.asp`。formなし) |
+| 76 | https://www.gurunavi.com/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 77 | https://www.ncgm.go.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formはGoogle検索のみ) |
+| 78 | https://www.ncc.go.jp/jp/contact/ | 除外 | 到達不能 (HTTP 404「リニューアル」。静的formは検索のみ) |
+| 79 | https://www.hosp.keio.ac.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 80 | https://www.mhlw.go.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 81 | https://www.jrc.or.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 82 | https://www.suumo.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 83 | https://www.homes.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは物件検索 `freeword/cond` のみ) |
+| 84 | https://www.athome.co.jp/contact/ | 除外 | 到達不能 (HTTP 404→`asp.athome.jp`。formなし) |
+| 85 | https://www.sekisuihouse.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは入力欄なし) |
+| 86 | https://www.daiwahouse.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 87 | https://www.mitsuihome.co.jp/contact/ | 除外 | フォームなし (HTTP 200はトップ頁。静的formは検索のみ。実フォームは `/support/sonota/form.php`→No.130で検証) |
+| 88 | https://www.sumitomo-rd.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ。実フォームはSMP別導線→No.169-170で検証) |
+| 89 | https://www.tokyu-land.co.jp/contact/ | 除外 | フォームなし (HTTP 200「各種お問い合わせ」ハブ。静的formは検索のみ。実フォームは `/form/*`→No.132-135で検証) |
+| 90 | https://www.nomura-re.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし) |
+| 91 | https://www.mitsuifudosan.co.jp/contact/ | 除外 | フォームなし (HTTP 200「総合お問い合わせ」ハブ。静的formは検索のみ。実フォームはenquete別導線→No.136-138で検証) |
+| 92 | https://www.recruit.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索のみ) |
+| 93 | https://www.mynavi.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 94 | https://www.jasso.go.jp/contact/ | 除外 | フォームなし (HTTP 200→`notfound.html`経由トップ。formなし。実窓口は `/about/toiawase/`→No.174で検証) |
+| 95 | https://www.benesse.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧」リンク集。静的formなし。実フォームはenquete別導線→No.143で検証) |
+| 96 | https://www.z-kai.co.jp/contact/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 97 | https://www.city.sendai.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 98 | https://www.city.hiroshima.lg.jp/contact/ | 除外 | 到達不能 (HTTP 404。formなし) |
+| 99 | https://www.jrhokkaido.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`jrherror/404-jrhp.html`。formなし) |
+| 100 | https://www.jrkyushu.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formは検索+運行情報selectのみ。実フォームはkintoneapp→No.167で検証) |
+| 101 | https://www.keio.co.jp/contact/ | 除外 | フォームなし (HTTP 200「よくあるご質問/お問合せ」+検索(text:s)のみ) |
+| 102 | https://www.keikyu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 103 | https://www.odakyu.jp/contact/ | 除外 | 到達不能 (HTTP 404「URLが変わりました」告知頁。静的formは検索のみ) |
+| 104 | https://www.hankyu.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`404.html`。静的formは検索のみ) |
+| 105 | https://www.kintetsu.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは検索のみ) |
+| 106 | https://www.meitetsu.co.jp/contact/ | 除外 | 到達不能 (HTTP 200だがsize 3063の404内容頁。formなし) |
+| 107 | https://www.nitto.co.jp/contact/ | 除外 | フォームなし (HTTP 301→`nitto.com`トップに転送。連絡先頁なし) |
+| 108 | https://www.tdk.com/ja/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 109 | https://www.omron.co.jp/contact/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 110 | https://www.yamaha.co.jp/contact/ | 除外 | 到達不能 (HTTP 404) |
+| 111 | https://www.casio.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし) |
+| 112 | https://www.epson.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。text 1欄(actionなし)のみ。実フォームはcform別導線→No.145-146で検証) |
+| 113 | https://www.brother.co.jp/contact/index.aspx | 除外 | フォームなし (HTTP 200「お問い合わせ(総合)」リンク集。静的formなし。実フォームは `business.brother.co.jp`→No.155で検証) |
+| 114 | https://www.konicaminolta.com/jp-ja/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」リンク集。静的formなし。実フォームはenq別導線→No.148-149で検証) |
+| 115 | https://www.ricoh.co.jp/contact/ | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。form actionなし。実フォームはwebform別導線→No.151-152で検証) |
+| 116 | https://www.suntory.co.jp/customer/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 117 | https://www.asahibeer.co.jp/customer/ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 118 | https://www.kirin.co.jp/contact/ | 除外 | 到達不能 (HTTP 404。静的formは `kirinholdings` 検索のみ) |
+| 119 | https://www.nestle.co.jp/contact/ | 除外 | 到達不能 (HTTP 403。checkbox 1のみのbotチャレンジ頁とみられる) |
+| 120 | https://www.yakult.co.jp/contact/ | 除外 | 到達不能 (HTTP 200→`/maintenance/`。メンテナンス中) |
+| 121 | https://www.housefoods.co.jp/customer/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 122 | https://www.nissin.com/jp/customer/ | 除外 | フォームなし (HTTP 200「お客さま窓口」ハブ。静的formは検索のみ。実フォームは `/jp/customer/form/`→No.128で検証) |
+| 123 | https://www.otsuka.co.jp/contact/ | 除外 | フォームなし (HTTP 200→`/contacts/`「お問い合わせ窓口」ハブ。静的formは検索のみ。実フォームは `/contacts/opinion/form`→No.129で検証) |
+| 124 | https://www.fujifilm.com/jp/ja/form/FF-CSR | 有望 P1 | 静的実フォーム (HTTP 200。`action=/jp/ja/form/FF-CSR`、input 24・textarea 1・select 1。氏名分割 `name[first/last]`・カナ `name_kana[first/last]`・email確認2欄・郵便番号 `postal_code`・`city`・都道府県select・tel/fax・`inquiry_body`。企業CSR窓口。多様性◎) |
+| 125 | https://www.fujifilm.com/jp/ja/form/FF-Webmaster-Ja | 有望 P2 | 静的実フォーム (HTTP 200。No.124と同型・宛先違い。氏名/カナ分割・住所・email確認あり) |
+| 126 | https://www.fujifilm.com/jp/ja/form/FF-Procurement-Tokyo | 有望 P2 | 静的実フォーム (HTTP 200。No.124と同型・資材購買宛。textarea 2) |
+| 127 | https://holdings.fujifilm.com/ja/form/compliance-hotline | 有望 P2 | 静的実フォーム (HTTP 200。氏名/カナ分割・email確認2欄・`inquiry_body`。住所欄なしのためP2) |
+| 128 | https://www.nissin.com/jp/customer/form/ | 除外 | JS描画のみ (HTTP 200だが静的formは `/jp/search/` 検索+空formのみ。入力欄はJS生成とみられる) |
+| 129 | https://www.otsuka.co.jp/contacts/opinion/form | 有望 P1 | 静的実フォーム (HTTP 200。`name`・`name_kana`・`company`・`mail`・tel 3分割 `tel[1/2/3]`・性別radio・年齢・`contents`。製薬ご意見窓口。多様性◎) |
+| 130 | https://www.mitsuihome.co.jp/support/sonota/form.php | 有望 P1 | 静的実フォーム (HTTP 200。同意checkbox・担当radio・所属・氏名 `name_1/2`・カナ `name_kana_1/2`・郵便 `post1/2`・`address1`・都道府県select `pref`・`contents`。住宅・不動産。多様性◎) |
+| 131 | https://www.mitsui-reform.com/ssl/catalog/select.html | 有望 P1 | 静的実フォーム (HTTP 200「資料請求 入力」。`action=index.php`、input 71・radio 33。氏名 `name_1/2`・カナ `kana_1/2`・tel・email確認2欄・郵便 `post`。資料請求系。多様性◎) |
+| 132 | https://www.tokyu-land.co.jp/form/contact/ | 有望 P1 | 静的実フォーム (HTTP 200。`action=./index.php`、氏名 `name`・カナ `kana`・郵便 `zip`・`address1/2`・email確認2欄・都道府県select `pref`・`contenttext`。不動産総合窓口。多様性◎) |
+| 133 | https://www.tokyu-land.co.jp/form/kojin/ | 有望 P2 | 静的実フォーム (HTTP 200。No.132と同系・個人客向け。`pref_house` 等物件条件欄あり) |
+| 134 | https://www.tokyu-land.co.jp/form/tenant/ | 有望 P2 | 静的実フォーム (HTTP 200。No.132と同系・テナント出店用。会社・部署・役職欄あり。B2B色) |
+| 135 | https://www.tokyu-land.co.jp/form/branz_form/ | 有望 P3 | 静的実フォーム (HTTP 200。No.132と同系・BRANZ契約者用。同一サイト4件目のため予備P3) |
+| 136 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=2099dacc175d6c916c073494dd1533c0 | 除外 | 到達不能 (HTTP 200「エラー画面」。form空。事前遷移なしの直アクセスは不可) |
+| 137 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=31fc0115ff55ff8b08bf6edeaf4704f1 | 除外 | 到達不能 (同上・エラー画面) |
+| 138 | https://www3.mitsuifudosan.co.jp/enquete/regulation.php?enqueteurl=ed02503e1fc8cf0ba77096f75542f896 | 除外 | 到達不能 (同上・エラー画面) |
+| 139 | https://contact.city.kobe.lg.jp/webapp/form/26436_ucnb_1/index.do | 有望 P1 | 静的実フォーム (HTTP 200「神戸市：お問い合わせフォーム」。Struts Webフォーム、text 8・checkbox 5・textarea・select。自治体。多様性◎) |
+| 140 | https://www.city.kobe.lg.jp/a06814/kurashi/registration/application.html | 除外 | フォームなし (HTTP 200「電子申請」案内頁。静的formは検索のみ) |
+| 141 | https://www.city.kobe.lg.jp/a63551/kurashi/sodan/window/siminsoudan01/index.html | 除外 | フォームなし (HTTP 200「市民相談室」案内頁。静的formは検索のみ) |
+| 142 | https://www.city.kobe.lg.jp/a57337/toiawase/callrecording.html | 除外 | フォームなし (HTTP 200「通話録音方針」説明頁。静的formは検索+hiddenのみ) |
+| 143 | https://enquete.benesse.ne.jp/forms/o/we040f7618/form | 有望 P2 | 静的実フォーム (HTTP 200「ベネッセコーポレーションへのお問い合わせ」。input 28・textarea・select。項目名は `q01001001` 等コード化。教育系。多様性○) |
+| 144 | https://form.mitsui-chintai.co.jp/webapp/form/19959_rndb_66/index.do | 有望 P2 | 静的実フォーム (HTTP 200「パークアクシスお問合せ」。Struts Webフォーム、text 5・checkbox・textarea。賃貸不動産。多様性○) |
+| 145 | https://cform.epson.jp/form5/pub/e040/1009009009015109731 | 有望 P1 | 静的実フォーム (HTTP 200「CSR・環境活動お問い合わせ」。`c_q` 系19欄・郵便3分割 `areacode/citycode/subscribercode`・住所検索ボタン・select・textarea。メーカー。多様性◎) |
+| 146 | https://cform.epson.jp/form5/pub/e040/3009009007012109727 | 有望 P2 | 静的実フォーム (HTTP 200「IRお問い合わせ」。No.145と同型cform) |
+| 147 | https://www.epson-tcform.co.jp/ja/ | 除外 | フォームなし (HTTP 200だが企業情報頁。formなし) |
+| 148 | https://enq.konicaminolta.com/n/form/yjlb/365Lbza7mEsxhGmFJFxAV | 除外 | フォームなし (HTTP 200だが「サステナビリティについて」無関係頁に転送。formなし。enqトークン失効とみられる) |
+| 149 | https://enq.konicaminolta.com/n/form/yjlb/Fxe2avU65Uk8xbfJCyUzh | 除外 | フォームなし (HTTP 200だが「光学製品」無関係頁に転送。formなし。同上) |
+| 150 | https://www.konicaminolta.com/jp-ja/explainablekansei/contact/form/ | 除外 | 到達不能 (HTTP 403。本文なし) |
+| 151 | https://webform.ricoh.com/form/pub/e00103/risb | 有望 P1 | 静的実フォーム (HTTP 200「リコー経済社会研究所問合せ」。氏名分割 `c_q1_first/second`・email確認2欄・tel 3分割・textarea。メーカー系シンクタンク。多様性◎) |
+| 152 | https://webform.ricoh.com/form/pub/e00134/vulnerability_inq | 有望 P2 | 静的実フォーム (HTTP 200「脆弱性お問い合わせ」。No.151と同系+select。セキュリティ窓口) |
+| 153 | https://www.ricoh.co.jp/contact/pro-mail | 除外 | フォームなし (HTTP 200「メールでのお問い合わせ」案内頁。form actionなし・inputなし) |
+| 154 | https://jp.ricoh.com/about/request | 除外 | フォームなし (HTTP 200「企業紹介映像・冊子」案内頁。入力欄なし) |
+| 155 | https://business.brother.co.jp/public/application/add/113 | 有望 P2 | 静的実フォーム (HTTP 200「ブラザーWEBお問い合わせ」。input 77・radio 46・checkbox 11・textarea 2・select 3。項目名はコード化だが大規模。メーカーB2B。多様性○) |
+| 156 | https://form.kikkoman.co.jp/m/website | 有望 P1 | 静的実フォーム (HTTP 200。tel 3分割 `e_25028[tel1/2/3]`・email確認2欄・textarea・select。食品メーカー。多様性◎) |
+| 157 | https://form.kikkoman.co.jp/m/media | 有望 P2 | 静的実フォーム (HTTP 200「取材お問い合わせ」。No.156と同系・tel 3分割あり。報道向け) |
+| 158 | https://form.kikkoman.co.jp/m/works | 有望 P2 | 静的実フォーム (HTTP 200「採用お問い合わせ」。No.156と同系・tel 3分割あり) |
+| 159 | https://customer.kikkoman.co.jp/hc/ja/requests/new?ticket_form_id=4415358851993 | 除外 | 到達不能 (HTTP 403相当・Cloudflare "Just a moment"。bot遮断) |
+| 160 | https://www.kikkoman.co.jp/mail/ | 除外 | フォームなし (HTTP 200「メールマガジン登録」案内頁。静的formは検索のみ) |
+| 161 | https://business.kuronekoyamato.co.jp/contact/form/ | 除外 | JS描画のみ (HTTP 200「お問い合わせフォーム」だが静的formは `/searchresult/` 検索のみ。入力欄はJS生成とみられる) |
+| 162 | https://bmypage.kuronekoyamato.co.jp/bmypage/SV0201_applyPage.htm?utm_source=contact&utm_medium=kakeuri&utm_id=corporate | 除外 | JS描画のみ/ログイン必須の可能性 (HTTP 200・size 6107・文字化け。静的formなし。掛売り申込で会員系導線) |
+| 163 | https://www.e-service.sagawa-exp.co.jp/portal/do/cr-user/apply/show?pattern=s48 | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 164 | https://www.sagawa-exp.co.jp/customer/receive/mail/ | 除外 | フォームなし (HTTP 200「配達予定通知を受け取る」案内頁。静的formは検索のみ) |
+| 165 | https://www.sagawa-exp.co.jp/business/receive/mail/ | 除外 | フォームなし (HTTP 200。No.164の法人版。静的formは検索のみ) |
+| 166 | https://www.jrkyushu.co.jp/yoyaku/ | 除外 | JS描画のみ (HTTP 200「ネット予約でQRチケレス」。formなし・select 4のみ。予約はJS) |
+| 167 | https://3d2e2826.form.kintoneapp.com/public/goikengoyoubou-jrkyushu | 除外 | JS描画のみ (HTTP 200「JR九州へのご意見・ご要望」。size 8362・formなし。kintone公開フォームはJS描画) |
+| 168 | https://www.keio.co.jp/train/sasazuka-sengawa/order/ | 除外 | フォームなし (HTTP 200だが「工事の順序」案内頁。formなし。無関係頁) |
+| 169 | https://area31.smp.ne.jp/area/is?SMPFORM=qcrc-mcldsd-95bb156300186458a5d681e60ccadfa&type=ac | 有望 P1 | 静的実フォーム (HTTP 200。`action=/area/Reg2`、氏名 `name`・フリガナ `furigana`・会社・email確認2欄・tel・郵便2分割 `zip1:a/t`・`address1/2`・都道府県select `pref`・`inqDetail`。SMP(住友不系)フォーム。多様性◎) |
+| 170 | https://reg31.smp.ne.jp/regist/is?SMPFORM=qili-mbohmg-16d3b32725ef963f616238bd9d403ec2 | 有望 P1 | 静的実フォーム (HTTP 200。`action=/regist/Reg2`、氏名 `name1/2`・カナ `kana1/2`・郵便2分割・`address2/3`・都道府県select・tel/fax・email確認・`content`。SMPフォーム。多様性◎) |
+| 171 | https://go6.global.toshiba/GX/contactform | 有望 P1 | 静的実フォーム (HTTP 200。Pardotフォーム、姓/名 `lastname/firstname`・分類radio・郵便 `zip`・州/市/番地 `state/city/addressone`・tel・email確認・会社・部署・`description`・select 4。外資系形式と日本住所の混在。多様性◎) |
+| 172 | https://www.baseq.jp/form/inquery/ | 除外 | 到達不能 (curl失敗・code=000) |
+| 173 | https://www.celestinehotels.jp/form/ | 除外 | フォームなし (HTTP 200「お問い合わせ」だがformなし。予約はJSとみられる) |
+| 174 | https://support.sequencehotels.com/hc/ja/requests/new?ticket_form_id=360000545692&hoteltag=sequence-administration-headquarters | 除外 | 到達不能 (HTTP 403相当・Cloudflare "Just a moment"。bot遮断) |
+| 175 | https://www.jasso.go.jp/about/toiawase/index.html | 除外 | フォームなし (HTTP 200「お問い合わせ先一覧」。formなし・リンク集) |
+| 176 | https://aeon-voice.my.salesforce-sites.com/VoiceAgreementForm?cid=08 | 有望 P2 | 静的実フォーム (HTTP 200。Salesforceサイト、氏名 `name_field`・email・radio 3・checkbox・`comment`。小売の声フォーム。多様性○。hidden項目が多く取込時に要精査) |
+| 177 | https://www.npa.go.jp/bureau/cyber/soudan.html | 除外 | フォームなし (HTTP 200「サイバー事案相談窓口」案内頁。formなし。電話・リンク案内中心) |
+| 178 | https://www.jtb.co.jp/luxurytravel/ordermade/ | 除外 | JS描画のみ (HTTP 200だがformなし。オーダーメイド旅行のJS導線とみられる) |
+| 179 | https://waigaya.honda.co.jp/user/enquete.do?grp=bugreport&no=200511 | 有望 P3 | 要精査 (HTTP 200。text 5・checkbox 10・select 2・textarea。販売店アンケート系で住所・氏名欄の有無は取込時に確認。予備P3) |
+| 180 | https://www.mazda.co.jp/purchase/webcatalog/ | 除外 | フォームなし (HTTP 200「ウェブカタログのご紹介」。静的formは検索のみ) |
+| 181 | https://nba.docomo.ne.jp/lp/entry001 | 除外 | フォームなし (HTTP 200だがNBA特設頁。formなし。無関係頁) |
+| 182 | https://form-auhikari.kddi.com/cgi-bin/callback/form.cgi | 有望 P2 | 静的実フォーム (HTTP 200「各サービスご相談のお申し込み」。`action=form2.cgi`、input 56・radio 17・checkbox 13・textarea。通信・折り返し相談。多様性○) |
+| 183 | http://scala-com.jp/i-ask/ | 除外 | フォームなし (HTTP 200「i-ask」だが静的formは `/search-result/` 検索のみ。製品検索頁) |
+
+## 集計
+
+- 試行総数: 183件 (No.1-183。要求100件以上を満たす)
+- 有望: 28件 (P1 12件・P2 14件・P3 2件)
+  - P1 (12): No.124, 129, 130, 131, 132, 139, 145, 151, 156, 169, 170, 171
+  - P2 (14): No.125, 126, 127, 133, 134, 143, 144, 146, 152, 155, 157, 158, 176, 182
+  - P3 (2): No.135, 179
+- 除外: 155件
+- 既存19件 (`tests/target-url.md`) との重複: なし (全183件をドメイン・パス照合。既存は学校・form-mailer中心、本リストは企業・自治体・不動産・SMP/Pardot/Salesforce系で重複ドメイン自体なし)
+- 有望の多様性: メーカー (富士フイルム・大塚製薬・キッコーマン・エプソン・リコー・ブラザー・東芝) / 住宅・不動産 (三井ホーム・三井リフォーム・東急不動産・三井賃貸・SMP) / 自治体 (神戸市) / 教育 (ベネッセ) / 小売 (イオン) / 通信 (au)。学校系ゼロで既存corpusと重複しない
+

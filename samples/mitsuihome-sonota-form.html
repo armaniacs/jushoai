@@ -1,0 +1,37 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.mitsuihome.co.jp/support/sonota/form.php
+  (三井ホーム その他お問い合わせ).
+  Field ids, names, and control kinds mirror the real page. The real page
+  carries its headings (氏名/郵便番号/都道府県/…) in table cells with no
+  <label> association, so the scanner sees the same bare inputs as here.
+  The kw pair are header/footer site-search boxes (same as forum.html s).
+  The tantou radios (担当者 いる/いない) and koukoku checkboxes stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>三井ホーム その他お問い合わせ (housing)</title>
+<form>
+      <input name="kw" id="" type="text" value="">
+      <input name="kw" id="" type="text" value="">
+      <input name="syozoku" id="" type="text" value="" maxlength="50">
+      <input name="shimei" id="" type="text" value="" maxlength="50">
+      <input name="company" id="" type="text" value="" maxlength="100">
+      <input name="busho" id="" type="text" value="" maxlength="100">
+      <input name="name_1" id="" type="text" value="" maxlength="20">
+      <input name="name_2" id="" type="text" value="" maxlength="13">
+      <input name="name_kana_1" id="" type="text" value="" maxlength="20">
+      <input name="name_kana_2" id="" type="text" value="" maxlength="20">
+      <input name="post1" id="" type="text" value="" maxlength="3">
+      <input name="post2" id="" type="text" value="" maxlength="4">
+      <select name="pref" id=""><option value="">--</option></select>
+      <input name="address1" id="" type="text" value="" maxlength="40">
+      <input name="address2" id="" type="text" value="" maxlength="40">
+      <input name="address3" id="" type="text" value="" maxlength="40">
+      <input name="tel" id="" type="tel" value="" maxlength="13">
+      <input name="mail" id="" type="email" value="" maxlength="128">
+      <select name="koukoku_paper" id=""><option value="">--</option></select>
+      <input name="koukoku_paper_else" id="" type="text" value="" maxlength="40">
+      <select name="koukoku_magazine" id=""><option value="">--</option></select>
+      <input name="koukoku_magazine_else" id="" type="text" value="" maxlength="40">
+      <select name="koukoku_site" id=""><option value="">--</option></select>
+      <input name="koukoku_site_else" id="" type="text" value="" maxlength="40">
+</form>

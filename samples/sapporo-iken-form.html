@@ -1,0 +1,18 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.city.sapporo.jp/city/iken-hp/index.html
+  (札幌市公式ホームページに関するご意見・ご提案).
+  Field names, labels, maxlengths, and control kinds mirror the real page.
+  Bare labels are kept (hamamatsu-kocho-form.html precedent: the same
+  question.cgi-family CMS th memo spans leave classification unchanged).
+  item_1 (ご意見・ご提案 textarea) stays dropped (not scanned).
+-->
+<html lang="ja"><meta charset="utf-8"><title>札幌市 HPへのご意見・ご提案 (municipal)</title>
+<form>
+      <label for="tmp_query">検索</label>
+      <input name="q" id="tmp_query" type="text" value="">
+      <label for="item_2">お名前</label>
+      <input name="item_2" id="item_2" type="text" value="" maxlength="40">
+      <label for="item_3">メールアドレス</label>
+      <input name="item_3" id="item_3" type="text" value="" maxlength="128">
+</form>

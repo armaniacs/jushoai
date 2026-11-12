@@ -146,32 +146,126 @@ describe('sample forms end to end', () => {
     }
   });
 
-  it('12fc22bc297429.html fills the in-scope fields', async () => {
-    expect(await planFor('12fc22bc297429.html')).toEqual(expectedFor('12fc22bc297429.html'));
-  });
-  it('2dd1c663300469.html fills the in-scope fields', async () => {
-    expect(await planFor('2dd1c663300469.html')).toEqual(expectedFor('2dd1c663300469.html'));
-  });
-  it('registration.html fills the in-scope fields', async () => {
-    expect(await planFor('registration.html')).toEqual(expectedFor('registration.html'));
-  });
-  it('forum.html fills the in-scope fields', async () => {
-    expect(await planFor('forum.html')).toEqual(expectedFor('forum.html'));
-  });
-  it('richell-anketo-rating.html fills the in-scope fields', async () => {
-    expect(await planFor('richell-anketo-rating.html')).toEqual(expectedFor('richell-anketo-rating.html'));
-  });
-  it('kosodate-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('kosodate-contact.html')).toEqual(expectedFor('kosodate-contact.html'));
-  });
-  it('library-theater-apply.html fills the in-scope fields', async () => {
-    expect(await planFor('library-theater-apply.html')).toEqual(expectedFor('library-theater-apply.html'));
-  });
-  it('nishimachi-inquiry.html fills the in-scope fields', async () => {
-    expect(await planFor('nishimachi-inquiry.html')).toEqual(expectedFor('nishimachi-inquiry.html'));
-  });
-  it('gis-intl-admission.html fills the in-scope fields', async () => {
-    expect(await planFor('gis-intl-admission.html')).toEqual(expectedFor('gis-intl-admission.html'));
+  const inScopeFixtures: CorpusName[] = [
+    '12fc22bc297429.html',
+    '2dd1c663300469.html',
+    'registration.html',
+    'forum.html',
+    'richell-anketo-rating.html',
+    'kosodate-contact.html',
+    'library-theater-apply.html',
+    'nishimachi-inquiry.html',
+    'gis-intl-admission.html',
+    'bst-inquire.html',
+    'isi-contact.html',
+    'ois-contact.html',
+    'kigakuen-briefing.html',
+    'seedome-openschool.html',
+    'ff-csr.html',
+    'otsuka-opinion-form.html',
+    'mitsuihome-sonota-form.html',
+    'mitsui-reform-catalog-form.html',
+    'tokyu-land-contact-form.html',
+    'kobe-city-contact-form.html',
+    'epson-csr-form.html',
+    'ricoh-risb-form.html',
+    'kikkoman-website-form.html',
+    'smp-regist-inquiry-form.html',
+    'toshiba-gx-contact-form.html',
+    'ff-webmaster-form.html',
+    'ff-procurement-form.html',
+    'ff-compliance-hotline-form.html',
+    'tokyu-land-kojin-form.html',
+    'tokyu-land-tenant-form.html',
+    'benesse-inquiry-form.html',
+    'mitsui-chintai-inquiry-form.html',
+    'epson-ir-form.html',
+    'ricoh-vulnerability-form.html',
+    'brother-inquiry-form.html',
+    'kikkoman-media-form.html',
+    'kikkoman-works-form.html',
+    'aeon-voice-form.html',
+    'auhikari-callback-form.html',
+    'hamamatsu-kocho-form.html',
+    'okayama-inquiry-form.html',
+    'fukuoka-teian-form.html',
+    'tokyo-steel-contact-form.html',
+    'taiheiyo-cement-contact-form.html',
+    'ngk-contact-form.html',
+    'lixil-inquiry-form.html',
+    'sapporo-iken-form.html',
+    'kubota-engine-contact-form.html',
+    'mailform.html',
+    'opinion-html.html',
+    'arakawa-mailform.html',
+    '2000033.html',
+    'tosyo-00001-html.html',
+    'azbil-kikubari-form.html',
+    'keyence-inquiry-form.html',
+    'sysmex-contact-form.html',
+    'lasertec-inquiry-form.html',
+    'toyoda-gosei-form.html',
+    'mitsubishi-materials-form.html',
+    'yoshinoya-store-form.html',
+    'tonami-luggage-form.html',
+    'contact.html',
+    'inquiry-html.html',
+    'index-asp.html',
+    '6932.html',
+    'kit-contact-form.html',
+    'shimane-inquiry-form.html',
+    'aoyama-campus-inquiry.html',
+    'aoyama-sagamihara-career.html',
+    'smp-openhouse-inquiry.html',
+    'sumitomo-latour-inquiry.html',
+    'sumifu-step-otoiawase.html',
+    'proud-procedure-form.html',
+    'tokyu-branz-owner-form.html',
+    'tokyu-commercial-form.html',
+    'tokyu-cre-form.html',
+    'brillia-support-contact.html',
+    'hulic-develop-plan.html',
+    'mori-webcas-contact.html',
+    'openhouse-customer-contact.html',
+    'anabuki-general-contact.html',
+    'anabuki-landuse-contact.html',
+    'haseko-contact-input.html',
+    'toshin-shiryo-form.html',
+    'toshin-mendan-form.html',
+    'yotsuya-nyujuku-form.html',
+    'kumon-annai-form.html',
+    'manavis-shiryo-form.html',
+    'eikoh-shiryo-form.html',
+    'cigr-ir-contact.html',
+    'shozemi-contact-form.html',
+    'waseda-ac-form.html',
+    'morijuku-contact-form.html',
+    'wadakohsan-inquiry.html',
+    'jiritsu-red-contact-form.html',
+    'hhp-site-inquiry.html',
+    'nttud-inquiry.html',
+    'sekisui-catalog-request.html',
+    'tomas-trial-form.html',
+    'try-gakuin-reserve-form.html',
+    'meiko-contact-form.html',
+    'sekisui-inquiry-form.html',
+    'keishin-contact-form.html',
+    'sekisui-mail-form.html',
+    'rinkai-shiryo-form.html',
+    'sanaru-contact-form.html',
+    'ichishin-contact-form.html',
+    'ena-request-form.html',
+    'eishinkan-contact-form.html',
+    'axis-inquiry-form.html',
+    'yotsuya-littleclub-form.html',
+    'fujita-contact.html',
+    'yamada-holdings-contact.html',
+    'apaman-contact.html',
+    'jpaa-contact.html',
+    'nkanzai-contact.html',
+  ];
+  it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
+    expect(await planFor(file)).toEqual(expectedFor(file));
   });
 
   // PBI-211: the corpus fixtures carry their real-page radio groups again
@@ -209,20 +303,5 @@ describe('sample forms end to end', () => {
       });
       expect(items.map((i) => i.cls.category)).toEqual(radios.map((r) => groups[r.meta.name]![1]));
     }
-  });
-  it('bst-inquire.html fills the in-scope fields', async () => {
-    expect(await planFor('bst-inquire.html')).toEqual(expectedFor('bst-inquire.html'));
-  });
-  it('isi-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('isi-contact.html')).toEqual(expectedFor('isi-contact.html'));
-  });
-  it('ois-contact.html fills the in-scope fields', async () => {
-    expect(await planFor('ois-contact.html')).toEqual(expectedFor('ois-contact.html'));
-  });
-  it('kigakuen-briefing.html fills the in-scope fields', async () => {
-    expect(await planFor('kigakuen-briefing.html')).toEqual(expectedFor('kigakuen-briefing.html'));
-  });
-  it('seedome-openschool.html fills the in-scope fields', async () => {
-    expect(await planFor('seedome-openschool.html')).toEqual(expectedFor('seedome-openschool.html'));
   });
 });

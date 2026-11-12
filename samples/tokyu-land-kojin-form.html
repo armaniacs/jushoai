@@ -1,0 +1,63 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.tokyu-land.co.jp/form/kojin/
+  (東急不動産 個人のお客様向けお問い合わせ).
+  Field ids, names, and control kinds mirror the real page. The real page
+  lays each row out as its own dl/dt/dd (no <label> association), and the
+  scanner reads the dt text as nearby, so the per-field headings are kept
+  verbatim (section-only headings dropped, same as tokyu-land-contact).
+  Both pref selects keep the scaffold's single `--` option (same as the
+  tokyu-land-contact sibling fixture). The kind/contact radios and type
+  checkboxes stay skipped.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東急不動産 個人のお客様向けお問い合わせ (real-estate)</title>
+<form>
+      <input name="q" id="q1" type="search" value="" placeholder="サイト内検索">
+      <input name="q" id="q2" type="search" value="" placeholder="サイト内検索">
+<dl>
+<div><dt>都道府県</dt><dd>
+      <select name="pref_house" id="pref_house"><option value="">--</option></select>
+</dd></div>
+<div><dt>市区町村</dt><dd>
+      <input name="address1_house" id="" type="text" value="">
+</dd></div>
+<div><dt>番地・建物名</dt><dd>
+      <input name="address2_house" id="" type="text" value="">
+</dd></div>
+<div><dt>売却・購入希望価格</dt><dd>
+      <input name="min_price" id="min_price" type="text" value="">
+      <input name="max_price" id="max_price" type="text" value="">
+</dd></div>
+<div><dt>物件面積</dt><dd>
+      <input name="land" id="land" type="text" value="">
+      <input name="bill" id="bill" type="text" value="">
+</dd></div>
+<div><dt>お名前</dt><dd>
+      <input name="name" id="name" type="text" value="">
+</dd></div>
+<div><dt>フリガナ</dt><dd>
+      <input name="kana" id="kana" type="text" value="">
+</dd></div>
+<div><dt>郵便番号</dt><dd>
+      <input name="zip" id="zip" type="text" value="">
+</dd></div>
+<div><dt>都道府県</dt><dd>
+      <select name="pref" id="pref"><option value="">--</option></select>
+</dd></div>
+<div><dt>市区町村</dt><dd>
+      <input name="address1" id="" type="text" value="">
+</dd></div>
+<div><dt>番地・建物名</dt><dd>
+      <input name="address2" id="" type="text" value="">
+</dd></div>
+<div><dt>電話番号</dt><dd>
+      <input name="tel" id="tel" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス</dt><dd>
+      <input name="mail" id="mail" type="text" value="">
+</dd></div>
+<div><dt>メールアドレス（確認用）</dt><dd>
+      <input name="mail2" id="mail2" type="text" value="">
+</dd></div>
+</dl>
+</form>

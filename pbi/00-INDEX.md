@@ -1,12 +1,20 @@
 # PBI 台帳インデックス
 
+## 進行中からアーカイブ済み（2026-11-10・autonomous-task-closerで6件処理・`make check` green）
+
+- `archived/2026-10-31-207-feat-pr-template.md`（静的レビュー承認。4節・指針・CP932・無変更を確認。残す `[ ]` は目視のみ（push後ユーザー作業）とBDD自動テスト化の断念記録）
+- `archived/2026-11-10-218-refactor-planner-value-table.md`（実装済み・レビュー承認・Minor 5件追跡。planner 値解決の表化。41行表・黄金テスト・旧新対応表）
+- `archived/2026-11-10-219-refactor-refine-separation.md`（実装済み・レビュー承認。dropLeftovers/narrowAddress 切出し、split→leftover→narrow 順序固定）
+- `archived/2026-11-10-220-refactor-options-footer-blank.md`（実装済み・再レビュー承認。footer 一本化＋blank 分岐の型化。prefecture 仕様統一は別途ユーザー判断）
+- `archived/2026-11-10-221-refactor-run-env-extract.md`（実装済み・再レビュー承認。buildRunEnv 抽出＋遅延読み復元。等価テスト6件）
+- `archived/2026-11-10-222-docs-limit-vocabulary-map.md`（実装済み・自己レビュー。scan-limits.ts に上限一覧集約。挙動不変）
+
 ## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票。211-212を実装・レビュー済み。アーキテクチャレビューの発見5件のなぜなぜ分析（30本×3立場）→RICE採点で214-216を起票し、213-216は2026-11-01に実装・レビュー・アーカイブ済み）
 
 - `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
 - `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
 - `2026-10-31-205-fix-privacy-article-dns-rebinding.md`（順位 2。RICE 50。記事に DNS rebinding 注意書きを1文。206 と同時に1コミット）
 - `2026-10-31-206-fix-privacy-article-audit-retention.md`（順位 2。RICE 50。記事に監査ログ保持期間を1文。205 と同時に1コミット）
-- `2026-10-31-207-feat-pr-template.md`（残務記録済み（f4fe570・レビュー1件反映）。静的3点pass、BDD全自動化の断念記録、目視はpush後ユーザー作業）
 - `2026-10-31-208-feat-samples-corpus-growth.md`（第3トランチ実装済み（2ad7a2d・レビュー承認）。32 fixture/350 fields・259/94/162・refine+11、既存27行無変更。honest pin、honeypot除外は将来PBI候補）
 - `2026-10-31-209-feat-dark-mode.md`（残務記録済み（7637081・レビュー承認）。コード確認済みsrc無変更、手動1-3はOS切替要のためユーザー作業）
 - `2026-10-31-210-feat-pattern-violation-warning.md`（実装済み（b57b19c・レビュー承認・構造ゲート KEEP）。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）

@@ -1,0 +1,24 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.kit.ac.jp/contact
+  (京都工芸繊維大学お問い合わせ, toiawase_form).
+  Row titles are td/span on the real page, which the scanner never
+  reads (brother precedent), so bare inputs are equivalent; field names
+  carry the signal (sei/mei/sei_kana/mei_kana/org/unit/tel/mail).
+  The header site-search (s) is trimmed: site chrome, separate form.
+  toiawase_komoku (問合せ種別 ~20 radios) is not gender/decade, stays
+  a bundled skip. toiawase_body is a textarea, out of scan.
+  In-scope controls: 9 (sei/mei/sei_kana/mei_kana/org/unit/tel/mail/mail2).
+-->
+<html lang="ja"><meta charset="utf-8"><title>京都工芸繊維大学お問い合わせ</title>
+<form>
+<input name="sei" id="sei" type="text" value="">
+<input name="mei" id="mei" type="text" value="">
+<input name="sei_kana" id="sei_kana" type="text" value="">
+<input name="mei_kana" id="mei_kana" type="text" value="">
+<input name="org" id="org" type="text" value="">
+<input name="unit" id="unit" type="text" value="">
+<input name="tel" id="tel" type="tel" value="">
+<input name="mail" id="mail" type="email" value="">
+<input name="mail2" id="mail2" type="email" value="">
+</form>

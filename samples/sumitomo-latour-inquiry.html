@@ -1,0 +1,41 @@
+<!-- Minimal reproduction of https://residence.sumitomo-latour.jp/inquiry/. Values stripped; trim further before committing. -->
+<form>
+      <input name="keyword" id="" type="search" value="" placeholder="例）中野　1LDK">
+      <select name="sel_building_dummy" id="sel_building_dummy"><option value="">--</option></select>
+      <label for="sel_area0">ご希望物件必須</label>
+      <select name="sel_area[]" id="sel_area0"><option value="">--</option></select>
+      <select name="sel_building[]" id="sel_building0"><option value="">--</option></select>
+      <label for="budget_lower">ご予算必須</label>
+      <select name="budget_lower" id="budget_lower"><option value="">--</option></select>
+      <select name="budget_higher" id="budget_higher"><option value="">--</option></select>
+      <label for="space_lower">希望面積</label>
+      <select name="space_lower" id="space_lower"><option value="">--</option></select>
+      <select name="space_higher" id="space_higher"><option value="">--</option></select>
+      <label for="season_year">入居希望時期</label>
+      <select name="season_year" id="season_year"><option value="">--</option></select>
+      <select name="season_month" id="season_month"><option value="">--</option></select>
+      <label for="name">お名前必須</label>
+      <input name="name" id="name" type="text" value="" maxlength="100">
+      <label for="name_ruby">フリガナ必須</label>
+      <input name="name_ruby" id="name_ruby" type="text" value="" maxlength="100">
+      <label for="postcode1">郵便番号</label>
+      <input name="postcode1" id="postcode1" type="text" value="" placeholder="0000000" maxlength="8">
+      <label for="address1">都道府県必須</label>
+      <select name="address1" id="address1"><option value="">--</option></select>
+      <label for="address2">市区町村・番地必須</label>
+      <input name="address2" id="address2" type="text" value="" placeholder="例）新宿区西新宿2-4-1" maxlength="100">
+      <label for="extended_address">ビル・マンション名</label>
+      <input name="extended_address" id="extended_address" type="text" value="" placeholder="例）新宿NSビル 20階 201号室" maxlength="100">
+      <label for="mail">メールアドレス必須</label>
+      <input name="mail" id="mail" type="email" value="">
+      <label for="mailConfirm">メールアドレス（確認用）必須</label>
+      <input name="mailConfirm" id="mailConfirm" type="email" value="">
+      <label for="tel">電話番号必須</label>
+      <input name="tel" id="tel" type="tel" value="">
+      <label for="time">連絡可能な時間帯</label>
+      <select name="time" id="time"><option value="">--</option></select>
+      <label for="birthday_year">生年月日</label>
+      <select name="birthday_year" id="birthday_year"><option value="">--</option></select>
+      <select name="birthday_month" id="birthday_month"><option value="">--</option></select>
+      <select name="birthday_day" id="birthday_day"><option value="">--</option></select>
+</form>

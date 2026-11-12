@@ -77,7 +77,7 @@ grep -rn "warn-maxlength" src/ tests/
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（2026-11-10 レビュー Approved。Minor 2件は追跡記録）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録（2026-10-31）
@@ -121,3 +121,7 @@ grep -rn "warn-maxlength" src/ tests/
 - make check: パス
 - HEADLESS=1 E2E_NO_SANDBOX=1 make e2e-chrome: 24/24 パス（preview の警告行追加が既存 E2E に影響しないことを確認）
 - 文字種チェック（docs-charset）: OK
+
+### コードレビュー記録（2026-11-10）
+- spec ✅（BDD 3件・受入6件、過剰なし）。品質 Approved。Critical/Important なし
+- Minor 2件は追跡のみ: planner.test.ts の適合例が BDD の文字通りの組み合わせでない、samples.test.ts の warn-pattern 状態の直接 assert なし（unit 側で固定済みのため許容）

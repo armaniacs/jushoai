@@ -1,0 +1,74 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.jpaa.or.jp/contact/
+  (日本弁理士会お問い合わせ, MW WP Form).
+  The real page is one table form with th scope=row headings (scanner reads
+  tr>th as nearby) and Japanese control names. 職種/業種 keep their real
+  options verbatim. 部署・役職 carries the same duplicated id="gyou" as the
+  real page. agree is an opt-out checkbox (skip fixed). 住所欄なし.
+  In-scope controls: 11 (会社名, 職種, 業種, 部署・役職, 氏名, フリガナ,
+  メールアドレス, メールアドレス(確認), 電話番号[data][0..2]).
+-->
+<html lang="ja"><meta charset="utf-8"><title>日本弁理士会お問い合わせ</title>
+<form method="post" action="" enctype="multipart/form-data">
+<table>
+<tr>
+<th scope="row">会社名・団体名必須</th>
+<td><input type="text" name="会社名" id="com" size="60" value="" placeholder="例：知的財産株式会社"></td>
+</tr>
+<tr>
+<th scope="row">職種</th>
+<td>
+<select name="職種" id="gyou">
+<option value="" selected="selected">選択してください</option>
+<option value="企業">企業</option>
+<option value="行政団体">行政団体</option>
+<option value="個人">個人</option>
+<option value="その他">その他</option>
+</select>
+</td>
+</tr>
+<tr>
+<th scope="row">業種</th>
+<td>
+<select name="業種" id="gyou">
+<option value="" selected="selected">選択してください</option>
+<option value="製造業関連">製造業関連</option>
+<option value="小売関連">小売関連</option>
+<option value="農林水産関連">農林水産関連</option>
+<option value="IT関連">IT関連</option>
+<option value="その他">その他</option>
+</select>
+</td>
+</tr>
+<tr>
+<th scope="row">部署・役職</th>
+<td><input type="text" name="部署・役職" id="gyou" size="60" value="" placeholder="例：総務課 課長"></td>
+</tr>
+<tr>
+<th scope="row">氏名必須</th>
+<td><input type="text" name="氏名" id="name" size="60" value="" placeholder="例：特許 太郎"></td>
+</tr>
+<tr>
+<th scope="row">フリガナ必須</th>
+<td><input type="text" name="フリガナ" id="kana" size="60" value="" placeholder="例：トッキョ タロウ"></td>
+</tr>
+<tr>
+<th scope="row">メールアドレス必須</th>
+<td><input type="email" name="メールアドレス" id="mail" size="60" value="" placeholder="例：benrishi_taro@jpaa.co.jp"></td>
+</tr>
+<tr>
+<th scope="row">メールアドレス(確認)必須</th>
+<td><input type="email" name="メールアドレス(確認)" id="mail2" size="60" value="" placeholder="例：benrishi_taro@jpaa.co.jp"></td>
+</tr>
+<tr>
+<th scope="row">電話番号</th>
+<td>
+<input type="text" name="電話番号[data][0]" size="6" maxlength="5" value="">
+<input type="text" name="電話番号[data][1]" size="5" maxlength="4" value="">
+<input type="text" name="電話番号[data][2]" size="5" maxlength="4" value="">
+</td>
+</tr>
+</table>
+</form>
+</html>

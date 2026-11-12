@@ -10,8 +10,25 @@ export interface LedgerExtract {
 }
 
 export function renderLedgerEntry(file: string, extracted: LedgerExtract): string;
+
+// Shared insertion core: splices `text` above the line carrying the anchor
+// position `pos` (the LEDGER_ANCHOR match, or the array `];`).
+export function insertAboveAnchor(source: string, text: string, pos: number): string;
 export function insertLedgerEntry(source: string, entry: string): string | null;
-export function insertTestCase(source: string, stub: string): string | null;
+
+// Declaration of the aggregated `inScopeFixtures` array in
+// tests/integration/samples.test.ts (consumed by a single `it.each`).
+export const INSCOPE_ARRAY_RE: RegExp;
+
+// Strict wired check: an `inScopeFixtures` element line
+// (`\n    'file',`), a legacy single-`it()` stub title,
+// or a `planFor('file')` test body call (custom-titled singles).
+export function isFixtureWired(source: string, file: string): boolean;
+
+// Appends a quoted entry to the `inScopeFixtures` array. Returns the
+// unchanged source when the file is already listed (dup guard), or null when
+// the array declaration is gone.
+export function insertFixtureEntry(source: string, file: string): string | null;
 
 export interface Wiring {
   file: string;

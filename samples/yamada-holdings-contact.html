@@ -1,0 +1,48 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.yamada-holdings.jp/contact/
+  (ヤマダホールディングスお問合せ窓口).
+  The real page is one table form with no <label> association: th headings
+  carry the signal (scanner reads tr>th as nearby). Item names are coded
+  (f01/f02/f03), so only the th text + placeholder resolve. TITLE keeps its
+  real 4 options verbatim. user-id-state is an unlabeled display:none trap
+  field: trimmed as a honeypot. question is a textarea (out of scan).
+  In-scope controls: 6 (TITLE, f01, f02, pm_email, pm_email2, f03).
+-->
+<html lang="ja"><meta charset="utf-8"><title>ヤマダホールディングスお問合せ窓口</title>
+<form name="Goiken" method="post" action="cgi-bin/contact.cgi">
+<table>
+<tr>
+<th>お問い合わせ項目必須</th>
+<td>
+<select name="TITLE">
+<option value="" selected="selected">お問い合わせ内容を選択してください</option>
+<option value="IRについて-ヤマダホールディングス-">IRについて</option>
+<option value="ご意見ご感想-ヤマダホールディングス-">ご意見ご感想</option>
+<option value="その他-ヤマダホールディングス-">その他</option>
+</select>
+</td>
+</tr>
+<tr>
+<th>お名前必須</th>
+<td><input name="f01" type="text" size="40" placeholder="お名前を入力して下さい。"></td>
+</tr>
+<tr>
+<th>フリガナ必須</th>
+<td><input name="f02" type="text" size="40" placeholder="フリガナを入力して下さい。"></td>
+</tr>
+<tr>
+<th>メールアドレス必須</th>
+<td><input name="pm_email" type="text" size="40" placeholder="メールアドレスを入力して下さい。"></td>
+</tr>
+<tr>
+<th>メールアドレス(確認用)必須</th>
+<td><input name="pm_email2" type="text" size="40" placeholder="再度メールアドレスを入力して下さい。"></td>
+</tr>
+<tr>
+<th>電話番号必須</th>
+<td><input name="f03" type="text" size="40" placeholder="電話番号を入力して下さい。"></td>
+</tr>
+</table>
+</form>
+</html>

@@ -1,0 +1,76 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.fujita.co.jp/contact/
+  (フジタお問い合わせメールフォーム).
+  The real page is one table form: th headings carry the grouping signal
+  (名前 / フリガナ / 電話番号 / メールアドレス) and each control keeps its
+  own label or aria-label, which this repro preserves. contact_type keeps
+  its real 10 options verbatim. customer_type (法人/個人) is a non-gender
+  radio group: bundled per name, stays skipped. The header/footer
+  site-search boxes are trimmed: site chrome, not part of the contact form.
+  In-scope controls: 11 (contact_type, company, your_name_last/first,
+  your_kana_last/first, tel01/02/03, email, email_check).
+-->
+<html lang="ja"><meta charset="utf-8"><title>フジタお問い合わせ</title>
+<form>
+<table>
+<tr>
+<th><label for="contact_type">お問い合わせの分類必須</label></th>
+<td>
+<select name="contact_type" id="contact_type">
+<option value="ソリューション・技術について">ソリューション・技術について</option>
+<option value="海外事業について">海外事業について</option>
+<option value="まちづくり事業について">まちづくり事業について</option>
+<option value="財務情報について">財務情報について</option>
+<option value="当社施工物件について">当社施工物件について</option>
+<option value="資産活用・土地のご相談">資産活用・土地のご相談</option>
+<option value="物流センターについて">物流センターについて</option>
+<option value="事業用地について">事業用地について</option>
+<option value="築育について">築育について</option>
+<option value="その他">その他</option>
+</select>
+</td>
+</tr>
+<tr>
+<th>法人/個人必須</th>
+<td>
+<label for="company">会社名・部署など</label>
+<input name="company" id="company" type="text" value="" maxlength="64">
+</td>
+</tr>
+<tr>
+<th>名前必須</th>
+<td>
+<label for="your_name_last">姓：</label>
+<input name="your_name_last" id="your_name_last" type="text" value="" maxlength="32">
+<label for="your_name_first">名：</label>
+<input name="your_name_first" id="your_name_first" type="text" value="" maxlength="32">
+</td>
+</tr>
+<tr>
+<th>フリガナ必須</th>
+<td>
+<label for="your_kana_last">セイ：</label>
+<input name="your_kana_last" id="your_kana_last" type="text" value="" maxlength="32">
+<label for="your_kana_first">メイ：</label>
+<input name="your_kana_first" id="your_kana_first" type="text" value="" maxlength="32">
+</td>
+</tr>
+<tr>
+<th><label for="tel01">電話番号必須</label></th>
+<td>
+<input name="tel01" id="tel01" type="text" value="" maxlength="5">
+<input name="tel02" type="text" aria-label="電話番号2" value="" maxlength="5">
+<input name="tel03" type="text" aria-label="電話番号3" value="" maxlength="5">
+</td>
+</tr>
+<tr>
+<th><label for="email">メールアドレス必須</label></th>
+<td>
+<input name="email" id="email" type="email" value="" maxlength="256">
+<input name="email_check" type="email" aria-label="確認用メールアドレス" value="" maxlength="256">
+</td>
+</tr>
+</table>
+</form>
+</html>

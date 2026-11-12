@@ -11,9 +11,9 @@ import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../core/types';
 import type { Address, Profile, StoredData } from '../../core/types';
 import { loadData, newId, saveData } from '../../storage';
 import { applyImportDraft, applyImportToState } from '../../core/import-apply';
-import { ADDRESS_BLANK_KEYS, PROFILE_BLANK_KEYS, selectImportTargets } from '../../core/import-targets';
+import { ADDRESS_BLANK_KEYS, PROFILE_BLANK_KEYS, isPrefectureBlank, selectImportTargets } from '../../core/import-targets';
 import { IMPORT_DRAFT_MESSAGE } from '../../import-message';
-import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton } from './dom';
+import { el, labeled, textInput, kanaHiraganaHint, isAtLimit, MAX_ITEMS, buildSelect, cardFieldset, actionButton, renderCardFooter } from './dom';
 import { post } from './notice-center';
 import { mountAiSection } from './ai-section';
 import { mountAuditSection } from './audit-section';
@@ -157,13 +157,13 @@ function renderProfilePage(profiles: Profile[], rerender: () => void): HTMLEleme
     rerender();
   });
   const limitNote = buildLimitNote(`プロファイルは${MAX_ITEMS}件まで登録できます`, isAtLimit(profiles.length));
-  const save = actionButton('保存', false, () => { void onSaveSide('profile'); });
-  const importButton = actionButton('フォームから取り込む', false, () => {
-    void onImportDraft().catch(onImportFailed);
+  // Both pages share one footer generator (PBI-220): a wording or enabled
+  // change inside renderCardFooter reaches both sides at once. The failure
+  // notice wiring travels with onImport; the footer only places the buttons.
+  const footer = renderCardFooter({
+    onSave: () => { void onSaveSide('profile'); },
+    onImport: () => { void onImportDraft().catch(onImportFailed); },
   });
-  const footer = document.createElement('div');
-  footer.className = 'row';
-  footer.append(save, importButton);
   page.append(heading, ...cards, addProfile, ...(limitNote.textContent ? [limitNote] : []), footer);
   return page;
 }
@@ -201,13 +201,10 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
     rerender();
   });
   const limitNote = buildLimitNote(`住所は${MAX_ITEMS}件まで登録できます`, isAtLimit(addresses.length));
-  const save = actionButton('保存', false, () => { void onSaveSide('address'); });
-  const importButton = actionButton('フォームから取り込む', false, () => {
-    void onImportDraft().catch(onImportFailed);
+  const footer = renderCardFooter({
+    onSave: () => { void onSaveSide('address'); },
+    onImport: () => { void onImportDraft().catch(onImportFailed); },
   });
-  const footer = document.createElement('div');
-  footer.className = 'row';
-  footer.append(save, importButton);
   page.append(heading, ...cards, add, ...(limitNote.textContent ? [limitNote] : []), footer);
   return page;
 }
@@ -219,9 +216,9 @@ function renderAddressPage(addresses: Address[], profiles: Profile[], rerender: 
 // documented extras below. Unlike the import, a non-blank first card is
 // filled in place, never forked: forking would leave the old invalid card
 // behind and the trial validation could never pass.
-// prefecture注記: ADDRESS_BLANK_KEYS は OPTIONS_ADDRESS_FIELDS由来で
-// prefecture(select行)を含まないが、trial は従来どおり prefecture の空欄も
-// sample で埋める。import側との不一致であり、仕様確認までは現状維持する
+// prefecture注記 (PBI-220): prefecture が空判定に入るかは型で選ぶ。trial は
+// 下の applyTrialSampleToAddress で単欄ヘルパー isPrefectureBlank を直接呼び、
+// import は selectImportTargets で false を渡す。仕様統一までは現状維持する
 // (推測で統一しない)。
 export function applyTrialSampleToProfile(base: Profile, sample: Omit<Profile, 'id'>): Profile {
   const next = { ...base };
@@ -244,8 +241,12 @@ export function applyTrialSampleToAddress(base: Address, sample: Omit<Address, '
       next[key] = sample[key];
     }
   }
-  // prefecture は ADDRESS_BLANK_KEYS外(上記注記)。trial は従来どおり空欄のみ埋める。
-  if (next.prefecture.trim() === '' && sample.prefecture !== '') next.prefecture = sample.prefecture;
+  // trial は prefecture を空判定に含める (isBlankAddress の { includePrefecture: true }
+  // の選択に対応)。ADDRESS_BLANK_KEYS 外の prefecture 単欄だけを見るため、
+  // 単欄ヘルパーを直接呼び、素カード合成はしない (EMPTY_ADDRESS の既定値に依存しない)。
+  // 仕様統一は別 PBI の範囲であり、ここでは分岐の所在を型に移すだけ。
+  const prefectureBlank = isPrefectureBlank(next.prefecture);
+  if (prefectureBlank && sample.prefecture !== '') next.prefecture = sample.prefecture;
   if (next.label.trim() === '') next.label = '自宅';
   return next;
 }

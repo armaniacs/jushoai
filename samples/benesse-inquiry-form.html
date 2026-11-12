@@ -1,0 +1,32 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://enquete.benesse.ne.jp/forms/o/we040f7618/form
+  (ベネッセコーポレーションへのお問い合わせ).
+  Field names are coded (q0100...) on the real page, so the question texts
+  are kept verbatim as <label>s; they carry the classification signal.
+  The 11 in-scope controls are all the visible fields (the rest is hidden
+  state + one textarea). The Q1 select keeps its real options verbatim.
+-->
+<html lang="ja"><meta charset="utf-8"><title>ベネッセコーポレーションへのお問い合わせ (education)</title>
+<form>
+      <label for="id_q01001001">氏名（漢字） 姓：</label>
+      <input name="q01001001" id="id_q01001001" type="text" value="">
+      <label for="id_q01001002">氏名（漢字） 名：</label>
+      <input name="q01001002" id="id_q01001002" type="text" value="">
+      <label for="id_q01002001">氏名（かな） せい：</label>
+      <input name="q01002001" id="id_q01002001" type="text" value="">
+      <label for="id_q01002002">氏名（かな） めい：</label>
+      <input name="q01002002" id="id_q01002002" type="text" value="">
+      <label for="id_q01005001">会員番号</label>
+      <input name="q01005001" id="id_q01005001" type="tel" value="" placeholder="012" maxlength="3">
+      <input name="q01005002" id="id_q01005002" type="tel" value="" placeholder="345" maxlength="3">
+      <input name="q01005003" id="id_q01005003" type="tel" value="" placeholder="6789" maxlength="4">
+      <label for="id_q01007001">電話番号</label>
+      <input name="q01007001" id="id_q01007001" type="tel" value="" placeholder="例）1234567890（ハイフンなし）" maxlength="11">
+      <label for="id_q01008001">メールアドレス</label>
+      <input name="q01008001" id="id_q01008001" type="text" value="" placeholder="zemi@benesse.co.jp">
+      <label for="id_q01008002">メールアドレス（確認用）</label>
+      <input name="q01008002" id="id_q01008002" type="text" value="" placeholder="zemi@benesse.co.jp">
+      <label for="id_q90001001">お問い合わせの分野</label>
+      <select name="q90001001" id="id_q90001001"><option value="">--</option><option value="Q90001001_1">たまごクラブ・ひよこクラブ</option><option value="Q90001001_2">ベネッセの英語(お子さま向け商品)</option><option value="Q90001001_3">ベネッセの辞書</option><option value="Q90001001_4">進研模試・スタディーサポート</option><option value="Q90001001_5">ベネッセ教育総合研究所</option><option value="Q90001001_6">マナビジョン</option><option value="Q90001001_7">ベネッセカード</option><option value="Q90001001_8">中途採用・新卒採用</option><option value="Q90001001_9">採用その他</option><option value="Q90001001_10">IR関連</option><option value="Q90001001_11">その他・ベネッセの商品</option><option value="Q90001001_12">---</option><option value="Q90001001_13">---</option><option value="Q90001001_14">---</option></select>
+</form>

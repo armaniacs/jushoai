@@ -1,0 +1,20 @@
+<!-- Minimal reproduction of https://ssl.form-mailer.jp/fms/08ff74b0839409.
+青山学院大学 就職・キャリアに関するお問い合わせフォーム【相模原キャンパス】.
+Labels carry the signal (学生番号/名前の姓・名/メール確認2欄/
+学部・学科、研究科). 所属キャンパス radio (3 options) and 学年 radio
+(1年..9 options) are not gender/decade groups, stay bundled skips
+(学年 = school year, not the 年代 decade group). In-scope controls: 6. -->
+<form>
+      <label for="field_7341173">学生番号 / Student ID Number</label>
+      <input name="field_7341173" id="field_7341173" type="text" value="" pattern="4">
+      <label for="field_7341167_sei">名前の姓</label>
+      <input name="field_7341167_sei" id="field_7341167_sei" type="text" value="" placeholder="姓" maxlength="2500" pattern="1">
+      <label for="field_7341167_mei">名前の名</label>
+      <input name="field_7341167_mei" id="field_7341167_mei" type="text" value="" placeholder="名" maxlength="2500" pattern="1">
+      <label for="field_7341168">メールアドレス / Mail Address</label>
+      <input name="field_7341168" id="field_7341168" type="email" value="" placeholder="info@example.com" maxlength="2500">
+      <label for="field_7341168_mcon">メールアドレス / Mail Addressの確認用</label>
+      <input name="field_7341168_mcon" id="field_7341168_mcon" type="email" value="" placeholder="確認用" maxlength="2500">
+      <label for="field_7341181">学部・学科、研究科 / Faculty or Graduate School</label>
+      <input name="field_7341181" id="field_7341181" type="text" value="" pattern="1">
+</form>

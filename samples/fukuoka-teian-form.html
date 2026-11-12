@@ -1,0 +1,46 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://shiminnnokoe.city.fukuoka.lg.jp/teian/
+  (福岡市 市政への提案).
+  Field names, headings, maxlengths, select options, and control kinds mirror
+  the real page. The real page carries its headings in table th cells with no
+  <label> association, so the rows are kept as minimal tr/th/td (auhikari
+  precedent). ku/age options are restored verbatim (the scaffolder strips
+  select options to `--`; kobe precedent). The choume/ban/gou inputs and the
+  sex radios exist on the real page only inside HTML comments, so they are
+  dropped (phantom controls the scanner never sees; the live sex is a hidden
+  shim). m_data (textarea) stays dropped (not scanned).
+-->
+<html lang="ja"><meta charset="utf-8"><title>福岡市 市政への提案 (municipal)</title>
+<form>
+<table>
+<tr><th>件名（必須）</th><td>
+      <input name="m_title" id="kenmei" type="text" value="" maxlength="50">
+</td></tr>
+<tr><th>氏名</th><td>
+      <input name="name" id="" type="text" value="" maxlength="20">
+</td></tr>
+<tr><th>フリガナ</th><td>
+      <input name="kana" id="furigana" type="text" value="" maxlength="50">
+</td></tr>
+<tr><th>郵便番号（半角）</th><td>
+      <input name="zipcode" id="zipcode" type="text" value="" maxlength="7">
+</td></tr>
+<tr><th>住所</th><td>
+      <select name="ku" id=""><option value="">――</option><option value="10">中央区</option><option value="20">博多区</option><option value="30">東区</option><option value="50">南区</option><option value="60">城南区</option><option value="70">早良区</option><option value="80">西区</option><option value="85">市内</option><option value="90">市外</option><option value="91">不明</option></select>
+      <input name="choumei" id="" type="text" value="" maxlength="100">
+</td></tr>
+<tr><th>アパートマンション</th><td>
+      <input name="apartname" id="" type="text" value="" maxlength="30">
+</td></tr>
+<tr><th>電話番号（半角）</th><td>
+      <input name="phone" id="phone" type="text" value="" maxlength="13">
+</td></tr>
+<tr><th>メールアドレス（半角）</th><td>
+      <input name="email" id="email" type="text" value="" maxlength="50">
+</td></tr>
+<tr><th>年齢</th><td>
+      <select name="age" id=""><option value="">――</option><option value="5">10歳未満</option><option value="10">10代</option><option value="20">20代</option><option value="30">30代</option><option value="40">40代</option><option value="50">50代</option><option value="60">60代</option><option value="70">70代</option><option value="80">80代以上</option><option value="99">不明</option></select>
+</td></tr>
+</table>
+</form>

@@ -1,0 +1,22 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.tokyosteel.co.jp/contact/
+  (東京製鐵5423お問い合わせ).
+  Field names, placeholders, and control kinds mirror the real page.
+  The real page lays each row out as div.p-form__row with a p.label heading,
+  which the scanner does not read as nearby (tr>th / dd>dt / legend only), so
+  the rows are kept as bare controls (brother-inquiry-form.html 前例).
+  The category select carries the real options (選択してください + 4種);
+  message textarea and agree checkbox stay skipped per policy.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東京製鐵 お問い合わせ (steel)</title>
+<form>
+      <select name="category" id=""><option value="">選択してください</option><option value="「ほぼゼロ」に関するお問い合わせ">「ほぼゼロ」に関するお問い合わせ</option><option value="製品に関するお問い合わせ">製品に関するお問い合わせ</option><option value="当社全般に関するお問い合わせ">当社全般に関するお問い合わせ</option><option value="IRに関するお問い合わせ">IRに関するお問い合わせ</option></select>
+      <input name="company" id="" type="text" value="" placeholder="例）東京製鐵株式会社">
+      <input name="department" id="" type="text" value="" placeholder="例）総務部">
+      <input name="name" id="" type="text" value="" placeholder="例）山田 太郎">
+      <input name="tel" id="" type="text" value="" placeholder="例）01234567890　ハイフン無し" pattern="\d{2,4}-?\d{2,4}-?\d{3,4}">
+      <input name="email" id="" type="email" value="" placeholder="例）mail@sample.com">
+      <input name="email2" id="" type="email" value="">
+      <input name="fax" id="" type="text" value="" placeholder="例）01234567890　ハイフン無し" pattern="\d{2,4}-?\d{2,4}-?\d{3,4}">
+</form>

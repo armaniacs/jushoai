@@ -1,0 +1,25 @@
+<!-- Minimal reproduction of https://business.form-mailer.jp/fms/25b2d0e0137776.
+お問い合わせフォーム（青山キャンパス所属学生用）.
+Labels carry the signal (学生番号/名前の姓・名/連絡用メール確認2欄/
+連絡先 3-split with 市外局番・市内局番・加入者番号 labels). The two
+radios (奨学金情報の事前確認, JASSO問合せ) are not gender/decade, stay
+bundled skips. 所属キャンパス/質問項目 are checkbox groups, out of
+scope. In-scope controls: 8. -->
+<form>
+      <label for="field_2295371">学生番号</label>
+      <input name="field_2295371" id="field_2295371" type="text" value="" pattern="4">
+      <label for="field_2295359_sei">名前の姓</label>
+      <input name="field_2295359_sei" id="field_2295359_sei" type="text" value="" placeholder="姓" maxlength="2500" pattern="1">
+      <label for="field_2295359_mei">名前の名</label>
+      <input name="field_2295359_mei" id="field_2295359_mei" type="text" value="" placeholder="名" maxlength="2500" pattern="1">
+      <label for="field_2295420">連絡用メールアドレス</label>
+      <input name="field_2295420" id="field_2295420" type="email" value="" placeholder="info@example.com" maxlength="2500">
+      <label for="field_2295420_mcon">連絡用メールアドレスの確認用</label>
+      <input name="field_2295420_mcon" id="field_2295420_mcon" type="email" value="" placeholder="確認用" maxlength="2500">
+      <label for="field_2295364_1">連絡先の市外局番</label>
+      <input name="field_2295364_1" id="field_2295364_1" type="tel" value="" placeholder="090" maxlength="4" pattern="^\d+$">
+      <label for="field_2295364_2">連絡先の市内局番</label>
+      <input name="field_2295364_2" id="field_2295364_2" type="tel" value="" placeholder="0000" maxlength="4" pattern="^\d+$">
+      <label for="field_2295364_3">連絡先の加入者番号</label>
+      <input name="field_2295364_3" id="field_2295364_3" type="tel" value="" placeholder="0000" maxlength="4" pattern="^\d+$">
+</form>
