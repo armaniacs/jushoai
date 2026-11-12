@@ -91,3 +91,4 @@
 - https://mori.webcas.net/form/pub/f008/contact → mori-webcas-contact.html
 - https://openhouse-group.co.jp/support/contact.html → openhouse-customer-contact.html
 - https://www.anabuki.ne.jp/contact/form.php?contact_type=1 → anabuki-general-contact.html
+- https://www.anabuki.ne.jp/contact/landuse/?contact_type=7 → anabuki-landuse-contact.html

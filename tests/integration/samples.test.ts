@@ -426,4 +426,7 @@ describe('sample forms end to end', () => {
   it('anabuki-general-contact.html fills the in-scope fields', async () => {
     expect(await planFor('anabuki-general-contact.html')).toEqual(expectedFor('anabuki-general-contact.html'));
   });
+  it('anabuki-landuse-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('anabuki-landuse-contact.html')).toEqual(expectedFor('anabuki-landuse-contact.html'));
+  });
 });
