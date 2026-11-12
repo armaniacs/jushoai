@@ -1,0 +1,23 @@
+<!-- Minimal reproduction of https://www.anabuki.ne.jp/contact/form.php?contact_type=1. Values stripped; trim further before committing. -->
+<form>
+      <select name="contact_type" id="form_item_contact_type"><option value="">--</option></select>
+      <input name="company" id="form_item_company" type="text" value="" placeholder="（例）穴吹興産株式会社">
+      <input name="name" id="form_item_name" type="text" value="" placeholder="（例）穴吹 太郎">
+      <input name="kana" id="form_item_kana" type="text" value="" placeholder="（例）アナブキ タロウ">
+      <input name="zip" id="form_item_zip" type="text" value="" placeholder="（例）7600028" maxlength="8">
+      <input name="address" id="form_item_address" type="text" value="" placeholder="（例）香川県高松市鍛冶屋町7-12穴吹五番町ビル701">
+      <input name="tel" id="form_item_tel" type="tel" value="" placeholder="（例）087-822-3567" maxlength="13">
+      <input name="fax" id="form_item_fax" type="tel" value="" placeholder="（例）087-822-1400" maxlength="13">
+      <input name="q" id="input-search" type="text" value="">
+<!-- skip: inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: business_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: business_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: email (mail): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: email_confirm (mail): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: agree_confirm (checkbox): out of scope (skip fixed) -->
+<!-- skip: btn_submit (button): action element, never a fill target (exclude) -->
+<!-- skip: csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

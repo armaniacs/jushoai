@@ -423,4 +423,7 @@ describe('sample forms end to end', () => {
   it('openhouse-customer-contact.html fills the in-scope fields', async () => {
     expect(await planFor('openhouse-customer-contact.html')).toEqual(expectedFor('openhouse-customer-contact.html'));
   });
+  it('anabuki-general-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('anabuki-general-contact.html')).toEqual(expectedFor('anabuki-general-contact.html'));
+  });
 });

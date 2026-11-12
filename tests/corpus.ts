@@ -3132,6 +3132,34 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'anabuki-general-contact.html': {
+    expected: {
+      // 穴吹興産総合問合せ。placeholder（例）が信号。メール欄は type=mail
+      // のため走査対象外 (tooling が除外)。
+      'name': '山田 太郎',
+      'zip': '100-0001',
+      'address': '東京都千代田区千代田1-1 千代田ビル101',
+    },
+    excluded: [
+      'contact_type (select): only a `--` option, correctly warn-no-option',
+      'company (text): placeholder（例）穴吹興産株式会社, stays unclassified (LLM fallback; company-by-placeholder candidate)',
+      'kana (text): placeholder（例）アナブキ タロウ, stays unclassified (LLM fallback; kana-via-placeholder candidate)',
+      'tel/fax (tel): type=tel with placeholder 例, stay unclassified (LLM fallback; tel-by-name candidate)',
+      'q (text): site-search field (id input-search), stays unclassified (same as forum.html s)',
+      'email/email_confirm (mail): non-standard type, not scanned (scan covers text/email/tel/search + select; exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'business_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'business_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'email (mail): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'email_confirm (mail): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agree_confirm (checkbox): out of scope (skip fixed)',
+      'btn_submit (button): action element, never a fill target (exclude)',
+      'csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
