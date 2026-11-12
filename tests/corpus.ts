@@ -35,7 +35,7 @@ const EPSON_EXPECTED = {
   c_q14_citycode: '千代田区', c_q15_citycode: '千代田区',
 };
 
-// ff-csr / ff-webmaster / ff-procurement fill the same thirteen Drupal-form
+// ff-csr / ff-webmaster / ff-procurement fill the same twelve Drupal-form
 // fields: 姓/名 labels each read as a full name (no first/last split
 // applied); 勤務先・学校名 compound reads as the school vocabulary, so the
 // school profile value fills; FAX has no profile value, so the rule fills
@@ -2705,7 +2705,7 @@ const LEDGER = {
       'reserve[wish_date] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
       'reserve[subjects] x2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
       '(no name/id) (image): unaddressable (exclude)',
-      'reserve[category_type]/reserve[media_type]/reserve[referrer]/event_type/event_data[] x274 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'reserve[category_type]/reserve[media_type]/reserve[referrer]/event_type/(event_data[] x274) (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
   'meiko-contact-form.html': {
@@ -3218,7 +3218,7 @@ const LEDGER = {
       'agree[data][] (checkbox): opt-out checkbox, out of scope (skip fixed)',
       'agree[separator]/__children[agree][] (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'submitConfirm (submit): action element, never a fill target (exclude)',
-      'mw-wp-form-form-id/mw_wp_form_token/mw-wp-form-form-id/mw_wp_form_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mw-wp-form-form-id x2/mw_wp_form_token x2 (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'cn-accept-cookie/cn-refuse-cookie/cn-close-notice (button): action element, never a fill target (exclude)',
     ],
   },
@@ -3232,7 +3232,7 @@ const LEDGER = {
       'contact_subject (text): 件名, no profile value, correctly unfilled (same as ff-csr inquiry_title)',
       'contactselect (select): SP-only tab switcher outside the form, trimmed as site chrome (exclude)',
       'q (text) x2: header/footer site-search fields, trimmed as site chrome (same as forum.html s)',
-      'cx/cof/ie/cx/cof/ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cx x2/cof x2/ie x2 (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'contact_message (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
       'agree[] (checkbox): out of scope (skip fixed)',
       '(no name/id) x2 (button): unaddressable (exclude)',
