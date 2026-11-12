@@ -194,3 +194,29 @@
 | 118 | https://www.mizuho-rt.co.jp/contact/ | L | みずほリサーチ | 除外 | 到達不能 (HTTP 403 Access Denied) |
 | 119 | https://www.jpc-net.jp/contact/ | L | 日本生産性本部 | 除外 | フォームなし (HTTP 200。静的formは検索3件のみ) |
 | 120 | https://www.jpaa.or.jp/contact/ | L | 日本弁理士会 | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせ」。MW WP Form、input 18・textarea 1・select 2。会社名・部署・役職・氏名・フリガナ・メールアドレス確認・電話番号3分割・職種/業種select。日本語名項目が素直で多様性◎。住所欄なし) |
+
+### M 宿泊業、飲食サービス業
+
+| 121 | https://www.imperialhotel.co.jp/contact | M | 帝国ホテル | 除外 | フォームなし (HTTP 200。静的formは検索2件のみ) |
+| 122 | https://www.hotel-okura.co.jp/contact | M | オークラホテル | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 123 | https://www.newotani.co.jp/contact | M | ニューオータニ | 除外 | 到達不能 (HTTP 404) |
+| 124 | https://www.princehotels.co.jp/contact | M | プリンスホテル | 除外 | 到達不能 (HTTP 404) |
+| 125 | https://www.toyoko-inn.co.jp/contact | M | 東横イン | 除外 | 到達不能 (HTTP 404) |
+| 126 | https://www.apahotel.co.jp/contact | M | アパホテル | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 127 | https://www.hoshinoresorts.com/contact/ | M | 星野リゾート | 除外 | フォームなし (HTTP 200「お問い合わせ」頁だが静的formなし。予約導線はJSとみられる) |
+| 128 | https://www.mcdonalds.co.jp/contact/ | M | マクドナルド | 除外 | 到達不能 (HTTP 404) |
+| 129 | https://www.skylark.co.jp/contact/ | M | すかいらーくHD | 除外 | 到達不能 (HTTP 404) |
+| 130 | https://www.zensho.co.jp/contact/ | M | ゼンショーHD | 除外 | 到達不能 (HTTP 404) |
+
+### N 生活関連サービス業、娯楽業
+
+| 131 | https://www.jtb.co.jp/inquiry/ | N | JTB問合せ窓口 | 除外 | 到達不能 (HTTP 200で/Error/404Error.aspに転送。404頁) |
+| 132 | https://www.his.co.jp/contact/ | N | HIS | 除外 | 到達不能 (HTTP 404) |
+| 133 | https://www.knt.co.jp/contact/ | N | 近畿日本ツーリスト | 除外 | 到達不能 (HTTP 404) |
+| 134 | https://www.olc.co.jp/contact/ | N | オリエンタルランド | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 135 | https://www.usj.co.jp/contact/ | N | USJ | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 136 | https://www.avex.co.jp/contact/ | N | エイベックス | 除外 | フォームなし (HTTP 200トップ。静的formなし) |
+| 137 | https://www.yoshimoto.co.jp/contact/ | N | 吉本興業 | 除外 | フォームなし (HTTP 200「ご依頼・お問い合わせ」案内頁。静的formなし) |
+| 138 | https://www.karaokekan.co.jp/contact/ | N | カラオケ館 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 139 | https://www.duskin.co.jp/contact/ | N | ダスキン | 除外 | 到達不能 (HTTP 404) |
+| 140 | https://www.secom.co.jp/inquiry/ | N | セコム問合せ | 除外 | 到達不能 (HTTP 404) |
