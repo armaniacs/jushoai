@@ -48,27 +48,30 @@ export function insertLedgerEntry(source, entry) {
   return `${source.slice(0, lineStart)}${entry}${source.slice(lineStart)}`;
 }
 
-// Inserts the case stub before the closing `});` of the last describe block.
-// Returns null when there is no describe block to append to, or the unchanged
-// source when the case is already present.
-export function insertTestCase(source, stub) {
-  const firstLine = stub.trim().split('\n')[0];
-  if (firstLine && source.includes(firstLine)) return source;
-  const idx = source.lastIndexOf('\n});');
-  if (idx === -1) return null;
-  return `${source.slice(0, idx)}\n${stub}${source.slice(idx + 1)}`;
-}
+// Appends a quoted entry to the aggregated `inScopeFixtures` array in
+// tests/integration/samples.test.ts (consumed by a single `it.each`, SIMP-T2).
+// Returns the unchanged source when the file is already listed (dup guard
+// covers both the array entry and a legacy single-`it()` stub, so re-running
+// on a wired fixture never duplicates it), or null when the array declaration
+// is gone (the caller must fail instead of silently no-oping).
+export const INSCOPE_ARRAY_RE = /const inScopeFixtures:\s*CorpusName\[\]\s*=\s*\[/;
 
-// Case stub consuming the ledger interface: the expectations and exclusion
-// reasons live in the corpus entry, so the stub only names the fixture.
-function renderCaseStub(file) {
-  return `  it('${file} fills the in-scope fields', async () => {\n    expect(await planFor('${file}')).toEqual(expectedFor('${file}'));\n  });\n`;
+export function insertFixtureEntry(source, file) {
+  // Dup guard: the quoted name matches an array entry, and the legacy title
+  // matches a pre-aggregation single-`it()` stub. Either way the fixture is
+  // already wired, so the source is left untouched (never a dup, never mixed).
+  if (source.includes(`'${file}'`) || source.includes(`it('${file} fills the in-scope fields'`)) return source;
+  const m = INSCOPE_ARRAY_RE.exec(source);
+  if (!m) return null;
+  const close = source.indexOf('];', m.index);
+  if (close === -1) return null;
+  const lineStart = source.lastIndexOf('\n', close) + 1;
+  return `${source.slice(0, lineStart)}    '${file}',\n${source.slice(lineStart)}`;
 }
 
 export function buildWiring(html, sourceLabel, file) {
   const extracted = extractControls(html);
   const entry = renderLedgerEntry(file, extracted);
-  const stub = renderCaseStub(file);
   return {
     file,
     fixture: renderFixture(sourceLabel, extracted),
@@ -81,7 +84,7 @@ export function buildWiring(html, sourceLabel, file) {
     applyWiring({ ledger, test }) {
       const nextLedger = insertLedgerEntry(ledger, entry);
       if (nextLedger === null) return null;
-      const nextTest = insertTestCase(test, stub);
+      const nextTest = insertFixtureEntry(test, file);
       if (nextTest === null) return null;
       return { ledger: nextLedger, test: nextTest };
     },
@@ -112,7 +115,7 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
       test: readFileSync(testPath, 'utf8'),
     });
     if (!applied) {
-      console.error('wiring failed: the corpus ledger anchor in tests/corpus.ts (or the describe block in samples.test.ts) is missing; nothing was written.');
+      console.error('wiring failed: the corpus ledger anchor in tests/corpus.ts (or the inScopeFixtures array in samples.test.ts) is missing; nothing was written.');
       process.exit(1);
     }
     writeFileSync(new URL(`../samples/${wiring.file}`, import.meta.url), wiring.fixture);
@@ -121,9 +124,8 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
     // Success only after a read-back: the ledger and the test source must
     // actually carry the new entry (a silent no-op never reports success).
     const ledgerWired = readFileSync(ledgerPath, 'utf8').includes(`'${wiring.file}': {`);
-    // samples.test.ts aggregates the定型 cases in one it.each file list, so the
-    // read-back matches the quoted file name (satisfied by both a list entry
-    // and a singly appended `it('... fills the in-scope fields')` stub).
+    // samples.test.ts aggregates the定型 cases in one it.each file list, so
+    // the read-back matches the quoted file name carried by the array entry.
     const testWired = readFileSync(testPath, 'utf8').includes(`'${wiring.file}'`);
     if (!ledgerWired || !testWired) {
       console.error('wiring failed: read back tests/corpus.ts and samples.test.ts but the new entry is not there.');

@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import {
   fixtureNameFromUrl, LEDGER_ANCHOR,
-  renderLedgerEntry, insertLedgerEntry, insertTestCase, buildWiring,
+  renderLedgerEntry, insertLedgerEntry, insertFixtureEntry, buildWiring,
 } from '../../scripts/add-fixture.mjs';
 
 // Stand-ins for the two files the tool wires: the corpus ledger module
-// (tests/corpus.ts, anchor inside the LEDGER object) and the samples.test.ts
-// describe block.
+// (tests/corpus.ts, anchor inside the LEDGER object) and the aggregated
+// `inScopeFixtures` array in samples.test.ts (consumed by a single it.each).
 const ledgerSource = `export interface CorpusEntry { html: string; expected: Record<string, string>; excluded?: string[]; }
 
 const LEDGER = {
@@ -22,7 +22,10 @@ ${LEDGER_ANCHOR}
 const testSource = `import { corpusEntry } from '../corpus';
 
 describe('x', () => {
-  it('a case', async () => {
+  const inScopeFixtures: CorpusName[] = [
+    'a.html',
+  ];
+  it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
   });
 });
 `;
@@ -57,23 +60,32 @@ describe('add-fixture', () => {
     expect(insertLedgerEntry("const LEDGER = {\n  'a.html': { expected: {} },\n};\n", entry)).toBeNull();
   });
 
-  it('inserts the test case once, idempotently, and fails without a describe block', () => {
-    const stub = `  it('c.html fills the in-scope fields', async () => {\n    expect(await planFor('c.html')).toEqual(expectedFor('c.html'));\n  });\n`;
-    const withCase = insertTestCase(testSource, stub) ?? '';
-    expect(withCase).toContain(`it('c.html fills the in-scope fields'`);
-    expect(withCase.trimEnd().endsWith('});')).toBe(true);
-    expect(insertTestCase(withCase, stub)).toBe(withCase);
-    expect(insertTestCase('const x = 1;\n', stub)).toBeNull();
+  it('appends the fixture to inScopeFixtures once, guards duplicates, and fails without the array', () => {
+    const withEntry = insertFixtureEntry(testSource, 'c.html') ?? '';
+    expect(withEntry).toContain(`    'c.html',\n  ];`);
+    expect(withEntry).toContain(`it.each(inScopeFixtures)`);
+    // Dup guard: re-adding the same file leaves the source untouched.
+    expect(insertFixtureEntry(withEntry, 'c.html')).toBe(withEntry);
+    expect(insertFixtureEntry(testSource, 'a.html')).toBe(testSource);
+    // Legacy single-it() stubs also satisfy the guard (no mixed-style dup).
+    const legacy = `${testSource}\n  it('c.html fills the in-scope fields', async () => {\n  });\n`;
+    expect(insertFixtureEntry(legacy, 'c.html')).toBe(legacy);
+    // A missing array declaration fails instead of silently no-oping.
+    expect(insertFixtureEntry('const x = 1;\n', 'c.html')).toBeNull();
   });
 
-  it('wires the fixture into the ledger and the test case, and fails without the ledger anchor', () => {
+  it('wires the fixture into the ledger and the inScopeFixtures array, and fails without the ledger anchor', () => {
     const wiring = buildWiring('<form><input name="q1" id="q1" type="text"><button>go</button></form>', 'https://example.com/c', 'c.html');
     expect(wiring.controls).toBe(1);
     expect(wiring.ledgerEntry).toContain(`  'c.html': {`);
     const applied = wiring.applyWiring({ ledger: ledgerSource, test: testSource });
     expect(applied?.ledger).toContain(`  'c.html': {`);
-    expect(applied?.test).toContain(`it('c.html fills the in-scope fields'`);
-    expect(applied?.test).toContain(`toEqual(expectedFor('c.html'))`);
+    expect(applied?.test).toContain(`    'c.html',\n  ];`);
+    expect(applied?.test).not.toContain(`it('c.html fills the in-scope fields'`);
+    expect(applied?.test).toContain(`it.each(inScopeFixtures)`);
+    // Idempotent: wiring the same fixture twice changes nothing.
+    const rewired = wiring.applyWiring({ ledger: applied!.ledger, test: applied!.test });
+    expect(rewired).toEqual(applied);
     // Ledger first: without the anchor the wiring fails and the test source
     // is left untouched (no case without its entry).
     expect(wiring.applyWiring({ ledger: 'const LEDGER = {};\n', test: testSource })).toBeNull();

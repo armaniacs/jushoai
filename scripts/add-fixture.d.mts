@@ -11,7 +11,15 @@ export interface LedgerExtract {
 
 export function renderLedgerEntry(file: string, extracted: LedgerExtract): string;
 export function insertLedgerEntry(source: string, entry: string): string | null;
-export function insertTestCase(source: string, stub: string): string | null;
+
+// Declaration of the aggregated `inScopeFixtures` array in
+// tests/integration/samples.test.ts (consumed by a single `it.each`).
+export const INSCOPE_ARRAY_RE: RegExp;
+
+// Appends a quoted entry to the `inScopeFixtures` array. Returns the
+// unchanged source when the file is already listed (dup guard), or null when
+// the array declaration is gone.
+export function insertFixtureEntry(source: string, file: string): string | null;
 
 export interface Wiring {
   file: string;
