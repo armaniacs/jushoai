@@ -438,4 +438,7 @@ describe('sample forms end to end', () => {
   it('toshin-mendan-form.html fills the in-scope fields', async () => {
     expect(await planFor('toshin-mendan-form.html')).toEqual(expectedFor('toshin-mendan-form.html'));
   });
+  it('yotsuya-nyujuku-form.html fills the in-scope fields', async () => {
+    expect(await planFor('yotsuya-nyujuku-form.html')).toEqual(expectedFor('yotsuya-nyujuku-form.html'));
+  });
 });

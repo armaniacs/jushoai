@@ -3383,6 +3383,51 @@ const LEDGER = {
       'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'yotsuya-nyujuku-form.html': {
+    expected: {
+      // 四谷大塚入塾テスト (lform)。児童+保護者の氏名・カナが name 語彙で解決。
+      'family_name': '山田',
+      'first_name': '太郎',
+      'family_name_kana': 'ヤマダ',
+      'first_name_kana': 'タロウ',
+      // 保護者欄も同一プロファイル値で fill (honest pin。児童と保護者の区別は将来PBIで)。
+      'parent_family_name': '山田',
+      'parent_first_name': '太郎',
+      'parent_family_name_kana': 'ヤマダ',
+      'parent_first_name_kana': 'タロウ',
+      'mail_address': 'yamada@example.com',
+      'mail_address_confirm': 'yamada@example.com',
+      // zip は type=tel・maxlength=7 のため undashed。
+      'zip': '1000001',
+      'address1': '千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      // tel 3欄は type=tel・maxlength=7 で分割対に載る (toshin bare と対照的)。
+      'tel1': '090',
+      'tel2': '1234',
+      'tel3': '5678',
+      'school_name': '都立日比谷高校',
+    },
+    excluded: [
+      'kousha/request/birth_year/birth_month/birth_date/prefecture/school_grade/school_prefecture (select): only a `--` option, correctly warn-no-option',
+      '_method (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'sex (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'sex (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'sex (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'relationship (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'school_section (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'school_section (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'school_section (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'school_section (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'school_class (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'freetext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'enquete (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (image): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

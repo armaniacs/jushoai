@@ -95,3 +95,4 @@
 - https://www.haseko.co.jp/hc/contact/input → haseko-contact-input.html
 - https://www.toshin.com/sform/shiryo-seikyu/input?form_action=shiryo → toshin-shiryo-form.html
 - https://www.toshin.com/sform/kobetsu-mendan/input?form_action=mendan&kobetsu=1 → toshin-mendan-form.html
+- https://www.yotsuyaotsuka.com/lform/nyujuku_test/input → yotsuya-nyujuku-form.html
