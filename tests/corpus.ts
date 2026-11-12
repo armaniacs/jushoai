@@ -3006,6 +3006,43 @@ const LEDGER = {
       'sub (image): action element, never a fill target (exclude)',
     ],
   },
+  'hulic-develop-plan.html': {
+    expected: {
+      // ヒューリック不動産開発。label なし・placeholder が信号。
+      // name1/2・kana1/2 は _1/_2 分割で素直に解決。
+      'name1': '山田',
+      'name2': '太郎',
+      'kana1': 'ヤマダ',
+      'kana2': 'タロウ',
+      'zip': '100-0001',
+      'address': '東京都千代田区千代田1-1',
+      'building': '千代田ビル101',
+      'tel': '090-1234-5678',
+      // mail は未分類のまま mail_conf のみ解決 (honest pin。確認欄の非対称が候補)。
+      'mail_conf': 'yamada@example.com',
+    },
+    excluded: [
+      'query x2 (text): site-search fields (id ss-query1), stay unclassified (same as forum.html s)',
+      'mail (text): placeholder 例）hulic@hulic.co.jp, stays unclassified while mail_conf fills (LLM fallback; email-confirm asymmetry candidate)',
+      'company_name (text): placeholder 例）株式会社ヒューリック, stays unclassified (LLM fallback; company-by-placeholder candidate)',
+      'fax (text): placeholder 例）03-0000-0000, stays unclassified (LLM fallback; ff-csr では tel 値が入るが本頁では未解決、fax vocabulary candidate)',
+      'btnG (submit): action element, never a fill target (exclude)',
+      'btnG (submit): action element, never a fill target (exclude)',
+      '_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'subject (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'subject (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'body (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'company (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'company (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'company (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

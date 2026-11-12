@@ -414,4 +414,7 @@ describe('sample forms end to end', () => {
   it('brillia-support-contact.html fills the in-scope fields', async () => {
     expect(await planFor('brillia-support-contact.html')).toEqual(expectedFor('brillia-support-contact.html'));
   });
+  it('hulic-develop-plan.html fills the in-scope fields', async () => {
+    expect(await planFor('hulic-develop-plan.html')).toEqual(expectedFor('hulic-develop-plan.html'));
+  });
 });
