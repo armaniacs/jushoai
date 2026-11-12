@@ -64,3 +64,29 @@
 | 18 | https://www.nichiro.co.jp/contact/ | B | 日魯漁業 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
 | 19 | https://www.taiyo-aandf.co.jp/contact/ | B | 大洋エーアンドエフ | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
 | 20 | https://www.shinkogyorui.co.jp/contact/ | B | 神港魚類 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+
+### C 鉱業、採石業、砂利採取業
+
+| 21 | https://www.inpex.co.jp/contact/ | C | INPEX | 除外 | 到達不能 (HTTP 404。静的formは検索系のみ) |
+| 22 | https://www.japex.co.jp/contact/ | C | 石油資源開発 | 除外 | フォームなし (HTTP 200。静的formは検索・タブ切替radioのみ) |
+| 23 | https://www.furukawakk.co.jp/contact/ | C | 古河機械金属 | 除外 | 到達不能 (HTTP 404) |
+| 24 | https://www.toho-zinc.co.jp/contact/ | C | 東邦亜鉛 | 除外 | 到達不能 (HTTP 404) |
+| 25 | https://www.hitachi-cement.co.jp/contact/ | C | 日立セメント | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
+| 26 | https://www.ube.co.jp/contact/ | C | 宇部興産 | 除外 | 到達不能 (HTTP 200で/error/no_page.htmに転送。404頁) |
+| 27 | https://www.chichibu-lime.co.jp/contact/ | C | 秩父石灰 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 28 | https://www.nittetsu-mining.co.jp/contact/ | C | 日鉄鉱業 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 29 | https://www.toho-titanium.co.jp/contact/ | C | 東邦チタニウム | 除外 | フォームなし (HTTP 200「お問合せ」案内頁。静的formなし) |
+| 30 | https://www.asahihd.co.jp/contact/ | C | アサヒHD | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+
+### D 建設業
+
+| 31 | https://www.kajima.co.jp/contact/ | D | 鹿島建設 | 除外 | フォームなし (HTTP 200。静的form 7件はすべて検索系。実窓口は別導線とみられる) |
+| 32 | https://www.shimz.co.jp/contact/ | D | 清水建設 | 除外 | 到達不能 (HTTP 404) |
+| 33 | https://www.taisei.co.jp/contact/ | D | 大成建設 | 除外 | フォームなし (HTTP 200。静的formは検索3件のみ) |
+| 34 | https://www.takenaka.co.jp/contact/ | D | 竹中工務店 | 除外 | 到達不能 (HTTP 404) |
+| 35 | https://www.obayashi.co.jp/contact/ | D | 大林組 | 除外 | 到達不能 (HTTP 404) |
+| 36 | https://www.haseko.co.jp/contact/ | D | 長谷工コーポレーション | 除外 | 到達不能 (HTTP 404) |
+| 37 | https://www.toda.co.jp/contact/ | D | 戸田建設 | 除外 | 到達不能 (HTTP 404) |
+| 38 | https://www.maeda.co.jp/contact/ | D | 前田建設工業 | 除外 | 到達不能 (HTTP 404) |
+| 39 | https://www.nishimatsu.co.jp/contact/ | D | 西松建設 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 40 | https://www.fujita.co.jp/contact/ | D | フジタ | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせメールフォーム」。action=/contact/confirm/、input 16・textarea 1・select 1。your_name_last/first・your_kana_last/first・tel01/02/03・email確認・customer_type radio・contact_type select。命名素直で多様性◎) |
