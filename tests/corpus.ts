@@ -4590,6 +4590,40 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'sanaru-contact-form.html': {
+    expected: {
+      // 佐鳴予備校問合せ (idata[*])。name/zip/tel/email 系が素直に解決。
+      'idata[name]': '山田',
+      // name_k (カナ) は firstName に載り漢字が入る (honest pin。_k suffix の読分け候補)。
+      'idata[name_k]': '太郎',
+      'idata[zip_a]': '100',
+      'idata[zip_b]': '0001',
+      'idata[address]': '千代田区千代田1-1',
+      'idata[building]': '千代田ビル101',
+      'idata[tel_a]': '090',
+      'idata[tel_b]': '1234',
+      'idata[tel_c]': '5678',
+      'idata[email]': 'yamada@example.com',
+      'idata[email_check]': 'yamada@example.com',
+    },
+    excluded: [
+      'idata[reason_other] (text): bare conditional detail field, stays unclassified (LLM fallback)',
+      'idata[im]/idata[hc]/idata[cs]/idata[pref] (select): only a `--` option, correctly warn-no-option',
+      'idata[company]/idata[company_k]/idata[section] (text): 会社・部署系は未分類 (LLM fallback; ff C3 と同型)',
+      'idata[fax_a]/idata[fax_b]/idata[fax_c] (text): bare fax 3-split, stay unclassified (fax vocabulary candidate; ff では tel 値が入るが本頁では未解決)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[reason] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[inquiry] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'idata[iorc] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'idata[iorc] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'i_confirm (submit): action element, never a fill target (exclude)',
+      'i_reset (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
