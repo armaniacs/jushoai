@@ -83,3 +83,4 @@
 - https://residence.sumitomo-latour.jp/inquiry/ → sumitomo-latour-inquiry.html
 - https://sumifu-step-form.spiral-site.com/otoiawase → sumifu-step-otoiawase.html
 - https://www.proud-web.jp/module/inquiry/procedureForm.xphp → proud-procedure-form.html
+- https://www.tokyu-land.co.jp/form/branz_owner/ → tokyu-branz-owner-form.html

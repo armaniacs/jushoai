@@ -2836,6 +2836,44 @@ const LEDGER = {
       'FormAssist_submit (button): action element, never a fill target (exclude)',
     ],
   },
+  'tokyu-branz-owner-form.html': {
+    expected: {
+      // BRANZ オーナー (東急)。label なし・name/id 語彙のみ。
+      // mansion_name/name 対は姓/名分割に載り mansion_name→山田・name→太郎
+      // (honest pin。物件名欄への姓注入が候補)。
+      'mansion_name': '山田',
+      'name': '太郎',
+      'kana': 'ヤマダ タロウ',
+      'zip': '1000001',
+      'address1': '千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      'tel': '09012345678',
+    },
+    excluded: [
+      'q x2 (search): header/footer site-search fields, stay unclassified (same as forum.html s)',
+      'room_no (text): 部屋番号, no profile value, correctly unfilled',
+      'pref (select): only a `--` option, correctly warn-no-option',
+      'mail/mail2 (text): type=text with no email signal, stay unclassified (LLM fallback; email-via-name candidate, same as otsuka mail)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'flow (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'who_have_questions (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'who_have_questions (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'who_have_questions (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'area (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'area (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contentcheck[] (checkbox): out of scope (skip fixed)',
+      'contentcheck[] (checkbox): out of scope (skip fixed)',
+      'contentcheck[] (checkbox): out of scope (skip fixed)',
+      'contentcheck[] (checkbox): out of scope (skip fixed)',
+      'contentcheck[] (checkbox): out of scope (skip fixed)',
+      'contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
