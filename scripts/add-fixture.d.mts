@@ -20,6 +20,11 @@ export function insertLedgerEntry(source: string, entry: string): string | null;
 // tests/integration/samples.test.ts (consumed by a single `it.each`).
 export const INSCOPE_ARRAY_RE: RegExp;
 
+// Strict wired check: an `inScopeFixtures` element line
+// (`\n    'file',`), a legacy single-`it()` stub title,
+// or a `planFor('file')` test body call (custom-titled singles).
+export function isFixtureWired(source: string, file: string): boolean;
+
 // Appends a quoted entry to the `inScopeFixtures` array. Returns the
 // unchanged source when the file is already listed (dup guard), or null when
 // the array declaration is gone.

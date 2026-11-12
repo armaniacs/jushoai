@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   fixtureNameFromUrl, LEDGER_ANCHOR,
-  renderLedgerEntry, insertAboveAnchor, insertLedgerEntry, insertFixtureEntry, buildWiring,
+  renderLedgerEntry, insertAboveAnchor, insertLedgerEntry, insertFixtureEntry, isFixtureWired, buildWiring,
 } from '../../scripts/add-fixture.mjs';
 
 // Stand-ins for the two files the tool wires: the corpus ledger module
@@ -94,5 +94,35 @@ describe('add-fixture', () => {
     // Ledger first: without the anchor the wiring fails and the test source
     // is left untouched (no case without its entry).
     expect(wiring.applyWiring({ ledger: 'const LEDGER = {};\n', test: testSource })).toBeNull();
+  });
+
+  it('treats only an array element line or a legacy stub as wired (FIX-B/M3)', () => {
+    // Array element line (exactly what insertFixtureEntry writes) is wired.
+    expect(isFixtureWired(testSource, 'a.html')).toBe(true);
+    // Legacy single-it() stub title is wired (no mixed-style dup).
+    const legacy = `${testSource}\n  it('c.html fills the in-scope fields', async () => {\n  });\n`;
+    expect(isFixtureWired(legacy, 'c.html')).toBe(true);
+    // A bare quoted mention (comment, corpusEntry('x'), planFor('x')) is not.
+    expect(isFixtureWired(`// wired: 'c.html' is done\n`, 'c.html')).toBe(false);
+    expect(isFixtureWired(`corpusEntry('c.html')`, 'c.html')).toBe(false);
+    // A same-named entry on a single-line sibling list (anchorFixtures shape)
+    // is not wired, even though the comma form `'c.html',` is present there.
+    const anchorOnly = `const anchorFixtures: CorpusName[] = ['c.html', 'other.html'];\nconst inScopeFixtures: CorpusName[] = [\n    'other.html',\n];\n`;
+    expect(anchorOnly).toContain(`'c.html',`);
+    expect(isFixtureWired(anchorOnly, 'c.html')).toBe(false);
+    expect(isFixtureWired(anchorOnly, 'other.html')).toBe(true);
+    // A custom-titled single-it body calling planFor('file') is wired (the
+    // five registry-mapped specials); a table-only mention is not.
+    expect(isFixtureWired(`it('c resolves radios', async () => {\n expect(await planFor('c.html')).toEqual(expectedFor('c.html'));\n});`, 'c.html')).toBe(true);
+    expect(isFixtureWired(`const t = [{ file: 'c.html' }];\ncorpusEntry('c.html');`, 'c.html')).toBe(false);
+  });
+
+  it('does not let a single-line sibling list trip the dup guard (FIX-B/M3)', () => {
+    const anchorOnly = `const anchorFixtures: CorpusName[] = ['c.html', 'other.html'];\nconst inScopeFixtures: CorpusName[] = [\n    'other.html',\n];\n`;
+    const added = insertFixtureEntry(anchorOnly, 'c.html');
+    expect(added).not.toBeNull();
+    expect(added).toContain(`\n    'c.html',\n`);
+    // Once the element line lands, the guard holds.
+    expect(insertFixtureEntry(added!, 'c.html')).toBe(added);
   });
 });

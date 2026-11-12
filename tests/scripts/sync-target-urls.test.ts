@@ -44,6 +44,33 @@ describe('sync-target-urls registry', () => {
     const ascii = `# Target URLs\n\n- https://example.com/a -> a.html\n`;
     expect(stampRegistry(ascii, 'https://example.com/a', 'x.html')).toBe(ascii);
   });
+  it('stamps only a single-space dash prefix (FIX-B/M4, pre-S6 strictness)', () => {
+    // `-  url` (double space) is not stamped in place; the URL is already
+    // present so nothing is appended either: the registry is left untouched.
+    const wide = `# Target URLs\n\n-  https://example.com/b\n`;
+    expect(stampRegistry(wide, 'https://example.com/b', 'b.html')).toBe(wide);
+    // Leading indent with a single space still stamps and keeps the layout.
+    const indented = `# Target URLs\n\n  - https://example.com/b\n`;
+    expect(stampRegistry(indented, 'https://example.com/b', 'b.html')).toBe(
+      `# Target URLs\n\n  - https://example.com/b → b.html\n`,
+    );
+    // A single tab after the dash stamps too (old `slice(2)` removed exactly
+    // one whitespace char), and already-mapped wide lines stay alone.
+    const tabbed = `# Target URLs\n\n-\thttps://example.com/b\n`;
+    expect(stampRegistry(tabbed, 'https://example.com/b', 'b.html')).toBe(
+      `# Target URLs\n\n-\thttps://example.com/b → b.html\n`,
+    );
+    expect(
+      stampRegistry(`# Target URLs\n\n-  https://example.com/a → a.html\n`, 'https://example.com/a', 'x.html'),
+    ).toBe(`# Target URLs\n\n-  https://example.com/a → a.html\n`);
+  });
+  it('keeps the reader tolerant while the writer is strict (FIX-B/M4)', () => {
+    // parseRegistryLine still reads a double-space line (reader unchanged);
+    // only stampRegistry refuses to write it back in place.
+    expect(parseRegistryLine('-  https://example.com/b')).toEqual({
+      prefix: '-  ', url: 'https://example.com/b', file: null,
+    });
+  });
   it('appends unknown URLs', () => {
     expect(stampRegistry(md, 'https://example.com/c', 'c.html')).toContain('- https://example.com/c → c.html');
   });

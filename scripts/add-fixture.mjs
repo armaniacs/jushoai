@@ -57,11 +57,28 @@ export function insertLedgerEntry(source, entry) {
 // is gone (the caller must fail instead of silently no-oping).
 export const INSCOPE_ARRAY_RE = /const inScopeFixtures:\s*CorpusName\[\]\s*=\s*\[/;
 
+// Strict wired check (FIX-B/M3): an `inScopeFixtures` element line, a legacy
+// single-`it()` stub title, or a `planFor('file')` test body call. The element
+// line is matched with its leading newline + 4-space indent (exactly what
+// insertFixtureEntry writes), not a bare `'file'` contains-match: a bare match
+// also hits single-line lists such as `anchorFixtures` (`['a.html', 'b.html']`
+// carries `'a.html',` with a trailing comma), so even the `'file',` comma form
+// still false-positives there. The `planFor(` seam covers the five custom-
+// titled singles (formmailer-anketo-gender / formmailer-raijo-age /
+// overseas-webform-joshibi / furigana-fieldset-form / reinvent-registration-
+// contact): without it the strict check would call them unwired and a later
+// sync would append a duplicate array entry, breaking the 121/121 smoke.
+export function isFixtureWired(source, file) {
+  return source.includes(`\n    '${file}',`)
+    || source.includes(`it('${file} fills the in-scope fields'`)
+    || source.includes(`planFor('${file}'`);
+}
+
 export function insertFixtureEntry(source, file) {
-  // Dup guard: the quoted name matches an array entry, and the legacy title
-  // matches a pre-aggregation single-`it()` stub. Either way the fixture is
-  // already wired, so the source is left untouched (never a dup, never mixed).
-  if (source.includes(`'${file}'`) || source.includes(`it('${file} fills the in-scope fields'`)) return source;
+  // Dup guard: the quoted name matches an array element line, and the legacy
+  // title matches a pre-aggregation single-`it()` stub. Either way the fixture
+  // is already wired, so the source is left untouched (never a dup, never mixed).
+  if (isFixtureWired(source, file)) return source;
   const m = INSCOPE_ARRAY_RE.exec(source);
   if (!m) return null;
   const close = source.indexOf('];', m.index);
@@ -125,8 +142,9 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
     // actually carry the new entry (a silent no-op never reports success).
     const ledgerWired = readFileSync(ledgerPath, 'utf8').includes(`'${wiring.file}': {`);
     // samples.test.ts aggregates the定型 cases in one it.each file list, so
-    // the read-back matches the quoted file name carried by the array entry.
-    const testWired = readFileSync(testPath, 'utf8').includes(`'${wiring.file}'`);
+    // the read-back matches the array element line (or a legacy stub title),
+    // never a bare quoted-name contains-match (see isFixtureWired).
+    const testWired = isFixtureWired(readFileSync(testPath, 'utf8'), wiring.file);
     if (!ledgerWired || !testWired) {
       console.error('wiring failed: read back tests/corpus.ts and samples.test.ts but the new entry is not there.');
       process.exit(1);
