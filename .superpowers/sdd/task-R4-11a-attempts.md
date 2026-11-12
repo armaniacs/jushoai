@@ -90,3 +90,29 @@
 | 38 | https://www.maeda.co.jp/contact/ | D | 前田建設工業 | 除外 | 到達不能 (HTTP 404) |
 | 39 | https://www.nishimatsu.co.jp/contact/ | D | 西松建設 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
 | 40 | https://www.fujita.co.jp/contact/ | D | フジタ | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせメールフォーム」。action=/contact/confirm/、input 16・textarea 1・select 1。your_name_last/first・your_kana_last/first・tel01/02/03・email確認・customer_type radio・contact_type select。命名素直で多様性◎) |
+
+### E 製造業
+
+| 41 | https://www.komatsu.jp/inquiry/ | E | コマツ | 除外 | 到達不能 (HTTP 404転送頁。/inquiry/ なし) |
+| 42 | https://www.hitachicm.co.jp/contact/ | E | 日立建機 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 43 | https://www.omron.com/jp/ja/contact/ | E | オムロン | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 44 | https://www.yakult.co.jp/inquiry/ | E | ヤクルト本社 | 除外 | 到達不能 (メンテナンス中頁に転送。静的formなし) |
+| 45 | https://www.meiji.com/contact/ | E | 明治HD | 除外 | 到達不能 (HTTP 403・error頁) |
+| 46 | https://www.morinagamilk.co.jp/contact/ | E | 森永乳業 | 除外 | フォームなし (HTTP 200。静的formはサイト内検索のみ) |
+| 47 | https://www.nissin.com/jp/contact/ | E | 日清食品HD | 除外 | 到達不能 (HTTP 404) |
+| 48 | https://www.housefoods.co.jp/contact/ | E | ハウス食品 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 49 | https://www.shiseido.com/jp/ja/contact/ | E | 資生堂 | 除外 | 到達不能 (HTTP 410 Gone) |
+| 50 | https://www.kao.com/jp/customer/ | E | 花王 | 除外 | 到達不能 (HTTP 404) |
+
+### F 電気・ガス・熱供給・水道業
+
+| 51 | https://www.chuden.co.jp/contact/ | F | 中部電力 | 除外 | 到達不能 (HTTP 404) |
+| 52 | https://www.kepco.co.jp/contact/ | F | 関西電力 | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 53 | https://www.tohoku-epco.co.jp/contact/ | F | 東北電力 | 除外 | 到達不能 (HTTP 404) |
+| 54 | https://www.kyuden.co.jp/contact/ | F | 九州電力 | 除外 | 到達不能 (HTTP 404) |
+| 55 | https://www.hepco.co.jp/contact/ | F | 北海道電力 | 除外 | 到達不能 (HTTP 404) |
+| 56 | https://www.energia.co.jp/contact/ | F | 中国電力 | 除外 | 到達不能 (HTTP 404) |
+| 57 | https://www.yonden.co.jp/contact/ | F | 四国電力 | 除外 | フォームなし (HTTP 200「よくあるご質問・お問い合わせ」FAQ頁。静的formは空formのみ) |
+| 58 | https://www.rikuden.co.jp/contact/ | F | 北陸電力 | 除外 | 到達不能 (HTTP 404) |
+| 59 | https://www.osakagas.co.jp/contact/ | F | 大阪ガス | 除外 | 到達不能 (HTTP 404) |
+| 60 | https://www.tohogas.co.jp/contact/ | F | 東邦ガス | 除外 | 到達不能 (HTTP 404) |
