@@ -85,7 +85,12 @@ const DEPT = /学部|学科|専攻|department|major|faculty/;
 // 応募者側の団体で、会社プロファイルの注入先ではないため否定文脈で除外する
 // （officeEligible と同型の除外を COMPANY_OFFICE 自身に持たせる）。
 const COMPANY_OFFICE = /(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名/;
-const DEPT_OFFICE = /部署(?!名)/;
+// T2: standalone 部署名 also reads as the company department (MS Forms
+// 3.所属部署名 shape). The compound joint stays out: a 部署名 glued to a
+// company word (会社名・部署名) keeps the company reading, so the negative
+// lookbehinds hold the joint even if DISPATCH order ever changes. Bare /部署/
+// would also swallow such joints, hence the narrower alternation.
+const DEPT_OFFICE = /(?:(?<!会社名・)(?<!法人名・)(?<!団体名・)(?<!社名・)部署名|部署(?!名))/;
 const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
 const officeEligible = (own: string): boolean =>
   !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && (COMPANY_OFFICE.test(own) || DEPT_OFFICE.test(own));

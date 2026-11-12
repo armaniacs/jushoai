@@ -198,13 +198,14 @@ describe('classifyField: birth, school, department', () => {
     expect(cat({ label: 'Department' })).toBe('department');
   });
 
-  // PBI-119: 緩和境界。ご担当者名（名前系）・会社の生年月日（誕生文脈）・部署名、
+  // PBI-119: 緩和境界。ご担当者名（名前系）・会社の生年月日（誕生文脈）、
   // そしてカナ欄（会社名（フリガナ））・会社電話・役職・店舗・法人種別は
-  // 従来どおり company/companyDepartment にならない。
+  // 従来どおり company/companyDepartment にならない。T2: 単独の部署名は
+  // companyDepartment の語彙になったため negatives から外す（T2 の positive
+  // が所有する）。複合欄（会社名・部署名）は company のまま。
   it.each([
     { label: 'ご担当者名' },
     { label: '会社の生年月日' },
-    { label: '部署名' },
     { label: '会社名（フリガナ）' },
     { label: '会社電話' },
     { label: '役職' },
@@ -212,6 +213,60 @@ describe('classifyField: birth, school, department', () => {
     { label: '法人種別' },
   ] as Parameters<typeof makeMeta>[0][])('leaves %j outside the company categories', (p) => {
     expect(cat(p) ?? '').not.toMatch(/^(company|companyDepartment)$/);
+  });
+});
+
+// T2: standalone department wording resolves to the existing companyDepartment
+// category (MS Forms q3 shape). The allowance is 部署名 as a standalone word:
+// the 会社名・部署名 compound still reads as company (the COMPANY entry
+// precedes the department entry, and the regex guard keeps the compound joint
+// out of the department signal even if the order ever changes).
+describe('classifyField: standalone department wording (T2)', () => {
+  it.each([
+    { label: '所属部署名' },
+    { label: '3.所属部署名' },
+    { label: '所属部署' },
+    { label: '部署名' },
+    { name: 'q3', label: '3.所属部署名', placeholder: '回答を入力してください' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as companyDepartment', (p) => {
+    expect(cat(p)).toBe('companyDepartment');
+  });
+
+  it.each([
+    { label: '所属部署名' },
+    { label: '部署名' },
+  ] as Parameters<typeof makeMeta>[0][])('is confident (rule, >= 0.6) for %j', (p) => {
+    const c = classifyField(makeMeta(p));
+    expect(c).toMatchObject({ category: 'companyDepartment', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('reaches the legend-only department case without an own office word', () => {
+    expect(classifyField(makeMeta({ name: 'team', nearby: '部署名' })))
+      .toMatchObject({ category: 'companyDepartment', confidence: 0.65 });
+  });
+
+  it('keeps the 会社名・部署名 compound on company, never the department', () => {
+    expect(cat({ label: '会社名・部署名' })).toBe('company');
+  });
+
+  it.each([
+    { label: '応募団体名' },
+    { label: '申込団体名' },
+    { label: '会社名（フリガナ）' },
+    { label: '会社の生年月日' },
+    { label: '役職' },
+    { label: '役職名' },
+    { label: '会社電話' },
+    { label: '店舗名' },
+    { label: '法人種別' },
+    { label: 'ご担当者名' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside companyDepartment', (p) => {
+    expect(cat(p) ?? null).not.toBe('companyDepartment');
+  });
+
+  it('keeps the 部署・役職 compound on the existing department reading', () => {
+    expect(cat({ label: '部署・役職' })).toBe('companyDepartment');
   });
 });
 
@@ -776,8 +831,9 @@ describe('classifyField: Japanese labels', () => {
     { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
     // 会社名は PBI-119 で company に分類されるため negatives から外れ、
-    // 部署名は companyDepartment の緩和境界として negatives に残る。
-    { label: 'ご担当者名' }, { label: '部署名' }, { label: '備考' },
+    // 単独の部署名は T2 で companyDepartment に分類されるため negatives から
+    // 外れる（T2 の positive が所有する）。
+    { label: 'ご担当者名' }, { label: '備考' },
     { label: 'お問い合わせ内容' }, { label: 'パスワード' },
     { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },

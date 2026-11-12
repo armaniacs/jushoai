@@ -51,6 +51,8 @@ const FF_EXPECTED = {
   postal_code: '100-0001',
   city: '千代田区',
   jianwuming: '千代田ビル101',
+  // T2: the 部署名 label now reads as companyDepartment, so the department value fills.
+  organization_unit_name: '開発部',
   tel: '090-1234-5678',
   fax: '090-1234-5678',
 };
@@ -535,7 +537,6 @@ const LEDGER = {
     expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
-      'organization_unit_name (text): 部署名, stays unclassified (LLM fallback; 部署 vocabulary candidate)',
       'state_province_list (select): only a `--` option, correctly warn-no-option',
       '(no name/id) (button): unaddressable (exclude)',
       'inquiry_body (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
@@ -818,7 +819,6 @@ const LEDGER = {
     expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
-      'organization_unit_name (text): 部署名, stays unclassified (部署 vocabulary candidate)',
       'state_province_list (select): only a `--` option, correctly warn-no-option',
       '(no name/id) (button): unaddressable (exclude)',
       'inquiry_body (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
@@ -834,7 +834,6 @@ const LEDGER = {
     expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
-      'organization_unit_name (text): 部署名, stays unclassified (部署 vocabulary candidate)',
       'state_province_list (select): only a `--` option, correctly warn-no-option',
       '(no name/id) (button): unaddressable (exclude)',
       'inquiry_body/guishenotese (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
@@ -916,12 +915,13 @@ const LEDGER = {
       'tel': '09012345678',
       'mail': 'yamada@example.com',
       'mail2': 'yamada@example.com',
+      // T2: the 部署名 dt now reads as companyDepartment via the legend path (0.65).
+      'team': '開発部',
     },
     excluded: [
       'q x2 (search): header/footer site-search fields, stay unclassified (same as tokyu-land-contact)',
       'park/cate/land (text): 出店施設・業種・面積, no profile value, correctly unfilled',
       'company (text): 貴社名, stays unclassified (LLM fallback; 会社語彙 candidate, same as R4-2a C3)',
-      'team (text): 部署名, stays unclassified (部署 vocabulary candidate)',
       'job (text): 役職, stays unclassified (LLM fallback)',
       'pref (select): only a `--` option, correctly warn-no-option',
       '(no name/id) x2 (submit): unaddressable (exclude)',
@@ -1486,6 +1486,10 @@ const LEDGER = {
       'name': '山田 太郎',
       'name_furigana': 'やまだ たろう',
       'facility_company': '株式会社サンプル',
+      // T2: the opened office gate lets the department-name token read as the
+      // school department (DISPATCH order keeps name=department fields there),
+      // so 普通科 fills. Japanese-only 部署名 fields read as companyDepartment.
+      'department': '普通科',
       'zip': '1000001',
       'pref': '13',
       'city': '千代田区',
@@ -1566,6 +1570,8 @@ const LEDGER = {
       'e_8563': '千代田1-1',
       'e_8591': '千代田ビル101',
       'e_8558': '株式会社サンプル',
+      // T2: the 部署名 th now reads as companyDepartment via the legend path (0.65).
+      'e_8559': '開発部',
     },
     excluded: [
       'e_8569[value][] x2 (checkbox): out of scope (skip fixed)',
@@ -2594,12 +2600,13 @@ const LEDGER = {
       'form_name': '山田 太郎',
       'form_name_kana': 'ヤマダ タロウ',
       'form_company': '株式会社サンプル',
+      // T2: the 部署名 label now reads as companyDepartment.
+      'form_division': '開発部',
       'form_mail': 'yamada@example.com',
       'form_tel': '09012345678',
     },
     excluded: [
       'kw (text): site-search field (placeholder キーワードを入力), stays unclassified (same as forum.html s)',
-      'form_division (text): 部署名 label with form_ prefix, stays unclassified (LLM fallback; 部署-by-label candidate, same as ff-csr organization_unit_name)',
       '(no name/id) x12 (button): unaddressable (exclude)',
       'env/temp (hidden): empty-submit shim or server state, never a fill target (exclude)',
       '(no name/id) (submit): unaddressable (exclude)',
@@ -3245,11 +3252,12 @@ const LEDGER = {
       // profile digits (hyphenation only applies to split tel parts).
       'q1': '山田太郎',
       'q2': '株式会社サンプル',
+      // T2: 3.所属部署名 reads as companyDepartment, so the department value fills.
+      'q3': '開発部',
       'q5': 'yamada@example.com',
       'q6': '09012345678',
     },
     excluded: [
-      'q3 (text): 所属部署名, 部署名 sits outside the DEPT_OFFICE boundary, stays unclassified (T2: companyDepartment candidate)',
       'q4 (text): 役職名, no job-title vocabulary in the rules, stays unclassified (T3: job-title candidate)',
       'q7 (text): trailing-question stand-in, stays unclassified',
     ],
