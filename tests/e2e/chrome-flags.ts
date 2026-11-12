@@ -22,5 +22,7 @@ export function chromeLaunchArgs(
   // stay unconditional: /dev/shm can be too small in containers and GPU
   // rendering is unnecessary for these tests.
   args.push('--disable-dev-shm-usage', '--disable-gpu');
+  // PBI-162 banner asserts the light token; without this the run follows the OS appearance (PBI-209 dark override).
+  args.push('--force-prefers-color-scheme=light');
   return args;
 }
