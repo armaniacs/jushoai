@@ -109,3 +109,4 @@
 - https://www.nttud.co.jp/contact/nttud_inquiry/ → nttud-inquiry.html
 - https://www.tomas.co.jp/contact/trial_lesson/ → tomas-trial-form.html
 - https://www.try-gakuin.com/reserve/ → try-gakuin-reserve-form.html
+- https://www.meikogijuku.jp/contact/entry → meiko-contact-form.html

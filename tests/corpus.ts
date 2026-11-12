@@ -4156,6 +4156,46 @@ const LEDGER = {
       'event_data[] (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'meiko-contact-form.html': {
+    expected: {
+      // 明光義塾問合せ (Drupal)。select 実選択肢は実ページどおり復元
+      // (R4-2b 前例。sex・pref_cd の解決に必要)。
+      'last_name': '山田',
+      'first_name': '太郎',
+      // カナ欄は placeholder せい/めい (ひらがな) のため fullNameKana ではなく分割値。
+      'last_name_kana': 'やまだ',
+      'first_name_kana': 'たろう',
+      // sex は実選択肢 男性/女性で gender 群に載り、値 2 (女性) が fill。
+      'sex': '2',
+      'school_name': '都立日比谷高校',
+      'zip1': '100',
+      'zip2': '0001',
+      // pref_cd は実選択肢 47 都道府県で prefecture が解決 (値 149=東京都)。
+      'pref_cd': '149',
+      'addr1': '千代田区千代田1-1',
+      'addr2': '千代田ビル101',
+      'building': '千代田ビル101',
+      'tel1': '090',
+      'tel2': '1234',
+      'tel3': '5678',
+      'email_input': 'yamada@example.com',
+      // friend_name (紹介者名 placeholder 明光太郎) は fullName に載る (honest pin)。
+      'friend_name': '山田太郎',
+    },
+    excluded: [
+      'grade/relationship/school_type/opportunity_select (select): 実選択肢つきだが stay unclassified (LLM fallback)',
+      'keyword_input (text): 教室検索欄。placeholder 教室名、駅名など、stays unclassified (same as forum.html s)',
+      'zip_address_search (button): action element, never a fill target (exclude)',
+      'zip_school_search (button): action element, never a fill target (exclude)',
+      'keyword_search (button): action element, never a fill target (exclude)',
+      'selected_school (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'question_request (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'op (submit): action element, never a fill target (exclude)',
+      'form_build_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'form_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
