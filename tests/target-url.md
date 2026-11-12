@@ -94,3 +94,4 @@
 - https://www.anabuki.ne.jp/contact/landuse/?contact_type=7 → anabuki-landuse-contact.html
 - https://www.haseko.co.jp/hc/contact/input → haseko-contact-input.html
 - https://www.toshin.com/sform/shiryo-seikyu/input?form_action=shiryo → toshin-shiryo-form.html
+- https://www.toshin.com/sform/kobetsu-mendan/input?form_action=mendan&kobetsu=1 → toshin-mendan-form.html

@@ -1,0 +1,75 @@
+<!-- Minimal reproduction of https://www.toshin.com/sform/kobetsu-mendan/input?form_action=mendan&kobetsu=1. Values stripped; trim further before committing. -->
+<form>
+      <input name="check_kousha" id="check-kousha" type="text" value="">
+      <input name="last_name" id="last-name" type="text" value="" maxlength="255">
+      <input name="first_name" id="first-name" type="text" value="" maxlength="255">
+      <input name="last_name_kana" id="last-name-kana" type="text" value="" maxlength="255">
+      <input name="first_name_kana" id="first-name-kana" type="text" value="" maxlength="255">
+      <select name="birthdate[year]" id=""><option value="">--</option></select>
+      <select name="birthdate[month]" id=""><option value="">--</option></select>
+      <select name="birthdate[day]" id=""><option value="">--</option></select>
+      <input name="email" id="email" type="email" value="" maxlength="255">
+      <input name="email_confirm" id="email-confirm" type="text" value="">
+      <input name="zip" id="zip" type="text" value="" maxlength="16">
+      <select name="prefecture_code" id="pref_code"><option value="">--</option></select>
+      <input name="address1" id="address1" type="text" value="" maxlength="64">
+      <input name="address2" id="address2" type="text" value="" maxlength="255">
+      <input name="address3" id="address3" type="text" value="">
+      <input name="tel_check" id="tel_check" type="text" value="">
+      <input name="tel1" id="tel1" type="text" value="" maxlength="32">
+      <input name="tel2" id="tel2" type="text" value="" maxlength="32">
+      <input name="tel3" id="tel3" type="text" value="" maxlength="32">
+      <select name="school_grade" id="school-grade"><option value="">--</option></select>
+      <select name="school_prefecture_code" id="school_prefecture_code"><option value="">--</option></select>
+      <select name="school_city" id="school_city"><option value="">--</option></select>
+      <select name="schoollist_id" id="schoollist_id"><option value="">--</option></select>
+      <select name="school_code" id="school_code"><option value="">--</option></select>
+      <input name="school_name" id="school_name" type="text" value="" maxlength="255">
+      <input name="relationship_other" id="relationship-other" type="text" value="" maxlength="255">
+      <select name="application_opportunity" id="application-opportunity"><option value="">--</option></select>
+      <input name="target_university_name" id="target_university_name" type="text" value="" placeholder="例）東京大学">
+<!-- skip: _method (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: _csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: rq_select (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: rq_select (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: button-kousha-select (button): action element, never a fill target (exclude) -->
+<!-- skip: kousha_name (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: kousha_type (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: kousha_code (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: sex (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: sex (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: sex (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: tel_pre_check (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: ptel_pre_check (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: landline1 (landline): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: landline2 (landline): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: landline3 (landline): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: relationship (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: relationship (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: enrollment (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: enrollment (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: enrollment (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: enrollment (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: mail_magazine (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: mail_magazine (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: mail_magazine (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: course_type (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: course_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: course_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: course_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: course_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: course_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: is_target_decided (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: is_target_decided (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: is_target_decided (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: university_type (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: university_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: university_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: university_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: university_type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: free_text (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: form_id (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
