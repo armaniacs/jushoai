@@ -4504,6 +4504,45 @@ const LEDGER = {
       'submit (button): action element, never a fill target (exclude)',
     ],
   },
+  'sekisui-mail-form.html': {
+    expected: {
+      // 積水ハウスメール問合せ (mpmail)。-kanji/-kana 接尾分割。
+      'name-kanji1': '山田',
+      'name-kanji2': '太郎',
+      'name-kana1': 'ヤマダ',
+      'name-kana2': 'タロウ',
+      // mailaddress (type=text) は住所に載り住所値が入る (honest pin。
+      // mailaddress 語彙が候補。ff-csr の fax と同形の誤読)。
+      'mailaddress': '東京都千代田区千代田1-1',
+      'zip1': '100',
+      'zip2': '0001',
+      'addr1': '東京都千代田区千代田1-1',
+      'addr2': '千代田ビル101',
+      'tel1': '090',
+      'tel2': '1234',
+      'tel3': '5678',
+    },
+    excluded: [
+      'prefs (select): only a `--` option, correctly warn-no-option',
+      'inq-subject (text): 件名, no profile value, correctly unfilled',
+      '(no name/id) (image): unaddressable (exclude)',
+      '(no name/id) (image): unaddressable (exclude)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'kind (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'attachment (file): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (image): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
