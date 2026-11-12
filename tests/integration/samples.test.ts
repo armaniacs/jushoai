@@ -411,4 +411,7 @@ describe('sample forms end to end', () => {
   it('tokyu-cre-form.html fills the in-scope fields', async () => {
     expect(await planFor('tokyu-cre-form.html')).toEqual(expectedFor('tokyu-cre-form.html'));
   });
+  it('brillia-support-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('brillia-support-contact.html')).toEqual(expectedFor('brillia-support-contact.html'));
+  });
 });

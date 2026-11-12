@@ -86,3 +86,4 @@
 - https://www.tokyu-land.co.jp/form/branz_owner/ → tokyu-branz-owner-form.html
 - https://www.tokyu-land.co.jp/form/commercial/ → tokyu-commercial-form.html
 - https://www.tokyu-land.co.jp/form/cre/ → tokyu-cre-form.html
+- https://fmt.e-state.ne.jp/brillia-support/contact/ → brillia-support-contact.html
