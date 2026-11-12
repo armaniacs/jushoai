@@ -3524,6 +3524,50 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'eikoh-shiryo-form.html': {
+    expected: {
+      // 栄光ゼミナール総合資料請求 (eforms)。見出しは div 構成で scanner の
+      // nearby 対象外のため、氏名欄は placeholder のみで bare と等価
+      // (brother 前例と同じ。実ページ確認済み)。
+      // tel は placeholder 半角数字11桁のまま undashed。
+      'tel': '09012345678',
+      // email は type=text だが name が email のため解決。
+      'email': 'yamada@example.com',
+    },
+    excluded: [
+      'area_code/class_code/school_current (select): only a `--` option, correctly warn-no-option',
+      'name_f1/name_m1 (text): 生徒氏名(漢字) の見出しは div で nearby 対象外。placeholder 姓/名(全角)のみでは未分類 (LLM fallback; brother N7 同型)',
+      'k_name_f1/k_name_m1/k_name_f2/k_name_m2 (text): 生徒氏名(カナ) の見出しは div で nearby 対象外。placeholder セイ/メイ(全角)のみでは未分類 (LLM fallback)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[1][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[2][sel] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'org_q[2][sel] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'org_q[2][sel] (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'org_q[3][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[5][sel][] (checkbox): out of scope (skip fixed)',
+      'org_q[4][txt] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'keycode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'next_act_mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'efno (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'dummy (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+      '(no name/id) (text): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
