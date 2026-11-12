@@ -272,3 +272,29 @@
 | 178 | https://www.nkanzai.co.jp/contact/ | R | 日本管財 | 有望 P2 | 静的実フォーム (HTTP 200「お問い合わせ」。action=./confirm/、input 13・textarea 1・select 1。contact_name・contact_mail確認・contactselect select・contact_message textarea。住所・電話欄なしのためP2) |
 | 179 | https://www.secom.co.jp/business/contact/ | R | セコム法人窓口 | 除外 | 到達不能 (HTTP 404) |
 | 180 | https://www.japanpost.jp/about/contact/ | R | 日本郵政について | 除外 | 到達不能 (HTTP 404) |
+
+### S 公務
+
+| 181 | https://www.soumu.go.jp/contact/ | S | 総務省 | 除外 | 到達不能 (HTTP 404。静的formなし) |
+| 182 | https://www.moj.go.jp/contact/ | S | 法務省 | 除外 | 到達不能 (HTTP 404) |
+| 183 | https://www.mofa.go.jp/contact/ | S | 外務省 | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 184 | https://www.mof.go.jp/contact/ | S | 財務省 | 除外 | 到達不能 (HTTP 404。静的formは検索系のみ) |
+| 185 | https://www.mext.go.jp/contact/ | S | 文部科学省 | 除外 | 到達不能 (HTTP 404) |
+| 186 | https://www.cfa.go.jp/contact/ | S | こども家庭庁 | 除外 | フォームなし (HTTP 200「ご意見・ご要望」頁だが静的formなし。送信導線はJSとみられる) |
+| 187 | https://www.meti.go.jp/contact/ | S | 経済産業省 | 除外 | 到達不能 (HTTP 403。指定ページなし) |
+| 188 | https://www.mlit.go.jp/contact/ | S | 国土交通省 | 除外 | 到達不能 (HTTP 404) |
+| 189 | https://www.env.go.jp/contact/ | S | 環境省 | 除外 | 到達不能 (HTTP 404) |
+| 190 | https://www.mod.go.jp/contact/ | S | 防衛省 | 除外 | 到達不能 (HTTP 403・bot遮断) |
+
+### T 分類不能の産業
+
+| 191 | https://group.softbank/contact/ | T | ソフトバンクGご意見 | 除外 | フォームなし (HTTP 200。静的form 2件は検索のみ。実窓口は別導線とみられる) |
+| 192 | https://corp.rakuten.co.jp/contact/ | T | 楽天G会社情報問合せ | 除外 | 到達不能 (HTTP 404) |
+| 193 | https://www.japanpost.jp/ir/contact/ | T | 日本郵政IR問合せ | 除外 | 到達不能 (HTTP 404。転送先は株主・投資家情報頁で問合せformなし) |
+| 194 | https://www.jreast.co.jp/contact/ | T | JR東日本問合せ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 195 | https://www.sony.com/ja/SonyInfo/contact/ | T | ソニーG問合せ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 196 | https://www.dmm.co.jp/contact/ | T | DMM | 除外 | 到達不能 (HTTP 404) |
+| 197 | https://www.npo-homepage.go.jp/contact/ | T | NPOホームページ | 除外 | 到達不能 (HTTP 404) |
+| 198 | https://www.japan.coop/contact/ | T | 日本生協連 | 除外 | 到達不能 (HTTP 404) |
+| 199 | https://www.shadan.or.jp/contact/ | T | 日本社団法人協会 | 除外 | 到達不能 (HTTP 404) |
+| 200 | https://www.mitsubishi.com/contact/ | T | 三菱広報 | 除外 | 到達不能 (HTTP 404) |
