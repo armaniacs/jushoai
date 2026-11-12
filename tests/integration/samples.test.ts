@@ -429,4 +429,10 @@ describe('sample forms end to end', () => {
   it('anabuki-landuse-contact.html fills the in-scope fields', async () => {
     expect(await planFor('anabuki-landuse-contact.html')).toEqual(expectedFor('anabuki-landuse-contact.html'));
   });
+  it('haseko-contact-input.html fills the in-scope fields', async () => {
+    expect(await planFor('haseko-contact-input.html')).toEqual(expectedFor('haseko-contact-input.html'));
+  });
+  it('input.html fills the in-scope fields', async () => {
+    expect(await planFor('input.html')).toEqual(expectedFor('input.html'));
+  });
 });
