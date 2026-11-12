@@ -444,4 +444,7 @@ describe('sample forms end to end', () => {
   it('kumon-annai-form.html fills the in-scope fields', async () => {
     expect(await planFor('kumon-annai-form.html')).toEqual(expectedFor('kumon-annai-form.html'));
   });
+  it('manavis-shiryo-form.html fills the in-scope fields', async () => {
+    expect(await planFor('manavis-shiryo-form.html')).toEqual(expectedFor('manavis-shiryo-form.html'));
+  });
 });

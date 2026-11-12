@@ -97,3 +97,4 @@
 - https://www.toshin.com/sform/kobetsu-mendan/input?form_action=mendan&kobetsu=1 → toshin-mendan-form.html
 - https://www.yotsuyaotsuka.com/lform/nyujuku_test/input → yotsuya-nyujuku-form.html
 - https://www.kumon.ne.jp/inquiry/annai.php → kumon-annai-form.html
+- https://www.manavis.com/contact/shiryou.php → manavis-shiryo-form.html
