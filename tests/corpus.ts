@@ -4983,6 +4983,37 @@ const LEDGER = {
       'BUMON_CD (hidden): empty-submit shim or server state, never a fill target (exclude)',
     ],
   },
+  'fujita-contact.html': {
+    expected: {
+      // 姓/名 labels each read as a full name (no first/last split applied);
+      // pinned honest, same shape as the ff-csr name[first]/name[last] pin.
+      'company': '株式会社サンプル',
+      'your_name_last': '山田 太郎',
+      'your_name_first': '山田 太郎',
+      'your_kana_last': 'ヤマダ タロウ',
+      'your_kana_first': 'ヤマダ タロウ',
+      'email': 'yamada@example.com',
+      'email_check': 'yamada@example.com',
+    },
+    excluded: [
+      'contact_type (select): real 10 options restored verbatim, stays unclassified (LLM fallback; inquiry-kind select candidate)',
+      'tel01/02/03 (text): bare 3-split with only a label on tel01, stay unclassified (LLM fallback; tel-split-by-name candidate, same as kobe-city ANSWER6-1/2/3)',
+      's (search) x2: header/footer site-search fields, trimmed as site chrome (same as forum.html s)',
+      'customer_type (radio): 法人/個人, bundled per name; stays unclassified (radio policy)',
+      'customer_type (radio): 法人/個人, bundled per name; stays unclassified (radio policy)',
+      'nonce (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'referrer (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'note (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'js-gMainNav_search_btn (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'js-gSearchBtn (button): action element, never a fill target (exclude)',
+      'js-gMenuBtn (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'js-gSiteMap_moreLink (button): action element, never a fill target (exclude)',
+      'js-gPageTop_button (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

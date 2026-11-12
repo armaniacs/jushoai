@@ -516,4 +516,7 @@ describe('sample forms end to end', () => {
   it('yotsuya-littleclub-form.html fills the in-scope fields', async () => {
     expect(await planFor('yotsuya-littleclub-form.html')).toEqual(expectedFor('yotsuya-littleclub-form.html'));
   });
+  it('fujita-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('fujita-contact.html')).toEqual(expectedFor('fujita-contact.html'));
+  });
 });
