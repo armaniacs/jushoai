@@ -102,3 +102,4 @@
 - https://www.cigr.co.jp/forms/cigr/ir/contact/ → cigr-ir-contact.html
 - https://www.shozemi.com/contact/ → shozemi-contact-form.html
 - https://reg.waseda-ac.co.jp/public/application/add/1397 → waseda-ac-form.html
+- https://www.morijuku.com/contact/ → morijuku-contact-form.html

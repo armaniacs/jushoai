@@ -3661,6 +3661,39 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'morijuku-contact-form.html': {
+    expected: {
+      // 森塾問合せ。自社基盤 (kinds[]・name1/kana1)。label for 付きのまま残す。
+      // name1/name2 はともに fullName (姓/名 label が同一のため same-label 分割
+      // なし。ff C1 と同形、honest pin)。placeholder 姓/名は効かない。
+      'name1': '山田 太郎',
+      'name2': '山田 太郎',
+      // kana1/kana2 はともに fullNameKana 結合値 (registration yomiSei/yomiMei と同形)。
+      'kana1': 'やまだたろう',
+      'kana2': 'やまだたろう',
+      'tel': '09012345678',
+      'mail': 'yamada@example.com',
+      'zip': '100-0001',
+      'addr': '千代田区千代田1-1 千代田ビル101',
+    },
+    excluded: [
+      'prof/pref (select): only a `--` option, correctly warn-no-option',
+      'kinds[1] (checkbox): out of scope (skip fixed)',
+      'kinds[2] (checkbox): out of scope (skip fixed)',
+      'kinds[6] (checkbox): out of scope (skip fixed)',
+      'kinds[9] (checkbox): out of scope (skip fixed)',
+      'kinds[8] (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'school (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'content (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

@@ -459,4 +459,7 @@ describe('sample forms end to end', () => {
   it('waseda-ac-form.html fills the in-scope fields', async () => {
     expect(await planFor('waseda-ac-form.html')).toEqual(expectedFor('waseda-ac-form.html'));
   });
+  it('morijuku-contact-form.html fills the in-scope fields', async () => {
+    expect(await planFor('morijuku-contact-form.html')).toEqual(expectedFor('morijuku-contact-form.html'));
+  });
 });

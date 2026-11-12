@@ -1,0 +1,35 @@
+<!-- Minimal reproduction of https://www.morijuku.com/contact/. Values stripped; trim further before committing. -->
+<form>
+      <label for="prof">お子様の学年*必須</label>
+      <select name="prof" id="prof"><option value="">--</option></select>
+      <label for="name1">お子様の名前*必須</label>
+      <input name="name1" id="name1" type="text" value="" placeholder="姓">
+      <input name="name2" id="name2" type="text" value="" placeholder="名">
+      <label for="kana1">お子様の名前（ふりがな）*必須</label>
+      <input name="kana1" id="kana1" type="text" value="" placeholder="せい">
+      <input name="kana2" id="kana2" type="text" value="" placeholder="めい">
+      <label for="tel">お電話番号*必須</label>
+      <input name="tel" id="tel" type="tel" value="" placeholder="0312345678">
+      <label for="mail">メールアドレス*任意</label>
+      <input name="mail" id="mail" type="email" value="" placeholder="aaa@morjuku.com">
+      <label for="zip">郵便番号</label>
+      <input name="zip" id="zip" type="text" value="" placeholder="1234567" maxlength="8">
+      <label for="pref">都道府県</label>
+      <select name="pref" id="pref"><option value="">--</option></select>
+      <label for="addr">市区町村・番地・建物名</label>
+      <input name="addr" id="addr" type="text" value="" placeholder="豊島区西池袋1-11-1 201号">
+<!-- skip: kinds[1] (checkbox): out of scope (skip fixed) -->
+<!-- skip: kinds[2] (checkbox): out of scope (skip fixed) -->
+<!-- skip: kinds[6] (checkbox): out of scope (skip fixed) -->
+<!-- skip: kinds[9] (checkbox): out of scope (skip fixed) -->
+<!-- skip: kinds[8] (checkbox): out of scope (skip fixed) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: school (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: content (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+</form>
