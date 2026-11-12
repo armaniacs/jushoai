@@ -22,6 +22,21 @@
 | 12 | トライ式高等学院予約 | try-gakuin-reserve-form.html (11 controls → 7欄解決。段階式の懸念あったが静的取込可) | 成功 | 35a1d473b58aaf3a4bfa0205eee629fe9699cf5e |
 | 13 | 明光義塾問合せ | meiko-contact-form.html (22 controls → 17欄解決。select 実選択肢復元) | 成功 | 26910603c6b61837f43e221bf1115e88acfc010c |
 | 14 | 京進スクール・ワン問合せ | keishin-contact-form.html (30 controls → 20欄解決。Shift_JIS 文字化け復元) | 成功 | 85bfadb642d23a61c3759eabbeed96e93a22578f |
+| 15 | 臨海セミナー資料請求 | rinkai-shiryo-form.html (15 controls → 9欄解決。grade 実選択肢復元) | 成功 | 161d12090e4200bd900cb3a6a22f3c4c9653a9f7 |
+| 16 | 佐鳴予備校問合せ | sanaru-contact-form.html (22 controls → 11欄解決) | 成功 | 0e1fb316ea9494c9c74232705aa2f249f0437168 |
+| 17 | 市進学院問合せ | ichishin-contact-form.html (35 controls → 24欄解決。th/td復元・JS断片除去) | 成功 | df34a319b9ca0b792d9f16b8d6522d75a3d2a0ac |
+| 18 | ena資料請求 | ena-request-form.html (28 controls → 16欄解決。grade/prefecture 実選択肢復元) | 成功 | a4d5af1a9dd504850b50c1ca948a10fe15e7b397 |
+| 19 | 英進館問合せ | eishinkan-contact-form.html (30 controls → 16欄解決。文字化け復元・gender復元) | 成功 | dd99e41639749d4aef3e56fc8b460eb43fb21dc9 |
+| 20 | 個別指導Axis問合せ | axis-inquiry-form.html (22 controls → 14欄解決) | 成功 | 2745557d899bfd4ba1eaefd8290a317a914fd5dc |
+| 21 | 四谷大塚pformリトルクラブ | yotsuya-littleclub-form.html (34 controls → 10欄解決。select 実選択肢復元) | 成功 | c755232980bb09525840e58886192d91f119b7d9 |
+
+## 検証
+
+- `npx vitest run tests/integration/samples.test.ts`: 133 passed (R4-8b 21件分を含む。全緑)
+- `make addurl-check`: no '<expected>' remnants (ゼロ)
+- `npx tsc --noEmit`: clean
+- `make eval` は未実行 (pin 更新なしのため RED 想定内。R4-3 の集約タスクに委譲)
+- src/ 変更なし。push なし。
 
 ## 混入メモ (No.10 取込中の出来事)
 
