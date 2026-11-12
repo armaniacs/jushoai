@@ -486,6 +486,9 @@ describe('sample forms end to end', () => {
   it('meiko-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('meiko-contact-form.html')).toEqual(expectedFor('meiko-contact-form.html'));
   });
+  it('sekisui-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('sekisui-inquiry-form.html')).toEqual(expectedFor('sekisui-inquiry-form.html'));
+  });
   it('keishin-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('keishin-contact-form.html')).toEqual(expectedFor('keishin-contact-form.html'));
   });
