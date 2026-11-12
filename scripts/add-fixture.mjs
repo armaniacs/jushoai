@@ -3,8 +3,13 @@
 // Static HTML only: JS-rendered pages still need a manual save, and the generated
 // expectations stay '<expected>' placeholders until a human fills and trims them.
 import { readFileSync, writeFileSync } from 'node:fs';
-import { extractControls, renderFixture } from './scaffold-fixture.mjs';
+import { extractControls, renderFixture, renderLedgerEntry } from './scaffold-fixture.mjs';
 import { fetchPage } from './shared-fetch.mjs';
+
+// Single ledger seam: the corpus entry renderer lives in scaffold-fixture.mjs
+// (shared with the manual scaffold stub); re-exported here so existing
+// importers of add-fixture.mjs keep working.
+export { renderLedgerEntry };
 
 export function fixtureNameFromUrl(href) {
   try {
@@ -23,17 +28,14 @@ export function fixtureNameFromUrl(href) {
 // interface anchor, and the wiring fails when the anchor is gone.
 export const LEDGER_ANCHOR = '// <corpus-ledger: make addurl appends its template entry above this line>';
 
-// Template entry for the corpus ledger, in the CorpusExtras shape:
-// '<expected>' placeholders for the scanned controls plus the skipped-control
-// reasons as excluded strings.
-export function renderLedgerEntry(file, { controls, skipped }) {
-  const keys = controls.map((c) => `      '${c.name || c.id}': '<expected>',`).join('\n');
-  const excluded = skipped.map((s) => `      '${s.key} (${s.type}): ${s.reason}',`).join('\n');
-  const lines = [`  '${file}': {`, keys ? '    expected: {' : '    expected: {},'];
-  if (keys) lines.push(keys, '    },');
-  if (excluded) lines.push('    excluded: [', excluded, '    ],');
-  lines.push('  },');
-  return lines.join('\n') + '\n';
+// Shared insertion core (S6 unification): insertAboveAnchor splices `text`
+// above the line that carries the anchor position `pos` — the LEDGER_ANCHOR
+// match for the ledger, the array `];` for inScopeFixtures. Both wrappers
+// keep their own dup guard / missing-anchor contract and differ only in how
+// they locate `pos`.
+export function insertAboveAnchor(source, text, pos) {
+  const lineStart = source.lastIndexOf('\n', pos) + 1;
+  return `${source.slice(0, lineStart)}${text}${source.slice(lineStart)}`;
 }
 
 // Inserts the entry above the anchor line. Returns null when the anchor is
@@ -44,8 +46,7 @@ export function insertLedgerEntry(source, entry) {
   if (idx === -1) return null;
   const firstLine = entry.trimEnd().split('\n')[0];
   if (firstLine && source.includes(firstLine)) return source;
-  const lineStart = source.lastIndexOf('\n', idx) + 1;
-  return `${source.slice(0, lineStart)}${entry}${source.slice(lineStart)}`;
+  return insertAboveAnchor(source, entry, idx);
 }
 
 // Appends a quoted entry to the aggregated `inScopeFixtures` array in
@@ -65,8 +66,7 @@ export function insertFixtureEntry(source, file) {
   if (!m) return null;
   const close = source.indexOf('];', m.index);
   if (close === -1) return null;
-  const lineStart = source.lastIndexOf('\n', close) + 1;
-  return `${source.slice(0, lineStart)}    '${file}',\n${source.slice(lineStart)}`;
+  return insertAboveAnchor(source, `    '${file}',\n`, close);
 }
 
 export function buildWiring(html, sourceLabel, file) {

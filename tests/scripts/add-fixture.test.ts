@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   fixtureNameFromUrl, LEDGER_ANCHOR,
-  renderLedgerEntry, insertLedgerEntry, insertFixtureEntry, buildWiring,
+  renderLedgerEntry, insertAboveAnchor, insertLedgerEntry, insertFixtureEntry, buildWiring,
 } from '../../scripts/add-fixture.mjs';
 
 // Stand-ins for the two files the tool wires: the corpus ledger module
@@ -45,6 +45,11 @@ describe('add-fixture', () => {
     expect(entry).toContain(`      'q1': '<expected>',`);
     expect(entry).toContain(`      'q2': '<expected>',`);
     expect(entry).toContain(`      'submit (submit): action element, never a fill target (exclude)',`);
+  });
+
+  it('inserts text above the anchor line through the shared core', () => {
+    expect(insertAboveAnchor('a\nb\n', 'X\n', 2)).toBe('a\nX\nb\n');
+    expect(insertAboveAnchor('a\nb\n', 'X\n', 0)).toBe('X\na\nb\n');
   });
 
   it('inserts the ledger entry above the anchor exactly once and idempotently', () => {

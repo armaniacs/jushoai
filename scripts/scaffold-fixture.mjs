@@ -82,10 +82,46 @@ export function renderFixture(sourceName, { controls, skipped }) {
   return `<!-- Minimal reproduction of ${sourceName}. Values stripped; trim further before committing. -->\n<form>\n${fields.join('\n')}\n${skipNote ? skipNote + '\n' : ''}</form>\n`;
 }
 
-export function renderTestStub(fileName, { controls, skipped }) {
-  const keys = controls.map((c) => `      '${c.name || c.id}': '<expected>',`).join('\n');
-  const skipKeys = skipped.map((s) => `//   ${s.key} (${s.type}): ${s.reason}`).join('\n');
-  return `  it('${fileName} fills the in-scope fields', async () => {\n    expect(await planFor('${fileName}')).toEqual({\n${keys}\n    });\n${skipKeys ? skipKeys + '\n' : ''}  });\n`;
+// Shared key/exclusion line formatters (single seam for both fixture CLIs:
+// add-fixture.mjs reuses these for its corpus ledger entry, so the
+// `'key': '<expected>'` shape cannot drift between the two generators).
+export function formatExpectedLines(controls) {
+  return controls.map((c) => `      '${c.name || c.id}': '<expected>',`);
+}
+
+export function formatExcludedLines(skipped) {
+  return skipped.map((s) => `      '${s.key} (${s.type}): ${s.reason}',`);
+}
+
+// Template entry for the corpus ledger, in the CorpusExtras shape:
+// '<expected>' placeholders for the scanned controls plus the skipped-control
+// reasons as excluded strings. (Moved here from add-fixture.mjs so both the
+// addurl wiring and the manual scaffold stub render from this one function;
+// add-fixture.mjs re-exports it, so existing importers keep working.)
+export function renderLedgerEntry(file, { controls, skipped }) {
+  const keys = formatExpectedLines(controls).join('\n');
+  const excluded = formatExcludedLines(skipped).join('\n');
+  const lines = [`  '${file}': {`, keys ? '    expected: {' : '    expected: {},'];
+  if (keys) lines.push(keys, '    },');
+  if (excluded) lines.push('    excluded: [', excluded, '    ],');
+  lines.push('  },');
+  return lines.join('\n') + '\n';
+}
+
+// Manual-wiring stub for the aggregated `inScopeFixtures` array in
+// tests/integration/samples.test.ts (consumed by a single `it.each`, SIMP-T2).
+// The old single-`it('X fills the in-scope fields')` shape is gone: pasting it
+// would mix styles, so this emits the array element plus the ledger entry
+// above (dup guard: skip the paste when the file is already listed).
+export function renderTestStub(fileName, extracted) {
+  return [
+    `// Manual wiring for '${fileName}' (array operation; never add a single it() stub):`,
+    `// 1. tests/integration/samples.test.ts: add the next line to inScopeFixtures`,
+    `//    (dup guard: skip when '${fileName}' is already listed).`,
+    `    '${fileName}',`,
+    `// 2. tests/corpus.ts: insert the entry below above the LEDGER_ANCHOR line.`,
+    renderLedgerEntry(fileName, extracted).trimEnd(),
+  ].join('\n') + '\n';
 }
 
 // CLI: node scripts/scaffold-fixture.mjs <source.html> [fixture-name]

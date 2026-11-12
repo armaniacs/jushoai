@@ -1,11 +1,13 @@
 import { describe, it, expect, vi } from 'vitest';
 import {
   FETCH_TIMEOUT_MS,
+  REGISTRY_LINE_RE,
   collectExpectedRemnants,
   countExpectedPlaceholders,
   fetchPage,
   formatExpectedRemnants,
   parseRegistry,
+  parseRegistryLine,
   parseSyncArgs,
   selectTargets,
   stampRegistry,
@@ -13,6 +15,19 @@ import {
 
 describe('sync-target-urls registry', () => {
   const md = `# Target URLs\n\n- https://example.com/a → a.html\n- https://example.com/b\n`;
+  it('parses one line with either arrow via the single parser', () => {
+    expect(parseRegistryLine('- https://example.com/a → a.html')).toEqual({
+      prefix: '- ', url: 'https://example.com/a', file: 'a.html',
+    });
+    expect(parseRegistryLine('- https://example.com/a -> a.html')).toEqual({
+      prefix: '- ', url: 'https://example.com/a', file: 'a.html',
+    });
+    expect(parseRegistryLine('- https://example.com/b')).toEqual({
+      prefix: '- ', url: 'https://example.com/b', file: null,
+    });
+    expect(parseRegistryLine('# Target URLs')).toBeNull();
+    expect(REGISTRY_LINE_RE).toBeDefined();
+  });
   it('parses mapped and unmapped URLs', () => {
     expect(parseRegistry(md)).toEqual([
       { url: 'https://example.com/a', file: 'a.html' },
@@ -23,6 +38,11 @@ describe('sync-target-urls registry', () => {
     const next = stampRegistry(md, 'https://example.com/b', 'b.html');
     expect(next).toContain('- https://example.com/b → b.html');
     expect(parseRegistry(next)).toContainEqual({ url: 'https://example.com/b', file: 'b.html' });
+  });
+  it('leaves already-mapped lines alone for either arrow shape', () => {
+    expect(stampRegistry(md, 'https://example.com/a', 'x.html')).toBe(md);
+    const ascii = `# Target URLs\n\n- https://example.com/a -> a.html\n`;
+    expect(stampRegistry(ascii, 'https://example.com/a', 'x.html')).toBe(ascii);
   });
   it('appends unknown URLs', () => {
     expect(stampRegistry(md, 'https://example.com/c', 'c.html')).toContain('- https://example.com/c → c.html');

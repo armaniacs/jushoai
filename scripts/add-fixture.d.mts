@@ -10,6 +10,10 @@ export interface LedgerExtract {
 }
 
 export function renderLedgerEntry(file: string, extracted: LedgerExtract): string;
+
+// Shared insertion core: splices `text` above the line carrying the anchor
+// position `pos` (the LEDGER_ANCHOR match, or the array `];`).
+export function insertAboveAnchor(source: string, text: string, pos: number): string;
 export function insertLedgerEntry(source: string, entry: string): string | null;
 
 // Declaration of the aggregated `inScopeFixtures` array in

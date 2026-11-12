@@ -3,6 +3,16 @@ export interface RegistryEntry {
   file: string | null;
 }
 
+// Single registry-line parser (one regex serves parseRegistry/stampRegistry).
+export const REGISTRY_LINE_RE: RegExp;
+
+export interface RegistryLine {
+  prefix: string;
+  url: string;
+  file: string | null;
+}
+
+export function parseRegistryLine(line: string): RegistryLine | null;
 export function parseRegistry(md: string): RegistryEntry[];
 export function stampRegistry(md: string, url: string, file: string): string;
 

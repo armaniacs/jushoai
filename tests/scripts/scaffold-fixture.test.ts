@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   extractControls, renderFixture, renderTestStub,
+  formatExpectedLines, formatExcludedLines, renderLedgerEntry,
 } from '../../scripts/scaffold-fixture.mjs';
 import raijo from '../../samples/formmailer-raijo-age.html?raw';
 
@@ -35,14 +36,40 @@ describe('scaffold-fixture', () => {
     for (const s of skipped.slice(1)) expect(s.reason).toMatch(/skip fixed|exclude/);
   });
 
-  it('renders a fixture and planFor stub that mention skipped elements', () => {
+  it('renders an inScopeFixtures array stub plus the ledger entry (no single it())', () => {
     const extracted = extractControls(html('<input id="a" name="a" type="text"><input name="h" type="hidden">'));
     const fixture = renderFixture('https://example.com/form', extracted);
     expect(fixture).toContain('name="a"');
     expect(fixture).toContain('skip: h (hidden)');
     const stub = renderTestStub('example.html', extracted);
-    expect(stub).toContain(`planFor('example.html')`);
+    // Array operation: one element line for inScopeFixtures, matching the
+    // insertFixtureEntry shape in add-fixture.mjs.
+    expect(stub).toContain(`    'example.html',\n`);
+    // The ledger entry for tests/corpus.ts, rendered from the shared seam.
+    expect(stub).toContain(`  'example.html': {`);
     expect(stub).toContain(`'a': '<expected>'`);
+    expect(stub).toContain(`h (hidden)`);
+    // Never a legacy single-it() stub, so pasting cannot mix styles.
+    expect(stub).not.toContain('fills the in-scope fields');
+    expect(stub).not.toContain('planFor(');
+  });
+
+  it('shares one ledger renderer between the scaffold stub and the addurl wiring', async () => {
+    const { renderLedgerEntry: fromAddFixture } = await import('../../scripts/add-fixture.mjs');
+    const extracted = extractControls(html('<input id="a" name="a" type="text"><input name="h" type="hidden">'));
+    expect(fromAddFixture('example.html', extracted)).toBe(renderLedgerEntry('example.html', extracted));
+  });
+
+  it('formats the expected/excluded lines both generators share', () => {
+    expect(formatExpectedLines([{ name: 'q1', id: 'q1' }, { name: '', id: 'q2' }])).toEqual([
+      `      'q1': '<expected>',`,
+      `      'q2': '<expected>',`,
+    ]);
+    expect(formatExcludedLines([
+      { key: 'h', type: 'hidden', reason: 'empty-submit shim or server state, never a fill target (exclude)' },
+    ])).toEqual([
+      `      'h (hidden): empty-submit shim or server state, never a fill target (exclude)',`,
+    ]);
   });
 
   it('dogfoods the raijo form: split parts kept, age radios skipped', () => {

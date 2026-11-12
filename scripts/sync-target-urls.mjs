@@ -11,11 +11,23 @@ import { FETCH_TIMEOUT_MS, fetchPage } from './shared-fetch.mjs';
 // scripts/shared-fetch.mjs, the single fetch seam for both fixture CLIs.
 export { FETCH_TIMEOUT_MS, fetchPage };
 
+// Single registry-line parser (S6 unification): one regex serves both the
+// reader (parseRegistry) and the writer (stampRegistry), so the `→`/`->`
+// arrow shape cannot drift between them. Group 1 keeps the exact `- ` prefix
+// (leading whitespace included) so stamping preserves the original layout.
+export const REGISTRY_LINE_RE = /^(\s*-\s*)(\S+)(?:\s*(?:→|->)\s*(\S+))?\s*$/;
+
+export function parseRegistryLine(line) {
+  const m = line.match(REGISTRY_LINE_RE);
+  if (!m) return null;
+  return { prefix: m[1], url: m[2], file: m[3] ?? null };
+}
+
 export function parseRegistry(md) {
   const out = [];
   for (const line of md.split('\n')) {
-    const m = line.match(/^\s*-\s*(\S+)(?:\s*(?:→|->)\s*(\S+))?\s*$/);
-    if (m) out.push({ url: m[1], file: m[2] ?? null });
+    const parsed = parseRegistryLine(line);
+    if (parsed) out.push({ url: parsed.url, file: parsed.file });
   }
   return out;
 }
@@ -24,10 +36,10 @@ export function stampRegistry(md, url, file) {
   const lines = md.split('\n');
   let touched = false;
   const next = lines.map((line) => {
-    const m = line.match(/^(\s*-\s*\S+?)((?:\s*(?:→|->)\s*\S+)?)\s*$/);
-    if (m && m[1].trim().slice(2) === url && !m[2]) {
+    const parsed = parseRegistryLine(line);
+    if (parsed && parsed.url === url && !parsed.file) {
       touched = true;
-      return `${m[1]} → ${file}`;
+      return `${parsed.prefix}${url} → ${file}`;
     }
     return line;
   });
