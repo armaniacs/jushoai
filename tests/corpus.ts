@@ -3725,20 +3725,21 @@ const LEDGER = {
   },
   'jiritsu-red-contact-form.html': {
     expected: {
-      'prof': '<expected>',
-      'name1': '<expected>',
-      'name2': '<expected>',
-      'kana1': '<expected>',
-      'kana2': '<expected>',
-      'tel': '<expected>',
-      'pref': '<expected>',
-      'city': '<expected>',
-      'school': '<expected>',
-      'mail': '<expected>',
-      'zip': '<expected>',
-      'address1': '<expected>',
+      // 自立学習RED問合せ。森塾と同系基盤 (kinds[]・name1/kana1)。
+      // name1/name2 はともに fullName。結合区切りは placeholder 由来で
+      // 森塾 (姓/名→半角スペース) と異なり無区切り (honest pin)。
+      'name1': '山田太郎',
+      'name2': '山田太郎',
+      'kana1': 'やまだたろう',
+      'kana2': 'やまだたろう',
+      'tel': '09012345678',
+      'mail': 'yamada@example.com',
+      // zip は label なし・placeholder 7桁例のみで undashed のまま解決。
+      'zip': '1000001',
     },
     excluded: [
+      'prof/pref/city/school/address1 (select): only a `--` option, correctly warn-no-option',
+      'address2 (textarea): 住所2行目は textarea のため not scanned (scan covers text/email/tel/search + select; exclude)',
       'kinds[0] (checkbox): out of scope (skip fixed)',
       'kinds[3] (checkbox): out of scope (skip fixed)',
       'kinds[1] (checkbox): out of scope (skip fixed)',
@@ -3752,6 +3753,32 @@ const LEDGER = {
       'introduction (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'g-recaptcha-response (hidden): empty-submit shim or server state, never a fill target (exclude)',
       '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
+  'hhp-site-inquiry.html': {
+    expected: {
+      // 阪急阪神不動産 (CakePHP)。label・placeholder なし・name/id 語彙のみ。
+      // 姓名・カナ・郵便・電話の番号分割は素直に解決。
+      'data[Question][name1]': '山田',
+      'data[Question][name2]': '太郎',
+      'data[Question][kana1]': 'ヤマダ',
+      'data[Question][kana2]': 'タロウ',
+      'data[Question][zip1]': '100',
+      'data[Question][zip2]': '0001',
+      'data[Question][tel1]': '090',
+      'data[Question][tel2]': '1234',
+      'data[Question][tel3]': '5678',
+    },
+    excluded: [
+      'data[Question][add1] (select): only a `--` option, correctly warn-no-option',
+      'data[Question][add2/3/4] (text): bare add* names, stay unclassified (LLM fallback; address-via-name candidate)',
+      'data[Question][mail1/2] (text): type=text bare mail names, stay unclassified (LLM fallback; email-via-name candidate)',
+      '_method (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'data[_Token][key] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'recaptchaResponse (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'data[Questionitem][4] (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'confirm_btn (submit): action element, never a fill target (exclude)',
     ],
   },
   // <corpus-ledger: make addurl appends its template entry above this line>

@@ -468,4 +468,7 @@ describe('sample forms end to end', () => {
   it('jiritsu-red-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('jiritsu-red-contact-form.html')).toEqual(expectedFor('jiritsu-red-contact-form.html'));
   });
+  it('hhp-site-inquiry.html fills the in-scope fields', async () => {
+    expect(await planFor('hhp-site-inquiry.html')).toEqual(expectedFor('hhp-site-inquiry.html'));
+  });
 });
