@@ -120,3 +120,4 @@
 - https://www.ena.co.jp/request_form/ → ena-request-form.html
 - https://reg34.smp.ne.jp/regist/is?SMPFORM=qcnc-maphkb-0db25bb6f4a5b6785732327ff044c78c → eishinkan-contact-form.html
 - https://axis-kobetsu.jp/contact/inquiry → axis-inquiry-form.html
+- https://www.yotsuyaotsuka.com/pform/iws/little_club/input → yotsuya-littleclub-form.html
