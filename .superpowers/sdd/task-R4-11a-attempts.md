@@ -116,3 +116,29 @@
 | 58 | https://www.rikuden.co.jp/contact/ | F | 北陸電力 | 除外 | 到達不能 (HTTP 404) |
 | 59 | https://www.osakagas.co.jp/contact/ | F | 大阪ガス | 除外 | 到達不能 (HTTP 404) |
 | 60 | https://www.tohogas.co.jp/contact/ | F | 東邦ガス | 除外 | 到達不能 (HTTP 404) |
+
+### G 情報通信業
+
+| 61 | https://www.ntt.com/contact/ | G | NTTコミュニケーションズ | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 62 | https://www.kddi.com/contact/ | G | KDDI | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 63 | https://www.iij.ad.jp/contact/ | G | IIJ | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
+| 64 | https://www.sakura.ad.jp/contact/ | G | さくらインターネット | 除外 | 到達不能 (HTTP 404) |
+| 65 | https://www.gmo.jp/contact/ | G | GMOインターネット | 除外 | 到達不能 (HTTP 403・bot遮断) |
+| 66 | https://www.lycorp.co.jp/contact/ | G | LINEヤフー | 除外 | 到達不能 (HTTP 403。実体は404頁) |
+| 67 | https://www.cyberagent.co.jp/contact/ | G | サイバーエージェント | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 68 | https://dena.com/jp/contact/ | G | DeNA | 除外 | フォームなし (HTTP 200「お問合せ」案内頁。静的formなし。実窓口は別導線とみられる) |
+| 69 | https://www.mercari.com/contact/ | G | メルカリ | 除外 | 到達不能 (HTTP 403・bot遮断) |
+| 70 | https://www.zozo.co.jp/contact/ | G | ZOZO | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+
+### H 運輸業、郵便業
+
+| 71 | https://www.jrkyushu.co.jp/inquiry/ | H | JR九州 | 除外 | 到達不能 (HTTP 404。静的formは検索系のみ) |
+| 72 | https://www.jr-shikoku.co.jp/contact/ | H | JR四国 | 除外 | 到達不能 (HTTP 404) |
+| 73 | https://www.jrfreight.co.jp/contact/ | H | JR貨物 | 除外 | 到達不能 (HTTP 200だが実体はエラーページ。静的formなし) |
+| 74 | https://www.keisei.co.jp/contact/form/ | H | 京成電鉄 | 除外 | 到達不能 (HTTP 404) |
+| 75 | https://www.keikyu.co.jp/contact/form/ | H | 京急電鉄 | 除外 | 到達不能 (HTTP 404) |
+| 76 | https://www.hanshin.co.jp/contact/ | H | 阪神電気鉄道 | 除外 | 到達不能 (HTTP 404。404頁内の乗換・切符系formのみで問合せ欄なし) |
+| 77 | https://www.nankai.co.jp/contact/ | H | 南海電鉄 | 除外 | 到達不能 (HTTP 404) |
+| 78 | https://www.nyk.com/inquiry/ | H | 日本郵船 | 除外 | 到達不能 (HTTP 404) |
+| 79 | https://www.mol.co.jp/inquiry/ | H | 商船三井 | 除外 | 到達不能 (HTTP 200で/error/404.htmlに転送。404頁) |
+| 80 | https://www.kline.co.jp/inquiry/ | H | 川崎汽船 | 除外 | 到達不能 (HTTP 404) |
