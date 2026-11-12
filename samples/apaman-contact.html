@@ -1,0 +1,43 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://www.apaman.co.jp/contact/
+  (アパマンお問い合わせ).
+  The real page is dl/dt/dd rows with no <label> association: dt headings
+  carry the signal (scanner reads dt as nearby, same as mitsui-reform).
+  Placeholders are generic 例） examples, kept verbatim. remarks is a
+  textarea (out of scan); privacy is a checkbox (skip fixed).
+  In-scope controls: 9 (company, your_name, kana, tel_mobile, tel_home,
+  fax, zipcode, address, email).
+-->
+<html lang="ja"><meta charset="utf-8"><title>アパマンお問い合わせ</title>
+<form action="/mail_send.php" method="post" id="form">
+<dl>
+<dt>法人名・部署名</dt>
+<dd><input type="text" name="company" placeholder="法人名義の場合にご入力ください"></dd>
+<dt>お名前（漢字）必須</dt>
+<dd><input type="text" name="your_name" placeholder="山田 太郎"></dd>
+<dt>お名前（かな）必須</dt>
+<dd><input type="text" name="kana" placeholder="やまだ たろう"></dd>
+<dt>携帯電話</dt>
+<dd><input type="tel" name="tel_mobile" placeholder="例）090-1234-5678"></dd>
+<dt>固定電話</dt>
+<dd><input type="tel" name="tel_home" placeholder="例）03-5875-8256"></dd>
+<dt>FAX</dt>
+<dd><input type="tel" name="fax" placeholder="例）03-5875-8256"></dd>
+<dt>郵便番号必須</dt>
+<dd><input type="text" name="zipcode" placeholder="例）123-0000"></dd>
+<dt>ご住所必須</dt>
+<dd><input type="text" name="address" placeholder="例）東京都○○区○○1-2-3 ○○ビル1F"></dd>
+<dt>メールアドレス必須</dt>
+<dd><input type="email" name="email" placeholder="例）contact@example.com"></dd>
+</dl>
+<!-- skip: form_type (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: g-recaptcha-response (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: remarks (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: privacy (checkbox): out of scope (skip fixed) -->
+<!-- skip: js--btn-confirm (button): action element, never a fill target (exclude) -->
+<!-- skip: js--btn-back (button): action element, never a fill target (exclude) -->
+<!-- skip: js--btn-send (button): action element, never a fill target (exclude) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+</form>
+</html>

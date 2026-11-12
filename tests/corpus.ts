@@ -5032,6 +5032,34 @@ const LEDGER = {
       'submitbtn (submit): action element, never a fill target (exclude)',
     ],
   },
+  'apaman-contact.html': {
+    expected: {
+      'company': '株式会社サンプル',
+      'your_name': '山田 太郎',
+      // ひらがな placeholder をそのまま保持 (kobe-city ANSWER2 のカタカナ
+      // pin と対称。かな種の正規化は将来PBI候補)。
+      'kana': 'やまだ たろう',
+      // 携帯/固定の2欄とも tel に載る (mitsui-reform の tel/tel2 と同形)。
+      'tel_mobile': '090-1234-5678',
+      'tel_home': '090-1234-5678',
+      // FAX has no profile value; the rule fills the tel value (honest pin,
+      // fax-vocabulary candidate, same as the ff-csr fax pin).
+      'fax': '090-1234-5678',
+      'zipcode': '100-0001',
+      'address': '東京都千代田区千代田1-1 千代田ビル101',
+      'email': 'yamada@example.com',
+    },
+    excluded: [
+      'form_type (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'g-recaptcha-response (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'remarks (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'js--btn-confirm (button): action element, never a fill target (exclude)',
+      'js--btn-back (button): action element, never a fill target (exclude)',
+      'js--btn-send (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

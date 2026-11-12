@@ -123,3 +123,4 @@
 - https://www.yotsuyaotsuka.com/pform/iws/little_club/input → yotsuya-littleclub-form.html
 - https://www.fujita.co.jp/contact/ → fujita-contact.html
 - https://www.yamada-holdings.jp/contact/ → yamada-holdings-contact.html
+- https://www.apaman.co.jp/contact/ → apaman-contact.html
