@@ -528,4 +528,7 @@ describe('sample forms end to end', () => {
   it('jpaa-contact.html fills the in-scope fields', async () => {
     expect(await planFor('jpaa-contact.html')).toEqual(expectedFor('jpaa-contact.html'));
   });
+  it('nkanzai-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('nkanzai-contact.html')).toEqual(expectedFor('nkanzai-contact.html'));
+  });
 });

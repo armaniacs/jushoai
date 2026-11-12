@@ -125,3 +125,4 @@
 - https://www.yamada-holdings.jp/contact/ → yamada-holdings-contact.html
 - https://www.apaman.co.jp/contact/ → apaman-contact.html
 - https://www.jpaa.or.jp/contact/ → jpaa-contact.html
+- https://www.nkanzai.co.jp/contact/ → nkanzai-contact.html

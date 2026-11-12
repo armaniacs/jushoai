@@ -5092,6 +5092,28 @@ const LEDGER = {
       'cn-close-notice (button): action element, never a fill target (exclude)',
     ],
   },
+  'nkanzai-contact.html': {
+    expected: {
+      'contact_name': '山田 太郎',
+      'contact_mail': 'yamada@example.com',
+      'contact_mail_r': 'yamada@example.com',
+    },
+    excluded: [
+      'contact_subject (text): 件名, no profile value, correctly unfilled (same as ff-csr inquiry_title)',
+      'contactselect (select): SP-only tab switcher outside the form, trimmed as site chrome (exclude)',
+      'q (text) x2: header/footer site-search fields, trimmed as site chrome (same as forum.html s)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cof (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cof (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'contact_message (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agree[] (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
