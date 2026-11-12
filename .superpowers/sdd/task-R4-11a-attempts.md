@@ -220,3 +220,29 @@
 | 138 | https://www.karaokekan.co.jp/contact/ | N | カラオケ館 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
 | 139 | https://www.duskin.co.jp/contact/ | N | ダスキン | 除外 | 到達不能 (HTTP 404) |
 | 140 | https://www.secom.co.jp/inquiry/ | N | セコム問合せ | 除外 | 到達不能 (HTTP 404) |
+
+### O 教育、学習支援業
+
+| 141 | https://www.u-tokyo.ac.jp/contact/ | O | 東京大学 | 除外 | 到達不能 (HTTP 403 Forbidden) |
+| 142 | https://www.kyoto-u.ac.jp/contact | O | 京都大学 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 143 | https://www.waseda.jp/contact/ | O | 早稲田大学 | 除外 | 到達不能 (HTTP 403・Cloudflare遮断) |
+| 144 | https://www.keio.ac.jp/contact/ | O | 慶應義塾 | 除外 | 到達不能 (HTTP 404) |
+| 145 | https://www.kawai-juku.ac.jp/contact/ | O | 河合塾 | 除外 | 到達不能 (HTTP 404) |
+| 146 | https://www.sundai.ac.jp/contact/ | O | 駿台予備校 | 除外 | 到達不能 (HTTP 404) |
+| 147 | https://www.yozemi.ac.jp/contact/ | O | 代々木ゼミナール | 除外 | 到達不能 (HTTP 200で/notfound.htmlに転送。404頁) |
+| 148 | https://www.gakken.co.jp/contact/ | O | 学研HD | 除外 | 到達不能 (HTTP 404) |
+| 149 | https://www.benesse.co.jp/customer/ | O | ベネッセお客様窓口 | 除外 | フォームなし (HTTP 200「ベネッセお客様本部」案内頁。静的formなし) |
+| 150 | https://www.kumon.ne.jp/contact/ | O | 公文教育研究会 | 除外 | 到達不能 (HTTP 404) |
+
+### P 医療、福祉
+
+| 151 | https://www.takeda.co.jp/contact/ | P | 武田薬品工業 | 除外 | 到達不能 (HTTP 404。size 21の空応答) |
+| 152 | https://www.astellas.co.jp/contact/ | P | アステラス製薬 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 153 | https://www.daiichisankyo.co.jp/contact/ | P | 第一三共 | 除外 | JS描画のみ (HTTP 200だが可視欄なし。__EVENTTARGET等のASP.NET残骸のみで実体はJS描画とみられる) |
+| 154 | https://www.eisai.co.jp/contact/ | P | エーザイ | 除外 | 到達不能 (HTTP 404) |
+| 155 | https://www.juntendo.ac.jp/hospital/contact/ | P | 順天堂医院 | 除外 | 到達不能 (HTTP 404。転送先はerror/404.html) |
+| 156 | https://www.toranomon.gr.jp/contact/ | P | 虎の門病院 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 157 | https://www.ncc.go.jp/contact/ | P | 国立がん研究センター | 除外 | 到達不能 (HTTP 404) |
+| 158 | https://www.nichiigakkan.co.jp/contact/ | P | ニチイホールディングス | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
+| 159 | https://www.benesse-style-care.co.jp/contact/ | P | ベネッセスタイルケア | 除外 | 到達不能 (HTTP 404。ベネッセスタイルケア案内のみ) |
+| 160 | https://www.sompocare.co.jp/contact/ | P | SOMPOケア | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
