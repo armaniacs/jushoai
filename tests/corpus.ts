@@ -3694,6 +3694,66 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'wadakohsan-inquiry.html': {
+    expected: {
+      // 和田興産ワコーレ (mw-wp-form)。your- 接頭 + 例) placeholder が信号。
+      // 氏名・フリガナは全角スペース結合の full 値。
+      'your-name': '山田　太郎',
+      'your-hurigana': 'やまだ　たろう',
+      'your-email': 'yamada@example.com',
+      'your-email-confirm': 'yamada@example.com',
+      'your-tel': '090-1234-5678',
+      'your-post-code': '1000001',
+      'your-address': '東京都千代田区千代田1-1 千代田ビル101',
+      // your-department は学校の学科に載り普通科が入る (honest pin。部署語彙が候補)。
+      'your-department': '普通科',
+    },
+    excluded: [
+      'q (text): site-search field (placeholder 検索内容を入力してください), stays unclassified (same as forum.html s)',
+      'your-company (text): placeholder 例）和田興産株式会社, stays unclassified (LLM fallback; company-by-placeholder candidate)',
+      'name-ga-cookie-accept-btn (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'cx (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'ie (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'sa (submit): action element, never a fill target (exclude)',
+      'recaptcha-v3 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'your-content (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submitConfirm (button): action element, never a fill target (exclude)',
+      'mw-wp-form-form-id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mw_wp_form_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
+  'jiritsu-red-contact-form.html': {
+    expected: {
+      'prof': '<expected>',
+      'name1': '<expected>',
+      'name2': '<expected>',
+      'kana1': '<expected>',
+      'kana2': '<expected>',
+      'tel': '<expected>',
+      'pref': '<expected>',
+      'city': '<expected>',
+      'school': '<expected>',
+      'mail': '<expected>',
+      'zip': '<expected>',
+      'address1': '<expected>',
+    },
+    excluded: [
+      'kinds[0] (checkbox): out of scope (skip fixed)',
+      'kinds[3] (checkbox): out of scope (skip fixed)',
+      'kinds[1] (checkbox): out of scope (skip fixed)',
+      'kinds[5] (checkbox): out of scope (skip fixed)',
+      'kinds[6] (checkbox): out of scope (skip fixed)',
+      'kinds[7] (checkbox): out of scope (skip fixed)',
+      'kinds[4] (checkbox): out of scope (skip fixed)',
+      'address2 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'content (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'introduction (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'g-recaptcha-response (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
