@@ -114,3 +114,4 @@
 - https://www.sekisuihouse.co.jp/cgi-bin/inquiry/form.cgi → sekisui-inquiry-form.html
 - https://reg18.smp.ne.jp/regist/is?SMPFORM=mjqd-maraob-3de8341d99c0daa975f12ed6ea3415de → keishin-contact-form.html
 - https://www.sekisuihouse.co.jp/mail/form.html → sekisui-mail-form.html
+- https://www.rinkaiseminar.co.jp/contact/shiryo → rinkai-shiryo-form.html

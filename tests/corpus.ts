@@ -4543,6 +4543,53 @@ const LEDGER = {
       '(no name/id) (image): unaddressable (exclude)',
     ],
   },
+  'rinkai-shiryo-form.html': {
+    expected: {
+      // 臨海セミナー資料請求 (WordPress CF7)。form_group_grade のみ実選択肢
+      // (学年 13件) を実ページどおり復元。course/prefecture/classroom は
+      // 実ページでも空 (JS 連動) のため '--' のまま。
+      'form_name_student': '山田',
+      'form_name_student_kana': 'ヤマダ',
+      'form_post_code': '100-0001',
+      'form_address1': '千代田区千代田1-1',
+      'form_address2': '千代田ビル101',
+      'form_cf7rs_tel': '090-1234-5678',
+      'form_cf7rs_mail': 'yamada@example.com',
+      // 兄弟姉妹氏名もプロファイル値で fill (honest pin。兄弟と本人の区別は将来PBIで)。
+      'form_name_brother': '太郎',
+      'form_name_brother_kana': 'タロウ',
+    },
+    excluded: [
+      's (text): site-search field, stays unclassified (same as forum.html s)',
+      'form_group_grade (select): 実選択肢つき (学年) だが stay unclassified (LLM fallback)',
+      'form_group_course/form_group_prefecture/form_group_classroom (select): 実ページでも空 (JS 連動のため)、correctly warn-no-option',
+      'form_cf7rs_ad_set_text (text): bare 広告セット欄 with no signal, stays unclassified (LLM fallback)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+      '_wpcf7 (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_version (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_locale (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_unit_tag (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_container_post (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_wpcf7_posted_data_hash (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'form_cf7rs_checkbox427[] (checkbox): out of scope (skip fixed)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_ad_set (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'form_cf7rs_requests (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
