@@ -2874,6 +2874,41 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'tokyu-commercial-form.html': {
+    expected: {
+      // 商業施設 (東急。自宅 house 系+連絡先の複合)。label なし。
+      'name': '山田 太郎',
+      'kana': 'ヤマダ タロウ',
+      // 自宅・連絡先の郵便2欄は 3+4 分割対に載る (honest pin。proud と同形)。
+      'zip_house': '100',
+      'zip': '0001',
+      // 住所2行×自宅/連絡先は refine で同値に載る (honest pin)。
+      'address1_house': '千代田区千代田1-1',
+      'address1': '千代田区千代田1-1',
+      'address2_house': '千代田ビル101',
+      'address2': '千代田ビル101',
+      'tel': '09012345678',
+    },
+    excluded: [
+      'q x2 (search): header/footer site-search fields, stay unclassified (same as forum.html s)',
+      'kind/pref_house/pref (select): only a `--` option, correctly warn-no-option',
+      'kind_etc_text (text): conditional detail field (placeholder その他), stays unclassified (LLM fallback)',
+      'land_1/land_2/bill_1/bill_2 (text): conditional branch fields (土地・ビル条件), no profile value, correctly unfilled',
+      'company/team/job (text): 会社・部署・役職 with no label association, stay unclassified (LLM fallback; company/department-by-name candidates)',
+      'mail/mail2 (text): type=text with no email signal, stay unclassified (LLM fallback; email-via-name candidate, same as otsuka mail)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      '(no name/id) (submit): unaddressable (exclude)',
+      'flow (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      '(no name/id) (submit): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

@@ -84,3 +84,4 @@
 - https://sumifu-step-form.spiral-site.com/otoiawase → sumifu-step-otoiawase.html
 - https://www.proud-web.jp/module/inquiry/procedureForm.xphp → proud-procedure-form.html
 - https://www.tokyu-land.co.jp/form/branz_owner/ → tokyu-branz-owner-form.html
+- https://www.tokyu-land.co.jp/form/commercial/ → tokyu-commercial-form.html

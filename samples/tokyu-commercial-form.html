@@ -1,0 +1,38 @@
+<!-- Minimal reproduction of https://www.tokyu-land.co.jp/form/commercial/. Values stripped; trim further before committing. -->
+<form>
+      <input name="q" id="q1" type="search" value="" placeholder="サイト内検索">
+      <input name="q" id="q2" type="search" value="" placeholder="サイト内検索">
+      <select name="kind" id="kind"><option value="">--</option></select>
+      <input name="kind_etc_text" id="" type="text" value="" placeholder="その他">
+      <input name="land_1" id="land_1" type="text" value="">
+      <input name="land_2" id="land_2" type="text" value="">
+      <input name="bill_1" id="bill_1" type="text" value="">
+      <input name="bill_2" id="bill_2" type="text" value="">
+      <input name="zip_house" id="zip_house" type="text" value="">
+      <select name="pref_house" id="pref_house"><option value="">--</option></select>
+      <input name="address1_house" id="address1_house" type="text" value="">
+      <input name="address2_house" id="address2_house" type="text" value="">
+      <input name="name" id="name" type="text" value="">
+      <input name="kana" id="kana" type="text" value="">
+      <input name="company" id="" type="text" value="">
+      <input name="team" id="" type="text" value="">
+      <input name="job" id="" type="text" value="">
+      <input name="zip" id="zip" type="text" value="">
+      <select name="pref" id="pref"><option value="">--</option></select>
+      <input name="address1" id="" type="text" value="">
+      <input name="address2" id="" type="text" value="">
+      <input name="tel" id="tel" type="text" value="">
+      <input name="mail" id="mail" type="text" value="">
+      <input name="mail2" id="mail2" type="text" value="">
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+<!-- skip: flow (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: contenttext (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: type (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: contact (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: (no name/id) (submit): unaddressable (exclude) -->
+</form>

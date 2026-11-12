@@ -405,4 +405,7 @@ describe('sample forms end to end', () => {
   it('tokyu-branz-owner-form.html fills the in-scope fields', async () => {
     expect(await planFor('tokyu-branz-owner-form.html')).toEqual(expectedFor('tokyu-branz-owner-form.html'));
   });
+  it('tokyu-commercial-form.html fills the in-scope fields', async () => {
+    expect(await planFor('tokyu-commercial-form.html')).toEqual(expectedFor('tokyu-commercial-form.html'));
+  });
 });
