@@ -250,6 +250,41 @@ describe('classifyField: standalone department wording (T2)', () => {
     expect(cat({ label: '会社名・部署名' })).toBe('company');
   });
 
+  // F1: sysmex shape (name=department + 所属部署名 label) reads as the
+  // company department, not the school department. Bare 部署 keeps the
+  // school reading, so the guard is 部署名-only.
+  it('reads name=department with a 所属部署名 label as the company department', () => {
+    expect(cat({ name: 'department', label: '所属部署名' })).toBe('companyDepartment');
+    const c = classifyField(makeMeta({ name: 'department', label: '所属部署名' }));
+    expect(c).toMatchObject({ category: 'companyDepartment', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('keeps bare-部署 English-token fields on the school reading', () => {
+    expect(cat({ name: 'department', label: '部署' })).toBe('department');
+    expect(cat({ name: 'department', label: '所属部署' })).toBe('department');
+  });
+
+  // F2: company-word department joints keep the company reading (never the
+  // department), including a non-・ separator variant.
+  it.each([
+    { label: '企業名・部署名' },
+    { label: '会社名/部署名' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps the joint %j on company, never the department', (p) => {
+    expect(cat(p)).toBe('company');
+    expect(cat(p)).not.toBe('companyDepartment');
+  });
+
+  it('reads a bare 企業名 label as the company', () => {
+    expect(cat({ label: '企業名' })).toBe('company');
+  });
+
+  // F4: own 部署名 under a 会社名 heading reads as the company department.
+  it('reads an own 部署名 under a 会社名 heading as the company department', () => {
+    expect(classifyField(makeMeta({ label: '部署名', nearby: '会社名' })))
+      .toMatchObject({ category: 'companyDepartment', confidence: 0.7 });
+  });
+
   it.each([
     { label: '応募団体名' },
     { label: '申込団体名' },

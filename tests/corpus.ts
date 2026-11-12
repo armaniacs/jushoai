@@ -1486,10 +1486,10 @@ const LEDGER = {
       'name': '山田 太郎',
       'name_furigana': 'やまだ たろう',
       'facility_company': '株式会社サンプル',
-      // T2: the opened office gate lets the department-name token read as the
-      // school department (DISPATCH order keeps name=department fields there),
-      // so 普通科 fills. Japanese-only 部署名 fields read as companyDepartment.
-      'department': '普通科',
+      // F1 fix: the 所属部署名 label is a Japanese department word, so the
+      // field reads as companyDepartment even though name=department matches
+      // the school token (the school entry yields to an own 部署名 signal).
+      'department': '開発部',
       'zip': '1000001',
       'pref': '13',
       'city': '千代田区',
