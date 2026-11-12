@@ -5060,6 +5060,38 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'jpaa-contact.html': {
+    expected: {
+      '会社名': '株式会社サンプル',
+      // 部署・役職 reads as the department vocabulary (registration.html
+      // deptTxt precedent), so the department profile value fills.
+      '部署・役職': '開発部',
+      '氏名': '山田 太郎',
+      'フリガナ': 'ヤマダ タロウ',
+      'メールアドレス': 'yamada@example.com',
+      'メールアドレス(確認)': 'yamada@example.com',
+      '電話番号[data][0]': '090',
+      '電話番号[data][1]': '1234',
+      '電話番号[data][2]': '5678',
+    },
+    excluded: [
+      '職種 (select): real 5 options restored verbatim, stays unclassified (LLM fallback)',
+      '業種 (select): real 6 options restored verbatim, stays unclassified (LLM fallback)',
+      'お問い合わせ内容 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      '電話番号[separator] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'agree[data][] (checkbox): opt-out checkbox, out of scope (skip fixed)',
+      'agree[separator] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__children[agree][] (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submitConfirm (submit): action element, never a fill target (exclude)',
+      'mw-wp-form-form-id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mw_wp_form_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mw-wp-form-form-id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mw_wp_form_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cn-accept-cookie (button): action element, never a fill target (exclude)',
+      'cn-refuse-cookie (button): action element, never a fill target (exclude)',
+      'cn-close-notice (button): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

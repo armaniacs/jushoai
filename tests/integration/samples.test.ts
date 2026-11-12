@@ -525,4 +525,7 @@ describe('sample forms end to end', () => {
   it('apaman-contact.html fills the in-scope fields', async () => {
     expect(await planFor('apaman-contact.html')).toEqual(expectedFor('apaman-contact.html'));
   });
+  it('jpaa-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('jpaa-contact.html')).toEqual(expectedFor('jpaa-contact.html'));
+  });
 });
