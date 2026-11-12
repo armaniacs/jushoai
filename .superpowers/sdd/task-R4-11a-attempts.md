@@ -142,3 +142,29 @@
 | 78 | https://www.nyk.com/inquiry/ | H | 日本郵船 | 除外 | 到達不能 (HTTP 404) |
 | 79 | https://www.mol.co.jp/inquiry/ | H | 商船三井 | 除外 | 到達不能 (HTTP 200で/error/404.htmlに転送。404頁) |
 | 80 | https://www.kline.co.jp/inquiry/ | H | 川崎汽船 | 除外 | 到達不能 (HTTP 404) |
+
+### I 卸売業、小売業
+
+| 81 | https://www.family.co.jp/contact/ | I | ファミリーマート | 除外 | 到達不能 (HTTP 404) |
+| 82 | https://www.lawson.co.jp/contact/ | I | ローソン | 除外 | 到達不能 (HTTP 404) |
+| 83 | https://www.donki.com/contact/ | I | ドンキホーテ | 除外 | 到達不能 (HTTP 404) |
+| 84 | https://www.shimamura.gr.jp/contact/ | I | しまむら | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 85 | https://www.uniqlo.com/jp/ja/contact/ | I | ユニクロ | 除外 | 到達不能 (HTTP 404。静的formはfingerprint 1欄のみ) |
+| 86 | https://www.yamada-holdings.jp/contact/ | I | ヤマダHD | 有望 P2 | 静的実フォーム (HTTP 200「お問い合わせ」。action=cgi-bin/contact.cgi、input 8・textarea 1・select 1。f01=お名前・f02=フリガナ・pm_email確認・f03=電話・TITLE select・question textarea。項目名コード化のためP2) |
+| 87 | https://www.imhds.co.jp/contact/ | I | 三越伊勢丹HD | 除外 | 到達不能 (HTTP 404。静的formは検索系のみ) |
+| 88 | https://www.takashimaya.co.jp/contact/ | I | 高島屋 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 89 | https://www.ksdenki.com/contact/ | I | ケーズHD | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 90 | https://www.edion.co.jp/contact/ | I | エディオン | 除外 | フォームなし (HTTP 200「お問い合わせ」ハブ。静的formなし) |
+
+### J 金融業、保険業
+
+| 91 | https://www.nissay.co.jp/contact/ | J | 日本生命 | 除外 | フォームなし (HTTP 200「お問合せ」案内頁。静的formなし) |
+| 92 | https://www.sumitomolife.co.jp/contact/ | J | 住友生命 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 93 | https://www.jp-bank.japanpost.jp/contact/ | J | ゆうちょ銀行 | 除外 | 到達不能 (HTTP 200で/error/pc403.htmlに転送。403エラー頁) |
+| 94 | https://www.resona-gr.co.jp/contact/ | J | りそなHD | 除外 | 到達不能 (HTTP 404) |
+| 95 | https://www.smth.jp/contact/ | J | 三井住友トラスト | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 96 | https://www.ms-ins.com/contact/ | J | 三井住友海上 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 97 | https://www.sompo-japan.co.jp/contact/ | J | 損保ジャパン | 除外 | JS描画のみ (HTTP 200だが可視欄なし。__VIEWSTATEのみで実体はJS描画とみられる) |
+| 98 | https://www.sbigroup.co.jp/contact/ | J | SBI HD | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
+| 99 | https://www.orix.co.jp/contact/ | J | オリックス | 除外 | 到達不能 (HTTP 404) |
+| 100 | https://www.ms-ad-hd.com/contact/ | J | MS&AD HD | 除外 | 到達不能 (HTTP 404) |
