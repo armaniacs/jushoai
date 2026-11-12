@@ -117,3 +117,4 @@
 - https://www.rinkaiseminar.co.jp/contact/shiryo → rinkai-shiryo-form.html
 - https://www.sanaru.co.jp/contact/ → sanaru-contact-form.html
 - https://reg18.smp.ne.jp/regist/is?SMPFORM=ncpd-mbtgrh-140da6f466b94a6cd5f8054138f03923 → ichishin-contact-form.html
+- https://www.ena.co.jp/request_form/ → ena-request-form.html
