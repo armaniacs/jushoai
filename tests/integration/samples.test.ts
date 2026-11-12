@@ -128,6 +128,26 @@ describe('sample forms end to end', () => {
     expect(await planFor('reinvent-registration-contact.html')).toEqual(expectedFor('reinvent-registration-contact.html'));
   });
 
+  // T1 pin: Microsoft Forms (Tokyo OpenRoaming) minimal reproduction. The live
+  // page renders client-side, so the fixture transcribes the reported questions
+  // with the real placeholders. Rules fill 1, 2, 5, 6 today; 3 (department)
+  // and 4 (job title) have no rule vocabulary yet (T2/T3 own them).
+  it('ms-forms-openroaming pins the current rule classification', async () => {
+    const { html } = corpusEntry('responsepage-aspx.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    expect(fields.map((f) => f.meta.name)).toEqual(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7']);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    expect(items.map((i) => i.cls.category)).toEqual([
+      'fullName', 'company', 'unknown', 'unknown', 'email', 'tel', 'unknown',
+    ]);
+    expect(items.map((i) => i.cls.confidence)).toEqual([0.7, 0.7, 0, 0, 0.7, 0.7, 0]);
+    expect(items.map((i) => i.cls.source)).toEqual(['rule', 'rule', 'rule', 'rule', 'rule', 'rule', 'rule']);
+    expect(await planFor('responsepage-aspx.html')).toEqual(expectedFor('responsepage-aspx.html'));
+  });
+
   it('anchors the table-form button on the last name field', () => {
     document.body.innerHTML = new DOMParser().parseFromString(corpusEntry('table-form.html').html, 'text/html').body.innerHTML;
     const forms = detectForms(document);
@@ -263,6 +283,7 @@ describe('sample forms end to end', () => {
     'apaman-contact.html',
     'jpaa-contact.html',
     'nkanzai-contact.html',
+    'responsepage-aspx.html',
   ];
   it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
     expect(await planFor(file)).toEqual(expectedFor(file));

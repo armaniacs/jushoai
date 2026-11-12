@@ -126,3 +126,4 @@
 - https://www.apaman.co.jp/contact/ → apaman-contact.html
 - https://www.jpaa.or.jp/contact/ → jpaa-contact.html
 - https://www.nkanzai.co.jp/contact/ → nkanzai-contact.html
+- https://forms.cloud.microsoft/pages/responsepage.aspx?id=uyT_3okgAESMjvceaAN4sjf79RZArsplvgIJiMXnHa5UQkIwMjNaQlhTVzBFTVI3OURSQ0JPRkVLSi4u&route=shorturl → responsepage-aspx.html

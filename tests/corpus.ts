@@ -3238,6 +3238,22 @@ const LEDGER = {
       '(no name/id) x2 (button): unaddressable (exclude)',
     ],
   },
+  'responsepage-aspx.html': {
+    expected: {
+      // Single fullName box with no separator cue in the placeholder, so the
+      // planner joins without a space. Single tel box likewise keeps the raw
+      // profile digits (hyphenation only applies to split tel parts).
+      'q1': '山田太郎',
+      'q2': '株式会社サンプル',
+      'q5': 'yamada@example.com',
+      'q6': '09012345678',
+    },
+    excluded: [
+      'q3 (text): 所属部署名, 部署名 sits outside the DEPT_OFFICE boundary, stays unclassified (T2: companyDepartment candidate)',
+      'q4 (text): 役職名, no job-title vocabulary in the rules, stays unclassified (T3: job-title candidate)',
+      'q7 (text): trailing-question stand-in, stays unclassified',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
