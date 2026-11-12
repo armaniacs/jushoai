@@ -4379,6 +4379,10 @@ const LEDGER = {
       'addr1': '東京都千代田区千代田1-1',
       'addr2': '千代田ビル101',
       'birth-year': '1990',
+      // SIMP-T1f: 文字化け placeholder 削除で name 由来の kana 分類が復活
+      // (name-kana1 → lastNameKana / name-kana2 → firstNameKana)。
+      'name-kana1': 'ヤマダ',
+      'name-kana2': 'タロウ',
       // 名前/ドメイン4欄は各々 full email に載る (honest pin。分割結合が候補)。
       'email-name': 'yamada@example.com',
       'email-domain': 'yamada@example.com',
@@ -4393,7 +4397,7 @@ const LEDGER = {
       'sex': '女性',
     },
     excluded: [
-      'name-kanji1/2/name-kana1/2 (text): 文字化け placeholder のみ, stay unclassified (LLM fallback; kanji/kana person-name placeholder does not infer)',
+      'name-kanji1/2 (text): 文字化け placeholder は SIMP-T1 で削除済み (name-kana1/2 は kana 分類へ復帰し expected へ移動), kanji 2欄は stay unclassified (LLM fallback; kanji person-name does not infer)',
       'prefs/occupation (select): only a `--` option, correctly warn-no-option',
       'shop/employee-name/office (text): 店舗・担当・勤務先, no profile value, correctly unfilled',
       'charset_detect (hidden): empty-submit shim or server state, never a fill target (exclude)',

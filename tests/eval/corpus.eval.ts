@@ -124,7 +124,7 @@ const PIN_TABLE: Record<string, PinRow> = {
   'sapporo-iken-form.html': { ruleHits: 2, llmFallbacks: 1, fillable: 2, refineChanged: 0, refineDropped: 0 },
   'seedome-openschool.html': { ruleHits: 6, llmFallbacks: 1, fillable: 6, refineChanged: 3, refineDropped: 0 },
   'sekisui-catalog-request.html': { ruleHits: 11, llmFallbacks: 20, fillable: 7, refineChanged: 4, refineDropped: 4 },
-  'sekisui-inquiry-form.html': { ruleHits: 13, llmFallbacks: 4, fillable: 8, refineChanged: 5, refineDropped: 5 },
+  'sekisui-inquiry-form.html': { ruleHits: 15, llmFallbacks: 4, fillable: 10, refineChanged: 7, refineDropped: 3 },
   'sekisui-mail-form.html': { ruleHits: 12, llmFallbacks: 2, fillable: 7, refineChanged: 9, refineDropped: 0 },
   'shimane-inquiry-form.html': { ruleHits: 3, llmFallbacks: 2, fillable: 2, refineChanged: 0, refineDropped: 0 },
   'shozemi-contact-form.html': { ruleHits: 12, llmFallbacks: 2, fillable: 7, refineChanged: 1, refineDropped: 0 },
