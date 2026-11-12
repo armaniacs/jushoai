@@ -3254,11 +3254,12 @@ const LEDGER = {
       'q2': '株式会社サンプル',
       // T2: 3.所属部署名 reads as companyDepartment, so the department value fills.
       'q3': '開発部',
+      // T3: 4.役職名 reads as jobTitle, so the title value fills.
+      'q4': '課長',
       'q5': 'yamada@example.com',
       'q6': '09012345678',
     },
     excluded: [
-      'q4 (text): 役職名, no job-title vocabulary in the rules, stays unclassified (T3: job-title candidate)',
       'q7 (text): trailing-question stand-in, stays unclassified',
     ],
   },

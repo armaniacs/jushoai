@@ -48,6 +48,10 @@ describe('migrateData', () => {
   it('keeps the new shape as-is with defaults for missing keys', () => {
     const out = migrateData({ profiles: [{ id: 'p9', label: '仕事用', lastName: '山田' }], addresses: [] });
     expect(out.profiles).toEqual([{ ...EMPTY_PROFILE, id: 'p9', label: '仕事用', lastName: '山田' }]);
+    // T3: a stored profile saved before jobTitle existed loads with '' (no
+    // compat shim beyond the template-spread defaults), so normalizeProfile
+    // never sees undefined.
+    expect(out.profiles[0]!.jobTitle).toBe('');
   });
 
   it('returns empty lists when nothing is stored', () => {

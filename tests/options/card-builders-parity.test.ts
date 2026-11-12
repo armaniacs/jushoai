@@ -21,7 +21,7 @@ function makeProfile(id: string, label: string) {
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
     birthday: '', school: '', department: '',
-    companyName: '', companyDepartment: '', companyNameKana: '',
+    companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '',
   };
 }
@@ -71,7 +71,8 @@ const PROFILE_LABELS = [
   '生年月日', '学校名', '学部・学科',
   // PBI-119: 会社名・会社の部署（学部・学科とメールアドレスの間）。
   // PBI-160: 会社名フリガナは会社名と会社の部署の間。
-  '会社名（任意）', '会社名（フリガナ・任意）', '会社の部署（任意）',
+  // T3: 役職は会社の部署の直後。
+  '会社名（任意）', '会社名（フリガナ・任意）', '会社の部署（任意）', '役職（任意）',
   'メールアドレス', '電話番号',
   '性別（任意）',
 ];

@@ -305,6 +305,67 @@ describe('classifyField: standalone department wording (T2)', () => {
   });
 });
 
+// T3: standalone role wording resolves to the new jobTitle category (MS Forms
+// q4 shape). The allowance is 役職 as a standalone word: joints with a company
+// or department word never read as the title (部署名・役職名 keeps the
+// department reading, 部署・役職 keeps the existing companyDepartment pin, and
+// company-word joints stay on company). Legend-only 役職 (tokyu-tenant job)
+// stays unknown: the title has no legend entry on purpose.
+describe('classifyField: standalone role wording (T3)', () => {
+  it.each([
+    { label: '役職名' },
+    { label: '役職' },
+    { label: '4.役職名' },
+    { name: 'q4', label: '4.役職名', placeholder: '回答を入力してください' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as jobTitle', (p) => {
+    expect(cat(p)).toBe('jobTitle');
+  });
+
+  it.each([
+    { label: '役職名' },
+    { label: '役職' },
+  ] as Parameters<typeof makeMeta>[0][])('is confident (rule, >= 0.6) for %j', (p) => {
+    const c = classifyField(makeMeta(p));
+    expect(c).toMatchObject({ category: 'jobTitle', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('reads an own 役職名 at 0.7', () => {
+    expect(classifyField(makeMeta({ label: '4.役職名' })))
+      .toMatchObject({ category: 'jobTitle', confidence: 0.7 });
+  });
+
+  it('keeps the 部署名・役職名 compound on the department reading, never the title', () => {
+    expect(cat({ label: '部署名・役職名' })).toBe('companyDepartment');
+    expect(cat({ label: '部署名・役職名' })).not.toBe('jobTitle');
+  });
+
+  it('keeps the 会社名・役職名 compound on company, never the title', () => {
+    expect(cat({ label: '会社名・役職名' })).toBe('company');
+    expect(cat({ label: '会社名・役職名' })).not.toBe('jobTitle');
+  });
+
+  it('keeps the 部署・役職 compound on the existing department reading', () => {
+    expect(cat({ label: '部署・役職' })).toBe('companyDepartment');
+  });
+
+  it('leaves legend-only 役職 (tokyu-tenant job shape) unknown', () => {
+    expect(cat({ name: 'job', nearby: '役職' })).toBeNull();
+  });
+
+  it.each([
+    { label: '役職（フリガナ）' },
+    { label: 'ご担当者名' },
+    { label: '会社の生年月日' },
+    { label: '会社名（フリガナ）' },
+    { label: '会社電話' },
+    { label: '店舗名' },
+    { label: '法人種別' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside jobTitle', (p) => {
+    expect(cat(p) ?? null).not.toBe('jobTitle');
+  });
+});
+
 // レビュー指摘の再現 fixture。fixture 先行（AGENTS.md）: 先に失敗させてから直す。
 describe('classifyField: single birthday after the label-only anchor (review)', () => {
   it.each([
@@ -611,7 +672,7 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
     lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
     gender: '', birthday: '', school: '', department: '',
-    companyName: '', companyDepartment: '', companyNameKana: '', email: '', tel: '09012345678',
+    companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '', email: '', tel: '09012345678',
   };
   const address: Address = {
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',

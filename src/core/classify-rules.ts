@@ -116,6 +116,18 @@ const deptOfficeEligible = (own: string): boolean =>
 // is 部署名-only and the other name=department fixtures stay unchanged.
 const hasOwnDeptName = (own: string): boolean =>
   officeEligible(own) && /部署名/.test(own);
+// T3: standalone 役職/役職名 reads as the job title (MS Forms 4.役職名
+// shape). A joint with a company or department word (部署名・役職名,
+// 部署・役職, 会社名・役職名) never reads as the title: the department entry
+// (which precedes the title entry) keeps the 部署 joints, and the joint block
+// keeps the company-word shapes out. Kana/birth companions stay excluded with
+// the office entries. The title has no legend entry on purpose: the only
+// legend-only 役職 shape (tokyu-tenant job) stays unknown.
+const JOB_OFFICE = /役職/;
+const hasCompoundJobJoint = (own: string): boolean =>
+  /役職/.test(own) && /会社|法人|企業|団体|店舗|事業所|営業所|部署|社/.test(own);
+const jobOfficeEligible = (own: string): boolean =>
+  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && JOB_OFFICE.test(own) && !hasCompoundJobJoint(own);
 // PBI-119 + レビュー指摘: legend 側の gate。旧 legend gate（officeEligible）は
 // 欄自身の office 語一致を要求したため、「ご記入ください + 共有見出し会社名」の
 // ような shared heading ケースが到達不能だった（own 語が一致すれば own entry
@@ -282,6 +294,16 @@ const DISPATCH: readonly MatcherEntry[] = [
     (ctx) => deptOfficeEligible(ctx.ownText),
     (ctx) => officeLegendEligible(ctx.ownText),
   ),
+  // T3: the job title is an own-text-only entry (no legend pair): a standalone
+  // 役職/役職名 reads 0.7, while the legend-only 役職 shape (tokyu-tenant job)
+  // stays unknown. Department and company joints never reach this entry: the
+  // department entry precedes it and the joint blocks on both sides hold.
+  {
+    name: 'job-title-own',
+    match: (ctx) => (
+      JOB_OFFICE.test(ctx.ownText) && jobOfficeEligible(ctx.ownText) ? matchAs('jobTitle', 0.7) : null
+    ),
+  },
   ...ownLegend(GENDER, 'gender'),
   // Overseas address fields are named explicitly (country, address_1..4,
   // postal_code), so they classify without sibling refinement. 国名 alone
@@ -406,10 +428,13 @@ export function classifyField(m: FieldMeta): Classification | null {
   const legendText = views.legendText;
   // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す。
   // 緩和境界（カナ文脈・誕生文脈・部署名を除外）は officeEligible が一箇所で持つ。
+  // T3: 単独の役職語は jobTitle だけ EXCLUDE から通す（緩和境界は
+  // jobOfficeEligible が一箇所で持つ）。
   // PBI-160: 会社名フリガナ（会社・法人系語彙 AND カナ注記の連言）は
   // officeKanaEligible が own/legend の両側で一箇所に持つ（誕生文脈は除外）。
   const officeField =
-    EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText);
+    EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText)
+    && !jobOfficeEligible(ownText);
 
   const ownTrimmed = ownText.trim();
   // レビュー指摘: the single-birthday anchor reads the LABEL view only.

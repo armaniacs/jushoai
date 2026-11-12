@@ -15,7 +15,7 @@ const profile: Profile = {
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
-  companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -128,10 +128,10 @@ describe('sample forms end to end', () => {
     expect(await planFor('reinvent-registration-contact.html')).toEqual(expectedFor('reinvent-registration-contact.html'));
   });
 
-  // T2: MS Forms (Tokyo OpenRoaming) minimal reproduction. The live page
+  // T3: MS Forms (Tokyo OpenRoaming) minimal reproduction. The live page
   // renders client-side, so the fixture transcribes the reported questions
-  // with the real placeholders. Rules fill 1, 2, 3, 5, 6; 4 (job title) has
-  // no rule vocabulary yet (T3 owns it).
+  // with the real placeholders. Rules fill 1-6; 7 (trailing question) stays
+  // unclassified.
   it('ms-forms-openroaming pins the current rule classification', async () => {
     const { html } = corpusEntry('responsepage-aspx.html');
     document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
@@ -141,9 +141,9 @@ describe('sample forms end to end', () => {
       englishPage: isEnglishPageText(document.body.textContent ?? ''),
     });
     expect(items.map((i) => i.cls.category)).toEqual([
-      'fullName', 'company', 'companyDepartment', 'unknown', 'email', 'tel', 'unknown',
+      'fullName', 'company', 'companyDepartment', 'jobTitle', 'email', 'tel', 'unknown',
     ]);
-    expect(items.map((i) => i.cls.confidence)).toEqual([0.7, 0.7, 0.7, 0, 0.7, 0.7, 0]);
+    expect(items.map((i) => i.cls.confidence)).toEqual([0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0]);
     expect(items.map((i) => i.cls.source)).toEqual(['rule', 'rule', 'rule', 'rule', 'rule', 'rule', 'rule']);
     expect(await planFor('responsepage-aspx.html')).toEqual(expectedFor('responsepage-aspx.html'));
   });

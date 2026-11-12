@@ -46,10 +46,11 @@ describe('normalizeProfile', () => {
 
   it('trims the company fields including the kana name (PBI-160)', () => {
     const p = normalizeProfile({
-      ...base, companyName: ' 株式会社サンプル ', companyDepartment: ' 開発部 ', companyNameKana: ' カブシキガイシャサンプル ',
+      ...base, companyName: ' 株式会社サンプル ', companyDepartment: ' 開発部 ', jobTitle: ' 課長 ', companyNameKana: ' カブシキガイシャサンプル ',
     });
     expect(p.companyName).toBe('株式会社サンプル');
     expect(p.companyDepartment).toBe('開発部');
+    expect(p.jobTitle).toBe('課長');
     expect(p.companyNameKana).toBe('カブシキガイシャサンプル');
   });
 });
