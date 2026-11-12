@@ -88,3 +88,4 @@
 - https://www.tokyu-land.co.jp/form/cre/ → tokyu-cre-form.html
 - https://fmt.e-state.ne.jp/brillia-support/contact/ → brillia-support-contact.html
 - https://www.hulic.co.jp/business/inquiry/entry?subject=developPlan → hulic-develop-plan.html
+- https://mori.webcas.net/form/pub/f008/contact → mori-webcas-contact.html

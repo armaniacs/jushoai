@@ -3043,6 +3043,31 @@ const LEDGER = {
       '(no name/id) (submit): unaddressable (exclude)',
     ],
   },
+  'mori-webcas-contact.html': {
+    expected: {
+      // 森ビル総合問合せ (webcas)。コード化 c_q* 名・placeholder のみが信号。
+      // かな対はひらがな placeholder 由来で解決。
+      'c_q28_first': 'やまだ',
+      'c_q28_second': 'たろう',
+      // 会社名/学校名 placeholder は学校語彙に載り学校値が入る (honest pin)。
+      'c_q14': '都立日比谷高校',
+      // citycode 欄に市区町村値が入る (honest pin。電話3分割の誤結合が候補)。
+      'c_q17_citycode': '千代田区',
+    },
+    excluded: [
+      'c_q10_first/second (text): 漢字 placeholder 森/太郎, stay unclassified (LLM fallback; kanji person-name placeholder does not infer fullName, same as kobe-city ANSWER1)',
+      'c_q27/c_q27_confirm (text): type=text with an email placeholder, stay unclassified (LLM fallback; email-via-placeholder candidate, same as otsuka mail)',
+      'c_q17_areacode/subscribercode (text): bare 電話 3-split with placeholder only, stay unclassified (LLM fallback; tel-split-by-name candidate, same as kobe-city ANSWER6)',
+      'c_q29 (text): 住所 placeholder 例, stays unclassified (LLM fallback; address-via-placeholder candidate)',
+      'c_q3 (select): only a `--` option, correctly warn-no-option',
+      'c_q30 (text): 担当者名, no profile value, correctly unfilled',
+      '__pid (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__pageId (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '__token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'c_q6 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'wcf5start (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

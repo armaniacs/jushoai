@@ -1,0 +1,21 @@
+<!-- Minimal reproduction of https://mori.webcas.net/form/pub/f008/contact. Values stripped; trim further before committing. -->
+<form>
+      <input name="c_q10_first" id="c_q10_first" type="text" value="" placeholder="森" maxlength="100">
+      <input name="c_q10_second" id="c_q10_second" type="text" value="" placeholder="太郎" maxlength="100">
+      <input name="c_q28_first" id="c_q28_first" type="text" value="" placeholder="もり" maxlength="100">
+      <input name="c_q28_second" id="c_q28_second" type="text" value="" placeholder="たろう" maxlength="100">
+      <input name="c_q27" id="c_q27" type="text" value="" placeholder="taro.mori@mori.co.jp" maxlength="255">
+      <input name="c_q27_confirm" id="c_q27_confirm" type="text" value="" placeholder="taro.mori@mori.co.jp" maxlength="255">
+      <input name="c_q14" id="c_q14" type="text" value="" placeholder="会社名、学校名などを入力ください" maxlength="255">
+      <input name="c_q17_areacode" id="c_q17_areacode" type="tel" value="" placeholder="00" maxlength="5">
+      <input name="c_q17_citycode" id="c_q17_citycode" type="tel" value="" placeholder="1234" maxlength="4">
+      <input name="c_q17_subscribercode" id="c_q17_subscribercode" type="tel" value="" placeholder="5678" maxlength="4">
+      <input name="c_q29" id="c_q29" type="text" value="" placeholder="東京都港区六本木6-10-1六本木ヒルズ森タワー" maxlength="255">
+      <select name="c_q3" id="c_q3"><option value="">--</option></select>
+      <input name="c_q30" id="c_q30" type="text" value="" placeholder="担当者名" maxlength="255">
+<!-- skip: __pid (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: __pageId (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: __token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+<!-- skip: c_q6 (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: wcf5start (submit): action element, never a fill target (exclude) -->
+</form>

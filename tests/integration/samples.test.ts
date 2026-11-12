@@ -417,4 +417,7 @@ describe('sample forms end to end', () => {
   it('hulic-develop-plan.html fills the in-scope fields', async () => {
     expect(await planFor('hulic-develop-plan.html')).toEqual(expectedFor('hulic-develop-plan.html'));
   });
+  it('mori-webcas-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('mori-webcas-contact.html')).toEqual(expectedFor('mori-webcas-contact.html'));
+  });
 });
