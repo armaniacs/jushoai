@@ -168,3 +168,29 @@
 | 98 | https://www.sbigroup.co.jp/contact/ | J | SBI HD | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
 | 99 | https://www.orix.co.jp/contact/ | J | オリックス | 除外 | 到達不能 (HTTP 404) |
 | 100 | https://www.ms-ad-hd.com/contact/ | J | MS&AD HD | 除外 | 到達不能 (HTTP 404) |
+
+### K 不動産業、物品賃貸業
+
+| 101 | https://www.kentaku.co.jp/contact/ | K | 大東建託 | 除外 | フォームなし (HTTP 200。静的formは検索2件のみ) |
+| 102 | https://www.livable.co.jp/contact/ | K | 東急リバブル | 除外 | フォームなし (HTTP 200「各種お問い合わせ」ハブ。静的formなし。実窓口は別導線とみられる) |
+| 103 | https://www.rehouse.or.jp/contact/ | K | 三井のリハウス | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 104 | https://www.stepon.co.jp/contact/ | K | 住友不動産販売 | 除外 | 到達不能 (HTTP 404) |
+| 105 | https://www.daiwaliving.co.jp/contact/ | K | 大和リビング | 除外 | 到達不能 (HTTP 404。転送先は賃貸トップで問合せformなし) |
+| 106 | https://www.ur-net.go.jp/contact/ | K | UR都市機構 | 除外 | 到達不能 (HTTP 404) |
+| 107 | https://www.mf-realty.jp/contact/ | K | 三井不動産リアルティ | 除外 | 到達不能 (HTTP 403。実体は404頁。静的formなし) |
+| 108 | https://www.nomura-solutions.co.jp/contact/ | K | 野村不動産ソリューションズ | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
+| 109 | https://www.apaman.co.jp/contact/ | K | アパマン | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせ」。action=/mail_send.php、input 12・textarea 1。company・your_name・kana・tel_mobile/home・fax・zipcode・address・email・remarks。郵便・住所・電話・メール揃いで多様性◎) |
+| 110 | https://www.samty.co.jp/contact/ | K | サムティ | 除外 | 到達不能 (HTTP 404) |
+
+### L 学術研究、専門・技術サービス業
+
+| 111 | https://www.riken.jp/contact/ | L | 理化学研究所 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 112 | https://www.aist.go.jp/contact/ | L | 産業技術総合研究所 | 除外 | 到達不能 (HTTP 404) |
+| 113 | https://www.jaxa.jp/contact/ | L | JAXA | 除外 | 到達不能 (HTTP 404) |
+| 114 | https://www.nri.com/jp/contact | L | 野村総合研究所 | 除外 | フォームなし (/jp/contactがトップに転送。静的formは検索のみ) |
+| 115 | https://www.mri.co.jp/contact/ | L | 三菱総合研究所 | 除外 | 到達不能 (HTTP 404) |
+| 116 | https://www.jri.co.jp/contact/ | L | 日本総研 | 除外 | フォームなし (HTTP 200。静的formは検索のみ) |
+| 117 | https://www.dir.co.jp/contact/ | L | 大和総研 | 除外 | フォームなし (HTTP 200。静的formは検索3件のみ) |
+| 118 | https://www.mizuho-rt.co.jp/contact/ | L | みずほリサーチ | 除外 | 到達不能 (HTTP 403 Access Denied) |
+| 119 | https://www.jpc-net.jp/contact/ | L | 日本生産性本部 | 除外 | フォームなし (HTTP 200。静的formは検索3件のみ) |
+| 120 | https://www.jpaa.or.jp/contact/ | L | 日本弁理士会 | 有望 P1 | 静的実フォーム (HTTP 200「お問い合わせ」。MW WP Form、input 18・textarea 1・select 2。会社名・部署・役職・氏名・フリガナ・メールアドレス確認・電話番号3分割・職種/業種select。日本語名項目が素直で多様性◎。住所欄なし) |
