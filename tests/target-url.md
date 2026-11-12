@@ -106,3 +106,4 @@
 - https://www.wadakohsan.co.jp/inquiry/ → wadakohsan-inquiry.html
 - https://www.jiritsu-red.jp/contact/ → jiritsu-red-contact-form.html
 - https://www.hhp.co.jp/inquiry/site/index/ → hhp-site-inquiry.html
+- https://www.nttud.co.jp/contact/nttud_inquiry/ → nttud-inquiry.html
