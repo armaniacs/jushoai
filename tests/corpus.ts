@@ -4839,6 +4839,45 @@ const LEDGER = {
       'ftCourse_r24 (checkbox): out of scope (skip fixed)',
     ],
   },
+  'eishinkan-contact-form.html': {
+    expected: {
+      // 英進館 (SMP)。実ページ Shift_JIS のため tooling の placeholder
+      // 文字化けを正規の日本語に復元済み (No.14 京進と同形)。
+      'student_sei': '山田',
+      'student_mei': '太郎',
+      // student/guardian のカナ欄 (seiKana/meiKana) は未分類のまま
+      // (LLM fallback; keishin の fam_name2 解決と対照的。suffix 読分け候補)。
+      'school': '都立日比谷高校',
+      // gender radio (男性/女性) は実値つきで復元。gender 群に載り値 2。
+      'gender': '2',
+      'phone:a': '090',
+      'phone:e': '1234',
+      'phone:n': '5678',
+      'email': 'yamada@example.com',
+      'email:cf': 'yamada@example.com',
+      'zipcode:a': '100',
+      'zipcode:t': '0001',
+      'addr1': '千代田区千代田1-1',
+      'addr2': '千代田ビル101',
+      // addr3 は address1 と同値に載る (refine の重複。honest pin)。
+      'addr3': '千代田区千代田1-1',
+      // 保護者欄も同一プロファイル値で fill (honest pin)。
+      'guardian_sei': '山田',
+      'guardian_mei': '太郎',
+    },
+    excluded: [
+      'school_year/entrance_exam/placeArea/placeName/birthday_y/m/d/pref/relationship/reason (select): only a `--` option, correctly warn-no-option',
+      'reason_oth (text): bare conditional detail field, stays unclassified (LLM fallback)',
+      'gender (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'inquiry (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'privacy (checkbox): out of scope (skip fixed)',
+      'privacy (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'detect (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'SMPFORM (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'mode (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'submit (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
