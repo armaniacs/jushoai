@@ -3428,6 +3428,30 @@ const LEDGER = {
       '(no name/id) (image): unaddressable (exclude)',
     ],
   },
+  'kumon-annai-form.html': {
+    expected: {
+      // 公文教室案内。placeholder の例が分類信号。name1/2 (漢字)・name3/4 (カナ) は連番分割で素直に解決。
+      'name1': '山田',
+      'name2': '太郎',
+      'name3': 'ヤマダ',
+      'name4': 'タロウ',
+      // post は type=tel・maxlength=7 のため undashed。
+      'post': '1000001',
+      // add2 (番地以下) は addressNoPref と building の結合値が入る (honest pin)。
+      'add2': '千代田1-1 千代田ビル101',
+      // tel/tel2/tel3 は placeholder 123/4567/8910 の桁幅どおりに分割対に載る。
+      'tel': '090',
+      'tel2': '1234',
+      'tel3': '5678',
+      'mail': 'yamada@example.com',
+    },
+    excluded: [
+      'cprg/gakunen1/gakunen2/gakunen3/add1/muni/town (select): only a `--` option, correctly warn-no-option',
+      'text (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'form_submit (submit): action element, never a fill target (exclude)',
+      'status (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

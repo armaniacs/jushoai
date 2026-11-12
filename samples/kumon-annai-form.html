@@ -1,0 +1,23 @@
+<!-- Minimal reproduction of https://www.kumon.ne.jp/inquiry/annai.php. Values stripped; trim further before committing. -->
+<form>
+      <select name="cprg" id="cprg"><option value="">--</option></select>
+      <input name="name1" id="a_name1" type="text" value="" placeholder="例）公文" maxlength="20">
+      <input name="name2" id="a_name2" type="text" value="" placeholder="例）太郎" maxlength="20">
+      <input name="name3" id="name3" type="text" value="" placeholder="例）クモン" maxlength="20">
+      <input name="name4" id="name4" type="text" value="" placeholder="例）タロウ" maxlength="20">
+      <select name="gakunen1" id="a_gakunen1"><option value="">--</option></select>
+      <select name="gakunen2" id="gakunen2"><option value="">--</option></select>
+      <select name="gakunen3" id="gakunen3"><option value="">--</option></select>
+      <input name="post" id="zip" type="tel" value="" placeholder="例）1234567" maxlength="7">
+      <select name="add1" id="metro"><option value="">--</option></select>
+      <select name="muni" id="muni"><option value="">--</option></select>
+      <select name="town" id="town"><option value="">--</option></select>
+      <input name="add2" id="a_add2" type="text" value="" placeholder="例）1丁目2番3号ハイツ公文201" maxlength="200">
+      <input name="tel" id="a_tel" type="tel" value="" placeholder="123" maxlength="5">
+      <input name="tel2" id="a_tel2" type="tel" value="" placeholder="4567" maxlength="4">
+      <input name="tel3" id="a_tel3" type="tel" value="" placeholder="8910" maxlength="4">
+      <input name="mail" id="a_mail" type="email" value="" placeholder="例）example@mail.com" maxlength="512">
+<!-- skip: text (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: form_submit (submit): action element, never a fill target (exclude) -->
+<!-- skip: status (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>
