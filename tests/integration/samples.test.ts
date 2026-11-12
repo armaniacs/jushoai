@@ -420,4 +420,7 @@ describe('sample forms end to end', () => {
   it('mori-webcas-contact.html fills the in-scope fields', async () => {
     expect(await planFor('mori-webcas-contact.html')).toEqual(expectedFor('mori-webcas-contact.html'));
   });
+  it('openhouse-customer-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('openhouse-customer-contact.html')).toEqual(expectedFor('openhouse-customer-contact.html'));
+  });
 });
