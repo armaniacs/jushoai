@@ -3821,6 +3821,39 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'tomas-trial-form.html': {
+    expected: {
+      // TOMAS 体験授業 (Laravel)。保護者+生徒の氏名・カナ構成。
+      'last_name': '山田',
+      'first_name': '太郎',
+      // 生徒氏名も同一プロファイル値で fill (yotsuya parent と同形、honest pin)。
+      'student_last_name': '山田',
+      'student_first_name': '太郎',
+      'zip1': '100',
+      'zip2': '0001',
+      'city': '千代田区',
+      // town (町域以下) は addressNoPref+building 結合値に載る。
+      'town': '千代田1-1 千代田ビル101',
+      'email': 'yamada@example.com',
+    },
+    excluded: [
+      'student_last_kana/student_first_kana/guardian_last_kana/guardian_first_kana (text): bare カナ欄。placeholder セイ/メイのみでは未分類 (LLM fallback; eikoh と同型)',
+      'tel x2 (tel/text): 同名2欄の重複 + bare。未分類のまま (LLM fallback; duplicate-name tel candidate)',
+      'tel1/tel2/tel3 (text): bare 3-split (placeholder 000/0000) で未分類 (tel-split-by-name candidate, same as No.1)',
+      'gakunen/pref/selapplicant/selClass/taiken_time/kyouka/selexam (select): only a `--` option, correctly warn-no-option',
+      'taiken_date (text): bare 体験希望日 with no signal, stays unclassified (LLM fallback)',
+      'toggle (checkbox): out of scope (skip fixed)',
+      '_step (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'seibetsu (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'seibetsu (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'question (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'newsletter (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'newsletter (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'tl-agree-check (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
