@@ -107,6 +107,7 @@
 - https://www.jiritsu-red.jp/contact/ → jiritsu-red-contact-form.html
 - https://www.hhp.co.jp/inquiry/site/index/ → hhp-site-inquiry.html
 - https://www.nttud.co.jp/contact/nttud_inquiry/ → nttud-inquiry.html
+- https://www.sekisuihouse.co.jp/cgi-bin/request/catalog.cgi → sekisui-catalog-request.html
 - https://www.tomas.co.jp/contact/trial_lesson/ → tomas-trial-form.html
 - https://www.try-gakuin.com/reserve/ → try-gakuin-reserve-form.html
 - https://www.meikogijuku.jp/contact/entry → meiko-contact-form.html
