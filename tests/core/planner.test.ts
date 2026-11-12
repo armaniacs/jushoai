@@ -9,7 +9,7 @@ const profile: Profile = {
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
-  companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -672,6 +672,7 @@ describe('value row table (PBI-218)', () => {
       department: '普通科',
       company: '株式会社サンプル',
       companyDepartment: '開発部',
+      jobTitle: '課長',
       companyNameKana: 'カブシキガイシャサンプル',
       gender: '女性',
       ageDecade: '30代',
@@ -701,7 +702,7 @@ describe('value row table (PBI-218)', () => {
         'email', 'tel', 'tel1', 'tel2', 'tel3', 'zip', 'zip1', 'zip2',
         'prefecture', 'city', 'street', 'building', 'addressFull', 'addressNoPref',
         'birthYear', 'birthMonth', 'birthDay', 'birthEra', 'birthday',
-        'school', 'department', 'company', 'companyDepartment', 'companyNameKana'].sort(),
+        'school', 'department', 'company', 'companyDepartment', 'jobTitle', 'companyNameKana'].sort(),
     );
     const byCat = new Map(VALUE_ROWS.map((r) => [r.category, r] as const));
     // The old ABBREVIATABLE set, now the abbreviatable column.

@@ -13,7 +13,7 @@ vi.mock('../../src/storage', () => ({
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
         birthday: '', school: '', department: '',
-        companyName: '', companyDepartment: '', companyNameKana: '',
+        companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
       {
@@ -21,7 +21,7 @@ vi.mock('../../src/storage', () => ({
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
         birthday: '', school: '', department: '',
-        companyName: '', companyDepartment: '', companyNameKana: '',
+        companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
       {
@@ -29,7 +29,7 @@ vi.mock('../../src/storage', () => ({
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
         birthday: '', school: '', department: '',
-        companyName: '', companyDepartment: '', companyNameKana: '',
+        companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
     ],

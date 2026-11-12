@@ -71,6 +71,7 @@ export function makeSampleProfile(rand: Rand = defaultRand): Omit<Profile, 'id'>
     department: '',
     companyName: '',
     companyDepartment: '',
+    jobTitle: '',
     companyNameKana: '',
     email: `${lastNameRomaji.toLowerCase()}.${firstNameRomaji.toLowerCase()}${serial}@example.com`,
     tel: `${telHead}${digits(rand, 8)}`,

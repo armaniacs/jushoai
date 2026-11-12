@@ -5,7 +5,7 @@ import { chromeLaunchArgs } from './chrome-flags';
 // it never reads or mutates the real process.env and never launches a browser.
 describe('chromeLaunchArgs', () => {
   it('includes neither --no-sandbox nor --headless=new for an empty env, but the unconditional flags', () => {
-    expect(chromeLaunchArgs({})).toEqual(['--disable-dev-shm-usage', '--disable-gpu']);
+    expect(chromeLaunchArgs({})).toEqual(['--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=light']);
   });
 
   it('adds --no-sandbox when CI is set', () => {
@@ -30,7 +30,7 @@ describe('chromeLaunchArgs', () => {
 
   it('adds --headless=new only when HEADLESS is exactly 1', () => {
     expect(chromeLaunchArgs({ HEADLESS: '1' })).toEqual([
-      '--headless=new', '--disable-dev-shm-usage', '--disable-gpu',
+      '--headless=new', '--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=light',
     ]);
     expect(chromeLaunchArgs({ HEADLESS: '0' })).not.toContain('--headless=new');
   });
@@ -38,13 +38,13 @@ describe('chromeLaunchArgs', () => {
   it('keeps the expected set for combined envs regardless of order', () => {
     // Flag order is meaningless to Chrome, so assert as a set: arrayContaining
     // catches a missing flag and the length check catches a surplus one.
-    const full = ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'];
+    const full = ['--headless=new', '--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=light'];
     for (const env of [{ HEADLESS: '1', CI: '1' }, { HEADLESS: '1', E2E_NO_SANDBOX: '1' }] as const) {
       const args = chromeLaunchArgs({ ...env });
       expect(args).toEqual(expect.arrayContaining(full));
       expect(args).toHaveLength(full.length);
     }
-    const ciOnly = ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu'];
+    const ciOnly = ['--no-sandbox', '--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=light'];
     const ciArgs = chromeLaunchArgs({ CI: '1' });
     expect(ciArgs).toEqual(expect.arrayContaining(ciOnly));
     expect(ciArgs).toHaveLength(ciOnly.length);

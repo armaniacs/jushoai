@@ -15,7 +15,7 @@ const profile: Profile = {
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
   birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
-  companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
 };
@@ -126,6 +126,26 @@ describe('sample forms end to end', () => {
 
   it('reinvent-registration-contact fills latin values and leaves the optional ID names empty', async () => {
     expect(await planFor('reinvent-registration-contact.html')).toEqual(expectedFor('reinvent-registration-contact.html'));
+  });
+
+  // T3: MS Forms (Tokyo OpenRoaming) minimal reproduction. The live page
+  // renders client-side, so the fixture transcribes the reported questions
+  // with the real placeholders. Rules fill 1-6; 7 (trailing question) stays
+  // unclassified.
+  it('ms-forms-openroaming pins the current rule classification', async () => {
+    const { html } = corpusEntry('responsepage-aspx.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    expect(fields.map((f) => f.meta.name)).toEqual(['q1', 'q2', 'q3', 'q4', 'q5', 'q6', 'q7']);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    expect(items.map((i) => i.cls.category)).toEqual([
+      'fullName', 'company', 'companyDepartment', 'jobTitle', 'email', 'tel', 'unknown',
+    ]);
+    expect(items.map((i) => i.cls.confidence)).toEqual([0.7, 0.7, 0.7, 0.7, 0.7, 0.7, 0]);
+    expect(items.map((i) => i.cls.source)).toEqual(['rule', 'rule', 'rule', 'rule', 'rule', 'rule', 'rule']);
+    expect(await planFor('responsepage-aspx.html')).toEqual(expectedFor('responsepage-aspx.html'));
   });
 
   it('anchors the table-form button on the last name field', () => {
@@ -263,6 +283,7 @@ describe('sample forms end to end', () => {
     'apaman-contact.html',
     'jpaa-contact.html',
     'nkanzai-contact.html',
+    'responsepage-aspx.html',
   ];
   it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
     expect(await planFor(file)).toEqual(expectedFor(file));

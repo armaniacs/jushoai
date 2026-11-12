@@ -12,7 +12,8 @@ export const CATEGORIES = [
   'birthday',
   'school', 'department',
   // PBI-119: 会社名・会社の部署。既存 department は学部・学科用のまま。
-  'company', 'companyDepartment',
+  // T3: 役職名（jobTitle）。単独の役職語だけが分類対象。
+  'company', 'companyDepartment', 'jobTitle',
   // PBI-160: 会社名フリガナ（terminal カテゴリ。resolveKana の帰属変換を通さない）。
   'companyNameKana',
   'unknown',
@@ -106,6 +107,8 @@ export interface Profile {
   // PBI-119: 会社名・会社の部署（いずれも任意・空可・検証なし）。既存 department は学部・学科用。
   companyName: string;
   companyDepartment: string;
+  // T3: 役職名（任意・空可・検証なし）。部署名と同扱い。
+  jobTitle: string;
   // PBI-160: 会社名フリガナ（任意・空可・検証なし）。
   companyNameKana: string;
   email: string;
@@ -146,6 +149,6 @@ export const EMPTY_PROFILE: Profile = {
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '',
   birthday: '', school: '', department: '',
-  companyName: '', companyDepartment: '', companyNameKana: '',
+  companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: '', tel: '',
 };

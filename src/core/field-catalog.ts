@@ -49,6 +49,7 @@ export const PROFILE_FIELD_CATALOG: readonly ProfileFieldEntry[] = [
   { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル', guest: false },
   { key: 'companyNameKana', label: '会社名（フリガナ・任意）', placeholder: 'カブシキガイシャサンプル', guest: false },
   { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部', guest: false },
+  { key: 'jobTitle', label: '役職（任意）', placeholder: '課長', guest: false },
   { key: 'email', label: 'メールアドレス', placeholder: 'yamada@example.com', type: 'email', guest: true },
   { key: 'tel', label: '電話番号', placeholder: '09012345678', type: 'tel', guest: true },
 ];

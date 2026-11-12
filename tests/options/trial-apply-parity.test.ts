@@ -103,7 +103,7 @@ function blankProfile(id: string): Profile {
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
     birthday: '', school: '', department: '',
-    companyName: '', companyDepartment: '', companyNameKana: '',
+    companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '',
   };
 }
@@ -120,7 +120,7 @@ function filledProfile(id: string): Profile {
     lastName: '鈴木', firstName: '', lastNameKana: '', firstNameKana: 'スズキ',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
     birthday: '', school: '', department: '経済学部',
-    companyName: '', companyDepartment: '', companyNameKana: '',
+    companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '0312345678',
   };
 }
@@ -157,7 +157,7 @@ const SAMPLE_P: Omit<Profile, 'id'> = {
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '男性',
   birthday: '', school: 'サンプル高校', department: '',
-  companyName: '', companyDepartment: '', companyNameKana: '',
+  companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: 'yamada.taro@example.com', tel: '',
 };
 
@@ -167,7 +167,7 @@ const SAMPLE_P_FULL: Omit<Profile, 'id'> = {
   lastNameRomaji: 'Sato', firstNameRomaji: 'Hanako',
   gender: '女性',
   birthday: '1990-05-07', school: 'サンプル大学', department: '文学部',
-  companyName: '株式会社サンプル', companyDepartment: '開発部',
+  companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'sato@example.com', tel: '09012345678',
 };
@@ -295,6 +295,7 @@ describe('in-place repair of a non-blank first card', () => {
       department: '経済学部', // kept
       companyName: '',
       companyDepartment: '',
+      jobTitle: '',
       companyNameKana: '',
       email: 'yamada.taro@example.com', // filled
       tel: '0312345678', // kept

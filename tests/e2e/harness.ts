@@ -61,6 +61,8 @@ async function buildSession(): Promise<WebDriver> {
   if (bin) options.setBinary(bin);
   if (process.env.HEADLESS === '1') options.addArguments('-headless');
   options.setPreference('extensions.webextensions.uuids', JSON.stringify({ [GECKO_ID]: EXT_UUID }));
+  // PBI-162 banner asserts the light token; without this the run follows the OS appearance (PBI-209 dark override).
+  options.setPreference('layout.css.prefers-color-scheme.content-override', 1);
   // Chrome-context scripting (used to open moz-extension:// tabs) needs geckodriver's system-access flag.
   const service = new firefox.ServiceBuilder().addArguments('--allow-system-access');
   const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options)

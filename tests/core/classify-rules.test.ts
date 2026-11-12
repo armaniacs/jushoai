@@ -198,13 +198,14 @@ describe('classifyField: birth, school, department', () => {
     expect(cat({ label: 'Department' })).toBe('department');
   });
 
-  // PBI-119: 緩和境界。ご担当者名（名前系）・会社の生年月日（誕生文脈）・部署名、
+  // PBI-119: 緩和境界。ご担当者名（名前系）・会社の生年月日（誕生文脈）、
   // そしてカナ欄（会社名（フリガナ））・会社電話・役職・店舗・法人種別は
-  // 従来どおり company/companyDepartment にならない。
+  // 従来どおり company/companyDepartment にならない。T2: 単独の部署名は
+  // companyDepartment の語彙になったため negatives から外す（T2 の positive
+  // が所有する）。複合欄（会社名・部署名）は company のまま。
   it.each([
     { label: 'ご担当者名' },
     { label: '会社の生年月日' },
-    { label: '部署名' },
     { label: '会社名（フリガナ）' },
     { label: '会社電話' },
     { label: '役職' },
@@ -212,6 +213,156 @@ describe('classifyField: birth, school, department', () => {
     { label: '法人種別' },
   ] as Parameters<typeof makeMeta>[0][])('leaves %j outside the company categories', (p) => {
     expect(cat(p) ?? '').not.toMatch(/^(company|companyDepartment)$/);
+  });
+});
+
+// T2: standalone department wording resolves to the existing companyDepartment
+// category (MS Forms q3 shape). The allowance is 部署名 as a standalone word:
+// the 会社名・部署名 compound still reads as company (the COMPANY entry
+// precedes the department entry, and the regex guard keeps the compound joint
+// out of the department signal even if the order ever changes).
+describe('classifyField: standalone department wording (T2)', () => {
+  it.each([
+    { label: '所属部署名' },
+    { label: '3.所属部署名' },
+    { label: '所属部署' },
+    { label: '部署名' },
+    { name: 'q3', label: '3.所属部署名', placeholder: '回答を入力してください' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as companyDepartment', (p) => {
+    expect(cat(p)).toBe('companyDepartment');
+  });
+
+  it.each([
+    { label: '所属部署名' },
+    { label: '部署名' },
+  ] as Parameters<typeof makeMeta>[0][])('is confident (rule, >= 0.6) for %j', (p) => {
+    const c = classifyField(makeMeta(p));
+    expect(c).toMatchObject({ category: 'companyDepartment', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('reaches the legend-only department case without an own office word', () => {
+    expect(classifyField(makeMeta({ name: 'team', nearby: '部署名' })))
+      .toMatchObject({ category: 'companyDepartment', confidence: 0.65 });
+  });
+
+  it('keeps the 会社名・部署名 compound on company, never the department', () => {
+    expect(cat({ label: '会社名・部署名' })).toBe('company');
+  });
+
+  // F1: sysmex shape (name=department + 所属部署名 label) reads as the
+  // company department, not the school department. Bare 部署 keeps the
+  // school reading, so the guard is 部署名-only.
+  it('reads name=department with a 所属部署名 label as the company department', () => {
+    expect(cat({ name: 'department', label: '所属部署名' })).toBe('companyDepartment');
+    const c = classifyField(makeMeta({ name: 'department', label: '所属部署名' }));
+    expect(c).toMatchObject({ category: 'companyDepartment', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('keeps bare-部署 English-token fields on the school reading', () => {
+    expect(cat({ name: 'department', label: '部署' })).toBe('department');
+    expect(cat({ name: 'department', label: '所属部署' })).toBe('department');
+  });
+
+  // F2: company-word department joints keep the company reading (never the
+  // department), including a non-・ separator variant.
+  it.each([
+    { label: '企業名・部署名' },
+    { label: '会社名/部署名' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps the joint %j on company, never the department', (p) => {
+    expect(cat(p)).toBe('company');
+    expect(cat(p)).not.toBe('companyDepartment');
+  });
+
+  it('reads a bare 企業名 label as the company', () => {
+    expect(cat({ label: '企業名' })).toBe('company');
+  });
+
+  // F4: own 部署名 under a 会社名 heading reads as the company department.
+  it('reads an own 部署名 under a 会社名 heading as the company department', () => {
+    expect(classifyField(makeMeta({ label: '部署名', nearby: '会社名' })))
+      .toMatchObject({ category: 'companyDepartment', confidence: 0.7 });
+  });
+
+  it.each([
+    { label: '応募団体名' },
+    { label: '申込団体名' },
+    { label: '会社名（フリガナ）' },
+    { label: '会社の生年月日' },
+    { label: '役職' },
+    { label: '役職名' },
+    { label: '会社電話' },
+    { label: '店舗名' },
+    { label: '法人種別' },
+    { label: 'ご担当者名' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside companyDepartment', (p) => {
+    expect(cat(p) ?? null).not.toBe('companyDepartment');
+  });
+
+  it('keeps the 部署・役職 compound on the existing department reading', () => {
+    expect(cat({ label: '部署・役職' })).toBe('companyDepartment');
+  });
+});
+
+// T3: standalone role wording resolves to the new jobTitle category (MS Forms
+// q4 shape). The allowance is 役職 as a standalone word: joints with a company
+// or department word never read as the title (部署名・役職名 keeps the
+// department reading, 部署・役職 keeps the existing companyDepartment pin, and
+// company-word joints stay on company). Legend-only 役職 (tokyu-tenant job)
+// stays unknown: the title has no legend entry on purpose.
+describe('classifyField: standalone role wording (T3)', () => {
+  it.each([
+    { label: '役職名' },
+    { label: '役職' },
+    { label: '4.役職名' },
+    { name: 'q4', label: '4.役職名', placeholder: '回答を入力してください' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as jobTitle', (p) => {
+    expect(cat(p)).toBe('jobTitle');
+  });
+
+  it.each([
+    { label: '役職名' },
+    { label: '役職' },
+  ] as Parameters<typeof makeMeta>[0][])('is confident (rule, >= 0.6) for %j', (p) => {
+    const c = classifyField(makeMeta(p));
+    expect(c).toMatchObject({ category: 'jobTitle', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('reads an own 役職名 at 0.7', () => {
+    expect(classifyField(makeMeta({ label: '4.役職名' })))
+      .toMatchObject({ category: 'jobTitle', confidence: 0.7 });
+  });
+
+  it('keeps the 部署名・役職名 compound on the department reading, never the title', () => {
+    expect(cat({ label: '部署名・役職名' })).toBe('companyDepartment');
+    expect(cat({ label: '部署名・役職名' })).not.toBe('jobTitle');
+  });
+
+  it('keeps the 会社名・役職名 compound on company, never the title', () => {
+    expect(cat({ label: '会社名・役職名' })).toBe('company');
+    expect(cat({ label: '会社名・役職名' })).not.toBe('jobTitle');
+  });
+
+  it('keeps the 部署・役職 compound on the existing department reading', () => {
+    expect(cat({ label: '部署・役職' })).toBe('companyDepartment');
+  });
+
+  it('leaves legend-only 役職 (tokyu-tenant job shape) unknown', () => {
+    expect(cat({ name: 'job', nearby: '役職' })).toBeNull();
+  });
+
+  it.each([
+    { label: '役職（フリガナ）' },
+    { label: 'ご担当者名' },
+    { label: '会社の生年月日' },
+    { label: '会社名（フリガナ）' },
+    { label: '会社電話' },
+    { label: '店舗名' },
+    { label: '法人種別' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside jobTitle', (p) => {
+    expect(cat(p) ?? null).not.toBe('jobTitle');
   });
 });
 
@@ -521,7 +672,7 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
     lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
     gender: '', birthday: '', school: '', department: '',
-    companyName: '', companyDepartment: '', companyNameKana: '', email: '', tel: '09012345678',
+    companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '', email: '', tel: '09012345678',
   };
   const address: Address = {
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',
@@ -776,8 +927,9 @@ describe('classifyField: Japanese labels', () => {
     { label: '件名' }, { label: '題名' }, { label: '商品名' }, { label: '品名' },
     { label: '店名' }, { label: '国名' }, { label: 'ユーザー名' }, { label: 'お届け先名' },
     // 会社名は PBI-119 で company に分類されるため negatives から外れ、
-    // 部署名は companyDepartment の緩和境界として negatives に残る。
-    { label: 'ご担当者名' }, { label: '部署名' }, { label: '備考' },
+    // 単独の部署名は T2 で companyDepartment に分類されるため negatives から
+    // 外れる（T2 の positive が所有する）。
+    { label: 'ご担当者名' }, { label: '備考' },
     { label: 'お問い合わせ内容' }, { label: 'パスワード' },
     { name: 'user_name' }, { name: 'card_name' }, { name: 'subject' },
     { label: 'カード名義' },

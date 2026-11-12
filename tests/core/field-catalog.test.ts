@@ -58,6 +58,19 @@ describe('field catalog (PBI-158)', () => {
     expect(GUEST_PROFILE_FIELDS.some((f) => f.key === 'companyNameKana')).toBe(false);
   });
 
+  // T3: 役職は companyDepartment の直後に options のみで載り、guest には載らない。
+  it('carries the job-title row for options only, right after the department row', () => {
+    const row = PROFILE_FIELD_CATALOG.find((f) => f.key === 'jobTitle')!;
+    expect(row.label).toBe('役職（任意）');
+    expect(row.placeholder).toBe('課長');
+    expect(row.guest).toBe(false);
+    expect(OPTIONS_PROFILE_FIELDS.find((f) => f.key === 'jobTitle')!.label)
+      .toBe('役職（任意）');
+    expect(GUEST_PROFILE_FIELDS.some((f) => f.key === 'jobTitle')).toBe(false);
+    expect(PROFILE_FIELD_CATALOG.indexOf(row)).toBe(
+      PROFILE_FIELD_CATALOG.findIndex((f) => f.key === 'companyDepartment') + 1);
+  });
+
   it('marks the building note as options-only too', () => {
     expect(OPTIONS_ADDRESS_FIELDS.find((f) => f.key === 'building')!.label)
       .toBe('建物名・部屋番号（任意）');

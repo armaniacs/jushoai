@@ -84,11 +84,50 @@ const DEPT = /学部|学科|専攻|department|major|faculty/;
 // この一箇所の条件を共有する。応募/申込 の団体名（応募団体名・申込団体名）は
 // 応募者側の団体で、会社プロファイルの注入先ではないため否定文脈で除外する
 // （officeEligible と同型の除外を COMPANY_OFFICE 自身に持たせる）。
-const COMPANY_OFFICE = /(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名/;
-const DEPT_OFFICE = /部署(?!名)/;
+const COMPANY_OFFICE = /(?:会社|法人|企業)名|(?:(?<!応募)(?<!申込)団体名)|社名/;
+// T2: standalone 部署名 also reads as the company department (MS Forms
+// 3.所属部署名 shape). The compound joint stays out: a 部署名 glued to a
+// company word (会社名・部署名) keeps the company reading, so the negative
+// lookbehinds hold the joint even if DISPATCH order ever changes. Bare /部署/
+// would also swallow such joints, hence the narrower alternation.
+const DEPT_OFFICE = /(?:(?<!会社名・)(?<!法人名・)(?<!団体名・)(?<!社名・)(?<!企業名・)部署名|部署(?!名))/;
+// A 部署名 glued to a company word (会社名・部署名, 企業名・部署名, and non-・
+// separator variants such as 会社名/部署名) keeps the company reading. The
+// joint holds even if DISPATCH order ever changes, so the standalone 部署名
+// signal never fires there.
+const COMPANY_WORD = /会社|法人|企業|団体|店舗|事業所|営業所|社/;
+const hasCompoundDeptJoint = (own: string): boolean =>
+  /部署名/.test(own) && COMPANY_WORD.test(own);
 const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
-const officeEligible = (own: string): boolean =>
-  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && (COMPANY_OFFICE.test(own) || DEPT_OFFICE.test(own));
+const officeEligible = (own: string): boolean => {
+  if (KANA_NOTE.test(own) || BIRTH_CTX.test(own)) return false;
+  if (COMPANY_OFFICE.test(own)) return true;
+  return DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
+};
+// The standalone 部署名 signal for the company-department entry: same gate
+// as officeEligible but without the company-word alternative, so a joint
+// never reads as the department even if DISPATCH order ever changes.
+const deptOfficeEligible = (own: string): boolean =>
+  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own)
+  && DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
+// F1: a Japanese 部署名 word outranks the English school token (sysmex
+// name=department + 所属部署名 label reads as the company department, not
+// the school department). Bare 部署 keeps the school reading, so the guard
+// is 部署名-only and the other name=department fixtures stay unchanged.
+const hasOwnDeptName = (own: string): boolean =>
+  officeEligible(own) && /部署名/.test(own);
+// T3: standalone 役職/役職名 reads as the job title (MS Forms 4.役職名
+// shape). A joint with a company or department word (部署名・役職名,
+// 部署・役職, 会社名・役職名) never reads as the title: the department entry
+// (which precedes the title entry) keeps the 部署 joints, and the joint block
+// keeps the company-word shapes out. Kana/birth companions stay excluded with
+// the office entries. The title has no legend entry on purpose: the only
+// legend-only 役職 shape (tokyu-tenant job) stays unknown.
+const JOB_OFFICE = /役職/;
+const hasCompoundJobJoint = (own: string): boolean =>
+  /役職/.test(own) && /会社|法人|企業|団体|店舗|事業所|営業所|部署|社/.test(own);
+const jobOfficeEligible = (own: string): boolean =>
+  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && JOB_OFFICE.test(own) && !hasCompoundJobJoint(own);
 // PBI-119 + レビュー指摘: legend 側の gate。旧 legend gate（officeEligible）は
 // 欄自身の office 語一致を要求したため、「ご記入ください + 共有見出し会社名」の
 // ような shared heading ケースが到達不能だった（own 語が一致すれば own entry
@@ -222,8 +261,11 @@ const DISPATCH: readonly MatcherEntry[] = [
     },
   },
   // school / department / gender: field itself (0.7) outranks a shared heading (0.65).
+  // F1: the school department entry yields when the field itself carries a
+  // Japanese 部署名 word (the company-department signal outranks the English
+  // token); bare 部署 keeps the school reading.
   ...ownLegend(SCHOOL, 'school'),
-  ...ownLegend(DEPT, 'department'),
+  ...ownLegend(DEPT, 'department', (ctx) => !hasOwnDeptName(ctx.ownText)),
   // PBI-119: 会社名・会社部署は school/department と同一の単独欄パターン
   // （field 自身 0.7 が shared heading 0.65 に勝る）。own 側の緩和境界は
   // officeEligible、legend 側は officeLegendEligible（欄自身の office 語一致を
@@ -249,9 +291,19 @@ const DISPATCH: readonly MatcherEntry[] = [
   ...ownLegend(
     DEPT_OFFICE,
     'companyDepartment',
-    (ctx) => officeEligible(ctx.ownText),
+    (ctx) => deptOfficeEligible(ctx.ownText),
     (ctx) => officeLegendEligible(ctx.ownText),
   ),
+  // T3: the job title is an own-text-only entry (no legend pair): a standalone
+  // 役職/役職名 reads 0.7, while the legend-only 役職 shape (tokyu-tenant job)
+  // stays unknown. Department and company joints never reach this entry: the
+  // department entry precedes it and the joint blocks on both sides hold.
+  {
+    name: 'job-title-own',
+    match: (ctx) => (
+      JOB_OFFICE.test(ctx.ownText) && jobOfficeEligible(ctx.ownText) ? matchAs('jobTitle', 0.7) : null
+    ),
+  },
   ...ownLegend(GENDER, 'gender'),
   // Overseas address fields are named explicitly (country, address_1..4,
   // postal_code), so they classify without sibling refinement. 国名 alone
@@ -376,10 +428,13 @@ export function classifyField(m: FieldMeta): Classification | null {
   const legendText = views.legendText;
   // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す。
   // 緩和境界（カナ文脈・誕生文脈・部署名を除外）は officeEligible が一箇所で持つ。
+  // T3: 単独の役職語は jobTitle だけ EXCLUDE から通す（緩和境界は
+  // jobOfficeEligible が一箇所で持つ）。
   // PBI-160: 会社名フリガナ（会社・法人系語彙 AND カナ注記の連言）は
   // officeKanaEligible が own/legend の両側で一箇所に持つ（誕生文脈は除外）。
   const officeField =
-    EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText);
+    EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText)
+    && !jobOfficeEligible(ownText);
 
   const ownTrimmed = ownText.trim();
   // レビュー指摘: the single-birthday anchor reads the LABEL view only.

@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  Minimal reproduction of https://forms.cloud.microsoft/pages/responsepage.aspx?id=uyT_3okgAESMjvceaAN4sjf79RZArsplvgIJiMXnHa5UQkIwMjNaQlhTVzBFTVI3OURSQ0JPRkVLSi4u&route=shorturl
+  (Tokyo OpenRoaming application, Microsoft Forms).
+  The live page renders its questions client-side: a static fetch returns only
+  the JS shell with none of the question texts, so the seven questions below
+  are transcribed from the user report in the brief's verbatim wording.
+  MS Forms renders each short-text answer as <input type="text"> labelled via
+  aria-labelledby pointing at the question title (no <label> elements), so the
+  fixture keeps that shape. Placeholders mirror the real page.
+  Q7 stands in for the trailing questions: the report only requires that
+  everything after Q6 stays unclassified, and the live wording is
+  unreachable without JS rendering.
+-->
+<html lang="ja"><meta charset="utf-8"><title>東京都 OpenRoaming (Microsoft Forms)</title>
+<form>
+  <div>
+    <div id="q1-title">1.氏名</div>
+    <input name="q1" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q1-title">
+  </div>
+  <div>
+    <div id="q2-title">2.企業・自治体・団体名</div>
+    <input name="q2" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q2-title">
+  </div>
+  <div>
+    <div id="q3-title">3.所属部署名</div>
+    <input name="q3" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q3-title">
+  </div>
+  <div>
+    <div id="q4-title">4.役職名</div>
+    <input name="q4" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q4-title">
+  </div>
+  <div>
+    <div id="q5-title">5.メール</div>
+    <input name="q5" type="text" value="" placeholder="メールを入力してください" aria-labelledby="q5-title">
+  </div>
+  <div>
+    <div id="q6-title">6.電話番号</div>
+    <input name="q6" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q6-title">
+  </div>
+  <div>
+    <div id="q7-title">7.備考</div>
+    <input name="q7" type="text" value="" placeholder="回答を入力してください" aria-labelledby="q7-title">
+  </div>
+</form>

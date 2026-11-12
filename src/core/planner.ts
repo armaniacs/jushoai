@@ -278,6 +278,8 @@ export const VALUE_ROWS: readonly ValueRow[] = [
   // PBI-119: 会社名・会社の部署。空は従来どおりスキップ（warn-no-value）。
   { category: 'company', read: ({ profile }) => profile.companyName, assist: null, abbreviatable: false },
   { category: 'companyDepartment', read: ({ profile }) => profile.companyDepartment, assist: null, abbreviatable: false },
+  // T3: 役職名。空は従来どおりスキップ（warn-no-value）。
+  { category: 'jobTitle', read: ({ profile }) => profile.jobTitle, assist: null, abbreviatable: false },
   // PBI-160: 会社名フリガナ。人名カナと同一の formatKana 変換。
   // 辞書 assist（旧 ASSISTABLE）には加えない（人名辞書は会社名に向かない）。
   {
