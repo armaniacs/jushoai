@@ -450,6 +450,9 @@ describe('sample forms end to end', () => {
   it('eikoh-shiryo-form.html fills the in-scope fields', async () => {
     expect(await planFor('eikoh-shiryo-form.html')).toEqual(expectedFor('eikoh-shiryo-form.html'));
   });
+  it('cigr-ir-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('cigr-ir-contact.html')).toEqual(expectedFor('cigr-ir-contact.html'));
+  });
   it('shozemi-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('shozemi-contact-form.html')).toEqual(expectedFor('shozemi-contact-form.html'));
   });

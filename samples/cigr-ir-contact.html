@@ -1,0 +1,25 @@
+<!-- Minimal reproduction of https://www.cigr.co.jp/forms/cigr/ir/contact/. Values stripped; trim further before committing. -->
+<form>
+      <label for="ir_company_info">会社名・部署名（個人の方は不要）</label>
+      <input name="ir_company_info" id="ir_company_info" type="text" value="">
+      <input name="user_name_sei" id="user_name_sei" type="text" value="" placeholder="田町">
+      <input name="user_name_mei" id="user_name_mei" type="text" value="" placeholder="太郎">
+      <input name="user_name_seikana" id="user_name_seikana" type="text" value="" placeholder="タマチ">
+      <input name="user_name_meikana" id="user_name_meikana" type="text" value="" placeholder="タロウ">
+      <input name="email_first" id="email_first" type="email" value="">
+      <input name="email_second" id="email_second" type="email" value="">
+      <label for="tel">お電話番号</label>
+      <input name="tel" id="tel" type="text" value="" placeholder="00000000000">
+      <input name="address_zip" id="zip" type="text" value="" placeholder="1050014">
+      <select name="address_prefecture" id="prefecture"><option value="">--</option></select>
+      <input name="address_municipality" id="municipality" type="text" value="" placeholder="港区芝">
+      <input name="address_lotnumber" id="lotnumber" type="text" value="" placeholder="1-23-4">
+      <input name="address_building" id="building" type="text" value="" placeholder="田町ビル">
+<!-- skip: ir_textarea (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: address_kaigai (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: address_kaigai (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped) -->
+<!-- skip: address_minute (textarea): not scanned (scan covers text/email/tel/search + select; exclude) -->
+<!-- skip: agree_checkbox[] (checkbox): out of scope (skip fixed) -->
+<!-- skip: (no name/id) (button): unaddressable (exclude) -->
+<!-- skip: csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude) -->
+</form>

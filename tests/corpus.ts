@@ -3568,6 +3568,33 @@ const LEDGER = {
       '(no name/id) (text): unaddressable (exclude)',
     ],
   },
+  'cigr-ir-contact.html': {
+    expected: {
+      // コスモスイニシア IR。label 結合あり (会社名・部署名・電話番号)。
+      // 姓名・カナ対は _sei/_mei・seikana/meikana 分割で素直に解決。
+      'ir_company_info': '株式会社サンプル',
+      'user_name_seikana': 'ヤマダ',
+      'user_name_meikana': 'タロウ',
+      'email_first': 'yamada@example.com',
+      'email_second': 'yamada@example.com',
+      'tel': '09012345678',
+      'address_zip': '1000001',
+      'address_municipality': '千代田区',
+      'address_lotnumber': '千代田1-1',
+      'address_building': '千代田ビル101',
+    },
+    excluded: [
+      'user_name_sei/mei (text): 漢字 placeholder 田町/太郎, stay unclassified (LLM fallback; kanji person-name placeholder does not infer fullName, same as mori c_q10)',
+      'address_prefecture (select): only a `--` option, correctly warn-no-option',
+      'ir_textarea (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'address_kaigai (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'address_kaigai (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'address_minute (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'agree_checkbox[] (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'csrf_token (hidden): empty-submit shim or server state, never a fill target (exclude)',
+    ],
+  },
   'shozemi-contact-form.html': {
     expected: {
       // 湘南ゼミナール。氏名2行は実ページどおり dt/dd 見出しを復元
