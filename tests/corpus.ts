@@ -28,6 +28,33 @@ const TEN_ADDRESS_EXPECTED = {
   tel: '090-1234-5678', email: 'yamada@example.com',
 };
 
+// epson-csr-form / epson-ir-form fill the same two citycode fields: coded
+// c_q names carry no classification signal without labels, so only the
+// citycode names read as city (the rest is LLM-fallback territory).
+const EPSON_EXPECTED = {
+  c_q14_citycode: '千代田区', c_q15_citycode: '千代田区',
+};
+
+// ff-csr / ff-webmaster / ff-procurement fill the same thirteen Drupal-form
+// fields: 姓/名 labels each read as a full name (no first/last split
+// applied); 勤務先・学校名 compound reads as the school vocabulary, so the
+// school profile value fills; FAX has no profile value, so the rule fills
+// the tel value (honest pin, fax-vocabulary candidate).
+const FF_EXPECTED = {
+  'name[first]': '山田 太郎',
+  'name[last]': '山田 太郎',
+  'name_kana[first]': 'ヤマダ タロウ',
+  'name_kana[last]': 'ヤマダ タロウ',
+  'e_mailatoresu[mail_1]': 'yamada@example.com',
+  'e_mailatoresu[mail_2]': 'yamada@example.com',
+  qinwuxianxuexiaoming: '都立日比谷高校',
+  postal_code: '100-0001',
+  city: '千代田区',
+  jianwuming: '千代田ビル101',
+  tel: '090-1234-5678',
+  fax: '090-1234-5678',
+};
+
 const LEDGER = {
   '12fc22bc297429.html': {
     expected: {
@@ -505,26 +532,7 @@ const LEDGER = {
     ],
   },
   'ff-csr.html': {
-    expected: {
-      // 姓/名 labels each read as a full name (no first/last split applied);
-      // pinned honest, same shape as the ois-contact kana pair.
-      'name[first]': '山田 太郎',
-      'name[last]': '山田 太郎',
-      'name_kana[first]': 'ヤマダ タロウ',
-      'name_kana[last]': 'ヤマダ タロウ',
-      'e_mailatoresu[mail_1]': 'yamada@example.com',
-      'e_mailatoresu[mail_2]': 'yamada@example.com',
-      // 勤務先・学校名 compound reads as the school vocabulary (PBI-212
-      // Institution), so the school profile value fills.
-      'qinwuxianxuexiaoming': '都立日比谷高校',
-      'postal_code': '100-0001',
-      'city': '千代田区',
-      'jianwuming': '千代田ビル101',
-      'tel': '090-1234-5678',
-      // FAX has no profile value; the rule fills the tel value (honest pin,
-      // fax-vocabulary candidate).
-      'fax': '090-1234-5678',
-    },
+    expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
       'organization_unit_name (text): 部署名, stays unclassified (LLM fallback; 部署 vocabulary candidate)',
@@ -686,13 +694,7 @@ const LEDGER = {
     ],
   },
   'epson-csr-form.html': {
-    expected: {
-      // Coded c_q names carry no classification signal without labels, so
-      // only the citycode names read as city. The rest is LLM-fallback
-      // territory (same shape as the benesse enquete precedent in R4-1).
-      'c_q14_citycode': '千代田区',
-      'c_q15_citycode': '千代田区',
-    },
+    expected: EPSON_EXPECTED,
     excluded: [
       'c_q1/c_q1_confirm (text): 1.Eメールアドレス with no label or placeholder signal, stay unclassified (LLM fallback)',
       'c_q3_first/second (text): 2.お名前 姓/名, stay unclassified (LLM fallback; coded-name person fields)',
@@ -813,26 +815,7 @@ const LEDGER = {
     ],
   },
   'ff-webmaster-form.html': {
-    expected: {
-      // Same Drupal form family as ff-csr: 姓/名 labels each read as a full
-      // name (no first/last split applied); pinned honest.
-      'name[first]': '山田 太郎',
-      'name[last]': '山田 太郎',
-      'name_kana[first]': 'ヤマダ タロウ',
-      'name_kana[last]': 'ヤマダ タロウ',
-      'e_mailatoresu[mail_1]': 'yamada@example.com',
-      'e_mailatoresu[mail_2]': 'yamada@example.com',
-      // 勤務先・学校名 compound reads as the school vocabulary, so the
-      // school profile value fills (same as ff-csr).
-      'qinwuxianxuexiaoming': '都立日比谷高校',
-      'postal_code': '100-0001',
-      'city': '千代田区',
-      'jianwuming': '千代田ビル101',
-      'tel': '090-1234-5678',
-      // FAX has no profile value; the rule fills the tel value (honest pin,
-      // fax-vocabulary candidate, same as ff-csr).
-      'fax': '090-1234-5678',
-    },
+    expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
       'organization_unit_name (text): 部署名, stays unclassified (部署 vocabulary candidate)',
@@ -848,26 +831,7 @@ const LEDGER = {
     ],
   },
   'ff-procurement-form.html': {
-    expected: {
-      // Same Drupal form family as ff-csr / ff-webmaster: 姓/名 labels each
-      // read as a full name (no first/last split applied); pinned honest.
-      'name[first]': '山田 太郎',
-      'name[last]': '山田 太郎',
-      'name_kana[first]': 'ヤマダ タロウ',
-      'name_kana[last]': 'ヤマダ タロウ',
-      'e_mailatoresu[mail_1]': 'yamada@example.com',
-      'e_mailatoresu[mail_2]': 'yamada@example.com',
-      // 勤務先・学校名 compound reads as the school vocabulary, so the
-      // school profile value fills (same as ff-csr).
-      'qinwuxianxuexiaoming': '都立日比谷高校',
-      'postal_code': '100-0001',
-      'city': '千代田区',
-      'jianwuming': '千代田ビル101',
-      'tel': '090-1234-5678',
-      // FAX has no profile value; the rule fills the tel value (honest pin,
-      // fax-vocabulary candidate, same as ff-csr).
-      'fax': '090-1234-5678',
-    },
+    expected: FF_EXPECTED,
     excluded: [
       'inquiry_title (text): 件名, no profile value, correctly unfilled',
       'organization_unit_name (text): 部署名, stays unclassified (部署 vocabulary candidate)',
@@ -1010,13 +974,7 @@ const LEDGER = {
     ],
   },
   'epson-ir-form.html': {
-    expected: {
-      // Same cform family as epson-csr-form: coded c_q names carry no
-      // classification signal without labels, so only the citycode names read
-      // as city (pinned honest).
-      'c_q14_citycode': '千代田区',
-      'c_q15_citycode': '千代田区',
-    },
+    expected: EPSON_EXPECTED,
     excluded: [
       'c_q1/c_q1_confirm (text): Eメールアドレス with no label or placeholder signal, stay unclassified (LLM fallback)',
       'c_q3_first/second (text): お名前 姓/名, stay unclassified (LLM fallback; coded-name person fields)',
