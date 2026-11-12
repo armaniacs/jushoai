@@ -246,3 +246,29 @@
 | 158 | https://www.nichiigakkan.co.jp/contact/ | P | ニチイホールディングス | 除外 | フォームなし (HTTP 200「お問い合わせ」案内頁。静的formなし) |
 | 159 | https://www.benesse-style-care.co.jp/contact/ | P | ベネッセスタイルケア | 除外 | 到達不能 (HTTP 404。ベネッセスタイルケア案内のみ) |
 | 160 | https://www.sompocare.co.jp/contact/ | P | SOMPOケア | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+
+### Q 複合サービス事業 (郵便局・農協など)
+
+| 161 | https://www.japanpost.jp/question/ | Q | 日本郵政ご意見 | 除外 | 到達不能 (HTTP 404。静的formは検索・メガメニューのみ) |
+| 162 | https://www.post.japanpost.jp/question/ | Q | 日本郵便問合せ | 除外 | フォームなし (HTTP 200。静的formは検索2件のみ) |
+| 163 | https://www.coopkyosai.coop/contact/ | Q | コープ共済 | 除外 | 到達不能 (curl失敗・code=000。ドメイン接続不可) |
+| 164 | https://www.jp-life.japanpost.jp/contact/ | Q | かんぽ生命 | 除外 | フォームなし (HTTP 200。静的formは検索2件とアコーディオン切替radioのみ) |
+| 165 | https://www.ja-zenchu.or.jp/inquiry/ | Q | JA全中ご意見 | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 166 | https://www.ja-kyosai.or.jp/inquiry/ | Q | JA共済ご相談 | 除外 | 到達不能 (HTTP 404) |
+| 167 | https://www.zenrosai.coop/contact/ | Q | 全労済 | 除外 | フォームなし (HTTP 200。静的form 3件はすべてサイト内検索。実窓口は別導線とみられる) |
+| 168 | https://www.coopdeli.coop/contact/ | Q | コープデリ | 除外 | 到達不能 (curl失敗・code=000。接続不可) |
+| 169 | https://www.pal-system.co.jp/contact/ | Q | パルシステム | 除外 | フォームなし (HTTP 200ヘルプ頁。静的formなし) |
+| 170 | https://www.seikatsuclub.coop/contact/ | Q | 生活クラブ | 除外 | 到達不能 (HTTP 200で/sorry/notfound.htmlに転送。404頁) |
+
+### R サービス業 (他に分類されないもの)
+
+| 171 | https://www.recruit.co.jp/inquiry/ | R | リクルート問合せ | 除外 | 到達不能 (HTTP 404) |
+| 172 | https://www.persol-group.co.jp/contact/ | R | パーソルHD | 除外 | 到達不能 (HTTP 404) |
+| 173 | https://www.pasonagroup.co.jp/contact/ | R | パソナグループ | 除外 | JS描画のみ (HTTP 200だが可視欄なし。__VIEWSTATEのみ。実フォームは/clientinquiry.html等の別導線とみられる) |
+| 174 | https://www.alsok.co.jp/contact/ | R | ALSOK | 除外 | 到達不能 (HTTP 404) |
+| 175 | https://www.we-are-csp.co.jp/contact/ | R | セントラル警備保障 | 除外 | JS描画のみ (HTTP 200だが可視欄なし。hidden 2欄のみで実体はJS描画とみられる) |
+| 176 | https://www.trans-cosmos.co.jp/inquiry/ | R | トランスコスモス問合せ | 除外 | フォームなし (/inquiry/がトップに転送。静的formなし) |
+| 177 | https://www.bell24.co.jp/contact/ | R | ベルシステム24 | 除外 | 到達不能 (HTTP 404) |
+| 178 | https://www.nkanzai.co.jp/contact/ | R | 日本管財 | 有望 P2 | 静的実フォーム (HTTP 200「お問い合わせ」。action=./confirm/、input 13・textarea 1・select 1。contact_name・contact_mail確認・contactselect select・contact_message textarea。住所・電話欄なしのためP2) |
+| 179 | https://www.secom.co.jp/business/contact/ | R | セコム法人窓口 | 除外 | 到達不能 (HTTP 404) |
+| 180 | https://www.japanpost.jp/about/contact/ | R | 日本郵政について | 除外 | 到達不能 (HTTP 404) |
