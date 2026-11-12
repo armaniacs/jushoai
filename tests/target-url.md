@@ -122,3 +122,4 @@
 - https://axis-kobetsu.jp/contact/inquiry → axis-inquiry-form.html
 - https://www.yotsuyaotsuka.com/pform/iws/little_club/input → yotsuya-littleclub-form.html
 - https://www.fujita.co.jp/contact/ → fujita-contact.html
+- https://www.yamada-holdings.jp/contact/ → yamada-holdings-contact.html

@@ -5014,6 +5014,24 @@ const LEDGER = {
       'js-gPageTop_button (button): action element, never a fill target (exclude)',
     ],
   },
+  'yamada-holdings-contact.html': {
+    expected: {
+      'f01': '山田 太郎',
+      // f03 fills the undashed tel value (no maxlength/hyphen signal on
+      // the bare coded field; pinned honest).
+      'f03': '09012345678',
+      'pm_email': 'yamada@example.com',
+      'pm_email2': 'yamada@example.com',
+    },
+    excluded: [
+      'TITLE (select): real 4 options restored verbatim, stays unclassified (LLM fallback; inquiry-kind select candidate)',
+      'f02 (text): フリガナ via th-nearby + placeholder only (coded name), stays unclassified (LLM fallback; kana-via-nearby candidate)',
+      'user-id-state (text): unlabeled display:none trap field, trimmed as a honeypot (exclude)',
+      'url (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'question (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'submitbtn (submit): action element, never a fill target (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

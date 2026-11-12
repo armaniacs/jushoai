@@ -519,4 +519,7 @@ describe('sample forms end to end', () => {
   it('fujita-contact.html fills the in-scope fields', async () => {
     expect(await planFor('fujita-contact.html')).toEqual(expectedFor('fujita-contact.html'));
   });
+  it('yamada-holdings-contact.html fills the in-scope fields', async () => {
+    expect(await planFor('yamada-holdings-contact.html')).toEqual(expectedFor('yamada-holdings-contact.html'));
+  });
 });
