@@ -3596,6 +3596,44 @@ const LEDGER = {
       'Form__submitButton (button): action element, never a fill target (exclude)',
     ],
   },
+  'waseda-ac-form.html': {
+    expected: {
+      // 早稲田アカデミー申込基盤 (NY校問合せ)。attributeNN のコード化名が
+      // 大半で語彙が効かず、末尾語彙 (zip/tel/email/address) のみ解決。
+      'Public::Application::Userenquete_D__P__D_zip1': '100',
+      'Public::Application::Userenquete_D__P__D_zip2': '0001',
+      // address2 のみ building に載る。address1/address3 は未分類 (honest pin)。
+      'Public::Application::Userenquete_D__P__D_address2': '千代田ビル101',
+      'Public::Application::Userenquete_D__P__D_tel': '090-1234-5678',
+      'Public::Application::Userenquete_D__P__D_email': 'yamada@example.com',
+    },
+    excluded: [
+      '..._D_name1/_name2/_name1_ka/_name2_ka (text): coded prefix + bare, stay unclassified (LLM fallback; name-split-by-suffix candidate)',
+      '..._D_VisitorData.attribute68-89/311/344/376/640/409/442/475/508/541/574/79/14 (text/select): coded attribute names with no vocabulary, stay unclassified (LLM fallback)',
+      '..._D_prefecture_master_id (select): only a `--` option, correctly warn-no-option',
+      '..._D_address1/_address3 (text): bare coded names, stay unclassified while address2 fills as building (LLM fallback)',
+      '..._D_Enquete.attribute2185 (select): only a `--` option, correctly warn-no-option',
+      'csrf_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute1 (checkbox): out of scope (skip fixed)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute2 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute85 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute85 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
+      'Public::Application::Userenquete_D__P__D_VisitorData.attribute673 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'Public::Application::Userenquete_D__P__D_Enquete.attribute2183 (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'Public::Application::Userenquete_D__P__D_Enquete.attribute2184 (checkbox): out of scope (skip fixed)',
+      'Public::Application::Userenquete_D__P__D_Enquete.attribute2184 (checkbox): out of scope (skip fixed)',
+      'Public::Application::Userenquete_D__P__D_Enquete.attribute2184 (checkbox): out of scope (skip fixed)',
+      'Public::Application::Userenquete_D__P__D_Enquete.attribute2184 (checkbox): out of scope (skip fixed)',
+      '(no name/id) (button): unaddressable (exclude)',
+      'selected_action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'cart_delete (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'action (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'serialkey (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      'Public::Application::Userenquete_D__P__D_language_master_id (hidden): empty-submit shim or server state, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
