@@ -110,3 +110,4 @@
 - https://www.tomas.co.jp/contact/trial_lesson/ → tomas-trial-form.html
 - https://www.try-gakuin.com/reserve/ → try-gakuin-reserve-form.html
 - https://www.meikogijuku.jp/contact/entry → meiko-contact-form.html
+- https://reg18.smp.ne.jp/regist/is?SMPFORM=mjqd-maraob-3de8341d99c0daa975f12ed6ea3415de → keishin-contact-form.html
