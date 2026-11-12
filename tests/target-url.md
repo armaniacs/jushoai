@@ -119,3 +119,4 @@
 - https://reg18.smp.ne.jp/regist/is?SMPFORM=ncpd-mbtgrh-140da6f466b94a6cd5f8054138f03923 → ichishin-contact-form.html
 - https://www.ena.co.jp/request_form/ → ena-request-form.html
 - https://reg34.smp.ne.jp/regist/is?SMPFORM=qcnc-maphkb-0db25bb6f4a5b6785732327ff044c78c → eishinkan-contact-form.html
+- https://axis-kobetsu.jp/contact/inquiry → axis-inquiry-form.html

@@ -4878,6 +4878,62 @@ const LEDGER = {
       'submit (submit): action element, never a fill target (exclude)',
     ],
   },
+  'axis-inquiry-form.html': {
+    expected: {
+      // 個別指導Axis問合せ。自社基盤 (camelCase)。label for 付きのまま残す。
+      // native select は Vue カスタムで実ページでも空のため '--' が忠実。
+      'lastName': '山田',
+      'firstName': '太郎',
+      'lastNameKana': 'ヤマダ',
+      'firstNameKana': 'タロウ',
+      // gender (text。bare) は name 起点で女性に載る。
+      'gender': '女性',
+      // dobYear のみ pattern 適合 (1990)。dobMonth/dobDate は profile
+      // 05/07 が pattern (leading-zero 不可) に合わず未注入 (PBI-210 形状)。
+      'dobYear': '1990',
+      'schoolName': '都立日比谷高校',
+      'postalCode': '1000001',
+      // addressCity (市区町村) は addressNoPref 全体が入る (honest pin)。
+      'addressCity': '千代田区千代田1-1',
+      'address1': '千代田区千代田1-1',
+      'address2': '千代田ビル101',
+      'phone': '09012345678',
+      'email': 'yamada@example.com',
+      // その他3欄のうち schoolSelectionOther のみ school に載る
+      // (honest pin。3欄の非対称は将来PBIで)。
+      'schoolSelectionOther': '都立日比谷高校',
+    },
+    excluded: [
+      'axisPrefectureCode/axisSchoolId/grade/addressPrefectureCode (select): Vue カスタムで実ページでも空、correctly warn-no-option',
+      'dobMonth/dobDate (text): pattern (leading-zero 不可) に profile 05/07 が合わず warn-pattern で未注入 (honest pin)',
+      'studyIssuesOther/learningGoalsOther (text): bare その他欄。schoolSelectionOther のみ解決する非対称 (LLM fallback)',
+      'v-0-0-1 (button): action element, never a fill target (exclude)',
+      'v-0-0-3 (button): action element, never a fill target (exclude)',
+      'customRequests (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'v-0-0-11:男性 (button): action element, never a fill target (exclude)',
+      'v-0-0-11:女性 (button): action element, never a fill target (exclude)',
+      'v-0-0-15 (button): action element, never a fill target (exclude)',
+      'concernsOrQuestions (textarea): not scanned (scan covers text/email/tel/search + select; exclude)',
+      'v-0-0-20 (button): action element, never a fill target (exclude)',
+      'v-0-0-28:学校の定期テストで点が取れない (button): action element, never a fill target (exclude)',
+      'v-0-0-28:家庭学習が出来ていない (button): action element, never a fill target (exclude)',
+      'v-0-0-28:模試で偏差値が低迷している (button): action element, never a fill target (exclude)',
+      'v-0-0-28:部活動ばかりで勉強していない (button): action element, never a fill target (exclude)',
+      'v-0-0-28:塾があわない・成績が上がらない (button): action element, never a fill target (exclude)',
+      'v-0-0-36:受験・志望校合格対策 (button): action element, never a fill target (exclude)',
+      'v-0-0-36:学校の定期テスト対策 (button): action element, never a fill target (exclude)',
+      'v-0-0-36:模試・成績アップ対策 (button): action element, never a fill target (exclude)',
+      'v-0-0-36:他塾内容の理解度アップ (button): action element, never a fill target (exclude)',
+      'v-0-0-36:学校の授業内容の理解度アップ (button): action element, never a fill target (exclude)',
+      'v-0-0-36:学習習慣づくり (button): action element, never a fill target (exclude)',
+      'v-0-0-45:個別指導形態・学習スタイル (button): action element, never a fill target (exclude)',
+      'v-0-0-45:授業料と諸費用 (button): action element, never a fill target (exclude)',
+      'v-0-0-45:学習内容やテキスト (button): action element, never a fill target (exclude)',
+      'v-0-0-45:先生の質 (button): action element, never a fill target (exclude)',
+      'v-0-0-45:通塾学校例 (button): action element, never a fill target (exclude)',
+      '(no name/id) (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 

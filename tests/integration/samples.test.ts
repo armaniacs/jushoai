@@ -510,4 +510,7 @@ describe('sample forms end to end', () => {
   it('eishinkan-contact-form.html fills the in-scope fields', async () => {
     expect(await planFor('eishinkan-contact-form.html')).toEqual(expectedFor('eishinkan-contact-form.html'));
   });
+  it('axis-inquiry-form.html fills the in-scope fields', async () => {
+    expect(await planFor('axis-inquiry-form.html')).toEqual(expectedFor('axis-inquiry-form.html'));
+  });
 });
