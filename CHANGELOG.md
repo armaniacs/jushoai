@@ -6,6 +6,13 @@
 
 ## [Unreleased]
 
+## [0.1.34] - 2026-11-14
+
+### Added
+
+- フォーム上の青バナー右上に半透明のボタンを追加し、押したバナーだけをその場で隠せるようにする（リロードまで表示せず、保存や送信はしない）
+- バナーを隠した直後のダイアログから「このページだけ」「この配下全体」を選んで起動しない URL へ登録できるようにする（保存後は開いたままのタブにも反映される）
+
 ## [0.1.33] - 2026-11-13
 
 ### Added
@@ -537,6 +544,9 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.34]: https://github.com/armaniacs/jushoai/compare/v0.1.33...v0.1.34
+[0.1.33]: https://github.com/armaniacs/jushoai/compare/v0.1.32...v0.1.33
+[0.1.32]: https://github.com/armaniacs/jushoai/compare/v0.1.31...v0.1.32
 [0.1.31]: https://github.com/armaniacs/jushoai/compare/v0.1.30...v0.1.31
 [0.1.30]: https://github.com/armaniacs/jushoai/compare/v0.1.29...v0.1.30
 [0.1.29]: https://github.com/armaniacs/jushoai/compare/v0.1.28...v0.1.29
