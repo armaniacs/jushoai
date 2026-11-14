@@ -36,6 +36,8 @@ import { isReady } from '../storage';
 import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
+import { createDismissMemory } from '../content/dismiss-memory';
+import { showDismissDialog } from '../ui/dismiss-dialog';
 import { attachRepositionTracking } from '../ui/panel';
 import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
@@ -125,6 +127,7 @@ export default defineContentScript({
   runAt: 'document_idle',
   async main() {
     const mounted = new Map<Element, { handle: ButtonHandle; anchor: Element; container: Element }>();
+    const dismissed = createDismissMemory();
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
@@ -465,14 +468,15 @@ export default defineContentScript({
         return;
       }
       lastScan = sig;
-      const forms = detectForms(document);
+      const forms = detectForms(document).filter((f) => !dismissed.has(f.container));
       const plan = planMounts(new Map([...mounted].map(([c, m]) => [c, m.anchor])), forms);
       for (const container of plan.destroy) {
         mounted.get(container)?.handle.destroy();
         mounted.delete(container);
       }
       for (const form of plan.mount) {
-        const handle = mountButton(
+        let handle: ButtonHandle;
+        handle = mountButton(
           form.anchor.el,
           () => void guardedRun(form.container, handle),
           (info) => {
@@ -484,6 +488,18 @@ export default defineContentScript({
               },
               () => void chrome.runtime.sendMessage({ type: 'open-options' }),
             );
+          },
+          () => {
+            dismissed.add(form.container);
+            mounted.get(form.container)?.handle.destroy();
+            mounted.delete(form.container);
+            showDismissDialog({
+              onClose: () => {},
+              onUndo: () => {
+                dismissed.remove(form.container);
+                schedule();
+              },
+            });
           },
         );
         mounted.set(form.container, { handle, anchor: form.anchor.el, container: form.container });
