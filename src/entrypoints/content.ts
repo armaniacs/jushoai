@@ -1,4 +1,5 @@
-import { isExcludedUrl } from '../core/exclusions';
+import { isExcludedUrl, addExclusionEntry } from '../core/exclusions';
+import { buildExclusionCandidates } from '../core/exclusion-prefix';
 import { isEnglishPageText } from '../core/page-language';
 import { fillOneReasonLabel } from '../core/fill-one';
 import { fillOneEntry } from '../content/fill-one-entry';
@@ -7,7 +8,7 @@ import { createFillSession, type FillSession } from '../content-session';
 import { buildRunEnv } from '../content/run-env';
 import { bindPreview } from '../content/preview-bind';
 import { KvStoreReadError } from '../kv-store';
-import { EXCLUDED_URLS_KEY, loadExcludedUrls } from '../exclusions-store';
+import { EXCLUDED_URLS_KEY, loadExcludedUrls, saveExcludedUrls } from '../exclusions-store';
 import { collectAvoidRects } from '../dom/avoid-rects';
 import { planMounts } from '../dom/mount-plan';
 import { detectForms, scanContainer } from '../dom/detect-forms';
@@ -493,12 +494,38 @@ export default defineContentScript({
             dismissed.add(form.container);
             mounted.get(form.container)?.handle.destroy();
             mounted.delete(form.container);
-            showDismissDialog({
+            let dialog: { showRegisterError: (reason: string) => void; close: () => void } | null = null;
+            const candidates = buildExclusionCandidates(window.location.href);
+            dialog = showDismissDialog({
               onClose: () => {},
               onUndo: () => {
                 dismissed.remove(form.container);
                 schedule();
               },
+              register: candidates.ok
+                ? {
+                    exactLabel: candidates.exact,
+                    prefixLabel: candidates.prefix,
+                    onRegister: (choice) => {
+                      void (async () => {
+                        const raw = choice === 'exact' ? candidates.exact : candidates.prefix;
+                        const current = await loadExcludedUrls();
+                        const added = addExclusionEntry(current, raw);
+                        if (!added.ok) {
+                          dialog?.showRegisterError(added.reason);
+                          return;
+                        }
+                        try {
+                          await saveExcludedUrls(added.entries);
+                        } catch {
+                          dialog?.showRegisterError('保存に失敗しました');
+                          return;
+                        }
+                        dialog?.close();
+                      })();
+                    },
+                  }
+                : undefined,
             });
           },
         );
