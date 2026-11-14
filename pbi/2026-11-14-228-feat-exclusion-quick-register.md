@@ -27,12 +27,12 @@ Scenario: 重複と上限は既存理由を出す
 ```
 
 ## 受け入れ基準
-- [ ] 候補は「このページだけ」と「この配下全体」の2択で出る
-- [ ] 例: スライドURLの配下候補は `https://docs.google.com/presentation/` になる
-- [ ] 登録後は設定画面の起動しないURLに追記される
-- [ ] 開いたままの頁でも `storage.onChanged` 経路で反映される
-- [ ] 保存失敗時は理由が見え、ダイアログが閉じない
-- [ ] `make check` が緑のまま
+- [x] 候補は「このページだけ」と「この配下全体」の2択で出る
+- [x] 例: スライドURLの配下候補は `https://docs.google.com/presentation/` になる
+- [x] 登録後は設定画面の起動しないURLに追記される
+- [x] 開いたままの頁でも `storage.onChanged` 経路で反映される
+- [x] 保存失敗時は理由が見え、ダイアログが閉じない
+- [x] `make check` が緑のまま
 
 ## テスト戦略(t_wadaスタイル)
 
@@ -75,6 +75,11 @@ grep -n "gate.refresh\|onChanged" src/entrypoints/content.ts
 - ページ由来の文字列は `textContent` で入れること
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] `make check` が緑
-- [ ] 登録内容が設定画面と一致すること
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] `make check` が緑
+- [x] 登録内容が設定画面と一致すること
+
+## 実装記録
+- 実装: d886547(候補生成)・180b318(ダイアログ登録欄)・c91ccef(content.ts 登録接続)。全タスクレビュー承認
+- 検証: focused 36 tests pass、`make typecheck` clean、最終 `make check` EXIT 0
+- 手動確認(サンプルフォームでの登録・追記・開いたまま反映の目視)はユーザー作業として残る
