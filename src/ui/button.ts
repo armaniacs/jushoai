@@ -64,7 +64,7 @@ const CSS = `
       --jushoai-banner-bg-active: #1e3a8a;
     }
   }
-  .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center;
+  .wrap { all: initial; display: inline-flex; gap: 8px; align-items: center; position: relative;
     font: 600 13px/1 system-ui, sans-serif; color: var(--jushoai-banner-fg);
     /* PBI-162: the banner background stays translucent so a field it still
        covers remains readable (the placement, PBI-161, cannot always find a
@@ -89,12 +89,33 @@ const CSS = `
   .badge[data-status="disabled"] { background: rgba(0,0,0,.3); }
   .hint { position: absolute; width: 1px; height: 1px; overflow: hidden;
     clip-path: inset(50%); white-space: nowrap; }
+  .dismiss { all: initial; position: absolute; top: -10px; right: -10px; width: 22px; height: 22px;
+    border-radius: 50%; background: rgba(0,0,0,.45); color: #fff;
+    font: 700 13px/22px system-ui, sans-serif; text-align: center; cursor: pointer;
+    border: 1px solid rgba(255,255,255,.7); opacity: .55; }
+  .wrap:hover .dismiss, .dismiss:hover, .dismiss:focus-visible { opacity: 1; }
 `;
+
+export function createDismissButton(onDismiss: () => void): HTMLButtonElement {
+  const dismiss = document.createElement('button');
+  dismiss.type = 'button';
+  dismiss.className = 'dismiss';
+  dismiss.textContent = 'X';
+  dismiss.setAttribute('aria-label', 'このボタンを隠す');
+  dismiss.title = 'このボタンを隠す';
+  dismiss.addEventListener('click', (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onDismiss();
+  });
+  return dismiss;
+}
 
 export function mountButton(
   anchor: Element,
   onClick: () => void,
   onBadgeClick: (info: AiStatusInfo) => void = () => {},
+  onDismiss: () => void = () => {},
 ): ButtonHandle {
   const { host, root } = createShadowHost({ position: 'fixed' });
   // Viewport-anchored (fixed): the written top/left must always equal the
@@ -145,6 +166,12 @@ export function mountButton(
     e.stopPropagation();
     if (statusKnown) onBadgeClick(lastInfo);
   });
+  // The dismiss affordance registers last: existing harnesses observe click
+  // listeners in registration order ([button, badge]), and `button:not(.badge)`
+  // resolves to the main button only while the dismiss stays last in DOM
+  // order. The dismiss is absolutely positioned, so DOM order is visual-neutral.
+  const dismiss = createDismissButton(() => onDismiss());
+  wrap.append(dismiss);
   // The same viewport width the placement uses: a zero clientWidth means no
   // layout yet (detached documents), so fall back to innerWidth instead of
   // clamping everything against a zero-width viewport.
@@ -191,6 +218,7 @@ export function mountButton(
     window.removeEventListener('pointercancel', endDrag);
   };
   wrap.addEventListener('pointerdown', (e) => {
+    if ((e.target as Element | null)?.closest?.('.dismiss')) return;
     // A new gesture clears a leftover flag: a drag that ended outside the
     // banner (released over the page) never delivers its click to the
     // banner's listeners, and without the reset the next legitimate press
