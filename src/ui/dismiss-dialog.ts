@@ -20,6 +20,7 @@ export interface DismissDialogHandle {
   choose: (choice: 'exact' | 'prefix') => void;
   submitRegister: () => void;
   showRegisterError: (reason: string) => void;
+  setRegisterBusy: (busy: boolean) => void;
 }
 
 export function showDismissDialog(actions: DismissDialogActions): DismissDialogHandle {
@@ -36,6 +37,8 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   ].join('');
   const box = document.createElement('div');
   box.className = 'box';
+  box.setAttribute('role', 'dialog');
+  box.setAttribute('aria-label', 'JushoAI の非表示ダイアログ');
   const text = document.createElement('div');
   text.textContent = 'このボタンを隠しました(リロードまで)';
   const row = document.createElement('div');
@@ -63,6 +66,10 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   let errorBox: HTMLElement | null = null;
   let exactRadio: HTMLInputElement | null = null;
   let prefixRadio: HTMLInputElement | null = null;
+  let submitBtn: HTMLButtonElement | null = null;
+  // exact と prefix が同じ文字列(ルート URL など)のときは二択に意味が
+  // ないので、ラジオなしの1行表示にして登録は prefix 扱いにする。
+  let collapsedRegister = false;
 
   if (actions.register) {
     const reg = actions.register;
@@ -83,10 +90,19 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     const submit = document.createElement('button');
     submit.type = 'button';
     submit.textContent = '起動しないURLに登録する';
-    submit.addEventListener('click', () => { reg.onRegister(selected); });
+    submitBtn = submit;
     errorBox = document.createElement('div');
     errorBox.setAttribute('role', 'alert');
-    box.append(makeOption('exact', reg.exactLabel), makeOption('prefix', reg.prefixLabel), submit, errorBox);
+    if (reg.exactLabel === reg.prefixLabel) {
+      collapsedRegister = true;
+      const fixed = document.createElement('div');
+      fixed.textContent = `このサイト全体: ${reg.prefixLabel}`;
+      submit.addEventListener('click', () => { reg.onRegister('prefix'); });
+      box.append(fixed, submit, errorBox);
+    } else {
+      submit.addEventListener('click', () => { reg.onRegister(selected); });
+      box.append(makeOption('exact', reg.exactLabel), makeOption('prefix', reg.prefixLabel), submit, errorBox);
+    }
   }
 
   root.append(style, box);
@@ -102,7 +118,11 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       if (choice === 'exact') exactRadio?.click();
       else prefixRadio?.click();
     },
-    submitRegister: () => { actions.register?.onRegister(selected); },
+    submitRegister: () => {
+      if (!actions.register) return;
+      actions.register.onRegister(collapsedRegister ? 'prefix' : selected);
+    },
     showRegisterError: (reason) => { if (errorBox) errorBox.textContent = reason; },
+    setRegisterBusy: (busy) => { if (submitBtn) submitBtn.disabled = busy; },
   };
 }

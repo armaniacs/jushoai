@@ -1,4 +1,4 @@
-import { isExcludedUrl, addExclusionEntry } from '../core/exclusions';
+import { isExcludedUrl } from '../core/exclusions';
 import { buildExclusionCandidates } from '../core/exclusion-prefix';
 import { isEnglishPageText } from '../core/page-language';
 import { fillOneReasonLabel } from '../core/fill-one';
@@ -38,7 +38,8 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { createDismissMemory } from '../content/dismiss-memory';
-import { showDismissDialog } from '../ui/dismiss-dialog';
+import { registerExclusionChoice } from '../content/exclusion-register';
+import { showDismissDialog, type DismissDialogHandle } from '../ui/dismiss-dialog';
 import { attachRepositionTracking } from '../ui/panel';
 import { type PreviewHandle } from '../ui/preview';
 import { ANALYZE_MESSAGE_TYPE } from '../analyze-contract';
@@ -132,6 +133,9 @@ export default defineContentScript({
     const running = new Set<Element>();
     let openPreview: PreviewHandle | null = null;
     let openGuide: GuideHandle | null = null;
+    // Xダイアログは同じ隅に積むと古い方が触れなくなるので単一ハンドルで
+    // 追う。新しい dismiss で直前のがあれば先に閉じる。
+    let openDismissDialog: { close: () => void } | null = null;
     const browser = detectBrowser(navigator.userAgent);
 
     // Single place that tears down open panels: closing one panel must never
@@ -494,11 +498,15 @@ export default defineContentScript({
             dismissed.add(form.container);
             mounted.get(form.container)?.handle.destroy();
             mounted.delete(form.container);
-            let dialog: { showRegisterError: (reason: string) => void; close: () => void } | null = null;
+            // 直前のダイアログが残っていれば先に閉じる(単一ハンドル)。
+            openDismissDialog?.close();
+            openDismissDialog = null;
+            let dialog: DismissDialogHandle | null = null;
             const candidates = buildExclusionCandidates(window.location.href);
             dialog = showDismissDialog({
-              onClose: () => {},
+              onClose: () => { if (openDismissDialog === dialog) openDismissDialog = null; },
               onUndo: () => {
+                if (openDismissDialog === dialog) openDismissDialog = null;
                 dismissed.remove(form.container);
                 schedule();
               },
@@ -507,26 +515,22 @@ export default defineContentScript({
                     exactLabel: candidates.exact,
                     prefixLabel: candidates.prefix,
                     onRegister: (choice) => {
-                      void (async () => {
-                        const raw = choice === 'exact' ? candidates.exact : candidates.prefix;
-                        const current = await loadExcludedUrls();
-                        const added = addExclusionEntry(current, raw);
-                        if (!added.ok) {
-                          dialog?.showRegisterError(added.reason);
-                          return;
-                        }
-                        try {
-                          await saveExcludedUrls(added.entries);
-                        } catch {
-                          dialog?.showRegisterError('保存に失敗しました');
-                          return;
-                        }
-                        dialog?.close();
-                      })();
+                      void registerExclusionChoice(choice, {
+                        loadExcluded: loadExcludedUrls,
+                        saveExcluded: saveExcludedUrls,
+                        candidates,
+                        showError: (reason) => { dialog?.showRegisterError(reason); },
+                        close: () => {
+                          if (openDismissDialog === dialog) openDismissDialog = null;
+                          dialog?.close();
+                        },
+                        setBusy: (busy) => { dialog?.setRegisterBusy(busy); },
+                      });
                     },
                   }
                 : undefined,
             });
+            openDismissDialog = dialog;
           },
         );
         mounted.set(form.container, { handle, anchor: form.anchor.el, container: form.container });

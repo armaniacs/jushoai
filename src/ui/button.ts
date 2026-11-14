@@ -106,6 +106,7 @@ export function createDismissButton(onDismiss: () => void): HTMLButtonElement {
   dismiss.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (!e.isTrusted) return;
     onDismiss();
   });
   return dismiss;
