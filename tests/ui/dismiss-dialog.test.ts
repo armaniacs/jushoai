@@ -17,3 +17,27 @@ describe('showDismissDialog', () => {
     expect(onUndo).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('showDismissDialog with register', () => {
+  it('選んだ候補で onRegister が走る', () => {
+    const onRegister = vi.fn();
+    const dialog = showDismissDialog({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: onRegister as (choice: 'exact' | 'prefix') => void,
+      },
+    });
+    dialog.choose('prefix');
+    dialog.submitRegister();
+    expect(onRegister).toHaveBeenCalledWith('prefix');
+  });
+
+  it('失敗文を出すとダイアログが残る', () => {
+    const dialog = showDismissDialog({ onClose: vi.fn(), onUndo: vi.fn() });
+    dialog.showRegisterError('すでに登録されています');
+    expect(document.body.contains(dialog.host)).toBe(true);
+  });
+});
