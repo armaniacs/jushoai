@@ -36,6 +36,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     ' border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px;',
     ' box-shadow: 0 2px 8px rgba(0,0,0,.15); width: 280px; }',
     '.row { display: flex; gap: 8px; margin-top: 8px; }',
+    '.opt { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; }',
+    '.opt > input { flex-shrink: 0; }',
+    '.opt > span { min-width: 0; overflow-wrap: anywhere; }',
   ].join('');
   const box = document.createElement('div');
   box.className = 'box';
@@ -99,6 +102,7 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     const reg = actions.register;
     const makeOption = (choice: 'exact' | 'prefix', label: string): HTMLElement => {
       const line = document.createElement('label');
+      line.className = 'opt';
       const radio = document.createElement('input');
       radio.type = 'radio';
       radio.name = 'jushoai-exclusion-choice';

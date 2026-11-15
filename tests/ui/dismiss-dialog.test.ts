@@ -171,3 +171,46 @@ describe('showDismissDialog auto-hide', () => {
     expect(document.body.contains(dialog.host)).toBe(false);
   });
 });
+
+describe('showDismissDialog register radio wrap', () => {
+  function showRegister() {
+    return showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+  }
+
+  it('2つの選択肢の label が縦積みになる(display: block 系)', () => {
+    const { root } = showRegister();
+    const labels = [...root.querySelectorAll('label')];
+    expect(labels).toHaveLength(2);
+    // jsdom はレイアウトを持たないため、class と style 要素の CSS テキストで検証する。
+    const css = root.querySelector('style')?.textContent ?? '';
+    for (const label of labels) {
+      const display =
+        label.className
+          .split(/\s+/)
+          .map((c) => new RegExp(`\\.${c}\\s*\\{[^}]*display\\s*:\\s*([^;\\s}]+)`, 's').exec(css)?.[1])
+          .find(Boolean) ?? getComputedStyle(label).display;
+      expect(['block', 'flex']).toContain(display);
+    }
+  });
+
+  it('ラジオとテキストが同一 label 内にあり分離していない', () => {
+    const { root } = showRegister();
+    const labels = [...root.querySelectorAll('label')];
+    expect(labels).toHaveLength(2);
+    for (const label of labels) {
+      const radio = label.querySelector('input[type="radio"]');
+      expect(radio).not.toBeNull();
+      // ラベルテキストは同一 label 内の要素が持ち、radio の兄弟であること。
+      const textEl = [...label.children].find((el) => el !== radio);
+      expect(textEl?.textContent?.length).toBeGreaterThan(0);
+    }
+  });
+});
