@@ -2,7 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { renderMarkdown, slugify } from '../../site/lib/markdown.ts';
 
-const opts = { base: '/', copyLabel: 'コピー', copiedLabel: 'コピーしました' };
+const opts = { base: '/', copyLabel: 'コピー', copiedLabel: 'コピーしました', copyFailLabel: 'コピーできませんでした' };
 
 describe('slugify', () => {
   it('keeps letters and digits including Japanese, joins words with hyphens', () => {
@@ -27,9 +27,10 @@ describe('renderMarkdown: headings', () => {
 
 describe('renderMarkdown: code blocks', () => {
   it('wraps fences with a copy button and escapes content', () => {
-    const r = renderMarkdown('```bash\nmake <build> && echo "x"\n```', { base: '/', copyLabel: 'Copy', copiedLabel: 'Copied' });
+    const r = renderMarkdown('```bash\nmake <build> && echo "x"\n```', { base: '/', copyLabel: 'Copy', copiedLabel: 'Copied', copyFailLabel: 'Copy failed' });
     expect(r.html).toContain('<div class="code">');
-    expect(r.html).toContain('<button class="copy" type="button" data-copy data-done="Copied">Copy</button>');
+    expect(r.html).toContain('<button class="copy" type="button" data-copy data-done="Copied" data-fail="Copy failed">Copy</button>');
+    expect(r.html).toContain('>Copy</button><span class="tip" role="status"></span>');
     expect(r.html).toContain('make &lt;build&gt; &amp;&amp; echo &quot;x&quot;');
   });
 
@@ -51,14 +52,20 @@ describe('renderMarkdown: code blocks', () => {
 
 describe('renderMarkdown: copy button label', () => {
   it('escapes the done label attribute', () => {
-    const r = renderMarkdown('```\nx\n```', { base: '/', copyLabel: 'c', copiedLabel: 'a"<b' });
+    const r = renderMarkdown('```\nx\n```', { base: '/', copyLabel: 'c', copiedLabel: 'a"<b', copyFailLabel: 'f' });
     expect(r.html).toContain('data-done="a&quot;&lt;b"');
+  });
+
+  it('emits the escaped failure label and an empty live-region tip', () => {
+    const r = renderMarkdown('```\nx\n```', { base: '/', copyLabel: 'c', copiedLabel: 'd', copyFailLabel: 'a"<b' });
+    expect(r.html).toContain('data-fail="a&quot;&lt;b"');
+    expect(r.html).toContain('<span class="tip" role="status"></span>');
   });
 });
 
 describe('renderMarkdown: links', () => {
   it('prefixes absolute site paths with the base and collects raw hrefs', () => {
-    const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd' });
+    const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd', copyFailLabel: 'f' });
     expect(r.html).toContain('href="/JushoAI/guides/privacy/"');
     expect(r.html).toContain('href="#x"');
     expect(r.html).toContain('href="mailto:a@b.c"');
@@ -106,7 +113,7 @@ describe('renderMarkdown: raw HTML', () => {
 
 describe('renderMarkdown: edge cases', () => {
   it('treats protocol-relative hrefs as external, without base rewriting', () => {
-    const r = renderMarkdown('[a](//example.com/x)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd' });
+    const r = renderMarkdown('[a](//example.com/x)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd', copyFailLabel: 'f' });
     expect(r.html).toContain('href="//example.com/x" target="_blank" rel="noopener noreferrer"');
   });
 

@@ -126,8 +126,16 @@ details.faq p { color: var(--muted); margin: .75rem 0 0; }
 .code { position: relative; margin: 1.25rem 0; }
 .code pre { margin: 0; background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px; padding: 1rem 4.5rem 1rem 1.1rem; overflow-x: auto; }
 .code pre code { background: none; border: 0; padding: 0; font-size: .9rem; }
-.copy { position: absolute; top: .5rem; right: .5rem; font: inherit; font-size: .8rem; padding: .15rem .6rem; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--text); cursor: pointer; }
-.copy.copied { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+.copy { position: absolute; top: .5rem; right: .5rem; font: inherit; font-size: .8rem; padding: .15rem .6rem; min-inline-size: 24px; min-block-size: 24px; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--text); cursor: pointer; }
+.copy[data-copied] { background: var(--btn-bg); color: var(--btn-text); border-color: transparent; }
+.copy[data-failed] { border-color: var(--accent-text); color: var(--accent-text); }
+/* Copy feedback bubble. It is also the role="status" live region, so it is
+   shown and hidden with opacity only: display:none / visibility:hidden would
+   take it out of the accessibility tree and the text would not be announced.
+   The text itself carries the outcome (not color alone). Opacity fade is
+   also the prefers-reduced-motion behavior, so no motion fallback is needed. */
+.code .tip { position: absolute; top: 2.4rem; right: .5rem; font-size: .8rem; padding: .15rem .6rem; border-radius: 6px; border: 1px solid var(--line); background: var(--bg-soft); color: var(--text); white-space: nowrap; opacity: 0; transition: opacity .15s ease-out; pointer-events: none; }
+.code .tip:not(:empty) { opacity: 1; }
 .guide-list { display: grid; gap: 1rem; list-style: none; padding: 0; margin: 2rem 0 0; }
 .guide-list a { display: block; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.1rem 1.25rem; text-decoration: none; color: var(--text); }
 .guide-list a:hover { border-color: var(--accent-text); }

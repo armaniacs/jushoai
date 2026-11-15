@@ -10,6 +10,8 @@ export interface RenderOptions {
   base: string;
   copyLabel: string;
   copiedLabel: string;
+  /** Failure message shown in the adjacent role="status" tip (Task 3). */
+  copyFailLabel: string;
   /** Guide file identity for build error messages (e.g. "ja/popup-and-fill.md"). */
   source?: string;
 }
@@ -58,7 +60,7 @@ export function wrapTables(html: string): string {
 const decodeHtml = (s: string) =>
   s.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
 
-export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, source }: RenderOptions): Rendered {
+export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copyFailLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx]!;
@@ -76,15 +78,23 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, sour
     // Scrollable code blocks follow the guide `html` §2 pattern: the <pre>
     // that scrolls (`.code pre` has overflow-x:auto) is itself focusable and
     // exposed as a named region so keyboard-only users can scroll it.
-    // The copy <button> next to it is untouched (Task 3 owns it), so there
+    // The copy <button> next to it keeps its visible label (Task 3); there
     // is no caption element to reference via aria-labelledby — aria-label is
     // used instead. The name is the fence language when present
     // ("code: bash") with a neutral "code" fallback (the element-ish token,
     // not a translated word, mirroring wrapTables' "table" fallback) so
     // ja/en output stays symmetric without new i18n dictionary keys.
     const lang = kind ? ` aria-label="code: ${escapeHtml(kind)}"` : ' aria-label="code"';
+    // Copy-button feedback follows the guide `copy-button` pattern (Task 3):
+    // the button label never changes; success/failure is shown in the
+    // adjacent role="status" tip, which is both the visible bubble and the
+    // live region. The tip stays empty until a copy so no stale message is
+    // left for screen reader browse mode. `data-copy`/`data-done` are kept
+    // for the existing contract; `data-fail` carries the localized failure
+    // message (same ja/en source as the other labels, no new i18n keys).
     return (
-      `<div class="code"><button class="copy" type="button" data-copy data-done="${escapeHtml(copiedLabel)}">${escapeHtml(copyLabel)}</button>` +
+      `<div class="code"><button class="copy" type="button" data-copy data-done="${escapeHtml(copiedLabel)}" data-fail="${escapeHtml(copyFailLabel)}">${escapeHtml(copyLabel)}</button>` +
+      `<span class="tip" role="status"></span>` +
       `<pre tabindex="0" role="region"${lang}><code>${escapeHtml(token.content)}</code></pre></div>\n`
     );
   };
