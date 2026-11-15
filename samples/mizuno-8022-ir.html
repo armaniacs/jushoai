@@ -1,0 +1,13 @@
+<!-- Minimal reproduction of https://jpn.mizuno.com/form-corp/ir. Values final. -->
+<form>
+      <label for="edit-name">お名前</label>
+      <input name="name" id="edit-name" type="text" value="" placeholder="例： 苗字　名前" maxlength="100">
+      <label for="edit-furikana">ふりがな</label>
+      <input name="furikana" id="edit-furikana" type="text" value="" placeholder="例： みょうじ　なまえ" maxlength="100">
+      <label for="edit-tel-no">電話番号</label>
+      <input name="tel_no" id="edit-tel-no" type="text" value="" placeholder="例： 03-1234-5678" maxlength="13" pattern="0\d{1,4}-\d{1,4}-\d{3,4}">
+      <label for="edit-mail-set-mail-1">メールアドレス</label>
+      <input name="mail_set[mail_1]" id="edit-mail-set-mail-1" type="email" value="" placeholder="例： mizuno.info@example.co.jp" maxlength="200">
+      <label for="edit-mail-set-mail-2">メールアドレス確認</label>
+      <input name="mail_set[mail_2]" id="edit-mail-set-mail-2" type="email" value="" placeholder="確認のため再度ご入力ください。" maxlength="200">
+</form>

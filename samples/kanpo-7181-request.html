@@ -1,0 +1,25 @@
+<!-- Minimal reproduction of https://www.jp-life.japanpost.jp/request/top02.html. Values final. -->
+<form>
+      <label for="name">氏名（漢字）必須</label>
+      <input name="name" id="name" type="text" value="" placeholder="姓（漢字）" maxlength="50">
+      <input name="name2" id="name2" type="text" value="" placeholder="名（漢字）" maxlength="50">
+      <label for="furigana">氏名（カナ）必須</label>
+      <input name="furigana" id="furigana" type="text" value="" placeholder="セイ（カナ）" maxlength="60">
+      <input name="furigana2" id="furigana2" type="text" value="" placeholder="メイ（カナ）" maxlength="60">
+      <label for="year">生年月日必須</label>
+      <select name="" id="year"><option value="">--</option></select>
+      <select name="" id="month"><option value="">--</option></select>
+      <select name="" id="day"><option value="">--</option></select>
+      <label for="postal">郵便番号・住所必須</label>
+      <input name="postal" id="postal" type="tel" value="" placeholder="1234567" maxlength="7">
+      <input name="address1" id="address1" type="text" value="" placeholder="自動入力" maxlength="48">
+      <input name="address2" id="address2" type="text" value="" placeholder="住所の続き（番地以降）" maxlength="30">
+      <label for="telA">携帯番号（固定電話）必須</label>
+      <input name="telA" id="telA" type="tel" value="" placeholder="090" maxlength="5">
+      <input name="telB" id="telB" type="tel" value="" placeholder="1234" maxlength="4">
+      <input name="telC" id="telC" type="tel" value="" placeholder="5678" maxlength="4">
+      <label for="mail">メールアドレス必須</label>
+      <input name="mail" id="mail" type="email" value="" placeholder="xxxxx@xxxxx.co.jp" maxlength="254">
+      <label for="mailCheck">メールアドレス（確認用）必須</label>
+      <input name="mailCheck" id="mailCheck" type="email" value="" placeholder="確認のため再度ご入力ください" maxlength="254">
+</form>
