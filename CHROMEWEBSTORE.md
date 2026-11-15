@@ -67,7 +67,7 @@ Key features
 How to use
 1. Register your profile (name, furigana, email, phone) and addresses on the extension settings page
 2. Press "Fill with JushoAI" near the form
-3. Check the field and value list in the preview, then press Enter
+3. Check the field and value list in the preview, then press "入力する"
 
 Privacy and permission notes
 - Your saved profile values are never sent anywhere. Only when you turn AI on, information about fields the rules cannot decide (field names, labels, examples, nearby headings) goes to the provider you chose
@@ -143,7 +143,7 @@ Japanese (画面の表示は日本語専用。ストアの説明文は日本語�
 |-----------|-----------|------------------------|---------|---------------------------|
 | Personally identifiable info | Yes (登録した氏名・住所などを端末内に保存) | No (プロファイルの値は外部に送らない) | 保存した値を申込フォームに入力する | No |
 | Health info | No | No | - | No |
-| Financial info | No | No | - (対応しないものとして扱い、保存項目に含めない) | No |
+| Financial info | No | No | - | No |
 | Authentication info | Yes (AI 用 API キーを暗号化して端末内に保存) | Yes (AI 設定時のみ、選んだプロバイダーへの呼び出しの認証に使う) | 選んだ AI プロバイダーの利用認証 | 選んだプロバイダーのみ |
 | Personal communications | No | No | - | No |
 | Location | No | No | - | No |
@@ -151,7 +151,7 @@ Japanese (画面の表示は日本語専用。ストアの説明文は日本語�
 | User activity | No | No | - | No |
 | Website content | Yes (入力実行時に表示中の入力欄とそのラベル・見出しを読み取る) | AI 設定時のみ Yes (ルールで判定できない欄の情報だけを、選んだプロバイダーに送る。ブラウザー内蔵 AI は端末内で動き、外部に送らない) | 入力欄の分類 | 選んだクラウドのプロバイダーのみ (ブラウザー内蔵 AI の場合はなし) |
 
-(実装との一致: プロファイル値は外部送信しないこと、AI 利用時のみ欄の情報 (name・label・placeholder・見出し・type・maxlength など) を選択プロバイダーに送ること、API キーは AES-GCM の封筒 (エンベロープ) で暗号化して保存し background だけが復号すること、通信先 host 権限は optional で設定保存時に要求することは、src/ai/* と src/llm/* の実装のとおりである。ラベルや見出しはページ上の文言のため、ページに表示されている個人情報が送信内容に含まれることがある)
+(実装との一致: プロファイル値は外部送信しないこと、AI 利用時のみ欄の情報 (name・label・placeholder・見出し・type・maxlength など) を選択プロバイダーに送ること、API キーは AES-GCM の封筒 (エンベロープ) で暗号化したまま保存し使うときだけ復号すること、通信先 host 権限は optional で設定保存時に要求することは、src/ai/* と src/llm/* の実装のとおりである。ラベルや見出しはページ上の文言のため、ページに表示されている個人情報が送信内容に含まれることがある)
 
 ### Data Use Certification
 

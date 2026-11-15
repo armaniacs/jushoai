@@ -266,9 +266,10 @@ export default defineContentScript({
       const info = await getAiStatusViaBackground();
       button.setStatus(info);
       if (info.provider === 'built-in' && info.status === 'downloadable') {
-        void requestDownloadViaBackground()
-          .then(() => getAiStatusViaBackground())
-          .then((s) => button.setStatus(s));
+        void (async () => {
+          await requestDownloadViaBackground();
+          button.setStatus(await getAiStatusViaBackground());
+        })();
       }
       const classifier = info.status === 'available' ? new BackgroundClassifier() : null;
       // PBI-45: run() passes intent only — which classifier to use. The reason
