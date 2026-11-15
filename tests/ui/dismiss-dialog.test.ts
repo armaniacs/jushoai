@@ -128,10 +128,14 @@ describe('showDismissDialog auto-hide', () => {
 
   it('15秒経過で閉じる', () => {
     vi.useFakeTimers();
-    const dialog = showDismissDialog({ onClose: vi.fn(), onUndo: vi.fn() });
+    const onClose = vi.fn();
+    const onUndo = vi.fn();
+    const dialog = showDismissDialog({ onClose, onUndo });
     expect(document.body.contains(dialog.host)).toBe(true);
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(false);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(onUndo).not.toHaveBeenCalled();
   });
 
   it('ホバー中は残りホバー解除で閉じる', () => {
