@@ -23,6 +23,8 @@ export interface DismissDialogHandle {
   setRegisterBusy: (busy: boolean) => void;
 }
 
+export const AUTO_HIDE_MS = 15000;
+
 export function showDismissDialog(actions: DismissDialogActions): DismissDialogHandle {
   const { host, root } = createShadowHost({ position: 'fixed' });
   host.style.setProperty('right', '16px', 'important');
@@ -51,13 +53,35 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   undo.textContent = '元に戻す';
 
   let closed = false;
+  let autoHideTimer: ReturnType<typeof setTimeout> | undefined;
   const teardown = (): void => {
     if (closed) return;
     closed = true;
+    if (autoHideTimer !== undefined) {
+      clearTimeout(autoHideTimer);
+      autoHideTimer = undefined;
+    }
     host.remove();
   };
   only.addEventListener('click', () => { teardown(); actions.onClose(); });
   undo.addEventListener('click', () => { teardown(); actions.onUndo(); });
+
+  // 自動非表示中も操作中(ホバー/フォーカス)は残す。タイマー満了時に
+  // engaged なら、外れた時点で閉じる。
+  let engaged = false;
+  let autoHideExpired = false;
+  const maybeAutoHide = (): void => {
+    if (autoHideExpired && !engaged) teardown();
+  };
+  box.addEventListener('pointerenter', () => { engaged = true; });
+  box.addEventListener('pointerleave', () => { engaged = false; maybeAutoHide(); });
+  box.addEventListener('focusin', () => { engaged = true; });
+  box.addEventListener('focusout', (e) => {
+    // ダイアログ内のボタン間移動では engaged を維持する。
+    if (e.relatedTarget instanceof Node && box.contains(e.relatedTarget)) return;
+    engaged = false;
+    maybeAutoHide();
+  });
 
   row.append(only, undo);
   box.append(text, row);
@@ -107,6 +131,12 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
 
   root.append(style, box);
   document.body.append(host);
+
+  autoHideTimer = setTimeout(() => {
+    autoHideTimer = undefined;
+    if (engaged) autoHideExpired = true;
+    else teardown();
+  }, AUTO_HIDE_MS);
 
   return {
     host,

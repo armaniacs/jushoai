@@ -120,3 +120,50 @@ describe('showDismissDialog a11y', () => {
     expect(box?.getAttribute('aria-label')).toBe('JushoAI の非表示ダイアログ');
   });
 });
+
+describe('showDismissDialog auto-hide', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('15秒経過で閉じる', () => {
+    vi.useFakeTimers();
+    const dialog = showDismissDialog({ onClose: vi.fn(), onUndo: vi.fn() });
+    expect(document.body.contains(dialog.host)).toBe(true);
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+
+  it('ホバー中は残りホバー解除で閉じる', () => {
+    vi.useFakeTimers();
+    const { dialog, root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const box = root.querySelector('[role="dialog"]')!;
+    box.dispatchEvent(new Event('pointerenter', { bubbles: true }));
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    box.dispatchEvent(new Event('pointerleave', { bubbles: true }));
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+
+  it('フォーカス中は残りフォーカス解除で閉じる', () => {
+    vi.useFakeTimers();
+    const { dialog, root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const button = root.querySelector('button')!;
+    button.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    button.dispatchEvent(new FocusEvent('focusout', { bubbles: true }));
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+
+  it('手動 close 後にタイマーが発火しても何も起きない', () => {
+    vi.useFakeTimers();
+    const onClose = vi.fn();
+    const dialog = showDismissDialog({ onClose, onUndo: vi.fn() });
+    dialog.closeOnly();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    vi.advanceTimersByTime(15000);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+});
