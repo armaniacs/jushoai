@@ -56,7 +56,9 @@ export function renderPage(p: PageInput): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(p.title)}</title>
 <meta name="description" content="${escapeHtml(p.description)}">
-<meta name="color-scheme" content="dark light">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161b">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JushoAI">
 <meta property="og:title" content="${escapeHtml(p.title)}">
