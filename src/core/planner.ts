@@ -207,6 +207,17 @@ export const VALUE_ROWS: readonly ValueRow[] = [
   { category: 'tel1', read: ({ profile }) => telAt(profile, 0), assist: null, abbreviatable: false },
   { category: 'tel2', read: ({ profile }) => telAt(profile, 1), assist: null, abbreviatable: false },
   { category: 'tel3', read: ({ profile }) => telAt(profile, 2), assist: null, abbreviatable: false },
+  // PBI-226: FAX にプロファイル値はないため電話番号値を流用する（従来の流用
+  // 挙動の維持：ff-csr の fax 欄は tel 値で fill していた）。ハイフン判定は
+  // tel 行と同一で、値の見え方は tel と変わらない。
+  {
+    category: 'fax',
+    read: ({ profile, meta }) => {
+      if (!profile.tel) return '';
+      return wantsHyphen(meta.placeholder, meta.maxLength, 'tel') ? splitTel(profile.tel).join('-') : profile.tel;
+    },
+    assist: null, abbreviatable: false,
+  },
   {
     category: 'zip',
     read: ({ address, meta }) => {

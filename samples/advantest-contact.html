@@ -1,0 +1,18 @@
+<!-- Minimal reproduction of https://www.advantest.com/ja/contact/. Values final. -->
+<form>
+      <input name="q" id="" type="text" value="" placeholder="キーワードで検索">
+      <label for="category">お問い合わせ内容 *</label>
+      <select name="data[Contact][category]" id="category"><option value="">--</option></select>
+      <label for="lname">姓 *</label>
+      <input name="data[Contact][lname]" id="lname" type="text" value="" maxlength="50">
+      <label for="fname">名 *</label>
+      <input name="data[Contact][fname]" id="fname" type="text" value="" maxlength="50">
+      <label for="company">会社名 *</label>
+      <input name="data[Contact][company]" id="company" type="text" value="" placeholder="個人の方は「個人」とご記入ください" maxlength="50">
+      <label for="section">部署</label>
+      <input name="data[Contact][section]" id="section" type="text" value="" maxlength="50">
+      <label for="phone">電話番号</label>
+      <input name="data[Contact][phone]" id="phone" type="tel" value="" maxlength="50">
+      <label for="subject">件名 *</label>
+      <input name="data[Contact][subject]" id="subject" type="text" value="" maxlength="50">
+</form>

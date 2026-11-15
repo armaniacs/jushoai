@@ -1,0 +1,15 @@
+<!-- Minimal reproduction of https://www.kobebussan.co.jp/mail.php. Values final. -->
+<form>
+      <label for="name">お名前（必須）</label>
+      <input name="お名前" id="name" type="text" value="" placeholder="全角">
+      <label for="mail">お問い合わせ項目（必須）</label>
+      <input name="メールアドレス" id="mail" type="email" value="" placeholder="半角" pattern="[a-z0-9._%\+\-]+@[a-z0-9.\-]+\.[a-z]{2,3}$">
+      <input name="" id="mail_check" type="email" value="" placeholder="半角" pattern="[a-z0-9._%\+\-]+@[a-z0-9.\-]+\.[a-z]{2,3}$">
+      <label for="tel">お電話番号</label>
+      <input name="電話番号" id="tel" type="tel" value="" placeholder="-（ハイフン）無し" pattern="^[0-9A-Za-z]+$">
+      <select name="都道府県" id=""><option value="">--</option></select>
+      <input name="市区町村" id="city" type="text" value="" placeholder="（市区町村・番地）">
+      <input name="マンション名" id="house" type="text" value="" placeholder="（マンション名・部屋番号など）">
+      <select name="お問い合わせ項目" id=""><option value="">--</option></select>
+      <input name="店舗名" id="shopname" type="text" value="">
+</form>

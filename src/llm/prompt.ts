@@ -11,6 +11,7 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 - lastNameKana: 姓のフリガナ / firstNameKana: 名のフリガナ / fullNameKana: 姓名のフリガナを1欄に入力
 - email: メールアドレス
 - tel: 電話番号1欄 / tel1, tel2, tel3: 電話番号の分割欄（市外局番, 市内局番, 加入者番号）
+- fax: FAX番号1欄（値は電話番号を流用）
 - zip: 郵便番号1欄 / zip1, zip2: 郵便番号の分割欄（上3桁, 下4桁）
 - birthYear: 生まれ年（西暦4桁）/ birthMonth: 生まれ月 / birthDay: 生まれ日 / birthEra: 和暦の元号
 - birthday: 生年月日を1欄に入力
