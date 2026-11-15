@@ -57,6 +57,20 @@ describe('renderMarkdown: links', () => {
   });
 });
 
+describe('renderMarkdown: tables', () => {
+  it('wraps tables in a keyboard-focusable region named by its headers', () => {
+    const r = renderMarkdown('| 分類 | 欄 |\n|---|---|\n| 氏名 | 姓 |\n', opts);
+    expect(r.html).toContain('<div class="table-wrapper" tabindex="0" role="region" aria-label="分類, 欄"><table>');
+    expect(r.html).toContain('</table></div>');
+    expect(r.html).toContain('<th>分類</th>');
+  });
+
+  it('escapes header text used in the region name', () => {
+    const r = renderMarkdown('| a"b | c |\n|---|---|\n| x | y |\n', opts);
+    expect(r.html).toContain('aria-label="a&quot;b, c"');
+  });
+});
+
 describe('renderMarkdown: raw HTML', () => {
   it('escapes raw HTML instead of passing it through', () => {
     const r = renderMarkdown('<script>alert(1)</script>', opts);

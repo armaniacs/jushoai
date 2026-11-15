@@ -32,6 +32,28 @@ export function slugify(text: string): string {
 export const escapeHtml = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 
+// Wraps every <table> in a keyboard-scrollable region (responsive-table
+// pattern). The accessible name is derived from the table's own header
+// cells so each table gets a distinct label without new i18n keys. The
+// inner <table>/<th> markup is left untouched (plain tags, <th> semantics
+// kept) so guide validators that match literal tags keep working.
+export function wrapTables(html: string): string {
+  return html.replace(/<table>([\s\S]*?)<\/table>/g, (m, inner: string) => {
+    const head = /<thead>([\s\S]*?)<\/thead>/.exec(inner)?.[1] ?? inner;
+    const headers = [...head.matchAll(/<th>([\s\S]*?)<\/th>/g)]
+      .map((c) => decodeHtml((c[1] ?? '').replace(/<[^>]+>/g, '').trim()))
+      .filter((t) => t !== '');
+    const label = headers.length > 0 ? ` aria-label="${escapeHtml(headers.join(', '))}"` : '';
+    return `<div class="table-wrapper" tabindex="0" role="region"${label}><table>${inner}</table></div>`;
+  });
+}
+
+// wrapTables reads header text back out of already-escaped HTML, so decode
+// the entities markdown-it emitted before escapeHtml re-escapes the label
+// (decode &amp; last to avoid double-decoding sequences like &amp;quot;).
+const decodeHtml = (s: string) =>
+  s.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
+
 export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   md.renderer.rules.fence = (tokens, idx) => {
@@ -84,5 +106,6 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, sour
     }
   });
 
-  return { html: md.renderer.render(tokens, md.options as Parameters<typeof md.renderer.render>[1], env), headings, links };
+  const rendered = md.renderer.render(tokens, md.options as Parameters<typeof md.renderer.render>[1], env);
+  return { html: wrapTables(rendered), headings, links };
 }

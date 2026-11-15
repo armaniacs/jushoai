@@ -118,7 +118,8 @@ details.faq p { color: var(--muted); margin: .75rem 0 0; }
 .prose ul, .prose ol { padding-left: 1.4rem; }
 .prose li { margin: .25rem 0; }
 .prose code { background: var(--code-bg); border: 1px solid var(--line); border-radius: 4px; padding: .05rem .35rem; font-size: .92em; }
-.prose table { border-collapse: collapse; width: 100%; margin: 1.25rem 0; display: block; overflow-x: auto; }
+.prose .table-wrapper { overflow: auto; margin: 1.25rem 0; }
+.prose table { border-collapse: collapse; width: 100%; }
 .prose th, .prose td { border: 1px solid var(--line); padding: .5rem .75rem; text-align: left; vertical-align: top; }
 .prose th { background: var(--bg-soft); }
 .prose blockquote { margin: 1.25rem 0; padding: .25rem 1rem; border-left: 4px solid var(--accent); background: var(--bg-soft); }
