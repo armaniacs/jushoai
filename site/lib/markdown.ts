@@ -38,12 +38,16 @@ export const escapeHtml = (s: string) =>
 // inner <table>/<th> markup is left untouched (plain tags, <th> semantics
 // kept) so guide validators that match literal tags keep working.
 export function wrapTables(html: string): string {
-  return html.replace(/<table>([\s\S]*?)<\/table>/g, (m, inner: string) => {
+  return html.replace(/<table\b[^>]*>([\s\S]*?)<\/table>/g, (m, inner: string) => {
     const head = /<thead>([\s\S]*?)<\/thead>/.exec(inner)?.[1] ?? inner;
-    const headers = [...head.matchAll(/<th>([\s\S]*?)<\/th>/g)]
+    const headers = [...head.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)]
       .map((c) => decodeHtml((c[1] ?? '').replace(/<[^>]+>/g, '').trim()))
       .filter((t) => t !== '');
-    const label = headers.length > 0 ? ` aria-label="${escapeHtml(headers.join(', '))}"` : '';
+    // Empty-header fallback: fixed neutral token "table" (the HTML element
+    // name, not a translated word) so ja/en symmetry holds without new i18n
+    // dictionary keys. A region without an accessible name is exposed as
+    // generic, so a label is always emitted here.
+    const label = headers.length > 0 ? ` aria-label="${escapeHtml(headers.join(', '))}"` : ' aria-label="table"';
     return `<div class="table-wrapper" tabindex="0" role="region"${label}><table>${inner}</table></div>`;
   });
 }

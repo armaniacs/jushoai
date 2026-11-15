@@ -69,6 +69,16 @@ describe('renderMarkdown: tables', () => {
     const r = renderMarkdown('| a"b | c |\n|---|---|\n| x | y |\n', opts);
     expect(r.html).toContain('aria-label="a&quot;b, c"');
   });
+
+  it('keeps the region name when columns use alignment syntax', () => {
+    const r = renderMarkdown('| 左 | 中 | 右 |\n|:---|:---:|---:|\n| a | b | c |\n', opts);
+    expect(r.html).toContain('aria-label="左, 中, 右"');
+  });
+
+  it('falls back to a neutral label when no headers can be derived', () => {
+    const r = renderMarkdown('|  |  |\n|---|---|\n| a | b |\n', opts);
+    expect(r.html).toContain('<div class="table-wrapper" tabindex="0" role="region" aria-label="table"><table>');
+  });
 });
 
 describe('renderMarkdown: raw HTML', () => {
