@@ -99,15 +99,15 @@ Japanese (画面の表示は日本語専用。ストアの説明文は日本語�
 | Asset | Dimensions | Status | Filename |
 |-------|-----------|--------|----------|
 | Store Icon [REQUIRED] | 128x128 PNG | Ready | public/icon/128.png |
-| Screenshot 1 [REQUIRED] | 1280x800 or 640x400 | Needs update (要更新) | 未作成 |
-| Screenshot 2 [RECOMMENDED] | 1280x800 or 640x400 | Needs update (要更新) | 未作成 |
-| Screenshot 3 [RECOMMENDED] | 1280x800 or 640x400 | Needs update (要更新) | 未作成 |
-| Screenshot 4 | 1280x800 or 640x400 | Needs update (要更新) | 未作成 |
-| Screenshot 5 | 1280x800 or 640x400 | Needs update (要更新) | 未作成 |
-| Small Promo Tile [RECOMMENDED] | 440x280 | Needs update (要更新) | 未作成 |
-| Marquee Promo Tile | 1400x560 | Needs update (要更新) | 未作成 |
+| Screenshot 1 [REQUIRED] | 1280x800 or 640x400 | Ready | promo/2026-11-16-store-assets/01-before.png |
+| Screenshot 2 [RECOMMENDED] | 1280x800 or 640x400 | Ready | promo/2026-11-16-store-assets/02-preview.png |
+| Screenshot 3 [RECOMMENDED] | 1280x800 or 640x400 | Ready | promo/2026-11-16-store-assets/03-after.png |
+| Screenshot 4 | 1280x800 or 640x400 | Ready | promo/2026-11-16-store-assets/04-profile.png |
+| Screenshot 5 | 1280x800 or 640x400 | Ready | promo/2026-11-16-store-assets/06-ai.png |
+| Small Promo Tile [RECOMMENDED] | 440x280 | Ready | promo/2026-11-16-store-assets/07-promo-440x280.png |
+| Marquee Promo Tile | 1400x560 | Ready | promo/2026-11-16-store-assets/08-marquee-1400x560.png |
 
-(実在の確認: public/icon/16.png (16x16)、32.png (32x32)、48.png (48x48)、128.png (128x128) はいずれも実寸どおり存在する。スクリーンショットとプロモタイルは未整備のため捏造せず「要更新」と明記する。promo/2026-10-10-store-registration/images/ の画像は記事用の素材であり、ストア用規定寸法のものではないため計上しない)
+(実在の確認: public/icon/16.png (16x16)、32.png (32x32)、48.png (48x48)、128.png (128x128) はいずれも実寸どおり存在する。スクリーンショットの6枚とプロモタイル2種は tmp/store/ にあったもの (2026-10-08撮影、寸法は file で実測確認・内容は目視確認済み) を promo/2026-11-16-store-assets/ に移して追跡可能にした。予備として 05-address.png (設定の住所ページ) も同梱。撮影から版が進んでいるため、提出時に現行画面との一致だけ目視すること。promo/2026-10-10-store-registration/images/ の画像は記事用の素材であり、ストア用規定寸法のものではないため計上しない)
 
 ### Screenshot Notes
 
@@ -116,7 +116,7 @@ Japanese (画面の表示は日本語専用。ストアの説明文は日本語�
 - Screenshot 3: 入力後のフォーム。分割された欄に正しい形で値が入った状態を見せる
 - Screenshot 4 (任意): 設定ページのプロファイル登録。10件まで登録できることが分かる画面にする
 - Screenshot 5 (任意): 通信の監査ログ。送った内容を確認・削除できることが分かる画面にする
-- すべての画像は現在の版の画面で撮り直し、個人情報を含めないこと
+- 画像は 2026-10-08 撮影のものを流用する。提出時に現行画面と一致しているか目視し、大きく変わっていれば撮り直すこと。個人情報を含めないこと
 
 ## Permissions Justification
 
@@ -180,7 +180,7 @@ armaniacs (package.json の author と一致)
 
 **Contact Email** [REQUIRED]
 
-要更新: 公開用の連絡先メールアドレスは未定。現状の窓口は下の Support URL (GitHub Issues) で受け付けており、提出前に公開可能なメールアドレスを決めて本欄を更新すること。捏造しないため空欄のままにしない。
+公開用のメールアドレスは設けず、下の Support URL (GitHub Issues) を連絡先とする。ダッシュボードの連絡先欄には開発者の Google アカウントのメールが入るため、公開欄の追加は不要と判断した (2026-11-16 確定)。
 
 **Support URL / Email** [RECOMMENDED]
 
