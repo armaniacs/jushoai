@@ -32,6 +32,21 @@ describe('renderMarkdown: code blocks', () => {
     expect(r.html).toContain('<button class="copy" type="button" data-copy data-done="Copied">Copy</button>');
     expect(r.html).toContain('make &lt;build&gt; &amp;&amp; echo &quot;x&quot;');
   });
+
+  it('exposes the scrolling pre as a named region including the fence language', () => {
+    const r = renderMarkdown('```bash\necho hi\n```', opts);
+    expect(r.html).toContain('<pre tabindex="0" role="region" aria-label="code: bash"><code>');
+  });
+
+  it('falls back to a neutral label when the fence has no language', () => {
+    const r = renderMarkdown('```\nplain\n```', opts);
+    expect(r.html).toContain('<pre tabindex="0" role="region" aria-label="code"><code>');
+  });
+
+  it('escapes the fence language used in the region name', () => {
+    const r = renderMarkdown('```a"b\nx\n```', opts);
+    expect(r.html).toContain('aria-label="code: a&quot;b"');
+  });
 });
 
 describe('renderMarkdown: copy button label', () => {

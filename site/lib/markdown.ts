@@ -73,9 +73,19 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, sour
       }
       return `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${escapeHtml(title)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>\n`;
     }
+    // Scrollable code blocks follow the guide `html` §2 pattern: the <pre>
+    // that scrolls (`.code pre` has overflow-x:auto) is itself focusable and
+    // exposed as a named region so keyboard-only users can scroll it.
+    // The copy <button> next to it is untouched (Task 3 owns it), so there
+    // is no caption element to reference via aria-labelledby — aria-label is
+    // used instead. The name is the fence language when present
+    // ("code: bash") with a neutral "code" fallback (the element-ish token,
+    // not a translated word, mirroring wrapTables' "table" fallback) so
+    // ja/en output stays symmetric without new i18n dictionary keys.
+    const lang = kind ? ` aria-label="code: ${escapeHtml(kind)}"` : ' aria-label="code"';
     return (
       `<div class="code"><button class="copy" type="button" data-copy data-done="${escapeHtml(copiedLabel)}">${escapeHtml(copyLabel)}</button>` +
-      `<pre><code>${escapeHtml(token.content)}</code></pre></div>\n`
+      `<pre tabindex="0" role="region"${lang}><code>${escapeHtml(token.content)}</code></pre></div>\n`
     );
   };
 
