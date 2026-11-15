@@ -34,3 +34,5 @@ JushoAI_VULNHUNT_*/
 # promo drafts stay local; only the template type is tracked
 promo/*
 !promo/README.md
+# store submission assets are release material, tracked for reuse
+!promo/2026-11-16-store-assets/
