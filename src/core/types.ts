@@ -5,6 +5,9 @@ export const CATEGORIES = [
   'gender', 'ageDecade',
   'country', 'address1', 'address2', 'address3', 'address4', 'postalCode',
   'email', 'tel', 'tel1', 'tel2', 'tel3',
+  // PBI-226: FAX番号欄。プロファイルにFAX値はなく、planner が電話番号値を
+  // 流用する。tel 系の分割・leftover 対象外で、電話番号欄との区別を保つ。
+  'fax',
   'zip', 'zip1', 'zip2',
   'prefecture', 'city', 'street', 'building',
   'addressFull', 'addressNoPref',
