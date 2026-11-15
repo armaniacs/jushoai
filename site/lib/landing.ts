@@ -119,8 +119,8 @@ ${renderFeedbackSection(s.feedback)}
 <p><a href="${u('guides/license/')}">${e(s.license.link)}</a></p>
 </div></section>
 
-<section class="block" id="faq"><div class="wrap narrow">
-<h2 class="section-title">${e(s.faq.title)}</h2>
+<section class="block" id="faq" aria-labelledby="faq-heading"><div class="wrap narrow">
+<h2 class="section-title" id="faq-heading">${e(s.faq.title)}</h2>
 ${s.faq.items.map((i) => `<details class="faq"><summary>${e(i.q)}</summary><p>${e(i.a)}</p></details>`).join('\n')}
 <p><a href="${u('guides/troubleshooting/')}">${e(s.faq.more)}</a></p>
 </div></section>`;
