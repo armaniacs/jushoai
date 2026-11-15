@@ -72,7 +72,7 @@ export const Demo: React.FC<{ clip: DemoClip }> = ({ clip }) => {
             <OffthreadVideo src={staticFile(clip.file)} startFrom={Math.round(clip.start * FPS)} style={{ width: '100%', height: '100%' }} muted />
           )}
         </div>
-        {fastRate > 1 ? (
+        {fastRate >= 2 ? (
           <div style={{ position: 'absolute', top: 24, right: 28, padding: '6px 18px', borderRadius: 999, background: 'rgba(11,16,32,.78)', color: '#fff', fontFamily: FONT, fontSize: 34, fontWeight: 800 }}>
             ×{fastRate}
           </div>

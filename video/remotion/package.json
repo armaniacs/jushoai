@@ -4,7 +4,9 @@
   "type": "module",
   "scripts": {
     "studio": "remotion studio",
-    "render": "node render.mjs"
+    "render": "node render.mjs",
+    "render-drag": "node render.mjs --comp DragDemo --out ../output/drag-demo.mp4",
+    "render-dismiss": "node render.mjs --comp DismissVideo --out ../output/dismiss-register.mp4"
   },
   "dependencies": {
     "@remotion/bundler": "^4.0.0",

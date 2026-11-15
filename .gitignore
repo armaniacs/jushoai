@@ -23,6 +23,7 @@ JushoAI_VULNHUNT_RESULTS_*/
 video/ext/
 video/output/
 video/playwright/.work/
+video/playwright/.browsers/
 # dummy-profile store captures, uploaded to dashboards by hand, never committed
 video/playwright/.store-shots/
 video/remotion/node_modules/
