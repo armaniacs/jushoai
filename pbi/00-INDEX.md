@@ -21,6 +21,11 @@
 - `2026-10-31-211-feat-corpus-radio-restore.md`（実装済み（e9bfc0f・レビュー承認・kosodate 逸脱 Keep）。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
 - `2026-10-31-212-feat-english-form-vocabulary.md`（実装済み（402def7・レビュー承認・PBI-following 判定）。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
 - `2026-11-09-217-chore-jsdom-major.md`（jsdom 31 major 対応。テスト基盤の回帰確認付き。fake-indexeddb 6.2.8・vitest 5.1.0 は 2dc2d3d で追従済み）
+- `2026-11-14-224-fix-search-box-exclusion.md`（実装・レビュー承認（commit a7547eb）。検索窓系 name（q/query/keyword/kw/s）の送付除外。branch feat/samples-311-new-fields）
+- `2026-11-14-225-fix-name-company-classification.md`（実装・レビュー承認（commit a7547eb）。name=company のラベルなし会社名欄の分類。branch feat/samples-311-new-fields）
+- `2026-11-14-226-fix-fax-field-handling.md`（実装・レビュー承認（commit a7547eb）。FAX番号欄の扱い整理。branch feat/samples-311-new-fields）
+- `2026-11-14-229-fix-name-email-classification.md`（旧227から改番。実装・レビュー承認（commit a7547eb、表記統一 9d59d9f）。name属性のemail読み。kasadera救済。branch feat/samples-311-new-fields）
+- `2026-11-15-230-feat-samples-311-corpus.md`（実装・レビュー承認（commit 2af8930）。samples 190件追加・14件削除・pin更新。branch feat/samples-311-new-fields）
 
 ## 進行中からアーカイブ済み（2026-11-01・subagent-drivenで4件実装・レビュー済み・`make check` green。コードレビューはreviewerサブエージェントで完了）
 
