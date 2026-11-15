@@ -6,6 +6,8 @@
 
 ## [Unreleased]
 
+## [0.1.35] - 2026-11-15
+
 ### Added
 
 - 非表示ダイアログを約15秒で自動的に閉じるようにする（ホバー中・フォーカス中は残り、外れたら閉じる）
@@ -552,6 +554,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.1.35]: https://github.com/armaniacs/jushoai/compare/v0.1.34...v0.1.35
 [0.1.34]: https://github.com/armaniacs/jushoai/compare/v0.1.33...v0.1.34
 [0.1.33]: https://github.com/armaniacs/jushoai/compare/v0.1.32...v0.1.33
 [0.1.32]: https://github.com/armaniacs/jushoai/compare/v0.1.31...v0.1.32
