@@ -31,9 +31,9 @@ describe('search-box exclusion (PBI-224)', () => {
     expect(plan).toEqual([]);
   });
 
-  // PBI-227 で更新：companyEmail は email ゲートが拾うため email になる。
+  // PBI-229 で更新：companyEmail は email ゲートが拾うため email になる。
   // 検索窓除外の対象でないこと（本テストの意図）は不変。
-  it('does not exclude derived names such as companyEmail (email since PBI-227)', () => {
+  it('does not exclude derived names such as companyEmail (email since PBI-229)', () => {
     expect(classifyField(makeMeta({ name: 'companyEmail' }))).toMatchObject({
       category: 'email',
       source: 'rule',

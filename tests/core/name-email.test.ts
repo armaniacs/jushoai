@@ -1,4 +1,4 @@
-// PBI-227: label空 × text/tel/email型 × name に mail/email を含む欄は
+// PBI-229: label空 × text/tel/email型 × name に mail/email を含む欄は
 // email 確定（confident: LLMに回さない）。PBI-225（name完全一致ゲート）と同型の
 // label空・name基準ゲートだが、一致条件は部分一致（mail を含めば email も含む）。
 // 確認系派生名（mailconf / email_confirm 等）は同じ email 値が入ることを
@@ -10,7 +10,7 @@ import { buildPlan } from '../../src/core/planner';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
-describe('classifyField: email by bare name (PBI-227)', () => {
+describe('classifyField: email by bare name (PBI-229)', () => {
   // BDD: ラベルなし・name="item_mail_1" は email 確定（LLMに回さない）。
   it.each([
     { name: 'item_mail_1' },
@@ -136,12 +136,12 @@ describe('classifyField: email by bare name (PBI-227)', () => {
 
   // PBI-225 との相互作用：name=company は company のまま（email ゲートは
   // company ゲートの後に置く）。companyEmail は company ではなく email になる
-  // （company ゲートは完全一致のため開かず、email ゲートが拾う。PBI-227 で更新）。
+  // （company ゲートは完全一致のため開かず、email ゲートが拾う。PBI-229 で更新）。
   it('leaves the bare company name to the company gate', () => {
     expect(classifyField(makeMeta({ name: 'company' }))).toMatchObject({ category: 'company' });
   });
 
-  it('reads companyEmail as email, not company (PBI-227 updates PBI-225)', () => {
+  it('reads companyEmail as email, not company (PBI-229 updates PBI-225)', () => {
     expect(classifyField(makeMeta({ name: 'companyEmail' }))).toMatchObject({
       category: 'email',
       source: 'rule',

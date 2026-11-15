@@ -58,9 +58,9 @@ describe('classifyField: company by bare name (PBI-225)', () => {
     expect(classifyField(makeMeta(p))?.category ?? null).not.toBe('company');
   });
 
-  // PBI-227 で更新：companyEmail は email ゲート（name に mail を含む）が
+  // PBI-229 で更新：companyEmail は email ゲート（name に mail を含む）が
   // 拾うため email になる。company ではないこと（本テストの意図）は不変。
-  it('reads companyEmail as email since PBI-227 (never company)', () => {
+  it('reads companyEmail as email since PBI-229 (never company)', () => {
     expect(classifyField(makeMeta({ name: 'companyEmail' }))).toMatchObject({
       category: 'email',
       source: 'rule',

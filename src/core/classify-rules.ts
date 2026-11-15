@@ -180,7 +180,7 @@ const isCompanyByName = (m: FieldMeta): boolean =>
   m.tag === 'input' && m.type === 'text'
   && m.label.trim() === '' && m.nearby.trim() === ''
   && COMPANY_NAME_KEY.has(companyNameKey(m.name));
-// PBI-227: name に mail を含む欄の email ゲート（PBI-225 の会社ゲートの隣）。
+// PBI-229: name に mail を含む欄の email ゲート（PBI-225 の会社ゲートの隣）。
 // 'email' は 'mail' を部分文字列に含むため includes('mail') 一つで両方を拾う
 // （item_mail_1・mail2・mailconf・email_confirm・companyEmail 等）。
 // label・nearby が空の text/tel/email 型の input だけが対象：チェックボックス
@@ -538,7 +538,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   // ため）。テキスト欄だけが対象（radio グループ名 company は開かない）。
   if (isCompanyByName(m)) return make('company', 0.7);
 
-  // PBI-227: label空 × text/tel/email型 × name に mail/email を含む欄は
+  // PBI-229: label空 × text/tel/email型 × name に mail/email を含む欄は
   // email 確定（company ゲートの隣。EXCLUDE・DISPATCH・sources より先）。
   // 確認系派生名（mailconf・email_confirm 等）も email になるため planner は
   // 同一 profile.email を入れ、既存の確認欄流用と矛盾しない。
