@@ -92,7 +92,7 @@ export async function buildSite(o: BuildOptions): Promise<string[]> {
     await writeFile(
       join(o.outDir, lang === 'en' ? 'en/404.html' : '404.html'),
       renderPage({
-        lang, base: o.base, path: '', chrome: strings[lang].chrome, title: n.title, description: n.body,
+        lang, base: o.base, path: '', chrome: strings[lang].chrome, title: n.title, description: n.body, noCurrent: true,
         body: `<div class="prose"><h1>404</h1><p>${n.body}</p><p><a href="${pageUrl(o.base, lang, '')}">${n.home}</a></p></div>`,
       }),
     );

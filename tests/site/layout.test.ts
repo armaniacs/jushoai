@@ -3,7 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { renderPage, type Chrome } from '../../site/lib/layout.ts';
 
 const chrome: Chrome = {
-  nav: { home: 'ホーム', guides: 'ガイド', install: 'インストール', feedback: '要望を送る', langName: 'English', skip: '本文へ' },
+  nav: { home: 'ホーム', guides: 'ガイド', install: 'インストール', feedback: '要望を送る', langName: 'English', skip: '本文へ', label: 'サイトナビゲーション' },
   footer: { tagline: 'tag', guides: 'ガイド', privacy: 'プライバシー', license: 'ライセンス', feedback: '要望を送る', source: 'ソース' },
 };
 
@@ -58,13 +58,36 @@ describe('renderPage', () => {
   it('escapes chrome strings and the base in attributes', () => {
     const html = page({
       base: '/a"b/',
-      chrome: { ...chrome, nav: { ...chrome.nav, home: '<b>h</b>' }, footer: { ...chrome.footer, tagline: '<i>t</i>' } },
+      chrome: { ...chrome, nav: { ...chrome.nav, home: '<b>h</b>', label: '<b>l</b>' }, footer: { ...chrome.footer, tagline: '<i>t</i>' } },
     });
     expect(html).toContain('&lt;b&gt;h&lt;/b&gt;');
+    expect(html).toContain('aria-label="&lt;b&gt;l&lt;/b&gt;"');
     expect(html).toContain('&lt;i&gt;t&lt;/i&gt;');
     expect(html).not.toContain('<b>h');
     expect(html).toContain('href="/a&quot;b/assets/site.css"');
     expect(html).not.toContain('/a"b/');
+  });
+
+  it('labels the nav landmark from the dictionary', () => {
+    expect(page()).toContain('<nav aria-label="サイトナビゲーション">');
+    const en = page({ lang: 'en', chrome: { ...chrome, nav: { ...chrome.nav, label: 'Site navigation' } } });
+    expect(en).toContain('<nav aria-label="Site navigation">');
+  });
+
+  it('marks only the current nav link with aria-current="page"', () => {
+    const landing = page({ path: '' });
+    expect(landing).toContain('<a href="/" aria-current="page">ホーム</a>');
+    expect(landing).not.toContain('<a href="/guides/" aria-current="page">');
+    const index = page({ path: 'guides/' });
+    expect(index).toContain('<a href="/guides/" aria-current="page">ガイド</a>');
+    expect(index).not.toContain('<a href="/" aria-current="page">');
+    const article = page({ path: 'guides/privacy/' });
+    expect(article).toContain('<a href="/guides/" aria-current="page">ガイド</a>');
+    expect(article).not.toContain('<a href="/" aria-current="page">');
+  });
+
+  it('marks no nav link as current when opted out (404 reuses the landing path)', () => {
+    expect(page({ path: '', noCurrent: true })).not.toContain('aria-current="page"');
   });
 
   it('gives the logo an empty alt because the brand name is next to it', () => {

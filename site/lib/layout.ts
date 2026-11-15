@@ -9,6 +9,7 @@ export interface NavStrings {
   feedback: string;
   langName: string;
   skip: string;
+  label: string;
 }
 
 export interface FooterStrings {
@@ -36,6 +37,9 @@ export interface PageInput {
   body: string;
   chrome: Chrome;
   hasCode?: boolean;
+  // 404 pages reuse path '' for hreflang alternates, so they opt out of the
+  // current-page marker explicitly instead of highlighting the home link.
+  noCurrent?: boolean;
 }
 
 export function renderPage(p: PageInput): string {
@@ -43,6 +47,8 @@ export function renderPage(p: PageInput): string {
   const u = (lang: Lang, path: string) => escapeHtml(pageUrl(p.base, lang, path));
   const asset = (name: string) => escapeHtml(`${p.base}assets/${name}`);
   const { nav, footer } = p.chrome;
+  const homeCurrent = !p.noCurrent && p.path === '';
+  const guidesCurrent = !p.noCurrent && p.path.startsWith('guides/');
   return `<!doctype html>
 <html lang="${p.lang}">
 <head>
@@ -69,9 +75,9 @@ export function renderPage(p: PageInput): string {
 <a class="skip" href="#main">${escapeHtml(nav.skip)}</a>
 <header class="nav">
 <a class="logo" href="${u(p.lang, '')}"><span class="logo-tile"><img src="${asset('logo.png')}" alt="" width="28" height="28"></span><span>JushoAI</span></a>
-<nav>
-<a href="${u(p.lang, '')}">${escapeHtml(nav.home)}</a>
-<a href="${u(p.lang, 'guides/')}">${escapeHtml(nav.guides)}</a>
+<nav aria-label="${escapeHtml(nav.label)}">
+<a href="${u(p.lang, '')}"${homeCurrent ? ' aria-current="page"' : ''}>${escapeHtml(nav.home)}</a>
+<a href="${u(p.lang, 'guides/')}"${guidesCurrent ? ' aria-current="page"' : ''}>${escapeHtml(nav.guides)}</a>
 <a href="${u(p.lang, '')}#install">${escapeHtml(nav.install)}</a>
 <a class="cta" href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(nav.feedback)}</a>
 <a class="lang" href="${u(other, p.path)}" hreflang="${other}" lang="${other}">${escapeHtml(nav.langName)}</a>

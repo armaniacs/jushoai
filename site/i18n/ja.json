@@ -4,7 +4,7 @@
     "description": "姓名・フリガナ・分割された住所など、日本式の入力フォームを 1 クリックで埋める Chromium 系ブラウザ拡張機能。ルール主体で、AI は補助。入力前にプレビューで確認できます。"
   },
   "chrome": {
-    "nav": { "home": "ホーム", "guides": "ガイド", "install": "インストール", "feedback": "要望を送る", "langName": "English", "skip": "本文へ移動" },
+    "nav": { "home": "ホーム", "guides": "ガイド", "install": "インストール", "feedback": "要望を送る", "langName": "English", "skip": "本文へ移動", "label": "サイトナビゲーション" },
     "footer": { "tagline": "日本式フォームの入力を、正しい形で。", "guides": "ガイド", "privacy": "プライバシー", "license": "ライセンス", "feedback": "要望を送る", "source": "ソース" }
   },
   "hero": {
