@@ -7,6 +7,9 @@
 // after a failure).
 const timers = new WeakMap();
 let lastMessage = '';
+// `requestAnimationFrame` may be unavailable (very old browsers, some
+// embedded contexts); fall back to a synchronous call so feedback still shows.
+const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => { fn(); };
 
 function report(button, ok) {
   const tip = button.nextElementSibling;
@@ -25,7 +28,7 @@ function report(button, ok) {
   lastMessage = message;
   tip.textContent = '';
   button.setAttribute(ok ? 'data-copied' : 'data-failed', '');
-  requestAnimationFrame(() => {
+  raf(() => {
     tip.textContent = message;
   });
   timers.set(

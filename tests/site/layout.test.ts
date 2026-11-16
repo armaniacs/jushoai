@@ -106,6 +106,13 @@ describe('renderPage', () => {
     expect(html).toContain('href="/guides/license/"');
   });
 
+  it('declares color-scheme and light/dark theme-color metas', () => {
+    const html = page();
+    expect(html).toContain('<meta name="color-scheme" content="light dark">');
+    expect(html).toContain('<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">');
+    expect(html).toContain('<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161b">');
+  });
+
   it('declares Open Graph metadata with absolute URLs', () => {
     const html = page({ base: '/jushoai/' });
     expect(html).toContain('<meta property="og:title" content="T">');

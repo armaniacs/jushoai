@@ -16,7 +16,7 @@ document.addEventListener('click', (event) => {
   if (iframe.src === '') return;
   iframe.title = link.dataset.title ?? '';
   iframe.setAttribute('loading', 'lazy');
-  iframe.allow = 'accelerometer; autoplay; encrypted-media; picture-in-picture';
+  iframe.allow = 'autoplay; encrypted-media; picture-in-picture';
   iframe.allowFullscreen = true;
   box.replaceChildren(iframe);
   iframe.focus({ preventScroll: true });
