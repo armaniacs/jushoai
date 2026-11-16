@@ -75,7 +75,7 @@ describe('renderLanding', () => {
   it.each(['ja', 'en'] as const)('shows the demo gif above the video for %s', async (lang) => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });
-    expect(html).toContain('<video width="1280" height="720" muted loop autoplay playsinline');
+    expect(html).toContain('<video width="1280" height="720" muted loop autoplay playsinline controls');
     expect(html).toContain('src="/assets/demo.mp4"');
     expect(html).toContain('src="/assets/demo.gif"');
     expect(html).toContain('decoding="async"');

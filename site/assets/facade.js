@@ -21,3 +21,13 @@ document.addEventListener('click', (event) => {
   box.replaceChildren(iframe);
   iframe.focus({ preventScroll: true });
 });
+
+// Reduced-motion handling lives in this file — not in a new asset — because
+// facade.js loads on exactly the hasVideo pages, and the looping demo
+// <video autoplay> only exists on those pages: this is the smallest
+// guaranteed-to-be-present place to pause it (WCAG 2.2.2).
+if (typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches) {
+  document.querySelectorAll('video[autoplay]').forEach((v) => {
+    if (v instanceof HTMLVideoElement) v.pause();
+  });
+}

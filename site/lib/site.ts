@@ -27,6 +27,14 @@ export const COPY_LABEL: Record<Lang, { copy: string; done: string; fail: string
   en: { copy: 'Copy', done: 'Copied', fail: 'Copy failed' },
 };
 
+// Region names for the keyboard-scrollable table/code regions. Kept here
+// next to COPY_LABEL — not in site/i18n/*.json — so ja/en stay symmetric
+// through the same code path with no new dictionary keys.
+export const REGION_LABEL: Record<Lang, { table: string; code: string }> = {
+  ja: { table: '表', code: 'コード' },
+  en: { table: 'table', code: 'code' },
+};
+
 export function normalizeBase(raw: string | undefined): string {
   let b = (raw ?? '/').trim() || '/';
   if (!b.startsWith('/')) b = `/${b}`;
@@ -76,7 +84,7 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
       }
       const order = Number(data.order);
       if (data.order && !Number.isFinite(order)) problems.push(`${lang}/${slug}.md: order must be a number`);
-      const r = renderMarkdown(body, { base, copyLabel: COPY_LABEL[lang].copy, copiedLabel: COPY_LABEL[lang].done, copyFailLabel: COPY_LABEL[lang].fail, source: `${lang}/${slug}.md` });
+      const r = renderMarkdown(body, { base, copyLabel: COPY_LABEL[lang].copy, copiedLabel: COPY_LABEL[lang].done, copyFailLabel: COPY_LABEL[lang].fail, tableLabel: REGION_LABEL[lang].table, codeLabel: REGION_LABEL[lang].code, source: `${lang}/${slug}.md` });
       guides.push({
         lang, slug, title: data.title ?? '', description: data.description ?? '',
         order: Number.isFinite(order) ? order : 0, html: r.html, headings: r.headings, links: r.links,

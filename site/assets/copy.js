@@ -12,8 +12,14 @@ let lastMessage = '';
 const raf = typeof requestAnimationFrame === 'function' ? requestAnimationFrame : (fn) => { fn(); };
 
 function report(button, ok) {
-  const tip = button.nextElementSibling;
-  if (!tip) return;
+  // Resolve the tip from the markup (.code > .tip) instead of relying on
+  // the button's position, so an unrelated markup move cannot silently
+  // retarget feedback elsewhere.
+  const tip = button.closest('.code')?.querySelector(':scope > .tip');
+  if (!tip) {
+    console.warn('copy: feedback tip not found (want .code > .tip)');
+    return;
+  }
   // Rapid clicks restart this button's own feedback instead of stacking
   // timers; other buttons' feedback is unaffected.
   clearTimeout(timers.get(button));

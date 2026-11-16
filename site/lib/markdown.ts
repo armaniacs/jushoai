@@ -12,6 +12,10 @@ export interface RenderOptions {
   copiedLabel: string;
   /** Failure message shown in the adjacent role="status" tip (Task 3). */
   copyFailLabel: string;
+  /** Per-language region name for header-less tables (ja "表", en "table"). */
+  tableLabel: string;
+  /** Per-language region-name base for code blocks (ja "コード", en "code"). */
+  codeLabel: string;
   /** Guide file identity for build error messages (e.g. "ja/popup-and-fill.md"). */
   source?: string;
 }
@@ -36,21 +40,29 @@ export const escapeHtml = (s: string) =>
 
 // Wraps every <table> in a keyboard-scrollable region (responsive-table
 // pattern). The accessible name is derived from the table's own header
-// cells so each table gets a distinct label without new i18n keys. The
-// inner <table>/<th> markup is left untouched (plain tags, <th> semantics
-// kept) so guide validators that match literal tags keep working.
-export function wrapTables(html: string): string {
+// cells so each table gets a distinct label; tables without usable headers
+// fall back to the per-language tableLabel ("表" on ja pages, "table" on en
+// pages — passed in like the copy labels, not looked up here) so ja/en
+// symmetry holds without new i18n dictionary keys. A region without an
+// accessible name is exposed as generic, so a label is always emitted here.
+// Repeats within one page get a numeric suffix ("表 2") so same-named
+// regions stay distinguishable. The inner <table>/<th> markup is left
+// untouched (plain tags, <th> semantics kept) so guide validators that match
+// literal tags keep working.
+export function wrapTables(html: string, tableLabel: string): string {
+  // One page per call, so a per-call counter disambiguates repeats in it.
+  const counts = new Map<string, number>();
   return html.replace(/<table\b[^>]*>([\s\S]*?)<\/table>/g, (m, inner: string) => {
     const head = /<thead>([\s\S]*?)<\/thead>/.exec(inner)?.[1] ?? inner;
     const headers = [...head.matchAll(/<th\b[^>]*>([\s\S]*?)<\/th>/g)]
       .map((c) => decodeHtml((c[1] ?? '').replace(/<[^>]+>/g, '').trim()))
       .filter((t) => t !== '');
-    // Empty-header fallback: fixed neutral token "table" (the HTML element
-    // name, not a translated word) so ja/en symmetry holds without new i18n
-    // dictionary keys. A region without an accessible name is exposed as
-    // generic, so a label is always emitted here.
-    const label = headers.length > 0 ? ` aria-label="${escapeHtml(headers.join(', '))}"` : ' aria-label="table"';
-    return `<div class="table-wrapper" tabindex="0" role="region"${label}><table>${inner}</table></div>`;
+    // Empty-header fallback: the per-language tableLabel.
+    const base = headers.length > 0 ? headers.join(', ') : tableLabel;
+    const n = (counts.get(base) ?? 0) + 1;
+    counts.set(base, n);
+    const name = n === 1 ? base : `${base} ${n}`;
+    return `<div class="table-wrapper" tabindex="0" role="region" aria-label="${escapeHtml(name)}"><table>${inner}</table></div>`;
   });
 }
 
@@ -64,10 +76,15 @@ const decodeHtml = (s: string) =>
 // iframe is not in the initial HTML, so no request goes to YouTube before the
 // visitor activates it. The link points at the watch page, so without
 // JavaScript it still opens the video; `facade.js` intercepts the click and
-// swaps in the no-cookie player with autoplay. The video id is validated by
-// the caller (11-char YouTube id) and the title is escaped here, so both
-// attributes are safe. `rel=0` keeps related videos on the same channel.
+// swaps in the no-cookie player with autoplay. The video id is validated
+// both by the callers and inside this function (11-char YouTube id), and the
+// title is escaped here, so both attributes are safe. `rel=0` keeps related
+// videos on the same channel.
 export function videoFacade(id: string, title: string): string {
+  // Defense in depth: both current callers validate the id (11-char YouTube
+  // id) before calling, but this guard keeps a future third caller from
+  // injecting an arbitrary string into src/href.
+  if (!/^[A-Za-z0-9_-]{11}$/.test(id)) throw new Error('invalid youtube video id (want an 11-char YouTube id)');
   const embed = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
   const watch = `https://www.youtube.com/watch?v=${id}`;
   return (
@@ -79,8 +96,10 @@ export function videoFacade(id: string, title: string): string {
   );
 }
 
-export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copyFailLabel, source }: RenderOptions): Rendered {
+export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copyFailLabel, tableLabel, codeLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+  // One page per call, so a per-call counter disambiguates repeats in it.
+  const codeCounts = new Map<string, number>();
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx]!;
     // ```youtube <11-char-id> with the iframe title on the content line
@@ -100,11 +119,17 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copy
     // exposed as a named region so keyboard-only users can scroll it.
     // The copy <button> next to it keeps its visible label (Task 3); there
     // is no caption element to reference via aria-labelledby — aria-label is
-    // used instead. The name is the fence language when present
-    // ("code: bash") with a neutral "code" fallback (the element-ish token,
-    // not a translated word, mirroring wrapTables' "table" fallback) so
-    // ja/en output stays symmetric without new i18n dictionary keys.
-    const lang = kind ? ` aria-label="code: ${escapeHtml(kind)}"` : ' aria-label="code"';
+    // used instead. The name is the per-language codeLabel plus the fence
+    // language when present ("コード: bash" on ja pages, "code: bash" on en
+    // pages — passed in like the copy labels, not looked up here) so ja/en
+    // output stays symmetric without new i18n dictionary keys. Repeats
+    // within one page get a numeric suffix ("コード: bash 2") so same-named
+    // regions stay distinguishable.
+    const baseName = kind ? `${codeLabel}: ${kind}` : codeLabel;
+    const seen = (codeCounts.get(baseName) ?? 0) + 1;
+    codeCounts.set(baseName, seen);
+    const regionName = seen === 1 ? baseName : `${baseName} ${seen}`;
+    const lang = ` aria-label="${escapeHtml(regionName)}"`;
     // Copy-button feedback follows the guide `copy-button` pattern (Task 3):
     // the button label never changes; success/failure is shown in the
     // adjacent role="status" tip, which is both the visible bubble and the
@@ -151,5 +176,5 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copy
   });
 
   const rendered = md.renderer.render(tokens, md.options as Parameters<typeof md.renderer.render>[1], env);
-  return { html: wrapTables(rendered), headings, links };
+  return { html: wrapTables(rendered, tableLabel), headings, links };
 }

@@ -60,6 +60,7 @@ export function renderPage(p: PageInput): string {
 <title>${escapeHtml(p.title)}</title>
 <meta name="description" content="${escapeHtml(p.description)}">
 <meta name="color-scheme" content="light dark">
+<!-- theme-color must stay in sync with --bg in site/assets/site.css (light #ffffff, dark #14161b). -->
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161b">
 <meta property="og:type" content="website">

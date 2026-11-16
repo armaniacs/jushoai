@@ -66,7 +66,7 @@ ${p.lang === 'en' ? `<p class="note ui-note">${e(s.mock.uiNote)}</p>` : ''}
 <section class="block" id="demo"><div class="wrap narrow">
 <h2 class="section-title">${e(s.demo.title)}</h2>
 <p class="section-lead">${e(s.demo.lead)}</p>
-<figure class="demo-gif"><video width="1280" height="720" muted loop autoplay playsinline preload="metadata"><source src="${p.base}assets/demo.mp4" type="video/mp4"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" decoding="async" width="1280" height="720"></video><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
+<figure class="demo-gif"><video width="1280" height="720" muted loop autoplay playsinline controls preload="metadata"><source src="${p.base}assets/demo.mp4" type="video/mp4"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" decoding="async" width="1280" height="720"></video><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
 ${videoFacade(VIDEO_ID, s.demo.iframeTitle)}
 <p class="note"><a href="${VIDEO_WATCH_URL}" target="_blank" rel="noopener noreferrer">${e(s.demo.link)}</a></p>
 </div></section>
