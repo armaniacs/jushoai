@@ -63,6 +63,24 @@ describe('renderMarkdown: copy button label', () => {
   });
 });
 
+describe('renderMarkdown: youtube fence', () => {
+  it('renders a click-to-load facade instead of the player iframe', () => {
+    const r = renderMarkdown('```youtube 9gHt4KeipHc\nDemo title\n```', opts);
+    expect(r.html).not.toContain('<iframe');
+    expect(r.html).toContain('data-embed="https://www.youtube-nocookie.com/embed/9gHt4KeipHc?autoplay=1&amp;rel=0"');
+    expect(r.html).toContain('data-title="Demo title"');
+    expect(r.html).toContain('href="https://www.youtube.com/watch?v=9gHt4KeipHc"');
+    expect(r.html).not.toContain('youtube.com/embed');
+  });
+
+  it('escapes the title and rejects invalid fences', () => {
+    const r = renderMarkdown('```youtube 9gHt4KeipHc\na"<b\n```', opts);
+    expect(r.html).toContain('data-title="a&quot;&lt;b"');
+    expect(() => renderMarkdown('```youtube bad\nTitle\n```', { ...opts, source: 'x.md' })).toThrow(/invalid youtube fence/);
+    expect(() => renderMarkdown('```youtube 9gHt4KeipHc\n\n```', opts)).toThrow(/invalid youtube fence/);
+  });
+});
+
 describe('renderMarkdown: links', () => {
   it('prefixes absolute site paths with the base and collects raw hrefs', () => {
     const r = renderMarkdown('[a](/guides/privacy/) [b](#x) [c](mailto:a@b.c)', { base: '/JushoAI/', copyLabel: 'c', copiedLabel: 'd', copyFailLabel: 'f' });

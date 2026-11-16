@@ -60,12 +60,32 @@ export function wrapTables(html: string): string {
 const decodeHtml = (s: string) =>
   s.replace(/&quot;/g, '"').replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&');
 
+// Renders a click-to-load YouTube facade (performance pattern): the player
+// iframe is not in the initial HTML, so no request goes to YouTube before the
+// visitor activates it. The link points at the watch page, so without
+// JavaScript it still opens the video; `facade.js` intercepts the click and
+// swaps in the no-cookie player with autoplay. The video id is validated by
+// the caller (11-char YouTube id) and the title is escaped here, so both
+// attributes are safe. `rel=0` keeps related videos on the same channel.
+export function videoFacade(id: string, title: string): string {
+  const embed = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+  const watch = `https://www.youtube.com/watch?v=${id}`;
+  return (
+    `<div class="video video-facade">` +
+    `<a class="video-facade-link" href="${watch}" target="_blank" rel="noopener noreferrer"` +
+    ` data-embed="${escapeHtml(embed)}" data-title="${escapeHtml(title)}">` +
+    `<span class="video-facade-icon" aria-hidden="true"></span>` +
+    `<span class="video-facade-title">${escapeHtml(title)}</span></a></div>\n`
+  );
+}
+
 export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copyFailLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
   md.renderer.rules.fence = (tokens, idx) => {
     const token = tokens[idx]!;
     // ```youtube <11-char-id> with the iframe title on the content line
-    // embeds the no-cookie player (same markup as the landing demo section).
+    // renders a click-to-load facade (same markup as the landing demo
+    // section). The no-cookie player is only loaded after activation.
     // Anything else renders as a copyable code block, as before.
     const [kind, id] = token.info.trim().split(/\s+/);
     if (kind === 'youtube') {
@@ -73,7 +93,7 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copy
       if (!/^[A-Za-z0-9_-]{11}$/.test(id ?? '') || title === '') {
         throw new Error(`${source ?? 'guide'}: invalid youtube fence (want "\`\`\`youtube <11-char-id>" + a title line)`);
       }
-      return `<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/${id}" title="${escapeHtml(title)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>\n`;
+      return videoFacade(id!, title);
     }
     // Scrollable code blocks follow the guide `html` §2 pattern: the <pre>
     // that scrolls (`.code pre` has overflow-x:auto) is itself focusable and

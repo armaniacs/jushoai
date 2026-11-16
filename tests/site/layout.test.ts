@@ -55,6 +55,11 @@ describe('renderPage', () => {
     expect(page({ hasCode: true })).toContain('<script src="/assets/copy.js" defer></script>');
   });
 
+  it('includes the facade script only when the page has a video', () => {
+    expect(page()).not.toContain('facade.js');
+    expect(page({ hasVideo: true })).toContain('<script src="/assets/facade.js" defer></script>');
+  });
+
   it('escapes chrome strings and the base in attributes', () => {
     const html = page({
       base: '/a"b/',

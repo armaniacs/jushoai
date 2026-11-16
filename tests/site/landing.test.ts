@@ -61,12 +61,13 @@ describe('renderLanding', () => {
     expect(html).toContain('rel="noopener noreferrer"');
   });
 
-  it.each(['ja', 'en'] as const)('embeds the demo video without cookies for %s', async (lang) => {
+  it.each(['ja', 'en'] as const)('defers the demo video behind a click-to-load facade for %s', async (lang) => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });
-    expect(html).toContain('src="https://www.youtube-nocookie.com/embed/Y3y9ofrsyFo"');
-    expect(html).toContain('loading="lazy"');
-    expect(html).toContain(`title="${s.demo.iframeTitle}"`);
+    // No player in the initial HTML: nothing is fetched from YouTube before activation.
+    expect(html).not.toContain('<iframe');
+    expect(html).toContain('data-embed="https://www.youtube-nocookie.com/embed/Y3y9ofrsyFo?autoplay=1&amp;rel=0"');
+    expect(html).toContain(`data-title="${s.demo.iframeTitle}"`);
     expect(html).toContain('href="https://www.youtube.com/watch?v=Y3y9ofrsyFo"');
     expect(html).not.toContain('www.youtube.com/embed');
   });
@@ -74,9 +75,12 @@ describe('renderLanding', () => {
   it.each(['ja', 'en'] as const)('shows the demo gif above the video for %s', async (lang) => {
     const s = await load(lang);
     const html = renderLanding({ lang, base: '/', s });
+    expect(html).toContain('<video width="1280" height="720" muted loop autoplay playsinline');
+    expect(html).toContain('src="/assets/demo.mp4"');
     expect(html).toContain('src="/assets/demo.gif"');
+    expect(html).toContain('decoding="async"');
     expect(html).toContain(`alt="${s.demo.gifAlt}"`);
-    expect(html.indexOf('assets/demo.gif')).toBeLessThan(html.indexOf('class="video"'));
+    expect(html.indexOf('assets/demo.gif')).toBeLessThan(html.indexOf('video-facade'));
   });
 
   it('no longer says the extension is unpublished and keeps the Firefox path', async () => {

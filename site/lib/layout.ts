@@ -37,6 +37,9 @@ export interface PageInput {
   body: string;
   chrome: Chrome;
   hasCode?: boolean;
+  // Pages with a YouTube facade (landing demo, ```youtube fences) load the
+  // click-to-load script; pages without one fetch no extra JavaScript.
+  hasVideo?: boolean;
   // 404 pages reuse path '' for hreflang alternates, so they opt out of the
   // current-page marker explicitly instead of highlighting the home link.
   noCurrent?: boolean;
@@ -92,7 +95,7 @@ ${p.body}
 <p>${escapeHtml(footer.tagline)}</p>
 <p><a href="${u(p.lang, 'guides/')}">${escapeHtml(footer.guides)}</a> / <a href="${u(p.lang, 'guides/privacy/')}">${escapeHtml(footer.privacy)}</a> / <a href="${u(p.lang, 'guides/license/')}">${escapeHtml(footer.license)}</a> / <a href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(footer.feedback)}</a> / <a href="${escapeHtml(REPO_URL)}" rel="noopener">${escapeHtml(footer.source)}</a></p>
 </footer>
-${p.hasCode ? `<script src="${asset('copy.js')}" defer></script>\n` : ''}</body>
+${p.hasCode ? `<script src="${asset('copy.js')}" defer></script>\n` : ''}${p.hasVideo ? `<script src="${asset('facade.js')}" defer></script>\n` : ''}</body>
 </html>
 `;
 }
