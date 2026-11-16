@@ -45,6 +45,7 @@ export interface PageInput {
   noCurrent?: boolean;
 }
 
+// theme-color meta values must stay in sync with --bg in site/assets/site.css (light #ffffff, dark #14161b).
 export function renderPage(p: PageInput): string {
   const other: Lang = p.lang === 'ja' ? 'en' : 'ja';
   const u = (lang: Lang, path: string) => escapeHtml(pageUrl(p.base, lang, path));
@@ -60,7 +61,6 @@ export function renderPage(p: PageInput): string {
 <title>${escapeHtml(p.title)}</title>
 <meta name="description" content="${escapeHtml(p.description)}">
 <meta name="color-scheme" content="light dark">
-<!-- theme-color must stay in sync with --bg in site/assets/site.css (light #ffffff, dark #14161b). -->
 <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
 <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161b">
 <meta property="og:type" content="website">
