@@ -117,7 +117,8 @@ describe('showDismissDialog with register', () => {
     expect(submit?.getAttribute('aria-disabled')).toBe('true');
     dialog.setRegisterBusy(false);
     expect(submit?.disabled).toBe(false);
-    expect(submit?.getAttribute('aria-disabled')).toBe('false');
+    // 解除後は既定状態を表す "false" を残さず属性ごと外す(PBI-237)。
+    expect(submit?.hasAttribute('aria-disabled')).toBe(false);
   });
 });
 
@@ -138,8 +139,11 @@ describe('showDismissDialog auto-hide', () => {
     vi.useFakeTimers();
     const onClose = vi.fn();
     const onUndo = vi.fn();
-    const dialog = showDismissDialog({ onClose, onUndo });
+    const { dialog, root } = showWithOpenRoot({ onClose, onUndo });
     expect(document.body.contains(dialog.host)).toBe(true);
+    // PBI-237: 開いた直後は最初のボタンにフォーカスがある。誰も操作していない
+    // 状態の自動クローズを見るため、先にフォーカスを外す。
+    root.querySelector('button')?.blur();
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(false);
     expect(onClose).not.toHaveBeenCalled();
@@ -294,7 +298,10 @@ describe('showDismissDialog register busy vs auto-hide', () => {
 
   it('busy 解除後に通常の自動クローズが再開する', () => {
     vi.useFakeTimers();
-    const { dialog } = showRegisterDialog(vi.fn());
+    const { dialog, root } = showRegisterDialog(vi.fn());
+    // PBI-237: 開いた直後はフォーカスがダイアログ内にある。フォーカスを外して
+    // から busy 前提の自動クローズを見る。
+    root.querySelector('button')?.blur();
     dialog.setRegisterBusy(true);
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(true);
@@ -306,7 +313,8 @@ describe('showDismissDialog register busy vs auto-hide', () => {
 
   it('busy が短く終わったときは元のタイマーどおり閉じる', () => {
     vi.useFakeTimers();
-    const { dialog } = showRegisterDialog(vi.fn());
+    const { dialog, root } = showRegisterDialog(vi.fn());
+    root.querySelector('button')?.blur();
     dialog.setRegisterBusy(true);
     vi.advanceTimersByTime(5000);
     dialog.setRegisterBusy(false);
@@ -352,5 +360,168 @@ describe('showDismissDialog register flow keeps alert', () => {
     await flow;
     expect(saveExcluded).toHaveBeenCalledTimes(2);
     expect(document.body.contains(dialog.host)).toBe(true);
+  });
+});
+
+describe('showDismissDialog a11y focus and announce (PBI-237)', () => {
+  it('開いたら最初のボタンへフォーカスが移る', () => {
+    const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const first = root.querySelector('button');
+    expect(first?.textContent).toBe('今回だけ閉じる');
+    // jsdom は shadow 内のフォーカスを host に retarget するため root.activeElement で断言する。
+    expect(root.activeElement).toBe(first);
+  });
+
+  it('出現を role="status" の兄弟領域で告知する', () => {
+    const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const live = root.querySelector('[role="status"]');
+    expect(live).not.toBeNull();
+    // status は aria-live="polite" を内包する。告知文は本文を要約し、
+    // 自動クローズ予定も一緒に読ませる。
+    expect(live?.textContent).toContain('開きました');
+    expect(live?.textContent).toContain('15秒後に自動で閉じます');
+  });
+
+  it('自動クローズ予定が本文に明示される', () => {
+    const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const box = root.querySelector('[role="dialog"]')!;
+    expect(box.textContent).toContain('15秒後に自動で閉じます');
+  });
+});
+
+describe('showDismissDialog Escape close (PBI-237)', () => {
+  const pressEscape = (): void => {
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+  };
+
+  it('Esc で「今回だけ閉じる」と同じ経路で閉じる(登録・undo は起こらない)', () => {
+    const onClose = vi.fn();
+    const onUndo = vi.fn();
+    const onRegister = vi.fn();
+    const { dialog, root } = showWithOpenRoot({
+      onClose,
+      onUndo,
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister,
+      },
+    });
+    root.querySelector('button')!.focus();
+    pressEscape();
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(onUndo).not.toHaveBeenCalled();
+    expect(onRegister).not.toHaveBeenCalled();
+  });
+
+  it('Esc はダイアログ内にフォーカスがあるときだけ効き、閉じた後は反応しない', () => {
+    const onClose = vi.fn();
+    const { dialog, root } = showWithOpenRoot({ onClose, onUndo: vi.fn() });
+    root.querySelector('button')!.focus();
+    // 別のパネル側へフォーカスが動いた状態では Esc を奪わない(非モーダル)。
+    const elsewhere = document.createElement('button');
+    elsewhere.textContent = 'page';
+    document.body.append(elsewhere);
+    elsewhere.focus();
+    pressEscape();
+    expect(document.body.contains(dialog.host)).toBe(true);
+    expect(onClose).not.toHaveBeenCalled();
+    root.querySelector('button')!.focus();
+    pressEscape();
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(onClose).toHaveBeenCalledTimes(1);
+    const listenerDetached = (): void => {
+      pressEscape();
+      expect(onClose).toHaveBeenCalledTimes(1);
+    };
+    listenerDetached();
+  });
+});
+
+describe('showDismissDialog focus restore (PBI-237)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  // wiring が合意位置として渡す想定の page 側要素(フォームの先頭欄など)。
+  function makeRestoreTarget(): HTMLButtonElement {
+    const target = document.createElement('button');
+    target.textContent = '合意位置';
+    document.body.append(target);
+    return target;
+  }
+
+  it('今回だけ閉じる(X 経路)で閉じた後、body ではなく合意位置へ戻る', () => {
+    const target = makeRestoreTarget();
+    const onClose = vi.fn();
+    const dialog = showDismissDialog({ onClose, onUndo: vi.fn(), restoreFocus: () => target });
+    dialog.closeOnly();
+    expect(onClose).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('Esc で閉じた後も合意位置へ戻る', () => {
+    const target = makeRestoreTarget();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      restoreFocus: () => target,
+    });
+    root.querySelector('button')!.focus();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', cancelable: true }));
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('自動クローズで閉じた後も合意位置へ戻る', () => {
+    vi.useFakeTimers();
+    const target = makeRestoreTarget();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      restoreFocus: () => target,
+    });
+    root.querySelector('button')?.blur();
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('元に戻すで閉じた後も合意位置へ戻る', () => {
+    const target = makeRestoreTarget();
+    const onUndo = vi.fn();
+    const dialog = showDismissDialog({ onClose: vi.fn(), onUndo, restoreFocus: () => target });
+    dialog.undo();
+    expect(onUndo).toHaveBeenCalledTimes(1);
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('開いた時点の位置が実在すれば opener へ戻る(panel.ts と同じ方針)', () => {
+    const opener = document.createElement('button');
+    opener.textContent = 'opener';
+    document.body.append(opener);
+    opener.focus();
+    const target = makeRestoreTarget();
+    const dialog = showDismissDialog({ onClose: vi.fn(), onUndo: vi.fn(), restoreFocus: () => target });
+    dialog.closeOnly();
+    expect(document.activeElement).toBe(opener);
+  });
+
+  it('開いた直後のフォーカスがある間は15秒を超えても閉じず、外した時点で閉じて合意位置へ戻る', () => {
+    vi.useFakeTimers();
+    const target = makeRestoreTarget();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      restoreFocus: () => target,
+    });
+    const first = root.querySelector('button')!;
+    expect(root.activeElement).toBe(first);
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    first.blur();
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(document.activeElement).toBe(target);
   });
 });

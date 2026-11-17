@@ -511,6 +511,9 @@ export default defineContentScript({
                 dismissed.remove(form.container);
                 schedule();
               },
+              // バナーはダイアログが開く前に破棄済みなので opener は body に
+              // 落ちている。閉じた後の復帰先はフォームの先頭欄に合意する。
+              restoreFocus: () => form.anchor.el,
               register: candidates.ok
                 ? {
                     exactLabel: candidates.exact,

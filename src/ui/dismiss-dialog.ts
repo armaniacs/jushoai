@@ -10,6 +10,11 @@ export interface DismissDialogActions {
   onClose: () => void;
   onUndo: () => void;
   register?: DismissDialogRegister;
+  // Page-side agreed focus target, evaluated at close time. The banner that
+  // opened this dialog is destroyed before the dialog appears, so the opener
+  // position captured at open time is already body; the wiring returns the
+  // form's first field instead. Connectivity is checked before focusing.
+  restoreFocus?: () => HTMLElement | null;
 }
 
 export interface DismissDialogHandle {
@@ -24,6 +29,9 @@ export interface DismissDialogHandle {
 }
 
 export const AUTO_HIDE_MS = 15000;
+
+const AUTO_CLOSE_NOTICE = '15秒後に自動で閉じます';
+const OPEN_ANNOUNCEMENT = `JushoAI の非表示ダイアログを開きました。${AUTO_CLOSE_NOTICE}`;
 
 export function showDismissDialog(actions: DismissDialogActions): DismissDialogHandle {
   const { host, root } = createShadowHost({ position: 'fixed' });
@@ -45,7 +53,15 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   box.setAttribute('role', 'dialog');
   box.setAttribute('aria-label', 'JushoAI の非表示ダイアログ');
   const text = document.createElement('div');
-  text.textContent = 'このボタンを隠しました(リロードまで)';
+  text.textContent = `このボタンを隠しました(リロードまで)。${AUTO_CLOSE_NOTICE}`;
+  // Live region announcing the dialog's appearance. Sits outside the dialog
+  // box (sibling region), visually hidden like preview.ts's status line.
+  const live = document.createElement('div');
+  live.setAttribute('role', 'status');
+  live.setAttribute(
+    'style',
+    'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;',
+  );
   const row = document.createElement('div');
   row.className = 'row';
   const only = document.createElement('button');
@@ -57,6 +73,34 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
 
   let closed = false;
   let autoHideTimer: ReturnType<typeof setTimeout> | undefined;
+  // Esc closes via the "close only this time" path: registration never runs.
+  // The dialog is non-modal, so the key only applies while focus is inside —
+  // otherwise Esc would be stolen from modal panels (preview/guide) that may
+  // be open on top of this dialog.
+  const onEscapeKey = (e: KeyboardEvent): void => {
+    if (e.key !== 'Escape') return;
+    const active = root.activeElement;
+    if (!(active instanceof Node) || !box.contains(active)) return;
+    teardown();
+    actions.onClose();
+  };
+  const detachEscapeClose = (): void => {
+    document.removeEventListener('keydown', onEscapeKey, true);
+  };
+  document.addEventListener('keydown', onEscapeKey, true);
+  // Focus restore follows mountPanel's policy: prefer the position focused at
+  // open time. Here that is usually already body — the banner that opened the
+  // dialog is destroyed before showDismissDialog runs — so the wiring supplies
+  // a page-side agreed target (the form's first field) as the fallback.
+  const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+  const restoreFocus = (): void => {
+    if (opener && opener !== document.body && opener.isConnected) {
+      opener.focus();
+      return;
+    }
+    const agreed = actions.restoreFocus?.() ?? null;
+    if (agreed && agreed.isConnected) agreed.focus();
+  };
   const teardown = (): void => {
     if (closed) return;
     closed = true;
@@ -64,7 +108,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       clearTimeout(autoHideTimer);
       autoHideTimer = undefined;
     }
+    detachEscapeClose();
     host.remove();
+    restoreFocus();
   };
   only.addEventListener('click', () => { teardown(); actions.onClose(); });
   undo.addEventListener('click', () => { teardown(); actions.onUndo(); });
@@ -154,8 +200,15 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     }
   }
 
-  root.append(style, box);
+  root.append(style, live, box);
   document.body.append(host);
+
+  // Set after insertion: a live region filled before it enters the document
+  // is skipped by some screen readers.
+  live.textContent = OPEN_ANNOUNCEMENT;
+  // mountPanel's convention: initial focus goes to the first enabled button.
+  const buttons = [...box.querySelectorAll<HTMLButtonElement>('button')];
+  buttons.find((b) => !b.disabled)?.focus();
 
   armAutoHide();
 
@@ -177,8 +230,13 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     setRegisterBusy: (busy) => {
       registerBusy = busy;
       // aria-disabled instead of the disabled attribute: disabling would drop
-      // keyboard focus to body (same rationale as site/assets/copy.js).
-      if (submitBtn) submitBtn.setAttribute('aria-disabled', busy ? 'true' : 'false');
+      // keyboard focus to body (same rationale as site/assets/copy.js). The
+      // attribute is removed when idle: "false" is the ARIA default state and
+      // only adds noise for assistive tech.
+      if (submitBtn) {
+        if (busy) submitBtn.setAttribute('aria-disabled', 'true');
+        else submitBtn.removeAttribute('aria-disabled');
+      }
       if (!busy && autoHideExpired && !closed) {
         // Expiry absorbed during registration: rearm a full window so normal
         // auto-close resumes and a just-shown role="alert" stays readable.
