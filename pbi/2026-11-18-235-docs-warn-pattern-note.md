@@ -36,7 +36,7 @@ Scenario: ja/en の両表に 1 行ずつある
 
 ## Definition of Done
 - [x] 全 BDD シナリオが検証手順（make site と目視照合）でパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 1 件: en 意味列の第 2 文が文法的に断片だが既存行も短文中心で許容範囲）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
 
 ## 実装記録

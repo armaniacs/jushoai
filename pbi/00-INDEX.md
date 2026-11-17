@@ -7,7 +7,7 @@
 - `2026-11-18-232-refactor-company-vocabulary-single.md`（順位 2。RICE 90。実装済み（35efb03）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録・officeLegendEligible の集約は後続候補）。classify-rulesの会社語彙一本化。Maintainability）
 - `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。実装済み（0a21525）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録）。isEmailByNameのmail部分一致締め直し。Domain Logic）
 - `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。実装済み（6513446）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録）。登録処理中の自動クローズ競合。Red Team+UI統合）
-- `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。ガイド注記表にwarn-pattern行。Documentation）
+- `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。実装済み（f3d2d6e）・タスクレビュー Approved（spec ✅、Minor 1 件は PBI に記録）。ガイド注記表にwarn-pattern行。Documentation）
 - `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。lockfileミラー前提の文書化。Supply Chain）
 - `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41・レビュー唯一のHigh。実装済み（bf29536〜67106f2）・タスクレビュー Approved（spec ✅・実装者の 2 判断を承認、Minor 3 件は PBI に記録）。非表示・クイック登録ダイアログのa11y。Accessibility）
 - `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。実装済み（a926a29）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録・タスク ID 参照の除去は最終レビュー修正波へ）。dismiss-dialogをテーマトークンへ。Maintainability）
