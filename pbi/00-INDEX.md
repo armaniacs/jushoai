@@ -1,5 +1,17 @@
 # PBI 台帳インデックス
 
+## 進行中からアーカイブ済み（2026-11-17・台帳棚卸しで9件処理。204はCI締めを実測、224-230はPR #25でマージ・0.1.36でリリース済み）
+
+- `archived/2026-10-31-204-fix-e2e-driver-stability.md`（実装済み（PR #20）・レビュー承認・Minor 4件。CHROME_BIN/CHROMEDRIVER_BIN 上書き・版数 preflight の fail-fast・SE_CACHE_PATH リポローカル化・初回ガイドの横取り対策。CI で chrome/firefox/check 全 success を実測）
+- `archived/2026-10-31-205-fix-privacy-article-dns-rebinding.md`（実装済み・レビュー承認（2026-10-31、review-5ff42cb..714d108）。記事に DNS rebinding 注意書きの1文。BDD 自動テスト化は1文の docs-only 変更のため断念し検証手順でパス（206 と同じ扱い））
+- `archived/2026-10-31-206-fix-privacy-article-audit-retention.md`（実装済み・レビュー承認（同上）。記事に監査ログの7日間保持を1文。docs-charset チェックと privacy.md:60 との文言照合でパス）
+- `archived/2026-11-09-217-chore-jsdom-major.md`（実装済み（3fa4673、PR #22 でマージ）・レビュー完了。jsdom 31.0.0 に major 更新。CSS 展開差の2テストを根拠づけて pin 更新、make check green）
+- `archived/2026-11-14-224-fix-search-box-exclusion.md`（実装済み（a7547eb）・レビュー承認。PR #25 で main マージ・0.1.36 でリリース。検索窓系 name（q/query/keyword/kw/s）の送付除外）
+- `archived/2026-11-14-225-fix-name-company-classification.md`（実装済み（a7547eb）・レビュー承認。PR #25 で main マージ・0.1.36 でリリース。name=company のラベルなし会社名欄の分類）
+- `archived/2026-11-14-226-fix-fax-field-handling.md`（実装済み（a7547eb）・レビュー承認。PR #25 で main マージ・0.1.36 でリリース。FAX番号欄の扱い整理）
+- `archived/2026-11-14-229-fix-name-email-classification.md`（旧227から改番。実装済み（a7547eb、表記統一 9d59d9f）・レビュー承認。PR #25 で main マージ・0.1.36 でリリース。name属性のemail読み。kasadera救済）
+- `archived/2026-11-15-230-feat-samples-311-corpus.md`（実装済み（2af8930）・レビュー承認。PR #25 で main マージ・0.1.36 でリリース。samples 190件追加・14件削除・pin更新）
+
 ## 進行中からアーカイブ済み（2026-11-10・autonomous-task-closerで6件処理・`make check` green）
 
 - `archived/2026-10-31-207-feat-pr-template.md`（静的レビュー承認。4節・指針・CP932・無変更を確認。残す `[ ]` は目視のみ（push後ユーザー作業）とBDD自動テスト化の断念記録）
@@ -9,23 +21,14 @@
 - `archived/2026-11-10-221-refactor-run-env-extract.md`（実装済み・再レビュー承認。buildRunEnv 抽出＋遅延読み復元。等価テスト6件）
 - `archived/2026-11-10-222-docs-limit-vocabulary-map.md`（実装済み・自己レビュー。scan-limits.ts に上限一覧集約。挙動不変）
 
-## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票。211-212を実装・レビュー済み。アーキテクチャレビューの発見5件のなぜなぜ分析（30本×3立場）→RICE採点で214-216を起票し、213-216は2026-11-01に実装・レビュー・アーカイブ済み）
+## 進行中（2026-10-31・普及強化後の残る領域。9候補を調査 → RICE 採点、6件をPBI化 + なぜなぜ分析の合意で210を起票、残った台帳を一括処置して211-213を起票。211-212を実装・レビュー済み。アーキテクチャレビューの発見5件のなぜなぜ分析（30本×3立場）→RICE採点で214-216を起票し、213-216は2026-11-01に実装・レビュー・アーカイブ済み。204-206・217・224-230は2026-11-17にアーカイブ済み）
 
 - `2026-10-31-00-backlog-next-cycle.md`（ラウンド台帳。やらないこと宣言: ショートカット起動・CSV入出力・キーボード操作。実装済み3件は除外: コンテキストメニュー=PBI-137、プレビュープロファイル切替=2026-10-05 profiles 設計、CI E2E 組み込み=9194c00）
-- `2026-10-31-204-fix-e2e-driver-stability.md`（順位 1。RICE 69。CI gate RED + ローカル版数不一致の blocker 解除型）
-- `2026-10-31-205-fix-privacy-article-dns-rebinding.md`（順位 2。RICE 50。記事に DNS rebinding 注意書きを1文。206 と同時に1コミット）
-- `2026-10-31-206-fix-privacy-article-audit-retention.md`（順位 2。RICE 50。記事に監査ログ保持期間を1文。205 と同時に1コミット）
 - `2026-10-31-208-feat-samples-corpus-growth.md`（第3トランチ実装済み（2ad7a2d・レビュー承認）。32 fixture/350 fields・259/94/162・refine+11、既存27行無変更。honest pin、honeypot除外は将来PBI候補）
 - `2026-10-31-209-feat-dark-mode.md`（残務記録済み（7637081・レビュー承認）。コード確認済みsrc無変更、手動1-3はOS切替要のためユーザー作業）
 - `2026-10-31-210-feat-pattern-violation-warning.md`（実装済み（b57b19c・レビュー承認・構造ゲート KEEP）。pattern 違反の値注入を警告して注入しない。maxlength 超過と同じ位置の軸。なぜなぜ分析の合意で最上位候補）
 - `2026-10-31-211-feat-corpus-radio-restore.md`（実装済み（e9bfc0f・レビュー承認・kosodate 逸脱 Keep）。corpus fixture の radio グループ復元 + re-pin。radio-heavy 軸を計測可能に。PBI-208 review Minor 由来）
 - `2026-10-31-212-feat-english-form-vocabulary.md`（実装済み（402def7・レビュー承認・PBI-following 判定）。英語フォームの語彙追加。gender 選択肢（Male/Female）と教育機関ラベル。PBI-208 Concerns + なぜなぜ分析項目 7 由来）
-- `2026-11-09-217-chore-jsdom-major.md`（jsdom 31 major 対応。テスト基盤の回帰確認付き。fake-indexeddb 6.2.8・vitest 5.1.0 は 2dc2d3d で追従済み）
-- `2026-11-14-224-fix-search-box-exclusion.md`（実装・レビュー承認（commit a7547eb）。検索窓系 name（q/query/keyword/kw/s）の送付除外。branch feat/samples-311-new-fields）
-- `2026-11-14-225-fix-name-company-classification.md`（実装・レビュー承認（commit a7547eb）。name=company のラベルなし会社名欄の分類。branch feat/samples-311-new-fields）
-- `2026-11-14-226-fix-fax-field-handling.md`（実装・レビュー承認（commit a7547eb）。FAX番号欄の扱い整理。branch feat/samples-311-new-fields）
-- `2026-11-14-229-fix-name-email-classification.md`（旧227から改番。実装・レビュー承認（commit a7547eb、表記統一 9d59d9f）。name属性のemail読み。kasadera救済。branch feat/samples-311-new-fields）
-- `2026-11-15-230-feat-samples-311-corpus.md`（実装・レビュー承認（commit 2af8930）。samples 190件追加・14件削除・pin更新。branch feat/samples-311-new-fields）
 
 ## 進行中からアーカイブ済み（2026-11-01・subagent-drivenで4件実装・レビュー済み・`make check` green。コードレビューはreviewerサブエージェントで完了）
 
