@@ -367,6 +367,60 @@ describe('value pattern fit (PBI-210)', () => {
   });
 });
 
+// PBI-243: the pattern attribute is page-controlled, so a crafted nested-
+// quantifier pattern must fall open (check skipped, no warn) instead of being
+// compiled and tested against profile values.
+describe('value pattern fall-open (PBI-243)', () => {
+  // The BDD crafted pattern. Without the fall-open lint this value exhausts
+  // exponentially against the anchored `^(?:a|aa)+$` (every split of the 40
+  // a's into 1s and 2s is retried before the b fails the match), so the RED
+  // run of this test is a 5s timeout — the main-thread freeze the PBI fixes.
+  it('skips a nested-quantifier crafted pattern (fall open, completes synchronously)', () => {
+    const value = 'a'.repeat(40) + 'b';
+    const plan = buildPlan(
+      [item('lastName', { pattern: '(a|aa)+' })],
+      { profile: { ...profile, lastName: value }, address },
+    );
+    expect(plan).toEqual([expect.objectContaining({ value, status: 'ok' })]);
+  });
+
+  // BDD scenario 2: an ordinary pattern keeps the PBI-210 warn judgment.
+  it('keeps warning on an ordinary pattern (\\d{3}-\\d{4})', () => {
+    const plan = buildPlan([item('zip', { pattern: '\\d{3}-\\d{4}' })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '', display: '1000001', status: 'warn-pattern' })]);
+  });
+
+  // Length caps (PBI-243 (b)): at the cap the check still runs, over it the
+  // check falls open. The corpus's longest real pattern is ~70 chars and
+  // profile values are short, so the bounds never fire on ordinary forms.
+  it('still checks a pattern at the length cap', () => {
+    const at = '0'.repeat(197) + '{3}';
+    expect(at.length).toBe(200);
+    const plan = buildPlan([item('lastName', { pattern: at })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '', display: '山田', status: 'warn-pattern' })]);
+  });
+
+  it('skips a pattern over the length cap (fall open)', () => {
+    const over = '0'.repeat(198) + '{3}';
+    expect(over.length).toBe(201);
+    const plan = buildPlan([item('lastName', { pattern: over })], { profile, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '山田', status: 'ok' })]);
+  });
+
+  it('still checks a value at the length cap', () => {
+    const at = 'a'.repeat(999) + 'b';
+    expect(at.length).toBe(1000);
+    const plan = buildPlan([item('lastName', { pattern: '\\d{3}-\\d{4}' })], { profile: { ...profile, lastName: at }, address });
+    expect(plan).toEqual([expect.objectContaining({ value: '', display: at, status: 'warn-pattern' })]);
+  });
+
+  it('skips the check on a value over the length cap (fall open)', () => {
+    const over = 'a'.repeat(1001);
+    const plan = buildPlan([item('lastName', { pattern: '\\d{3}-\\d{4}' })], { profile: { ...profile, lastName: over }, address });
+    expect(plan).toEqual([expect.objectContaining({ value: over, status: 'ok' })]);
+  });
+});
+
 describe('school', () => {
   const schooled = { ...profile, school: '都立日比谷高校', department: '普通科' };
 
