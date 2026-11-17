@@ -1,6 +1,6 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { Category, FieldMeta } from '../../src/core/types';
-import type { FieldClassifier, ClassifySchedule } from '../../src/core/classifier';
+import type { AttemptOutcome, FieldClassifier, ClassifySchedule } from '../../src/core/classifier';
 import {
   mergeClassified, runClassifyPipeline, withLegacyThrowFallback,
 } from '../../src/classify-pipeline/pipeline';
@@ -191,6 +191,73 @@ describe('runClassifyPipeline: chunk schedule handoff', () => {
     expect(attempt).toHaveBeenCalledTimes(2);
     expect(result.items.filter((i) => i.meta.id.startsWith('t')).map((i) => i.cls.category))
       .toEqual(['tel1', 'tel2', 'tel3']);
+  });
+});
+
+describe('runClassifyPipeline: run budget and non-retryable stop (PBI-240)', () => {
+  afterEach(() => vi.useRealTimers());
+  const manyPending = (n: number) => Array.from({ length: n }, (_, i) => pendingMeta(`f${i}`));
+
+  it('hands the run start clock to the attempt seam for the budget clamp', async () => {
+    const attempt = okAttempt();
+    const before = Date.now();
+    await runClassifyPipeline(classifierWith(attempt), manyPending(60), {});
+    const startedOpts = attempt.mock.calls.map((c) => (c[2] as { startedAt?: number } | undefined)?.startedAt);
+    expect(startedOpts).toHaveLength(3);
+    for (const t of startedOpts) {
+      expect(t).toBeGreaterThanOrEqual(before);
+      expect(t!).toBeLessThanOrEqual(Date.now());
+    }
+  });
+
+  it('stops launching chunks once the run total budget is spent', async () => {
+    vi.useFakeTimers();
+    const attempt = vi.fn(async (fields: FieldMeta[]): Promise<AttemptOutcome> => {
+      await new Promise((r) => setTimeout(r, 50_000));
+      return { map: new Map(fields.map((m): [string, Category] => [m.id, 'email'])), failureReason: null };
+    });
+    const p = runClassifyPipeline(classifierWith(attempt), manyPending(60), {});
+    await vi.advanceTimersByTimeAsync(200_000);
+    const result = await p;
+    // Two 50s chunks spend the 60s run budget (the second overshoots it); the
+    // third chunk is not launched. This adapter ignores opts.startedAt, so the
+    // pipeline-side elapsed check is the only guard on its path.
+    expect(attempt).toHaveBeenCalledTimes(2);
+    expect(result.failureReason).toBe('network');
+    expect(result.items.filter((i) => i.cls.source === 'llm')).toHaveLength(40);
+  });
+
+  it.each(['auth', 'rejected'] as const)(
+    'stops the run on a non-retryable %s outcome without sending the remaining chunks',
+    async (reason) => {
+      const attempt = vi.fn(async (): Promise<AttemptOutcome> => ({ map: new Map(), failureReason: reason }));
+      const result = await runClassifyPipeline(classifierWith(attempt), manyPending(60), {});
+      expect(attempt, reason).toHaveBeenCalledTimes(1);
+      expect(result.failureReason, reason).toBe(reason);
+    },
+  );
+
+  it('keeps sending after a retryable outcome (unavailable stays retryable)', async () => {
+    const attempt = vi.fn(async (): Promise<AttemptOutcome> => ({ map: new Map(), failureReason: 'unavailable' }));
+    const result = await runClassifyPipeline(classifierWith(attempt), manyPending(60), {});
+    expect(attempt).toHaveBeenCalledTimes(3);
+    expect(result.failureReason).toBe('unavailable');
+  });
+
+  it('debug-logs a contract-external throw with counts only (PBI-240)', async () => {
+    const debug = vi.spyOn(console, 'debug').mockImplementation(() => {});
+    const throwing: FieldClassifier = {
+      classify: async () => { throw new Error('down'); },
+      attempt: async () => { throw new Error('boom'); },
+    };
+    const result = await runClassifyPipeline(throwing, manyPending(60), {});
+    expect(result.failureReason).toBeNull();
+    expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
+    expect(debug).toHaveBeenCalledTimes(3);
+    const line = String(debug.mock.calls[0]![0]);
+    expect(line).toMatch(/outside contract/);
+    expect(line).not.toContain('f0');
+    debug.mockRestore();
   });
 });
 

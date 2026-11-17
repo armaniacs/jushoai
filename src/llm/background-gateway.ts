@@ -13,9 +13,10 @@ const STATUS_TIMEOUT_MS = TRANSFER_STATUS_TIMEOUT_MS;
 // classify-transport（send）が所有し、この gateway は数値を自前利用しない。
 // 新規コードは transfer-contract の正準名を import すること。
 export const CLASSIFY_TIMEOUT_MS = TRANSFER_CHUNK_TIMEOUT_MS;
-// PBI-33: chunk sequential run total cap (1 chunk 45s x 3 chunks = 135s worst
-// case on slow lines). The per-chunk send is additionally clamped to the
-// remaining budget, so the wall clock stays within this bound.
+// PBI-33/240: chunk sequential run total budget (60s). Each chunk send clamps
+// its round-trip to the budget remaining since the run start (runClassifyPipeline
+// hands opts.startedAt through the seam), so a split run's wall clock stays
+// within this bound instead of re-earning a full budget per send.
 export const CLASSIFY_TOTAL_TIMEOUT_MS = TRANSFER_TOTAL_TIMEOUT_MS;
 // PBI-174: cap・chunk 幅の数値は転送契約ではなくチャンク計画
 // (classify-pipeline/chunks) が所有する。ここでは既存の名前を別名として
@@ -71,13 +72,14 @@ export class BackgroundClassifier implements CappedClassifier {
   async attempt(
     fields: FieldMeta[],
     callerSchedule?: ClassifySchedule,
-    opts?: { signal?: AbortSignal },
+    opts?: { signal?: AbortSignal; startedAt?: number },
   ): Promise<CappedAttempt & { failureReason: ClassifyFailure | null }> {
     return send(fields, {
       signal: opts?.signal,
       schedule: callerSchedule,
       timeoutMs: this.timeoutMs,
       totalTimeoutMs: this.totalTimeoutMs,
+      startedAt: opts?.startedAt,
     });
   }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evalMetricsFor, reportLine, aggregate, type EvalMetrics } from '../../src/eval/metrics';
+import { evalMetricsFor, reportLine, aggregate, p, type EvalMetrics, type PinRow } from '../../src/eval/metrics';
 import { scanFields } from '../../src/dom/scan-fields';
 // The corpus (name → html + per-fixture expectations) comes from the shared
 // ledger module (PBI-216): the glob lives there, once, so this file carries
@@ -15,22 +15,7 @@ import { corpus } from '../corpus';
 // 現在の内訳は pin 表を見よ。pin のずれは表の該当 fixture 行を同じコミットで
 // 編集する。表の diff が世代記録になる。古い基準値の追記はしない。
 // unknowns は total - ruleHits で誘導できるため行に載せない（EvalMetrics には残る）。
-interface PinRow {
-  ruleHits: number;
-  llmFallbacks: number;
-  fillable: number;
-  refineChanged: number;
-  refineDropped: number;
-}
-
-const p = (
-  ruleHits: number,
-  llmFallbacks: number,
-  fillable: number,
-  refineChanged: number,
-  refineDropped: number,
-): PinRow => ({ ruleHits, llmFallbacks, fillable, refineChanged, refineDropped });
-
+// PinRow と p() は src/eval/metrics.ts にあり、make eval-pin の生成行と共有する。
 const PIN_TABLE: Record<string, PinRow> = {
   '12fc22bc297429.html': p(10, 0, 8, 3, 0),
   '2dd1c663300469.html': p(11, 1, 7, 0, 0),
@@ -391,7 +376,7 @@ describe('sample corpus metrics (local, no network)', () => {
         problems.push(`${name}: pin 表の行が corpus にありません（fixture を削除したなら行も削除する）`);
       }
     }
-    expect(problems, 'pin 表と corpus または実測がずれています。pin 更新か意図しない分類の変化かを fixture に戻って確認する').toEqual([]);
+    expect(problems, 'pin 表と corpus または実測がずれています。pin 更新か意図しない分類の変化かを fixture に戻って確認する。更新する行は make eval-pin（FIXTURE=<fixture名> で絞り込み）で再生成できる').toEqual([]);
 
     // 集計は pin 表の合計として読む。magic number は pin 表の行にしか置かない。
     const pinRows = Object.values(PIN_TABLE);

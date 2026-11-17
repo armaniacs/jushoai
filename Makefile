@@ -8,7 +8,7 @@
 # *e2e/video drive a real browser against localhost plus dist/*-mv3 (e2e harness on 127.0.0.1; video record*.mjs on :4180, record-drag.mjs self-serves on :4181). e2e is hermetic except 1 github-origin assert (tests/e2e/scenarios.ts:154).
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check check-all zip clean site site-serve eval addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
+.PHONY: help install dev build test typecheck check check-all zip clean site site-serve eval eval-pin addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -67,6 +67,9 @@ site-serve: site ## Serve site-dist at http://127.0.0.1:4173
 
 eval: ## Run the local rule-metrics eval over the sample corpus (no network)
 	npm run eval
+
+eval-pin: ## Print paste-ready PIN_TABLE rows from the eval metrics (FIXTURE="a.html b.html" filters; empty = all rows)
+	EVAL_PIN_FIXTURES="$(FIXTURE)" npm run eval-pin
 
 addurl: ## Register URL in tests/target-url.md and sync fixtures (URL=... [FIXTURE=...])
 ifndef URL

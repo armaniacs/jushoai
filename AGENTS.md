@@ -37,6 +37,12 @@ npx vitest run tests/core/planner.test.ts     # 単一ファイル
 npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 ```
 
+## 依存解決と npm ミラー
+
+依存の解決 URL は `package-lock.json` の全行が非公式ミラー `https://npm.flatt.tech/` に固定されており、`.npmrc` の `registry` 行が同じミラーを指す。方針はミラー継続で、lockfile を `registry.npmjs.org` 側に戻す再生成はしない。全パッケージに integrity ハッシュ（sha512）が付いており npm が取得時に検証するため、改ざんはハッシュ不一致として検知できる、というのがこの運用の前提。信頼境界はミラー運営者に置かれている点を踏まえ、追加の検証が必要になったら upstream での lockfile 再生成を再検討する。
+
+ミラー障害時の fallback: `.npmrc` の `registry` 行を一時的に除去する（または `https://registry.npmjs.org/` を指定する）と、`npm install --package-lock-only` 相当で lockfile を upstream 側に再解決でき、`npm ci` が通る。この再解決で lockfile の解決 URL が書き換わるため一時措置にとどめ、復旧後に元に戻すか方針を改めて決める。通常の作業では lockfile も `.npmrc` も書き換えない。
+
 ## ディレクトリ配置
 
 - `src/`: 実装(`core/` 純粋関数、`dom/`、`llm/`、`ai/`、`entrypoints/`)。`tests/` は `src/` と同じ構造で、`tests/core/`、`tests/integration/`、`tests/build/`、`tests/e2e/`

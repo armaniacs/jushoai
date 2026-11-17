@@ -11,7 +11,11 @@ export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
   return { host, root };
 }
 
-export const OVERLAY_CSS = `
+// Theme tokens shared by every shadow root that paints the extension chrome.
+// Split out of OVERLAY_CSS so self-styled consumers can inject only
+// the declarations instead of the whole overlay stylesheet, which would
+// duplicate the panel/button rules into their shadow roots.
+export const SHADOW_TOKENS = `
   :host {
     /* PBI-209: theme tokens declared inside the shadow root. The host carries
        all: initial !important, so page-side :root variables never reach this
@@ -55,6 +59,9 @@ export const OVERLAY_CSS = `
       --jushoai-input-border: #565e70;
     }
   }
+`;
+
+export const OVERLAY_CSS = `${SHADOW_TOKENS}
   .panel { all: initial; display: block; box-sizing: border-box; width: 360px; max-height: 80vh;
     overflow: auto; font: 13px/1.5 system-ui, sans-serif; color: var(--jushoai-panel-fg); background: var(--jushoai-panel-bg);
     border: 1px solid var(--jushoai-border); border-radius: 8px; padding: 12px; box-shadow: 0 8px 24px rgba(0,0,0,.25);

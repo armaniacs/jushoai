@@ -24,10 +24,10 @@ Scenario: 救済対象は維持される
   Then  PBI-229 どおり email 確定になる（kasadera 等の既存 fixture の pin が変わらない）
 
 ## 受け入れ基準
-- [ ] 除外語彙に `mailing` を足す、または `mail` の前後を非英字に寄せた境界 + 確認語彙（conf 等）の明示許可リストに締める
-- [ ] 該当 shape（mailing 系 name・label/nearby 空）を fixture 先行で tests/core/ に追加して RED から直す
-- [ ] `npm run eval` が全パスし、pin 更新は該当 fixture 行のみ
-- [ ] `make check` が緑
+- [x] 除外語彙に `mailing` を足す、または `mail` の前後を非英字に寄せた境界 + 確認語彙（conf 等）の明示許可リストに締める
+- [x] 該当 shape（mailing 系 name・label/nearby 空）を fixture 先行で tests/core/ に追加して RED から直す
+- [x] `npm run eval` が全パスし、pin 更新は該当 fixture 行のみ
+- [x] `make check` が緑
 
 ## 実装手順
 - まず fixture を追加して失敗させる（tests/helpers.ts の makeMeta）
@@ -38,10 +38,23 @@ Scenario: 救済対象は維持される
 - fixture 先行（BDD シナリオ 2 本を tests/core/ に）
 - PBI-229 の既存テストが救済対象の回帰網
 
+## 実装記録
+- 方式は (a) denylist 拡張を選んだ（src/core/classify-rules.ts の `isBareMailName`）。境界 + 確認語彙許可リスト（(b)）は `mailconf`・`mailCheck`・`companyEmail` が境界条件を満たさず、許可リストが救済対象の数だけ育つため、flat denylist への語追加 1 箇所で済む (a) が最も単純。
+- BDD シナリオが `mailingaddress` と `mailbox` の両方を要求するため、受け入れ基準の文言（`mailing` のみ）に加えて `mailbox` も denylist に足した。`mailaddress`（confirm-derived 派生名、PBI-229 既存テスト）は `mailing` を含まないため救済対象のまま。
+- fixture 先行: tests/core/name-email.test.ts に `mailingaddress` / `mailbox`（label・nearby 空）を it.each で追加し、RED（両方とも category: 'email' で失敗）を確認してから実装。GREEN 後は name-email / name-company / search-box-exclusion / classify-rules の 4 ファイル 360 テストが全パス。
+- `npm run eval` 全パス、pin 差分なし（corpus 内に `mailing` / `mailbox` を name に持つ欄が存在しないため、該当 fixture 行の更新も発生せず）。`make check` 緑（web-ext lint の warning 2 件は manifest min-version 由来の既存分）。
+- DoD の `コードレビュー完了` はレビュー担当者の判断のため未チェックのまま残す。
+
 ## 見積もり
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（fixture 先行 RED→GREEN。救済対象は PBI-229 既存テスト + pin で回帰確認済み）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 3 件は下記）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 3 件）
+
+- 新規テストの `not.toBe('email')` は classifyField が undefined を返しても通る。フォールバック先（unknown 等の具体値）を断言するとシナリオ 1 の「従来の分類経路に戻る」がより固く締まる（PBI-229 の既存ブロックの書式に合わせたため現状許容）
+- src/core/classify-rules.ts:205-209 の追加コメントが英語で周囲のブロックは日本語。規約どおり英語であり外観上の差のみ（PBI-232 と同じ前例）
+- `emailing` 等の字面を持つ実際のメール欄はゲートから外れて LLM フォールバックに流れる。派生語誤爆を塞ぐ方針と整合・救済対象外・corpus 該当なしのため対応不要（認知のための記録）

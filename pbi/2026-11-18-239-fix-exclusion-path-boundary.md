@@ -10,7 +10,7 @@
 
 ## 出どころ
 - checking-team 2026-11-18 ラウンド・Red Team Leader。`plans/2026-11-18-0530-review-main-v0.1.29.md`
-- 場所: src/core/exclusions.ts:37-41（`target.startsWith(e.toLowerCase())`）、src/content/exclusion-register.ts:30-31・src/content/exclusion-prefix.ts:7-19（exact 候補の生成）
+- 場所: src/core/exclusions.ts:37-41（`target.startsWith(e.toLowerCase())`）、src/content/exclusion-register.ts:30-31・src/core/exclusion-prefix.ts:7-19（exact 候補の生成。レビュー時に core 配下と訂正）
 
 ## BDD受け入れシナリオ
 Scenario: 兄弟パスは一致しない
@@ -29,10 +29,10 @@ Scenario: 既存保存値の正規化
   Then  同じ判定規則で読まれ、既存の起動しない URL 設定が意図に反して消えない
 
 ## 受け入れ基準
-- [ ] マッチングが origin 完全一致 + path セグメント境界（`target === entry || target.startsWith(entry + '/')` 相当。query/hash は別扱い）になる
-- [ ] 既存保存値の読み込み時（parseExcludedUrls）に正規化を足し、v0.1.29〜0.1.37 の保存データとの互換を保つ
-- [ ] 境界ケースの fixture を tests/core/ に先に追加して RED から直す
-- [ ] `make check` が緑
+- [x] マッチングが origin 完全一致 + path セグメント境界（`target === entry || target.startsWith(entry + '/')` 相当。query/hash は別扱い）になる
+- [x] 既存保存値の読み込み時（parseExcludedUrls）に正規化を足し、v0.1.29〜0.1.37 の保存データとの互換を保つ
+- [x] 境界ケースの fixture を tests/core/ に先に追加して RED から直す
+- [x] `make check` が緑
 
 ## 実装手順
 - tests/core/exclusions.test.ts（または既存テスト）に境界 fixture を先に足す
@@ -47,6 +47,21 @@ Scenario: 既存保存値の正規化
 0.1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（BDD 4 面 + 互換 pin 2 件を fixture 先行で RED→GREEN）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 4 件は下記）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 4 件）
+
+- fragment の正規形が 2 種類残る: normalizeExclusionEntry（登録経路）は # を保持、parseExcludedUrls（読み込み経路）は除去。登録直後の options 一覧に # が残り、セッション内の重複検出が ?a=1#top と ?a=1 をまとめない。normalizeExclusionEntry 側でも除去すると正形が 1 つになる
+- 開示済みの等価性（default port・userinfo・bare-origin target）に fixture がない。将来のリファクタで静かに反転し得るため 1 it ずつの pin が望ましい
+- 本 PBI 出どころ節の exclusion-prefix.ts の場所表記が誤り（正: src/core/exclusion-prefix.ts。下記で訂正）
+- coversQuery の `if (entrySearch === '') return true` は到達不能な防御ガード（唯一の呼び出し側が保護済み）。無害
+
+## 実装記録
+
+- src/core/exclusions.ts: `isExcludedUrl` を URL 構成要素ベースに変更。`new URL` の origin 完全一致の上で、path をセグメント境界で比較する。末尾スラッシュ付きエントリはディレクトリ接頭辞（`tp.startsWith(ep)`）、裸パスは「ページ自身 + 配下」（`tp === ep || tp.startsWith(ep + '/')`）。`/pay` は `/payment`・`/pay-admin` に一致しない。query 付きエントリは 1 ページの exact 登録として path を完全一致に固定し、query は同じ境界規則（`?a=1` は `?a=1&b=2` に一致、`?a=12` には不一致）。fragment は判定に使わない。両側 case-insensitive（既存の pin を維持）。
+- src/core/exclusions.ts: `parseExcludedUrls` に読み込み時正規化を追加。fragment を除去してから重複除去する（`#top` 付きの旧 exact 登録が現行規則で読まれる）。末尾スラッシュなし・大文字混在の旧保存値（v0.1.29〜0.1.37）はそのまま現行規則で読まれ、裸パス =「ページ自身 + 配下」のため登録ページは起動しないまま。
+- src/content/exclusion-prefix.ts は無変更。prefix 候補（origin + 第 1 パスセグメント + 末尾スラッシュ、query なし）は新規則のディレクトリ形式と自然に整合し、矛盾なし。
+- テスト: tests/core/exclusions.test.ts に PBI-239 の境界 fixture 6 件を追加（兄弟パス不一致・ページ+配下一致・query/fragment 別扱い・末尾スラッシュ境界・fragment 正規化・旧保存値互換 pin）。fixture 先行で RED を確認: 4 件失敗（兄弟パス `/payment`・`/pay-admin` の誤一致、query 境界 `?a=12` の誤一致、fragment が残る、旧保存値で `/payment` が除外扱い）→ 実装後に GREEN（26/26）。
+- 検証: 関連テスト 9 ファイル 130 件 GREEN（exclusions / exclusion-prefix / search-box-exclusion (PBI-224) / exclusion-register / content-exclusions / exclusions-store / dismiss-dialog / exclusion-section / content-session）。typecheck OK。`npm run eval` GREEN。`npm run eval-pin` の 311 行が変更前後で完全一致（pin rows 不変）。`make check` 緑（web-ext lint は既存の manifest 警告 2 件のみ、errors 0）。

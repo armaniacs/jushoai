@@ -24,10 +24,10 @@ Scenario: 通常の pattern は検査が続く
   Then  PBI-210 どおりの warn-pattern 判定が続く
 
 ## 受け入れ基準
-- [ ] 破滅的構造（ネスト量子化など）を検出する構造 lint を追加し、該当 pattern は検査をスキップする（fall open。同期 RegExp にタイムアウトは持たせられないため「怪しければ検査しない」）
-- [ ] または検査対象値長と pattern 長に上限を設け、超過時は fall open する（(a) と (b) のいずれか、または両方）
-- [ ] 境界ケースの fixture を tests/core/ に先に追加して RED から直す
-- [ ] `make check` が緑
+- [x] 破滅的構造（ネスト量子化など）を検出する構造 lint を追加し、該当 pattern は検査をスキップする（fall open。同期 RegExp にタイムアウトは持たせられないため「怪しければ検査しない」）
+- [x] または検査対象値長と pattern 長に上限を設け、超過時は fall open する（(a) と (b) のいずれか、または両方）
+- [x] 境界ケースの fixture を tests/core/ に先に追加して RED から直す
+- [x] `make check` が緑
 
 ## 実装手順
 - fixture 先行: crafted pattern の fixture で「検査を飛ばす」挙動を固定する
@@ -42,6 +42,26 @@ Scenario: 通常の pattern は検査が続く
 0.1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（fixture 先行 2 輪。6 面 + 修正 3 面。凍結面の RED 証跡は 3 秒 kill の子プロセス probe。planner 76/76）
+- [x] コードレビュー完了（初回レビューは Needs fixes（Important 2 件）→ 修正コミット後に再レビュー Approved・spec ✅。Critical/Important なし。Minor 2 件は下記）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（再レビュー Approved・Minor 2 件）
+
+- しきい値未満側の最悪値の表記が楽観的: 固定次数 k の分割数は C(n+k-1, k-1) で、次数 6 × 値長 1000 は約 8×10^12 ステップ（= 遅延ではなく凍結）。`.*.*.*.*.*.*x` × 長いプロファイル値で攻撃可能。harm クラスは PBI が受容する範囲でブロック要件ではないが、planner.ts のコメントとレポート concern の「多項式/遅延」表現を修正するか C(n,k) の算数を記録する（ラウンド最終レビュー修正波へ）
+- 後方参照型 `(a*)\1+$` 系の爆発は依然未捕捉（同期 RegExp の構造的限界。レポート concern のみに記録済み。実装記録にも本行で記録）
+
+## 実装記録
+- 方式は (a)+(b) の両方。(a) だけでも BDD シナリオ 1 は満たせるが、構造 lint が通す低次数の多項式後退（しきい値未満の無上限量記号 × 長い値）を (b) の長さ上限が蓋をする。ただし (b) が効くのは値長軸だけなので、無上限量記号の連結（値が短くても次数で爆発する）は (b) では防げず、lint 側のカウントで捕まえる（下記レビュー修正）。(b) 単独では `(a|aa)+`（8 文字）を検出できずシナリオ 1 を満たせないため、lint が必須だった。
+- (a) 構造 lint: `src/core/planner.ts` の `hasCatastrophicShape`。1 パス走査でエスケープと文字クラス本体を不透明扱いし、2 形を危険と判定する。(i) 量記号が「1 スパンを複数通りにマッチし得る group 本体（量記号・`|`・範囲付き有界量記号 `{n,m}`/`{n,}` のいずれかを含む）」の直後に来た。ちょうど `{n}` は 1 通りしかマッチしないため無害。`(a{1,2})+` はフィボナッチ爆発する。(ii) group を要しない pattern 全体の無上限量記号（`*` `+` `{n,}`）の連結。`MAX_UNBOUNDED_QUANTIFIERS = 6` を超えたら危険（通常 pattern は多くて 2-3）。判定は `valuePatternFor` が null を返す形で fall open（検査 skip、ブラウザのネイティブ検査に委ねる）。`(?:` は marker を本体に混ぜない（構文として skip。`(?:X)` ≡ X なので `\d{3}(?:-\d{4})?` を誤検出しない）。名前付き group `(?<name>...)` は marker を本体に含むため、量化されていれば危険側に倒れる。
+- (b) 長さ上限: pattern 長 200 超または検査対象値長 1000 超で fall open（`MAX_PATTERN_ATTRIBUTE_LENGTH` / `MAX_PATTERN_CHECK_VALUE_LENGTH`）。corpus の実 pattern 最長は約 70 文字で、通常フォームでは発火しない。
+- warn-pattern の PlanStatus 意味論とガイドは変更していない（ドキュメントは PBI-235 の担当）。
+- fixture 先行（tests/core/planner.test.ts の `value pattern fall-open (PBI-243)` describe、6 面）: crafted pattern（`(a|aa)+` × 40 個の a + b。実装前は 48 秒でタイムアウト = 凍結の再現、実装後は即時完了・warn なし）、通常 pattern（`\d{3}-\d{4}` で warn 継続）、pattern 長 200 ちょうど（検査続行）/ 201（skip）、値長 1000 ちょうど（検査続行）/ 1001（skip）。RED 3 失敗 → 実装後 6/6 GREEN。
+- `make check` 緑。`npm run eval` の pin 311 行は全行不変（pinDiff 実測照合パス。corpus に構造 lint の発火対象 pattern は存在しないことを実測で確認）。
+
+### レビュー修正（2026-11-18 checking-round の指摘対応）
+- Important 1（無上限量記号の連結が fall-open から漏れる）: 旧「実装記録」にあった「(b) の長さ上限が連結型の後退を蓋をする」という根拠は誤りだった。爆発は pattern の次数 × 短い値で決まり値長上限では防げない（実測: `a*`×10 + `b` の 21 文字が 30 文字の値で 3 秒時点でも停止せず、次数 6 は 54ms / 次数 8 は 1.7 秒）。`hasCatastrophicShape` に pattern 全体の無上限量記号（`*` `+` `{n,}`。エスケープと文字クラス内のものは数えない）のカウントを追加し、`MAX_UNBOUNDED_QUANTIFIERS = 6` を超えたら fall open。
+- Important 2（`(?:` marker の誤検知）: marker の `?` が group 本体に混入し、本体が何であれ量化された非捕捉 group がすべて危険扱いになっていた（`\d{3}(?:-\d{4})?` が warn を失う）。`(?:` を構文として skip し、併せて本体の危険判定で「ちょうど `{n}`」を無害側に修正した。名前付き group は marker を含むまま危険側。
+- fixture 追加（同 describe に 3 面、計 9 面）: 無上限量記号 10 連結・group なし（`a*`×10 + `b` に 30 文字の値。RED は凍結そのもので、同期凍結はテストランナーのタイムアウトで中断できないため 3 秒強制 kill の子プロセス probe で RED を確認。実装後は即時完了）、しきい値境界（6 個は検査続行 warn-pattern / 7 個は fall open。RED: 7 個側が現行コードで warn-pattern になり約 1 秒でアサーション失敗）、郵便番号 `(?:` pattern（`\d{3}(?:-\d{4})?`。RED: 現行コードで warn が消え約 1 秒でアサーション失敗 / GREEN: warn-pattern 継続）。
+- 検証: planner tests 76/76 GREEN（ファイル全体 574ms、凍結 fixture も即時）、`npm run eval` pin 全行不変、`make check` 緑。

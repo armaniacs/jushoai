@@ -25,12 +25,16 @@ export interface ClassifySchedule {
 // PBI-174: the abort signal rides the seam as an explicit run argument
 // (ClassifyPipeline passes preview disposal down to the transfer). Adapters
 // without chunking may ignore it; the run still checks it between chunks.
+// PBI-240: opts.startedAt carries the run's start wall clock so the transfer
+// clamps each send to the remaining run budget instead of re-earning a full
+// budget per send. Optional: adapters without a budgeted transfer may ignore
+// it, same as the signal.
 export interface FieldClassifier {
   classify(fields: FieldMeta[], schedule?: ClassifySchedule): Promise<Map<string, Category>>;
   attempt(
     fields: FieldMeta[],
     schedule?: ClassifySchedule,
-    opts?: { signal?: AbortSignal },
+    opts?: { signal?: AbortSignal; startedAt?: number },
   ): Promise<AttemptOutcome>;
 }
 
@@ -67,6 +71,6 @@ export interface CappedClassifier extends FieldClassifier {
   attempt(
     fields: FieldMeta[],
     schedule?: ClassifySchedule,
-    opts?: { signal?: AbortSignal },
+    opts?: { signal?: AbortSignal; startedAt?: number },
   ): Promise<CappedAttempt>;
 }

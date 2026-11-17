@@ -1,22 +1,22 @@
 # PBI 台帳インデックス
 
-## 進行中（2026-11-18・checking-teamレビューラウンド。9観点でmain HEAD fce24bc vs v0.1.29を標準レビュー→総合95/100（S）。High 1/Medium 14をPBI化してRICE順位確定、Low 16は台帳記録のみ。レポート: plans/2026-11-18-0530-review-main-v0.1.29.md）
+## 進行中（2026-11-18・checking-teamレビューラウンド。9観点でmain HEAD fce24bc vs v0.1.29を標準レビュー→総合95/100（S）。High 1/Medium 14をPBI化してRICE順位確定、Low 16は台帳記録のみ。14件すべて実装・タスクレビュー完了・全ブランチ最終レビュー「Ready to merge: Yes」（修正波 fadcc40..15b612d 済み・work/checking-round-2026-11-18）。レポート: plans/2026-11-18-0530-review-main-v0.1.29.md）
 
 - `2026-11-18-00-backlog-checking-team-round.md`（ラウンド台帳。Wave 3不実施・dismiss-dialog統合維持・core/analyze.ts移転見送りの判断を記録）
-- `2026-11-18-231-chore-eval-pin-generator.md`（順位 1。RICE 95。pin表更新の機械化。DX Advocate）
-- `2026-11-18-232-refactor-company-vocabulary-single.md`（順位 2。RICE 90。classify-rulesの会社語彙一本化。Maintainability）
-- `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。isEmailByNameのmail部分一致締め直し。Domain Logic）
-- `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。登録処理中の自動クローズ競合。Red Team+UI統合）
-- `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。ガイド注記表にwarn-pattern行。Documentation）
-- `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。lockfileミラー前提の文書化。Supply Chain）
-- `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41。レビュー唯一のHigh・234後に前倒し推奨。非表示・クイック登録ダイアログのa11y。Accessibility）
-- `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。dismiss-dialogをテーマトークンへ。Maintainability）
-- `2026-11-18-239-fix-exclusion-path-boundary.md`（順位 9。RICE 36。isExcludedUrlのパス境界。Red Team）
-- `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
-- `2026-11-18-241-fix-exclusion-writer-race.md`（順位 11。RICE 34。除外リストの複数ライター競合。Red Team+DataIntegrity統合）
-- `2026-11-18-242-docs-banner-register-flow.md`（順位 12。RICE 20。バナーX→クイック登録フローの文書化。Docs+Compliance統合）
-- `2026-11-18-243-fix-pattern-redos-fallopen.md`（順位 13。RICE 16。pattern属性ReDoSのfall-open化。Blue Team）
-- `2026-11-18-244-feat-exclusion-undo-hint.md`（順位 14。RICE 16。永続登録の解除導線。Ethics）
+- `2026-11-18-231-chore-eval-pin-generator.md`（順位 1。RICE 95。実装済み（5b2a191、branch work/pbi-231-eval-pin-generator）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。pin表更新の機械化。DX Advocate）
+- `2026-11-18-232-refactor-company-vocabulary-single.md`（順位 2。RICE 90。実装済み（35efb03）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録・officeLegendEligible の集約は後続候補）。classify-rulesの会社語彙一本化。Maintainability）
+- `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。実装済み（0a21525）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録）。isEmailByNameのmail部分一致締め直し。Domain Logic）
+- `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。実装済み（6513446）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録）。登録処理中の自動クローズ競合。Red Team+UI統合）
+- `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。実装済み（f3d2d6e）・タスクレビュー Approved（spec ✅、Minor 1 件は PBI に記録）。ガイド注記表にwarn-pattern行。Documentation）
+- `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。実装済み（214d803）・タスクレビュー Approved（spec ✅、Important 2 件はコントローラ処置済み 4089308・130cc81）。lockfileミラー前提の文書化。Supply Chain）
+- `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41・レビュー唯一のHigh。実装済み（bf29536〜67106f2）・タスクレビュー Approved（spec ✅・実装者の 2 判断を承認、Minor 3 件は PBI に記録）。非表示・クイック登録ダイアログのa11y。Accessibility）
+- `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。実装済み（a926a29）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録・タスク ID 参照の除去は最終レビュー修正波へ）。dismiss-dialogをテーマトークンへ。Maintainability）
+- `2026-11-18-239-fix-exclusion-path-boundary.md`（順位 9。RICE 36。実装済み（24d704a）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。isExcludedUrlのパス境界。Red Team）
+- `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。実装済み（15f4799）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
+- `2026-11-18-241-fix-exclusion-writer-race.md`（順位 11。RICE 34。実装済み（47cb8de）・タスクレビュー Approved（spec ✅、Minor 5 件は PBI に記録・残存競合窓 2 件は CAS 不使用の設計限界として明記）。除外リストの複数ライター競合。Red Team+DataIntegrity統合）
+- `2026-11-18-242-docs-banner-register-flow.md`（順位 12。RICE 20。実装済み（fdb93f0 + 修正 87f1ef5）・初回レビュー Approved（Important 1 件）→ 修正後 再レビュー Approved（Minor 2 件は PBI に記録）。バナーX→クイック登録フローの文書化。Docs+Compliance統合）
+- `2026-11-18-243-fix-pattern-redos-fallopen.md`（順位 13。RICE 16。実装済み（c814ce2 + 修正 5f515bb）・初回レビュー Needs fixes → 再レビュー Approved（spec ✅、Minor 2 件は PBI に記録・最悪値表記の修正は最終レビュー修正波へ）。pattern属性ReDoSのfall-open化。Blue Team）
+- `2026-11-18-244-feat-exclusion-undo-hint.md`（順位 14。RICE 16。実装済み（572cb7b + 43f5b92 + 修正 a968c97〜d982b3d）・初回レビュー Approved（Important 1 件）→ 修正後 再レビュー Approved（残指摘なし）。永続登録の解除導線。Ethics）
 
 ## 進行中からアーカイブ済み（2026-11-17・台帳棚卸しで9件処理。204はCI締めを実測、224-230はPR #25でマージ・0.1.36でリリース済み）
 

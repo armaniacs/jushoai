@@ -38,7 +38,7 @@ import { detectBrowser } from '../llm/browser-support';
 import { buildGuide, showAiGuide, type GuideHandle } from '../ui/ai-guide';
 import { mountButton, type ButtonHandle } from '../ui/button';
 import { createDismissMemory } from '../content/dismiss-memory';
-import { registerExclusionChoice } from '../content/exclusion-register';
+import { registerExclusionChoice, undoRegisteredExclusion } from '../content/exclusion-register';
 import { showDismissDialog, type DismissDialogHandle } from '../ui/dismiss-dialog';
 import { attachRepositionTracking } from '../ui/panel';
 import { type PreviewHandle } from '../ui/preview';
@@ -511,6 +511,10 @@ export default defineContentScript({
                 dismissed.remove(form.container);
                 schedule();
               },
+              // The banner was destroyed before this dialog opened, so the
+              // opener position is already body; agree on the form's first
+              // field as the close-time restore target.
+              restoreFocus: () => form.anchor.el,
               register: candidates.ok
                 ? {
                     exactLabel: candidates.exact,
@@ -521,9 +525,26 @@ export default defineContentScript({
                         saveExcluded: saveExcludedUrls,
                         candidates,
                         showError: (reason) => { dialog?.showRegisterError(reason); },
-                        close: () => {
-                          if (openDismissDialog === dialog) openDismissDialog = null;
-                          dialog?.close();
+                        // PBI-244: success stays open with a removal hint and
+                        // an immediate undo that deletes exactly the
+                        // registered entry and restores the banner. The busy
+                        // bracket keeps the outcome display alive the same way
+                        // the register chain does.
+                        showSuccess: (registered) => {
+                          dialog?.showRegisterSuccess(() => {
+                            void undoRegisteredExclusion(registered, {
+                              loadExcluded: loadExcludedUrls,
+                              saveExcluded: saveExcludedUrls,
+                              onRemoved: () => {
+                                if (openDismissDialog === dialog) openDismissDialog = null;
+                                dismissed.remove(form.container);
+                                schedule();
+                                dialog?.close();
+                              },
+                              showError: (reason) => { dialog?.showRegisterError(reason); },
+                              setBusy: (busy) => { dialog?.setRegisterBusy(busy); },
+                            });
+                          });
                         },
                         setBusy: (busy) => { dialog?.setRegisterBusy(busy); },
                       });

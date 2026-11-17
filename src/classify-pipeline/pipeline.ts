@@ -9,6 +9,7 @@ import { sendSet } from '../core/pending-split';
 import { prepare, type PremadePass } from '../core/classify-once';
 import type { Category, FieldMeta, Item, RuledField } from '../core/types';
 import type { FieldClassifier } from '../core/classifier';
+import { TRANSFER_TOTAL_TIMEOUT_MS } from '../llm/transfer-contract';
 import { planChunks, scheduleFor } from './chunks';
 
 // 分類1回ユースケースの境界と所有モジュール (PBI-174)。「1回の分類試行」
@@ -43,6 +44,11 @@ export interface ClassifyPipelineResult {
 function logRuleOnlyRun(fieldCount: number, startedAt: number): void {
   console.debug(`[JushoAI] rule-only classify fields=${fieldCount} durationMs=${Date.now() - startedAt}`);
 }
+
+// PBI-240: 再試行でも成功しないプロバイダの拒否。保守的な語彙集合で打ち切る:
+// network・bad-response・legacy null は一時的故障の可能性があるため継続、
+// unavailable も内蔵モデルの一時状態として継続する。
+const NON_RETRYABLE_FAILURES: ReadonlySet<ClassifyFailure> = new Set(['auth', 'rejected']);
 
 // LLM 合流の単一所有 (analyze.classifyAll から移動)。順序は不変:
 // confident 保持 (force 時は LLM 優先) → LLM 回答の採用 → radio ゲート →
@@ -148,20 +154,31 @@ export async function runClassifyPipeline(
       failureReason ??= 'network';
       break;
     }
+    // PBI-240: run 合計予算の復元。各送信は seam 経由の startedAt で残
+    // budget に clamp されるが、予算を使い切った後のチャンク起動はここで
+    // 止める (startedAt を無視する adapter でも送信が積み上がらない)。
+    if (Date.now() - startedAt >= TRANSFER_TOTAL_TIMEOUT_MS) {
+      failureReason ??= 'network';
+      break;
+    }
     let outcome;
     try {
       outcome = await seam!.attempt(
         plan.chunks[i]!,
         scheduleFor(i + 1, plan.chunks.length),
-        { signal: opts.signal },
+        { signal: opts.signal, startedAt },
       );
     } catch {
       // attempt は非 throw 契約。契約外の throw は旧 fail-safe
-      // (理由なし・後続継続) 扱いにする。
+      // (理由なし・後続継続) 扱いにする。PBI-27 の logRuleOnlyRun と同じ
+      // 規律で、件数と経過だけを 1 行残す (meta 内容は載せない)。
+      console.debug(`[JushoAI] classify attempt threw outside contract chunk=${i + 1}/${plan.chunks.length} elapsedMs=${Date.now() - startedAt}`);
       continue;
     }
     for (const [id, category] of outcome.map) fromLlm.set(id, category);
-    failureReason ??= asClassifyFailure(outcome.failureReason);
+    const chunkReason = asClassifyFailure(outcome.failureReason);
+    failureReason ??= chunkReason;
+    if (chunkReason !== null && NON_RETRYABLE_FAILURES.has(chunkReason)) break;
   }
   if (plan.truncatedCount > 0 && failureReason === null) {
     failureReason = 'truncated';

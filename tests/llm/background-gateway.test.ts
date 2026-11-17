@@ -211,15 +211,15 @@ describe('timeouts', () => {
 describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
   const hang = () => new Promise(() => {});
 
-  it('clamps a hung chunk to the remaining budget and keeps earlier results with a reason', async () => {
+  it('clamps a hung chunk to the remaining run budget and stops within it (PBI-33/240)', async () => {
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
       .mockImplementationOnce(hang);
     const result = await runClassifyPipeline(new BackgroundClassifier(5_000, 60), pending(60), {});
-    // Each chunk send is clamped to the remaining budget (min(5_000, 60ms)),
-    // so the hung second chunk is cut at ~60ms; the canonical run keeps
-    // sending the third chunk, whose send still carries the clamp.
-    expect(send).toHaveBeenCalledTimes(3);
+    // The remaining budget is measured from the run start (PBI-240), so the
+    // hung second chunk is cut at ~60ms and the third chunk's send finds the
+    // run budget spent and never reaches the wire.
+    expect(send).toHaveBeenCalledTimes(2);
     expect(llmItems(result)).toEqual([['f0', 'tel']]);
     expect(result.failureReason).toBe('network');
   });
@@ -263,6 +263,43 @@ describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
     expect(llmItems(result)).toHaveLength(45);
     expect(result.failureReason).toBeNull();
   });
+});
+
+describe('run total budget and non-retryable stop (PBI-240)', () => {
+  afterEach(() => vi.useRealTimers());
+  const never = () => new Promise(() => {});
+
+  it('spends the run total budget once for a stalled 3-chunk run', async () => {
+    vi.useFakeTimers();
+    const t0 = Date.now();
+    const wireTimes: number[] = [];
+    send.mockImplementation(() => {
+      wireTimes.push(Date.now());
+      return never();
+    });
+    const p = runClassifyPipeline(new BackgroundClassifier(), pending(60), {});
+    await vi.advanceTimersByTimeAsync(200_000);
+    const result = await p;
+    // The clamp is measured from the run start: chunk 1 is cut at its 45s
+    // timeout, chunk 2 at the 15s remaining of the 60s run budget, and the
+    // spent budget then stops the run — chunk 3 never reaches the wire and
+    // the run total stays within 60s.
+    expect(wireTimes.every((t) => t - t0 <= 60_000)).toBe(true);
+    expect(send).toHaveBeenCalledTimes(2);
+    expect(result.failureReason).toBe('network');
+    expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
+  });
+
+  it.each(['auth', 'rejected'] as const)(
+    'stops after a non-retryable %s reply without sending the remaining chunks',
+    async (reason) => {
+      send.mockResolvedValue({ ok: false, reason });
+      const result = await runClassifyPipeline(new BackgroundClassifier(), pending(60), {});
+      expect(send).toHaveBeenCalledTimes(1);
+      expect(result.failureReason).toBe(reason);
+      expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
+    },
+  );
 });
 
 describe('getAiStatusViaBackground (status info)', () => {

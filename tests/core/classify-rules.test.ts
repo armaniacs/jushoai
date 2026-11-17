@@ -345,6 +345,17 @@ describe('classifyField: standalone role wording (T3)', () => {
     expect(cat({ label: '会社名・役職名' })).not.toBe('jobTitle');
   });
 
+  // PBI-232 equivalence pin: the job joint guard must share the COMPANY_WORD
+  // vocabulary, so company-word joints other than 会社名 keep the company
+  // reading and never fall to jobTitle.
+  it.each([
+    { label: '法人名・役職名' },
+    { label: '企業名・役職名' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps the %j compound on company, never the title', (p) => {
+    expect(cat(p)).toBe('company');
+    expect(cat(p)).not.toBe('jobTitle');
+  });
+
   it('keeps the 部署・役職 compound on the existing department reading', () => {
     expect(cat({ label: '部署・役職' })).toBe('companyDepartment');
   });

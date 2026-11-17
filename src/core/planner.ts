@@ -79,8 +79,79 @@ const V_FLAG_OK = (() => {
   try { new RegExp('', 'v'); return true; } catch { return false; }
 })();
 
+// The pattern attribute is page-controlled, and a synchronous RegExp cannot be
+// timed out — crafted shapes make the anchored .test() below backtrack
+// exponentially and freeze the content script's main thread (the trigger is
+// just pressing the banner; preview approval is not needed). Fall open on a
+// suspicious shape instead of failing closed: the skipped check defers to the
+// browser's native validation, and a false positive only costs a page its
+// warning, never its fills. Two shapes are flagged:
+// - A quantifier repeating a group whose body can match one span in more than
+//   one way — a nested quantifier, a ranged bounded quantifier ((a{1,2})+
+//   walks the Fibonacci partitions of the value) or an alternation. An exact
+//   {n} matches its span one way only, so it is harmless. Overlapping and
+//   disjoint alternations are indistinguishable cheaply, so any | counts.
+// - A run of unbounded quantifiers (*, +, {n,}) anywhere in the pattern, no
+//   group needed: each extra one multiplies the ways the value can be carved
+//   up, and the blowup grows with the run's degree against short values
+//   (a*a*...b froze the engine on a 30-char value), so the value-length cap
+//   cannot backstop it. Ordinary patterns carry at most a few; past the cap
+//   the check falls open.
+// Single-pass scan: escapes and character-class bodies are opaque (their
+// | ( ) + * are literals), so a quantifier is attributed to the atom it
+// repeats. The (?: marker is syntax rather than part of the body — skipping it
+// keeps \d{3}(?:-\d{4})? out of the group rule ((?:X) ≡ X); other (?... forms
+// keep the marker in the body, so a quantified named group still reads as
+// dangerous.
+const MAX_UNBOUNDED_QUANTIFIERS = 6;
+const hasCatastrophicShape = (pattern: string): boolean => {
+  const bodies: string[] = [];
+  let inClass = false;
+  let unbounded = 0;
+  for (let i = 0; i < pattern.length; i++) {
+    const ch = pattern[i]!;
+    if (ch === '\\') { i++; continue; }
+    if (inClass) { if (ch === ']') inClass = false; continue; }
+    if (ch === '[') { inClass = true; continue; }
+    if (ch === '*' || ch === '+') unbounded++;
+    else if (ch === '{' && /^\{\d+,\}/.test(pattern.slice(i))) unbounded++;
+    if (ch === '(') {
+      if (pattern[i + 1] === '?' && pattern[i + 2] === ':') i += 2;
+      bodies.push('');
+    } else if (ch === ')') {
+      const body = bodies.pop() ?? '';
+      const parent = bodies.length - 1;
+      if (parent >= 0) bodies[parent] = (bodies[parent] ?? '') + `(${body})`;
+      const rest = pattern.slice(i + 1);
+      const quantified = rest.startsWith('*') || rest.startsWith('+') || rest.startsWith('?')
+        || /^\{\d+(,\d*)?\}/.test(rest);
+      if (quantified && body !== '' && (/[+*?|]/.test(body) || /\{\d*,\d*\}/.test(body))) return true;
+    } else if (bodies.length > 0) {
+      const top = bodies.length - 1;
+      bodies[top] = (bodies[top] ?? '') + ch;
+    }
+  }
+  return unbounded > MAX_UNBOUNDED_QUANTIFIERS;
+};
+
+// Length caps on the same fall-open: they bound the backtracking search space
+// for what the shape lint passes through — a long pattern that is page noise,
+// and a long value against a pattern whose unbounded run stays under the
+// threshold. That residual blowup is combinatorial, not polynomial: matching n
+// value characters against k unbounded spans walks C(n+k-1, k-1) partitions,
+// so at the lint threshold k=6 with n=1000 that is C(1005,5) ≈ 8×10^12 steps —
+// a freeze, not a delay. The caps only bound how far it can go; shrinking the
+// value cap when the counted run is high would be the real mitigation (a
+// possible follow-up, thresholds unchanged here). The corpus's longest real
+// pattern is ~70 chars and profile values are short, so the bounds never fire
+// on ordinary forms.
+const MAX_PATTERN_ATTRIBUTE_LENGTH = 200;
+const MAX_PATTERN_CHECK_VALUE_LENGTH = 1000;
+
 function valuePatternFor(pattern: string): RegExp | null {
   if (pattern === '' || !HAS_REGEX_STRUCTURE.test(pattern)) return null;
+  if (pattern.length > MAX_PATTERN_ATTRIBUTE_LENGTH) return null;
+  if (hasCatastrophicShape(pattern)) return null;
   const anchored = `^(?:${pattern})$`;
   for (const flags of V_FLAG_OK ? ['v'] : ['']) {
     try { return new RegExp(anchored, flags); } catch { /* fall open: the browser ignores it too */ }
@@ -93,12 +164,14 @@ function valuePatternFor(pattern: string): RegExp | null {
 // The pattern attribute governs text/search/url/tel/email/password inputs only
 // (HTML spec); a type=date value must stay ISO or it stops being a date (the
 // width axis's own rule above), and the browser never enforces a date input's
-// pattern. A null compilation (no pattern, page-noise literal, unparseable)
-// never violates, so the row keeps its conventional status.
+// pattern. A null compilation (no pattern, page-noise literal, over-long or
+// suspicious-shaped pattern, unparseable) never violates, so the row keeps its
+// conventional status.
 const PATTERN_APPLIABLE = new Set(['text', 'search', 'url', 'tel', 'email', 'password']);
 
 const valuePatternViolates = (value: string, meta: FieldMeta): boolean => {
   if (meta.tag !== 'input' || !PATTERN_APPLIABLE.has(meta.type)) return false;
+  if (value.length > MAX_PATTERN_CHECK_VALUE_LENGTH) return false;
   const re = valuePatternFor(meta.pattern);
   return re !== null && !re.test(value);
 };

@@ -24,10 +24,10 @@ Scenario: 生成行が pin 照合を通る
   Then  pin 照合が緑になる（列の入れ間違いが構造的に起きない）
 
 ## 受け入れ基準
-- [ ] `make eval-pin`（または同等の npm script）が、pin 差分のある fixture の行を p() 形式で stdout に再生成する
-- [ ] 生成ロジックは metrics の集計結果から直接 p() 引数を組み立て、reportLine の文字列を解析しない（列順の二重管理を残さない）
-- [ ] 既存の pinDiff 失敗メッセージに `make eval-pin` の案内を 1 行足す
-- [ ] `make check` が緑
+- [x] `make eval-pin`（または同等の npm script）が、pin 差分のある fixture の行を p() 形式で stdout に再生成する
+- [x] 生成ロジックは metrics の集計結果から直接 p() 引数を組み立て、reportLine の文字列を解析しない（列順の二重管理を残さない）
+- [x] 既存の pinDiff 失敗メッセージに `make eval-pin` の案内を 1 行足す
+- [x] `make check` が緑
 
 ## 実装手順
 - src/eval/metrics.ts（または tests/eval/）に「集計 rows → p() 行」の整形関数を追加する
@@ -42,6 +42,23 @@ Scenario: 生成行が pin 照合を通る
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 4 件は下記）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 4 件）
+
+- tests/eval/corpus.eval.ts の新規コメント（PinRow と p() の移動先を示すもの）が日本語。ファイル既存のコメント块も日本語のため実害は小さいが、規約上は英語が本来
+- src/eval/metrics.ts の p() 移動コメントが「入れ替え行は生成されない」と主張し過ぎ。同型引数の並べ替えは tsc では検出されず、corpus の pinDiff でしか捉えられない。主張を reportLine 順混入の防止に狭めるべき
+- metricsFor が tests/eval/pin.eval.ts と tests/eval/corpus.eval.ts に逐語重複。corpus 計測設定が変わったときに 2 箇所同時修正が必要（pinDiff が発火するため実害なし）
+- `npx vitest run -c vitest.eval.config.ts` の直接実行では除外が効かず生成行が混ざる。make eval / make eval-pin の各入口は正しい
+
+## 実装記録
+
+- `src/eval/metrics.ts` に `PinRow`・`p()`・`pinLine()` を追加。`p()` と `PinRow` は tests/eval/corpus.eval.ts から移動し、pin 行の引数順（ruleHits, llmFallbacks, fillable, refineChanged, refineDropped）の定義を 1 箇所にした。`pinLine` は metrics オブジェクトの名前付きフィールドから `p()` を通じて行を組み立て、reportLine の文字列は解析しない
+- `tests/eval/pin.eval.ts` を新設。環境変数 `EVAL_PIN_FIXTURES`（空白/カンマ区切りの fixture 名）で絞り込み、空なら全 fixture の行を出力する。行は `process.stdout.write` で stdout にそのまま出す（vitest の console 収集を迂回し、貼り付け可能な形を保つ）。corpus にない fixture 名はテスト失敗で名指しする
+- `package.json` に `eval-pin` スクリプト、Makefile に `eval-pin` ターゲット（`FIXTURE=` 変数で絞り込み）を追加。`.PHONY` を更新
+- tests/eval/corpus.eval.ts は pinDiff 失敗メッセージ（expect の文言）に `make eval-pin` の案内 1 行を足したのみ。PIN_TABLE の行は 1 行も変更していない
+- テスト: tests/eval/metrics.test.ts に `pinLine` の単体テスト 2 件（p() 引数順を異なる 5 値で固定、全ゼロ行と unknowns/total 非載せを固定）。TDD で先にテストを追加し RED（`pinLine is not a function` で 2 件失敗）を確認してから実装して GREEN
+- 手動確認: `contact.html` の pin を意図的に崩すと eval が `contact.html: ruleHits pin=10 実測=11` と fixture 名付きで失敗し、失敗メッセージに案内 1 行が載る。`make eval-pin FIXTURE=contact.html` は正しい行 `'contact.html': p(11, 0, 6, 0, 0),` を出力し（元の表の行と一致）、行を戻せば pin 照合が緑になることを確認
+- `make check` 緑（typecheck + 全テスト + 両ブラウザ build + manifest 検査 + web-ext lint）

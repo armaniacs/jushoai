@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   EXCLUDED_URLS_MAX, EXCLUSION_ENTRY_MAX_LENGTH, addExclusionEntry, isExcludedUrl,
-  normalizeExclusionEntry, parseExcludedUrls, removeExclusionEntry,
+  mergeExcludedEntries, normalizeExclusionEntry, parseExcludedUrls, removeExclusionEntry,
 } from '../../src/core/exclusions';
 
 describe('normalizeExclusionEntry', () => {
@@ -22,6 +22,17 @@ describe('normalizeExclusionEntry', () => {
 
   it('accepts a bare origin, which excludes the whole site', () => {
     expect(normalizeExclusionEntry('https://docs.google.com')).toEqual({ ok: true, value: 'https://docs.google.com/' });
+  });
+
+  it('drops the fragment so registration and the store share one canonical form', () => {
+    expect(normalizeExclusionEntry('https://shared-host/pay#sec')).toEqual({
+      ok: true,
+      value: 'https://shared-host/pay',
+    });
+    expect(normalizeExclusionEntry('https://shared-host/form?a=1#top')).toEqual({
+      ok: true,
+      value: 'https://shared-host/form?a=1',
+    });
   });
 
   it('rejects empty, scheme-less and non-http schemes', () => {
@@ -71,6 +82,42 @@ describe('isExcludedUrl', () => {
   });
 });
 
+// PBI-239: matching is component-based (origin equality + path segment
+// boundary), not a raw string prefix.
+describe('isExcludedUrl: path boundary (PBI-239)', () => {
+  const exact = ['https://shared-host/pay'];
+
+  it('does not match sibling paths of an entry without a trailing slash', () => {
+    expect(isExcludedUrl('https://shared-host/payment', exact)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/pay-admin', exact)).toBe(false);
+  });
+
+  it('matches the registered page and its subpaths', () => {
+    expect(isExcludedUrl('https://shared-host/pay', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail?x=1', exact)).toBe(true);
+    expect(isExcludedUrl('https://other-host/pay', exact)).toBe(false);
+  });
+
+  it('treats the query as its own boundary and ignores the fragment', () => {
+    expect(isExcludedUrl('https://shared-host/pay?x=1', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay#top', exact)).toBe(true);
+    const withQuery = ['https://shared-host/form?a=1'];
+    expect(isExcludedUrl('https://shared-host/form?a=1&b=2', withQuery)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/form?a=12', withQuery)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/form?b=2&a=1', withQuery)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/form/step?a=1', withQuery)).toBe(false);
+  });
+
+  it('keeps the trailing slash as the subtree boundary', () => {
+    const dir = ['https://shared-host/pay/'];
+    expect(isExcludedUrl('https://shared-host/pay/', dir)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail', dir)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay', dir)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/payment', dir)).toBe(false);
+  });
+});
+
 describe('addExclusionEntry', () => {
   it('appends a normalized entry', () => {
     const result = addExclusionEntry([], ' https://docs.google.com/spreadsheets/ ');
@@ -96,6 +143,66 @@ describe('addExclusionEntry', () => {
   });
 });
 
+// PBI-241: options save merges boot→draft diff into the store's current
+// content: final = (current ∪ draft-additions) − draft-removals.
+describe('mergeExcludedEntries', () => {
+  it('keeps a registration another writer added after boot', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/'],
+      draft: ['https://a.example/', 'https://draft.example/'],
+      current: ['https://a.example/', 'https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/', 'https://quick.example/', 'https://draft.example/']);
+  });
+
+  it('removes a draft-deleted entry even when current still has it', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/', 'https://gone.example/'],
+      draft: ['https://a.example/'],
+      current: ['https://a.example/', 'https://gone.example/', 'https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/', 'https://quick.example/']);
+  });
+
+  it('does not resurrect an untouched entry that current no longer has', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/', 'https://dropped.example/'],
+      draft: ['https://a.example/', 'https://dropped.example/'],
+      current: ['https://a.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/']);
+  });
+
+  it('treats case-insensitive duplicates as one entry, current first', () => {
+    const merged = mergeExcludedEntries({
+      boot: [],
+      draft: ['HTTPS://A.EXAMPLE/'],
+      current: ['https://a.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/']);
+  });
+
+  it('applies the cap once after the merge, keeping the newest entries', () => {
+    const current = Array.from({ length: EXCLUDED_URLS_MAX }, (_, i) => `https://example.com/${i}`);
+    const merged = mergeExcludedEntries({
+      boot: current.slice(0, 10),
+      draft: [...current.slice(0, 10), 'https://example.com/new'],
+      current,
+    });
+    expect(merged).toHaveLength(EXCLUDED_URLS_MAX);
+    expect(merged[EXCLUDED_URLS_MAX - 1]).toBe('https://example.com/new');
+  });
+
+  it('merges into an empty boot after a failed page load', () => {
+    const merged = mergeExcludedEntries({
+      boot: [],
+      draft: ['https://draft.example/'],
+      current: ['https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://quick.example/', 'https://draft.example/']);
+  });
+});
+
 describe('removeExclusionEntry', () => {
   it('removes the exact entry and leaves the rest in order', () => {
     const entries = ['https://a.example/', 'https://b.example/'];
@@ -104,6 +211,15 @@ describe('removeExclusionEntry', () => {
 
   it('is a no-op for an unknown value', () => {
     expect(removeExclusionEntry(['https://a.example/'], 'https://c.example/')).toEqual(['https://a.example/']);
+  });
+
+  it('removes one entry from a full list without a cap check, keeping the rest in order (PBI-244)', () => {
+    const full = Array.from({ length: EXCLUDED_URLS_MAX }, (_, i) => `https://example.com/${i}`);
+    const next = removeExclusionEntry(full, 'https://example.com/50');
+    expect(next).toHaveLength(EXCLUDED_URLS_MAX - 1);
+    expect(next).not.toContain('https://example.com/50');
+    expect(next[0]).toBe('https://example.com/0');
+    expect(next[EXCLUDED_URLS_MAX - 2]).toBe(`https://example.com/${EXCLUDED_URLS_MAX - 1}`);
   });
 });
 
@@ -128,5 +244,19 @@ describe('parseExcludedUrls', () => {
   it('caps the list at the maximum', () => {
     const raw = Array.from({ length: EXCLUDED_URLS_MAX + 5 }, (_, i) => `https://example.com/${i}`);
     expect(parseExcludedUrls(raw)).toHaveLength(EXCLUDED_URLS_MAX);
+  });
+
+  it('drops the fragment from stored entries so legacy registrations read under the current rule (PBI-239)', () => {
+    expect(parseExcludedUrls(['https://shared-host/form?a=1#top'])).toEqual(['https://shared-host/form?a=1']);
+    expect(parseExcludedUrls(['https://x/form?a=1#top', 'https://x/form?a=1'])).toEqual(['https://x/form?a=1']);
+  });
+
+  it('keeps legacy shapes excluding their pages (v0.1.29-0.1.37 compatibility)', () => {
+    const stored = parseExcludedUrls(['https://Shared-Host/pay', 'https://docs.google.com']);
+    expect(stored).toEqual(['https://shared-host/pay', 'https://docs.google.com/']);
+    expect(isExcludedUrl('https://shared-host/pay', stored)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail', stored)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/payment', stored)).toBe(false);
+    expect(isExcludedUrl('https://docs.google.com/spreadsheets/x', stored)).toBe(true);
   });
 });
