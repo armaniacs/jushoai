@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import {
   showDismissDialog,
@@ -544,5 +545,29 @@ describe('showDismissDialog focus restore (PBI-237)', () => {
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(false);
     expect(document.activeElement).toBe(elsewhere);
+  });
+});
+
+describe('showDismissDialog theme tokens (PBI-238)', () => {
+  const SOURCE = readFileSync(
+    `${import.meta.dirname}/../../src/ui/dismiss-dialog.ts`,
+    'utf8',
+  );
+
+  it('hard-coded hex color literals are gone', () => {
+    // Pins the module text, not the DOM: a re-introduced literal must fail
+    // here instead of silently forking the shared theme again.
+    expect(SOURCE.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).toEqual([]);
+  });
+
+  it('paints the box through the shared tokens with the dark override', () => {
+    const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
+    const css = root.querySelector('style')?.textContent ?? '';
+    expect(css).toContain('var(--jushoai-panel-bg)');
+    expect(css).toContain('var(--jushoai-panel-fg)');
+    expect(css).toContain('var(--jushoai-border)');
+    // SHADOW_TOKENS carries the prefers-color-scheme dark palette.
+    expect(css).toContain('@media (prefers-color-scheme: dark)');
+    expect(css).toContain('--jushoai-panel-bg: #212530;');
   });
 });

@@ -1,4 +1,5 @@
 import { createShadowHost } from './host';
+import { SHADOW_TOKENS } from './overlay';
 
 export interface DismissDialogRegister {
   exactLabel: string;
@@ -39,9 +40,12 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   host.style.setProperty('bottom', '16px', 'important');
 
   const style = document.createElement('style');
+  // Tokens via SHADOW_TOKENS, not OVERLAY_CSS wholesale: only the variables
+  // are shared, so the overlay panel/button rules stay out of this root.
   style.textContent = [
-    '.box { font: 13px/1.5 system-ui, sans-serif; background: #fff; color: #222;',
-    ' border: 1px solid #ddd; border-radius: 8px; padding: 10px 12px;',
+    SHADOW_TOKENS,
+    '.box { font: 13px/1.5 system-ui, sans-serif; background: var(--jushoai-panel-bg); color: var(--jushoai-panel-fg);',
+    ' border: 1px solid var(--jushoai-border); border-radius: 8px; padding: 10px 12px;',
     ' box-shadow: 0 2px 8px rgba(0,0,0,.15); width: 280px; }',
     '.row { display: flex; gap: 8px; margin-top: 8px; }',
     '.opt { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; }',
