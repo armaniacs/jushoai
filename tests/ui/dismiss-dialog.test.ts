@@ -117,7 +117,8 @@ describe('showDismissDialog with register', () => {
     expect(submit?.getAttribute('aria-disabled')).toBe('true');
     dialog.setRegisterBusy(false);
     expect(submit?.disabled).toBe(false);
-    // 解除後は既定状態を表す "false" を残さず属性ごと外す(PBI-237)。
+    // After release the attribute is removed entirely: "false" is the ARIA
+    // default state and only adds noise.
     expect(submit?.hasAttribute('aria-disabled')).toBe(false);
   });
 });
@@ -141,8 +142,8 @@ describe('showDismissDialog auto-hide', () => {
     const onUndo = vi.fn();
     const { dialog, root } = showWithOpenRoot({ onClose, onUndo });
     expect(document.body.contains(dialog.host)).toBe(true);
-    // PBI-237: 開いた直後は最初のボタンにフォーカスがある。誰も操作していない
-    // 状態の自動クローズを見るため、先にフォーカスを外す。
+    // PBI-237: open moves focus to the first button. Step out to exercise the
+    // no-interaction auto-close path.
     root.querySelector('button')?.blur();
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(false);
@@ -299,8 +300,8 @@ describe('showDismissDialog register busy vs auto-hide', () => {
   it('busy 解除後に通常の自動クローズが再開する', () => {
     vi.useFakeTimers();
     const { dialog, root } = showRegisterDialog(vi.fn());
-    // PBI-237: 開いた直後はフォーカスがダイアログ内にある。フォーカスを外して
-    // から busy 前提の自動クローズを見る。
+    // PBI-237: open leaves focus inside the dialog. Step out before exercising
+    // the busy scenarios, which assume no focus in the dialog.
     root.querySelector('button')?.blur();
     dialog.setRegisterBusy(true);
     vi.advanceTimersByTime(15000);
@@ -368,7 +369,6 @@ describe('showDismissDialog a11y focus and announce (PBI-237)', () => {
     const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
     const first = root.querySelector('button');
     expect(first?.textContent).toBe('今回だけ閉じる');
-    // jsdom は shadow 内のフォーカスを host に retarget するため root.activeElement で断言する。
     expect(root.activeElement).toBe(first);
   });
 
@@ -376,8 +376,8 @@ describe('showDismissDialog a11y focus and announce (PBI-237)', () => {
     const { root } = showWithOpenRoot({ onClose: vi.fn(), onUndo: vi.fn() });
     const live = root.querySelector('[role="status"]');
     expect(live).not.toBeNull();
-    // status は aria-live="polite" を内包する。告知文は本文を要約し、
-    // 自動クローズ予定も一緒に読ませる。
+    // role="status" carries implicit aria-live="polite". The announcement
+    // summarizes the dialog and includes the auto-close plan.
     expect(live?.textContent).toContain('開きました');
     expect(live?.textContent).toContain('15秒後に自動で閉じます');
   });
@@ -419,7 +419,8 @@ describe('showDismissDialog Escape close (PBI-237)', () => {
     const onClose = vi.fn();
     const { dialog, root } = showWithOpenRoot({ onClose, onUndo: vi.fn() });
     root.querySelector('button')!.focus();
-    // 別のパネル側へフォーカスが動いた状態では Esc を奪わない(非モーダル)。
+    // Non-modal dialog: focus having moved elsewhere (another panel) means
+    // this dialog must not steal Escape.
     const elsewhere = document.createElement('button');
     elsewhere.textContent = 'page';
     document.body.append(elsewhere);
@@ -444,7 +445,8 @@ describe('showDismissDialog focus restore (PBI-237)', () => {
     vi.useRealTimers();
   });
 
-  // wiring が合意位置として渡す想定の page 側要素(フォームの先頭欄など)。
+  // Page-side element the wiring passes as the agreed restore target (the
+  // form's first field in production).
   function makeRestoreTarget(): HTMLButtonElement {
     const target = document.createElement('button');
     target.textContent = '合意位置';
