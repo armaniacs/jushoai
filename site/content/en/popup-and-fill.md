@@ -42,6 +42,7 @@ Dragging the button (about 20 seconds)
 |---|---|
 | 入力済みのため上書きしません | The field already has a value. |
 | 文字数を超えるため入力しません | The value is longer than the maximum length. It is not truncated and not entered. |
+| 欄のパターンと合わないため入力しません | The value does not match the format the field expects. A pattern mismatch, not a length issue. |
 | 一致する選択肢がないため入力しません | The dropdown has no matching option. |
 | プロファイルに値がないため入力しません | The profile has no value registered for that field. |
 
