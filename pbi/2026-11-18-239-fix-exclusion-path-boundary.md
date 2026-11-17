@@ -10,7 +10,7 @@
 
 ## 出どころ
 - checking-team 2026-11-18 ラウンド・Red Team Leader。`plans/2026-11-18-0530-review-main-v0.1.29.md`
-- 場所: src/core/exclusions.ts:37-41（`target.startsWith(e.toLowerCase())`）、src/content/exclusion-register.ts:30-31・src/content/exclusion-prefix.ts:7-19（exact 候補の生成）
+- 場所: src/core/exclusions.ts:37-41（`target.startsWith(e.toLowerCase())`）、src/content/exclusion-register.ts:30-31・src/core/exclusion-prefix.ts:7-19（exact 候補の生成。レビュー時に core 配下と訂正）
 
 ## BDD受け入れシナリオ
 Scenario: 兄弟パスは一致しない
@@ -47,9 +47,16 @@ Scenario: 既存保存値の正規化
 0.1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（BDD 4 面 + 互換 pin 2 件を fixture 先行で RED→GREEN）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 4 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 4 件）
+
+- fragment の正規形が 2 種類残る: normalizeExclusionEntry（登録経路）は # を保持、parseExcludedUrls（読み込み経路）は除去。登録直後の options 一覧に # が残り、セッション内の重複検出が ?a=1#top と ?a=1 をまとめない。normalizeExclusionEntry 側でも除去すると正形が 1 つになる
+- 開示済みの等価性（default port・userinfo・bare-origin target）に fixture がない。将来のリファクタで静かに反転し得るため 1 it ずつの pin が望ましい
+- 本 PBI 出どころ節の exclusion-prefix.ts の場所表記が誤り（正: src/core/exclusion-prefix.ts。下記で訂正）
+- coversQuery の `if (entrySearch === '') return true` は到達不能な防御ガード（唯一の呼び出し側が保護済み）。無害
 
 ## 実装記録
 
