@@ -12,7 +12,7 @@ export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
 }
 
 // Theme tokens shared by every shadow root that paints the extension chrome.
-// Split out of OVERLAY_CSS (PBI-238) so self-styled consumers can inject only
+// Split out of OVERLAY_CSS so self-styled consumers can inject only
 // the declarations instead of the whole overlay stylesheet, which would
 // duplicate the panel/button rules into their shadow roots.
 export const SHADOW_TOKENS = `
