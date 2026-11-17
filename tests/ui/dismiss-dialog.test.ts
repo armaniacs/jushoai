@@ -672,6 +672,49 @@ describe('showDismissDialog register success view (PBI-244)', () => {
     dialog.submitRegister();
     expect(onRegister).not.toHaveBeenCalled();
   });
+
+  it('成功表示への切り替えで失敗理由の残りを消す', () => {
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    dialog.showRegisterError('保存に失敗しました');
+    dialog.showRegisterSuccess(vi.fn());
+    expect(root.querySelector('[role="alert"]')?.textContent).toBe('');
+  });
+
+  it('undo は busy 中の再クリックを無視し、解除後は再度受け付ける', () => {
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    const onUndoRegistration = vi.fn();
+    dialog.showRegisterSuccess(() => {
+      onUndoRegistration();
+      // The real undo chain flips the shared busy flag synchronously before
+      // its first await, so a same-burst second click lands inside the window.
+      dialog.setRegisterBusy(true);
+    });
+    const undoButton = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === '登録を取り消す',
+    )!;
+    undoButton.click();
+    undoButton.click();
+    expect(onUndoRegistration).toHaveBeenCalledTimes(1);
+    dialog.setRegisterBusy(false);
+    undoButton.click();
+    expect(onUndoRegistration).toHaveBeenCalledTimes(2);
+  });
 });
 
 describe('showDismissDialog register success auto-close (PBI-244)', () => {
@@ -679,7 +722,7 @@ describe('showDismissDialog register success auto-close (PBI-244)', () => {
     vi.useRealTimers();
   });
 
-  it('成功表示後も自動クローズが働き、閉じた後は合意位置へ戻る', () => {
+  it('成功表示の既定状態(箱フォーカスのまま)でも告知どおり15秒で閉じ、合意位置へ戻る', () => {
     vi.useFakeTimers();
     const target = document.createElement('button');
     target.textContent = '合意位置';
@@ -695,11 +738,32 @@ describe('showDismissDialog register success auto-close (PBI-244)', () => {
       },
     });
     dialog.showRegisterSuccess(vi.fn());
-    // Success puts focus on the box (engaged), so step out before the timer.
-    (root.querySelector('[role="dialog"]') as HTMLElement).blur();
+    // No user interaction after success: focus stays parked on the box, and
+    // that container focus must not hold the auto-close the notice promises.
     vi.advanceTimersByTime(15000);
     expect(document.body.contains(dialog.host)).toBe(false);
     expect(document.activeElement).toBe(target);
+  });
+
+  it('成功表示中もホバー保持は効く(箱へのフォーカス着替えで消えない)', () => {
+    vi.useFakeTimers();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    const box = root.querySelector('[role="dialog"]') as HTMLElement;
+    // The pointer rests on the box from the submit click when success shows.
+    box.dispatchEvent(new Event('pointerenter', { bubbles: true }));
+    dialog.showRegisterSuccess(vi.fn());
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    box.dispatchEvent(new Event('pointerleave', { bubbles: true }));
+    expect(document.body.contains(dialog.host)).toBe(false);
   });
 
   it('成功表示中に undo ボタンへフォーカスがある間は自動クローズしない', () => {

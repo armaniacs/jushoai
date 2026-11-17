@@ -132,32 +132,54 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   undo.addEventListener('click', () => { teardown(); actions.onUndo(); });
 
   // 自動非表示中も操作中(ホバー/フォーカス)は残す。タイマー満了時に
-  // engaged なら、外れた時点で閉じる。
-  let engaged = false;
-  // Registration in flight counts as engaged: the outcome display (close on
+  // 保持されていれば、外れた時点で閉じる。ホバーとフォーカスは別フラグ:
+  // 成功表示は箱(tabindex=-1)自体へのフォーカスを保持と数えないため
+  // (下の focusin 参照)、箱へのフォーカス着替えがホバー保持を消さない。
+  let hoverHeld = false;
+  let focusHeld = false;
+  // Registration in flight counts as held: the outcome display (close on
   // success or role="alert" on failure) must survive a timer expiry during
   // load/save, or a failed save would look like a successful dismissal.
   let registerBusy = false;
   let autoHideExpired = false;
   const maybeAutoHide = (): void => {
-    if (autoHideExpired && !engaged && !registerBusy) teardown();
+    if (autoHideExpired && !hoverHeld && !focusHeld && !registerBusy) teardown();
   };
   const onAutoHideExpired = (): void => {
     autoHideTimer = undefined;
-    if (engaged || registerBusy) autoHideExpired = true;
+    if (hoverHeld || focusHeld || registerBusy) autoHideExpired = true;
     else teardown();
   };
   const armAutoHide = (): void => {
     if (autoHideTimer !== undefined) return;
     autoHideTimer = setTimeout(onAutoHideExpired, AUTO_HIDE_MS);
   };
-  box.addEventListener('pointerenter', () => { engaged = true; });
-  box.addEventListener('pointerleave', () => { engaged = false; maybeAutoHide(); });
-  box.addEventListener('focusin', () => { engaged = true; });
+  box.addEventListener('pointerenter', () => { hoverHeld = true; });
+  box.addEventListener('pointerleave', () => {
+    // Either leave event resets the whole hold (pinned PBI-237 behavior of
+    // the former single flag): leaving by pointer closes even while a
+    // control inside keeps focus, and vice versa.
+    hoverHeld = false;
+    focusHeld = false;
+    maybeAutoHide();
+  });
+  box.addEventListener('focusin', (e) => {
+    // The success view parks focus on the box itself (tabindex=-1) to keep an
+    // accidental Enter off the undo button. Container focus is not user
+    // interaction, so it must not hold the auto-close: the text promises a
+    // 15s close and a hold would make that false in the success view's own
+    // default state. Landing on the box also releases a hold left by a
+    // control removed since (the register submit), which fires no focusout.
+    // Unlike the leave events it must not clear hoverHeld: the pointer is
+    // still on the box right after a submit click when success shows.
+    focusHeld = e.target !== box;
+    if (!focusHeld) maybeAutoHide();
+  });
   box.addEventListener('focusout', (e) => {
-    // ダイアログ内のボタン間移動では engaged を維持する。
+    // ダイアログ内のボタン間移動では保持を維持する。
     if (e.relatedTarget instanceof Node && box.contains(e.relatedTarget)) return;
-    engaged = false;
+    hoverHeld = false;
+    focusHeld = false;
     maybeAutoHide();
   });
 
@@ -255,6 +277,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       if (!actions.register || succeeded) return;
       succeeded = true;
       submitBtn = null;
+      // A save-failure → retry → success sequence would otherwise leave the
+      // stale reason next to the success message.
+      if (errorBox) errorBox.textContent = '';
       // The dismissal actions leave with the register UI: 元に戻す would only
       // un-dismiss a page the exclusion keeps dormant, and two undo buttons
       // with different meanings would invite the wrong one.
@@ -267,12 +292,19 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       // Inline spacing instead of a `.box > button` rule: the register submit
       // is also a direct child and must keep its existing look.
       undoRegistration.style.marginTop = '8px';
-      undoRegistration.addEventListener('click', onUndoRegistration);
+      undoRegistration.addEventListener('click', () => {
+        // The undo chain flips the shared busy flag synchronously at start;
+        // a double-click must not re-enter load → remove → save mid-flight.
+        if (registerBusy) return;
+        onUndoRegistration();
+      });
       box.append(undoRegistration);
       // Focus the box, not the undo button: an accidental second Enter on a
       // focused undo would cancel the registration just made. tabindex=-1
       // keeps keyboard focus (and Esc) inside instead of stranding it on
       // body, and Tab reaches the undo button as a deliberate second step.
+      // Container focus does not hold the auto-close (only controls do), so
+      // the promised 15s close still runs while the user merely reads.
       box.setAttribute('tabindex', '-1');
       box.focus();
       live.textContent = `${REGISTER_SUCCESS_RESULT}${REGISTER_SUCCESS_HINT}`;
