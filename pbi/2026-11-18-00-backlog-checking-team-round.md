@@ -36,3 +36,10 @@
 - Wave 3（Test Experts）の即時テスト作成: 各 PBI の BDD と fixture 先行方針に組み込むため（プロジェクトのテスト規律に同じ）
 - dismiss-dialog の分割（UX 指摘への System Architect の調整判断）: バナー起点の 1 クリックフローという目的から統合を維持し、同一ダイアログ内の a11y・トークン整備で解消する
 - core/analyze.ts の移転: System Architect が侵食と判定しなかったため、次に analyze を開くときまで置く
+
+## 最終レビュー（2026-11-18・全ブランチ）
+
+- 14 件すべて実装・タスクレビュー完了後、全ブランチ最終レビュー（base 4eaac59..HEAD 43 コミット）を実施。「Ready to merge: With fixes」（Critical 1・Important 1・修正波割当て 2）
+- Critical（fragment 付き exact 登録で undo が黙って無効化される）: PBI-239 の fragment 正形 2 種の残置と PBI-244 の完全一致削除の縫い目。修正波（fadcc40）で normalizeExclusionEntry を単一正形化（fragment 除去）+ 統合 fixture（RED 3 → GREEN）で解消。再レビュー「Ready to merge: Yes」
+- 修正波は planner の最悪値表記（C(n+k-1, k-1) の算数記録・56d212a）と overlay.ts のタスク ID 参照除去（15b612d）も含む
+- マージ後のフォローアップ: INDEX 節のアーカイブ、PBI-238 の OS 切替手動確認、等価 fixture（default port/userinfo/bare-origin）、officeLegendEligible 第 4 述語の集約、overlay.ts の PBI-209 由来タスク ID コメントの除去、タスク ID コメント運用の AGENTS.md 明文化

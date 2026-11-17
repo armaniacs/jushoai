@@ -1,6 +1,6 @@
 # PBI 台帳インデックス
 
-## 進行中（2026-11-18・checking-teamレビューラウンド。9観点でmain HEAD fce24bc vs v0.1.29を標準レビュー→総合95/100（S）。High 1/Medium 14をPBI化してRICE順位確定、Low 16は台帳記録のみ。レポート: plans/2026-11-18-0530-review-main-v0.1.29.md）
+## 進行中（2026-11-18・checking-teamレビューラウンド。9観点でmain HEAD fce24bc vs v0.1.29を標準レビュー→総合95/100（S）。High 1/Medium 14をPBI化してRICE順位確定、Low 16は台帳記録のみ。14件すべて実装・タスクレビュー完了・全ブランチ最終レビュー「Ready to merge: Yes」（修正波 fadcc40..15b612d 済み・work/checking-round-2026-11-18）。レポート: plans/2026-11-18-0530-review-main-v0.1.29.md）
 
 - `2026-11-18-00-backlog-checking-team-round.md`（ラウンド台帳。Wave 3不実施・dismiss-dialog統合維持・core/analyze.ts移転見送りの判断を記録）
 - `2026-11-18-231-chore-eval-pin-generator.md`（順位 1。RICE 95。実装済み（5b2a191、branch work/pbi-231-eval-pin-generator）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。pin表更新の機械化。DX Advocate）
