@@ -59,6 +59,15 @@ describe('buildSite', () => {
     expect(html).toContain('<script src="/assets/copy.js" defer></script>');
   });
 
+  it('loads the facade script and the demo video on the landing page', async () => {
+    await run();
+    const html = await readFile(join(tmp, 'out', 'index.html'), 'utf8');
+    expect(html).toContain('<script src="/assets/facade.js" defer></script>');
+    expect(html).toContain('src="/assets/demo.mp4"');
+    expect(await exists('assets/facade.js')).toBe(true);
+    expect(await exists('assets/demo.mp4')).toBe(true);
+  });
+
   it('replaces a previous build', async () => {
     await run();
     await writeFile(join(tmp, 'out', 'stale.txt'), 'x');

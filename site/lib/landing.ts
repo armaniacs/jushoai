@@ -1,4 +1,4 @@
-import { escapeHtml } from './markdown.ts';
+import { escapeHtml, videoFacade } from './markdown.ts';
 import { mockButton, mockForm, mockGuide, mockPreview } from './mocks.ts';
 import type { Chrome } from './layout.ts';
 import { issueUrl, REPO_URL, renderFeedbackSection, type FeedbackStrings } from './feedback.ts';
@@ -30,11 +30,12 @@ export interface Strings {
 
 const e = escapeHtml;
 
-// The demo lives on YouTube. Embed through the no-cookie host so loading the page
-// does not set tracking cookies before the visitor presses play. The URLs stay in
-// code (not in the dictionary) because dictionary strings go through escapeHtml.
+// The demo lives on YouTube. The page renders a click-to-load facade instead
+// of the player iframe, so loading the page sets no YouTube cookies and
+// fetches nothing from YouTube before the visitor presses play. The id stays
+// in code (not in the dictionary) because dictionary strings go through
+// escapeHtml; the id is embedded into the facade markup by videoFacade.
 const VIDEO_ID = 'Y3y9ofrsyFo';
-const VIDEO_EMBED_URL = `https://www.youtube-nocookie.com/embed/${VIDEO_ID}`;
 const VIDEO_WATCH_URL = `https://www.youtube.com/watch?v=${VIDEO_ID}`;
 
 export function renderLanding(p: { lang: Lang; base: string; s: Strings }): string {
@@ -65,8 +66,8 @@ ${p.lang === 'en' ? `<p class="note ui-note">${e(s.mock.uiNote)}</p>` : ''}
 <section class="block" id="demo"><div class="wrap narrow">
 <h2 class="section-title">${e(s.demo.title)}</h2>
 <p class="section-lead">${e(s.demo.lead)}</p>
-<figure class="demo-gif"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" width="1280" height="720"><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
-<div class="video"><iframe src="${VIDEO_EMBED_URL}" title="${e(s.demo.iframeTitle)}" loading="lazy" allow="encrypted-media; picture-in-picture" allowfullscreen></iframe></div>
+<figure class="demo-gif"><video width="1280" height="720" muted loop autoplay playsinline controls preload="metadata"><source src="${p.base}assets/demo.mp4" type="video/mp4"><img src="${p.base}assets/demo.gif" alt="${e(s.demo.gifAlt)}" loading="lazy" decoding="async" width="1280" height="720"></video><figcaption>${e(s.demo.gifCaption)}</figcaption></figure>
+${videoFacade(VIDEO_ID, s.demo.iframeTitle)}
 <p class="note"><a href="${VIDEO_WATCH_URL}" target="_blank" rel="noopener noreferrer">${e(s.demo.link)}</a></p>
 </div></section>
 
@@ -119,8 +120,8 @@ ${renderFeedbackSection(s.feedback)}
 <p><a href="${u('guides/license/')}">${e(s.license.link)}</a></p>
 </div></section>
 
-<section class="block" id="faq"><div class="wrap narrow">
-<h2 class="section-title">${e(s.faq.title)}</h2>
+<section class="block" id="faq" aria-labelledby="faq-heading"><div class="wrap narrow">
+<h2 class="section-title" id="faq-heading">${e(s.faq.title)}</h2>
 ${s.faq.items.map((i) => `<details class="faq"><summary>${e(i.q)}</summary><p>${e(i.a)}</p></details>`).join('\n')}
 <p><a href="${u('guides/troubleshooting/')}">${e(s.faq.more)}</a></p>
 </div></section>`;

@@ -4,7 +4,7 @@
     "description": "A Chromium browser extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
   },
   "chrome": {
-    "nav": { "home": "Home", "guides": "Guides", "install": "Install", "feedback": "Send feedback", "langName": "日本語", "skip": "Skip to content" },
+    "nav": { "home": "Home", "guides": "Guides", "install": "Install", "feedback": "Send feedback", "langName": "日本語", "skip": "Skip to content", "label": "Site navigation" },
     "footer": { "tagline": "Japanese forms, filled the right way.", "guides": "Guides", "privacy": "Privacy", "license": "License", "feedback": "Send feedback", "source": "Source" }
   },
   "hero": {

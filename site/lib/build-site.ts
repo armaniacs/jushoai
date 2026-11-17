@@ -66,7 +66,7 @@ export async function buildSite(o: BuildOptions): Promise<string[]> {
     written.push(
       await writePage(o.outDir, pagePath(lang, ''), renderPage({
         ...common, path: '', title: s.meta.title, description: s.meta.description,
-        body: renderLanding({ lang, base: o.base, s }), hasCode: true,
+        body: renderLanding({ lang, base: o.base, s }), hasCode: true, hasVideo: true,
       })),
       await writePage(o.outDir, pagePath(lang, 'guides/'), renderPage({
         ...common, path: 'guides/', title: `${s.guides.title} — JushoAI`, description: s.guides.lead,
@@ -77,7 +77,7 @@ export async function buildSite(o: BuildOptions): Promise<string[]> {
       written.push(
         await writePage(o.outDir, pagePath(lang, `guides/${g.slug}/`), renderPage({
           ...common, path: `guides/${g.slug}/`, title: `${g.title} — JushoAI`, description: g.description,
-          body: `<article class="prose">\n${g.html}${renderFeedbackFooter(s.feedback)}\n</article>`, hasCode: g.html.includes('data-copy'),
+          body: `<article class="prose">\n${g.html}${renderFeedbackFooter(s.feedback)}\n</article>`, hasCode: g.html.includes('data-copy'), hasVideo: g.html.includes('video-facade-link'),
         })),
       );
     }
@@ -92,7 +92,7 @@ export async function buildSite(o: BuildOptions): Promise<string[]> {
     await writeFile(
       join(o.outDir, lang === 'en' ? 'en/404.html' : '404.html'),
       renderPage({
-        lang, base: o.base, path: '', chrome: strings[lang].chrome, title: n.title, description: n.body,
+        lang, base: o.base, path: '', chrome: strings[lang].chrome, title: n.title, description: n.body, noCurrent: true,
         body: `<div class="prose"><h1>404</h1><p>${n.body}</p><p><a href="${pageUrl(o.base, lang, '')}">${n.home}</a></p></div>`,
       }),
     );

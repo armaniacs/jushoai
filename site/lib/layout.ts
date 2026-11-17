@@ -9,6 +9,7 @@ export interface NavStrings {
   feedback: string;
   langName: string;
   skip: string;
+  label: string;
 }
 
 export interface FooterStrings {
@@ -36,13 +37,22 @@ export interface PageInput {
   body: string;
   chrome: Chrome;
   hasCode?: boolean;
+  // Pages with a YouTube facade (landing demo, ```youtube fences) load the
+  // click-to-load script; pages without one fetch no extra JavaScript.
+  hasVideo?: boolean;
+  // 404 pages reuse path '' for hreflang alternates, so they opt out of the
+  // current-page marker explicitly instead of highlighting the home link.
+  noCurrent?: boolean;
 }
 
+// theme-color meta values must stay in sync with --bg in site/assets/site.css (light #ffffff, dark #14161b).
 export function renderPage(p: PageInput): string {
   const other: Lang = p.lang === 'ja' ? 'en' : 'ja';
   const u = (lang: Lang, path: string) => escapeHtml(pageUrl(p.base, lang, path));
   const asset = (name: string) => escapeHtml(`${p.base}assets/${name}`);
   const { nav, footer } = p.chrome;
+  const homeCurrent = !p.noCurrent && p.path === '';
+  const guidesCurrent = !p.noCurrent && p.path.startsWith('guides/');
   return `<!doctype html>
 <html lang="${p.lang}">
 <head>
@@ -50,7 +60,9 @@ export function renderPage(p: PageInput): string {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${escapeHtml(p.title)}</title>
 <meta name="description" content="${escapeHtml(p.description)}">
-<meta name="color-scheme" content="dark light">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#14161b">
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="JushoAI">
 <meta property="og:title" content="${escapeHtml(p.title)}">
@@ -69,9 +81,9 @@ export function renderPage(p: PageInput): string {
 <a class="skip" href="#main">${escapeHtml(nav.skip)}</a>
 <header class="nav">
 <a class="logo" href="${u(p.lang, '')}"><span class="logo-tile"><img src="${asset('logo.png')}" alt="" width="28" height="28"></span><span>JushoAI</span></a>
-<nav>
-<a href="${u(p.lang, '')}">${escapeHtml(nav.home)}</a>
-<a href="${u(p.lang, 'guides/')}">${escapeHtml(nav.guides)}</a>
+<nav aria-label="${escapeHtml(nav.label)}">
+<a href="${u(p.lang, '')}"${homeCurrent ? ' aria-current="page"' : ''}>${escapeHtml(nav.home)}</a>
+<a href="${u(p.lang, 'guides/')}"${guidesCurrent ? ' aria-current="page"' : ''}>${escapeHtml(nav.guides)}</a>
 <a href="${u(p.lang, '')}#install">${escapeHtml(nav.install)}</a>
 <a class="cta" href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(nav.feedback)}</a>
 <a class="lang" href="${u(other, p.path)}" hreflang="${other}" lang="${other}">${escapeHtml(nav.langName)}</a>
@@ -84,7 +96,7 @@ ${p.body}
 <p>${escapeHtml(footer.tagline)}</p>
 <p><a href="${u(p.lang, 'guides/')}">${escapeHtml(footer.guides)}</a> / <a href="${u(p.lang, 'guides/privacy/')}">${escapeHtml(footer.privacy)}</a> / <a href="${u(p.lang, 'guides/license/')}">${escapeHtml(footer.license)}</a> / <a href="${escapeHtml(issueUrl('feature-request'))}" rel="noopener">${escapeHtml(footer.feedback)}</a> / <a href="${escapeHtml(REPO_URL)}" rel="noopener">${escapeHtml(footer.source)}</a></p>
 </footer>
-${p.hasCode ? `<script src="${asset('copy.js')}" defer></script>\n` : ''}</body>
+${p.hasCode ? `<script src="${asset('copy.js')}" defer></script>\n` : ''}${p.hasVideo ? `<script src="${asset('facade.js')}" defer></script>\n` : ''}</body>
 </html>
 `;
 }
