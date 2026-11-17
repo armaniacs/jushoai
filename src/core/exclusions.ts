@@ -30,6 +30,12 @@ export function normalizeExclusionEntry(raw: string): ExclusionInput {
     return { ok: false, reason: 'URL の形式が正しくありません' };
   }
   if (parsed.hostname === '') return { ok: false, reason: 'URL の形式が正しくありません' };
+  // Fragments name a position inside a page, not a different page, and never
+  // take part in matching, so the canonical form drops them. Keeping exactly
+  // one canonical form also keeps exact-string removals (the quick-register
+  // undo) aligned with the load-time normalized list: a #hash saved at
+  // registration would never match the fragment-less entry the load reads.
+  parsed.hash = '';
   return { ok: true, value: parsed.href };
 }
 
@@ -134,15 +140,6 @@ export function removeExclusionEntry(entries: readonly string[], value: string):
   return entries.filter((e) => e !== value);
 }
 
-// Fragments never take part in matching, so a stored #hash is dead weight from
-// exact registrations; strip it at load time (PBI-239) and dedupe against the
-// fragment-less form.
-const withoutFragment = (href: string): string => {
-  const parsed = new URL(href);
-  parsed.hash = '';
-  return parsed.href;
-};
-
 // Reads the stored value defensively: anything that is not a list of valid
 // http(s) entries reads as an empty list, so a corrupted or hand-edited store
 // can never keep the extension from starting. Legacy entries stored before
@@ -154,9 +151,8 @@ export function parseExcludedUrls(raw: unknown): string[] {
     if (typeof value !== 'string') continue;
     const normalized = normalizeExclusionEntry(value);
     if (!normalized.ok) continue;
-    const canonical = withoutFragment(normalized.value);
-    if (out.some((e) => sameEntry(e, canonical))) continue;
-    out.push(canonical);
+    if (out.some((e) => sameEntry(e, normalized.value))) continue;
+    out.push(normalized.value);
     if (out.length >= EXCLUDED_URLS_MAX) break;
   }
   return out;

@@ -24,6 +24,17 @@ describe('normalizeExclusionEntry', () => {
     expect(normalizeExclusionEntry('https://docs.google.com')).toEqual({ ok: true, value: 'https://docs.google.com/' });
   });
 
+  it('drops the fragment so registration and the store share one canonical form', () => {
+    expect(normalizeExclusionEntry('https://shared-host/pay#sec')).toEqual({
+      ok: true,
+      value: 'https://shared-host/pay',
+    });
+    expect(normalizeExclusionEntry('https://shared-host/form?a=1#top')).toEqual({
+      ok: true,
+      value: 'https://shared-host/form?a=1',
+    });
+  });
+
   it('rejects empty, scheme-less and non-http schemes', () => {
     for (const raw of ['', '   ', 'docs.google.com', 'javascript:alert(1)', 'ftp://example.com', 'chrome://extensions']) {
       const result = normalizeExclusionEntry(raw);

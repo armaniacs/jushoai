@@ -66,8 +66,11 @@ function openWithOpenRoot(actions: DismissDialogActions) {
 
 // content.ts の X 押下ハンドラと同じ配線: 登録チェーンと undo チェーンを
 // 実ストアに接続し、undo の成立でバナー復帰を表す onRestore を呼ぶ。
-function openWiredDialog(onRestore: () => void): { dialog: DismissDialogHandle; root: ShadowRoot } {
-  const candidates = { exact: QUICK, prefix: QUICK };
+function openWiredDialog(
+  onRestore: () => void,
+  quick: string = QUICK,
+): { dialog: DismissDialogHandle; root: ShadowRoot } {
+  const candidates = { exact: quick, prefix: quick };
   let dialog: DismissDialogHandle | null = null;
   const wired = openWithOpenRoot({
     onClose: vi.fn(),
@@ -127,6 +130,25 @@ describe('quick-register undo (PBI-244)', () => {
     await saveExcludedUrls([EXISTING]);
     const onRestore = vi.fn();
     const { dialog, root } = openWiredDialog(onRestore);
+    dialog.submitRegister();
+    await vi.waitFor(() => {
+      if (!root.textContent?.includes('起動しないURLに登録しました')) throw new Error('no success view');
+    });
+
+    buttonByText(root, '登録を取り消す').click();
+    await vi.waitFor(() => { if (onRestore.mock.calls.length === 0) throw new Error('not restored'); });
+
+    expect(await loadExcludedUrls()).toEqual([EXISTING]);
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+
+  it('fragment 付きページの登録でも undo で該当 1 件が消える（正形は 1 つ）', async () => {
+    await saveExcludedUrls([EXISTING]);
+    const onRestore = vi.fn();
+    const { dialog, root } = openWiredDialog(
+      onRestore,
+      'https://docs.google.com/spreadsheets/d/abc#gid=0',
+    );
     dialog.submitRegister();
     await vi.waitFor(() => {
       if (!root.textContent?.includes('起動しないURLに登録しました')) throw new Error('no success view');

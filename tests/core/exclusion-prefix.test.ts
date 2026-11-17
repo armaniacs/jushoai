@@ -10,10 +10,11 @@ describe('buildExclusionCandidates', () => {
     expect(result.prefix).toBe('https://docs.google.com/presentation/');
   });
 
-  it('クエリとハッシュは exact に残し prefix からは落とす', () => {
+  it('クエリは exact に残り、ハッシュは正形から落ちる。prefix からは両方落ちる', () => {
     const result = buildExclusionCandidates('https://example.com/form?a=1#top');
     expect(result.ok).toBe(true);
     if (!result.ok) return;
+    expect(result.exact).toBe('https://example.com/form?a=1');
     expect(result.prefix).toBe('https://example.com/form/');
   });
 
