@@ -1,5 +1,10 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { showDismissDialog, type DismissDialogActions } from '../../src/ui/dismiss-dialog';
+import {
+  showDismissDialog,
+  type DismissDialogActions,
+  type DismissDialogHandle,
+} from '../../src/ui/dismiss-dialog';
+import { registerExclusionChoice } from '../../src/content/exclusion-register';
 
 afterEach(() => {
   vi.restoreAllMocks();
@@ -92,7 +97,7 @@ describe('showDismissDialog with register', () => {
     expect(onRegister).toHaveBeenCalledWith('prefix');
   });
 
-  it('登録中は送信ボタンが無効になり終わると戻る', () => {
+  it('登録中は送信ボタンが disabled にならず aria-disabled になり終わると戻る', () => {
     const { dialog, root } = showWithOpenRoot({
       onClose: vi.fn(),
       onUndo: vi.fn(),
@@ -106,10 +111,13 @@ describe('showDismissDialog with register', () => {
       (b) => b.textContent === '起動しないURLに登録する',
     );
     expect(submit).toBeDefined();
+    expect(submit?.disabled).toBe(false);
     dialog.setRegisterBusy(true);
-    expect(submit?.disabled).toBe(true);
+    expect(submit?.disabled).toBe(false);
+    expect(submit?.getAttribute('aria-disabled')).toBe('true');
     dialog.setRegisterBusy(false);
     expect(submit?.disabled).toBe(false);
+    expect(submit?.getAttribute('aria-disabled')).toBe('false');
   });
 });
 
@@ -212,5 +220,137 @@ describe('showDismissDialog register radio wrap', () => {
       const textEl = [...label.children].find((el) => el !== radio);
       expect(textEl?.textContent?.length).toBeGreaterThan(0);
     }
+  });
+});
+
+function showRegisterDialog(onRegister: (choice: 'exact' | 'prefix') => void) {
+  return showWithOpenRoot({
+    onClose: vi.fn(),
+    onUndo: vi.fn(),
+    register: {
+      exactLabel: 'https://example.com/form',
+      prefixLabel: 'https://example.com/',
+      onRegister,
+    },
+  });
+}
+
+function findSubmit(root: ShadowRoot): HTMLButtonElement {
+  const submit = [...root.querySelectorAll('button')].find(
+    (b) => b.textContent === '起動しないURLに登録する',
+  );
+  expect(submit).toBeDefined();
+  return submit!;
+}
+
+describe('showDismissDialog register busy state', () => {
+  it('busy 中の submit クリックは無視され解除後は押せる', () => {
+    const onRegister = vi.fn();
+    const { dialog, root } = showRegisterDialog(onRegister as (choice: 'exact' | 'prefix') => void);
+    const submit = findSubmit(root);
+    dialog.setRegisterBusy(true);
+    submit.click();
+    expect(onRegister).not.toHaveBeenCalled();
+    dialog.setRegisterBusy(false);
+    submit.click();
+    expect(onRegister).toHaveBeenCalledTimes(1);
+  });
+
+  it('busy 中も submit のフォーカスが body に落ちない', () => {
+    const { dialog, root } = showRegisterDialog(vi.fn());
+    const submit = findSubmit(root);
+    submit.focus();
+    // jsdom は shadow 内のフォーカスを host に retarget するため、
+    // root.activeElement で断言する(body 落ちは host 外になる)。
+    expect(root.activeElement).toBe(submit);
+    expect(document.activeElement).toBe(dialog.host);
+    dialog.setRegisterBusy(true);
+    expect(submit.disabled).toBe(false);
+    expect(root.activeElement).toBe(submit);
+    dialog.setRegisterBusy(false);
+    expect(root.activeElement).toBe(submit);
+  });
+});
+
+describe('showDismissDialog register busy vs auto-hide', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('busy 中に15秒経過しても閉じずエラー表示が消えない', () => {
+    vi.useFakeTimers();
+    const { dialog, root } = showRegisterDialog(vi.fn());
+    const alert = root.querySelector('[role="alert"]')!;
+    dialog.setRegisterBusy(true);
+    dialog.showRegisterError('保存に失敗しました');
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    expect(alert.textContent).toBe('保存に失敗しました');
+    // busy 解除でも失敗直後の alert を即時 teardown しない。
+    dialog.setRegisterBusy(false);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    expect(alert.textContent).toBe('保存に失敗しました');
+  });
+
+  it('busy 解除後に通常の自動クローズが再開する', () => {
+    vi.useFakeTimers();
+    const { dialog } = showRegisterDialog(vi.fn());
+    dialog.setRegisterBusy(true);
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    dialog.setRegisterBusy(false);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+
+  it('busy が短く終わったときは元のタイマーどおり閉じる', () => {
+    vi.useFakeTimers();
+    const { dialog } = showRegisterDialog(vi.fn());
+    dialog.setRegisterBusy(true);
+    vi.advanceTimersByTime(5000);
+    dialog.setRegisterBusy(false);
+    vi.advanceTimersByTime(10000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+  });
+});
+
+describe('showDismissDialog register flow keeps alert', () => {
+  it('登録フロー失敗後も role="alert" が表示され続け再試行できる', async () => {
+    let flow: Promise<void> | undefined;
+    let handle: DismissDialogHandle | undefined;
+    const saveExcluded = vi.fn(async () => {
+      throw new Error('quota');
+    });
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: (choice) => {
+          flow = registerExclusionChoice(choice, {
+            loadExcluded: async () => [],
+            saveExcluded,
+            candidates: { exact: 'https://example.com/form', prefix: 'https://example.com/' },
+            showError: (reason) => { handle?.showRegisterError(reason); },
+            close: () => { handle?.close(); },
+            setBusy: (busy) => { handle?.setRegisterBusy(busy); },
+          });
+        },
+      },
+    });
+    handle = dialog;
+    const submit = findSubmit(root);
+    submit.click();
+    await flow;
+    expect(document.body.contains(dialog.host)).toBe(true);
+    const alert = root.querySelector('[role="alert"]');
+    expect(alert?.textContent).toBe('保存に失敗しました');
+    expect(submit.disabled).toBe(false);
+    submit.click();
+    await flow;
+    expect(saveExcluded).toHaveBeenCalledTimes(2);
+    expect(document.body.contains(dialog.host)).toBe(true);
   });
 });

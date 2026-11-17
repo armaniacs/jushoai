@@ -72,9 +72,22 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   // 自動非表示中も操作中(ホバー/フォーカス)は残す。タイマー満了時に
   // engaged なら、外れた時点で閉じる。
   let engaged = false;
+  // Registration in flight counts as engaged: the outcome display (close on
+  // success or role="alert" on failure) must survive a timer expiry during
+  // load/save, or a failed save would look like a successful dismissal.
+  let registerBusy = false;
   let autoHideExpired = false;
   const maybeAutoHide = (): void => {
-    if (autoHideExpired && !engaged) teardown();
+    if (autoHideExpired && !engaged && !registerBusy) teardown();
+  };
+  const onAutoHideExpired = (): void => {
+    autoHideTimer = undefined;
+    if (engaged || registerBusy) autoHideExpired = true;
+    else teardown();
+  };
+  const armAutoHide = (): void => {
+    if (autoHideTimer !== undefined) return;
+    autoHideTimer = setTimeout(onAutoHideExpired, AUTO_HIDE_MS);
   };
   box.addEventListener('pointerenter', () => { engaged = true; });
   box.addEventListener('pointerleave', () => { engaged = false; maybeAutoHide(); });
@@ -125,10 +138,18 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       collapsedRegister = true;
       const fixed = document.createElement('div');
       fixed.textContent = `このサイト全体: ${reg.prefixLabel}`;
-      submit.addEventListener('click', () => { reg.onRegister('prefix'); });
+      submit.addEventListener('click', () => {
+        // aria-disabled is advisory only; activation is dropped here instead.
+        if (registerBusy) return;
+        reg.onRegister('prefix');
+      });
       box.append(fixed, submit, errorBox);
     } else {
-      submit.addEventListener('click', () => { reg.onRegister(selected); });
+      submit.addEventListener('click', () => {
+        // aria-disabled is advisory only; activation is dropped here instead.
+        if (registerBusy) return;
+        reg.onRegister(selected);
+      });
       box.append(makeOption('exact', reg.exactLabel), makeOption('prefix', reg.prefixLabel), submit, errorBox);
     }
   }
@@ -136,11 +157,7 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   root.append(style, box);
   document.body.append(host);
 
-  autoHideTimer = setTimeout(() => {
-    autoHideTimer = undefined;
-    if (engaged) autoHideExpired = true;
-    else teardown();
-  }, AUTO_HIDE_MS);
+  armAutoHide();
 
   return {
     host,
@@ -157,6 +174,17 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       actions.register.onRegister(collapsedRegister ? 'prefix' : selected);
     },
     showRegisterError: (reason) => { if (errorBox) errorBox.textContent = reason; },
-    setRegisterBusy: (busy) => { if (submitBtn) submitBtn.disabled = busy; },
+    setRegisterBusy: (busy) => {
+      registerBusy = busy;
+      // aria-disabled instead of the disabled attribute: disabling would drop
+      // keyboard focus to body (same rationale as site/assets/copy.js).
+      if (submitBtn) submitBtn.setAttribute('aria-disabled', busy ? 'true' : 'false');
+      if (!busy && autoHideExpired && !closed) {
+        // Expiry absorbed during registration: rearm a full window so normal
+        // auto-close resumes and a just-shown role="alert" stays readable.
+        autoHideExpired = false;
+        armAutoHide();
+      }
+    },
   };
 }
