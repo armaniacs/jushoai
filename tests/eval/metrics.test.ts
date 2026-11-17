@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { evalMetricsFor, reportLine, aggregate } from '../../src/eval/metrics';
+import { evalMetricsFor, reportLine, aggregate, pinLine, type EvalMetrics } from '../../src/eval/metrics';
 import { makeMeta } from '../helpers';
 
 describe('evalMetricsFor', () => {
@@ -82,5 +82,21 @@ describe('aggregate', () => {
 
   it('returns zeros for an empty corpus', () => {
     expect(aggregate([])).toEqual({ fixtures: 0, total: 0, ruleHits: 0, llmFallbacks: 0, fillable: 0 });
+  });
+});
+
+describe('pinLine', () => {
+  const metrics: EvalMetrics = {
+    total: 10, ruleHits: 3, llmFallbacks: 6, unknowns: 1,
+    refineChanged: 2, refineDropped: 4, fillable: 1,
+  };
+
+  it('builds the PIN_TABLE row from metrics in the p() argument order', () => {
+    expect(pinLine('some-fixture.html', metrics)).toBe("'some-fixture.html': p(3, 6, 1, 2, 4),");
+  });
+
+  it('renders all-zero rows and keeps unknowns and total out of the row', () => {
+    const m: EvalMetrics = { total: 0, ruleHits: 0, llmFallbacks: 0, unknowns: 0, refineChanged: 0, refineDropped: 0, fillable: 0 };
+    expect(pinLine('z.html', m)).toBe("'z.html': p(0, 0, 0, 0, 0),");
   });
 });

@@ -62,6 +62,34 @@ export function reportLine(name: string, m: EvalMetrics): string {
   return `[JushoAI eval] fixture=${name} fields=${m.total} ruleHits=${m.ruleHits} llmFallbacks=${m.llmFallbacks} unknowns=${m.unknowns} refineChanged=${m.refineChanged} refineDropped=${m.refineDropped} fillable=${m.fillable}`;
 }
 
+// One PIN_TABLE row (tests/eval/corpus.eval.ts). The reportLine column order
+// (7 keys) differs from the p() argument order (5 args) on purpose; pinLine
+// reads the metrics object directly so a row can never pick up reportLine's
+// order by parsing its text.
+export interface PinRow {
+  ruleHits: number;
+  llmFallbacks: number;
+  fillable: number;
+  refineChanged: number;
+  refineDropped: number;
+}
+
+export const p = (
+  ruleHits: number,
+  llmFallbacks: number,
+  fillable: number,
+  refineChanged: number,
+  refineDropped: number,
+): PinRow => ({ ruleHits, llmFallbacks, fillable, refineChanged, refineDropped });
+
+// Paste-ready PIN_TABLE row (trailing comma included) built straight from the
+// aggregated metrics, through p() itself: reordering p's parameters moves this
+// output with it, so a transposed row cannot be generated.
+export function pinLine(name: string, m: EvalMetrics): string {
+  const r = p(m.ruleHits, m.llmFallbacks, m.fillable, m.refineChanged, m.refineDropped);
+  return `'${name}': p(${r.ruleHits}, ${r.llmFallbacks}, ${r.fillable}, ${r.refineChanged}, ${r.refineDropped}),`;
+}
+
 export interface AggregateMetrics {
   fixtures: number;
   total: number;
