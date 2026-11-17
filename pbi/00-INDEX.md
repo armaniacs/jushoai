@@ -1,5 +1,23 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-18・checking-teamレビューラウンド。9観点でmain HEAD fce24bc vs v0.1.29を標準レビュー→総合95/100（S）。High 1/Medium 14をPBI化してRICE順位確定、Low 16は台帳記録のみ。レポート: plans/2026-11-18-0530-review-main-v0.1.29.md）
+
+- `2026-11-18-00-backlog-checking-team-round.md`（ラウンド台帳。Wave 3不実施・dismiss-dialog統合維持・core/analyze.ts移転見送りの判断を記録）
+- `2026-11-18-231-chore-eval-pin-generator.md`（順位 1。RICE 95。pin表更新の機械化。DX Advocate）
+- `2026-11-18-232-refactor-company-vocabulary-single.md`（順位 2。RICE 90。classify-rulesの会社語彙一本化。Maintainability）
+- `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。isEmailByNameのmail部分一致締め直し。Domain Logic）
+- `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。登録処理中の自動クローズ競合。Red Team+UI統合）
+- `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。ガイド注記表にwarn-pattern行。Documentation）
+- `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。lockfileミラー前提の文書化。Supply Chain）
+- `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41。レビュー唯一のHigh・234後に前倒し推奨。非表示・クイック登録ダイアログのa11y。Accessibility）
+- `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。dismiss-dialogをテーマトークンへ。Maintainability）
+- `2026-11-18-239-fix-exclusion-path-boundary.md`（順位 9。RICE 36。isExcludedUrlのパス境界。Red Team）
+- `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
+- `2026-11-18-241-fix-exclusion-writer-race.md`（順位 11。RICE 34。除外リストの複数ライター競合。Red Team+DataIntegrity統合）
+- `2026-11-18-242-docs-banner-register-flow.md`（順位 12。RICE 20。バナーX→クイック登録フローの文書化。Docs+Compliance統合）
+- `2026-11-18-243-fix-pattern-redos-fallopen.md`（順位 13。RICE 16。pattern属性ReDoSのfall-open化。Blue Team）
+- `2026-11-18-244-feat-exclusion-undo-hint.md`（順位 14。RICE 16。永続登録の解除導線。Ethics）
+
 ## 進行中からアーカイブ済み（2026-11-17・台帳棚卸しで9件処理。204はCI締めを実測、224-230はPR #25でマージ・0.1.36でリリース済み）
 
 - `archived/2026-10-31-204-fix-e2e-driver-stability.md`（実装済み（PR #20）・レビュー承認・Minor 4件。CHROME_BIN/CHROMEDRIVER_BIN 上書き・版数 preflight の fail-fast・SE_CACHE_PATH リポローカル化・初回ガイドの横取り対策。CI で chrome/firefox/check 全 success を実測）
