@@ -16,7 +16,7 @@
 - `2026-11-18-241-fix-exclusion-writer-race.md`（順位 11。RICE 34。実装済み（47cb8de）・タスクレビュー Approved（spec ✅、Minor 5 件は PBI に記録・残存競合窓 2 件は CAS 不使用の設計限界として明記）。除外リストの複数ライター競合。Red Team+DataIntegrity統合）
 - `2026-11-18-242-docs-banner-register-flow.md`（順位 12。RICE 20。バナーX→クイック登録フローの文書化。Docs+Compliance統合）
 - `2026-11-18-243-fix-pattern-redos-fallopen.md`（順位 13。RICE 16。実装済み（c814ce2 + 修正 5f515bb）・初回レビュー Needs fixes → 再レビュー Approved（spec ✅、Minor 2 件は PBI に記録・最悪値表記の修正は最終レビュー修正波へ）。pattern属性ReDoSのfall-open化。Blue Team）
-- `2026-11-18-244-feat-exclusion-undo-hint.md`（順位 14。RICE 16。永続登録の解除導線。Ethics）
+- `2026-11-18-244-feat-exclusion-undo-hint.md`（順位 14。RICE 16。実装済み（572cb7b + 43f5b92 + 修正 a968c97〜d982b3d）・初回レビュー Approved（Important 1 件）→ 修正後 再レビュー Approved（残指摘なし）。永続登録の解除導線。Ethics）
 
 ## 進行中からアーカイブ済み（2026-11-17・台帳棚卸しで9件処理。204はCI締めを実測、224-230はPR #25でマージ・0.1.36でリリース済み）
 
