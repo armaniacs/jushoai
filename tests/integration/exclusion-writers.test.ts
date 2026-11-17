@@ -54,7 +54,7 @@ const quickRegister = async (raw: string): Promise<void> => {
     saveExcluded: saveExcludedUrls,
     candidates: { exact: raw, prefix: raw },
     showError,
-    close: vi.fn(),
+    showSuccess: vi.fn(),
     setBusy: vi.fn(),
   });
   expect(showError).not.toHaveBeenCalled();

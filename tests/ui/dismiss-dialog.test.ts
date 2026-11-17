@@ -344,7 +344,7 @@ describe('showDismissDialog register flow keeps alert', () => {
             saveExcluded,
             candidates: { exact: 'https://example.com/form', prefix: 'https://example.com/' },
             showError: (reason) => { handle?.showRegisterError(reason); },
-            close: () => { handle?.close(); },
+            showSuccess: () => { handle?.showRegisterSuccess(() => {}); },
             setBusy: (busy) => { handle?.setRegisterBusy(busy); },
           });
         },
@@ -569,5 +569,158 @@ describe('showDismissDialog theme tokens (PBI-238)', () => {
     // SHADOW_TOKENS carries the prefers-color-scheme dark palette.
     expect(css).toContain('@media (prefers-color-scheme: dark)');
     expect(css).toContain('--jushoai-panel-bg: #212530;');
+  });
+});
+
+describe('showDismissDialog register success view (PBI-244)', () => {
+  function showSuccessView(overrides: Partial<DismissDialogActions> = {}) {
+    const onUndoRegistration = vi.fn();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+      ...overrides,
+    });
+    dialog.showRegisterSuccess(onUndoRegistration);
+    return { dialog, root, onUndoRegistration };
+  }
+
+  it('BDD: 成功表示に解除先の文言が出る', () => {
+    const { root } = showSuccessView();
+    const box = root.querySelector('[role="dialog"]')!;
+    expect(box.textContent).toContain('解除は設定ページの『起動しないURL』から');
+  });
+
+  it('成功表示は登録の結果と自動クローズ予定を伝える', () => {
+    const { root } = showSuccessView();
+    const box = root.querySelector('[role="dialog"]')!;
+    expect(box.textContent).toContain('起動しないURLに登録しました');
+    expect(box.textContent).toContain('15秒後に自動で閉じます');
+  });
+
+  it('成功の切り替えを role="status" の兄弟領域で告知する', () => {
+    const { root } = showSuccessView();
+    const live = root.querySelector('[role="status"]')!;
+    expect(live.textContent).toContain('登録しました');
+    expect(live.textContent).toContain('解除は設定ページの');
+  });
+
+  it('登録 UI と dismiss 操作を外し、登録を取り消すボタンだけを残す', () => {
+    const { root } = showSuccessView();
+    expect(root.querySelector('input[type="radio"]')).toBeNull();
+    const buttons = [...root.querySelectorAll('button')].map((b) => b.textContent);
+    expect(buttons).toEqual(['登録を取り消す']);
+    expect(root.textContent).not.toContain('このページだけ:');
+    expect(root.textContent).not.toContain('今回だけ閉じる');
+  });
+
+  it('1行表示(候補同一)でも同じ切り替えになる', () => {
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    dialog.showRegisterSuccess(vi.fn());
+    const box = root.querySelector('[role="dialog"]')!;
+    expect(box.textContent).toContain('解除は設定ページの『起動しないURL』から');
+    expect(box.textContent).not.toContain('このサイト全体:');
+  });
+
+  it('登録を取り消すで onUndoRegistration が走る', () => {
+    const { root, onUndoRegistration } = showSuccessView();
+    const undoButton = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === '登録を取り消す',
+    )!;
+    undoButton.click();
+    expect(onUndoRegistration).toHaveBeenCalledTimes(1);
+  });
+
+  it('フォーカスは undo ボタンでなくダイアログ箱に置かれる', () => {
+    const { root } = showSuccessView();
+    const box = root.querySelector('[role="dialog"]') as HTMLElement;
+    expect(root.activeElement).toBe(box);
+    expect(box.getAttribute('tabindex')).toBe('-1');
+  });
+
+  it('二度呼んでも表示は一度だけ組み替わる', () => {
+    const { dialog, root } = showSuccessView();
+    dialog.showRegisterSuccess(vi.fn());
+    const buttons = [...root.querySelectorAll('button')].map((b) => b.textContent);
+    expect(buttons).toEqual(['登録を取り消す']);
+  });
+
+  it('stale ハンドルの submitRegister は成功後に登録を起こさない', () => {
+    const onRegister = vi.fn();
+    const { dialog } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister,
+      },
+    });
+    dialog.showRegisterSuccess(vi.fn());
+    dialog.submitRegister();
+    expect(onRegister).not.toHaveBeenCalled();
+  });
+});
+
+describe('showDismissDialog register success auto-close (PBI-244)', () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('成功表示後も自動クローズが働き、閉じた後は合意位置へ戻る', () => {
+    vi.useFakeTimers();
+    const target = document.createElement('button');
+    target.textContent = '合意位置';
+    document.body.append(target);
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      restoreFocus: () => target,
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    dialog.showRegisterSuccess(vi.fn());
+    // Success puts focus on the box (engaged), so step out before the timer.
+    (root.querySelector('[role="dialog"]') as HTMLElement).blur();
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(document.activeElement).toBe(target);
+  });
+
+  it('成功表示中に undo ボタンへフォーカスがある間は自動クローズしない', () => {
+    vi.useFakeTimers();
+    const { dialog, root } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      register: {
+        exactLabel: 'https://example.com/form',
+        prefixLabel: 'https://example.com/',
+        onRegister: vi.fn(),
+      },
+    });
+    dialog.showRegisterSuccess(vi.fn());
+    const undoButton = [...root.querySelectorAll('button')].find(
+      (b) => b.textContent === '登録を取り消す',
+    )!;
+    undoButton.focus();
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(true);
+    undoButton.blur();
+    expect(document.body.contains(dialog.host)).toBe(false);
   });
 });

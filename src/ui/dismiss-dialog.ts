@@ -26,6 +26,7 @@ export interface DismissDialogHandle {
   choose: (choice: 'exact' | 'prefix') => void;
   submitRegister: () => void;
   showRegisterError: (reason: string) => void;
+  showRegisterSuccess: (onUndoRegistration: () => void) => void;
   setRegisterBusy: (busy: boolean) => void;
 }
 
@@ -33,6 +34,11 @@ export const AUTO_HIDE_MS = 15000;
 
 const AUTO_CLOSE_NOTICE = '15秒後に自動で閉じます';
 const OPEN_ANNOUNCEMENT = `JushoAI の非表示ダイアログを開きました。${AUTO_CLOSE_NOTICE}`;
+const REGISTER_SUCCESS_RESULT = '起動しないURLに登録しました。';
+// The removal path names the settings section the options page renders, so a
+// user who missed the undo window can still find the list without hunting.
+const REGISTER_SUCCESS_HINT = '解除は設定ページの『起動しないURL』から。';
+const REGISTER_UNDO_LABEL = '登録を取り消す';
 
 export function showDismissDialog(actions: DismissDialogActions): DismissDialogHandle {
   const { host, root } = createShadowHost({ position: 'fixed' });
@@ -51,6 +57,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     '.opt { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; }',
     '.opt > input { flex-shrink: 0; }',
     '.opt > span { min-width: 0; overflow-wrap: anywhere; }',
+    // Only the success-view undo button is a direct child; the dismissal row
+    // keeps its spacing from .row.
+    '.box > button { margin-top: 8px; }',
   ].join('');
   const box = document.createElement('div');
   box.className = 'box';
@@ -166,6 +175,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
   // exact と prefix が同じ文字列(ルート URL など)のときは二択に意味が
   // ないので、ラジオなしの1行表示にして登録は prefix 扱いにする。
   let collapsedRegister = false;
+  // Nodes the success view swaps out wholesale (PBI-244).
+  const registerNodes: HTMLElement[] = [];
+  let succeeded = false;
 
   if (actions.register) {
     const reg = actions.register;
@@ -199,15 +211,17 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
         if (registerBusy) return;
         reg.onRegister('prefix');
       });
-      box.append(fixed, submit, errorBox);
+      registerNodes.push(fixed);
     } else {
       submit.addEventListener('click', () => {
         // aria-disabled is advisory only; activation is dropped here instead.
         if (registerBusy) return;
         reg.onRegister(selected);
       });
-      box.append(makeOption('exact', reg.exactLabel), makeOption('prefix', reg.prefixLabel), submit, errorBox);
+      registerNodes.push(makeOption('exact', reg.exactLabel), makeOption('prefix', reg.prefixLabel));
     }
+    registerNodes.push(submit);
+    box.append(...registerNodes, errorBox);
   }
 
   root.append(style, live, box);
@@ -233,10 +247,36 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       else prefixRadio?.click();
     },
     submitRegister: () => {
+      // The register UI is gone after success; a stale handle must not
+      // re-register.
+      if (succeeded) return;
       if (!actions.register) return;
       actions.register.onRegister(collapsedRegister ? 'prefix' : selected);
     },
     showRegisterError: (reason) => { if (errorBox) errorBox.textContent = reason; },
+    showRegisterSuccess: (onUndoRegistration) => {
+      if (!actions.register || succeeded) return;
+      succeeded = true;
+      submitBtn = null;
+      // The dismissal actions leave with the register UI: 元に戻す would only
+      // un-dismiss a page the exclusion keeps dormant, and two undo buttons
+      // with different meanings would invite the wrong one.
+      for (const node of registerNodes) node.remove();
+      row.remove();
+      text.textContent = `${REGISTER_SUCCESS_RESULT}${REGISTER_SUCCESS_HINT}${AUTO_CLOSE_NOTICE}`;
+      const undoRegistration = document.createElement('button');
+      undoRegistration.type = 'button';
+      undoRegistration.textContent = REGISTER_UNDO_LABEL;
+      undoRegistration.addEventListener('click', onUndoRegistration);
+      box.append(undoRegistration);
+      // Focus the box, not the undo button: an accidental second Enter on a
+      // focused undo would cancel the registration just made. tabindex=-1
+      // keeps keyboard focus (and Esc) inside instead of stranding it on
+      // body, and Tab reaches the undo button as a deliberate second step.
+      box.setAttribute('tabindex', '-1');
+      box.focus();
+      live.textContent = `${REGISTER_SUCCESS_RESULT}${REGISTER_SUCCESS_HINT}`;
+    },
     setRegisterBusy: (busy) => {
       registerBusy = busy;
       // aria-disabled instead of the disabled attribute: disabling would drop

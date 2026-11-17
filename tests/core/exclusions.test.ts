@@ -201,6 +201,15 @@ describe('removeExclusionEntry', () => {
   it('is a no-op for an unknown value', () => {
     expect(removeExclusionEntry(['https://a.example/'], 'https://c.example/')).toEqual(['https://a.example/']);
   });
+
+  it('removes one entry from a full list without a cap check, keeping the rest in order (PBI-244)', () => {
+    const full = Array.from({ length: EXCLUDED_URLS_MAX }, (_, i) => `https://example.com/${i}`);
+    const next = removeExclusionEntry(full, 'https://example.com/50');
+    expect(next).toHaveLength(EXCLUDED_URLS_MAX - 1);
+    expect(next).not.toContain('https://example.com/50');
+    expect(next[0]).toBe('https://example.com/0');
+    expect(next[EXCLUDED_URLS_MAX - 2]).toBe(`https://example.com/${EXCLUDED_URLS_MAX - 1}`);
+  });
 });
 
 describe('parseExcludedUrls', () => {
