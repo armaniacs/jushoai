@@ -43,8 +43,15 @@ Scenario: 生成行が pin 照合を通る
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 4 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 4 件）
+
+- tests/eval/corpus.eval.ts の新規コメント（PinRow と p() の移動先を示すもの）が日本語。ファイル既存のコメント块も日本語のため実害は小さいが、規約上は英語が本来
+- src/eval/metrics.ts の p() 移動コメントが「入れ替え行は生成されない」と主張し過ぎ。同型引数の並べ替えは tsc では検出されず、corpus の pinDiff でしか捉えられない。主張を reportLine 順混入の防止に狭めるべき
+- metricsFor が tests/eval/pin.eval.ts と tests/eval/corpus.eval.ts に逐語重複。corpus 計測設定が変わったときに 2 箇所同時修正が必要（pinDiff が発火するため実害なし）
+- `npx vitest run -c vitest.eval.config.ts` の直接実行では除外が効かず生成行が混ざる。make eval / make eval-pin の各入口は正しい
 
 ## 実装記録
 
