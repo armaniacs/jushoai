@@ -52,7 +52,7 @@ Fields classified by AI are marked `AI判定` (decided by AI). Close the preview
 
 ## URLs where JushoAI does not start
 
-On pages where filling forms is not the task, such as spreadsheets and mail, the button only gets in the way. Register a URL under `起動しないURL` (URLs where it does not start) in the settings page, and JushoAI stays out of any page whose URL starts with it.
+On pages where filling forms is not the task, such as spreadsheets and mail, the button only gets in the way. Register a URL under `起動しないURL` (URLs where it does not start) in the settings page, and JushoAI stays out of that page and the pages under it.
 
 1. Open `起動しないURL` in the settings page.
 2. Type a URL and click `追加` (add).
@@ -63,7 +63,7 @@ On pages where filling forms is not the task, such as spreadsheets and mail, the
 - When the registration succeeds, the dialog shows the hint `解除は設定ページの『起動しないURL』から。` (to remove it later, use the settings page) and a `登録を取り消す` (undo the registration) button. Clicking it removes the entry and brings the hidden button back
 - `この配下全体` (everything under it) registers the origin plus the first path segment: registering from `https://example.com/foo/bar` registers `https://example.com/foo/`, and JushoAI stays out of the pages under it. On a page directly under the origin, `https://example.com/` is registered and the whole site is covered
 - Example: registering `https://docs.google.com/spreadsheets/` keeps JushoAI out of every spreadsheet under it. `https://docs.google.com/document/` on the same host is unaffected
-- A URL matches when it starts with the registered text (case-insensitive)
+- A URL matches when the origin is the same and the page path is the registered path or under it (case-insensitive). Example: `https://example.com/pay` does not match `https://example.com/payment`
 - Saving takes effect on already open pages: the button disappears there
 - Up to 100 URLs can be registered, and only URLs starting with `http://` or `https://` are accepted
 
