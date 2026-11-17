@@ -57,9 +57,6 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
     '.opt { display: flex; gap: 6px; align-items: flex-start; margin-top: 4px; }',
     '.opt > input { flex-shrink: 0; }',
     '.opt > span { min-width: 0; overflow-wrap: anywhere; }',
-    // Only the success-view undo button is a direct child; the dismissal row
-    // keeps its spacing from .row.
-    '.box > button { margin-top: 8px; }',
   ].join('');
   const box = document.createElement('div');
   box.className = 'box';
@@ -267,6 +264,9 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       const undoRegistration = document.createElement('button');
       undoRegistration.type = 'button';
       undoRegistration.textContent = REGISTER_UNDO_LABEL;
+      // Inline spacing instead of a `.box > button` rule: the register submit
+      // is also a direct child and must keep its existing look.
+      undoRegistration.style.marginTop = '8px';
       undoRegistration.addEventListener('click', onUndoRegistration);
       box.append(undoRegistration);
       // Focus the box, not the undo button: an accidental second Enter on a
