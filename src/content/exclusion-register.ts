@@ -42,7 +42,17 @@ export async function registerExclusionChoice(
     }
     // The undo must delete exactly this entry: the canonical value the store
     // now holds, which is the one current did not have.
-    const registered = added.entries.find((value) => !current.includes(value)) ?? '';
+    const registered = added.entries.find((value) => !current.includes(value));
+    if (!registered) {
+      // addExclusionEntry on ok appends exactly one entry current lacks, so a
+      // miss means the store contract broke. Showing success would hand undo
+      // an empty value that restores the banner while the exclusion stands;
+      // fail through the same path as every other failure here instead of
+      // silently degrading (a throw would escape the void call site as an
+      // unhandled rejection and leave the dialog without a visible reason).
+      deps.showError('登録の解除対象を特定できませんでした');
+      return;
+    }
     deps.showSuccess(registered);
   } finally {
     deps.setBusy(false);

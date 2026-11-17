@@ -61,6 +61,20 @@ describe('registerExclusionChoice', () => {
     expect(deps.showSuccess).not.toHaveBeenCalled();
   });
 
+  it('保存後の差分特定に失敗したら固定文言を出し、成功表示に進まない', async () => {
+    // addExclusionEntry on ok always appends exactly one entry current lacks,
+    // so the diff lookup cannot miss. A store view whose includes() hides the
+    // new entry simulates that contract breaking; undoing a guessed value
+    // would restore the banner while the exclusion stands.
+    const lying: string[] = ['https://a.example/'];
+    lying.includes = () => true;
+    const deps = depsWith({ loadExcluded: vi.fn(async () => lying) });
+    await registerExclusionChoice('exact', deps);
+    expect(deps.showError).toHaveBeenCalledWith('登録の解除対象を特定できませんでした');
+    expect(deps.showSuccess).not.toHaveBeenCalled();
+    expect(deps.setBusy).toHaveBeenLastCalledWith(false);
+  });
+
   it('開始で忙しく終わりで戻す', async () => {
     const deps = depsWith();
     await registerExclusionChoice('prefix', deps);
