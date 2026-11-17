@@ -24,9 +24,9 @@ Scenario: prefix の自動範囲が開示される
   Then  「origin + 第 1 パスセグメント、origin 直下はサイト全体」という自動範囲が書かれ、実装（exclusion-prefix.ts）と矛盾しない
 
 ## 受け入れ基準
-- [ ] ja/en 両方の popup-and-fill.md に追記する（H2 を増やさず箇条書きで。パリティ検査に影響させない）
-- [ ] prefix 自動範囲の説明が実装と一致する
-- [ ] `make site` が緑
+- [x] ja/en 両方の popup-and-fill.md に追記する（H2 を増やさず箇条書きで。パリティ検査に影響させない）
+- [x] prefix 自動範囲の説明が実装と一致する
+- [x] `make site` が緑
 
 ## 実装手順
 - ja の「起動しないURL」節にバナー経由のフローと範囲を追記する
@@ -40,6 +40,29 @@ Scenario: prefix の自動範囲が開示される
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが検証手順でパスする
+- [x] 全 BDD シナリオが検証手順でパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録
+
+- 実施日: 2026-11-18（docs-only タスク）
+- 変更内容:
+  - `site/content/ja/popup-and-fill.md` と `site/content/en/popup-and-fill.md` の「起動しない URL」節（ja: 53-70 行）に、設定ページ手順の直後に箇条書き 4 本ずつを追記。H2 の追加なし、リンクの追加なし（パリティ検査の対象に触れない）
+  - 追記位置を設定ページ手順の直後にしたのは、「設定ページから」と「バナー X から」の 2 つの登録経路を隣接させ、既存の挙動説明（例・一致・反映・上限）と削除の段落の並びを変えないため
+- 文言と実装の照合（追記前に実装を読んで確認。docs-only のため TDD なし）:
+
+| ガイドの主張 | 実装の根拠 | 結果 |
+|---|---|---|
+| ダイアログで「このページだけ」/「この配下全体」を選び「起動しないURLに登録する」 | ラジオ文言（src/ui/dismiss-dialog.ts:212）、登録ボタン文言（同 :220）。X ボタンは src/ui/button.ts:99-113（textContent `X`、aria-label「このボタンを隠す」） | 一致 |
+| 15 秒で自動クローズ、ホバー・フォーカス中は残る | `AUTO_HIDE_MS = 15000`（src/ui/dismiss-dialog.ts:33）、ホバー/フォーカス保持（同 :138-184、PBI-234/237） | 一致 |
+| 隠れたボタンの取り消しは「元に戻す」 | ボタン文言（src/ui/dismiss-dialog.ts:82）→ `onUndo` で dismissed 解除して再マウント（src/entrypoints/content.ts:509-513） | 一致 |
+| 成功表示に「解除は設定ページの『起動しないURL』から。」のヒントと即時 undo ボタン | `REGISTER_SUCCESS_HINT`（src/ui/dismiss-dialog.ts:40、ガイドは同一文字列を引用）、「登録を取り消す」（同 :41）。undo は登録 1 件だけを削除しバナーを復帰（src/content/exclusion-register.ts:74-102、src/entrypoints/content.ts:533-548、PBI-244） | 一致 |
+| prefix の自動範囲は origin + 第 1 パスセグメント、origin 直下はサイト全体 | `buildExclusionCandidates`（src/core/exclusion-prefix.ts:16-17。第 1 セグメントなしなら `origin/`）。「この配下全体」の範囲の裏付けは PBI-239 の一致規則（src/core/exclusions.ts:61-84。origin 同一 + パスセグメント境界） | 一致 |
+
+- 検証:
+  - `make site` 緑（30 ページ生成、site check passed。validate-guides の日英パリティ検査を通過）
+  - 生成物の目視確認: `site-dist/guides/popup-and-fill/index.html` と `site-dist/en/guides/popup-and-fill/index.html` の両方に追記 4 本がレンダリングされていることを確認
+  - `make check` は docs-only（src/ 変更なし）のため未実施
+- BDD シナリオ: 「ガイドに最短経路が書かれる」「prefix の自動範囲が開示される」の両シナリオとも、上記の照合表と目視確認でパス
+- 既存記述のメモ: 同節の既存箇条書き「一致は、登録した文字列で URL が始まるかどうかで判定します」（en 対応行も）は PBI-239 より前の接頭一致の説明が残っており、末尾スラッシュなしの登録では現行のセグメント境界規則と厳密には異なる。本タスクは箇条書き追記のみがスコープのため既存行は変更せず、詳細はレポートの懸念を参照
