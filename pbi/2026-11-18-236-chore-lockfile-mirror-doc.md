@@ -36,9 +36,16 @@ Scenario: ミラー前提が文書化されている
 0.02人週（要チームでの見積もり）
 
 ## Definition of Done
-- [x] 全 BDD シナリオが検証手順でパスする
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが検証手順でパスする（npm config get registry・npm ci で lockfile 無変更を貼り付け済み。make install は既存 drift のため条件付き成立 → drift はコントローラが 130cc81 で同期し解消）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Important 2 件はコントローラ処置済み（下記）、Minor 2 件は記録のみ）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Important 2 件は処置済み・Minor 2 件）
+
+- Important（処置済み）: docs(sdd) コミット（ab35506）が .superpowers/sdd/ を強制 add した。規約上レポートは無視領域のスクラッチのため、コントローラが追跡解除（4089308）
+- Important（処置済み）: 既存 drift（lockfile root 版数 0.1.31 vs package.json 0.1.37）で make install が毎回 lockfile 2 行を書き換える状態。コントローラが版数同期コミット（130cc81、解決 URL 無変更の 2 行のみ）で解消
+- Minor: .npmrc の "Do not change this line without regenerating the lockfile" はやや過剰（npm ci は lockfile の URL を優先するため .npmrc 単独変更で壊れない）。保守的な方向の言い過ぎで実害なし
+- Minor: AGENTS.md の "`npm install --package-lock-only` 相当" の「相当」は不要なヘッジ（registry 行を除けば文字どおり機能する。brief 元文の踏襲）
 
 ## 実装記録
 
