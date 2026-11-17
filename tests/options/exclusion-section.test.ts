@@ -115,11 +115,34 @@ describe('mountExclusionSection', () => {
     await vi.waitFor(() => { if (!root.querySelector('h2')) throw new Error('not rendered'); });
     expect(root.querySelector('.errors')?.textContent).toContain('読み込めませんでした');
     expect(items()).toEqual(['まだ登録されていません']);
-    // Saving stays editable after the failed load.
+    // Saving stays editable after the failed load, but the save-time re-read
+    // runs through the same unavailable storage (PBI-241): the merge cannot
+    // be consistent, so the save is treated as a failure and writes nothing.
     type(ENTRY);
+    click(buttonByText('追加'));
+    expect(items().join('')).toContain(ENTRY);
+    click(buttonByText('保存'));
+    await vi.waitFor(() => { if (!root.querySelector('.errors')) throw new Error('no error'); });
+    expect(root.querySelector('.errors')?.textContent).toContain('保存に失敗');
+    expect(root.querySelector('.saved')).toBeNull();
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it('merges a save over storage changed after boot instead of overwriting it (PBI-241)', async () => {
+    let stored = [ENTRY];
+    mountExclusionSection(root, {
+      load: async () => [...stored],
+      save: async (entries) => { stored = [...entries]; },
+    });
+    await vi.waitFor(() => { if (!root.querySelector('h2')) throw new Error('not rendered'); });
+    // Another writer registers while the page is open.
+    stored = [ENTRY, 'https://example.com/quick/'];
+    type('https://example.com/added/');
     click(buttonByText('追加'));
     click(buttonByText('保存'));
     await vi.waitFor(() => { if (!root.querySelector('.saved')) throw new Error('not saved'); });
-    expect(save).toHaveBeenCalledWith([ENTRY]);
+    expect(stored).toEqual([ENTRY, 'https://example.com/quick/', 'https://example.com/added/']);
+    // The saved view shows the merged list.
+    expect(items().join('')).toContain('https://example.com/quick/');
   });
 });

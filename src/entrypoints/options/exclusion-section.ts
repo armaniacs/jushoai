@@ -1,4 +1,4 @@
-import { addExclusionEntry, EXCLUDED_URLS_MAX, removeExclusionEntry } from '../../core/exclusions';
+import { addExclusionEntry, EXCLUDED_URLS_MAX, mergeExcludedEntries, removeExclusionEntry } from '../../core/exclusions';
 import { loadExcludedUrls, saveExcludedUrls } from '../../exclusions-store';
 import { el, notice, textInput } from './dom';
 import { bootListSection } from './list-boot';
@@ -21,6 +21,11 @@ const defaultDeps = (): ExclusionSectionDeps => ({
 // mental model: edit, then save.
 export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionDeps = defaultDeps()): void {
   let entries: string[] = [];
+  // PBI-241: 保存 merges a diff against this boot snapshot into the store's
+  // current content, so it cannot revert a quick registration made while the
+  // page is open. A failed boot leaves it empty, which reads as "the draft
+  // gained everything the user adds" at save time.
+  let boot: readonly string[] = [];
   let draft = '';
   let feedback: HTMLElement | null = null;
 
@@ -51,18 +56,27 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
     render();
   };
 
+  // Save = re-read the store, merge the boot→draft diff into it (PBI-241),
+  // write once. A failed re-read or write means the merge could not be
+  // consistent, so the success notice is withheld and the failure is shown
+  // with the draft left untouched for a retry.
   const onSave = (): void => {
-    void deps.save(entries).then(
-      () => {
-        feedback = notice('saved', ['保存しました']);
-        syncNavCount();
-        render();
-      },
-      () => {
+    void (async () => {
+      let merged: string[];
+      try {
+        merged = mergeExcludedEntries({ boot, draft: entries, current: await deps.load() });
+        await deps.save(merged);
+      } catch {
         feedback = notice('errors', ['保存に失敗しました']);
         render();
-      },
-    );
+        return;
+      }
+      entries = [...merged];
+      boot = merged;
+      feedback = notice('saved', ['保存しました']);
+      syncNavCount();
+      render();
+    })();
   };
 
   function render(): void {
@@ -122,6 +136,7 @@ export function mountExclusionSection(root: HTMLElement, deps: ExclusionSectionD
     deps.load,
     (list) => {
       entries = list;
+      boot = list;
       render();
       syncNavCount();
     },

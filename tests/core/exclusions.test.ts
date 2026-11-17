@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   EXCLUDED_URLS_MAX, EXCLUSION_ENTRY_MAX_LENGTH, addExclusionEntry, isExcludedUrl,
-  normalizeExclusionEntry, parseExcludedUrls, removeExclusionEntry,
+  mergeExcludedEntries, normalizeExclusionEntry, parseExcludedUrls, removeExclusionEntry,
 } from '../../src/core/exclusions';
 
 describe('normalizeExclusionEntry', () => {
@@ -129,6 +129,66 @@ describe('addExclusionEntry', () => {
     const result = addExclusionEntry(full, 'https://example.com/one-more');
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toMatch(String(EXCLUDED_URLS_MAX));
+  });
+});
+
+// PBI-241: options save merges boot→draft diff into the store's current
+// content: final = (current ∪ draft-additions) − draft-removals.
+describe('mergeExcludedEntries', () => {
+  it('keeps a registration another writer added after boot', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/'],
+      draft: ['https://a.example/', 'https://draft.example/'],
+      current: ['https://a.example/', 'https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/', 'https://quick.example/', 'https://draft.example/']);
+  });
+
+  it('removes a draft-deleted entry even when current still has it', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/', 'https://gone.example/'],
+      draft: ['https://a.example/'],
+      current: ['https://a.example/', 'https://gone.example/', 'https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/', 'https://quick.example/']);
+  });
+
+  it('does not resurrect an untouched entry that current no longer has', () => {
+    const merged = mergeExcludedEntries({
+      boot: ['https://a.example/', 'https://dropped.example/'],
+      draft: ['https://a.example/', 'https://dropped.example/'],
+      current: ['https://a.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/']);
+  });
+
+  it('treats case-insensitive duplicates as one entry, current first', () => {
+    const merged = mergeExcludedEntries({
+      boot: [],
+      draft: ['HTTPS://A.EXAMPLE/'],
+      current: ['https://a.example/'],
+    });
+    expect(merged).toEqual(['https://a.example/']);
+  });
+
+  it('applies the cap once after the merge, keeping the newest entries', () => {
+    const current = Array.from({ length: EXCLUDED_URLS_MAX }, (_, i) => `https://example.com/${i}`);
+    const merged = mergeExcludedEntries({
+      boot: current.slice(0, 10),
+      draft: [...current.slice(0, 10), 'https://example.com/new'],
+      current,
+    });
+    expect(merged).toHaveLength(EXCLUDED_URLS_MAX);
+    expect(merged[EXCLUDED_URLS_MAX - 1]).toBe('https://example.com/new');
+  });
+
+  it('merges into an empty boot after a failed page load', () => {
+    const merged = mergeExcludedEntries({
+      boot: [],
+      draft: ['https://draft.example/'],
+      current: ['https://quick.example/'],
+    });
+    expect(merged).toEqual(['https://quick.example/', 'https://draft.example/']);
   });
 });
 

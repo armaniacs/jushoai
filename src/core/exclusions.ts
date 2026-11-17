@@ -99,6 +99,37 @@ export function addExclusionEntry(entries: readonly string[], raw: string): AddE
   return { ok: true, entries: [...entries, normalized.value] };
 }
 
+// The save-time merge for the options page (PBI-241): the page holds the list
+// in memory from boot, so writing it back wholesale would silently revert a
+// quick registration made while the page is open. Instead it saves a diff:
+// final = (current ∪ draft-additions) − draft-removals, where additions are
+// entries the draft gained after boot and removals are entries the draft lost
+// after boot. An entry the draft never touched survives only if it is still in
+// current, so neither writer resurrects the other's deletion. All three inputs
+// are canonical (normalizeExclusionEntry at add time, parseExcludedUrls at
+// load time), so comparison and the one cap pass after the merge are the only
+// concerns here.
+export interface ExclusionMergeInput {
+  boot: readonly string[];
+  draft: readonly string[];
+  current: readonly string[];
+}
+
+export function mergeExcludedEntries({ boot, draft, current }: ExclusionMergeInput): string[] {
+  const inBoot = (value: string): boolean => boot.some((b) => sameEntry(b, value));
+  const inDraft = (value: string): boolean => draft.some((d) => sameEntry(d, value));
+  const merged: string[] = [];
+  const push = (value: string): void => {
+    if (!merged.some((m) => sameEntry(m, value))) merged.push(value);
+  };
+  for (const value of current) push(value);
+  for (const value of draft) {
+    if (!inBoot(value)) push(value);
+  }
+  const kept = merged.filter((value) => !(inBoot(value) && !inDraft(value)));
+  return kept.length > EXCLUDED_URLS_MAX ? kept.slice(kept.length - EXCLUDED_URLS_MAX) : kept;
+}
+
 export function removeExclusionEntry(entries: readonly string[], value: string): string[] {
   return entries.filter((e) => e !== value);
 }
