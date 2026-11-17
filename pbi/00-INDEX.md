@@ -5,7 +5,7 @@
 - `2026-11-18-00-backlog-checking-team-round.md`（ラウンド台帳。Wave 3不実施・dismiss-dialog統合維持・core/analyze.ts移転見送りの判断を記録）
 - `2026-11-18-231-chore-eval-pin-generator.md`（順位 1。RICE 95。実装済み（5b2a191、branch work/pbi-231-eval-pin-generator）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。pin表更新の機械化。DX Advocate）
 - `2026-11-18-232-refactor-company-vocabulary-single.md`（順位 2。RICE 90。実装済み（35efb03）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録・officeLegendEligible の集約は後続候補）。classify-rulesの会社語彙一本化。Maintainability）
-- `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。isEmailByNameのmail部分一致締め直し。Domain Logic）
+- `2026-11-18-233-fix-mail-word-boundary.md`（順位 3。RICE 68。実装済み（0a21525）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録）。isEmailByNameのmail部分一致締め直し。Domain Logic）
 - `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。登録処理中の自動クローズ競合。Red Team+UI統合）
 - `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。ガイド注記表にwarn-pattern行。Documentation）
 - `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。lockfileミラー前提の文書化。Supply Chain）
