@@ -135,6 +135,27 @@ describe('wire round-trip encode -> decode -> buildPrompt (PBI-175)', () => {
   });
 });
 
+describe('classify transport run budget clamp (PBI-240)', () => {
+  it('measures the remaining budget from the run start when one is given', async () => {
+    sendMessage.mockImplementation(() => new Promise(() => {}));
+    const res = await send(metas(5), {
+      timeoutMs: 5_000,
+      totalTimeoutMs: 100,
+      startedAt: Date.now() - 150,
+    });
+    expect(sendMessage).not.toHaveBeenCalled();
+    expect(res.map.size).toBe(0);
+    expect(res.failureReason).toBe('network');
+  });
+
+  it('gives a send without a run start the whole budget (direct callers)', async () => {
+    sendMessage.mockImplementation(() => new Promise(() => {}));
+    const res = await send(metas(5), { timeoutMs: 5_000, totalTimeoutMs: 100 });
+    expect(sendMessage).toHaveBeenCalledTimes(1);
+    expect(res.failureReason).toBe('network');
+  });
+});
+
 describe('decodeRequest Result reasons map to the transfer failure vocabulary (PBI-175)', () => {
   it('distinguishes oversize / version / malformed', () => {
     const oversize = aiClassifyRequest(Array.from({ length: 31 }, (_, i) => encodeFieldMeta(makeMeta({ id: `f${i}` }))));

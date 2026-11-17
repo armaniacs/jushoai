@@ -48,12 +48,15 @@ describe('failure vocabulary priority: gateway chunk failure beats truncation', 
   });
 
   it('keeps the first failure when a later chunk would also fail', async () => {
+    // PBI-240: both reasons stay retryable, so the run keeps sending and the
+    // first failure wins. (An auth/rejected first chunk now stops the run
+    // instead — pinned in background-gateway.test.ts.)
     send
-      .mockResolvedValueOnce({ ok: false, reason: 'auth' })
-      .mockResolvedValueOnce({ ok: false, reason: 'network' });
+      .mockResolvedValueOnce({ ok: false, reason: 'network' })
+      .mockResolvedValueOnce({ ok: false, reason: 'bad-response' });
     const result = await runClassifyPipeline(new BackgroundClassifier(), pending(30), {});
     expect(send).toHaveBeenCalledTimes(2);
-    expect(result.failureReason).toBe('auth');
+    expect(result.failureReason).toBe('network');
     expect(result.items.every((i) => i.cls.source === 'rule')).toBe(true);
   });
 

@@ -29,6 +29,11 @@ export interface ClassifySendOptions {
   // a single-chunk run, so degenerate runs stay out of the audit log's
   // scheduling fields (the transport:88-90 passthrough, kept by PBI-193).
   schedule?: ClassifySchedule;
+  // Run-start wall clock (Date.now() at runClassifyPipeline entry, threaded
+  // through the attempt seam). The remaining budget is measured from it, so a
+  // split run cannot re-earn a full totalTimeoutMs per send (PBI-240).
+  // Absent: this send owns the whole budget (direct callers, tests).
+  startedAt?: number;
   // Defaults are the transfer-contract values. Passthrough for the gateway's
   // configuration (tests included); normally left unspecified.
   timeoutMs?: number;
@@ -44,7 +49,8 @@ export interface ClassifySendResult {
 // The one bounded send (PBI-193): encode the fields the caller hands in, one
 // wire round-trip, and bind the wire failure vocabulary to the result. The run
 // disciplines (first failure wins, the 'truncated' notice only when nothing
-// else failed, an abort keeping what is earned) are owned by
+// else failed, an abort keeping what is earned, the run-total budget via
+// startedAt and the stop on non-retryable reasons, both PBI-240) are owned by
 // runClassifyPipeline — the canonical chunk run this module serves through the
 // FieldClassifier seam.
 //
@@ -53,10 +59,12 @@ export interface ClassifySendResult {
 // malformed reply is 'bad-response', and a failing provider (401, 429,
 // timeout) reports its reason verbatim.
 //
-// PBI-33: totalTimeoutMs still clamps this send (Math.min(timeoutMs,
-// remaining)), so a send's wall clock stays within the budget the caller
-// configured; the signal stops the send before and during the round-trip.
-// Either cutoff returns 'network' with the map earned so far.
+// PBI-33/240: totalTimeoutMs still clamps this send (Math.min(timeoutMs,
+// remaining)), and remaining is measured from the run start the pipeline
+// hands in via opts.startedAt (a send without one owns the whole budget), so
+// a split run's wall clock stays within the caller's budget instead of each
+// send re-earning a full one; the signal stops the send before and during the
+// round-trip. Either cutoff returns 'network' with the map earned so far.
 export async function send(fields: FieldMeta[], opts: ClassifySendOptions = {}): Promise<ClassifySendResult> {
   const signal = opts.signal;
   const timeoutMs = opts.timeoutMs ?? TRANSFER_CHUNK_TIMEOUT_MS;
@@ -71,7 +79,7 @@ export async function send(fields: FieldMeta[], opts: ClassifySendOptions = {}):
   if (signal?.aborted) {
     return { map: out, failureReason: 'network', truncatedCount };
   }
-  const startedAt = Date.now();
+  const startedAt = opts.startedAt ?? Date.now();
   const remaining = totalTimeoutMs - (Date.now() - startedAt);
   if (remaining <= 0) {
     return { map: out, failureReason: 'network', truncatedCount };

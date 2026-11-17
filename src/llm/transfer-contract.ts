@@ -8,7 +8,9 @@
 //   - chunk < backstop ≤ total (20 < 30 ≤ 60): 整形済み送信チャンクが受信側
 //     backstop に引っかからないこと (= decodeRequest の null reject を静的に回避)
 //   - per-chunk timeout ≤ 残 budget ≤ total timeout (45s ≤ 60s):
-//     各チャンク送信は Math.min(timeoutMs, remaining) で残 budget に clamp され、
+//     各チャンク送信は Math.min(timeoutMs, remaining) で残 budget に clamp される。
+//     remaining は run 開始時刻基準で測る (PBI-240: runClassifyPipeline が seam
+//     経由で startedAt を渡す。run 開始時刻なしの単発送信は全 budget を持つ) ので、
 //     逐次実行全体が total timeout に収まる (= sendWithTimeout の timeout を静的に回避)
 //   - status timeout (5s) は分類実行と独立した軽量往復のため total とは無関係
 //
