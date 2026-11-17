@@ -49,8 +49,9 @@ Scenario: 登録直後の即時 undo
 - `src/content/exclusion-register.ts` に `undoRegisteredExclusion(entry, deps)` を追加: load → `removeExclusionEntry`（core の既存 1 件削除。大文字小文字を含め完全一致。登録値は add 時に正規化済みなので正確に 1 件だけ消える）→ save の逆連鎖。該当 1 件が既に無い場合（他ライターが削除済み）は書き戻さず取り消し済みとして扱う。読み込み失敗は投げられた文言、保存失敗は固定文言「取り消しに失敗しました」。setBusy でダイアログの busy 表示と自動クローズ抑制を登録チェーンと共通化。
 - `src/entrypoints/content.ts`: undo の配線。`onRemoved` で `dismissed.remove(form.container)` + `schedule()`（バナー復帰。exclusion が消えた直後に storage.onChanged 経由の gate refresh でも再開するが、即時性のために既存 onUndo と同じ経路を通す）→ ダイアログ close。削除失敗時はダイアログを開いたまま alert に理由を出し、バナーは戻さない（exclusion が残っているため不整合を避ける）。
 - 241 との相互作用（開示）: undo は「load → 1 件削除 → save」のため、undo の load と save の間にオプション側の merge 保存が割り込むと、その保存結果を undo の書き込みが上書きし得る（登録→undo と並行してオプション保存が走る競合）。また、利用者がオプションの draft に同一 URL を手動追加していた場合、undo 後のオプション保存が merge の draft-addition として当該 entry を復活させ得る。どちらも 241 の merge 規則の定義内の挙動で、本 PBI ではテスト対象外とする。
-- TDD: tests/content/exclusion-register.test.ts（成功時 showSuccess・undo チェーン 7 件）、tests/ui/dismiss-dialog.test.ts（成功表示 BDD シナリオ 1・切り替え構造・undo ボタン・自動クローズ 10 件）、tests/core/exclusions.test.ts（上限いっぱいからの 1 件削除 1 件）、tests/integration/exclusion-undo.test.ts（新設。実ダイアログ+実チェーン+実ストアで BDD シナリオ 2 と失敗時 1 件）を先に追加し RED 26 件を確認してから実装し GREEN。
+- TDD: tests/content/exclusion-register.test.ts（成功時 showSuccess・undo チェーン 7 件）、tests/ui/dismiss-dialog.test.ts（成功表示 BDD シナリオ 1・切り替え構造・undo ボタン・自動クローズ 11 件）、tests/core/exclusions.test.ts（上限いっぱいからの 1 件削除 1 件）、tests/integration/exclusion-undo.test.ts（新設。実ダイアログ+実チェーン+実ストアで BDD シナリオ 2 と失敗時 1 件）を先に追加し RED 26 件を確認してから実装し GREEN。
 - 検証: `npx vitest run` 189 ファイル 3162 passed + 1 expected fail。`npm run eval` パス（ルール分類 pin 影響なし）。`make check` 緑。
+- レビュー修正（2026-11-18）: 成功表示の箱（tabindex=-1）フォーカスを自動クローズの保持と数えないよう、保持をホバー/フォーカスの 2 フラグに分割（本文の「15秒後に自動で閉じます」を既定状態で真に。PBI-237 の pin は無変更で維持）。成功表示への切替時に残ったエラー表示をクリア。undo ボタンに busy 中の再クリック無視を追加。登録差分の特定漏れを `?? ''` の黙示的劣化から固定文言の失敗表示へ変更。テストは dismiss-dialog +4（内 1 件は既定状態で15秒で閉じるよう pin を差し替え）、exclusion-register +1（計 14）。
 
 ## Definition of Done
 - [ ] 全 BDD シナリオが自動テストとして実装されパスする
