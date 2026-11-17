@@ -79,50 +79,67 @@ const V_FLAG_OK = (() => {
   try { new RegExp('', 'v'); return true; } catch { return false; }
 })();
 
-// PBI-243: the pattern attribute is page-controlled, and a synchronous RegExp
-// cannot be timed out — a crafted nested-quantifier pattern (e.g. (a|aa)+,
-// (a+)+) makes the anchored .test() below backtrack exponentially and freezes
-// the content script's main thread (the trigger is just pressing the banner;
-// preview approval is not needed). Fall open on a suspicious shape instead of
-// failing closed: the skipped check defers to the browser's native validation,
-// and a false positive only costs a page its warning, never its fills.
+// The pattern attribute is page-controlled, and a synchronous RegExp cannot be
+// timed out — crafted shapes make the anchored .test() below backtrack
+// exponentially and freeze the content script's main thread (the trigger is
+// just pressing the banner; preview approval is not needed). Fall open on a
+// suspicious shape instead of failing closed: the skipped check defers to the
+// browser's native validation, and a false positive only costs a page its
+// warning, never its fills. Two shapes are flagged:
+// - A quantifier repeating a group whose body can match one span in more than
+//   one way — a nested quantifier, a ranged bounded quantifier ((a{1,2})+
+//   walks the Fibonacci partitions of the value) or an alternation. An exact
+//   {n} matches its span one way only, so it is harmless. Overlapping and
+//   disjoint alternations are indistinguishable cheaply, so any | counts.
+// - A run of unbounded quantifiers (*, +, {n,}) anywhere in the pattern, no
+//   group needed: each extra one multiplies the ways the value can be carved
+//   up, and the blowup grows with the run's degree against short values
+//   (a*a*...b froze the engine on a 30-char value), so the value-length cap
+//   cannot backstop it. Ordinary patterns carry at most a few; past the cap
+//   the check falls open.
 // Single-pass scan: escapes and character-class bodies are opaque (their
 // | ( ) + * are literals), so a quantifier is attributed to the atom it
-// repeats. A quantifier is dangerous exactly when it repeats a group whose
-// body can match one span in more than one way — a nested quantifier or an
-// alternation. Bounded inner quantifiers stay dangerous ((a{1,2})+ walks the
-// Fibonacci partitions of the value), so any quantifier counts; overlapping
-// and disjoint alternations are indistinguishable cheaply, so any | counts.
+// repeats. The (?: marker is syntax rather than part of the body — skipping it
+// keeps \d{3}(?:-\d{4})? out of the group rule ((?:X) ≡ X); other (?... forms
+// keep the marker in the body, so a quantified named group still reads as
+// dangerous.
+const MAX_UNBOUNDED_QUANTIFIERS = 6;
 const hasCatastrophicShape = (pattern: string): boolean => {
   const bodies: string[] = [];
   let inClass = false;
+  let unbounded = 0;
   for (let i = 0; i < pattern.length; i++) {
     const ch = pattern[i]!;
     if (ch === '\\') { i++; continue; }
     if (inClass) { if (ch === ']') inClass = false; continue; }
     if (ch === '[') { inClass = true; continue; }
-    if (ch === '(') { bodies.push(''); continue; }
-    if (ch === ')') {
+    if (ch === '*' || ch === '+') unbounded++;
+    else if (ch === '{' && /^\{\d+,\}/.test(pattern.slice(i))) unbounded++;
+    if (ch === '(') {
+      if (pattern[i + 1] === '?' && pattern[i + 2] === ':') i += 2;
+      bodies.push('');
+    } else if (ch === ')') {
       const body = bodies.pop() ?? '';
       const parent = bodies.length - 1;
       if (parent >= 0) bodies[parent] = (bodies[parent] ?? '') + `(${body})`;
       const rest = pattern.slice(i + 1);
       const quantified = rest.startsWith('*') || rest.startsWith('+') || rest.startsWith('?')
         || /^\{\d+(,\d*)?\}/.test(rest);
-      if (quantified && body !== '' && (/[+*?{]/.test(body) || body.includes('|'))) return true;
+      if (quantified && body !== '' && (/[+*?|]/.test(body) || /\{\d*,\d*\}/.test(body))) return true;
     } else if (bodies.length > 0) {
       const top = bodies.length - 1;
       bodies[top] = (bodies[top] ?? '') + ch;
     }
   }
-  return false;
+  return unbounded > MAX_UNBOUNDED_QUANTIFIERS;
 };
 
-// Length caps on the same fall-open (PBI-243 (b)): they bound the backtracking
-// search space for inputs the shape lint cannot see — a long pattern that is
-// page noise, a long value against a moderately ambiguous pattern. The
-// corpus's longest real pattern is ~70 chars and profile values are short, so
-// the bounds never fire on ordinary forms.
+// Length caps on the same fall-open: they bound the backtracking search space
+// for what the shape lint passes through — a long pattern that is page noise,
+// and a long value against a moderately ambiguous pattern whose unbounded run
+// stays under the threshold (the blowup there is polynomial in the value
+// length). The corpus's longest real pattern is ~70 chars and profile values
+// are short, so the bounds never fire on ordinary forms.
 const MAX_PATTERN_ATTRIBUTE_LENGTH = 200;
 const MAX_PATTERN_CHECK_VALUE_LENGTH = 1000;
 
