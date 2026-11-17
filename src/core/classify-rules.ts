@@ -202,6 +202,11 @@ const isCompanyByName = (m: FieldMeta): boolean =>
 // mailform6[0..2]・住所分割の mailform7 等。'mail' は欄ではなく容器を指す）と
 // 送信先指定の mailto（ena。利用者のアドレスを入れると誤配送の恐れ）は拾わ
 // ない。区切りを畳んで判定するため mail-form・mail_form も同じく除外する。
+// PBI-233: postal-derived names (mailingaddress / mailbox) read 'mail' as the
+// postal sense (a mailing address, a mail drop), not the user's address
+// column, so their stems join the flat denylist. The PBI-229 rescue targets
+// stay alive because none of them embeds these stems (mailaddress / mailconf
+// / item_mail_1 / email_confirm …).
 const isEmailByName = (m: FieldMeta): boolean =>
   m.tag === 'input' && (m.type === 'text' || m.type === 'tel' || m.type === 'email')
   && m.label.trim() === '' && m.nearby.trim() === ''
@@ -210,7 +215,12 @@ const isBareMailName = (name: string): boolean => {
   const key = norm(name.trim());
   if (!key.includes('mail')) return false;
   const flat = key.replace(/[\W_]+/g, '');
-  return !flat.includes('mailform') && !flat.includes('mailto');
+  return (
+    !flat.includes('mailform')
+    && !flat.includes('mailto')
+    && !flat.includes('mailing')
+    && !flat.includes('mailbox')
+  );
 };
 const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 const COUNTRY = /country/i;

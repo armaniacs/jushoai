@@ -98,6 +98,15 @@ describe('classifyField: email by bare name (PBI-229)', () => {
     expect(classifyField(makeMeta(p))?.category ?? null).not.toBe('email');
   });
 
+  // PBI-233 BDD: derived postal names keep the mail reading of the word, not
+  // the user's address column, so they must fall back to the traditional path.
+  it.each([
+    { name: 'mailingaddress' },
+    { name: 'mailbox' },
+  ])('never reads the postal-derived name %j as email', (p) => {
+    expect(classifyField(makeMeta(p))?.category ?? null).not.toBe('email');
+  });
+
   it('leaves the mailform tel 3-split to the tel refinement', () => {
     expect(classifyField(makeMeta({ name: 'mailform6[0]', type: 'tel' }))).toMatchObject({
       category: 'tel',
