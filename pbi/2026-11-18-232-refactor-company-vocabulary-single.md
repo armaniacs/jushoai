@@ -24,10 +24,10 @@ Scenario: 次の語彙追加が 1 箇所で完結する
   Then  新語が COMPANY_WORD だけで会社読み・jobTitle ガードの両方に反映される
 
 ## 受け入れ基準
-- [ ] `hasCompoundJobJoint` が `COMPANY_WORD.test(own) || /部署/.test(own)` の形になり、語彙の再記述が消える（現状と同値）
-- [ ] `officeContextExcluded(own)`（KANA_NOTE/BIRTH_CTX の除外判定）が切り出され、officeEligible / deptOfficeEligible / jobOfficeEligible の 3 述語から呼ばれる
-- [ ] 挙動不変であることを既存テスト全体で確認する（新規テストは同値性の pin として最小限）
-- [ ] `make check` が緑
+- [x] `hasCompoundJobJoint` が `COMPANY_WORD.test(own) || /部署/.test(own)` の形になり、語彙の再記述が消える（現状と同値）
+- [x] `officeContextExcluded(own)`（KANA_NOTE/BIRTH_CTX の除外判定）が切り出され、officeEligible / deptOfficeEligible / jobOfficeEligible の 3 述語から呼ばれる
+- [x] 挙動不変であることを既存テスト全体で確認する（新規テストは同値性の pin として最小限）
+- [x] `make check` が緑
 
 ## 実装手順
 - `hasCompoundJobJoint` を COMPANY_WORD 参照に置き換える
@@ -44,4 +44,10 @@ Scenario: 次の語彙追加が 1 箇所で完結する
 ## Definition of Done
 - [ ] 全 BDD シナリオが自動テストとして実装されパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録
+- 対象: `src/core/classify-rules.ts` のみ。`hasCompoundJobJoint` の社内正規表現 `/会社|法人|企業|団体|店舗|事業所|営業所|部署|社/` を `COMPANY_WORD.test(own) || /部署/.test(own)` に置換（代替語の集合が `COMPANY_WORD ∪ {部署}` と一致することを確認済みの等価変換）。`officeContextExcluded`（KANA_NOTE または BIRTH_CTX）を新設し、officeEligible（早期 return 形）・deptOfficeEligible・jobOfficeEligible の 3 述語から呼ぶ形に集約。WHY コメント（語彙の単一所有元・次回語彙追加時にガードが置き去りにならないこと）を COMPANY_WORD と hasCompoundJobJoint に追記
+- テスト: `tests/core/classify-rules.test.ts` の T3 ブロックに同値性 pin を 2 件追加（`法人名・役職名` / `企業名・役職名` → company、jobTitle にならない。既存 pin のなかった COMPANY_WORD 語の joint 形）。リファクタ前のコードで GREEN（現行挙動の pin）、リファクタ後も GREEN。本 PBI は挙動不変の等価リファクタのため RED 段階はなし
+- 検証: `npx vitest run tests/core/classify-rules.test.ts` 275 件 GREEN / `npx vitest run tests/core/` 834 件 GREEN / eval corpus（`npm run eval`、311 fixture・pin 表アサーション含む）GREEN で pin 行の変化なし / `make check` exit 0
+- 範囲外の残置: `officeLegendEligible` にも同型の `!KANA_NOTE && !BIRTH_CTX` 除外があるが、本 PBI の受け入れ基準が 3 述語を指定するため触っていない（後続 PBI 候補）

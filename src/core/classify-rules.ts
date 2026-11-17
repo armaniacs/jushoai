@@ -95,12 +95,20 @@ const DEPT_OFFICE = /(?:(?<!会社名・)(?<!法人名・)(?<!団体名・)(?<!�
 // separator variants such as 会社名/部署名) keeps the company reading. The
 // joint holds even if DISPATCH order ever changes, so the standalone 部署名
 // signal never fires there.
+// PBI-232: single owner of the company-word vocabulary. The joint guards
+// (hasCompoundDeptJoint / hasCompoundJobJoint) read this regex instead of
+// re-describing it, so the next vocabulary addition keeps every guard in sync
+// instead of leaving one behind.
 const COMPANY_WORD = /会社|法人|企業|団体|店舗|事業所|営業所|社/;
 const hasCompoundDeptJoint = (own: string): boolean =>
   /部署名/.test(own) && COMPANY_WORD.test(own);
 const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
+// PBI-232: single owner of the kana-note/birth-context exclusion shared by the
+// office gate predicates below.
+const officeContextExcluded = (own: string): boolean =>
+  KANA_NOTE.test(own) || BIRTH_CTX.test(own);
 const officeEligible = (own: string): boolean => {
-  if (KANA_NOTE.test(own) || BIRTH_CTX.test(own)) return false;
+  if (officeContextExcluded(own)) return false;
   if (COMPANY_OFFICE.test(own)) return true;
   return DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
 };
@@ -108,7 +116,7 @@ const officeEligible = (own: string): boolean => {
 // as officeEligible but without the company-word alternative, so a joint
 // never reads as the department even if DISPATCH order ever changes.
 const deptOfficeEligible = (own: string): boolean =>
-  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own)
+  !officeContextExcluded(own)
   && DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
 // F1: a Japanese 部署名 word outranks the English school token (sysmex
 // name=department + 所属部署名 label reads as the company department, not
@@ -124,10 +132,13 @@ const hasOwnDeptName = (own: string): boolean =>
 // the office entries. The title has no legend entry on purpose: the only
 // legend-only 役職 shape (tokyu-tenant job) stays unknown.
 const JOB_OFFICE = /役職/;
+// The company-word half reads COMPANY_WORD itself (single vocabulary owner), so
+// the next company-word addition keeps this job-title joint guard in sync;
+// 部署 is the department-word half kept alongside it.
 const hasCompoundJobJoint = (own: string): boolean =>
-  /役職/.test(own) && /会社|法人|企業|団体|店舗|事業所|営業所|部署|社/.test(own);
+  /役職/.test(own) && (COMPANY_WORD.test(own) || /部署/.test(own));
 const jobOfficeEligible = (own: string): boolean =>
-  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own) && JOB_OFFICE.test(own) && !hasCompoundJobJoint(own);
+  !officeContextExcluded(own) && JOB_OFFICE.test(own) && !hasCompoundJobJoint(own);
 // PBI-119 + レビュー指摘: legend 側の gate。旧 legend gate（officeEligible）は
 // 欄自身の office 語一致を要求したため、「ご記入ください + 共有見出し会社名」の
 // ような shared heading ケースが到達不能だった（own 語が一致すれば own entry
