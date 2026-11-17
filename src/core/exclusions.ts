@@ -1,7 +1,8 @@
 // User-managed list of URLs where JushoAI must not start. Entries are stored in
-// their canonical form (see normalizeExclusionEntry) and matched by prefix, so a
-// registered "https://docs.google.com/spreadsheets/" covers every sheet under it
-// while the sibling "https://docs.google.com/document/" stays in scope.
+// their canonical form (see normalizeExclusionEntry) and matched by URL
+// components (PBI-239), so a registered "https://docs.google.com/spreadsheets/"
+// covers every sheet under it while the sibling
+// "https://docs.google.com/document/" stays in scope.
 export const EXCLUDED_URLS_MAX = 100;
 export const EXCLUSION_ENTRY_MAX_LENGTH = 2048;
 
@@ -32,12 +33,54 @@ export function normalizeExclusionEntry(raw: string): ExclusionInput {
   return { ok: true, value: parsed.href };
 }
 
-// Matching ignores case on both sides: the scheme and host are canonicalized on
-// input, but a page can still link a path with different case than the entry.
+// Path comparison folds case (see isExcludedUrl) and stops at segment
+// boundaries: an entry whose path ends with "/" is a directory prefix, while a
+// bare path covers the registered page itself plus its subpaths, never its
+// siblings — /pay covers /pay and /pay/detail but not /payment.
+const coversPath = (entryPath: string, targetPath: string): boolean => {
+  const ep = entryPath.toLowerCase();
+  const tp = targetPath.toLowerCase();
+  if (ep.endsWith('/')) return tp.startsWith(ep);
+  return tp === ep || tp.startsWith(`${ep}/`);
+};
+
+const coversQuery = (entrySearch: string, targetSearch: string): boolean => {
+  if (entrySearch === '') return true;
+  const es = entrySearch.toLowerCase();
+  const ts = targetSearch.toLowerCase();
+  return ts === es || ts.startsWith(`${es}&`);
+};
+
+// Matching is component-based (PBI-239): origin equality, then the path and
+// query boundary rules below. Case is ignored on both sides: the scheme and
+// host are canonicalized on input, but a page can still link a path with
+// different case than the entry. A query-bearing entry is the exact
+// registration of one page (the quick-register prefix candidate never carries
+// a query), so it pins the path instead of covering a subtree. Fragments name
+// a position inside the page, not a different page, and never take part.
 export function isExcludedUrl(href: string, entries: readonly string[]): boolean {
   if (href === '' || entries.length === 0) return false;
-  const target = href.toLowerCase();
-  return entries.some((e) => e !== '' && target.startsWith(e.toLowerCase()));
+  let target: URL;
+  try {
+    target = new URL(href);
+  } catch {
+    return false;
+  }
+  return entries.some((e) => {
+    if (e === '') return false;
+    let entry: URL;
+    try {
+      entry = new URL(e);
+    } catch {
+      return false;
+    }
+    if (entry.origin !== target.origin) return false;
+    if (entry.search !== '') {
+      return entry.pathname.toLowerCase() === target.pathname.toLowerCase()
+        && coversQuery(entry.search, target.search);
+    }
+    return coversPath(entry.pathname, target.pathname);
+  });
 }
 
 const sameEntry = (a: string, b: string): boolean => a.toLowerCase() === b.toLowerCase();
@@ -60,9 +103,19 @@ export function removeExclusionEntry(entries: readonly string[], value: string):
   return entries.filter((e) => e !== value);
 }
 
+// Fragments never take part in matching, so a stored #hash is dead weight from
+// exact registrations; strip it at load time (PBI-239) and dedupe against the
+// fragment-less form.
+const withoutFragment = (href: string): string => {
+  const parsed = new URL(href);
+  parsed.hash = '';
+  return parsed.href;
+};
+
 // Reads the stored value defensively: anything that is not a list of valid
-// http(s) prefixes reads as an empty list, so a corrupted or hand-edited store
-// can never keep the extension from starting.
+// http(s) entries reads as an empty list, so a corrupted or hand-edited store
+// can never keep the extension from starting. Legacy entries stored before
+// PBI-239 (no trailing slash, mixed case, fragments) read under the same rule.
 export function parseExcludedUrls(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
   const out: string[] = [];
@@ -70,8 +123,9 @@ export function parseExcludedUrls(raw: unknown): string[] {
     if (typeof value !== 'string') continue;
     const normalized = normalizeExclusionEntry(value);
     if (!normalized.ok) continue;
-    if (out.some((e) => sameEntry(e, normalized.value))) continue;
-    out.push(normalized.value);
+    const canonical = withoutFragment(normalized.value);
+    if (out.some((e) => sameEntry(e, canonical))) continue;
+    out.push(canonical);
     if (out.length >= EXCLUDED_URLS_MAX) break;
   }
   return out;

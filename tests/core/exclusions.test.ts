@@ -71,6 +71,42 @@ describe('isExcludedUrl', () => {
   });
 });
 
+// PBI-239: matching is component-based (origin equality + path segment
+// boundary), not a raw string prefix.
+describe('isExcludedUrl: path boundary (PBI-239)', () => {
+  const exact = ['https://shared-host/pay'];
+
+  it('does not match sibling paths of an entry without a trailing slash', () => {
+    expect(isExcludedUrl('https://shared-host/payment', exact)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/pay-admin', exact)).toBe(false);
+  });
+
+  it('matches the registered page and its subpaths', () => {
+    expect(isExcludedUrl('https://shared-host/pay', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail?x=1', exact)).toBe(true);
+    expect(isExcludedUrl('https://other-host/pay', exact)).toBe(false);
+  });
+
+  it('treats the query as its own boundary and ignores the fragment', () => {
+    expect(isExcludedUrl('https://shared-host/pay?x=1', exact)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay#top', exact)).toBe(true);
+    const withQuery = ['https://shared-host/form?a=1'];
+    expect(isExcludedUrl('https://shared-host/form?a=1&b=2', withQuery)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/form?a=12', withQuery)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/form?b=2&a=1', withQuery)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/form/step?a=1', withQuery)).toBe(false);
+  });
+
+  it('keeps the trailing slash as the subtree boundary', () => {
+    const dir = ['https://shared-host/pay/'];
+    expect(isExcludedUrl('https://shared-host/pay/', dir)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail', dir)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay', dir)).toBe(false);
+    expect(isExcludedUrl('https://shared-host/payment', dir)).toBe(false);
+  });
+});
+
 describe('addExclusionEntry', () => {
   it('appends a normalized entry', () => {
     const result = addExclusionEntry([], ' https://docs.google.com/spreadsheets/ ');
@@ -128,5 +164,19 @@ describe('parseExcludedUrls', () => {
   it('caps the list at the maximum', () => {
     const raw = Array.from({ length: EXCLUDED_URLS_MAX + 5 }, (_, i) => `https://example.com/${i}`);
     expect(parseExcludedUrls(raw)).toHaveLength(EXCLUDED_URLS_MAX);
+  });
+
+  it('drops the fragment from stored entries so legacy registrations read under the current rule (PBI-239)', () => {
+    expect(parseExcludedUrls(['https://shared-host/form?a=1#top'])).toEqual(['https://shared-host/form?a=1']);
+    expect(parseExcludedUrls(['https://x/form?a=1#top', 'https://x/form?a=1'])).toEqual(['https://x/form?a=1']);
+  });
+
+  it('keeps legacy shapes excluding their pages (v0.1.29-0.1.37 compatibility)', () => {
+    const stored = parseExcludedUrls(['https://Shared-Host/pay', 'https://docs.google.com']);
+    expect(stored).toEqual(['https://shared-host/pay', 'https://docs.google.com/']);
+    expect(isExcludedUrl('https://shared-host/pay', stored)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/pay/detail', stored)).toBe(true);
+    expect(isExcludedUrl('https://shared-host/payment', stored)).toBe(false);
+    expect(isExcludedUrl('https://docs.google.com/spreadsheets/x', stored)).toBe(true);
   });
 });
