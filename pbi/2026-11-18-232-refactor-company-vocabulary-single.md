@@ -42,9 +42,14 @@ Scenario: 次の語彙追加が 1 箇所で完結する
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（シナリオ 1 は同値性 pin 2 件 + corpus 全体、シナリオ 2 は語彙の単一所有元化そのものが担保。等価リファクタのため RED 段階なし）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 2 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 2 件）
+
+- `officeContextExcluded` のコメントが "shared by the office gate predicates below" と述べるが、第 4 の office ゲート述語 `officeLegendEligible` に同型のインライン除外が残る（PBI スコープどおりの正しい残置）。文言の言い換えまたは officeLegendEligible 側への 1 行注記があれば読者の混乱が消える（本 PBI では対応しない）
+- `officeLegendEligible` の同型除外の集約は後続 PBI 候補（実装記録にも記載済み）
 
 ## 実装記録
 - 対象: `src/core/classify-rules.ts` のみ。`hasCompoundJobJoint` の社内正規表現 `/会社|法人|企業|団体|店舗|事業所|営業所|部署|社/` を `COMPANY_WORD.test(own) || /部署/.test(own)` に置換（代替語の集合が `COMPANY_WORD ∪ {部署}` と一致することを確認済みの等価変換）。`officeContextExcluded`（KANA_NOTE または BIRTH_CTX）を新設し、officeEligible（早期 return 形）・deptOfficeEligible・jobOfficeEligible の 3 述語から呼ぶ形に集約。WHY コメント（語彙の単一所有元・次回語彙追加時にガードが置き去りにならないこと）を COMPANY_WORD と hasCompoundJobJoint に追記
