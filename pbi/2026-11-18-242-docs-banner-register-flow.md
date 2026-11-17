@@ -40,9 +40,15 @@ Scenario: prefix の自動範囲が開示される
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [x] 全 BDD シナリオが検証手順でパスする
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが検証手順でパスする（make site 緑 + 実装照合表（AUTO_HIDE_MS・REGISTER_SUCCESS_HINT・prefix 範囲）をレポートに貼り付け）
+- [x] コードレビュー完了（初回レビュー Approved・Important 1 件（既存行が PBI-239 前の一致規則のまま）→ 修正（87f1ef5）→ 再レビュー Approved。Minor 2 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（初回 Approved・Important 1 件→修正後 再レビュー Approved・残 Minor 2 件）
+
+- 初回 Important（解消済み）: 同節の既存行が「URL が始まるか」という PBI-239 前の接頭一致の説明のままだった。修正コミット（87f1ef5）で ja/en の節冒頭文と規則の箇条書き 4 行を現行規則（origin 同一 + パスセグメント境界。例は PBI-239 の BDD fixture と同一の pay/payment）に置き換え。PBI-242 の追記箇条書きは無変更
+- Minor: query 付きエントリは 1 ページ限定登録（配下は一致しない）のため「同じかその配下」の表記が edge case で過大。括弧注記で厳密にできる
+- Minor: en の "that page and the pages under it" は末尾スラッシュ（ディレクトリ形式）のエントリに対してやや緩い表現。例 bullet が補足しているため実害なし
 
 ## 実装記録
 
