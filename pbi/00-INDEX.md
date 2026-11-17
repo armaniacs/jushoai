@@ -9,7 +9,7 @@
 - `2026-11-18-234-fix-register-autoclose-race.md`（順位 4。RICE 54。実装済み（6513446）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録）。登録処理中の自動クローズ競合。Red Team+UI統合）
 - `2026-11-18-235-docs-warn-pattern-note.md`（順位 5。RICE 50。ガイド注記表にwarn-pattern行。Documentation）
 - `2026-11-18-236-chore-lockfile-mirror-doc.md`（順位 6。RICE 45。lockfileミラー前提の文書化。Supply Chain）
-- `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41。レビュー唯一のHigh・234後に前倒し推奨。非表示・クイック登録ダイアログのa11y。Accessibility）
+- `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41・レビュー唯一のHigh。実装済み（bf29536〜67106f2）・タスクレビュー Approved（spec ✅・実装者の 2 判断を承認、Minor 3 件は PBI に記録）。非表示・クイック登録ダイアログのa11y。Accessibility）
 - `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。dismiss-dialogをテーマトークンへ。Maintainability）
 - `2026-11-18-239-fix-exclusion-path-boundary.md`（順位 9。RICE 36。isExcludedUrlのパス境界。Red Team）
 - `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
