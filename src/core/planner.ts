@@ -136,10 +136,15 @@ const hasCatastrophicShape = (pattern: string): boolean => {
 
 // Length caps on the same fall-open: they bound the backtracking search space
 // for what the shape lint passes through — a long pattern that is page noise,
-// and a long value against a moderately ambiguous pattern whose unbounded run
-// stays under the threshold (the blowup there is polynomial in the value
-// length). The corpus's longest real pattern is ~70 chars and profile values
-// are short, so the bounds never fire on ordinary forms.
+// and a long value against a pattern whose unbounded run stays under the
+// threshold. That residual blowup is combinatorial, not polynomial: matching n
+// value characters against k unbounded spans walks C(n+k-1, k-1) partitions,
+// so at the lint threshold k=6 with n=1000 that is C(1005,5) ≈ 8×10^12 steps —
+// a freeze, not a delay. The caps only bound how far it can go; shrinking the
+// value cap when the counted run is high would be the real mitigation (a
+// possible follow-up, thresholds unchanged here). The corpus's longest real
+// pattern is ~70 chars and profile values are short, so the bounds never fire
+// on ordinary forms.
 const MAX_PATTERN_ATTRIBUTE_LENGTH = 200;
 const MAX_PATTERN_CHECK_VALUE_LENGTH = 1000;
 
