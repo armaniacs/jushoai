@@ -526,4 +526,23 @@ describe('showDismissDialog focus restore (PBI-237)', () => {
     expect(document.body.contains(dialog.host)).toBe(false);
     expect(document.activeElement).toBe(target);
   });
+
+  it('閉じた時点でフォーカスが既にページ側にあれば合意位置へ奪い返さない', () => {
+    vi.useFakeTimers();
+    const target = makeRestoreTarget();
+    const elsewhere = document.createElement('button');
+    elsewhere.textContent = '入力中の欄';
+    document.body.append(elsewhere);
+    const { dialog } = showWithOpenRoot({
+      onClose: vi.fn(),
+      onUndo: vi.fn(),
+      restoreFocus: () => target,
+    });
+    // The user moved focus back to the page after opening the dialog; the
+    // close must not yank it to the agreed target mid-typing.
+    elsewhere.focus();
+    vi.advanceTimersByTime(15000);
+    expect(document.body.contains(dialog.host)).toBe(false);
+    expect(document.activeElement).toBe(elsewhere);
+  });
 });

@@ -109,8 +109,14 @@ export function showDismissDialog(actions: DismissDialogActions): DismissDialogH
       autoHideTimer = undefined;
     }
     detachEscapeClose();
+    // Shadow focus retargets to the host in document.activeElement.
+    const focusWasInside = document.activeElement === host;
     host.remove();
-    restoreFocus();
+    // Restore only when this close actually strands focus on body (the body
+    // fall this dialog exists to fix). If the user already moved focus
+    // elsewhere on the page, yanking it to the agreed target would interrupt
+    // them mid-keystroke.
+    if (focusWasInside || document.activeElement === document.body) restoreFocus();
   };
   only.addEventListener('click', () => { teardown(); actions.onClose(); });
   undo.addEventListener('click', () => { teardown(); actions.onUndo(); });
