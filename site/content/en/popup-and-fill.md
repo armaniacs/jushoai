@@ -58,6 +58,10 @@ On pages where filling forms is not the task, such as spreadsheets and mail, the
 2. Type a URL and click `追加` (add).
 3. Click `保存` (save).
 
+- You can also register without opening the settings page: click the `X` (hide this button) at the top right of the `JushoAI で入力` (fill with JushoAI) button. The button hides (until reload) and a dialog appears; choose `このページだけ` (this page only) or `この配下全体` (everything under it), then click `起動しないURLに登録する` (register it as a URL where it does not start)
+- The dialog closes by itself after 15 seconds. It stays while the pointer is over it or while a button inside it has focus. To bring the hidden button back right away, click `元に戻す` (undo)
+- When the registration succeeds, the dialog shows the hint `解除は設定ページの『起動しないURL』から。` (to remove it later, use the settings page) and a `登録を取り消す` (undo the registration) button. Clicking it removes the entry and brings the hidden button back
+- `この配下全体` (everything under it) registers the origin plus the first path segment: registering from `https://example.com/foo/bar` registers `https://example.com/foo/`, and JushoAI stays out of the pages under it. On a page directly under the origin, `https://example.com/` is registered and the whole site is covered
 - Example: registering `https://docs.google.com/spreadsheets/` keeps JushoAI out of every spreadsheet under it. `https://docs.google.com/document/` on the same host is unaffected
 - A URL matches when it starts with the registered text (case-insensitive)
 - Saving takes effect on already open pages: the button disappears there
