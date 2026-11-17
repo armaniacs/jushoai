@@ -43,9 +43,16 @@ Scenario: 非リトライ失敗で打ち切る
 0.1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [x] 全 BDD シナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] 全 BDD シナリオが自動テストとして実装されパスする（シナリオ 1 = stalled 3 チャンクで wire 送信 2 件・60 秒内・3 チャンク目不発、シナリオ 2 = auth/rejected each で 1 送信。10 RED → GREEN）
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 4 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 4 件）
+
+- stalled テストのコメントが「chunk 2 は 15 秒の残余で切られる」と主張するが、wireTimes は送信開始時刻のみを記録し、clamp 有無で送信数・reason が同一のため断言は両立する。run 終了時刻か chunk 2 完了時刻の断言を足すと自己完結する
+- seam 側のクロックテストが「run スコープの startedAt 再利用」を pin していない（チャンクごとの Date.now() 再取得でも通る）。`new Set(startedOpts).size === 1` で pin 可能
+- 実装記録の `failureReason = 'network'` は正しくは `??=`（first-failure-wins 保持。コードの方が記述より優れていたため本レビュー記録で訂正済み）
+- pipeline が transfer-contract の TRANSFER_TOTAL_TIMEOUT_MS を import する越層定数（adapter 注入 budget ではなく契約値が break 閾値）。本番構成では同一値で、adapter budget を pipeline へ渡すより疎結合。将来 totalTimeoutMs > 60s を注入するテストは pipeline が早く打つ（開示済みのトレードオフ）
 
 ## 実装記録
 
@@ -55,7 +62,7 @@ Scenario: 非リトライ失敗で打ち切る
   - `src/core/classifier.ts` — `FieldClassifier.attempt` / `CappedClassifier.attempt` の `opts` に省略可能な `startedAt?: number` を追加（PBI-174 の `signal` と同じ省略可能引数の前例。既存 adapter は無変更のまま影響なし）。
   - `src/llm/classify-transport.ts` — `ClassifySendOptions.startedAt` を追加し、`remaining = totalTimeoutMs - (Date.now() - startedAt)` を run 開始時刻基準で計算。`startedAt` なしの単発送信は従来どおり全 budget を持つ。
   - `src/llm/background-gateway.ts` — `BackgroundClassifier.attempt` が `opts.startedAt` を `send` へ流す。
-  - `src/classify-pipeline/pipeline.ts` — run 先頭の `startedAt`（既存）を `seam.attempt` の第 3 引数で渡し、さらにループ冒頭で `Date.now() - startedAt >= TRANSFER_TOTAL_TIMEOUT_MS` なら `failureReason = 'network'` で break（`startedAt` を無視する adapter、例: http-classifiers の経路でも予算切れ後のチャンク起動を止める）。
+  - `src/classify-pipeline/pipeline.ts` — run 先頭の `startedAt`（既存）を `seam.attempt` の第 3 引数で渡し、さらにループ冒頭で `Date.now() - startedAt >= TRANSFER_TOTAL_TIMEOUT_MS` なら `failureReason ??= 'network'` で break（first-failure-wins を保持。`startedAt` を無視する adapter、例: http-classifiers の経路でも予算切れ後のチャンク起動を止める）。
 - **非リトライ理由の打ち切り**（受け入れ基準 2）: `NON_RETRYABLE_FAILURES = {auth, rejected}` でチャンク結果の理由が一致したら break。保守的な語彙集合の選択（network・bad-response・legacy null・unavailable は継続=リトライ可能とみなす）は `pipeline.ts` の定数コメントに記載。`rejected` は http-classifiers の 400/422 拒否、`auth` は 401/403 に対応。
 - **契約・コメントの整合**（受け入れ基準 3・4）:
   - `src/llm/transfer-contract.ts` — 不変条件コメントに「remaining は run 開始時刻基準（PBI-240）」を明記。

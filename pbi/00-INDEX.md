@@ -12,7 +12,7 @@
 - `2026-11-18-237-fix-dialog-a11y.md`（順位 7。RICE 41・レビュー唯一のHigh。実装済み（bf29536〜67106f2）・タスクレビュー Approved（spec ✅・実装者の 2 判断を承認、Minor 3 件は PBI に記録）。非表示・クイック登録ダイアログのa11y。Accessibility）
 - `2026-11-18-238-fix-dismiss-dialog-dark-token.md`（順位 8。RICE 38。実装済み（a926a29）・タスクレビュー Approved（spec ✅、Minor 3 件は PBI に記録・タスク ID 参照の除去は最終レビュー修正波へ）。dismiss-dialogをテーマトークンへ。Maintainability）
 - `2026-11-18-239-fix-exclusion-path-boundary.md`（順位 9。RICE 36。実装済み（24d704a）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。isExcludedUrlのパス境界。Red Team）
-- `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
+- `2026-11-18-240-fix-chunk-total-timeout.md`（順位 10。RICE 36。実装済み（15f4799）・タスクレビュー Approved（spec ✅、Minor 4 件は PBI に記録）。チャンク実行のrun合計タイムアウト予算復元。Blue Team+Tuning統合）
 - `2026-11-18-241-fix-exclusion-writer-race.md`（順位 11。RICE 34。除外リストの複数ライター競合。Red Team+DataIntegrity統合）
 - `2026-11-18-242-docs-banner-register-flow.md`（順位 12。RICE 20。バナーX→クイック登録フローの文書化。Docs+Compliance統合）
 - `2026-11-18-243-fix-pattern-redos-fallopen.md`（順位 13。RICE 16。pattern属性ReDoSのfall-open化。Blue Team）
