@@ -52,5 +52,10 @@ Scenario: busy 中にフォーカスが落ちない
 
 ## Definition of Done
 - [x] 全 BDD シナリオが自動テストとして実装されパスする（busy 中の自動クローズ停止・busy 解除後の再開・フォーカス保持を tests/ui/dismiss-dialog.test.ts で固定）
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 2 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 2 件）
+
+- `setRegisterBusy(false)` が `aria-disabled="false"` を残す（ARIA 既定状態のため害なし）。属性 remove の方がノイズが少なく、PBI-237 が同じファイルを触る際に一緒に整理可能
+- 失敗後のダイアログ総寿命が最大 30 秒（busy 15 秒 + 再武装 15 秒）。BDD 整合の開示済み設計判断で、通常より長い点は将来の UX 調整候補
