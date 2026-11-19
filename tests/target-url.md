@@ -303,3 +303,4 @@
 - https://www1.newotani.co.jp/tokyo/banquet/form01/utf_01_form.asp → newotani-banquet-contact.html
 - https://regist02.smp.ne.jp/regist/is?SMPFORM=oar-nbqhp-8dee652365a4af80245a073bafe5e9f5 → palacehotel-contact.html
 - https://www.ritzcarlton.com/en/hotels-and-resorts/meetings-and-celebrations/weddings/rfp/?marshaCode=tyorz → ritz-tokyo-rfp-contact.html
+- https://sodan.yaoyorozuya.com/shichusuimei → shichusuimei.html

@@ -9275,6 +9275,19 @@ const LEDGER = {
       '(no name/id) (button): unaddressable (exclude)',
     ],
   },
+  'shichusuimei.html': {
+    // The real controls carry no name/id, so planFor's `name || htmlId` keys
+    // cannot express them: the assertions live in the bespoke samples case and
+    // this fixture is intentionally absent from inScopeFixtures.
+    expected: {},
+    excluded: [
+      'scanned 4 fields are asserted label-keyed in the bespoke case (no name/id)',
+      '出生時刻 (time): not scanned (scan covers text/email/tel/search/date + select; exclude)',
+      '出生地の経度 (number): not scanned (scan covers text/email/tel/search/date + select; exclude)',
+      '備考 (textarea): not scanned (scan covers text/email/tel/search/date + select; exclude)',
+      '診断する (button): unaddressable (exclude)',
+    ],
+  },
   // <corpus-ledger: make addurl appends its template entry above this line>
 } satisfies Record<string, CorpusExtras>;
 
