@@ -85,7 +85,7 @@ describe('scaffold-fixture', () => {
     expect(controls).toHaveLength(1);
     expect(controls[0]).toMatchObject({ name: 'b', type: 'date', label: '生年月日' });
     // The extracted control mirrors the live FieldMeta key set: no min/max, no value.
-    expect(Object.keys(controls[0]).filter((k) => ['min', 'max', 'value'].includes(k))).toEqual([]);
+    expect(Object.keys(controls[0] ?? {}).filter((k) => ['min', 'max', 'value'].includes(k))).toEqual([]);
     expect(skipped).toEqual([]);
   });
 
