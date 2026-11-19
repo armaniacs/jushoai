@@ -69,6 +69,10 @@ npx vitest run -t "formats kana by kind"      # テスト名で絞り込み
 - **Firefox は同じコードを `chrome.*` のまま使う。** ビルドは `wxt build -b firefox --mv3`（`dist/firefox-mv3`）。Firefox には Prompt API が無いため、`src/ai/browser-target.ts` の `selectableProviders` が `built-in` を外し、`normalizeAiSettings` は保存済みの `built-in` を `none` に落とす（ビルド時の `import.meta.env.FIREFOX` で分岐。vitest では常に非 Firefox）。背景は event page で、メモリ上の状態（`authFailed` / `compat` / 鍵キャッシュ）は再起動で消える前提。manifest は `data_collection_permissions`（必須 `none`、任意 `websiteContent`）を宣言する。manifest の検査は `tests/build/`（`make test-build`）、実ブラウザの E2E は `tests/e2e/`（`make e2e-firefox` / `make e2e-chrome`）で、どちらも `make test` には含めない。完全な検証は `make check-all`（check + site + 両ブラウザの E2E）に集約されている。E2E は Selenium + 各ブラウザの driver で、`HEADLESS=1` を受け、Firefox 側は `FIREFOX_BIN` も受ける。Chrome の拡張 ID は BiDi の導入結果から解決し、書き写さない。macOS ではターミナルに `~/Library/Application Support/Firefox` へのフルディスクアクセスが要る。
 - **ドキュメントサイトは `site/` の自作ビルド。** `site/lib/` の純粋関数（front matter、Markdown 変換、日英の対応検査、レイアウト、ランディング、ビルド、検査）を `node site/build.ts` が実行する（Node の組み込みの型除去を使うため、消去可能な構文だけを使い、相対 import に `.ts` を付ける）。日英のキーと H2 の数が違うとビルドが失敗する。ガイドの事実は README と設計書、コードにあるものだけを使う。型検査は `site/tsconfig.json` で別に行い、ルートの `tsconfig.json` からは外している。
 
+## コードコメント
+
+コードコメントにタスク ID（PBI-XXX 等）を書かない。理由の記述に留める。
+
 ## テスト方針
 
 - 分類・整形・計画のずれは、再現する fixture を `tests/core/` に先に追加して失敗させてから直す。fixture は `tests/helpers.ts` の `makeMeta` で作る。

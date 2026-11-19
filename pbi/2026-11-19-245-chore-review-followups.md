@@ -42,11 +42,11 @@ checking-team ラウンド（231〜244）の最終レビューで follow-up 判�
 
 ## 受け入れ基準
 
-- [ ] (a) officeLegendEligible が officeContextExcluded を参照し、classify-rules.ts に KANA_NOTE/BIRTH_CTX のインライン組合せが 3 述語と同じ形で残っていない
-- [ ] (b) 等価 fixture 3 面が tests/core/exclusions.test.ts に pin されている（期待値は実装と照合済み）
-- [ ] (c) overlay.ts にタスク ID 参照がなく、AGENTS.md に運用 1 行がある
-- [ ] (d) startedAt 再利用の pin が tests/llm/classify-pipeline.test.ts に追加されている
-- [ ] `make check` が緑。`npm run eval` の pin 311 行が全行不変
+- [x] (a) officeLegendEligible が officeContextExcluded を参照し、classify-rules.ts に KANA_NOTE/BIRTH_CTX のインライン組合せが 3 述語と同じ形で残っていない
+- [x] (b) 等価 fixture 3 面が tests/core/exclusions.test.ts に pin されている（期待値は実装と照合済み）
+- [x] (c) overlay.ts にタスク ID 参照がなく、AGENTS.md に運用 1 行がある
+- [x] (d) startedAt 再利用の pin が tests/llm/classify-pipeline.test.ts に追加されている
+- [x] `make check` が緑。`npm run eval` の pin 311 行が全行不変
 
 ## テスト戦略
 
@@ -57,6 +57,21 @@ checking-team ラウンド（231〜244）の最終レビューで follow-up 判�
 0.05人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが検証手順（make check・eval pin 不変・実装照合）でパスする
+- [x] 全 BDD シナリオが検証手順（make check・eval pin 不変・実装照合）でパスする
 - [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（本 PBI に実装記録）
+- [x] ドキュメント更新済み（本 PBI に実装記録）
+
+## 実装記録
+
+実装 (2026-11-19, work/pbi-245-review-followups):
+
+- **(a) officeLegendEligible の集約**（受け入れ基準 1）: `src/core/classify-rules.ts` — `!KANA_NOTE.test(own) && !BIRTH_CTX.test(own)` を `!officeContextExcluded(own)` に置き換える等価リファクタ。他の 3 述語（officeEligible / deptOfficeEligible / jobOfficeEligible）と同じ形になり、KANA_NOTE×BIRTH_CTX のインライン組合せは `officeContextExcluded` の実体だけになった。
+- **(b) 除外 URL の等価 fixture 3 面**（受け入れ基準 2）: `tests/core/exclusions.test.ts` に `isExcludedUrl: component equivalence` describe を追加（default port 同一視・userinfo 同一視・bare-origin target）。期待値は実装照合で確定（node で `new URL` の origin 正規化と `coversPath` の `/` 接頭辞挙動を確認）し、実装との差はなかった。
+- **(c) タスク ID コメントの残置除去**（受け入れ基準 3）: `src/ui/overlay.ts` — `/* PBI-209: ... */` 3 件からタスク ID 参照を除いて WHY だけを残し、併せて同じコメント内の「pre-PBI hexes」を「previous hexes」に言い換えた。`AGENTS.md` に `## コードコメント` 節として「コードコメントにタスク ID（PBI-XXX 等）を書かない。理由の記述に留める。」を追加。
+- **(d) チャンク予算の pin 補強**（受け入れ基準 4）: `tests/llm/classify-pipeline.test.ts` の seam クロックテストに「同一 run の全 `seam.attempt` に渡る `startedAt` が同一（`new Set(startedOpts).size === 1`）」の断言を追加。実装（`src/classify-pipeline/pipeline.ts`）は run 冒頭で 1 回だけ `Date.now()` を取り、全チャンクに同一値を渡すため既存挙動の pin。
+
+テスト:
+
+- (a)(c) は挙動不変のため新規テストなし（既存回帰網で確認）。(b)(d) は pin 追加のみで RED 段階なし。対象 2 ファイルは `npx vitest run` で 68 件パス。
+- `make check` が緑（exit 0。web-ext lint の既存 manifest 警告 2 件のみ）。
+- `npm run eval` の pin 311 行を実装前後で diff し、全行不変を確認。

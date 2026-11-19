@@ -17,10 +17,10 @@ export function createOverlayHost(): { host: HTMLElement; root: ShadowRoot } {
 // duplicate the panel/button rules into their shadow roots.
 export const SHADOW_TOKENS = `
   :host {
-    /* PBI-209: theme tokens declared inside the shadow root. The host carries
+    /* Theme tokens declared inside the shadow root. The host carries
        all: initial !important, so page-side :root variables never reach this
        tree; these tokens are the only theme source. Light defaults keep the
-       pre-PBI hexes (light OS appearance is unchanged) and the dark override
+       previous hexes (light OS appearance is unchanged) and the dark override
        follows below. Tokens without a dark entry (--jushoai-primary,
        --jushoai-ai-*) keep their light value: white on them already clears
        WCAG AA in both themes. */
@@ -42,7 +42,7 @@ export const SHADOW_TOKENS = `
   }
   @media (prefers-color-scheme: dark) {
     :host {
-      /* PBI-209: dark palette, auto-follow only (no manual switch). Text
+      /* Dark palette, auto-follow only (no manual switch). Text
          tokens clear WCAG AA (4.5:1) against the dark panel #212530
          (luminance 0.019): panel-fg #e8eaf0 12.7:1, muted #a3abbd 6.7:1,
          danger #ff8a80 6.7:1, warn #ffb74d 8.8:1. */
@@ -76,7 +76,7 @@ export const OVERLAY_CSS = `${SHADOW_TOKENS}
   button { font: inherit; padding: 6px 14px; border-radius: 6px; border: 1px solid var(--jushoai-border);
     background: var(--jushoai-button-bg); cursor: pointer; }
   button.primary { background: var(--jushoai-primary); border-color: var(--jushoai-primary); color: var(--jushoai-primary-fg); }
-  /* PBI-209: the dark color-scheme override lives in its own media block at
+  /* The dark color-scheme override lives in its own media block at
      the end of OVERLAY_CSS, after the .panel rule above. Equal specificity
      (0,1,0), same origin: the later rule wins, so on dark OS this lands after
      color-scheme: light and native selects/inputs/checkboxes follow the dark
