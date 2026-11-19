@@ -4,6 +4,21 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
+## [Unreleased]
+
+### Added
+
+- fixture 雛形の生成が type=date の欄を扱えるようにする（scan-fields の走査対象型との一致をテストで固定する）
+
+### Changed
+
+- fixture 雛形の書き込みに上書きガードを付ける（配線済みの同名 fixture は skip、異内容の既存ファイルへの書き込みは fail。addurl と一括 sync の共通動作）
+- 開発・テストの依存を最新に追従させる（web-ext 経由の node-forge は 1.4.3 への更新で脆弱性を解消。実行バンドルには含まれない）
+
+### Fixed
+
+- label が空でも name・id・placeholder に誕生日語がある生年月日 1 欄型を判定できるようにする（label ビューだけに依存していた判定を広げる）
+
 ## [0.1.38] - 2026-11-18
 
 ### Added
