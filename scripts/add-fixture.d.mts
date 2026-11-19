@@ -39,3 +39,18 @@ export interface Wiring {
 }
 
 export function buildWiring(html: string, sourceLabel: string, file: string): Wiring;
+
+// Overwrite guard shared by the addurl CLI and the bulk sync: 'skip' when the
+// name is already wired, 'fail' when a different fixture file is on disk,
+// 'write' otherwise (existingFixture is null when the file is absent).
+export interface FixtureWriteDecision {
+  action: 'write' | 'skip' | 'fail';
+  message?: string;
+}
+
+export function fixtureWriteDecision(options: {
+  wiringUnchanged: boolean;
+  existingFixture: string | null;
+  fixture: string;
+  file: string;
+}): FixtureWriteDecision;

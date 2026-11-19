@@ -3,8 +3,8 @@
 // corpus ledger entry (tests/corpus.ts) and the test case, and write the
 // `→ fixture` mapping back to the registry.
 // Static HTML only; expectations stay '<expected>' placeholders for humans.
-import { readFileSync, writeFileSync } from 'node:fs';
-import { buildWiring, fixtureNameFromUrl, isFixtureWired } from './add-fixture.mjs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { buildWiring, fixtureNameFromUrl, fixtureWriteDecision, isFixtureWired } from './add-fixture.mjs';
 import { FETCH_TIMEOUT_MS, fetchPage } from './shared-fetch.mjs';
 
 // Re-exported so existing importers keep working; the implementation lives in
@@ -159,7 +159,27 @@ if (process.argv[1]?.endsWith('scripts/sync-target-urls.mjs')) {
       console.error(`wiring failed: ${url}: the corpus ledger anchor in tests/corpus.ts is missing; fixture not written`);
       continue;
     }
-    writeFileSync(new URL(`../samples/${name}`, import.meta.url), wiring.fixture);
+    // Same overwrite guard as the addurl CLI: an already-wired name never gets
+    // its fixture rewritten, and a new wiring never clobbers a different file
+    // already on disk (the registry line is left bare for the operator).
+    const fixturePath = new URL(`../samples/${name}`, import.meta.url);
+    const existingFixture = existsSync(fixturePath) ? readFileSync(fixturePath, 'utf8') : null;
+    const decision = fixtureWriteDecision({
+      wiringUnchanged: applied.ledger === ledgerSource && applied.test === testSource,
+      existingFixture,
+      fixture: wiring.fixture,
+      file: name,
+    });
+    if (decision.action === 'skip') {
+      console.log(`${url}: ${decision.message}`);
+      continue;
+    }
+    if (decision.action === 'fail') {
+      failedUrls.push(url);
+      console.error(`${url}: ${decision.message}`);
+      continue;
+    }
+    writeFileSync(fixturePath, wiring.fixture);
     testSource = applied.test;
     ledgerSource = applied.ledger;
     updated = stampRegistry(updated, url, name);

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   fixtureNameFromUrl, LEDGER_ANCHOR,
   renderLedgerEntry, insertAboveAnchor, insertLedgerEntry, insertFixtureEntry, isFixtureWired, buildWiring,
+  fixtureWriteDecision,
 } from '../../scripts/add-fixture.mjs';
 
 // Stand-ins for the two files the tool wires: the corpus ledger module
@@ -77,6 +78,24 @@ describe('add-fixture', () => {
     expect(insertFixtureEntry(legacy, 'c.html')).toBe(legacy);
     // A missing array declaration fails instead of silently no-oping.
     expect(insertFixtureEntry('const x = 1;\n', 'c.html')).toBeNull();
+  });
+
+  it('guards the fixture write: skip when wired, fail on a different file, else write', () => {
+    const fixture = '<!-- Minimal reproduction -->\n<form></form>\n';
+    // A missing file is always writable (first wiring or a wired name whose
+    // file was lost).
+    expect(fixtureWriteDecision({ wiringUnchanged: true, existingFixture: null, fixture, file: 'c.html' })).toEqual({ action: 'write' });
+    // Already wired (dup guards left both sources unchanged): the fixture is
+    // never rewritten, so a re-run or a name collision cannot replace a
+    // trimmed fixture.
+    expect(fixtureWriteDecision({ wiringUnchanged: true, existingFixture: fixture, fixture, file: 'c.html' }).action).toBe('skip');
+    expect(fixtureWriteDecision({ wiringUnchanged: true, existingFixture: '<!-- trimmed by hand -->', fixture, file: 'c.html' }).action).toBe('skip');
+    // New wiring onto a different existing file fails instead of clobbering.
+    const refused = fixtureWriteDecision({ wiringUnchanged: false, existingFixture: '<!-- other page -->', fixture, file: 'c.html' });
+    expect(refused.action).toBe('fail');
+    expect(refused.message).toContain('refusing to overwrite samples/c.html');
+    // New wiring onto an identical file (harmless re-scaffold) writes.
+    expect(fixtureWriteDecision({ wiringUnchanged: false, existingFixture: fixture, fixture, file: 'c.html' }).action).toBe('write');
   });
 
   it('wires the fixture into the ledger and the inScopeFixtures array, and fails without the ledger anchor', () => {
