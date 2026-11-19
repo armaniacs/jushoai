@@ -429,6 +429,9 @@ describe('classifyField: single birthday on name/id/placeholder views (why-why 2
     { htmlId: 'birthday', placeholder: '2002/04/02' },
     // 日本語 name と例示 placeholder の併存形。
     { name: '生年月日', placeholder: '例）1990年5月7日' },
+    // レビュー指摘追補: placeholder 単独ビュー（name・id・label に誕生日語なし）も
+    // anchored 対象。placeholder だけが判定材料の欄が birthday に落ちない pin。
+    { placeholder: '生年月日' },
     // date 欄でも name/id 単独の anchored 誕生日語は birthday（ゲート内の判定も広げる）。
     { type: 'date', name: 'birthday', htmlId: 'birthday' },
   ] as Parameters<typeof makeMeta>[0][])('classifies %j as the single birthday', (p) => {

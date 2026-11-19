@@ -80,10 +80,12 @@ describe('scaffold-fixture', () => {
     const { TEXT_TYPES } = await import('../../src/dom/scan-fields');
     expect([...IN_SCOPE_TYPES].sort()).toEqual([...TEXT_TYPES].sort());
     const { controls, skipped } = extractControls(html(
-      '<label for="b">生年月日</label><input id="b" name="b" type="date" min="1900-01-01">',
+      '<label for="b">生年月日</label><input id="b" name="b" type="date" min="1900-01-01" max="2030-12-31">',
     ));
     expect(controls).toHaveLength(1);
     expect(controls[0]).toMatchObject({ name: 'b', type: 'date', label: '生年月日' });
+    // The extracted control mirrors the live FieldMeta key set: no min/max, no value.
+    expect(Object.keys(controls[0]).filter((k) => ['min', 'max', 'value'].includes(k))).toEqual([]);
     expect(skipped).toEqual([]);
   });
 
