@@ -118,6 +118,24 @@ describe('isExcludedUrl: path boundary (PBI-239)', () => {
   });
 });
 
+// Matching compares URL components, so three shapes a string-prefix matcher
+// would miss still name the same registered site: new URL drops the default
+// port and the userinfo from origin, and a bare-origin entry's path "/" is a
+// directory prefix of every path.
+describe('isExcludedUrl: component equivalence', () => {
+  it('matches the default port against an explicit one', () => {
+    expect(isExcludedUrl('https://x.com:443/pay', ['https://x.com/pay'])).toBe(true);
+  });
+
+  it('matches regardless of userinfo, which the origin never carries', () => {
+    expect(isExcludedUrl('https://x.com/pay', ['https://user:pass@x.com/pay'])).toBe(true);
+  });
+
+  it('treats a bare-origin entry as covering the whole site', () => {
+    expect(isExcludedUrl('https://x.com/any/path', ['https://x.com'])).toBe(true);
+  });
+});
+
 describe('addExclusionEntry', () => {
   it('appends a normalized entry', () => {
     const result = addExclusionEntry([], ' https://docs.google.com/spreadsheets/ ');

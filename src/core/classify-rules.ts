@@ -151,7 +151,7 @@ const jobOfficeEligible = (own: string): boolean =>
 // 複合欄はどちらにも解釈でき、誤注入より不注入が安全なため officeField が
 // EXCLUDE で落とす従来動作を維持する。
 const officeLegendEligible = (own: string): boolean =>
-  !KANA_NOTE.test(own) && !BIRTH_CTX.test(own)
+  !officeContextExcluded(own)
   && !COMPANY_OFFICE.test(own) && !DEPT_OFFICE.test(own);
 // PBI-160: 会社名フリガナの連言（会社・法人系語彙 AND カナ注記）。company
 // エントリの COMPANY_OFFICE に厳密に従い（応募/申込の団体名除外を含む）、

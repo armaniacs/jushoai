@@ -204,6 +204,9 @@ describe('runClassifyPipeline: run budget and non-retryable stop (PBI-240)', () 
     await runClassifyPipeline(classifierWith(attempt), manyPending(60), {});
     const startedOpts = attempt.mock.calls.map((c) => (c[2] as { startedAt?: number } | undefined)?.startedAt);
     expect(startedOpts).toHaveLength(3);
+    // One clock for the whole run: every chunk must clamp against the same
+    // run-start time, not re-earn a fresh budget per send.
+    expect(new Set(startedOpts).size).toBe(1);
     for (const t of startedOpts) {
       expect(t).toBeGreaterThanOrEqual(before);
       expect(t!).toBeLessThanOrEqual(Date.now());
