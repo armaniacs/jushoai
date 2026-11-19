@@ -1,5 +1,9 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-19・checking-teamラウンド最終レビューのフォローアップ整理。最終レビューの Minor 4 項目を 1 件に束ねて回収する）
+
+- `2026-11-19-245-chore-review-followups.md`（officeLegendEligible 集約・等価 fixture 3 面・タスク ID コメント除去と運用明文化・チャンク予算の pin 補強。RICE 48）
+
 ## 進行中からアーカイブ済み（2026-11-19・checking-teamラウンド完了で15件処理（ラウンド台帳含む）。全件PR #28でマージ・0.1.38でリリース済み。レビュー報告: plans/2026-11-18-0530-review-main-v0.1.29.md）
 
 - `archived/2026-11-18-00-backlog-checking-team-round.md`（ラウンド台帳。Wave 3不実施・dismiss-dialog統合維持・core/analyze.ts移転見送りの判断と最終レビュー結果を記録。フォローアップはPBI-245へ引き継ぎ）
