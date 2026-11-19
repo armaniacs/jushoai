@@ -58,8 +58,13 @@ checking-team ラウンド（231〜244）の最終レビューで follow-up 判�
 
 ## Definition of Done
 - [x] 全 BDD シナリオが検証手順（make check・eval pin 不変・実装照合）でパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（タスクレビュー Approved・spec ✅。Critical/Important なし。Minor 2 件は下記）
 - [x] ドキュメント更新済み（本 PBI に実装記録）
+
+### レビュー記録（タスクレビュー Approved・Minor 2 件）
+
+- (d) の pin は実タイマー + 即時解決のため、チャンク毎の Date.now() 再取得回帰がミリ秒粒度で素通りし得る（PBI 指定の断言形どおり。強化するなら fake timer を進める形）
+- (b) の userinfo pin は entry 側 1 方向のみ（origin 比較は対称のため意味差なし。target 側の逆方向を 1 行足すと正規化の対象面が閉じる。実装記録に開示済み）
 
 ## 実装記録
 

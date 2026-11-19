@@ -2,7 +2,7 @@
 
 ## 進行中（2026-11-19・checking-teamラウンド最終レビューのフォローアップ整理。最終レビューの Minor 4 項目を 1 件に束ねて回収する）
 
-- `2026-11-19-245-chore-review-followups.md`（officeLegendEligible 集約・等価 fixture 3 面・タスク ID コメント除去と運用明文化・チャンク予算の pin 補強。RICE 48）
+- `2026-11-19-245-chore-review-followups.md`（実装済み（4439d82）・タスクレビュー Approved（spec ✅、Minor 2 件は PBI に記録）。officeLegendEligible 集約・等価 fixture 3 面・タスク ID コメント除去と運用明文化・チャンク予算の pin 補強。RICE 48）
 
 ## 進行中からアーカイブ済み（2026-11-19・checking-teamラウンド完了で15件処理（ラウンド台帳含む）。全件PR #28でマージ・0.1.38でリリース済み。レビュー報告: plans/2026-11-18-0530-review-main-v0.1.29.md）
 
