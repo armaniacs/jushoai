@@ -27,7 +27,7 @@ const checkoutIndex = lines.findIndex((line) => line.includes('actions/checkout'
 
 describe('check workflow permissions', () => {
   it('declares no workflow-wide permissions', () => {
-    const topLevel = lines.filter((line) => /^permissions:/.test(line));
+    const topLevel = lines.filter((line) => line.startsWith('permissions:'));
     expect(topLevel, 'permissions must be job-scoped, not workflow-wide').toEqual([]);
   });
 
@@ -35,7 +35,7 @@ describe('check workflow permissions', () => {
     // Job ids are the two-space-indented keys directly under `jobs:`. A new
     // job without its own block would inherit the repository default, so the
     // block count must track the job count exactly.
-    const jobsIndex = lines.findIndex((line) => /^jobs:/.test(line));
+    const jobsIndex = lines.findIndex((line) => line.startsWith('jobs:'));
     const jobIds = lines
       .slice(jobsIndex + 1)
       .filter((line) => /^  [A-Za-z0-9_-]+:\s*$/.test(line));

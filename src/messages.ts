@@ -3,7 +3,7 @@ import type { ClassifySchedule } from './core/classifier';
 import { includesLiteral } from './core/literals';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
-import { TRANSFER_BACKSTOP_CAP, TRANSFER_CHUNK_SIZE } from './llm/transfer-contract';
+import { TRANSFER_BACKSTOP_CAP } from './llm/transfer-contract';
 import { MAX_TEXT_LENGTH } from './scan-limits';
 
 // Send-size contract for ai-classify, shared with background-gateway:

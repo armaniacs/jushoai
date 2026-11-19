@@ -243,9 +243,11 @@ describe('display parity', () => {
 describe('save parity', () => {
   it('blocks saving when the base URL changed without re-entering the key', async () => {
     const root = await mountWith(openaiSaved());
-    const baseUrl = [...pageOf(root).querySelectorAll('label')]
-      .find((l) => l.querySelector('span')?.textContent === 'ベース URL')
-      ?.querySelector('input')!;
+    const baseUrlLabel = [...pageOf(root).querySelectorAll('label')]
+      .find((l) => l.querySelector('span')?.textContent === 'ベース URL');
+    if (baseUrlLabel === undefined) throw new Error('base URL label not found');
+    const baseUrl = baseUrlLabel.querySelector('input');
+    if (baseUrl === null) throw new Error('base URL input not found');
     setInput(baseUrl, 'https://other.example/v1');
     buttonByText(root, '保存').click();
     await settle();
@@ -266,9 +268,11 @@ describe('save parity', () => {
       ...openaiSaved(),
       hasKey: { openai: true, gemini: false },
     });
-    const baseUrl = [...pageOf(root).querySelectorAll('label')]
-      .find((l) => l.querySelector('span')?.textContent === 'ベース URL')
-      ?.querySelector('input')!;
+    const baseUrlLabel = [...pageOf(root).querySelectorAll('label')]
+      .find((l) => l.querySelector('span')?.textContent === 'ベース URL');
+    if (baseUrlLabel === undefined) throw new Error('base URL label not found');
+    const baseUrl = baseUrlLabel.querySelector('input');
+    if (baseUrl === null) throw new Error('base URL input not found');
     setInput(baseUrl, 'https://other.example/v1');
     setInput(keyInput(root)!, 'sk-new-secret');
     buttonByText(root, '保存').click();

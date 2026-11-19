@@ -189,7 +189,7 @@ export function runFillOneKana(adapter: BrowserAdapter, label: string): void {
       expect(tags[tags.length - 1]).toBe('div.actions');
       await clickApplyButton(driver);
       // The full-name join follows the fixture placeholder's separator
-      // (detectNameSeparator): "ヤマダ　タロウ" here. The PBI-150 point is that a
+      // (detectNameSeparator): "ヤマダ" + 全角スペース + "タロウ" here. The PBI-150 point is that a
       // kana value lands in the kana field, never the kanji name.
       expect(await furigana.getAttribute('value')).toBe('ヤマダ　タロウ');
     });

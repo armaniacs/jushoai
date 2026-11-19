@@ -49,7 +49,7 @@ const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業
 const NAME_EXCLUDE =
   /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
 const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
-const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［\[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
+const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
 // PBI-203: 参加者名 は WPForms の参加者名ラベルで、氏名/名前 の語彙に載らない。
 // (02)参加者名フリガナ もこの語を含むが、kana 帰属は resolveKana が行うため
 // fullNameKana のまま残る（tests/core/classify-rules.test.ts の PBI-203 回帰）。
@@ -186,7 +186,7 @@ const isSearchBox = (m: FieldMeta): boolean =>
 // PBI-225: name完全一致の許可リスト（区切り・大小文字を畳んだキーで比較）。
 // companyEmail 等の派生名・company_kana・番号付き・接頭辞付きは別キーになる。
 const COMPANY_NAME_KEY: ReadonlySet<string> = new Set(['company', 'companyname']);
-const companyNameKey = (s: string): string => norm(s.trim()).replace(/[\s_\-]+/g, '');
+const companyNameKey = (s: string): string => norm(s.trim()).replace(/[\s_-]+/g, '');
 const isCompanyByName = (m: FieldMeta): boolean =>
   m.tag === 'input' && m.type === 'text'
   && m.label.trim() === '' && m.nearby.trim() === ''
@@ -529,7 +529,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   let nameView: string | null = null;
   let idView: string | null = null;
   const birthOnView = (): boolean => {
-    if (!BIRTH_CTX.test(ownTrimmed) && !/^bday/.test(ac)) return false;
+    if (!BIRTH_CTX.test(ownTrimmed) && !ac.startsWith('bday')) return false;
     labelView ??= norm(m.label).trim();
     if (isBirthPhrase(labelView)) return true;
     nameView ??= norm(m.name).trim();
@@ -548,7 +548,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   // （unclassified・しきい値未満の欄として LLM 補助に回る）。bday-year →
   // birthYear (0.95) のような部分カテゴリを date 欄に通さない。
   if (m.type === 'date') {
-    return birthOnOwn || birthOnView() || /^bday/.test(ac) ? make('birthday', 0.7) : null;
+    return birthOnOwn || birthOnView() || ac.startsWith('bday') ? make('birthday', 0.7) : null;
   }
 
   const acCategory = AUTOCOMPLETE.get(ac);

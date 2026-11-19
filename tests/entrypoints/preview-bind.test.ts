@@ -2,7 +2,6 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { bindPreview } from '../../src/content/preview-bind';
 import type { FillSession } from '../../src/content/preview-bind';
 import type { SessionPanel } from '../../src/content-session';
-import type { PreviewRow } from '../../src/ui/preview';
 import type { ButtonHandle } from '../../src/ui/button';
 import type { FillResult, FillSummary } from '../../src/dom/fill-plan';
 import { hintForButton } from '../../src/ai/failure-text';
