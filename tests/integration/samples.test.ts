@@ -148,6 +148,23 @@ describe('sample forms end to end', () => {
     expect(await planFor('responsepage-aspx.html')).toEqual(expectedFor('responsepage-aspx.html'));
   });
 
+  // 裸 1欄型 birthday (name=birthday、label 空、placeholder は例示 2002/04/02)。
+  // anchored 判定の対象を label・name・id・placeholder に広げたため birthday に
+  // 分類され、profile の ISO 値が入る (placeholder 例示の解析はしない設計は不変)。
+  // 積水 (name+id とも birthday) と同じ裸形。孤独な pin: 期待値表だけでは
+  // 「なぜ birthday か」が読めないため分類を明示する。
+  it('ena-request-form classifies the bare single birthday field and fills the ISO value', async () => {
+    const { html } = corpusEntry('ena-request-form.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const birthday = fields.find((f) => f.meta.name === 'birthday')!;
+    const items = await classifyAll([birthday.meta], null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    expect(items[0]!.cls).toMatchObject({ category: 'birthday', confidence: 0.7, source: 'rule' });
+    expect(await planFor('ena-request-form.html')).toMatchObject({ birthday: '1990-05-07' });
+  });
+
   it('anchors the table-form button on the last name field', () => {
     document.body.innerHTML = new DOMParser().parseFromString(corpusEntry('table-form.html').html, 'text/html').body.innerHTML;
     const forms = detectForms(document);

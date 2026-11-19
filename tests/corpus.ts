@@ -2417,13 +2417,18 @@ const LEDGER = {
       // 性別 radio は実ページの選択肢 (男性/女性/選択しない) を最小形で復元。
       // 女性が profile 性別に解決 (honest pin。otsuka sex と同形)。
       'sex': '女性',
+      // birthday は裸 1欄型 (name+id とも birthday、label 空)。anchored 判定の
+      // 対象が label 単独だったため生年月日だけ unknown で未注入だったが、
+      // 対象を label・name・id・placeholder に広げた (なぜなぜ分析 2026-11-19
+      // 項目2/3。誕生日語の語彙は不変) ため birthday に分類され、profile の
+      // ISO 値が入る。
+      'birthday': '1990-05-07',
     },
     excluded: [
       'zip1/zip2/planned_zip1/2 (text): bare 郵便番号 split with no label signal, stay unclassified (LLM fallback; post-prefix zip candidate, same as mitsuihome post1/post2)',
       'prefs/planned_prefs/house_figure/budget/occupation/shawoodclubSecretQuestion/construction x2 (select): only a `--` option, correctly warn-no-option',
       'group_company/company1/2 (text): bare 会社名 with no label association, stay unclassified (LLM fallback; company-by-name candidate)',
       'tsubo/kibou/shop/employeename/office (text): 坪数・希望・店舗・担当・勤務先, no profile value, correctly unfilled',
-      'birthday (text): bare 生年月日 single field, no profile value, correctly unfilled (profile-fields-form は y/m/d 分割のみ解決)',
       'shawoodclubPassword/Confirm/SecretAnswer (text): 会員 password 系, no profile value, correctly unfilled',
       'sex_corp (radio): 法人側の性別群。同一機構のため sex に代表させ trim (exclude)',
       'kind/cogrid/adreferer/category/overlapConfilm/preAdmissionKind/preEmail/ssoUrl/media/OID/PID/TID/catselect/present/swclub (hidden): empty-submit shim or server state, never a fill target (exclude)',
@@ -2767,9 +2772,13 @@ const LEDGER = {
       'email': 'yamada@example.com',
       'email_confirm': 'yamada@example.com',
       'school_name': '都立日比谷高校',
+      // birthday は裸 1欄型 (name=birthday、placeholder は例示 2002/04/02)。
+      // placeholder 例示の解析はしない設計のまま、anchored 判定の対象を
+      // label・name・id・placeholder に広げた (なぜなぜ分析 2026-11-19 項目2/3。
+      // 誕生日語の語彙は不変) ため birthday に分類され、注入値は ISO 一択。
+      'birthday': '1990-05-07',
     },
     excluded: [
-      'birthday (text): 例）2002/04/02 の full-date。pattern 不整合で未注入のまま (PBI-210 形状。honest pin)',
       'grade (select): 実選択肢つき (学年 17件) だが stay unclassified (LLM fallback)',
       'gakubu (select): 実ページでも空、correctly warn-no-option',
       'kousha_area/kousha (select): 連動のみの placeholder 選択肢、correctly warn-no-option',

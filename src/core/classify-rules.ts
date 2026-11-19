@@ -507,34 +507,48 @@ export function classifyField(m: FieldMeta): Classification | null {
     && !jobOfficeEligible(ownText);
 
   const ownTrimmed = ownText.trim();
-  // レビュー指摘: the single-birthday anchor reads the LABEL view only.
+  // なぜなぜ分析（2026-11-19 項目2/3）: the single-birthday anchor reads each of
+  // label・name・id・placeholder individually, as the design (profiles-design.md
+  // 追補「分類は欄自身の文言だけ」) prescribes. 旧実装は label 単独ビューだけを
+  // 見ていたため、label が空で name/id/placeholder に誕生日語がある欄（積水
+  // name+id とも birthday・ena name=birthday + placeholder 例示）が unknown に
+  // 落ちていた。誕生日語の語彙集合（BIRTH_PHRASE / BIRTH_PHRASE_EN）は不変で、
+  // 判定対象の拡張のみ。BIRTH_CTX を参照する系統（birth dispatch 3 エントリ・
+  // office 系ゲート・companyNameKana legend gate）には波及しない（語彙を広げて
+  // いないため gate の開きは変わらない）。
   // ownText は name+htmlId+label+placeholder の連結 norm 全体のため、anchored な
-  // 完全一致は name/id がある欄で常に失敗し（'birthday 生年月日' は /^(...)$/ に
-  // 不一致）、同じ欄が DISPATCH で birthYear (0.7) に落ちていた。planner の
-  // birthYear は非 ISO の '1990' を返し、date input は無音で捨てて fill-plan は
-  // 「適用済み」と報告する。label 単体が誕生日語と一致するかで判定する。お を
-  // 接頭辞の許可リストに足し、お誕生日 が birthDay に落ちるのを防ぐ。
-  // label のみのビューは遅延 norm: anchored 一致が成立するには label が誕生日語
-  // そのものである必要があり、それは ownText に誕生語があることと同値なので、
-  // 誕生語のない欄は norm を1回も追加で払わない（1欄の norm 数契約を保つ）。
-  // 共有ビューは literals が持ち、label 単体の anchored 判定は分類だけの関心事
-  // なため本モジュール ローカル。
+  // 完全一致は複数ビューが非空の欄で常に失敗し（'birthday birthday' は /^(...)$/
+  // に不一致）、同じ欄が DISPATCH で birthYear (0.7) に落ちるか unknown に沈む。
+  // 各ビューの norm は遅延: anchored 一致が成立するにはビューが誕生日語そのもの
+  // である必要があり、それは ownText に誕生語があることと同値なので、誕生語の
+  // ない欄は norm を1回も追加で払わない（1欄の norm 数契約を保つ）。placeholder
+  // のビューは buildFieldNormViews が既に持つため追加 norm なし。ownText 全体の
+  // anchored 判定（birthOnOwn）は温存: 'date of' + 'birth' のようなビュー境界を
+  // 跨ぐ語順の一致を失わない。
   let labelView: string | null = null;
-  const birthOnLabel = (): boolean => {
+  let nameView: string | null = null;
+  let idView: string | null = null;
+  const birthOnView = (): boolean => {
     if (!BIRTH_CTX.test(ownTrimmed) && !/^bday/.test(ac)) return false;
     labelView ??= norm(m.label).trim();
-    return isBirthPhrase(labelView);
+    if (isBirthPhrase(labelView)) return true;
+    nameView ??= norm(m.name).trim();
+    if (isBirthPhrase(nameView)) return true;
+    idView ??= norm(m.htmlId).trim();
+    if (isBirthPhrase(idView)) return true;
+    return isBirthPhrase(views.placeholder.trim());
   };
   const birthOnOwn = isBirthPhrase(ownTrimmed);
 
   // レビュー指摘: type=date の欄は birthday 以外のカテゴリに到達させない。
   // 値が常に YYYY-MM-DD の date input に birthYear の '1990' のような部分値は
-  // 無音で捨てられ、fill-plan は「適用済み」と報告する。誕生日語の根拠（label
-  // 一致 or autocomplete が bday で始まる）があれば birthday、なければ null
+  // 無音で捨てられ、fill-plan は「適用済み」と報告する。誕生日語の根拠
+  // （label・name・id・placeholder のいずれかが一致 or autocomplete が bday で
+  // 始まる）があれば birthday、なければ null
   // （unclassified・しきい値未満の欄として LLM 補助に回る）。bday-year →
   // birthYear (0.95) のような部分カテゴリを date 欄に通さない。
   if (m.type === 'date') {
-    return birthOnOwn || birthOnLabel() || /^bday/.test(ac) ? make('birthday', 0.7) : null;
+    return birthOnOwn || birthOnView() || /^bday/.test(ac) ? make('birthday', 0.7) : null;
   }
 
   const acCategory = AUTOCOMPLETE.get(ac);
@@ -571,8 +585,9 @@ export function classifyField(m: FieldMeta): Classification | null {
   // fills the profile's ISO value; an uninterpretable stored birthday stays
   // empty (warn-no-value), so the old no-partial-value guarantee holds.
   // Legend-only evidence would collide with the 3-split 生年月日 fieldset, so
-  // own wording stays the only signal.
-  if (birthOnOwn || birthOnLabel()) {
+  // legend stays out and the anchored views stay label・name・id・placeholder
+  // only (なぜなぜ分析 2026-11-19 項目2/3 の対象拡張。語彙は不変).
+  if (birthOnOwn || birthOnView()) {
     return make('birthday', 0.7);
   }
 
