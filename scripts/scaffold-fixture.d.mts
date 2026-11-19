@@ -22,6 +22,10 @@ export interface Extracted {
   skipped: ScaffoldSkipped[];
 }
 
+// Scan-target input types; mirrors TEXT_TYPES in src/dom/scan-fields.ts
+// (kept in sync by tests/scripts/scaffold-fixture.test.ts).
+export const IN_SCOPE_TYPES: Set<string>;
+
 export function extractControls(html: string): Extracted;
 export function renderFixture(sourceName: string, extracted: Extracted): string;
 

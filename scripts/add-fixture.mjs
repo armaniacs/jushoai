@@ -2,7 +2,7 @@
 // and wire it into the corpus ledger (tests/corpus.ts) and samples.test.ts.
 // Static HTML only: JS-rendered pages still need a manual save, and the generated
 // expectations stay '<expected>' placeholders until a human fills and trims them.
-import { readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { extractControls, renderFixture, renderLedgerEntry } from './scaffold-fixture.mjs';
 import { fetchPage } from './shared-fetch.mjs';
 
@@ -86,6 +86,29 @@ export function insertFixtureEntry(source, file) {
   return insertAboveAnchor(source, `    '${file}',\n`, close);
 }
 
+// Overwrite guard shared by both fixture writers (the addurl CLI and the bulk
+// sync): the dup guards above leave the sources unchanged for an already-wired
+// name, so writing the fresh scaffold anyway would silently replace a trimmed
+// fixture. A new wiring must likewise fail instead of clobbering a different
+// fixture file that is already on disk. `existingFixture` is null when the
+// file is absent, else its content.
+export function fixtureWriteDecision({ wiringUnchanged, existingFixture, fixture, file }) {
+  if (existingFixture === null) return { action: 'write' };
+  if (wiringUnchanged) {
+    return {
+      action: 'skip',
+      message: `skip write: samples/${file} is already wired; the existing fixture is left untouched. To add this page under a new name, choose a different fixture name.`,
+    };
+  }
+  if (existingFixture !== fixture) {
+    return {
+      action: 'fail',
+      message: `refusing to overwrite samples/${file}: a different fixture file is already on disk. Re-run with a different fixture name (FIXTURE=<name> for add-fixture, the → mapping for the registry).`,
+    };
+  }
+  return { action: 'write' };
+}
+
 export function buildWiring(html, sourceLabel, file) {
   const extracted = extractControls(html);
   const entry = renderLedgerEntry(file, extracted);
@@ -127,15 +150,33 @@ if (process.argv[1]?.endsWith('scripts/add-fixture.mjs')) {
     const ledgerPath = new URL('../tests/corpus.ts', import.meta.url);
     // Wire in memory first: a ledger anchor that is gone fails here, before
     // anything is written (no fixture without its entry and case).
-    const applied = wiring.applyWiring({
-      ledger: readFileSync(ledgerPath, 'utf8'),
-      test: readFileSync(testPath, 'utf8'),
-    });
+    const testSource = readFileSync(testPath, 'utf8');
+    const ledgerSource = readFileSync(ledgerPath, 'utf8');
+    const applied = wiring.applyWiring({ ledger: ledgerSource, test: testSource });
     if (!applied) {
       console.error('wiring failed: the corpus ledger anchor in tests/corpus.ts (or the inScopeFixtures array in samples.test.ts) is missing; nothing was written.');
       process.exit(1);
     }
-    writeFileSync(new URL(`../samples/${wiring.file}`, import.meta.url), wiring.fixture);
+    // Same overwrite guard as the bulk sync: an already-wired name never gets
+    // its fixture rewritten, and a new wiring never clobbers a different file
+    // already on disk.
+    const fixturePath = new URL(`../samples/${wiring.file}`, import.meta.url);
+    const existingFixture = existsSync(fixturePath) ? readFileSync(fixturePath, 'utf8') : null;
+    const decision = fixtureWriteDecision({
+      wiringUnchanged: applied.ledger === ledgerSource && applied.test === testSource,
+      existingFixture,
+      fixture: wiring.fixture,
+      file: wiring.file,
+    });
+    if (decision.action === 'skip') {
+      console.log(decision.message);
+      process.exit(0);
+    }
+    if (decision.action === 'fail') {
+      console.error(decision.message);
+      process.exit(1);
+    }
+    writeFileSync(fixturePath, wiring.fixture);
     writeFileSync(testPath, applied.test);
     writeFileSync(ledgerPath, applied.ledger);
     // Success only after a read-back: the ledger and the test source must

@@ -411,6 +411,47 @@ describe('classifyField: single birthday after the label-only anchor (review)', 
   });
 });
 
+// なぜなぜ分析（2026-11-19 項目2/3）の再現 fixture。fixture 先行（AGENTS.md）:
+// 先に失敗させてから直す。label が空で name/id/placeholder に誕生日語がある
+// 1欄型は、ownText が name+htmlId+label+placeholder の連結 norm のため anchored
+// 完全一致から漏れ、積水（name+id とも birthday）と ena（name=birthday +
+// placeholder 例示）で生年月日だけが unknown だった。設計（profiles-design.md
+// 追補「分類は欄自身の文言だけ」は label・name・id・placeholder を対象と規定）
+// どおりに各ビューを判定対象にする。語彙追加ではなく対象拡張（BIRTH_PHRASE は
+// 不変）。placeholder 例示（2002/04/02 等）の解析はしない設計は不変で、例示は
+// 誕生日語の判定対象にならない値として join に乗るだけ。
+describe('classifyField: single birthday on name/id/placeholder views (why-why 2026-11-19)', () => {
+  it.each([
+    // sekisui-catalog-request.html:35 — name+id 連結で anchored が壊れる形。
+    { name: 'birthday', htmlId: 'birthday' },
+    // ena-request-form.html:7 — placeholder 例示が join に乗る形。
+    { name: 'birthday', placeholder: '2002/04/02' },
+    { htmlId: 'birthday', placeholder: '2002/04/02' },
+    // 日本語 name と例示 placeholder の併存形。
+    { name: '生年月日', placeholder: '例）1990年5月7日' },
+    // レビュー指摘追補: placeholder 単独ビュー（name・id・label に誕生日語なし）も
+    // anchored 対象。placeholder だけが判定材料の欄が birthday に落ちない pin。
+    { placeholder: '生年月日' },
+    // date 欄でも name/id 単独の anchored 誕生日語は birthday（ゲート内の判定も広げる）。
+    { type: 'date', name: 'birthday', htmlId: 'birthday' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as the single birthday', (p) => {
+    expect(cat(p)).toBe('birthday');
+  });
+
+  // 否定形: 3欄分割（legend 内 年/月/日）と非 anchored 語は従来どおり。
+  // 誤って legend 近接・部分語まで birthday に広げていないことを pin する。
+  it('keeps the 3-split year/month/day fields inside a 生年月日 legend on the split categories', () => {
+    expect(cat({ name: 'year', nearby: '生年月日' })).toBe('birthYear');
+    expect(cat({ name: 'month', nearby: '生年月日' })).toBe('birthMonth');
+    expect(cat({ name: 'day', nearby: '生年月日' })).toBe('birthDay');
+  });
+
+  it('keeps non-anchored birth words away from birthday', () => {
+    expect(cat({ label: '誕生石' })).toBeNull();
+    expect(cat({ name: 'birthdayStone' })).toBeNull();
+  });
+});
+
 // レビュー指摘の再現 fixture: legend 専用ケースの到達不能と交差ケースの誤分類。
 describe('classifyField: company legend and 応募文脈 (review)', () => {
   it('reaches the legend-only company case without an own office word', () => {

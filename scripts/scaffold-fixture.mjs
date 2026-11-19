@@ -3,7 +3,9 @@
 // output to the smallest reproduction before committing it as a fixture.
 import { readFileSync } from 'node:fs';
 
-const IN_SCOPE_TYPES = new Set(['text', 'email', 'tel', 'search']);
+// Mirrors TEXT_TYPES in src/dom/scan-fields.ts: date controls here produce the
+// same fixture shape the live scan's FieldMeta carries (no min/max, value stripped).
+export const IN_SCOPE_TYPES = new Set(['text', 'email', 'tel', 'search', 'date']);
 const SKIP_REASONS = {
   radio: 'grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
   checkbox: 'out of scope (skip fixed)',

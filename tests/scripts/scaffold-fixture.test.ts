@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   extractControls, renderFixture, renderTestStub,
   formatExpectedLines, formatExcludedLines, renderLedgerEntry,
+  IN_SCOPE_TYPES,
 } from '../../scripts/scaffold-fixture.mjs';
 import raijo from '../../samples/formmailer-raijo-age.html?raw';
 
@@ -70,6 +71,22 @@ describe('scaffold-fixture', () => {
     ])).toEqual([
       `      'h (hidden): empty-submit shim or server state, never a fill target (exclude)',`,
     ]);
+  });
+
+  it('keeps date controls in scope and mirrors the live scan TEXT_TYPES (PBI-118)', async () => {
+    // The scaffold list must not drift from src/dom/scan-fields.ts TEXT_TYPES:
+    // a type the live scan carries but the scaffold drops would produce a
+    // fixture silently missing the very field the PBI needs to verify.
+    const { TEXT_TYPES } = await import('../../src/dom/scan-fields');
+    expect([...IN_SCOPE_TYPES].sort()).toEqual([...TEXT_TYPES].sort());
+    const { controls, skipped } = extractControls(html(
+      '<label for="b">生年月日</label><input id="b" name="b" type="date" min="1900-01-01" max="2030-12-31">',
+    ));
+    expect(controls).toHaveLength(1);
+    expect(controls[0]).toMatchObject({ name: 'b', type: 'date', label: '生年月日' });
+    // The extracted control mirrors the live FieldMeta key set: no min/max, no value.
+    expect(Object.keys(controls[0] ?? {}).filter((k) => ['min', 'max', 'value'].includes(k))).toEqual([]);
+    expect(skipped).toEqual([]);
   });
 
   it('dogfoods the raijo form: split parts kept, age radios skipped', () => {
