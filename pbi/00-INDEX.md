@@ -92,11 +92,9 @@
 - `archived/2026-10-29-166-feat-float-guide-autosave.md`（ガイド即時保存。実装 commit 2195ce1）
 - `archived/2026-10-29-167-feat-per-side-trial-guide.md`（片側trialガイド。実装 commit 614b648/f175bd0）
 
-## 進行中（118のみ・残1件）
+## 進行中からアーカイブ済み（2026-11-20・PBI-118をPR #31でマージ済み。AC 32 完了で進行中はゼロ）
 
-（118 は対象URL確定がユーザー作業、129 は着手条件未到来で backlog 残置）
-
-- `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
+- `archived/2026-10-21-118-feat-birthday-single-input.md`（PR #31 でマージ。誕生日語 1 欄型判定の拡張・type=date fixture・AC 32 完了）
 
 ## 進行中からアーカイブ済み（archラウンド4・2026-10-30に9件実装・検証済み。コードレビューはユーザー作業）
 
@@ -135,11 +133,10 @@
 
 最終検証: `make check` exit 0（155 files / 1979 passed + 1 expected fail）＋実ブラウザ E2E 13/13 green（tests/e2e/chrome.e2e.ts、配置・ドラッグ・タッチ経路・半透明を含む）。コードレビュー完了（checking-team 2026-10-27・9レビュアー、指摘 High 1/Medium 11 はすべて修正済み・Low は記録のみ）。実機タッチの手触り確認のみユーザー作業（タッチ経路自体は E2E で実測）。
 
-## 進行中（1021-1022ラウンド・残2件）
+## 進行中（1021-1022ラウンド・残1件）
 
-（115〜117・119〜128・130 はレビュー確認を経てアーカイブ済み。118 は対象URL確定がユーザー作業、129 は着手条件未到来で backlog 残置）
+（115〜117・119〜128・130 はレビュー確認を経てアーカイブ済み。129 は着手条件未到来で backlog 残置）
 
-- `2026-10-21-118-feat-birthday-single-input.md`（093eb73 feat(profile): 生年月日1欄型と会社項目。対象URLの確定はユーザー作業）
 - `2026-10-22-129-feat-dynamic-form-support.md`（実装なし。後描画追従は既存実装で担保、残る差分は残置判断を記録）
 
 ## 進行中（対象 URL 対応・実装済み）
