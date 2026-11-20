@@ -5,6 +5,8 @@ import { stripExample } from './formatters';
 import { kanaNormFromViews, matchFieldOwned, matchLegend, resolveKana, wantsKana } from './kana';
 import { buildFieldNormViews, norm } from './literals';
 import { applyEnglishPage } from './page-language';
+import { matchAs, ownLegend } from './dispatch-kit';
+import type { DispatchCtx, MatcherEntry } from './dispatch-kit';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -231,47 +233,6 @@ const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
 // A numeric age text box (年齢を数字で入力) must not qualify: only selects
 // and radio groups whose options carry decade (代) readings are decade fields.
 const AGE = /年齢|年代|ねんだい|年齢層|age/;
-
-interface DispatchCtx {
-  m: FieldMeta;
-  ownText: string;
-  legendText: string;
-  overseasCtx: string;
-  isOptionField: boolean;
-}
-
-type Matcher = (ctx: DispatchCtx) => Classification | null;
-
-interface MatcherEntry {
-  name: string;
-  match: Matcher;
-}
-
-// None of the dispatch entries yields a Kana category, so the module-level
-// constructor needs no kanaKind (kept in classifyField's local make).
-const matchAs = (category: Category, confidence: number): Classification => ({
-  category,
-  confidence,
-  source: 'rule',
-});
-
-// The field itself (0.7) outranks a shared heading (0.65): one data row
-// expands to the ordered pair, so the gradient lives in a single place.
-// extra gates both sides (e.g. decade options); legendExtra overrides the
-// legend side when its evidence lives elsewhere (e.g. FOREIGN_MARK may sit
-// in the field or its heading, so the legend side reads overseasCtx).
-function ownLegend(
-  re: RegExp,
-  category: Category,
-  extra?: (ctx: DispatchCtx) => boolean,
-  legendExtra?: (ctx: DispatchCtx) => boolean,
-): [MatcherEntry, MatcherEntry] {
-  const legendGate = legendExtra ?? extra;
-  return [
-    { name: `${category}-own`, match: (ctx) => (re.test(ctx.ownText) && (!extra || extra(ctx)) ? matchAs(category, 0.7) : null) },
-    { name: `${category}-legend`, match: (ctx) => (re.test(ctx.legendText) && (!legendGate || legendGate(ctx)) ? matchAs(category, 0.65) : null) },
-  ];
-}
 
 const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
 
