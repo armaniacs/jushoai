@@ -6,8 +6,7 @@
 //   eval の llmFallbacks も同じ pre-skip/pre-refine/非force 定義である。
 import { describe, expect, it, vi } from 'vitest';
 import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
-import { classifyRulePipelineWithTrace, refineWithDrops } from '../../src/core/classify-rules';
-import { resolveKana } from '../../src/core/kana';
+import { classifyRulePipelineWithTrace } from '../../src/core/classify-rules';
 import { evalMetricsFor } from '../../src/eval/metrics';
 import { ruleAll, sendSet, splitPending } from '../../src/core/pending-split';
 import type { Category, FieldMeta } from '../../src/core/types';
@@ -99,16 +98,9 @@ describe('sendSet: pipeline parity (PBI-185)', () => {
 describe('sendSet: refine-drop parity (PBI-185)', () => {
   it('refine で落ちる欄も pre-refine の送信集合には含まれる', () => {
     const metas = oversizedTel();
-    // pre-refine の入力を一段ずつ組み立てる（WithTrace の items は refine 済み
-    // のため二重適用になる）。
-    const preRefine = resolveKana(
-      ruleAll(metas).map((r) => ({
-        meta: r.meta,
-        cls: r.cls ?? { category: 'unknown' as const, confidence: 0, source: 'rule' as const },
-      })),
-    );
-    const { dropped } = refineWithDrops(preRefine);
-    expect(dropped.length).toBeGreaterThan(0);
+    // The pipeline trace is the public view of the refine step: the oversized
+    // tel group is dropped there, and refineDropped counts the vanished fields.
+    expect(classifyRulePipelineWithTrace(metas).refineDropped).toBeGreaterThan(0);
     // 送信集合は refine 前なので dropped 欄を含む。
     expect(sendSet(metas).map((m) => m.id).sort()).toEqual(metas.map((m) => m.id).sort());
   });
