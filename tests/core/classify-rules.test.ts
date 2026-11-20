@@ -658,6 +658,34 @@ describe('refineClassifications', () => {
     expect(trace.items.map((i) => i.meta.id)).toEqual(['e']);
   });
 
+  it('reports oversized zip drops through the pipeline trace', () => {
+    // tel and fullName oversized drops are pinned above and in
+    // send-set.test.ts; the zip path had no trace pin. The trace count is the
+    // only public evidence of a drop once the per-field reason went private.
+    const three = ['a', 'b', 'c'].map((id) => makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }));
+    const trace = classifyRulePipelineWithTrace(three);
+    expect(trace.refineDropped).toBe(3);
+    expect(trace.items).toEqual([]);
+  });
+
+  it('counts only vanished fields as refineDropped, not retags', () => {
+    // refineDropped is defined over ids that disappear during refine. Split
+    // retags (zip pair -> zip1/zip2) and leftover unknown-ization (tel pair)
+    // keep the field alive, so they must stay out of the drop count; otherwise
+    // the trace silently widens into a "changed" counter.
+    const telPair = ['a', 'b'].map((id) => makeMeta({ id, type: 'tel', label: '電話番号', nearby: '連絡先' }));
+    const telTrace = classifyRulePipelineWithTrace(telPair);
+    expect(telTrace.refineDropped).toBe(0);
+    expect(telTrace.refineChanged).toBe(2);
+    expect(telTrace.items.map((i) => i.cls.category)).toEqual(['unknown', 'unknown']);
+
+    const zipPair = ['c', 'd'].map((id) => makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }));
+    const zipTrace = classifyRulePipelineWithTrace(zipPair);
+    expect(zipTrace.refineDropped).toBe(0);
+    expect(zipTrace.refineChanged).toBe(2);
+    expect(zipTrace.items.map((i) => i.cls.category)).toEqual(['zip1', 'zip2']);
+  });
+
   it('splits two fullName fields sharing the same nearby heading', () => {
     const mk = (id: string) => ({ ...item('fullName', id), meta: makeMeta({ id, nearby: 'お名前' }) });
     expect(cats(refineClassifications([mk('a'), mk('b')]))).toEqual(['lastName', 'firstName']);

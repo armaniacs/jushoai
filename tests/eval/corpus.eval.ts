@@ -349,6 +349,9 @@ async function metricsFor(html: string): Promise<EvalMetrics> {
 }
 
 describe('sample corpus metrics (local, no network)', () => {
+  // The corpus-iterating tests run every fixture through the pipeline; at 300+
+  // fixtures they sit close to vitest's default 5s timeout and flake on a
+  // loaded machine, so they carry an explicit generous timeout.
   it('measures every fixture, prints one short line per fixture, and pins each row', async () => {
     const names = Object.keys(corpus);
     expect(names.length).toBeGreaterThan(0);
@@ -389,7 +392,7 @@ describe('sample corpus metrics (local, no network)', () => {
     expect(agg.fillable, 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.fillable));
     expect(rowSum((m) => m.refineChanged), 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.refineChanged));
     expect(rowSum((m) => m.refineDropped), 'pin 表の合計と実測がずれています').toBe(pinSum((r) => r.refineDropped));
-  });
+  }, 60_000);
 
   it('keeps page content out of every report line', async () => {
     const lines: string[] = [];
@@ -406,7 +409,7 @@ describe('sample corpus metrics (local, no network)', () => {
     for (const line of lines) {
       expect(new TextEncoder().encode(line).length).toBeLessThanOrEqual(200);
     }
-  });
+  }, 60_000);
 
   it('never reaches the network: metrics run rule-only', async () => {
     // evalMetricsFor uses the rule-only pipeline (classifyRulePipelineWithTrace)
