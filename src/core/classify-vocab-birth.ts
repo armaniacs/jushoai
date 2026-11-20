@@ -3,7 +3,7 @@ import { matchAs } from './dispatch-kit';
 import type { MatcherEntry } from './dispatch-kit';
 
 export const BIRTH_CTX = /bday|birth|dob|生年月日|誕生/;
-// PBI-118: anchored exact match for the birth phrase itself (standalone
+// Anchored exact match for the birth phrase itself (standalone
 // label). お joins the allowed prefixes (prevents お誕生日 from misfalling to
 // birthDay). English fields accept Birthday / Date of Birth.
 export const BIRTH_PHRASE = /^(ご|御|お)?(誕生日|生年月日|誕生年月日)$/;

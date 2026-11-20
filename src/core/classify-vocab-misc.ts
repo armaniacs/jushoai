@@ -9,15 +9,14 @@ export const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex(
 export const AGE = /年齢|年代|ねんだい|年齢層|age/;
 export const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
 
-// PBI-212: website field vocabulary (School Website etc.). A field that wants a
+// Website field vocabulary (School Website etc.). A field that wants a
 // URL reads apart from the school-name field, and no-fill is safer than a wrong
-// school-name fill, so it is excluded from classification (the misreading
-// candidate from the PBI-208 implementation record; the website vocabulary is
-// decided before the school-name field). norm lowercases, so website is
+// school-name fill, so it is excluded from classification (the website
+// vocabulary is decided before the school-name field). norm lowercases, so website is
 // lowercase only; url is guarded by word boundaries (same shape as the cc
 // pattern in NAME_EXCLUDE that avoids false picks like curl).
 export const WEBSITE = /website|web.?site|(^|[^a-z])url([^a-z]|$)/;
-// PBI-224: site search box exclusion names (exact-match list). Only fields with
+// Site search box exclusion names (exact-match list). Only fields with
 // empty label and nearby and type text/search are targeted. Derived names
 // (companyEmail etc.) never match. placeholder is not in the empty condition
 // because search boxes carry it too (Search, Keyword input, etc.). The

@@ -813,8 +813,7 @@ describe('refineClassifications: tel/zip leftover unknown-ization (PBI-219)', ()
     expect(cats(refineClassifications(tel))).toEqual(['unknown', 'unknown']);
     // A same-label zip pair is exact-size for the zip split policy, so the
     // composition retags it before the leftover step runs: the leftover-only
-    // zip unknown-ization is unreachable through the public interface (gap
-    // recorded in the task report).
+    // zip unknown-ization is unreachable through the public interface.
     const zip = ['c', 'd'].map((id) => ({
       ...item('zip', id),
       meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
