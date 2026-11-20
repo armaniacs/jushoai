@@ -29,7 +29,7 @@ Scenario: 誕生日語の 1 input 欄が分類対象になる
 - [x] 設計書(docs/superpowers/specs/)を新規・更新してから着手する(プロファイル設計書:20-22 の「生年月日 1 欄型 含めない」解除。type=date は ISO 一択・1 欄型 text は placeholder 例示に従うかどうかは設計時に決める)(profiles-design.md に追補(2026-10-21)節を追加: type=date も 1 欄型 text も ISO 一択、placeholder 例示の解析は誤注入防止のためしない、解釈不能な保存値は注入しない、legend だけでは判定しない(3 欄分割 fieldset との衝突防止)、AUTOCOMPLETE bday 0.95。文字種検証 exit 0)
 - [x] 走査対象に type=date を追加する(dom/scan-fields.ts:13 の TEXT_TYPES。現在は FieldMeta 自体が生成されない)(TEXT_TYPES に date を追加し FieldMeta 生成)
 - [x] 分類ガードを単一 birthday カテゴリの導入に合わせ更新する(classify-rules.ts:288-292 の誕生日語 return null。CATEGORIES+AUTOCOMPLETE bday+planner valueFor+LLM プロンプトのカテゴリ追加)(誕生日語 return null を birthday 0.7 に更新。新カテゴリ birthday。CATEGORIES+AUTOCOMPLETE bday+planner valueFor+SYSTEM_PROMPT に追加、buildSchema/parseLlmOutput の CATEGORIES 連動を確認)
-- [ ] 対象 URL を確定して `make addurl URL=<url>` から始め samples fixture 追加と tests/integration/samples.test.ts のケース追加を必須にする(完了条件(2026-11-19 なぜなぜ分析の合意で測定可能化): type=date を含む実ページ fixture が 1 件以上ある、かつ誕生日語の 1 欄型(text・label 空)が実 fixture で birthday に分類される。実施計画は .superpowers/sdd/why-why-2026-11-19-118-summary.md の「実施の進め方」: 機構修正(scaffold date 対応・AGENTS.md 手順) → 裸 1 欄型の分類改善(積水・ena の corpus pin 更新込み) → type=date の実 fixture 確定。grep 実測: samples 20 件に type="date" は 0 件、「誕生」ラベルは既存 3 欄分割型のみで新機能対象の fixture が存在しない。機構修正はタスク 1 として実装済み(2026-11-19): scaffold-fixture.mjs の IN_SCOPE_TYPES に date 追加・skip 文言の現状化・同名 fixture 上書きガード・AGENTS.md の addurl 標準手順追記。裸 1 欄型の分類改善と積水・ena の corpus pin 更新・samples.test.ts への ena ケース追加はタスク 2 として実装済み(2026-11-19、下記実装記録)。完了条件の後半(誕生日語の 1 欄型が実 fixture で birthday 分類)はこれで充足、残りは type=date の実 fixture 確定(タスク 3)。1 欄型 + 3 欄分割共存 fixture は未達(type=date の実 fixture 投入時に回収する。なぜなぜ分析 p2 項目 5))
+- [x] 対象 URL を確定して `make addurl URL=<url>` から始め samples fixture 追加と tests/integration/samples.test.ts のケース追加を必須にする(完了条件(2026-11-19 なぜなぜ分析の合意で測定可能化): type=date を含む実ページ fixture が 1 件以上ある、かつ誕生日語の 1 欄型(text・label 空)が実 fixture で birthday に分類される。実施計画は .superpowers/sdd/why-why-2026-11-19-118-summary.md の「実施の進め方」: 機構修正(scaffold date 対応・AGENTS.md 手順) → 裸 1 欄型の分類改善(積水・ena の corpus pin 更新込み) → type=date の実 fixture 確定。grep 実測: samples 20 件に type="date" は 0 件、「誕生」ラベルは既存 3 欄分割型のみで新機能対象の fixture が存在しない。機構修正はタスク 1 として実装済み(2026-11-19): scaffold-fixture.mjs の IN_SCOPE_TYPES に date 追加・skip 文言の現状化・同名 fixture 上書きガード・AGENTS.md の addurl 標準手順追記。裸 1 欄型の分類改善と積水・ena の corpus pin 更新・samples.test.ts への ena ケース追加はタスク 2 として実装済み(2026-11-19、下記実装記録)。完了条件の後半(誕生日語の 1 欄型が実 fixture で birthday 分類)はこれで充足、残りは type=date の実 fixture 確定(タスク 3)。1 欄型 + 3 欄分割共存 fixture は未達(type=date の実 fixture 投入時に回収する。なぜなぜ分析 p2 項目 5)。2026-11-19 タスク 3 の shichusuimei.html 投入で type=date 条件を充足、1 欄型分類条件はタスク 2 の ena で充足済み。共存 fixture(1 欄型 type=date と select 3 欄分割の同一ページ)は本 fixture も select 分割を持たないため未達のまま残す(なぜなぜ分析 p2 項目 5 の回収は後続に委ねる))
 - [x] birthday(ISO 1 本)・eras.ts(和暦導出)を無改変で再利用する(planner は splitBirthday 検証済み ISO をそのまま、解釈不能は空扱い。eras.ts 未改変)
 - [x] `make check` が通る
 
@@ -61,3 +61,23 @@ Scenario: 誕生日語の 1 input 欄が分類対象になる
 - `tests/corpus.ts`: 積水・ena の birthday を expected へ移動（'1990-05-07' 注入）し、excluded の誤注記を修正。ena の旧注記「pattern 不整合で未注入」は fixture に pattern 属性が存在せず分類欠落を別理由にしていたため、実態（anchored 対象の狭さ）に合わせた。積水の旧注記「no profile value」も同様（統合テストの共有 profile は birthday を持っていた）。
 - `tests/integration/samples.test.ts`: ena の誕生日 1 欄型が birthday 0.7 (rule) に分類され ISO 値が入る統合 pin を追加（ms-forms-openroaming の分類 pin 書式に倣う）。
 - 検証: fixture 先行 RED → 実装 → 単体 3178 テスト緑 → `npm run eval` 全パス（pin 更新後）→ `make check` 緑。
+
+## 実装記録（2026-11-19 タスク 3: type=date の実 fixture 確定）
+
+- **発見経路**: 実ブラウザ（selenium-webdriver + headless Chrome）による候補ページのレンダと、検索エンジン（DDG 実ブラウザ経由）の結果レンダ機械判定で候補を収集した。占い・診断系 98 候補のうち type=date + 生年月日ラベルを含むのは 1 件（sodan.yaoyorozuya.com/shichusuimei、ENMUSUBI 四柱推命無料鑑定・サーバーレンダ）。楽天は sandbox の DNS 解決失敗のため DoH + `curl --resolve` で grp01.id.rakuten.co.jp 経由の登録フォームを取得し、生年月日が select 3 欄分割（`by`/`bm`/`bd`）であることを確認した（type=date なし）。
+- **fixture 判断**: 実ページの欄は name/id を持たない。make addurl の scaffold は name/id を鍵にするため 0 controls になるが、実スキャナ（src/dom/scan-fields.ts）は name/id を要求しない（合成 id `jai-N`、name/htmlId は空文字）。よって samples/shichusuimei.html は name/id を付けず実ページのまま忠実に再現する。planFor の `name || htmlId` キー契約では name/id 無し欄が空文字に衝突して標準ケースで表現できないため、本 fixture は inScopeFixtures に入れず、bespoke ケース（tests/integration/samples.test.ts の label キー assertion）と LEDGER のコメントで代替する（PBI-216 の LEDGER 契約の既知の限界）。
+- **走査・分類・plan の実測**: scanFields は 4 欄（名前（任意）text・生年月日 date・性別条件 select・出生地の都市 select）。生年月日は birthday 0.7 (rule) に分類され、type=date へ ISO 値 1990-05-07 が注入される（BDD シナリオ 1 の実 fixture 化）。名前は fullName（山田 太郎）・性別条件は gender（女性）。出生地の都市は label に地名語があるが unknown のまま（eval の llmFallbacks +1）。出生時刻（time）・出生地の経度（number）・備考（textarea）・診断する（button）は走査対象外。
+- **落選候補**（AC の標準手順要件）: 前回調査 24 件の詳細は .superpowers/sdd/pbi-118-task3-report.md を参照。今回の追加実測:
+
+  | URL | 結果 |
+  |---|---|
+  | registration.rakuten.co.jp | DNS 解決不可 → DoH + `--resolve` で grp01.id.rakuten.co.jp 経由の登録フォームを取得。生年月日は select 3 欄分割（by/bm/bd）で type=date なし |
+  | welcome.ipet-ins.com/application/estimateinput | headless Chrome で描画成功。Angular の年月日 text 3 欄で type=date なし |
+  | account.edit.yahoo.co.jp/signup / jp.mercari.com/signup / accounts.dmm.com/... / accounts.nintendo.com/register | 多段フローで誕生日欄は後段（1 回のレンダでは到達不可） |
+  | www.amiami.com/top/regist/ | 地域判定で /eng/ トップへリダイレクト |
+  | www.aeonpet.com/campaign/grooming-yoyaku.html | JS アプリ描画で欄不現出 |
+  | MS Forms 公開フォーム 5 件 | 日付質問を含まず（type=date 0） |
+  | 検索ヒットの占い・診断系 97 件 | type=date 0 |
+
+- **pin**: tests/eval/corpus.eval.ts の PIN_TABLE に `shichusuimei.html: p(3, 1, 2, 0, 0)` を追加（make eval-pin の生成値。ruleHits 3 = fullName/birthday/gender、llmFallbacks 1 = 出生地の都市、fillable 2 = eval の合成 profile は gender を持たないため fullName/birthday の 2 行）。既存行の値は不変。
+- **検証**: `npx vitest run tests/integration/samples.test.ts` 緑（318 件）、`make addurl-check` 残数 0、`make eval` 緑（pinDiff なし）、`make test` 緑（3184 件 + 期待どおりの失敗 1 件）、`make check` 緑。

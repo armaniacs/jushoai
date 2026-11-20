@@ -109,6 +109,7 @@ const PIN_TABLE: Record<string, PinRow> = {
   'seedome-openschool.html': p(6, 1, 6, 3, 0),
   'sekisui-catalog-request.html': p(12, 19, 8, 4, 4),
   'sekisui-inquiry-form.html': p(15, 4, 10, 7, 3),
+  'shichusuimei.html': p(3, 1, 2, 0, 0),
   'shimane-inquiry-form.html': p(3, 2, 2, 0, 0),
   'shozemi-contact-form.html': p(12, 2, 7, 1, 0),
   'single-field-form.html': p(4, 2, 3, 0, 0),

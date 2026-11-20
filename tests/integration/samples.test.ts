@@ -165,6 +165,38 @@ describe('sample forms end to end', () => {
     expect(await planFor('ena-request-form.html')).toMatchObject({ birthday: '1990-05-07' });
   });
 
+  // 四柱推命診断 (sodan.yaoyorozuya.com/shichusuimei)。実ページの欄は name/id を
+  // 持たず、label 要素の包み込みだけが分類根拠。type=date の生年月日が実 fixture
+  // で birthday 分類され ISO が注入されることを pin する。
+  it('shichusuimei fills the nameless date birthday through the wrapping-label views', async () => {
+    const { html } = corpusEntry('shichusuimei.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const byLabel = new Map(fields.map((f) => [f.meta.label, f]));
+    expect([...byLabel.keys()].sort()).toEqual([
+      '出生地の都市から選択（5大都市・経度自動セット）',
+      '名前（任意）',
+      '性別条件（大運の計算用）',
+      '生年月日',
+    ]);
+    expect(byLabel.get('生年月日')!.meta.type).toBe('date');
+    expect(byLabel.has('出生時刻')).toBe(false);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    const birthday = items.find((it) => it.meta.label === '生年月日')!;
+    expect(birthday.cls).toMatchObject({ category: 'birthday', confidence: 0.7, source: 'rule' });
+    const plan = buildPlan(items, { profile, address });
+    const valueByLabel = new Map(
+      plan
+        .filter((p) => p.status === 'ok')
+        .map((p) => [fields.find((f) => f.meta.id === p.fieldId)!.meta.label, p.value]),
+    );
+    expect(valueByLabel.get('生年月日')).toBe('1990-05-07');
+    expect(valueByLabel.get('名前（任意）')).toBe('山田 太郎');
+    expect(valueByLabel.get('性別条件（大運の計算用）')).toBe('女性');
+  });
+
   it('anchors the table-form button on the last name field', () => {
     document.body.innerHTML = new DOMParser().parseFromString(corpusEntry('table-form.html').html, 'text/html').body.innerHTML;
     const forms = detectForms(document);
