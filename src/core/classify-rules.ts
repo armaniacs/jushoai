@@ -274,7 +274,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   return null;
 }
 
-export interface SplitDrop {
+interface SplitDrop {
   fieldId: string;
   from: Category;
   reason: 'oversized-group';
@@ -317,7 +317,7 @@ const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby
 // PBI-219: refineWithDrops の (c) leftover unknown 化を切り出した純粋関数。
 // 入力は変えず、新しい配列を返す。dropped 済み欄は合成側で先に取り除くため、
 // 旧所在の droppedIds ガードは引数ではなく合成順序で引き継ぐ。
-export function dropLeftovers(items: Item[]): Item[] {
+function dropLeftovers(items: Item[]): Item[] {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   for (const leftover of ['tel', 'zip'] as const) {
     const groups = new Map<string, number[]>();
@@ -344,7 +344,7 @@ export function dropLeftovers(items: Item[]): Item[] {
 // 見出しを持たない複数ブロックでは従来の全体判定と等価になる制限がある。
 // PBI-219: refineWithDrops の (d) 住所絞り込みを切り出した純粋関数。
 // 入力は変えず、新しい配列を返す。
-export function narrowAddress(items: Item[]): Item[] {
+function narrowAddress(items: Item[]): Item[] {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
   for (const it of out) {
@@ -362,7 +362,7 @@ export function narrowAddress(items: Item[]): Item[] {
   return out;
 }
 
-export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
+function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   // outはmapで作ったdenseな実体配列であり、indices()産の添字は常に有効。
   // 個別の!ではなくこのat()に集約してundefinedを一箇所で narrowing する。
