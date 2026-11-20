@@ -209,13 +209,20 @@ describe('timeouts', () => {
 });
 
 describe('BackgroundClassifier total timeout and abort (PBI-33)', () => {
+  afterEach(() => vi.useRealTimers());
   const hang = () => new Promise(() => {});
 
   it('clamps a hung chunk to the remaining run budget and stops within it (PBI-33/240)', async () => {
+    // The wall clock is virtual here: real 60ms timers fire late on loaded
+    // runners and let the third chunk slip onto the wire, so the budget is
+    // advanced deterministically instead.
+    vi.useFakeTimers();
     send
       .mockResolvedValueOnce({ ok: true, entries: [['f0', 'tel']] })
       .mockImplementationOnce(hang);
-    const result = await runClassifyPipeline(new BackgroundClassifier(5_000, 60), pending(60), {});
+    const p = runClassifyPipeline(new BackgroundClassifier(5_000, 60), pending(60), {});
+    await vi.advanceTimersByTimeAsync(60);
+    const result = await p;
     // The remaining budget is measured from the run start (PBI-240), so the
     // hung second chunk is cut at ~60ms and the third chunk's send finds the
     // run budget spent and never reaches the wire.
