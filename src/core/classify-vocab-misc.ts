@@ -3,11 +3,11 @@ import type { MatcherEntry } from './dispatch-kit';
 import { norm } from './literals';
 import type { FieldMeta, SelectOption } from './types';
 
-export const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
+const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
 // A numeric age text box (年齢を数字で入力) must not qualify: only selects
 // and radio groups whose options carry decade (代) readings are decade fields.
-export const AGE = /年齢|年代|ねんだい|年齢層|age/;
-export const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
+const AGE = /年齢|年代|ねんだい|年齢層|age/;
+const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
 
 // Website field vocabulary (School Website etc.). A field that wants a
 // URL reads apart from the school-name field, and no-fill is safer than a wrong
@@ -21,7 +21,7 @@ export const WEBSITE = /website|web.?site|(^|[^a-z])url([^a-z]|$)/;
 // (companyEmail etc.) never match. placeholder is not in the empty condition
 // because search boxes carry it too (Search, Keyword input, etc.). The
 // comparison goes through norm, so uppercase and fullwidth Q are also caught.
-export const SEARCH_BOX_NAME: ReadonlySet<string> = new Set(['q', 'query', 'keyword', 'kw', 's']);
+const SEARCH_BOX_NAME: ReadonlySet<string> = new Set(['q', 'query', 'keyword', 'kw', 's']);
 export const isSearchBox = (m: FieldMeta): boolean =>
   (m.type === 'text' || m.type === 'search')
   && m.label.trim() === '' && m.nearby.trim() === ''

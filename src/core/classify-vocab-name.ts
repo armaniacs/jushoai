@@ -12,8 +12,7 @@ export const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^
 // 氏名/名前 vocabulary. (02)参加者名フリガナ also contains the word, but kana
 // attribution is resolveKana's job, so it stays fullNameKana.
 export const FULL_NAME = /氏名|お名前|名前|参加者名|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
-export const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
-export const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
+const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
 
 // The email gate for fields whose name contains mail (beside the
 // company-name gate). 'email' contains 'mail' as a substring, so one
@@ -37,7 +36,7 @@ export const isEmailByName = (m: FieldMeta): boolean =>
   m.tag === 'input' && (m.type === 'text' || m.type === 'tel' || m.type === 'email')
   && m.label.trim() === '' && m.nearby.trim() === ''
   && isBareMailName(m.name);
-export const isBareMailName = (name: string): boolean => {
+const isBareMailName = (name: string): boolean => {
   const key = norm(name.trim());
   if (!key.includes('mail')) return false;
   const flat = key.replace(/[\W_]+/g, '');
@@ -52,7 +51,7 @@ export const isBareMailName = (name: string): boolean => {
 // A half-width note plus a name signal means the field wants a latin name,
 // even when name/id alone would read as a plain Japanese name (name_last).
 // NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
-export const romajiBase = (ctx: DispatchCtx): boolean =>
+const romajiBase = (ctx: DispatchCtx): boolean =>
   ROMAJI_CTX.test(ctx.ownText) && !NAME_EXCLUDE.test(ctx.ownText);
 
 // Entry order inside this array is match priority; the DISPATCH composition in

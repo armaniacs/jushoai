@@ -8,8 +8,8 @@ import { hasOwnDeptName } from './classify-vocab-office';
 // school pre-pass vocabulary (the reading order is unchanged: the school entry
 // returns before the name sources, per the existing definition order;
 // fixture-first).
-export const SCHOOL = /学校|school|univ|college|高校|大学|institution|institute/;
-export const DEPT = /学部|学科|専攻|department|major|faculty/;
+const SCHOOL = /学校|school|univ|college|高校|大学|institution|institute/;
+const DEPT = /学部|学科|専攻|department|major|faculty/;
 
 // Entry order inside this array is match priority; the DISPATCH composition in
 // classify-rules.ts owns the overall order.

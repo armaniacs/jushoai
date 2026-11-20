@@ -2,11 +2,11 @@ import { matchAs, ownLegend } from './dispatch-kit';
 import type { MatcherEntry } from './dispatch-kit';
 import type { Category } from './types';
 
-export const COUNTRY = /country/i;
-export const ADDR_LINE = /address[_-]?([1-4])/i;
-export const POSTAL_CODE = /postal[-_ ]?code/i;
-export const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
-export const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
+const COUNTRY = /country/i;
+const ADDR_LINE = /address[_-]?([1-4])/i;
+const POSTAL_CODE = /postal[-_ ]?code/i;
+const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
+const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
 
 // Entry order inside this array is match priority; the DISPATCH composition in
 // classify-rules.ts owns the overall order.

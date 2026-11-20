@@ -319,6 +319,9 @@ const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby
 // 旧所在の droppedIds ガードは引数ではなく合成順序で引き継ぐ。
 function dropLeftovers(items: Item[]): Item[] {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  // Reachability note: a same-label zip pair never reaches this unknown-ization —
+  // the zip split policy's exact-size-2 retag consumes it earlier in the composition.
+  // The branch remains as insurance in case the split policy is ever loosened.
   for (const leftover of ['tel', 'zip'] as const) {
     const groups = new Map<string, number[]>();
     out.forEach((it, i) => {
@@ -481,7 +484,8 @@ export interface RulePipelineTrace {
   initialUnconfident: FieldMeta[];
   // Fields whose category changed during the sibling refine step.
   refineChanged: number;
-  // Fields the refine dropped (oversized ambiguous groups).
+  // Fields that disappeared during refine (currently the only disappearance
+  // path is oversized-group drops).
   refineDropped: number;
 }
 
