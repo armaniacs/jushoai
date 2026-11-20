@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { showPreview } from '../../src/ui/preview';
-import type { PreviewOptions, PreviewRow } from '../../src/ui/preview';
+import type { PreviewOptions } from '../../src/ui/preview';
 import { EMPTY_PROFILE, EMPTY_ADDRESS, type Address, type Profile } from '../../src/core/types';
 import { attachOpenShadow, buttonIn, makeRow } from '../helpers';
 

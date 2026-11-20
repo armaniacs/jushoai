@@ -207,7 +207,7 @@ export function mountButton(
     manual = true;
     moveHostTo(dragOrigin.top + dy, dragOrigin.left + dx);
   };
-  const endDrag = (e: PointerEvent) => {
+  const endDrag = (_e: PointerEvent) => {
     if (!dragOrigin) return;
     if (dragging) suppressClick = true;
     dragging = false;

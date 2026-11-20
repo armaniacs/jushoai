@@ -105,12 +105,16 @@ describe('built-in fallback notice (PBI-32)', () => {
     fireChange(providerSelect(root), 'openai');
     await settle(2);
     // Loopback endpoints need no API key, so the save validates without secrets.
-    const baseUrl = [...pageOf(root).querySelectorAll('label')]
-      .find((l) => l.querySelector('span')?.textContent === 'ベース URL')
-      ?.querySelector('input')!;
-    const model = [...pageOf(root).querySelectorAll('label')]
-      .find((l) => l.querySelector('span')?.textContent === 'モデル名')
-      ?.querySelector('input')!;
+    const baseUrlLabel = [...pageOf(root).querySelectorAll('label')]
+      .find((l) => l.querySelector('span')?.textContent === 'ベース URL');
+    if (baseUrlLabel === undefined) throw new Error('base URL label not found');
+    const baseUrl = baseUrlLabel.querySelector('input');
+    if (baseUrl === null) throw new Error('base URL input not found');
+    const modelLabel = [...pageOf(root).querySelectorAll('label')]
+      .find((l) => l.querySelector('span')?.textContent === 'モデル名');
+    if (modelLabel === undefined) throw new Error('model label not found');
+    const model = modelLabel.querySelector('input');
+    if (model === null) throw new Error('model input not found');
     setInput(baseUrl, 'http://localhost:11434/v1');
     setInput(model, 'm');
     storeMocks.load.mockResolvedValue({

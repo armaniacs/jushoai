@@ -28,13 +28,6 @@ const TEN_ADDRESS_EXPECTED = {
   tel: '090-1234-5678', email: 'yamada@example.com',
 };
 
-// epson-csr-form / epson-ir-form fill the same two citycode fields: coded
-// c_q names carry no classification signal without labels, so only the
-// citycode names read as city (the rest is LLM-fallback territory).
-const EPSON_EXPECTED = {
-  c_q14_citycode: '千代田区', c_q15_citycode: '千代田区',
-};
-
 // ff-csr / ff-webmaster / ff-procurement fill the same twelve Drupal-form
 // fields: 姓/名 labels each read as a full name (no first/last split
 // applied); 勤務先・学校名 compound reads as the school vocabulary, so the
@@ -8075,11 +8068,11 @@ const LEDGER = {
     excluded: [
       'img_preserve_flg (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'mov_preserve_flg (hidden): empty-submit shim or server state, never a fill target (exclude)',
-      '(no name/id) (\"checkbox\"): unaddressable (exclude)',
+      '(no name/id) ("checkbox"): unaddressable (exclude)',
       '(no name/id) (button): unaddressable (exclude)',
       '(no name/id) (button): unaddressable (exclude)',
       '(no name/id) (button): unaddressable (exclude)',
-      '(no name/id) (\"checkbox\"): unaddressable (exclude)',
+      '(no name/id) ("checkbox"): unaddressable (exclude)',
       'lang-go (button): action element, never a fill target (exclude)',
       '_method (hidden): empty-submit shim or server state, never a fill target (exclude)',
       '_csrfToken (hidden): empty-submit shim or server state, never a fill target (exclude)',

@@ -24,7 +24,6 @@ import { IMPORT_DRAFT_MESSAGE_TYPE } from '../import-message';
 import { guestProfile, guestAddress } from '../core/guest';
 import { GUEST_MESSAGE_TYPE } from '../guest-message';
 import { confirmGuest } from '../ui/guest-panel';
-import type { FieldMeta } from '../core/types';
 import { egressRowsFor } from '../ai/egress-preview';
 import { confirmEgress } from '../ui/egress-panel';
 import { mergeLlmSkip, shouldDisableClassifier, type EgressPlan } from '../core/egress-plan';

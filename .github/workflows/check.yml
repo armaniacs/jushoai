@@ -40,7 +40,7 @@ jobs:
         # would fetch wxt from the registry.
         run: npx wxt prepare
 
-      - name: Typecheck, test and build
+      - name: Typecheck, lint, test and build
         run: make check
 
   e2e:

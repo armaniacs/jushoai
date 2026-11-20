@@ -3,15 +3,11 @@ import type { ClassifySchedule } from './core/classifier';
 import { includesLiteral } from './core/literals';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
-import { TRANSFER_BACKSTOP_CAP, TRANSFER_CHUNK_SIZE } from './llm/transfer-contract';
+import { TRANSFER_BACKSTOP_CAP } from './llm/transfer-contract';
 import { MAX_TEXT_LENGTH } from './scan-limits';
 
-// Send-size contract for ai-classify, shared with background-gateway:
-// the sender ships at most TRANSFER_TOTAL_CAP fields in TRANSFER_CHUNK_SIZE
-// pieces, and the receiver backstops each message at TRANSFER_BACKSTOP_CAP.
-// The chunk must stay below the backstop so a well-formed sender never trips it.
-// The numbers are owned by the transfer contract module (PBI-43): this file
-// imports them instead of holding its own copies.
+// ai-classify 受信側の backstop: 上限値は transfer-contract が単一所有し、
+// このファイルは TRANSFER_BACKSTOP_CAP の参照で超過を拒否するだけのため自前の数値を持たない
 const MAX_ID_LENGTH = 100;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];

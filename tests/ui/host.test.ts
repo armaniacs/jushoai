@@ -6,8 +6,10 @@ afterEach(() => { document.body.innerHTML = ''; });
 
 // Compile-time guard: omitting position must be a type error so a new
 // consumer cannot silently strand a static host. Checked by tsc --noEmit;
-// the branch never runs.
-if (false) {
+// the branch never runs (a named flag, not a literal, so the condition
+// is not a constant).
+const neverRuns: boolean = false;
+if (neverRuns) {
   // @ts-expect-error - position is required to prevent static stranded hosts
   createShadowHost();
 }

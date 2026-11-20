@@ -727,7 +727,7 @@ describe('showDismissDialog register success auto-close (PBI-244)', () => {
     const target = document.createElement('button');
     target.textContent = '合意位置';
     document.body.append(target);
-    const { dialog, root } = showWithOpenRoot({
+    const { dialog } = showWithOpenRoot({
       onClose: vi.fn(),
       onUndo: vi.fn(),
       restoreFocus: () => target,

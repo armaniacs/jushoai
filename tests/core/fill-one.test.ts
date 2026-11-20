@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { planOneField, fillOneReasonLabel } from '../../src/core/fill-one';
 import { classifyAll } from '../../src/core/analyze';
 import { buildPlan } from '../../src/core/planner';
-import { EMPTY_PROFILE, EMPTY_ADDRESS } from '../../src/core/types';
+import { EMPTY_PROFILE } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
 describe('planOneField', () => {

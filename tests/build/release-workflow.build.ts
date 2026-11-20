@@ -25,7 +25,7 @@ const checkoutIndex = lines.findIndex((line) => line.includes('actions/checkout'
 
 describe('release workflow permissions', () => {
   it('declares no workflow-wide permissions', () => {
-    const topLevel = lines.filter((line) => /^permissions:/.test(line));
+    const topLevel = lines.filter((line) => line.startsWith('permissions:'));
     expect(topLevel, 'permissions must be job-scoped, not workflow-wide').toEqual([]);
   });
 

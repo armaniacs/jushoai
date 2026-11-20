@@ -450,7 +450,7 @@ describe('transfer (PBI-117)', () => {
   // correctness gate; this ceiling is the DoS guard.
   it('rejects a crafted 200k-entry file before any per-entry processing (VULN-002)', async () => {
     await saveData(ready);
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     const N = 200_000;
     const crafted = `{"profiles":[${'{},'.repeat(N - 1)}{}],"addresses":[]}`;
     try {
@@ -513,7 +513,7 @@ describe('transfer (PBI-117)', () => {
   });
 
   it('falls mistyped fields back to defaults and rejects the entry', async () => {
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
     try {
       await saveData(ready);
       const result = await importTransferFile(JSON.stringify({

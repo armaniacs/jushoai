@@ -1,4 +1,5 @@
 # Verification layers: layer | config | include | make target | real browser | network | in check.
+# lint  | (oxlint defaults)      | **/*.{js,ts}              | lint                  | no  | no  | yes (check)
 # test  | vitest.config.ts       | tests/**/*.test.ts       | test                  | no  | no  | yes (check)
 # build | vitest.build.config.ts | tests/build/**/*.build.ts | test-build           | no  | no  | yes (check, needs dist/*-mv3)
 # e2e   | vitest.e2e.config.ts   | tests/e2e/**/*.e2e.ts    | e2e-firefox/e2e-chrome | yes | no* | via check-all only (serial: fileParallelism is false)
@@ -8,7 +9,7 @@
 # *e2e/video drive a real browser against localhost plus dist/*-mv3 (e2e harness on 127.0.0.1; video record*.mjs on :4180, record-drag.mjs self-serves on :4181). e2e is hermetic except 1 github-origin assert (tests/e2e/scenarios.ts:154).
 .DEFAULT_GOAL := help
 
-.PHONY: help install dev build test typecheck check check-all zip clean site site-serve eval eval-pin addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
+.PHONY: help install dev build test typecheck lint check check-all zip clean site site-serve eval eval-pin addurl addurl-check build-firefox lint-firefox test-build e2e-firefox e2e-chrome zip-firefox
 
 help: ## Show available targets
 	@grep -E '^[a-z0-9-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-14s %s\n", $$1, $$2}'
@@ -30,6 +31,9 @@ typecheck: ## Run tsc --noEmit (extension and site)
 	npm run typecheck
 	npx tsc -p site/tsconfig.json
 
+lint: ## Run oxlint with zero warnings allowed
+	npx oxlint --deny-warnings
+
 build-firefox: ## Build the extension into dist/firefox-mv3
 	npm run build:firefox
 
@@ -49,7 +53,7 @@ e2e-chrome: build ## Run the E2E suite in a real Chrome (HEADLESS=1 optional)
 zip-firefox: ## Package the Firefox build into dist/*.zip
 	npm run zip:firefox
 
-check: typecheck test test-build lint-firefox ## Typecheck, test, build both browsers, verify manifests and lint
+check: typecheck lint test test-build lint-firefox ## Typecheck, lint, test, build both browsers, verify manifests and lint
 
 check-all: check site e2e-firefox e2e-chrome ## Full verification including docs site and both browsers' E2E (needs real Chrome/Firefox; HEADLESS=1 for headless)
 

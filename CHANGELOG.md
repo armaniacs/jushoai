@@ -9,6 +9,7 @@
 ### Added
 
 - fixture 雛形の生成が type=date の欄を扱えるようにする（scan-fields の走査対象型との一致をテストで固定する）
+- oxlint を導入し、未使用変数・危険な非 null 断定などの静的検査を CI のゲートにする
 
 ### Changed
 

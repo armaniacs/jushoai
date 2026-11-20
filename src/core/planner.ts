@@ -71,7 +71,7 @@ function enforceWidth(value: string, meta: FieldMeta): string {
 // pattern that fails to compile is ignored by the browser as well. Both cases
 // fall open (no check) so an unusual pattern style never costs a page its
 // fills (fail-closed は禁止). null means "no check".
-const HAS_REGEX_STRUCTURE = /[\[\]{}()|+*?.^$\\]/;
+const HAS_REGEX_STRUCTURE = /[[\]{}()|+*?.^$\\]/;
 // The v flag (ES2024) is the HTML-spec compile mode for the pattern attribute.
 // Feature-detected once: an engine without it falls back to the anchored plain
 // RegExp (vitest は常に非 Firefox で動くが Node の版に依存しないため).

@@ -8,7 +8,7 @@ import {
   registerExclusionChoice,
   undoRegisteredExclusion,
 } from '../../src/content/exclusion-register';
-import { EXCLUDED_URLS_KEY, loadExcludedUrls, saveExcludedUrls } from '../../src/exclusions-store';
+import { loadExcludedUrls, saveExcludedUrls } from '../../src/exclusions-store';
 
 // PBI-244: the quick-register undo loop against one fake storage, wired like
 // content.ts: real dialog, real register/undo chains, real store adapter. The

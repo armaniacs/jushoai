@@ -18,7 +18,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 スタックは WXT + TypeScript + Vitest（jsdom）。
 
-`make help` で一覧を表示する。`make check` が typecheck + test + 両ブラウザの build + manifest 検査 + web-ext lint を通しで実行する。
+`make help` で一覧を表示する。`make check` が typecheck + lint + test + 両ブラウザの build + manifest 検査 + web-ext lint を通しで実行する。
 
 ```bash
 make install                                  # 依存の取得
@@ -29,6 +29,7 @@ make e2e-firefox                              # 実 Firefox で E2E
 make e2e-chrome                               # 実 Chrome で E2E
 make check-all                                # check + site + 両ブラウザの E2E を通しで実行する
 make typecheck                                # tsc --noEmit
+make lint                                     # oxlint（警告ゼロを維持）
 make test                                     # 全テスト
 make site                                     # ドキュメントサイトを site-dist に生成して検査
 make site-serve                               # site-dist を 127.0.0.1:4173 で配信
