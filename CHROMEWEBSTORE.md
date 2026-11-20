@@ -194,6 +194,7 @@ https://armaniacs.github.io/jushoai/ (package.json の homepage と一致)
 
 | Version | Date | Changes | Status |
 |---------|------|---------|--------|
+| 0.1.39 | 2026-11-20 | fixture 雛形の type=date 対応と上書きガード、開発依存の更新（node-forge 脆弱性解消）、誕生日語 1 欄型判定の拡張、oxlint 導入。 | Submitted (release.yml 自動) |
 | 0.1.38 | 2026-11-18 | 除外登録の即時取り消しと解除先案内、ダイアログの a11y（Esc・フォーカス・読み上げ）、除外 URL 一致規則の修正（origin + セグメント境界）、mail 語誤判定の修正、クラウド分類の待ち時間上限の復元、pattern ReDoS の fall-open。 | Submitted (release.yml 自動) |
 | 0.1.37 | 2026-11-18 | ドキュメントサイトの全面改修（表とコード枠のキーボードスクロール、コピー結果の表示統一、現在地表示、FAQ アニメ、動画の遅延読込と MP4 化）。 | Submitted (release.yml 自動) |
 | 0.1.36 | 2026-11-16 | samples corpus を 311 件に拡張。検索窓・会社名・FAX・email 読みの分類修正。除外登録の紹介動画と CHROMEWEBSTORE.md の新規作成。 | Submitted (release.yml 自動) |
