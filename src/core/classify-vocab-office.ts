@@ -1,6 +1,7 @@
 import { matchAs, ownLegend } from './dispatch-kit';
 import type { MatcherEntry } from './dispatch-kit';
 import { BIRTH_CTX } from './classify-vocab-birth';
+import { KANA_NOTE } from './classify-vocab-name';
 import { norm } from './literals';
 import type { FieldMeta } from './types';
 
@@ -36,7 +37,6 @@ export const DEPT_OFFICE = /(?:(?<!会社名・)(?<!法人名・)(?<!団体名�
 export const COMPANY_WORD = /会社|法人|企業|団体|店舗|事業所|営業所|社/;
 export const hasCompoundDeptJoint = (own: string): boolean =>
   /部署名/.test(own) && COMPANY_WORD.test(own);
-export const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
 // PBI-232: single owner of the kana-note/birth-context exclusion shared by the
 // office gate predicates below.
 export const officeContextExcluded = (own: string): boolean =>

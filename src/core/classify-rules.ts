@@ -1,16 +1,19 @@
 import type {
-  Category, Classification, FieldMeta, Item, SelectOption,
+  Category, Classification, FieldMeta, Item,
 } from './types';
 import { kanaNormFromViews, matchFieldOwned, matchLegend, resolveKana, wantsKana } from './kana';
 import { buildFieldNormViews, norm } from './literals';
 import { applyEnglishPage } from './page-language';
-import { matchAs, ownLegend } from './dispatch-kit';
 import type { DispatchCtx, MatcherEntry } from './dispatch-kit';
 import { BIRTH_CTX, birthEntries, isBirthPhrase } from './classify-vocab-birth';
+import { schoolEntries } from './classify-vocab-school';
 import {
-  EXCLUDE, hasOwnDeptName, isCompanyByName, jobOfficeEligible, officeEligible,
+  EXCLUDE, isCompanyByName, jobOfficeEligible, officeEligible,
   officeEntries, officeKanaEligible,
 } from './classify-vocab-office';
+import { FIRST, FULL_NAME, isEmailByName, LAST, NAME_EXCLUDE, nameEntries } from './classify-vocab-name';
+import { addressEntries } from './classify-vocab-address';
+import { ageEntries, genderEntries, isSearchBox, WEBSITE } from './classify-vocab-misc';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -46,87 +49,6 @@ const AUTOCOMPLETE = new Map<string, Category>([
   ['organization', 'company'],
 ]);
 
-// Applied only to the person-name step so e.g. a user_email field stays an email.
-const NAME_EXCLUDE =
-  /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
-const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
-const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
-// PBI-203: 参加者名 は WPForms の参加者名ラベルで、氏名/名前 の語彙に載らない。
-// (02)参加者名フリガナ もこの語を含むが、kana 帰属は resolveKana が行うため
-// fullNameKana のまま残る（tests/core/classify-rules.test.ts の PBI-203 回帰）。
-const FULL_NAME = /氏名|お名前|名前|参加者名|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
-
-// PBI-212: 教育機関の英語ラベル（Institution/Institute）を教育機関名欄の語彙に足す。
-// 「Name of Institution ...」を氏名（FULL_NAME の name 語）に拾わせないため、school
-// 前処理の語彙として先に判定する（読み順は変えず、school エントリが氏名の sources
-// より先に返る既存の定義順をそのまま使う。fixture 先行）。
-const SCHOOL = /学校|school|univ|college|高校|大学|institution|institute/;
-const DEPT = /学部|学科|専攻|department|major|faculty/;
-const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
-// PBI-212: website 欄の語彙（School Website など）。URL を入れたい欄は教育機関名欄
-// （school 名欄）と読み分け、学校名の誤補完より不注入が安全なため分類から外す
-// （PBI-208 実装記録の誤解釈候補。website 欄の語彙は school 名欄より先に判定する）。
-// norm が小文字化するため website は小文字のみ。url は語境界で守る（curl 等の
-// 誤拾いを避ける NAME_EXCLUDE の cc パターンと同型）。
-const WEBSITE = /website|web.?site|(^|[^a-z])url([^a-z]|$)/;
-// PBI-224: サイト内検索窓の除外名（完全一致リスト）。label・nearby が空で
-// type が text/search の欄だけが対象。派生名（companyEmail 等）は一致しない。
-// placeholder は検索窓にも付く（「検索」「キーワード入力」等）ため空条件に
-// 含めない。norm 越しに比較するため大文字・全角の Q も拾う。
-const SEARCH_BOX_NAME: ReadonlySet<string> = new Set(['q', 'query', 'keyword', 'kw', 's']);
-const isSearchBox = (m: FieldMeta): boolean =>
-  (m.type === 'text' || m.type === 'search')
-  && m.label.trim() === '' && m.nearby.trim() === ''
-  && SEARCH_BOX_NAME.has(norm(m.name.trim()));
-// PBI-229: name に mail を含む欄の email ゲート（PBI-225 の会社ゲートの隣）。
-// 'email' は 'mail' を部分文字列に含むため includes('mail') 一つで両方を拾う
-// （item_mail_1・mail2・mailconf・email_confirm・companyEmail 等）。
-// label・nearby が空の text/tel/email 型の input だけが対象：チェックボックス
-// （メルマガ購読等）・search・select・radio は開かない。placeholder は
-// PBI-225 と同じく空条件に含めない。EXCLUDE（company|corp|...）より先に返す
-// ため mail_company のような bare 名も email 確定する。
-// 誤読防止：フォーム名由来（nichirin の mailform2[0]・tel 3-split の
-// mailform6[0..2]・住所分割の mailform7 等。'mail' は欄ではなく容器を指す）と
-// 送信先指定の mailto（ena。利用者のアドレスを入れると誤配送の恐れ）は拾わ
-// ない。区切りを畳んで判定するため mail-form・mail_form も同じく除外する。
-// PBI-233: postal-derived names (mailingaddress / mailbox) read 'mail' as the
-// postal sense (a mailing address, a mail drop), not the user's address
-// column, so their stems join the flat denylist. The PBI-229 rescue targets
-// stay alive because none of them embeds these stems (mailaddress / mailconf
-// / item_mail_1 / email_confirm …).
-const isEmailByName = (m: FieldMeta): boolean =>
-  m.tag === 'input' && (m.type === 'text' || m.type === 'tel' || m.type === 'email')
-  && m.label.trim() === '' && m.nearby.trim() === ''
-  && isBareMailName(m.name);
-const isBareMailName = (name: string): boolean => {
-  const key = norm(name.trim());
-  if (!key.includes('mail')) return false;
-  const flat = key.replace(/[\W_]+/g, '');
-  return (
-    !flat.includes('mailform')
-    && !flat.includes('mailto')
-    && !flat.includes('mailing')
-    && !flat.includes('mailbox')
-  );
-};
-const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
-const COUNTRY = /country/i;
-const ADDR_LINE = /address[_-]?([1-4])/i;
-const POSTAL_CODE = /postal[-_ ]?code/i;
-const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
-const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
-// A numeric age text box (年齢を数字で入力) must not qualify: only selects
-// and radio groups whose options carry decade (代) readings are decade fields.
-const AGE = /年齢|年代|ねんだい|年齢層|age/;
-
-const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
-
-// A half-width note plus a name signal means the field wants a latin name,
-// even when name/id alone would read as a plain Japanese name (name_last).
-// NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
-const romajiBase = (ctx: DispatchCtx): boolean =>
-  ROMAJI_CTX.test(ctx.ownText) && !NAME_EXCLUDE.test(ctx.ownText);
-
 // Priority-ordered dispatch table for classifyField: definition order is the
 // match priority. A new field kind is one entry inserted at the right place;
 // existing entries stay untouched. Module-level so no per-field allocation,
@@ -135,77 +57,12 @@ const romajiBase = (ctx: DispatchCtx): boolean =>
 // single owner of the overall priority.
 const DISPATCH: readonly MatcherEntry[] = [
   ...birthEntries,
-  // school / department entries remain inline until Task 3.
-  // school / department / gender: field itself (0.7) outranks a shared heading (0.65).
-  // F1: the school department entry yields when the field itself carries a
-  // Japanese 部署名 word (the company-department signal outranks the English
-  // token); bare 部署 keeps the school reading.
-  ...ownLegend(SCHOOL, 'school'),
-  ...ownLegend(DEPT, 'department', (ctx) => !hasOwnDeptName(ctx.ownText)),
+  ...schoolEntries,
   ...officeEntries,
-  // gender and later entries remain inline until Task 3.
-  ...ownLegend(GENDER, 'gender'),
-  // Overseas address fields are named explicitly (country, address_1..4,
-  // postal_code), so they classify without sibling refinement. 国名 alone
-  // stays unclassified: on domestic forms it is ambiguous with person names.
-  // Bare address1/address2 keep their domestic readings (addressFull/building):
-  // the overseas reading needs an overseas context (city/state/street words
-  // or a half-width note) in the field or its heading.
-  ...ownLegend(COUNTRY, 'country'),
-  {
-    name: 'address-line-own',
-    match: (ctx) => {
-      const addrLine = ctx.ownText.match(ADDR_LINE);
-      return addrLine && OVERSEAS_CTX.test(ctx.overseasCtx)
-        ? matchAs(`address${addrLine[1]}` as Category, 0.7)
-        : null;
-    },
-  },
-  {
-    name: 'address-line-legend',
-    match: (ctx) => {
-      const addrLegend = ctx.legendText.match(ADDR_LINE);
-      return addrLegend && OVERSEAS_CTX.test(ctx.overseasCtx)
-        ? matchAs(`address${addrLegend[1]}` as Category, 0.65)
-        : null;
-    },
-  },
-  // postal-code: half-width/foreign note gates both sides; the legend side
-  // reads the combined field+heading context.
-  ...ownLegend(
-    POSTAL_CODE,
-    'postalCode',
-    (ctx) => FOREIGN_MARK.test(ctx.ownText),
-    (ctx) => FOREIGN_MARK.test(ctx.overseasCtx),
-  ),
-  // age: option fields with decade readings only.
-  ...ownLegend(AGE, 'ageDecade', (ctx) => ctx.isOptionField && hasDecadeOptions(ctx.m.options)),
-  {
-    name: 'romaji-full-name',
-    match: (ctx) =>
-      romajiBase(ctx) && FULL_NAME.test(ctx.ownText) ? matchAs('fullNameRomaji', 0.7) : null,
-  },
-  {
-    name: 'romaji-last-name',
-    match: (ctx) =>
-      romajiBase(ctx) && LAST.test(ctx.ownText) && !FIRST.test(ctx.ownText)
-        ? matchAs('lastNameRomaji', 0.7)
-        : null,
-  },
-  {
-    name: 'romaji-first-name',
-    match: (ctx) =>
-      romajiBase(ctx) && FIRST.test(ctx.ownText) && !LAST.test(ctx.ownText)
-        ? matchAs('firstNameRomaji', 0.7)
-        : null,
-  },
-  {
-    name: 'romaji-either-name',
-    match: (ctx) =>
-      romajiBase(ctx) && (LAST.test(ctx.ownText) || FIRST.test(ctx.ownText))
-        ? matchAs('fullNameRomaji', 0.7)
-        : null,
-  },
+  ...genderEntries,
+  ...addressEntries,
+  ...ageEntries,
+  ...nameEntries,
 ];
 
 // Kana-blind name step: returns plain name bases only. Whether a base wants kana
