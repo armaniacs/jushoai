@@ -650,7 +650,7 @@ describe('refineClassifications', () => {
   });
 
   it('reports oversized drops through the pipeline trace', () => {
-    // SplitDrop's per-field reason is module-private; the pipeline trace count
+    // The per-field drop reason is module-private; the pipeline trace count
     // plus the survivors' absence is the public view of the same behavior.
     const four = ['a', 'b', 'c', 'd'].map((id) => makeMeta({ id, label: 'お名前', nearby: 'お名前' }));
     const trace = classifyRulePipelineWithTrace([...four, makeMeta({ id: 'e', type: 'email' })]);
