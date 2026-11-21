@@ -126,10 +126,6 @@ export type WireExcludedKey = (typeof WIRE_EXCLUDED_KEYS)[number];
 // (classify-transport), the receiver (decodeFieldMeta) and the prompt builder (buildPrompt).
 export type MetaWire = Pick<FieldMeta, (typeof WIRE_META_KEYS)[number]>;
 
-// Display width for metadata strings leaving the extension (prompt rows and
-// feedback reports). Distinct from MAX_TEXT_LENGTH, which caps the wire envelope.
-export const META_CLIP_LENGTH = 80;
-
 export function encodeFieldMeta(f: FieldMeta): MetaWire {
   // LLM 送信用ペイロードはこの関数経由の wire 型（allow-list キー）のみで構築する。
   // FieldMeta.value（fill 判定専用のページ既存値）はここで落とす。以後の送信側変更でも
