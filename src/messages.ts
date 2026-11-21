@@ -13,10 +13,6 @@ const MAX_ID_LENGTH = 100;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
 
-// Transition shim: the failure vocabulary moved to core/classifier-failures;
-// a follow-up change re-points importers there and removes this re-export.
-export { type ClassifyFailure, type TestFailure, asClassifyFailure, decodeErrorToClassifyFailure } from './core/classifier-failures';
-
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
 export type ClassifyResponse =
   | { ok: true; entries: [string, Category][] }
@@ -223,10 +219,11 @@ const isWireRequestType = (v: string): v is AiRequest['type'] =>
 const hasOnlyKeys = (keys: string[], allow: readonly string[]): boolean =>
   keys.length === allow.length && keys.every((k) => allow.includes(k));
 
-// PBI-175: decodeRequest の Result 型化。従来の null 一値は失敗の種類を
-// 区別しないため、呼び出し側は oversize を truncated に、version/形不正を
-// bad-response に写像できなかった。理由語彙は転送の失敗語彙に直結する
-// （decodeErrorToClassifyFailure を参照）。
+// decodeRequest returns a Result instead of the old single null so callers can
+// tell failure kinds apart: a lone null could not map 'oversize' to 'truncated'
+// or version/shape failures to 'bad-response'. The reason vocabulary ties
+// directly into the transfer failure vocabulary (see decodeErrorToClassifyFailure
+// in core/classifier-failures).
 export type RequestDecodeError = 'oversize' | 'version' | 'malformed';
 export type DecodedRequestResult =
   | { ok: true; request: DecodedAiRequest }
@@ -292,9 +289,7 @@ export function isLegacyClassifyFailure(res: unknown): boolean {
 export function parseClassifyResult(res: unknown): { ok: true; map: Map<string, Category> } | { ok: false; reason: ClassifyFailure } | null {
   if (!isRecord(res)) return null;
   if (res.ok === false) {
-    return typeof res.reason === 'string' && isClassifyFailure(res.reason)
-      ? { ok: false, reason: res.reason }
-      : null;
+    return isClassifyFailure(res.reason) ? { ok: false, reason: res.reason } : null;
   }
   if (res.ok !== true || !Array.isArray(res.entries)) return null;
   const out = new Map<string, Category>();
@@ -318,7 +313,7 @@ export function parseTestResponse(res: unknown): TestResponse | null {
   if (res.ok === true && includesLiteral(CATEGORIES, res.category)) {
     return { ok: true, category: res.category };
   }
-  if (res.ok === false && typeof res.reason === 'string' && isTestFailure(res.reason)) {
+  if (res.ok === false && isTestFailure(res.reason)) {
     return { ok: false, reason: res.reason };
   }
   return null;

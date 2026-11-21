@@ -1,6 +1,7 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { AiStatusInfo } from '../ai/types';
-import { aiDownloadRequest, aiStatusRequest, aiTestRequest, parseAuditClearResponse, parseStatusResponse, parseTestResponse, type ClassifyFailure, type TestResponse } from '../messages';
+import type { ClassifyFailure } from '../core/classifier-failures';
+import { aiDownloadRequest, aiStatusRequest, aiTestRequest, parseAuditClearResponse, parseStatusResponse, parseTestResponse, type TestResponse } from '../messages';
 import { TRANSFER_CHUNK_TIMEOUT_MS, TRANSFER_STATUS_TIMEOUT_MS, TRANSFER_TOTAL_CAP, TRANSFER_TOTAL_TIMEOUT_MS } from './transfer-contract';
 import { send } from './classify-transport';
 import { sendWithTimeout } from './timed-call';

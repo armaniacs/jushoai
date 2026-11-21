@@ -1,9 +1,9 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { send } from '../../src/llm/classify-transport';
 import { buildPrompt } from '../../src/llm/prompt';
+import { decodeErrorToClassifyFailure } from '../../src/core/classifier-failures';
 import {
   aiClassifyRequest,
-  decodeErrorToClassifyFailure,
   decodeFieldMeta,
   decodeRequestResult,
   encodeFieldMeta,

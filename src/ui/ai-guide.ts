@@ -1,5 +1,5 @@
 import type { AiStatusInfo } from '../ai/types';
-import type { ClassifyFailure } from '../messages';
+import type { ClassifyFailure } from '../core/classifier-failures';
 import { STATUS_TEXT } from '../ai/status-text';
 import { getFlagGuidance, type BrowserKind } from '../llm/browser-support';
 import { OVERLAY_CSS } from './overlay';

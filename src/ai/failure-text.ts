@@ -1,4 +1,4 @@
-import type { ClassifyFailure, TestFailure } from '../messages';
+import type { ClassifyFailure, TestFailure } from '../core/classifier-failures';
 
 // AI失敗文言の単一対応表（PBI-19）。
 // content.ts のボタン hint と options の ai-section.ts の接続テスト notice が

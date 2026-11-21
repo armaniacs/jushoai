@@ -1,4 +1,4 @@
-import { asClassifyFailure, type ClassifyFailure } from '../messages';
+import { asClassifyFailure, type ClassifyFailure } from '../core/classifier-failures';
 import {
   classifyField, classifyRulePipeline, isConfident, refineClassifications,
 } from '../core/classify-rules';

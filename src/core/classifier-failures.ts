@@ -17,8 +17,11 @@ export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
 // The literal arrays stay module-internal: vocabulary membership is exposed
 // only through these predicates, so consumers cannot grow dependencies on the
 // raw lists.
-export const isTestFailure = (v: string): v is TestFailure => includesLiteral(TEST_FAILURES, v);
-export const isClassifyFailure = (v: string): v is ClassifyFailure => includesLiteral(CLASSIFY_FAILURES, v);
+// The predicates take unknown (not string): wire parsers pass unvalidated reply
+// fields straight in, and includesLiteral already owns the typeof-string check,
+// so callers never need a redundant typeof guard before calling.
+export const isTestFailure = (v: unknown): v is TestFailure => includesLiteral(TEST_FAILURES, v);
+export const isClassifyFailure = (v: unknown): v is ClassifyFailure => includesLiteral(CLASSIFY_FAILURES, v);
 
 // Seam-boundary guard for failureReason (review #5): the reason travels as a
 // string on AttemptOutcome, so a future adapter could hand back a

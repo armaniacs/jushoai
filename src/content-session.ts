@@ -4,7 +4,7 @@ import type { Address, FieldMeta, Profile, RunContext } from './core/types';
 import type { PremadePass } from './core/classify-once';
 import { runClassifyPipeline } from './classify-pipeline/pipeline';
 import type { FieldClassifier } from './core/classifier';
-import type { ClassifyFailure } from './messages';
+import type { ClassifyFailure } from './core/classifier-failures';
 import { createFillFlow, type DisplayDecision, type FillFlowEnv } from './content/fill-flow';
 export { decideDisplay, type DisplayDecision } from './content/fill-flow';
 import type { FillReport, FillSummary, UndoReport } from './dom/fill-plan';

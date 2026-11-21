@@ -4,7 +4,7 @@ import { hintForButton } from '../ai/failure-text';
 import { changedRows } from '../core/site-approval';
 import type { ApprovalRecord } from '../core/site-approval';
 import type { Address, Profile } from '../core/types';
-import type { ClassifyFailure } from '../messages';
+import type { ClassifyFailure } from '../core/classifier-failures';
 import type { ButtonHandle } from '../ui/button';
 import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
 

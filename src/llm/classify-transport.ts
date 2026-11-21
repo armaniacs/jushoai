@@ -1,11 +1,11 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { ClassifySchedule } from '../core/classifier';
+import type { ClassifyFailure } from '../core/classifier-failures';
 import {
   aiClassifyRequest,
   encodeFieldMeta,
   isLegacyClassifyFailure,
   parseClassifyResult,
-  type ClassifyFailure,
 } from '../messages';
 import { TRANSFER_CHUNK_TIMEOUT_MS, TRANSFER_TOTAL_TIMEOUT_MS } from './transfer-contract';
 import { sendWithTimeout } from './timed-call';
