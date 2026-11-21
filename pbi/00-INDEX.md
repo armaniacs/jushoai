@@ -1,5 +1,22 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-21・checking-team + アーキテクチャ発見の PBI 化。ラウンド台帳にインベントリ・RICE・受容判断を記録）
+
+- `2026-11-21-00-backlog-checking-arch-round.md`（ラウンド台帳。checking-team 2026-11-21 (95/100・Medium 5 件は同ラウンドで修正済み) とアーキテクチャレビュー 2026-11-20 の発見 13 件を個別 PBI 化 (246-258)。受容判断 2 件は台帳のみに記録）
+- `2026-11-21-246-refactor-messages-vocab-split.md`（順位 1。RICE 85。messages.ts を wire codec に戻す。アーキ候補 4）
+- `2026-11-21-247-refactor-drop-fill-session-facade.md`（順位 2。RICE 80。content-session facade 剥がし。アーキ候補 5）
+- `2026-11-21-248-chore-messaging-open-options-hygiene.md`（順位 3。RICE 75。open-options codec 経由化 + decode 1 回化 + alias 撤去。アーキ候補 6）
+- `2026-11-21-249-chore-review-convention-alignment.md`（順位 4。RICE 70。タスク ID・CONTEXT.md・コメント桁の規約整合）
+- `2026-11-21-250-chore-vocab-import-cycle-guard.md`（順位 5。RICE 55。語彙 module の import 方向を機械検査に載せる）
+- `2026-11-21-251-refactor-bare-name-gate-unify.md`（順位 6。RICE 45。bare-name ゲート 3 件の共有述語統合）
+- `2026-11-21-252-refactor-run-spine-startrun.md`（順位 7。RICE 40。run() 脊髄の startRun 深化。アーキ候補 2・Strong）
+- `2026-11-21-253-refactor-dismiss-flow-extract.md`（順位 8。RICE 35。除外クイック登録配線の dismiss-flow 抽出。アーキ候補 3）
+- `2026-11-21-254-chore-office-boundary-comment-single.md`（順位 9。RICE 25。緩和境界 WHY コメントの office 単一所有化）
+- `2026-11-21-255-refactor-matcher-module-level-regex.md`（順位 10。RICE 22。matcher 本体 inline 正規表現の module-level 化監査）
+- `2026-11-21-256-refactor-address-category-parse.md`（順位 11。RICE 20。address カテゴリ構築の型保護）
+- `2026-11-21-257-chore-ownlegend-gate-explicit.md`（順位 12。RICE 18。ownLegend の legend 側ゲート既定値の明示化）
+- `2026-11-21-258-refactor-refine-dropped-measure.md`（順位 13。RICE 15。refineDropped 計測源を dropped 数に寄せる）
+
 ## 進行中からアーカイブ済み（2026-11-20・台帳棚卸しで131件処理。残りはB3件・C4件＋ラウンド台帳）
 
 全件オールチェック済み（DoD更新なし）。証拠は各PBIの実装記録と下記コミット。`make check` green（189ファイル・3184 passed＋期待失敗1・サイト24・web-ext誤り0）を確認後に移送。
