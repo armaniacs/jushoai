@@ -1,6 +1,7 @@
 import { CATEGORIES, type Category, type FieldMeta } from './core/types';
 import type { ClassifySchedule } from './core/classifier';
 import { includesLiteral } from './core/literals';
+import { isClassifyFailure, isTestFailure, type ClassifyFailure, type TestFailure } from './core/classifier-failures';
 import { CLOUD_STATUSES, PROVIDER_KINDS, type AiState, type AiStatusInfo } from './ai/types';
 import { AI_STATUSES } from './llm/availability';
 import { TRANSFER_BACKSTOP_CAP } from './llm/transfer-contract';
@@ -11,20 +12,12 @@ import { MAX_TEXT_LENGTH } from './scan-limits';
 const MAX_ID_LENGTH = 100;
 
 const AI_STATES: readonly string[] = [...AI_STATUSES, ...CLOUD_STATUSES];
-const TEST_FAILURES = ['not-configured', 'permission', 'auth', 'network', 'rejected', 'bad-response', 'unavailable', 'first-dial'] as const;
 
-export type TestFailure = (typeof TEST_FAILURES)[number];
+// Transition shim: the failure vocabulary moved to core/classifier-failures;
+// a follow-up change re-points importers there and removes this re-export.
+export { type ClassifyFailure, type TestFailure, asClassifyFailure, decodeErrorToClassifyFailure } from './core/classifier-failures';
+
 export type TestResponse = { ok: true; category: Category } | { ok: false; reason: TestFailure };
-
-// Failure vocabulary for ai-classify: the TestFailure set, which includes
-// 'unavailable' (built-in AI present in settings but not usable right now),
-// plus 'truncated' (the transfer capped the run at TRANSFER_TOTAL_CAP and
-// dropped trailing fields). 'truncated' is classify-only: the transfer sets it
-// locally, so it never arrives over the wire and the connection test never
-// returns it (parseTestResponse still rejects it).
-const CLASSIFY_FAILURES = [...TEST_FAILURES, 'truncated'] as const;
-
-export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
 export type ClassifyResponse =
   | { ok: true; entries: [string, Category][] }
   | { ok: false; reason: ClassifyFailure };
@@ -239,14 +232,6 @@ export type DecodedRequestResult =
   | { ok: true; request: DecodedAiRequest }
   | { ok: false; reason: RequestDecodeError };
 
-// oversize（backstop 超え）は件数上限由来なので 'truncated' に、
-// version skew と形不正は応答異常として 'bad-response' に写像する。
-// 送信側転送（classify-transport）の失敗語彙と同一にすることで、
-// 受信・送信の両端が同じ理由で記録・表示できる。
-export function decodeErrorToClassifyFailure(reason: RequestDecodeError): ClassifyFailure {
-  return reason === 'oversize' ? 'truncated' : 'bad-response';
-}
-
 export function decodeRequestResult(msg: unknown): DecodedRequestResult {
   if (!isRecord(msg)) return { ok: false, reason: 'malformed' };
   if (!checkRequestVersion(msg)) return { ok: false, reason: 'version' };
@@ -302,23 +287,12 @@ export function isLegacyClassifyFailure(res: unknown): boolean {
   return isRecord(res) && res.ok === false && res.reason === undefined;
 }
 
-// Seam-boundary guard for failureReason (review #5): the reason travels as a
-// string on AttemptOutcome, so a future adapter could hand back a
-// non-vocabulary string that would crash the hint lookup
-// (AI_FAILURE_TEXT[reason].hint). Fold unknown reasons to 'bad-response' —
-// the same mapping the registry's throw path uses — and let null (success)
-// pass through.
-export function asClassifyFailure(reason: string | null): ClassifyFailure | null {
-  if (reason === null) return null;
-  return includesLiteral(CLASSIFY_FAILURES, reason) ? reason : 'bad-response';
-}
-
 // Reason-aware counterpart of parseClassifyResponse: keeps the failure reason
 // from an ai-classify reply instead of collapsing it to null.
 export function parseClassifyResult(res: unknown): { ok: true; map: Map<string, Category> } | { ok: false; reason: ClassifyFailure } | null {
   if (!isRecord(res)) return null;
   if (res.ok === false) {
-    return includesLiteral(CLASSIFY_FAILURES, res.reason)
+    return typeof res.reason === 'string' && isClassifyFailure(res.reason)
       ? { ok: false, reason: res.reason }
       : null;
   }
@@ -344,7 +318,7 @@ export function parseTestResponse(res: unknown): TestResponse | null {
   if (res.ok === true && includesLiteral(CATEGORIES, res.category)) {
     return { ok: true, category: res.category };
   }
-  if (res.ok === false && includesLiteral(TEST_FAILURES, res.reason)) {
+  if (res.ok === false && typeof res.reason === 'string' && isTestFailure(res.reason)) {
     return { ok: false, reason: res.reason };
   }
   return null;
