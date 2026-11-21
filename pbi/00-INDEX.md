@@ -16,6 +16,16 @@
 - `2026-11-21-257-chore-ownlegend-gate-explicit.md`（順位 12。RICE 18。ownLegend の legend 側ゲート既定値の明示化）
 - `2026-11-21-258-refactor-refine-dropped-measure.md`（順位 13。RICE 15。refineDropped 計測源を dropped 数に寄せる）
 
+## 進行中（2026-11-21・DRY/KISS 調査ラウンド。ラウンド台帳にインベントリ・受容判断を記録）
+
+- `2026-11-21-01-backlog-drykiss-round.md`（ラウンド台帳。コード全体の DRY/KISS 調査 (2026-11-21) の発見 6 件を個別 PBI 化。K3 (mountButton) は既存候補棚継続、K4 (classifyField) は受容判断、K5 (buildPlan) は条件未到来として台帳に記録）
+- `2026-11-21-259-refactor-is-record-shared-guard.md`（順位 1。RICE 95。isRecord 5 重定義を共有ガードに統合）
+- `2026-11-21-260-refactor-save-side-persist-helper.md`（順位 2。RICE 38。save-side の保存失敗処理をヘルパーに統合）
+- `2026-11-21-261-chore-settings-store-typed-error.md`（順位 3。RICE 14。settings-store の型付きエラーモード (導入 or 判断記録)）
+- `2026-11-21-262-refactor-dismiss-dialog-decompose.md`（順位 4。RICE 14・着手条件発火型。showDismissDialog の 4 責務分解 — 253 発火時に同時着手）
+- `2026-11-21-263-refactor-show-preview-decompose.md`（順位 5。RICE 14。showPreview の配線分解）
+- `2026-11-21-264-backlog-bad-response-named-constant.md`（順位 6。RICE 9。'bad-response' の fold 先既定を名前付き定数化）
+
 ## 進行中からアーカイブ済み（2026-11-21・pbi-cleanup。209をアーカイブしINDEX未載のラウンド台帳7件を記載（ドリフト修正））
 
 - `archived/2026-11-21-246-refactor-messages-vocab-split.md`（順位 1。RICE 85。SDD 3 タスクで実装 (ed7ddd0 / e3de4de / 2f634d5)・タスクレビュー 3 件 Approved・全ブランチ最終レビュー With fixes → 修正波再レビュー後残余 1 トークンを解消 (d9208ec / f2627dc)。messages.ts を wire codec に戻す (失敗語彙 → core/classifier-failures 新設・META_CLIP_LENGTH → llm/prompt・export 実測 31)。make check 緑 + make eval 3 passed。GitHub PR での approve はユーザー作業）
