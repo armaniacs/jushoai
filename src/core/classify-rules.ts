@@ -1,10 +1,19 @@
 import type {
-  Category, Classification, FieldMeta, Item, SelectOption,
+  Category, Classification, FieldMeta, Item,
 } from './types';
-import { stripExample } from './formatters';
 import { kanaNormFromViews, matchFieldOwned, matchLegend, resolveKana, wantsKana } from './kana';
 import { buildFieldNormViews, norm } from './literals';
 import { applyEnglishPage } from './page-language';
+import type { DispatchCtx, MatcherEntry } from './dispatch-kit';
+import { BIRTH_CTX, birthEntries, isBirthPhrase } from './classify-vocab-birth';
+import { schoolEntries } from './classify-vocab-school';
+import {
+  EXCLUDE, isCompanyByName, jobOfficeEligible, officeEligible,
+  officeEntries, officeKanaEligible,
+} from './classify-vocab-office';
+import { FIRST, FULL_NAME, isEmailByName, LAST, NAME_EXCLUDE, nameEntries } from './classify-vocab-name';
+import { addressEntries } from './classify-vocab-address';
+import { ageEntries, genderEntries, isSearchBox, WEBSITE } from './classify-vocab-misc';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -40,391 +49,20 @@ const AUTOCOMPLETE = new Map<string, Category>([
   ['organization', 'company'],
 ]);
 
-// 学校 is claimed by the school pre-pass below, so it stays out of this list; the office
-// vocabulary (会社/法人/企業/店舗/部署) stays excluded except for the two new
-// categories (PBI-119): officeEligible passes 会社名/法人・団体名/部署 alone through
-// company/companyDepartment.
-const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|店舗/;
-// Applied only to the person-name step so e.g. a user_email field stays an email.
-const NAME_EXCLUDE =
-  /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
-const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
-const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
-// PBI-203: 参加者名 は WPForms の参加者名ラベルで、氏名/名前 の語彙に載らない。
-// (02)参加者名フリガナ もこの語を含むが、kana 帰属は resolveKana が行うため
-// fullNameKana のまま残る（tests/core/classify-rules.test.ts の PBI-203 回帰）。
-const FULL_NAME = /氏名|お名前|名前|参加者名|full.?name|your.?name|(^|[^a-z])name([^a-z]|$)/;
-
 // Priority-ordered dispatch table for classifyField: definition order is the
 // match priority. A new field kind is one entry inserted at the right place;
 // existing entries stay untouched. Module-level so no per-field allocation,
-// and every matcher has a name visible in stack traces.
-const BIRTH_CTX = /bday|birth|dob|生年月日|誕生/;
-// PBI-118: 誕生日語そのもの（label 単体）の anchored 完全一致。お も接頭辞の
-// 許可リストに含める（お誕生日 → birthDay への誤落ち防止）。英語欄は Birthday /
-// Date of Birth を受ける。
-const BIRTH_PHRASE = /^(ご|御|お)?(誕生日|生年月日|誕生年月日)$/;
-const BIRTH_PHRASE_EN = /^(birthday|date of birth)$/;
-const isBirthPhrase = (view: string): boolean =>
-  BIRTH_PHRASE.test(view) || BIRTH_PHRASE_EN.test(view);
-const ERA_CTX = /元号|年号|和暦|era|wareki|gengou/;
-// 元号/年号/和暦 alone are era evidence, but romaji hits (generation, operate) and
-// place names sharing era kanji (昭和区) need the ERA_CTX gate above.
-const ERA_NAME = /元号|年号|和暦|令和|平成|昭和|大正|明治/;
-// PBI-212: 教育機関の英語ラベル（Institution/Institute）を教育機関名欄の語彙に足す。
-// 「Name of Institution ...」を氏名（FULL_NAME の name 語）に拾わせないため、school
-// 前処理の語彙として先に判定する（読み順は変えず、school エントリが氏名の sources
-// より先に返る既存の定義順をそのまま使う。fixture 先行）。
-const SCHOOL = /学校|school|univ|college|高校|大学|institution|institute/;
-const DEPT = /学部|学科|専攻|department|major|faculty/;
-// PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す（緩和境界）。
-// カナ文脈（会社名（フリガナ））と誕生文脈（会社の生年月日）は誤注入の恐れが
-// あるため緩和対象外で、従来どおり EXCLUDE のまま。役職・店舗・法人種別など
-// 他の office 語も緩和しない。officeField ゲートと DISPATCH の extra gate が
-// この一箇所の条件を共有する。応募/申込 の団体名（応募団体名・申込団体名）は
-// 応募者側の団体で、会社プロファイルの注入先ではないため否定文脈で除外する
-// （officeEligible と同型の除外を COMPANY_OFFICE 自身に持たせる）。
-const COMPANY_OFFICE = /(?:会社|法人|企業)名|(?:(?<!応募)(?<!申込)団体名)|社名/;
-// T2: standalone 部署名 also reads as the company department (MS Forms
-// 3.所属部署名 shape). The compound joint stays out: a 部署名 glued to a
-// company word (会社名・部署名) keeps the company reading, so the negative
-// lookbehinds hold the joint even if DISPATCH order ever changes. Bare /部署/
-// would also swallow such joints, hence the narrower alternation.
-const DEPT_OFFICE = /(?:(?<!会社名・)(?<!法人名・)(?<!団体名・)(?<!社名・)(?<!企業名・)部署名|部署(?!名))/;
-// A 部署名 glued to a company word (会社名・部署名, 企業名・部署名, and non-・
-// separator variants such as 会社名/部署名) keeps the company reading. The
-// joint holds even if DISPATCH order ever changes, so the standalone 部署名
-// signal never fires there.
-// PBI-232: single owner of the company-word vocabulary. The joint guards
-// (hasCompoundDeptJoint / hasCompoundJobJoint) read this regex instead of
-// re-describing it, so the next vocabulary addition keeps every guard in sync
-// instead of leaving one behind.
-const COMPANY_WORD = /会社|法人|企業|団体|店舗|事業所|営業所|社/;
-const hasCompoundDeptJoint = (own: string): boolean =>
-  /部署名/.test(own) && COMPANY_WORD.test(own);
-const KANA_NOTE = /カナ|フリガナ|かな|kana/i;
-// PBI-232: single owner of the kana-note/birth-context exclusion shared by the
-// office gate predicates below.
-const officeContextExcluded = (own: string): boolean =>
-  KANA_NOTE.test(own) || BIRTH_CTX.test(own);
-const officeEligible = (own: string): boolean => {
-  if (officeContextExcluded(own)) return false;
-  if (COMPANY_OFFICE.test(own)) return true;
-  return DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
-};
-// The standalone 部署名 signal for the company-department entry: same gate
-// as officeEligible but without the company-word alternative, so a joint
-// never reads as the department even if DISPATCH order ever changes.
-const deptOfficeEligible = (own: string): boolean =>
-  !officeContextExcluded(own)
-  && DEPT_OFFICE.test(own) && !hasCompoundDeptJoint(own);
-// F1: a Japanese 部署名 word outranks the English school token (sysmex
-// name=department + 所属部署名 label reads as the company department, not
-// the school department). Bare 部署 keeps the school reading, so the guard
-// is 部署名-only and the other name=department fixtures stay unchanged.
-const hasOwnDeptName = (own: string): boolean =>
-  officeEligible(own) && /部署名/.test(own);
-// T3: standalone 役職/役職名 reads as the job title (MS Forms 4.役職名
-// shape). A joint with a company or department word (部署名・役職名,
-// 部署・役職, 会社名・役職名) never reads as the title: the department entry
-// (which precedes the title entry) keeps the 部署 joints, and the joint block
-// keeps the company-word shapes out. Kana/birth companions stay excluded with
-// the office entries. The title has no legend entry on purpose: the only
-// legend-only 役職 shape (tokyu-tenant job) stays unknown.
-const JOB_OFFICE = /役職/;
-// The company-word half reads COMPANY_WORD itself (single vocabulary owner), so
-// the next company-word addition keeps this job-title joint guard in sync;
-// 部署 is the department-word half kept alongside it.
-const hasCompoundJobJoint = (own: string): boolean =>
-  /役職/.test(own) && (COMPANY_WORD.test(own) || /部署/.test(own));
-const jobOfficeEligible = (own: string): boolean =>
-  !officeContextExcluded(own) && JOB_OFFICE.test(own) && !hasCompoundJobJoint(own);
-// PBI-119 + レビュー指摘: legend 側の gate。旧 legend gate（officeEligible）は
-// 欄自身の office 語一致を要求したため、「ご記入ください + 共有見出し会社名」の
-// ような shared heading ケースが到達不能だった（own 語が一致すれば own entry
-// 0.7 が既に返る）。ここでは欄自身の文言一致を要求せず、カナ文脈・誕生文脈の
-// 除外だけを課す。ただし own 語が一致する欄では legend に流さない（own matcher
-// 0.7 が DispatchCtx の定義順で先に返る順序の維持 + !COMPANY_OFFICE/!DEPT_OFFICE
-// が「部署欄 + 共有見出し会社名」を company-legend 0.65 で採用する交差ケースを
-// 遮る）。
-// WHY 複合ラベル（会社名・部署名）の分解はしない: 「会社名・部署名」のような
-// 複合欄はどちらにも解釈でき、誤注入より不注入が安全なため officeField が
-// EXCLUDE で落とす従来動作を維持する。
-const officeLegendEligible = (own: string): boolean =>
-  !officeContextExcluded(own)
-  && !COMPANY_OFFICE.test(own) && !DEPT_OFFICE.test(own);
-// PBI-160: 会社名フリガナの連言（会社・法人系語彙 AND カナ注記）。company
-// エントリの COMPANY_OFFICE に厳密に従い（応募/申込の団体名除外を含む）、
-// カナ側は KANA_NOTE と同型の注記集合（フリガナはカナを部分文字列に含まない
-// ため明示する）。norm が全角括弧を半角化するため括弧の存続には依存せず、
-// 語の共起だけを見る（会社名（フリガナ）・会社名(フリガナ)のいずれも一致する）。
-const COMPANY_KANA =
-  /(?=.*(?:(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名))(?=.*(?:フリガナ|カナ|かな|kana))/;
-// PBI-160: 会社名フリガナの緩和境界。own 側は欄自身、legend 側は共有見出しが
-// 連言を持つときに開く（th 見出し「会社名（フリガナ）」の company_kana 欄は
-// own に和語がなく legend 経由で到達する）。誕生文脈は両側とも除外。
-// name のみ（company_kana・ラベルなし）は両方とも連言を持たないため
-// unknown のまま（誤注入より不注入）。
-const officeKanaEligible = (own: string, legend: string): boolean =>
-  !BIRTH_CTX.test(`${own} ${legend}`) && (COMPANY_KANA.test(own) || COMPANY_KANA.test(legend));
-const ROMAJI_CTX = /半角英数|半角|英字|英文|英語|ローマ字|romaji|alphabet|english/i;
-// PBI-212: website 欄の語彙（School Website など）。URL を入れたい欄は教育機関名欄
-// （school 名欄）と読み分け、学校名の誤補完より不注入が安全なため分類から外す
-// （PBI-208 実装記録の誤解釈候補。website 欄の語彙は school 名欄より先に判定する）。
-// norm が小文字化するため website は小文字のみ。url は語境界で守る（curl 等の
-// 誤拾いを避ける NAME_EXCLUDE の cc パターンと同型）。
-const WEBSITE = /website|web.?site|(^|[^a-z])url([^a-z]|$)/;
-// PBI-224: サイト内検索窓の除外名（完全一致リスト）。label・nearby が空で
-// type が text/search の欄だけが対象。派生名（companyEmail 等）は一致しない。
-// placeholder は検索窓にも付く（「検索」「キーワード入力」等）ため空条件に
-// 含めない。norm 越しに比較するため大文字・全角の Q も拾う。
-const SEARCH_BOX_NAME: ReadonlySet<string> = new Set(['q', 'query', 'keyword', 'kw', 's']);
-const isSearchBox = (m: FieldMeta): boolean =>
-  (m.type === 'text' || m.type === 'search')
-  && m.label.trim() === '' && m.nearby.trim() === ''
-  && SEARCH_BOX_NAME.has(norm(m.name.trim()));
-// PBI-225: name完全一致の許可リスト（区切り・大小文字を畳んだキーで比較）。
-// companyEmail 等の派生名・company_kana・番号付き・接頭辞付きは別キーになる。
-const COMPANY_NAME_KEY: ReadonlySet<string> = new Set(['company', 'companyname']);
-const companyNameKey = (s: string): string => norm(s.trim()).replace(/[\s_-]+/g, '');
-const isCompanyByName = (m: FieldMeta): boolean =>
-  m.tag === 'input' && m.type === 'text'
-  && m.label.trim() === '' && m.nearby.trim() === ''
-  && COMPANY_NAME_KEY.has(companyNameKey(m.name));
-// PBI-229: name に mail を含む欄の email ゲート（PBI-225 の会社ゲートの隣）。
-// 'email' は 'mail' を部分文字列に含むため includes('mail') 一つで両方を拾う
-// （item_mail_1・mail2・mailconf・email_confirm・companyEmail 等）。
-// label・nearby が空の text/tel/email 型の input だけが対象：チェックボックス
-// （メルマガ購読等）・search・select・radio は開かない。placeholder は
-// PBI-225 と同じく空条件に含めない。EXCLUDE（company|corp|...）より先に返す
-// ため mail_company のような bare 名も email 確定する。
-// 誤読防止：フォーム名由来（nichirin の mailform2[0]・tel 3-split の
-// mailform6[0..2]・住所分割の mailform7 等。'mail' は欄ではなく容器を指す）と
-// 送信先指定の mailto（ena。利用者のアドレスを入れると誤配送の恐れ）は拾わ
-// ない。区切りを畳んで判定するため mail-form・mail_form も同じく除外する。
-// PBI-233: postal-derived names (mailingaddress / mailbox) read 'mail' as the
-// postal sense (a mailing address, a mail drop), not the user's address
-// column, so their stems join the flat denylist. The PBI-229 rescue targets
-// stay alive because none of them embeds these stems (mailaddress / mailconf
-// / item_mail_1 / email_confirm …).
-const isEmailByName = (m: FieldMeta): boolean =>
-  m.tag === 'input' && (m.type === 'text' || m.type === 'tel' || m.type === 'email')
-  && m.label.trim() === '' && m.nearby.trim() === ''
-  && isBareMailName(m.name);
-const isBareMailName = (name: string): boolean => {
-  const key = norm(name.trim());
-  if (!key.includes('mail')) return false;
-  const flat = key.replace(/[\W_]+/g, '');
-  return (
-    !flat.includes('mailform')
-    && !flat.includes('mailto')
-    && !flat.includes('mailing')
-    && !flat.includes('mailbox')
-  );
-};
-const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
-const COUNTRY = /country/i;
-const ADDR_LINE = /address[_-]?([1-4])/i;
-const POSTAL_CODE = /postal[-_ ]?code/i;
-const OVERSEAS_CTX = /country|postal|city|state|province|region|street|building|apartment/i;
-const FOREIGN_MARK = /半角英数|海外|foreign|english|alphabet/i;
-// A numeric age text box (年齢を数字で入力) must not qualify: only selects
-// and radio groups whose options carry decade (代) readings are decade fields.
-const AGE = /年齢|年代|ねんだい|年齢層|age/;
-
-interface DispatchCtx {
-  m: FieldMeta;
-  ownText: string;
-  legendText: string;
-  overseasCtx: string;
-  isOptionField: boolean;
-}
-
-type Matcher = (ctx: DispatchCtx) => Classification | null;
-
-interface MatcherEntry {
-  name: string;
-  match: Matcher;
-}
-
-// None of the dispatch entries yields a Kana category, so the module-level
-// constructor needs no kanaKind (kept in classifyField's local make).
-const matchAs = (category: Category, confidence: number): Classification => ({
-  category,
-  confidence,
-  source: 'rule',
-});
-
-// The field itself (0.7) outranks a shared heading (0.65): one data row
-// expands to the ordered pair, so the gradient lives in a single place.
-// extra gates both sides (e.g. decade options); legendExtra overrides the
-// legend side when its evidence lives elsewhere (e.g. FOREIGN_MARK may sit
-// in the field or its heading, so the legend side reads overseasCtx).
-function ownLegend(
-  re: RegExp,
-  category: Category,
-  extra?: (ctx: DispatchCtx) => boolean,
-  legendExtra?: (ctx: DispatchCtx) => boolean,
-): [MatcherEntry, MatcherEntry] {
-  const legendGate = legendExtra ?? extra;
-  return [
-    { name: `${category}-own`, match: (ctx) => (re.test(ctx.ownText) && (!extra || extra(ctx)) ? matchAs(category, 0.7) : null) },
-    { name: `${category}-legend`, match: (ctx) => (re.test(ctx.legendText) && (!legendGate || legendGate(ctx)) ? matchAs(category, 0.65) : null) },
-  ];
-}
-
-const hasDecadeOptions = (o: SelectOption[]) => o.some((s) => /代/.test(s.text));
-
-// A half-width note plus a name signal means the field wants a latin name,
-// even when name/id alone would read as a plain Japanese name (name_last).
-// NAME_EXCLUDE (user/card/company/section words) never qualifies as a person name.
-const romajiBase = (ctx: DispatchCtx): boolean =>
-  ROMAJI_CTX.test(ctx.ownText) && !NAME_EXCLUDE.test(ctx.ownText);
-
+// and every matcher has a name visible in stack traces. Domain vocab modules
+// own their entry slices (classify-vocab-*); the spread order below is the
+// single owner of the overall priority.
 const DISPATCH: readonly MatcherEntry[] = [
-  // birth: 年/月/日 share 年月日, so month and day come first: 生年月日の月 must
-  // not read as a year, and 生年月日の日 must not read as a month.
-  {
-    name: 'birth-month',
-    match: (ctx) =>
-      (BIRTH_CTX.test(ctx.ownText) || BIRTH_CTX.test(ctx.legendText)) &&
-      /bday-month|(^|[^a-z])month|(^|[^\d年月日])月/.test(ctx.ownText)
-        ? matchAs('birthMonth', 0.7)
-        : null,
-  },
-  {
-    name: 'birth-day',
-    match: (ctx) =>
-      (BIRTH_CTX.test(ctx.ownText) || BIRTH_CTX.test(ctx.legendText)) &&
-      /bday-day|(^|[^a-z])day|(^|[^\d年月日])日/.test(ctx.ownText)
-        ? matchAs('birthDay', 0.7)
-        : null,
-  },
-  {
-    name: 'birth-year',
-    match: (ctx) =>
-      (BIRTH_CTX.test(ctx.ownText) || BIRTH_CTX.test(ctx.legendText)) &&
-      /bday-year|(^|[^a-z])year|(^|[^\d年月日])年/.test(ctx.ownText)
-        ? matchAs('birthYear', 0.7)
-        : null,
-  },
-  // era: context-gated kanji or an exact era word alone.
-  {
-    name: 'birth-era',
-    match: (ctx) => {
-      const eraByContext = ERA_CTX.test(`${ctx.ownText} ${ctx.legendText}`) && ERA_NAME.test(ctx.ownText);
-      const eraExact =
-        /^(令和|平成|昭和|大正|明治)$/.test(ctx.m.label.trim()) ||
-        /^(令和|平成|昭和|大正|明治)$/.test(stripExample(ctx.m.placeholder).trim());
-      return eraByContext || eraExact ? matchAs('birthEra', 0.7) : null;
-    },
-  },
-  // school / department / gender: field itself (0.7) outranks a shared heading (0.65).
-  // F1: the school department entry yields when the field itself carries a
-  // Japanese 部署名 word (the company-department signal outranks the English
-  // token); bare 部署 keeps the school reading.
-  ...ownLegend(SCHOOL, 'school'),
-  ...ownLegend(DEPT, 'department', (ctx) => !hasOwnDeptName(ctx.ownText)),
-  // PBI-119: 会社名・会社部署は school/department と同一の単独欄パターン
-  // （field 自身 0.7 が shared heading 0.65 に勝る）。own 側の緩和境界は
-  // officeEligible、legend 側は officeLegendEligible（欄自身の office 語一致を
-  // 要求せず、own 語がある欄は legend に流さない）が一箇所で持つ。
-  // PBI-160: 会社名フリガナは terminal カテゴリ（resolveKana の帰属変換を通さず
-  // classifyField が直接返す）。own 側は欄自身の連言、legend 側は共有見出しの
-  // 連言で開く。legend 側は own に会社語がある欄（漢字の会社名欄）には流さない
-  // （officeLegendEligible と同型の交差遮断）。誕生文脈は両側で除外する。
-  ...ownLegend(
-    COMPANY_KANA,
-    'companyNameKana',
-    (ctx) => !BIRTH_CTX.test(ctx.ownText),
-    (ctx) =>
-      !BIRTH_CTX.test(`${ctx.ownText} ${ctx.legendText}`)
-      && !COMPANY_OFFICE.test(ctx.ownText) && !DEPT_OFFICE.test(ctx.ownText),
-  ),
-  ...ownLegend(
-    COMPANY_OFFICE,
-    'company',
-    (ctx) => officeEligible(ctx.ownText),
-    (ctx) => officeLegendEligible(ctx.ownText),
-  ),
-  ...ownLegend(
-    DEPT_OFFICE,
-    'companyDepartment',
-    (ctx) => deptOfficeEligible(ctx.ownText),
-    (ctx) => officeLegendEligible(ctx.ownText),
-  ),
-  // T3: the job title is an own-text-only entry (no legend pair): a standalone
-  // 役職/役職名 reads 0.7, while the legend-only 役職 shape (tokyu-tenant job)
-  // stays unknown. Department and company joints never reach this entry: the
-  // department entry precedes it and the joint blocks on both sides hold.
-  {
-    name: 'job-title-own',
-    match: (ctx) => (
-      JOB_OFFICE.test(ctx.ownText) && jobOfficeEligible(ctx.ownText) ? matchAs('jobTitle', 0.7) : null
-    ),
-  },
-  ...ownLegend(GENDER, 'gender'),
-  // Overseas address fields are named explicitly (country, address_1..4,
-  // postal_code), so they classify without sibling refinement. 国名 alone
-  // stays unclassified: on domestic forms it is ambiguous with person names.
-  // Bare address1/address2 keep their domestic readings (addressFull/building):
-  // the overseas reading needs an overseas context (city/state/street words
-  // or a half-width note) in the field or its heading.
-  ...ownLegend(COUNTRY, 'country'),
-  {
-    name: 'address-line-own',
-    match: (ctx) => {
-      const addrLine = ctx.ownText.match(ADDR_LINE);
-      return addrLine && OVERSEAS_CTX.test(ctx.overseasCtx)
-        ? matchAs(`address${addrLine[1]}` as Category, 0.7)
-        : null;
-    },
-  },
-  {
-    name: 'address-line-legend',
-    match: (ctx) => {
-      const addrLegend = ctx.legendText.match(ADDR_LINE);
-      return addrLegend && OVERSEAS_CTX.test(ctx.overseasCtx)
-        ? matchAs(`address${addrLegend[1]}` as Category, 0.65)
-        : null;
-    },
-  },
-  // postal-code: half-width/foreign note gates both sides; the legend side
-  // reads the combined field+heading context.
-  ...ownLegend(
-    POSTAL_CODE,
-    'postalCode',
-    (ctx) => FOREIGN_MARK.test(ctx.ownText),
-    (ctx) => FOREIGN_MARK.test(ctx.overseasCtx),
-  ),
-  // age: option fields with decade readings only.
-  ...ownLegend(AGE, 'ageDecade', (ctx) => ctx.isOptionField && hasDecadeOptions(ctx.m.options)),
-  {
-    name: 'romaji-full-name',
-    match: (ctx) =>
-      romajiBase(ctx) && FULL_NAME.test(ctx.ownText) ? matchAs('fullNameRomaji', 0.7) : null,
-  },
-  {
-    name: 'romaji-last-name',
-    match: (ctx) =>
-      romajiBase(ctx) && LAST.test(ctx.ownText) && !FIRST.test(ctx.ownText)
-        ? matchAs('lastNameRomaji', 0.7)
-        : null,
-  },
-  {
-    name: 'romaji-first-name',
-    match: (ctx) =>
-      romajiBase(ctx) && FIRST.test(ctx.ownText) && !LAST.test(ctx.ownText)
-        ? matchAs('firstNameRomaji', 0.7)
-        : null,
-  },
-  {
-    name: 'romaji-either-name',
-    match: (ctx) =>
-      romajiBase(ctx) && (LAST.test(ctx.ownText) || FIRST.test(ctx.ownText))
-        ? matchAs('fullNameRomaji', 0.7)
-        : null,
-  },
+  ...birthEntries,
+  ...schoolEntries,
+  ...officeEntries,
+  ...genderEntries,
+  ...addressEntries,
+  ...ageEntries,
+  ...nameEntries,
 ];
 
 // Kana-blind name step: returns plain name bases only. Whether a base wants kana
@@ -636,7 +274,7 @@ export function classifyField(m: FieldMeta): Classification | null {
   return null;
 }
 
-export interface SplitDrop {
+interface SplitDrop {
   fieldId: string;
   from: Category;
   reason: 'oversized-group';
@@ -679,8 +317,11 @@ const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby
 // PBI-219: refineWithDrops の (c) leftover unknown 化を切り出した純粋関数。
 // 入力は変えず、新しい配列を返す。dropped 済み欄は合成側で先に取り除くため、
 // 旧所在の droppedIds ガードは引数ではなく合成順序で引き継ぐ。
-export function dropLeftovers(items: Item[]): Item[] {
+function dropLeftovers(items: Item[]): Item[] {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  // Reachability note: a same-label zip pair never reaches this unknown-ization —
+  // the zip split policy's exact-size-2 retag consumes it earlier in the composition.
+  // The branch remains as insurance in case the split policy is ever loosened.
   for (const leftover of ['tel', 'zip'] as const) {
     const groups = new Map<string, number[]>();
     out.forEach((it, i) => {
@@ -706,7 +347,7 @@ export function dropLeftovers(items: Item[]): Item[] {
 // 見出しを持たない複数ブロックでは従来の全体判定と等価になる制限がある。
 // PBI-219: refineWithDrops の (d) 住所絞り込みを切り出した純粋関数。
 // 入力は変えず、新しい配列を返す。
-export function narrowAddress(items: Item[]): Item[] {
+function narrowAddress(items: Item[]): Item[] {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
   for (const it of out) {
@@ -724,7 +365,7 @@ export function narrowAddress(items: Item[]): Item[] {
   return out;
 }
 
-export function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
+function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
   const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
   // outはmapで作ったdenseな実体配列であり、indices()産の添字は常に有効。
   // 個別の!ではなくこのat()に集約してundefinedを一箇所で narrowing する。
@@ -843,7 +484,8 @@ export interface RulePipelineTrace {
   initialUnconfident: FieldMeta[];
   // Fields whose category changed during the sibling refine step.
   refineChanged: number;
-  // Fields the refine dropped (oversized ambiguous groups).
+  // Fields that disappeared during refine (currently the only disappearance
+  // path is oversized-group drops).
   refineDropped: number;
 }
 

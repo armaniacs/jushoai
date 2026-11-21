@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import {
-  ACCEPT_THRESHOLD, classifyField, classifyRulePipeline, dropLeftovers, isConfident,
-  narrowAddress, refineClassifications, refineWithDrops,
+  ACCEPT_THRESHOLD, classifyField, classifyRulePipeline, classifyRulePipelineWithTrace,
+  isConfident, refineClassifications,
 } from '../../src/core/classify-rules';
 import { detectKanaKind, matchFieldOwned, matchLegend, resolveKana, wantsKana } from '../../src/core/kana';
 import { buildPlan } from '../../src/core/planner';
@@ -649,16 +649,41 @@ describe('refineClassifications', () => {
     expect(refineClassifications([...four, item('email', 'e')]).map((i) => i.meta.id)).toEqual(['e']);
   });
 
-  it('reports why oversized groups were dropped', () => {
-    const four = ['a', 'b', 'c', 'd'].map((id) => item('fullName', id));
-    const { items, dropped } = refineWithDrops([...four, item('email', 'e')]);
-    expect(items.map((i) => i.meta.id)).toEqual(['e']);
-    expect(dropped).toEqual([
-      { fieldId: 'a', from: 'fullName', reason: 'oversized-group' },
-      { fieldId: 'b', from: 'fullName', reason: 'oversized-group' },
-      { fieldId: 'c', from: 'fullName', reason: 'oversized-group' },
-      { fieldId: 'd', from: 'fullName', reason: 'oversized-group' },
-    ]);
+  it('reports oversized drops through the pipeline trace', () => {
+    // The per-field drop reason is module-private; the pipeline trace count
+    // plus the survivors' absence is the public view of the same behavior.
+    const four = ['a', 'b', 'c', 'd'].map((id) => makeMeta({ id, label: 'お名前', nearby: 'お名前' }));
+    const trace = classifyRulePipelineWithTrace([...four, makeMeta({ id: 'e', type: 'email' })]);
+    expect(trace.refineDropped).toBe(4);
+    expect(trace.items.map((i) => i.meta.id)).toEqual(['e']);
+  });
+
+  it('reports oversized zip drops through the pipeline trace', () => {
+    // tel and fullName oversized drops are pinned above and in
+    // send-set.test.ts; the zip path had no trace pin. The trace count is the
+    // only public evidence of a drop once the per-field reason went private.
+    const three = ['a', 'b', 'c'].map((id) => makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }));
+    const trace = classifyRulePipelineWithTrace(three);
+    expect(trace.refineDropped).toBe(3);
+    expect(trace.items).toEqual([]);
+  });
+
+  it('counts only vanished fields as refineDropped, not retags', () => {
+    // refineDropped is defined over ids that disappear during refine. Split
+    // retags (zip pair -> zip1/zip2) and leftover unknown-ization (tel pair)
+    // keep the field alive, so they must stay out of the drop count; otherwise
+    // the trace silently widens into a "changed" counter.
+    const telPair = ['a', 'b'].map((id) => makeMeta({ id, type: 'tel', label: '電話番号', nearby: '連絡先' }));
+    const telTrace = classifyRulePipelineWithTrace(telPair);
+    expect(telTrace.refineDropped).toBe(0);
+    expect(telTrace.refineChanged).toBe(2);
+    expect(telTrace.items.map((i) => i.cls.category)).toEqual(['unknown', 'unknown']);
+
+    const zipPair = ['c', 'd'].map((id) => makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }));
+    const zipTrace = classifyRulePipelineWithTrace(zipPair);
+    expect(zipTrace.refineDropped).toBe(0);
+    expect(zipTrace.refineChanged).toBe(2);
+    expect(zipTrace.items.map((i) => i.cls.category)).toEqual(['zip1', 'zip2']);
   });
 
   it('splits two fullName fields sharing the same nearby heading', () => {
@@ -745,13 +770,9 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
       ...item('zip', id),
       meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
     }));
-    const { items: refined, dropped } = refineWithDrops(items);
+    // dropped 欄は refine 後の item 列から消える（消失の不在で観測する）。
+    const refined = refineClassifications(items);
     expect(refined).toEqual([]);
-    expect(dropped).toEqual([
-      { fieldId: 'a', from: 'zip', reason: 'oversized-group' },
-      { fieldId: 'b', from: 'zip', reason: 'oversized-group' },
-      { fieldId: 'c', from: 'zip', reason: 'oversized-group' },
-    ]);
     expect(buildPlan(refined, { profile, address })).toEqual([]);
   });
 
@@ -770,10 +791,11 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
     ];
     const classified = metas.map((meta) => ({ meta, cls: classifyField(meta)! }));
     expect(classified.every(({ cls }) => cls !== null)).toBe(true);
-    const { items: refined, dropped } = refineWithDrops(classified);
+    const refined = refineClassifications(classified);
     // tel 2欄はunknown化、zip 3欄はoversizedでdropped：いずれも注入対象外
     expect(refined.map((i) => i.cls.category)).toEqual(['unknown', 'unknown']);
-    expect(dropped.map((d) => d.fieldId)).toEqual(['c', 'd', 'e']);
+    // 消失した c/d/e は item 列の不在として観測する。
+    expect(refined.map((i) => i.meta.id)).toEqual(['a', 'b']);
     expect(buildPlan(refined, { profile, address })).toEqual([]);
   });
 
@@ -799,7 +821,7 @@ describe('refineClassifications: PBI-09 split-mismatchは複製しない', () =>
   });
 });
 
-describe('dropLeftovers (PBI-219)', () => {
+describe('refineClassifications: tel/zip leftover unknown-ization (PBI-219)', () => {
   const item = (category: Category, id: string) => ({
     meta: makeMeta({ id }),
     cls: { category, confidence: 0.8, source: 'rule' } as Classification,
@@ -807,21 +829,24 @@ describe('dropLeftovers (PBI-219)', () => {
   const cats = (items: Item[]) => items.map((i) => i.cls.category);
 
   it('単独tel・単独zipは変えない', () => {
-    expect(cats(dropLeftovers([item('tel', 'a')]))).toEqual(['tel']);
-    expect(cats(dropLeftovers([item('zip', 'z')]))).toEqual(['zip']);
+    expect(cats(refineClassifications([item('tel', 'a')]))).toEqual(['tel']);
+    expect(cats(refineClassifications([item('zip', 'z')]))).toEqual(['zip']);
   });
 
-  it('同キーtel 2欄・zip 2欄をunknown化する', () => {
+  it('unknown-izes a same-key tel pair; a same-label zip pair is split-owned', () => {
     const tel = ['a', 'b'].map((id) => ({
       ...item('tel', id),
       meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
     }));
-    expect(cats(dropLeftovers(tel))).toEqual(['unknown', 'unknown']);
+    expect(cats(refineClassifications(tel))).toEqual(['unknown', 'unknown']);
+    // A same-label zip pair is exact-size for the zip split policy, so the
+    // composition retags it before the leftover step runs: the leftover-only
+    // zip unknown-ization is unreachable through the public interface.
     const zip = ['c', 'd'].map((id) => ({
       ...item('zip', id),
       meta: makeMeta({ id, label: '郵便番号', nearby: 'ご住所' }),
     }));
-    expect(cats(dropLeftovers(zip))).toEqual(['unknown', 'unknown']);
+    expect(cats(refineClassifications(zip))).toEqual(['zip1', 'zip2']);
   });
 
   it('別キーのtel群は変えない', () => {
@@ -829,17 +854,17 @@ describe('dropLeftovers (PBI-219)', () => {
       { ...item('tel', 'a'), meta: makeMeta({ id: 'a', label: '自宅電話' }) },
       { ...item('tel', 'b'), meta: makeMeta({ id: 'b', label: '携帯電話' }) },
     ];
-    expect(cats(dropLeftovers(items))).toEqual(['tel', 'tel']);
+    expect(cats(refineClassifications(items))).toEqual(['tel', 'tel']);
   });
 
   it('正常分割済み・対象外カテゴリは触らない', () => {
     const items = [item('tel1', 'a'), item('tel2', 'b'), item('tel3', 'c'), item('email', 'e')];
-    expect(cats(dropLeftovers(items))).toEqual(['tel1', 'tel2', 'tel3', 'email']);
+    expect(cats(refineClassifications(items))).toEqual(['tel1', 'tel2', 'tel3', 'email']);
   });
 
   it('空キー群（label・nearbyとも空）もunknown化する', () => {
     const items = ['a', 'b'].map((id) => item('tel', id));
-    expect(cats(dropLeftovers(items))).toEqual(['unknown', 'unknown']);
+    expect(cats(refineClassifications(items))).toEqual(['unknown', 'unknown']);
   });
 
   it('分類の付帯情報（confidence・source）を保つ', () => {
@@ -847,7 +872,7 @@ describe('dropLeftovers (PBI-219)', () => {
       ...item('tel', id),
       meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
     }));
-    expect(dropLeftovers(items).map((i) => i.cls)).toEqual([
+    expect(refineClassifications(items).map((i) => i.cls)).toEqual([
       { category: 'unknown', confidence: 0.8, source: 'rule' },
       { category: 'unknown', confidence: 0.8, source: 'rule' },
     ]);
@@ -858,12 +883,12 @@ describe('dropLeftovers (PBI-219)', () => {
       ...item('tel', id),
       meta: makeMeta({ id, label: '電話番号', nearby: '連絡先' }),
     }));
-    dropLeftovers(input);
+    refineClassifications(input);
     expect(input.map((i) => i.cls.category)).toEqual(['tel', 'tel']);
   });
 });
 
-describe('narrowAddress (PBI-219)', () => {
+describe('refineClassifications: addressFull narrowing (PBI-219)', () => {
   const item = (category: Category, id: string) => ({
     meta: makeMeta({ id }),
     cls: { category, confidence: 0.8, source: 'rule' } as Classification,
@@ -875,19 +900,19 @@ describe('narrowAddress (PBI-219)', () => {
   const cats = (items: Item[]) => items.map((i) => i.cls.category);
 
   it('addressFull単独は維持する', () => {
-    expect(cats(narrowAddress([item('addressFull', 'a')]))).toEqual(['addressFull']);
+    expect(cats(refineClassifications([item('addressFull', 'a')]))).toEqual(['addressFull']);
   });
 
   it('同一スコープのprefecture・cityで絞る（city優先）', () => {
-    expect(cats(narrowAddress([
+    expect(cats(refineClassifications([
       scoped('prefecture', 'p', 'ご住所'),
       scoped('addressFull', 'a', 'ご住所'),
     ]))).toEqual(['prefecture', 'addressNoPref']);
-    expect(cats(narrowAddress([
+    expect(cats(refineClassifications([
       scoped('city', 'c', 'ご住所'),
       scoped('addressFull', 'a', 'ご住所'),
     ]))).toEqual(['city', 'street']);
-    expect(cats(narrowAddress([
+    expect(cats(refineClassifications([
       scoped('prefecture', 'p', 'ご住所'),
       scoped('city', 'c', 'ご住所'),
       scoped('addressFull', 'a', 'ご住所'),
@@ -895,7 +920,7 @@ describe('narrowAddress (PBI-219)', () => {
   });
 
   it('別スコープのprefecture・cityでは絞らない', () => {
-    expect(cats(narrowAddress([
+    expect(cats(refineClassifications([
       scoped('prefecture', 'op', '注文者住所'),
       scoped('city', 'oc', '注文者住所'),
       scoped('addressFull', 'oa', '注文者住所'),
@@ -904,7 +929,7 @@ describe('narrowAddress (PBI-219)', () => {
   });
 
   it('city・prefecture自体は変えない', () => {
-    expect(cats(narrowAddress([item('city', 'c'), item('prefecture', 'p')])))
+    expect(cats(refineClassifications([item('city', 'c'), item('prefecture', 'p')])))
       .toEqual(['city', 'prefecture']);
   });
 
@@ -913,7 +938,7 @@ describe('narrowAddress (PBI-219)', () => {
       scoped('city', 'c', 'ご住所'),
       scoped('addressFull', 'a', 'ご住所'),
     ];
-    narrowAddress(input);
+    refineClassifications(input);
     expect(input.map((i) => i.cls.category)).toEqual(['city', 'addressFull']);
   });
 });
