@@ -7,7 +7,7 @@ import {
   type SessionClassifyResult, type SessionEnv,
 } from '../src/content-session';
 import type { FieldClassifier } from '../src/core/classifier';
-import type { ClassifyFailure } from '../src/messages';
+import type { ClassifyFailure } from '../src/core/classifier-failures';
 import { hintForButton } from '../src/ai/failure-text';
 import type { FillReport, FillSummary, UndoEntry } from '../src/dom/fill-plan';
 import { makeMeta } from './helpers';

@@ -1,11 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import { AI_FAILURE_TEXT, hintForButton, noticeForTest } from '../../src/ai/failure-text';
-import type { ClassifyFailure, TestFailure } from '../../src/messages';
+import type { ClassifyFailure, TestFailure } from '../../src/core/classifier-failures';
 
 // 単一対応表の正準キー集合。共有の8キーが両型の共通部分で、truncated は
 // classify-only（PBI-25: gateway の60件打ち切り信号）のため ClassifyFailure
-// にだけ含まれる。messages.ts に新規 reason を追加したら、このリストと
-// AI_FAILURE_TEXT の両方を更新すること（片方だけだと下のテストが失敗する）。
+// にだけ含まれる。core/classifier-failures.ts に新規 reason を追加したら、
+// このリストと AI_FAILURE_TEXT の両方を更新すること（片方だけだと下のテストが失敗する）。
 const SHARED_FAILURE_KEYS = [
   'not-configured',
   'permission',

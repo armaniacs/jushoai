@@ -32,11 +32,11 @@ Scenario: wire の変更が 1 箇所で完結する
 ```
 
 ## 受け入れ基準
-- [ ] 失敗語彙 (ClassifyFailure / TestFailure / asClassifyFailure / decodeErrorToClassifyFailure 等の fold 群) が **src/core/classifier-failures.ts (新設)** に移設されている (なぜなぜ分析 30 本で確定した移設先。`plans/2026-11-21-whywhy-246-messages-vocab.md`)
-- [ ] META_CLIP_LENGTH が prompt / feedback の消費側 module に移設されている (現在の消費者: src/llm/prompt.ts と src/feedback/issue-url.ts)
-- [ ] messages.ts の export が約 15 個以下 (envelope + builders + encode/decode + 移行用 re-export)
-- [ ] wire 形式自体は不変 (既存の messages 系テストが無変更で緑。wire キー集合の変更は本 PBI では行わない — 2026-10-04 設計書 / PBI-175 の規約)
-- [ ] `make check` 緑 + `make eval` 3 passed
+- [x] 失敗語彙 (ClassifyFailure / TestFailure / asClassifyFailure / decodeErrorToClassifyFailure の fold 群) が **src/core/classifier-failures.ts (新設)** に移設されている (なぜなぜ分析 30 本で確定した移設先。`plans/2026-11-21-whywhy-246-messages-vocab.md`)。配列 2 個は module 内部に留め、述語 `isClassifyFailure` / `isTestFailure` を新設 (wire parser は述語経由)
+- [x] META_CLIP_LENGTH が消費側 module に移設されている (移設先: src/llm/prompt.ts 第一消費者。src/feedback/issue-url.ts は llm/prompt から import — feedback → llm の新規 edge は受容リスクとして最終レビューで承認。将来 feedback が llm から 2 つ目のシンボルを取ったら配置先を再検討)
+- [x] messages.ts の export 実測 31 (PBI 原文の「約 15 個以下」は見積り誤り — 失敗語彙は 5 シンボルであり、残る codec 面 (envelope・builders・encode/decode・応答 parser・応答型) は PBI の解「messages は envelope + codec に縮小」に照らして正当に残留。docs/superpowers/plans/2026-11-21-pbi-246-messages-vocab.md の「PBI 数値目標の整合」で訂正)
+- [x] wire 形式自体は不変 (既存の messages 系テスト tests/messages.test.ts が無変更で緑。wire キー集合の変更は本 PBI では行わない — 2026-10-04 設計書 / PBI-175 の規約)
+- [x] `make check` 緑 (3186 passed + 1 expected fail・web-ext errors 0) + `make eval` 3 passed
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -86,9 +86,18 @@ grep -rn "ClassifyFailure\|TestFailure" src/ --include="*.ts" | grep -v "src/mes
 - 失敗語彙を src/llm/ から import している caller がある場合、core → llm 方向の依存を作らないこと (core は DOM・LLM 非依存)
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする (wire 契約不変の pin + 失敗語彙移設の import 解決)
-- [ ] テストカバレッジが基準を満たす (既存網維持・E2E は既存 make check-all で代用)
-- [ ] コードレビュー完了（GitHub PR での approve を必須とする）
-- [ ] リファクタリング完了（グリーン後・re-export 撤去まで）
-- [ ] ロールバック手段の検討（挙動不変の import 再配置のため revert で完結。wire 形式は無変更であることを PR 説明に明記）
-- [ ] ドキュメント更新済み（CONTEXT.md の語彙所在に失敗語彙の新所在を 1 行追記）
+- [x] 全 BDD シナリオが自動テストとして実装されパスする (wire 契約不変の pin 無変更 + 失敗語彙移設の import 解決 + mapping pin 維持)
+- [x] テストカバレッジが基準を満たす (既存網維持・focused 5 ファイル 112 passed)
+- [ ] コードレビュー完了（GitHub PR での approve を必須とする。SDD タスクレビュー 3 件 + 全ブランチ最終レビュー + 修正波再レビューは全て Approved・残余 1 トークン修正済み — PR 作成と approve はユーザー作業）
+- [x] リファクタリング完了（グリーン後・re-export 撤去まで）
+- [x] ロールバック手段の検討（挙動不変の import 再配置のため revert で完結。wire 形式は無変更であることを PR 説明に明記）
+- [x] ドキュメント更新済み（CONTEXT.md に「分類失敗語彙」の項を追記・計画ファイルに PBI 数値目標の整合を記録）
+
+## 実装記録（2026-11-21・SDD 3 タスク + 全ブランチ最終レビュー）
+
+- **Task 1 (ed7ddd0)**: src/core/classifier-failures.ts 新設。`TEST_FAILURES` / `CLASSIFY_FAILURES` (module 内部化) / `TestFailure` / `ClassifyFailure` / `asClassifyFailure` を verbatim 移設 (定数値・順序・fold 本体はバイト単位同一をレビューが検証)。`decodeErrorToClassifyFailure` は param を `string` に広げて移設 (三項演算子本体不変・本番未使用で mapping pin テストのみが消費)。述語 `isClassifyFailure` / `isTestFailure` を新設。messages.ts 側は移行用 re-export shim + parse 群を述語経由に張り替え。spec 適応 2 点 (verbatimModuleSyntax の inline type マーカー・述語 (v: string) に合わせた parse 側 typeof ガード) はレビューが挙動同一を検証。
+- **Task 2 (e3de4de)**: src 10 箇所 (指定 9 + classify-transport.ts split — shim 撤去に必要な適応) + tests 4 箇所の import を './core/classifier-failures' に張り替え。shim 撤去。旧 PBI-175 コメントを英語化。guard は (b) を採用 (述語を unknown 受けに広げ、parse 側の typeof 二重判定を includesLiteral に委譲 — literals.ts:6-8 が typeof を所有するため挙動同一)。messages.ts export 実測 32。
+- **Task 3 (2f634d5)**: META_CLIP_LENGTH を src/llm/prompt.ts へ移設 (値 80 不変・WHY コメント: display policy で wire 契約ではない)。encodeFieldMeta は clip しない (allow-list 射影のみ) ため parameter threading は不要 — messages からは削除のみ。clip 適用箇所 3 箇所 (prompt.ts:37 / issue-url.ts:56,68) は同一幅のまま不変。messages.ts export 実測 31。
+- **最終レビュー (With fixes → 修正済み)**: scan-limits.ts の stale ポインタ修正 + display/clip 節へ移動、prompt.ts 所有権コメントに feedback 報告行を追記、classifier.ts の failureReason string 根拠を現行の妥当な理由 (attempt seam を語彙 module に結合させない・fold は境界で asClassifyFailure が行う) に書き直し (d9208ec)。修正波の残余 1 トークン (scan-limits.ts:17 の行番号) は f2627dc で修正済み。
+- **検証**: `make check` 緑 (typecheck / oxlint 0 errors / vitest 189 ファイル 3186 passed + 1 expected fail / 両 build / test:build 24 / web-ext errors 0)、`make eval` 3 passed (分類 pin 不変)。wire 形式・失敗語彙の意味論は変更なし。
+- **graphify**: `graphify update .` 実行済み。

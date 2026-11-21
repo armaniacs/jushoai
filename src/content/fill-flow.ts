@@ -2,7 +2,7 @@ import type { Category, Item } from '../core/types';
 import type { PlanItem } from '../core/planner';
 import type { Address, FieldMeta, Profile } from '../core/types';
 import type { FeedbackSnapshot } from '../feedback/issue-url';
-import type { ClassifyFailure } from '../messages';
+import type { ClassifyFailure } from '../core/classifier-failures';
 import { hintForButton } from '../ai/failure-text';
 import { applyAbbrevApprovals } from '../core/planner';
 import {

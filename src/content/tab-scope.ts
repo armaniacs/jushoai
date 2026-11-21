@@ -1,7 +1,7 @@
 import { mergeCarryover } from '../core/carryover';
 import type { CarryEntry, Carryover } from '../core/carryover';
 import type { GuestValues } from '../core/guest';
-import type { ClassifyFailure } from '../messages';
+import type { ClassifyFailure } from '../core/classifier-failures';
 
 // PBI-201: the content script's tab-scoped memory behind one owner. The
 // one-shot guest (PBI-144), the wizard carryover (PBI-142) and the last AI

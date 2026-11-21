@@ -9,11 +9,11 @@ import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
 import type { ClassifySchedule } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
-import { asClassifyFailure } from '../messages';
+import { asClassifyFailure, type TestFailure } from '../core/classifier-failures';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
 import { createAuthBlock, type AuthBlock } from './auth-block';
 import { PromptApiClassifier } from './classifier';
-import type { ClassifyResponse, TestFailure, TestResponse } from '../messages';
+import type { ClassifyResponse, TestResponse } from '../messages';
 
 // Narrow environment: values and capabilities only, no loaders. The background
 // owns the loaders and their caches; every method below takes already-loaded

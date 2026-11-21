@@ -1,6 +1,7 @@
 import type { Category, FieldMeta } from '../core/types';
 import { fillResultLabel } from '../dom/fill-plan';
-import { META_CLIP_LENGTH, encodeFieldMeta, type MetaWire } from '../messages';
+import { META_CLIP_LENGTH } from '../llm/prompt';
+import { encodeFieldMeta, type MetaWire } from '../messages';
 
 export const FEEDBACK_REPO = 'https://github.com/armaniacs/jushoai';
 

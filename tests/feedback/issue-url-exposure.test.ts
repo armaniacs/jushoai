@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildFeedbackIssueUrl, sanitizePageUrl, type FeedbackInput } from '../../src/feedback/issue-url';
-import { META_CLIP_LENGTH } from '../../src/messages';
+import { META_CLIP_LENGTH } from '../../src/llm/prompt';
 import type { FieldMeta } from '../../src/core/types';
 
 // Locks the data-exposure surface flagged by Red Team (Medium) and

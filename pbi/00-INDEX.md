@@ -3,7 +3,6 @@
 ## 進行中（2026-11-21・checking-team + アーキテクチャ発見の PBI 化。ラウンド台帳にインベントリ・RICE・受容判断を記録）
 
 - `2026-11-21-00-backlog-checking-arch-round.md`（ラウンド台帳。checking-team 2026-11-21 (95/100・Medium 5 件は同ラウンドで修正済み) とアーキテクチャレビュー 2026-11-20 の発見 13 件を個別 PBI 化 (246-258)。受容判断 2 件は台帳のみに記録）
-- `2026-11-21-246-refactor-messages-vocab-split.md`（順位 1。RICE 85。messages.ts を wire codec に戻す。アーキ候補 4）
 - `2026-11-21-247-refactor-drop-fill-session-facade.md`（順位 2。RICE 80。content-session facade 剥がし。アーキ候補 5）
 - `2026-11-21-248-chore-messaging-open-options-hygiene.md`（順位 3。RICE 75。open-options codec 経由化 + decode 1 回化 + alias 撤去。アーキ候補 6）
 - `2026-11-21-249-chore-review-convention-alignment.md`（順位 4。RICE 70。タスク ID・CONTEXT.md・コメント桁の規約整合）
@@ -28,6 +27,8 @@
 - `2026-11-21-264-backlog-bad-response-named-constant.md`（順位 6。RICE 9。'bad-response' の fold 先既定を名前付き定数化）
 
 ## 進行中からアーカイブ済み（2026-11-21・pbi-cleanup。209をアーカイブしINDEX未載のラウンド台帳7件を記載（ドリフト修正））
+
+- `archived/2026-11-21-246-refactor-messages-vocab-split.md`（順位 1。RICE 85。SDD 3 タスクで実装 (ed7ddd0 / e3de4de / 2f634d5)・タスクレビュー 3 件 Approved・全ブランチ最終レビュー With fixes → 修正波再レビュー後残余 1 トークンを解消 (d9208ec / f2627dc)。messages.ts を wire codec に戻す (失敗語彙 → core/classifier-failures 新設・META_CLIP_LENGTH → llm/prompt・export 実測 31)。make check 緑 + make eval 3 passed。GitHub PR での approve はユーザー作業）
 
 - `archived/2026-10-31-209-feat-dark-mode.md`（実装済み（7637081・レビュー承認・CHANGELOG に dark モード自動追従を記載）。src 無変更をコード確認済み。手動 1-3（OS ダーク切替の実機確認）はユーザー作業として残置 — 実装・レビュー完了のため台帳からアーカイブ）
 - 台帳整理（ドリフト修正）: INDEX 未載だったラウンド台帳 7 件を記載（子 PBI は全件アーカイブ済み・ラウンド完結。台帳ファイル自体は pbi/ 直下に保持）:

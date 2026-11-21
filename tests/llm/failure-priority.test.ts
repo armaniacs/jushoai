@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
 import type { ProviderKind } from '../../src/ai/types';
 import type { PublicAiSettings } from '../../src/ai/types';
-import { asClassifyFailure } from '../../src/messages';
+import { asClassifyFailure } from '../../src/core/classifier-failures';
 import { BackgroundClassifier } from '../../src/llm/background-gateway';
 import { runClassifyPipeline } from '../../src/classify-pipeline/pipeline';
 import { ProviderRegistry } from '../../src/llm/provider-registry';
@@ -12,7 +12,8 @@ import { makeMeta } from '../helpers';
 // 経路そのもの）。ここで pin する順序は集約後も変えない:
 //   - チャンク失敗が切り詰め通知より優先される (pipeline 集約)
 //   - abort/期限切れの打ち切りが切り詰め通知より優先される (pipeline 集約)
-//   - 未知語彙は bad-response に畳まれ、null(成功/legacy 不明)は通す (messages)
+//   - 未知語彙は bad-response に畳まれ、null(成功/legacy 不明)は通す
+//     (core/classifier-failures)
 //   - HTTP 状態→語彙の対応は classify/test で同一 (registry。test の
 //     bad-response→network 読み替えだけが歴史的非対称として残る)
 
