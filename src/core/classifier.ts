@@ -40,8 +40,10 @@ export interface FieldClassifier {
 
 // Result of one classification attempt: the partial map bound to the reason of
 // the chunk that stopped the run. failureReason stays null on success.
-// Kept as string (not ClassifyFailure) so core/ stays free of the message
-// vocabulary import; gateway implementations narrow it to ClassifyFailure.
+// Kept as string (not ClassifyFailure) so the attempt seam's outcome shape
+// stays decoupled from the vocabulary module (classifier-failures.ts); the
+// raw string folds back into ClassifyFailure at the seam's boundary via
+// asClassifyFailure (classify-pipeline, provider-registry).
 export interface AttemptOutcome {
   map: Map<string, Category>;
   failureReason: string | null;

@@ -1,10 +1,12 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
 import { encodeFieldMeta, type MetaWire } from '../messages';
 
-// Display width for page-controlled metadata strings in prompt rows. This is
-// a prompt-metadata display policy, not a wire contract: encodeFieldMeta
-// carries full allow-list strings and each display site clips its own rows
-// (distinct from MAX_TEXT_LENGTH, which caps the wire envelope).
+// Display width for page-controlled metadata strings: prompt rows and
+// feedback report lines (src/feedback/issue-url.ts) clip their own display
+// text with this width. This is a display policy, not a wire contract:
+// encodeFieldMeta carries full allow-list strings and each display site
+// clips its own rows (distinct from MAX_TEXT_LENGTH, which caps the wire
+// envelope).
 export const META_CLIP_LENGTH = 80;
 
 // Prompt construction and output parsing shared by every provider path: the
