@@ -14,7 +14,7 @@ export const MAX_TEXT_LENGTH = 200;
 // - store (audit budget): AUDIT_MAX_BYTES, AUDIT_PAGE_URL_MAX_BYTES and
 //   AUDIT_MAX_ENTRIES (src/ai/audit-log.ts:11,22,4).
 // - display (clip): clipAuditResponse with AUDIT_RESPONSE_CLIP_LENGTH
-//   (src/ai/audit-log.ts:65-66,62) and META_CLIP_LENGTH (src/llm/prompt.ts:8).
+//   (src/ai/audit-log.ts:65-66,62) and META_CLIP_LENGTH (src/llm/prompt.ts:10).
 // Guide for a new path: sending values -> wire bounds; persisting records ->
 // audit budget; showing page text -> clip bounds. Do not move or unify the
 // constants (they change for different reasons).
