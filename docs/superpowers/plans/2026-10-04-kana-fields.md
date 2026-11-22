@@ -907,7 +907,9 @@ git add CHANGELOG.md
 git commit -m "docs: CHANGELOG にカナ欄対応を記録"
 ```
 
-- [ ] **Step 4: 手動確認（自動化できない実ページ挙動）**
+- [x] **Step 4: 手動確認（自動化できない実ページ挙動）**
+
+（2026-11-22 に実施・全項目 OK を確認済み。① ふりがな欄にひらがな・承認後バリデーションエラーなし ② カタカナ 4 行表示 ③ LLM で再分析ボタンの表示条件と実行 ④ 設定ページのひらがな表示。あわせて PBI-118 の samples 確認 (shichusuimei / ena-request-form の birthday 1 欄型) も実施）
 
 Chrome で `chrome://extensions` を開き、デベロッパーモードで `dist/chrome-mv3` をロード（または `make dev`）。プロファイルに姓・名・セイ・メイ（全角カナ）を保存しておく。以下を確認する:
 

@@ -37,7 +37,7 @@ Scenario: 誕生日語の 1 input 欄が分類対象になる
 
 - 単体: 分類(誕生日語 1 欄型)・planner(ISO 注入)の fixture 先行(tests/core/)
 - 統合: samples.test.ts のケース追加
-- 手動: samples フォームでの確認
+- 手動: samples フォームでの確認（2026-11-22 に実施: samples/shichusuimei.html (type=date 1 欄型) と samples/ena-request-form.html (誕生日語裸 1 欄型) で birthday 分類・注入を確認。カナ欄対応の実ページ手動確認と同セッション）
 
 ## 見積もり
 
