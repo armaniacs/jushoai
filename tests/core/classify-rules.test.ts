@@ -1381,6 +1381,10 @@ describe('classifyField: emergency contact vocabulary', () => {
     expect(cat({ label: '緊急連絡先氏名' })).toBe('fullName');
   });
 
+  it('keeps 緊急連絡先住所 on the address route', () => {
+    expect(cat({ label: '緊急連絡先住所' })).toBe('addressFull');
+  });
+
   it('splits three same-label emergency contact fields into tel1/tel2/tel3', () => {
     const items = classifyRulePipeline(['a', 'b', 'c'].map((id) =>
       makeMeta({ id, label: '緊急連絡先 必須', nearby: '保護者等情報入力' })));

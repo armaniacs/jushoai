@@ -112,11 +112,13 @@ function classifyText(
   if (last && !first) return 'lastName';
   if (first && !last) return 'firstName';
   if (last || first || FULL_NAME.test(t) || ((bareKana || kanaTest(t)) && wantsKanaField())) return 'fullName';
+  if (/address|住所|addr/.test(t)) return 'addressFull';
   // 緊急連絡先は電話語（電話・携帯・tel）を含まないため tel 行では拾われず、
   // 欄が unknown のまま分割も計画も働かなかった。名前段より後に置く: 緊急連絡先氏名
   // のような複合語は上の氏名判定に優先させ、fullName のまま保つ。
+  // 住所段よりも後にも置く: 緊急連絡先住所のような複合語は住所判定に優先させ、
+  // addressFull のまま保つ（先に置くと tel に取られてしまう）。
   if (/緊急連絡先/.test(t)) return 'tel';
-  if (/address|住所|addr/.test(t)) return 'addressFull';
   return null;
 }
 
