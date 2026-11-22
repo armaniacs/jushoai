@@ -91,6 +91,25 @@ export interface SaveSideDeps {
   ui: SaveSideUi;
 }
 
+// Shared failure path of the two save shells (saveSide / saveBoth): the catch
+// handling is identical and only the payload differs, so callers build the
+// payload and pass it in. Pick-based deps are satisfied structurally by both
+// full deps types without coupling the helper to either.
+async function persistWithUiError(
+  payload: StoredData,
+  deps: Pick<SaveSideDeps, 'saveData'> & { ui: Pick<SaveSideUi, 'showError' | 'render'> },
+): Promise<boolean> {
+  try {
+    await deps.saveData(payload);
+    return true;
+  } catch (e) {
+    console.warn('[JushoAI] save failed', e);
+    deps.ui.showError(['保存に失敗しました。容量不足の可能性があります。']);
+    deps.ui.render();
+    return false;
+  }
+}
+
 // Thin async shell with one fixed order for both kinds: validate, re-read the
 // opposite side, save, commit to memory only on success, then toast and
 // render. A failed save leaves the memory state untouched; a failed re-read
@@ -115,14 +134,7 @@ export async function saveSide(spec: SideSpec, deps: SaveSideDeps): Promise<void
   } catch {
     other = spec.otherFromLatest(current);
   }
-  try {
-    await deps.saveData(spec.buildSave(decision.own, other));
-  } catch (e) {
-    console.warn('[JushoAI] save failed', e);
-    deps.ui.showError(['保存に失敗しました。容量不足の可能性があります。']);
-    deps.ui.render();
-    return;
-  }
+  if (!(await persistWithUiError(spec.buildSave(decision.own, other), deps))) return;
   deps.setState(spec.buildCommitted(decision.own, current));
   if (decision.otherValid) {
     deps.ui.showToast(['保存しました']);
@@ -180,14 +192,7 @@ export async function saveBoth(draft: StoredData, deps: SaveBothDeps): Promise<v
     deps.ui.render();
     return;
   }
-  try {
-    await deps.saveData({ profiles: decision.profiles, addresses: decision.addresses });
-  } catch (e) {
-    console.warn('[JushoAI] save failed', e);
-    deps.ui.showError(['保存に失敗しました。容量不足の可能性があります。']);
-    deps.ui.render();
-    return;
-  }
+  if (!(await persistWithUiError({ profiles: decision.profiles, addresses: decision.addresses }, deps))) return;
   deps.setState({ profiles: decision.profiles, addresses: decision.addresses });
   const savedProfile = decision.profiles[0] ?? EMPTY_PROFILE;
   const savedAddress = decision.addresses[0] ?? EMPTY_ADDRESS;

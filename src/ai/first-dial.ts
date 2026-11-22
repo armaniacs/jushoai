@@ -1,5 +1,6 @@
 import { readKv, upsertKv, type KvSpec } from '../kv-store';
 import { originOf } from './key-reentry';
+import { isRecordValue } from '../core/types';
 
 // First-dial confirmation (trust-on-first-use) for user-configured cloud endpoints.
 //
@@ -24,12 +25,9 @@ export interface ConfirmedOrigin {
 
 export type FirstDialVerdict = { ok: true } | { ok: false; reason: 'unconfirmed' };
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-
 function isConfirmedOrigin(v: unknown): v is ConfirmedOrigin {
   return (
-    isRecord(v) && typeof v.origin === 'string' && v.origin !== '' &&
+    isRecordValue(v) && typeof v.origin === 'string' && v.origin !== '' &&
     Array.isArray(v.addresses) && v.addresses.every((a) => typeof a === 'string') &&
     typeof v.confirmedAt === 'number'
   );

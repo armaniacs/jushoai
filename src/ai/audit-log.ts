@@ -1,3 +1,5 @@
+import { isRecordValue } from '../core/types';
+
 export const AUDIT_KEY = 'jushoai:audit-log';
 export const AUDIT_RETENTION_MS = 7 * 24 * 60 * 60 * 1000;
 // Guards against a runaway loop filling storage within the retention window.
@@ -165,11 +167,8 @@ export function appendEntry(state: AuditState, draft: AuditDraft, now: number): 
   return { nextId: state.nextId + 1, entries: pruneEntries([...state.entries, entry], now) };
 }
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-
 const isEntry = (v: unknown): v is AuditEntry =>
-  isRecord(v) &&
+  isRecordValue(v) &&
   typeof v.id === 'number' && typeof v.createdAt === 'number' &&
   typeof v.provider === 'string' && typeof v.host === 'string' && typeof v.model === 'string' &&
   (v.purpose === 'classify' || v.purpose === 'connection-test') &&
@@ -194,7 +193,7 @@ const withTraceDefaults = (e: AuditEntry): AuditEntry => ({
 });
 
 export function normalizeAuditState(raw: unknown): AuditState {
-  if (!isRecord(raw) || !Array.isArray(raw.entries)) return EMPTY_AUDIT_STATE;
+  if (!isRecordValue(raw) || !Array.isArray(raw.entries)) return EMPTY_AUDIT_STATE;
   const entries = raw.entries.filter(isEntry).map(withTraceDefaults);
   const maxId = entries.reduce((m, e) => Math.max(m, e.id), 0);
   const nextId = typeof raw.nextId === 'number' && raw.nextId > maxId ? raw.nextId : maxId + 1;
