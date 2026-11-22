@@ -5,6 +5,7 @@ import { originOf } from './key-reentry';
 import { detectBuiltInFallback, normalizeAiSettings } from './settings';
 import { IS_FIREFOX } from './browser-target';
 import type { AiSettings, PublicAiSettings } from './types';
+import { isRecordValue } from '../core/types';
 
 export const AI_SETTINGS_KEY = 'jushoai:ai-settings';
 
@@ -14,17 +15,14 @@ type Keyed = (typeof KEYED)[number];
 // undefined keeps the stored key, an empty string deletes it, anything else replaces it.
 export type KeyUpdate = Partial<Record<Keyed, string>>;
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
-
 async function readStored(isFirefox: boolean = IS_FIREFOX): Promise<{ settings: AiSettings; keys: Partial<Record<Keyed, Envelope>>; builtInDisabled: boolean }> {
   const result = await chrome.storage.local.get(AI_SETTINGS_KEY);
   const raw = result[AI_SETTINGS_KEY] as unknown;
-  const rec = isRecord(raw) ? raw : {};
+  const rec = isRecordValue(raw) ? raw : {};
   const keys: Partial<Record<Keyed, Envelope>> = {};
   for (const p of KEYED) {
     const section = rec[p];
-    if (isRecord(section) && isEnvelope(section.apiKey)) keys[p] = section.apiKey;
+    if (isRecordValue(section) && isEnvelope(section.apiKey)) keys[p] = section.apiKey;
   }
   return { settings: normalizeAiSettings(raw, isFirefox), keys, builtInDisabled: detectBuiltInFallback(raw, isFirefox) };
 }

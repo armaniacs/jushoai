@@ -155,3 +155,9 @@ export const EMPTY_PROFILE: Profile = {
   companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: '', tel: '',
 };
+
+// Single parse-boundary narrowing guard: wire and storage decoders share this
+// one Record definition (arrays and null rejected) instead of redeclaring it.
+export function isRecordValue(v: unknown): v is Record<string, unknown> {
+  return typeof v === 'object' && v !== null && !Array.isArray(v);
+}

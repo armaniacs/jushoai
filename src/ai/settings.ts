@@ -3,9 +3,9 @@ import {
   DEFAULT_AI_SETTINGS, type AiSettings, type KeyPresence,
 } from './types';
 import { includesLiteral } from '../core/literals';
+import { isRecordValue } from '../core/types';
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
+const isRecord = isRecordValue;
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
 export function normalizeAiSettings(raw: unknown, isFirefox: boolean = IS_FIREFOX): AiSettings {
