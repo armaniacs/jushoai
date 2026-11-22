@@ -125,18 +125,26 @@ const LEDGER = {
       'form:j_idt503': '090',
       'form:j_idt507': '1234',
       'form:j_idt511': '5678',
+      // 緊急連絡先2行(児童/保護者)は電話語が無くても tel 語彙で判定され、
+      // 電話番号行と同じく同一labelの3欄が tel1/tel2/tel3 に分割されて載る。
+      'form:j_idt553': '090',
+      'form:j_idt557': '1234',
+      'form:j_idt561': '5678',
       'form:j_idt589': 'yamada@example.com',
       'form:j_idt1718': '山田',
       'form:j_idt1726': '太郎',
       'form:j_idt1748': 'ヤマダ',
       'form:j_idt1756': 'タロウ',
+      'form:j_idt2150': '090',
+      'form:j_idt2154': '1234',
+      'form:j_idt2158': '5678',
     },
     excluded: [
       'form:j_idt253 (select): 生年月日の年 with a single 2014 option, never a plan row (selects fill only prefecture/birthMonth/birthDay/birthEra; exclude)',
-      // 実ページ行構造の再現に不要な欄は最小 fixture から削る。緊急連絡先は電話語を
-      // 含まず tel-split-by-heading の要調査候補、塾は塾語彙で confident unknown の
-      // ため school に寄せない、という従来の付箋は欄が戻ってきたときのために残す。
-      '学年select・緊急連絡先3分割(児童/保護者)・塾コンボ一式(combobox/textCombo/form:juku*/form:j_idt1374)・出身3連動select・その他の学校: trimmed from the minimal fixture (exclude; 緊急連絡先は tel-split-by-heading の要調査候補、塾は塾語彙で confident unknown のため school に寄せない)',
+      // 実ページ行構造の再現に不要な欄は最小 fixture から削る。塾は塾語彙で
+      // confident unknown のため school に寄せない、という従来の付箋は欄が
+      // 戻ってきたときのために残す。
+      '学年select・塾コンボ一式(combobox/textCombo/form:juku*/form:j_idt1374)・出身3連動select・その他の学校: trimmed from the minimal fixture (exclude; 塾は塾語彙で confident unknown のため school に寄せない)',
     ],
   },
   'age-decade-select-form.html': {

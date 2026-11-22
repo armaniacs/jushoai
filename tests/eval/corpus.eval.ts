@@ -20,7 +20,7 @@ const PIN_TABLE: Record<string, PinRow> = {
   '12fc22bc297429.html': p(10, 0, 8, 3, 0),
   '2dd1c663300469.html': p(11, 1, 7, 0, 0),
   '6932.html': p(13, 4, 5, 1, 0),
-  'adachi-gakuen-apply.html': p(20, 0, 14, 3, 0),
+  'adachi-gakuen-apply.html': p(26, 0, 20, 9, 0),
   'aeon-voice-form.html': p(7, 2, 6, 0, 0),
   'age-decade-select-form.html': p(2, 0, 2, 0, 0),
   'anabuki-general-contact.html': p(4, 3, 2, 2, 0),

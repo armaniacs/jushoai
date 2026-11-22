@@ -15,7 +15,7 @@
   div.form-control-static; the 生年月日 row gives each select its own wrapper.
   The two sections are h3 headings + fieldset (参加者情報入力 / 保護者等情報入力)
   with no legend, and the page has no <label for> association, autocomplete, or
-  placeholder anywhere. Values are stripped. 学年・緊急連絡先・塾コンボ and the
+  placeholder anywhere. Values are stripped. 学年・塾コンボ and the
   出身/小学校 selects are trimmed: they pin no plan rows here (tests/corpus.ts).
 -->
 <html lang="ja"><meta charset="utf-8"><title>足立学園中学校 イベント申込 (school)</title>
@@ -108,6 +108,21 @@
         </div>
       </div></span></div>
     </div>
+    <span id="form:areaTelKinkyuJukensha"><div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">緊急連絡先&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt553" type="text" class="form-control input-sm" maxlength="5">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt557" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt561" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div></span>
     <div class="form-group">
       <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">メールアドレス&nbsp;<label class="label label-danger">必須</label></label>
         <div class="col-sm-5">
@@ -145,6 +160,21 @@
         </div>
       </div></span></div>
     </div>
+    <span id="form:areaTelKinkyuHogosha"><div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">緊急連絡先&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2150" type="text" class="form-control input-sm" maxlength="5">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2154" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2158" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div></span>
   </fieldset>
 </form>
 </html>
