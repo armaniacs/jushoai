@@ -17,7 +17,7 @@ JushoAI works with text, email, tel and search inputs and select lists (dropdown
 | Romaji | Family name, given name, full name (one field) | When the profile has a romaji name. |
 | Birthday | Year, month, day, era | Both Western and Japanese era years. |
 | Gender and age group | Dropdowns and radio buttons | Age group is derived from the birthday. |
-| School | School name, faculty and department | |
+| School | School name, faculty and department, school grade and juku | |
 | Contact | Email address, phone number | Phone numbers work in one field or three split fields. |
 | Postal code | One field, or two fields (first and second part) | Hyphens are decided from the example text and maximum length. |
 | Address | Prefecture, city, street, building, whole address (one field) | Prefecture dropdowns match different notations. |
