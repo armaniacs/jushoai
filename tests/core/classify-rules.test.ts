@@ -1310,10 +1310,6 @@ describe('classifyField: English form vocabulary (PBI-212)', () => {
 
 describe('classifyField: juku vocabulary', () => {
   it.each([
-    { label: '塾' },
-    { label: '塾名' },
-    { label: 'その他の塾' },
-    { label: '塾を検索', placeholder: '塾を検索（入力検索可）' },
     { name: 'form:jukuShikuchosonCd', label: '塾の市区町村' },
     { name: 'form:jukuCd', label: '塾名' },
     { name: 'jukuStateCd', htmlId: 'combobox' },
@@ -1322,7 +1318,6 @@ describe('classifyField: juku vocabulary', () => {
   });
 
   it.each([
-    { label: '塾' },
     { name: 'form:jukuCd', label: '塾名' },
   ] as Parameters<typeof makeMeta>[0][])('is confident for %j so the LLM fallback never sees it', (p) => {
     const c = classifyField(makeMeta(p));
@@ -1389,5 +1384,99 @@ describe('classifyField: emergency contact vocabulary', () => {
     const items = classifyRulePipeline(['a', 'b', 'c'].map((id) =>
       makeMeta({ id, label: '緊急連絡先 必須', nearby: '保護者等情報入力' })));
     expect(items.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+});
+
+// Task2: 学年・塾・小学校の分類語彙。fixture 先行: 先に失敗させてから語彙を足す。
+describe('classifyField: school grade, juku fill targets, and cascade filters', () => {
+  const gradeOptions = ['小学６年生', '小学５年生', '小学４年生', '小学３年生以下']
+    .map((text) => ({ value: text, text }));
+  const gradeSelect = (p: Parameters<typeof makeMeta>[0]): Parameters<typeof makeMeta>[0] => ({
+    tag: 'select', options: gradeOptions, ...p,
+  });
+
+  it.each([
+    gradeSelect({ name: 'form:j_idt1622:0:j_idt1650', label: '学年' }),
+    { tag: 'select', name: 'field_5969386', label: 'お子さまの学年' },
+    { tag: 'select', name: 'prof', label: 'お子様の学年' },
+    { tag: 'select', name: 'school_current', label: '学年' },
+    { tag: 'select', name: 'field_5969389', label: '希学園塾生に兄弟姉妹（有り）学年' },
+    { label: '学年' },
+    { label: 'お子様の学年' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as schoolGrade', (p) => {
+    expect(cat(p)).toBe('schoolGrade');
+  });
+
+  it('is confident (rule, >= 0.6) for the grade select', () => {
+    const c = classifyField(makeMeta(gradeSelect({ name: 'form:j_idt1622:0:j_idt1650', label: '学年' })));
+    expect(c).toMatchObject({ category: 'schoolGrade', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it('keeps decade-option fields on ageDecade, never schoolGrade', () => {
+    const decade = {
+      tag: 'select', label: '年代',
+      options: [{ value: '', text: '-' }, { value: '0', text: '20代' }],
+    } as Parameters<typeof makeMeta>[0];
+    expect(cat(decade)).toBe('ageDecade');
+    expect(cat(decade)).not.toBe('schoolGrade');
+  });
+
+  it.each([
+    { label: '年齢' },
+    { label: '年代物の家具' },
+    { name: 'car_grade', placeholder: 'グレード' },
+  ] as Parameters<typeof makeMeta>[0][])('leaves %j outside schoolGrade', (p) => {
+    expect(cat(p) ?? null).not.toBe('schoolGrade');
+  });
+
+  it('leaves a grade radio unclassified (select and text only)', () => {
+    expect(cat({ tag: 'radio', name: 'grade', label: '学年' })).toBeNull();
+  });
+
+  it.each([
+    { name: 'form:j_idt1374', label: 'その他の塾' },
+    { htmlId: 'textCombo', placeholder: '塾を検索（入力検索可）' },
+    { label: '塾' },
+    { label: '塾名' },
+    { label: '塾を検索', placeholder: '塾を検索（入力検索可）' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as juku', (p) => {
+    expect(cat(p)).toBe('juku');
+  });
+
+  it('is confident (rule, >= 0.6) for the visible juku text', () => {
+    const c = classifyField(makeMeta({ name: 'form:j_idt1374', label: 'その他の塾' }));
+    expect(c).toMatchObject({ category: 'juku', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it.each([
+    [{ name: 'form:j_idt661', label: 'その他の学校' }, 'school'],
+    [{ tag: 'select', name: 'form:shusshinSchoolCd' }, 'school'],
+    [{ name: 'field_5969387', label: 'お子さまの在籍小学校名' }, 'school'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+
+  it.each([
+    { tag: 'select', name: 'form:shussinTodofukenCd', label: '小学校' },
+    { tag: 'select', name: 'form:shussinShikuchosonCd' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps the cascade filter %j off the school reading', (p) => {
+    expect(cat(p)).toBe('unknown');
+  });
+
+  it('is confident (rule, >= 0.6) for the cascade filter unknown', () => {
+    const c = classifyField(makeMeta({ tag: 'select', name: 'form:shussinTodofukenCd', label: '小学校' }));
+    expect(c).toMatchObject({ category: 'unknown', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+  });
+
+  it.each([
+    [{ tag: 'select', label: '都道府県' }, 'prefecture'],
+    [{ label: '市区町村' }, 'city'],
+    [{ label: '電話番号' }, 'tel'],
+    [{ label: '会社名' }, 'company'],
+  ] as [Parameters<typeof makeMeta>[0], string][])('keeps %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
   });
 });
