@@ -2,7 +2,7 @@
 
 ## 進行中（2026-11-23・あらき連絡で起票。足立ラウンドの後続）
 
-- `2026-11-23-272-feat-emergency-contact-tel.md`（単発。RICE 192。緊急連絡先を電話番号として扱う。あらきのスクリーンショット付き連絡が原紙。計画は `docs/superpowers/plans/2026-11-23-emergency-contact-tel.md`）
+- `2026-11-23-272-feat-emergency-contact-tel.md`（単発。RICE 192。緊急連絡先を電話番号として扱う。あらきのスクリーンショット付き連絡が原紙。計画は `docs/superpowers/plans/2026-11-23-emergency-contact-tel.md`。実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。ブランチ `work/emergency-contact-tel` 4 コミット・未push。PR 順序は adachi → role → 本ブランチ。アーカイブはマージ後）
 
 ## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
 

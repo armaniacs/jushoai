@@ -23,10 +23,10 @@ Scenario: 氏名語と並ぶときは名前を優先する
 ```
 
 ## 受け入れ基準
-- [ ] `緊急連絡先` が tel 語彙で判定される（氏名語のある欄は氏名のまま。1欄型は tel で全体値）
-- [ ] 足立 fixture に実ページどおりの緊急連絡先2行（児童 j_idt553/557/561・保護者 j_idt2150/2154/2158）を戻す
-- [ ] corpus 台帳の expected に6欄分を載せ pin を更新する
-- [ ] `make check` と `make eval` が緑
+- [x] `緊急連絡先` が tel 語彙で判定される（氏名語のある欄は氏名のまま。1欄型は tel で全体値）
+- [x] 足立 fixture に実ページどおりの緊急連絡先2行（児童 j_idt553/557/561・保護者 j_idt2150/2154/2158）を戻す
+- [x] corpus 台帳の expected に6欄分を載せ pin を更新する
+- [x] `make check` と `make eval` が緑
 
 ## テスト戦略
 - 統合: 足立 fixture で2行6欄が埋まること
@@ -36,9 +36,9 @@ Scenario: 氏名語と並ぶときは名前を優先する
 0.5人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了
+- [x] ドキュメント更新済み
 
 ## 出どころ
 - あらき 2026-11-23 の連絡（スクリーンショット付き。緊急連絡先は電話番号から）
@@ -64,3 +64,13 @@ Scenario: 氏名語と並ぶときは名前を優先する
 - 役割が同扱いになると同ラベル6欄になり leftover 化で注入なし（既存の誤注入しない劣化）
 - LLM prompt 側のカテゴリ一覧の変更は不要（tel/tel1-3 は既存）
 - CHANGELOG.md はユーザー作業中なので触らない
+
+## 実装記録（2026-11-23）
+- `work/emergency-contact-tel`（base ad33ac2・role-profile-select に積む）に 4 コミット: 計画起票 3f9225a、語彙追加 ba1bdc8、住所段の後への移動修正 c245c18、fixture 復元 056fecc
+- `classifyText` に `緊急連絡先` の分岐を 1 つ追加。名前段（緊急連絡先氏名 → fullName）と住所段（緊急連絡先住所 → addressFull）の後に置き、両方の順序を pin テストで固定。判定は最後尾なので既存のどの語彙も動かさない
+- 足立 fixture に実ページどおりの2行を復元（ラッパ span・id 無し input・maxlength 5/4/4・`－` 区切り・`col-xs-1 col-xs-1` の重複クラスまで）。corpus 台帳に6欄分の expected を追加
+- pin は adachi のみ `p(20,0,14,3,0)` → `p(26,0,20,9,0)`（+6 ruleHits・+6 fillable・+6 refineChanged）。他 fixture は不動
+- 検証: make check exit 0（194 files・3297 passed + 期待失敗1・build 24・web-ext 誤り 0）、make eval 3 passed。タスクレビュー 2 件（Task 1 は住所段の後への移動修正ののち Approved）+ 最終レビュー Ready to merge: Yes
+- 台帳への記載事項: 緊急連絡先続柄のような見出し小欄も tel になる（語彙固有。実 fixture には未出。出たら `緊急連絡先(?!続柄)` の除外を検討。プレビューが抑止）。単独欄の pin は classifyField 経由で pipeline 経由でない。テスト戦略に書いた「同ラベル6欄」の専用テストは未追加（6欄同役割のときは oversized drop で欄ごと消え注入しない機構で、既存テストが sibling カテゴリで保証。leftover 化は 2 欄のときの機構）。corpus 台帳の保護者側3欄はコメント無し（児童側のコメントが2行分を説明）
+- サイトガイドの「電話番号は、1 欄と、3 つに分かれた欄に対応します」の記述が今回の挙動を既に覆うため、ユーザー向け文書の変更はなし
+- push・PR 作成はユーザー作業（role-profile-select と adachi-label-extraction に積むため、PR の順序は adachi → role → 本ブランチ）
