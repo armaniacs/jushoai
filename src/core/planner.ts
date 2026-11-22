@@ -11,7 +11,7 @@ import {
 } from './formatters';
 import { matchOption } from './match-option';
 import { isAllowedRadioCategory } from './radio-policy';
-import type { Address, Category, Classification, FieldMeta, Profile } from './types';
+import type { Address, Category, Classification, FieldMeta, PersonRole, Profile } from './types';
 import { carryoverFor } from './carryover';
 
 export type PlanStatus = 'ok' | 'filled' | 'warn-maxlength' | 'warn-pattern' | 'warn-no-option' | 'warn-no-value';
@@ -32,6 +32,10 @@ export interface PlanItem {
   // profile value is missing while the address zip resolves. Same opt-in
   // semantics as abbrev; the lookup is terminal-only and deterministic.
   assist?: string;
+  // 行の出どころ: roleProfiles を渡した呼び出しでのみ載る。役割と実際に値を
+  // 作ったプロファイルの id で、プレビューが行の用途を示すのに使う。
+  role?: PersonRole;
+  profileId?: string;
 }
 
 export interface PlanContext {
@@ -41,6 +45,11 @@ export interface PlanContext {
   // PBI-142: the earlier page's approved values, keyed by the field signature.
   // A field whose profile value is empty falls back to the carried value.
   carryover?: Record<string, string>;
+  // 役割ごとのプロファイル(任意)。載っている役割の欄はそのプロファイルで値を
+  // 作り、未載の役割は既定の profile に倒す。住所は共通の1つのまま(役割で
+  // 分けない)。この引数を渡した呼び出しだけ plan 行に role/profileId を載せ、
+  // 渡さない既定経路は行の形を1文字も変えない。
+  roleProfiles?: Partial<Record<PersonRole, Profile>>;
 }
 
 // PBI-120: width-forcing patterns reshape the value's character width before
@@ -510,10 +519,18 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
   const present = new Set(items.map((i) => i.cls.category));
   const plan: PlanItem[] = [];
 
-  for (const { meta, cls } of items) {
+  for (const { meta, cls, role } of items) {
     if (meta.readOnly || meta.disabled || cls.category === 'unknown') continue;
-    const base = { fieldId: meta.id, category: cls.category, source: cls.source };
-    const raw = enforceWidth(valueFor(cls, meta, ctx, present), meta);
+    // 役割ごとのプロファイル。載っている役割はそのプロファイルで値を作り、
+    // 未載の役割・マップ無しは既定の profile のまま(既定経路と同じ値)。
+    const personRole: PersonRole = role ?? 'self';
+    const roleProfile = ctx.roleProfiles?.[personRole];
+    const itemCtx = roleProfile ? { ...ctx, profile: roleProfile } : ctx;
+    const base = {
+      fieldId: meta.id, category: cls.category, source: cls.source,
+      ...(ctx.roleProfiles ? { role: personRole, profileId: (roleProfile ?? ctx.profile).id } : {}),
+    };
+    const raw = enforceWidth(valueFor(cls, meta, itemCtx, present), meta);
     // A missing profile value keeps its row with the reason attached instead
     // of vanishing: vanishing is indistinguishable from a classification
     // failure (unknown skips noiselessly above), so the preview could never
@@ -525,7 +542,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
     if (!raw) {
       // PBI-218: 表の assist 列の読み出し。assist:null の行は assistFor が null
       // を返すため旧 ASSISTABLE 集合の事前判定と同値（表固定テストで保証）。
-      const candidate = assistFor(cls.category, ctx, cls, meta);
+      const candidate = assistFor(cls.category, itemCtx, cls, meta);
       plan.push({
         ...base,
         value: '',
@@ -577,7 +594,7 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
       // (applyAbbrevApprovals). Without a candidate the row keeps its plain
       // warn-maxlength shape: truncation without approval stays out of scope.
       // The candidate presence check is the shared hasAbbrev judgment.
-      const abbreviated = abbreviationFor(cls.category, raw, meta.maxLength, meta, ctx, present);
+      const abbreviated = abbreviationFor(cls.category, raw, meta.maxLength, meta, itemCtx, present);
       plan.push({
         ...base,
         value: '',

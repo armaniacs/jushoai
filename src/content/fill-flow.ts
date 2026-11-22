@@ -1,6 +1,6 @@
 import type { Category, Item } from '../core/types';
 import type { PlanItem } from '../core/planner';
-import type { Address, FieldMeta, Profile } from '../core/types';
+import type { Address, FieldMeta, PersonRole, Profile } from '../core/types';
 import type { FeedbackSnapshot } from '../feedback/issue-url';
 import type { ClassifyFailure } from '../core/classifier-failures';
 import { hintForButton } from '../ai/failure-text';
@@ -94,6 +94,9 @@ export interface FillApplyState {
   after: Map<string, FeedbackSnapshot> | null;
   profileId: string;
   addressId: string;
+  // 役割ごとの選択(任意)。id のまま持ち、replan の度に profiles から解決する。
+  // 未載の役割・解決できない id は既定プロファイル(profileId の先)に倒れる。
+  roleProfileIds: Partial<Record<PersonRole, string>>;
   lastFailureReason: ClassifyFailure | null;
   lastUndo: UndoEntry[];
   // The rows the preview was built from (frozen at start): recordApproval
@@ -187,6 +190,7 @@ export function createFillFlow(bundle: FillBundle) {
     after: null,
     profileId: '',
     addressId: '',
+    roleProfileIds: input.roleProfileIds ?? {},
     lastFailureReason: null,
     lastUndo: [],
     approvalRows: [],
@@ -198,9 +202,21 @@ export function createFillFlow(bundle: FillBundle) {
     input.profiles.find((p) => p.id === state.profileId) ?? input.profiles[0]!;
   const currentAddress = (): Address | null =>
     input.addresses.find((a) => a.id === state.addressId) ?? null;
+  // 役割 → プロファイルの解決。実効的に1つも解決できないときは undefined を
+  // 返し、計画は役割マップ無しの既定経路と同じ形になる(行に出自を載せない)。
+  const currentRoleProfiles = (): Partial<Record<PersonRole, Profile>> | undefined => {
+    const out: Partial<Record<PersonRole, Profile>> = {};
+    for (const role of ['child', 'guardian', 'self'] as const) {
+      const id = state.roleProfileIds[role];
+      if (!id) continue;
+      const found = input.profiles.find((p) => p.id === id);
+      if (found) out[role] = found;
+    }
+    return Object.keys(out).length > 0 ? out : undefined;
+  };
 
   const replan = (): PreviewRow[] => {
-    const out = replanItems(state.items, currentProfile(), currentAddress(), input.metasById);
+    const out = replanItems(state.items, currentProfile(), currentAddress(), input.metasById, currentRoleProfiles());
     state.plan = out.plan;
     return out.rows;
   };
@@ -251,6 +267,23 @@ export function createFillFlow(bundle: FillBundle) {
 
     selectAddress(id: string): PreviewRow[] {
       state.addressId = id;
+      return replan();
+    },
+
+    // 現在の役割ごとの選択(id の浅いコピー)。UI が各役割の選択肢の初期値に使う。
+    get selectedRoleProfileIds(): Partial<Record<PersonRole, string>> {
+      return { ...state.roleProfileIds };
+    },
+
+    // 役割ごとのプロファイル選択(selectProfile 相当)。null で未指定に戻す。
+    // 住所は共通の1つのままなので、ここでは addressId を触らない。
+    selectRoleProfile(role: PersonRole, profileId: string | null): PreviewRow[] {
+      if (profileId === null) {
+        const { [role]: _removed, ...rest } = state.roleProfileIds;
+        state.roleProfileIds = rest;
+      } else {
+        state.roleProfileIds = { ...state.roleProfileIds, [role]: profileId };
+      }
       return replan();
     },
 

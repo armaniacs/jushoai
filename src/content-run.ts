@@ -1,6 +1,6 @@
 import type { Item } from './core/types';
 import { buildPlan, hasAbbrev, type PlanItem } from './core/planner';
-import type { Address, FieldMeta, Profile } from './core/types';
+import type { Address, FieldMeta, PersonRole, Profile } from './core/types';
 import type { FeedbackInput, FeedbackSnapshot } from './feedback/issue-url';
 import type { PreviewRow, PreviewRowCandidate } from './ui/preview';
 
@@ -37,6 +37,10 @@ export function buildPreviewRows(plan: PlanItem[], metasById: Map<string, FieldM
       display: p.display,
       status: p.status,
       source: p.source,
+      // The plan's provenance (role/profileId) rides only a role-mapped plan;
+      // the default path keeps the row shape exactly as before.
+      ...(p.role !== undefined ? { role: p.role } : {}),
+      ...(p.profileId !== undefined ? { profileId: p.profileId } : {}),
       ...optIn,
     };
   });
@@ -47,8 +51,9 @@ export function replanItems(
   profile: Profile,
   address: Address | null,
   metasById: Map<string, FieldMeta>,
+  roleProfiles?: Partial<Record<PersonRole, Profile>>,
 ): { plan: PlanItem[]; rows: PreviewRow[] } {
-  const plan = buildPlan(items, { profile, address });
+  const plan = buildPlan(items, { profile, address, roleProfiles });
   return { plan, rows: buildPreviewRows(plan, metasById) };
 }
 

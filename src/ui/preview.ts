@@ -1,5 +1,5 @@
 import type { PlanStatus } from '../core/planner';
-import type { Address, Profile } from '../core/types';
+import type { Address, PersonRole, Profile } from '../core/types';
 import { fillResultLabel, type FillSummary } from '../dom/fill-plan';
 import { isMeasurable } from '../dom/geometry';
 import { OVERLAY_CSS } from './overlay';
@@ -34,6 +34,11 @@ export interface PreviewRow {
   // counts toward the apply button's state on purpose: those rows will fill,
   // so the shortened preview stays usable when the visible rows are warnings.
   synthetic?: true;
+  // 行の出どころ(役割別計画のときだけ載る): the row's person role and the id of
+  // the profile actually used for the value. The preview labels the per-role
+  // usage; unset roles ride the default profile's id.
+  role?: PersonRole;
+  profileId?: string;
 }
 
 export interface PreviewOptions {

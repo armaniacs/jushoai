@@ -1,6 +1,6 @@
 import type { Category, Item } from './core/types';
 import type { PlanItem } from './core/planner';
-import type { Address, FieldMeta, Profile, RunContext } from './core/types';
+import type { Address, FieldMeta, PersonRole, Profile, RunContext } from './core/types';
 import type { PremadePass } from './core/classify-once';
 import { runClassifyPipeline } from './classify-pipeline/pipeline';
 import type { FieldClassifier } from './core/classifier';
@@ -20,6 +20,9 @@ export interface SessionInput {
   // 切替は候補提示のみ — it only changes the initial selection.
   assignedProfileId?: string | null;
   lastAddressId?: string;
+  // 役割ごとの初期選択(任意)。未載の役割・解決できない id は既定プロファイルに
+  // 倒れる。既定の割当て(児童=self=1人目、保護者=2人目)を適用するのは UI 側。
+  roleProfileIds?: Partial<Record<PersonRole, string>>;
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
   // PBI-181: the shared classify-once pass for this run. The session attaches
@@ -130,6 +133,16 @@ export function createFillSession(input: SessionInput, env: SessionEnv) {
 
     selectAddress(id: string): PreviewRow[] {
       return flow.selectAddress(id);
+    },
+
+    // 現在の役割ごとの選択(id の浅いコピー)。UI が各役割の選択肢の初期値に使う。
+    get selectedRoleProfileIds(): Partial<Record<PersonRole, string>> {
+      return flow.selectedRoleProfileIds;
+    },
+
+    // 役割ごとのプロファイル選択(selectProfile 相当)。null で未指定に戻す。
+    selectRoleProfile(role: PersonRole, profileId: string | null): PreviewRow[] {
+      return flow.selectRoleProfile(role, profileId);
     },
 
     // PBI-138: the preview's 分類を直す entry (rule-only re-plan; see fill-flow).
