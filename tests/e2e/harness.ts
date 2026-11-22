@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { Builder, By, until, type WebDriver, type WebElement } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox.js';
 import chrome from 'selenium-webdriver/chrome.js';
-import { chromeLaunchArgs } from './chrome-flags';
+import { chromeLaunchArgs, type PrefersColorScheme } from './chrome-flags';
 import {
   driverVersionFailureMessage, driverVersionStatus, parseMajorVersion,
   type DriverVersionCheck,
@@ -55,14 +55,20 @@ const SESSION_RETRIES = 3;
 const SESSION_RETRY_DELAY_MS = 2_000;
 const sleep = (ms: number) => new Promise<void>((ok) => setTimeout(ok, ms));
 
-async function buildSession(): Promise<WebDriver> {
+async function buildSession(scheme: PrefersColorScheme = 'light'): Promise<WebDriver> {
   const options = new firefox.Options();
   const bin = firefoxBinary();
   if (bin) options.setBinary(bin);
   if (process.env.HEADLESS === '1') options.addArguments('-headless');
   options.setPreference('extensions.webextensions.uuids', JSON.stringify({ [GECKO_ID]: EXT_UUID }));
-  // PBI-162 banner asserts the light token; without this the run follows the OS appearance (PBI-209 dark override).
-  options.setPreference('layout.css.prefers-color-scheme.content-override', 1);
+  // Banner scenarios assert color-scheme tokens, so the run must not follow
+  // the OS appearance: content-override pins what prefers-color-scheme
+  // reports (1 = light — proven by the light-token assertions passing under
+  // this pref; 0 = dark).
+  options.setPreference(
+    'layout.css.prefers-color-scheme.content-override',
+    scheme === 'dark' ? 0 : 1,
+  );
   // Chrome-context scripting (used to open moz-extension:// tabs) needs geckodriver's system-access flag.
   const service = new firefox.ServiceBuilder().addArguments('--allow-system-access');
   const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options)
@@ -72,7 +78,7 @@ async function buildSession(): Promise<WebDriver> {
   return driver;
 }
 
-export async function startDriver(): Promise<WebDriver> {
+export async function startDriver(scheme: PrefersColorScheme = 'light'): Promise<WebDriver> {
   if (!existsSync(ADDON_DIR)) throw new Error('dist/firefox-mv3 is missing: run `make build-firefox` first');
   // Firefox occasionally exits with status 0 right after geckodriver launches it
   // (seen in make e2e-firefox as "unexpectedly closed with status 0"), then a
@@ -81,7 +87,7 @@ export async function startDriver(): Promise<WebDriver> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= SESSION_RETRIES; attempt++) {
     try {
-      return await buildSession();
+      return await buildSession(scheme);
     } catch (err) {
       lastError = err;
       if (attempt === SESSION_RETRIES || !`${err}`.includes('unexpectedly closed')) throw err;
@@ -294,7 +300,7 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
 // Chrome: the extension id is assigned at install time, so it is resolved via
 // BiDi webextension.install (no id is written down) and the options page is
 // addressed with the returned id.
-export async function startChromeDriver(): Promise<{ driver: WebDriver; extensionId: string }> {
+export async function startChromeDriver(scheme: PrefersColorScheme = 'light'): Promise<{ driver: WebDriver; extensionId: string }> {
   if (!existsSync(CHROME_ADDON_DIR)) throw new Error('dist/chrome-mv3 is missing: run `make build` first');
   // Fail fast on a version mismatch or an unresolved driver (PBI-204): the
   // message carries both majors and the repair paths instead of letting the
@@ -309,7 +315,7 @@ export async function startChromeDriver(): Promise<{ driver: WebDriver; extensio
   // local runs keep the browser sandbox enabled.
   const bin = chromeBinary();
   if (bin) options.setBinaryPath(bin);
-  options.addArguments(...chromeLaunchArgs(process.env));
+  options.addArguments(...chromeLaunchArgs(process.env, { scheme }));
   options.enableBidi();
   const builder = new Builder().forBrowser('chrome').setChromeOptions(options);
   // The verified binary is the used one: an explicit service path skips the

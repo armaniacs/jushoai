@@ -7,8 +7,14 @@
 // local run with the sandbox kept enabled; only the harness passes the real
 // process.env.
 
+// Prefers-color-scheme a session forces. Light is the default at every layer
+// (flags, Firefox pref, adapters) so the existing light-token runs keep their
+// exact behavior; dark exists for the dark-token scenarios.
+export type PrefersColorScheme = 'light' | 'dark';
+
 export function chromeLaunchArgs(
   env: { HEADLESS?: string; CI?: string; E2E_NO_SANDBOX?: string },
+  opts?: { scheme?: PrefersColorScheme },
 ): string[] {
   const args: string[] = [];
   if (env.HEADLESS === '1') args.push('--headless=new');
@@ -22,7 +28,9 @@ export function chromeLaunchArgs(
   // stay unconditional: /dev/shm can be too small in containers and GPU
   // rendering is unnecessary for these tests.
   args.push('--disable-dev-shm-usage', '--disable-gpu');
-  // PBI-162 banner asserts the light token; without this the run follows the OS appearance (PBI-209 dark override).
-  args.push('--force-prefers-color-scheme=light');
+  // Banner scenarios assert color-scheme tokens, so the run must not follow
+  // the OS appearance; forcing the scheme pins the palette on every machine.
+  const scheme = opts?.scheme ?? 'light';
+  args.push(`--force-prefers-color-scheme=${scheme}`);
   return args;
 }
