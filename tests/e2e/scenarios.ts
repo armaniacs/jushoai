@@ -3,8 +3,9 @@ import { Key, type WebDriver } from 'selenium-webdriver';
 import {
   By, HOST_SELECTOR, OPTIONS_SELECTORS, PROFILE_DATA, badgeNotice, bannerHost, bannerWrap,
   clickApplyButton, clickFillButton, dismissGuideIfPresent, mountedHosts, panelChildTags,
-  reportButton, resultPanelText, until, valueOf,
+  panelElement, reportButton, resultPanelText, until, valueOf,
 } from './harness';
+import { WHITE, blendOver, contrastRatio, parseCssColor } from './contrast';
 import type { BrowserAdapter } from './adapter';
 
 // Browser-independent e2e scenarios. Each run* function registers the same
@@ -394,6 +395,69 @@ export function runTranslucentBanner(adapter: BrowserAdapter, label: string): vo
       // opaque hover/active states and the badge colors are unit-covered
       // (tests/ui/button.test.ts).
       expect(bg).toBe('rgba(36, 87, 214, 0.9)');
+    });
+  });
+}
+
+// Dark-session scenarios: run only from the *.dark.e2e.ts entries, whose
+// adapters force prefers-color-scheme: dark for the whole session (Chrome:
+// BiDi media override, the launch flag being inert; Firefox:
+// content-override pref). The reads are computed styles
+// inside the closed shadow UI: a dark media block losing the cascade to a
+// later light rule (the regression class this guards) leaves the stylesheet
+// text intact but shifts these values.
+// Dark tokens read from the CSS: overlay.ts dark block sets --jushoai-panel-bg
+// #212530 / --jushoai-panel-fg #e8eaf0 (documented 12.7:1); button.ts dark
+// block sets --jushoai-banner-bg rgba(28, 45, 100, 0.9) with the
+// theme-invariant white text (--jushoai-banner-fg #fff).
+export function runDarkColorScheme(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: dark color scheme (PBI-209)`, () => {
+    it('renders the preview panel with the dark tokens and AA contrast', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      await clickFillButton(driver);
+      const panel = (await driver.wait(async () => {
+        const el = await panelElement(driver);
+        return el ?? null;
+      }, 15_000, 'no preview panel appeared'))!;
+      const colors = (await driver.executeScript(
+        `const s = getComputedStyle(arguments[0]);
+         return { background: s.backgroundColor, color: s.color };`,
+        panel,
+      )) as { background: string; color: string };
+      expect(colors.background).toBe('rgb(33, 37, 48)');
+      expect(colors.color).toBe('rgb(232, 234, 240)');
+      const bg = parseCssColor(colors.background);
+      const fg = parseCssColor(colors.color);
+      expect(bg).not.toBeNull();
+      expect(fg).not.toBeNull();
+      expect(contrastRatio(bg!, fg!)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('renders the floating banner with the dark tokens and AA contrast', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      // Park the pointer on a form input before reading: the preceding panel
+      // scenario's click leaves the virtual pointer parked where the banner
+      // remounts, and :hover would flip the wrap to its active background
+      // (observed on Firefox: #1e3a8a instead of the resting token). The
+      // placement never covers inputs, so this anchor is always hover-free.
+      const anchor = await driver.findElement(By.id('ln'));
+      await driver.actions().move({ origin: anchor, x: 0, y: 0 }).perform();
+      const wrap = (await driver.wait(async () => {
+        const el = await bannerWrap(driver);
+        return el ?? null;
+      }, 10_000, 'no .wrap in the banner shadow root'))!;
+      const bg = await wrap.getCssValue('background-color');
+      const fg = await wrap.getCssValue('color');
+      expect(bg).toBe('rgba(28, 45, 100, 0.9)');
+      // The banner background is translucent, so the contrast a reader sees is
+      // the alpha blend over the page behind it. The fixture canvas is the
+      // browser default white — the same worst-case backdrop the dark token
+      // was chosen against (documented blend: rgb(51, 66, 116), 9.7:1).
+      const blended = blendOver(parseCssColor(bg)!, WHITE);
+      expect(blended).toEqual({ r: 51, g: 66, b: 116 });
+      expect(contrastRatio(blended, parseCssColor(fg)!)).toBeGreaterThanOrEqual(4.5);
     });
   });
 }

@@ -297,6 +297,25 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
   };
 }
 
+// Chrome ignores --force-prefers-color-scheme (verified on Chrome 157: the
+// CSS media query keeps evaluating light under the flag, so a flag-only dark
+// session renders light tokens). The dark session realizes the scheme through
+// the WebDriver BiDi media-features override instead — the emulation fallback
+// for when the flag is insufficient. The session already rides BiDi for the
+// extension install; the override is session-global and survives navigations.
+// Light sessions stay flag-only: their pins hold on the light-OS machines
+// this suite runs on (the flag is equally inert there — a pre-existing gap
+// outside this change's scope).
+async function forceChromeDarkScheme(driver: WebDriver): Promise<void> {
+  const bidi = await (driver as WebDriver & {
+    getBidi(): Promise<{ send(command: { method: string; params: unknown }): Promise<unknown> }>;
+  }).getBidi();
+  await bidi.send({
+    method: 'emulation.setMediaFeaturesOverride',
+    params: { features: { 'prefers-color-scheme': 'dark' } },
+  });
+}
+
 // Chrome: the extension id is assigned at install time, so it is resolved via
 // BiDi webextension.install (no id is written down) and the options page is
 // addressed with the returned id.
@@ -326,6 +345,7 @@ export async function startChromeDriver(scheme: PrefersColorScheme = 'light'): P
   const driver = await builder.build();
   const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
     .installWebExtension(CHROME_ADDON_DIR);
+  if (scheme === 'dark') await forceChromeDarkScheme(driver);
   return { driver, extensionId: ext.id };
 }
 
@@ -603,6 +623,13 @@ export async function panelChildTags(driver: WebDriver): Promise<string[]> {
 // wraps it in driver.wait when the banner may still be mounting.
 export async function bannerWrap(driver: WebDriver): Promise<WebElement | null> {
   return firstFromShadow(driver, (root) => firstIn(root, SHADOW_SELECTORS.bannerWrap));
+}
+
+// Preview panel element (.panel): carries the theme tokens the dark-session
+// scenarios read as computed colors. No-wait policy: a single seam read; the
+// caller wraps it in driver.wait when the panel may still be mounting.
+export async function panelElement(driver: WebDriver): Promise<WebElement | null> {
+  return firstFromShadow(driver, (root) => firstIn(root, SHADOW_SELECTORS.panel));
 }
 
 export { By, until };
