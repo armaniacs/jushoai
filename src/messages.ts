@@ -1,4 +1,4 @@
-import { CATEGORIES, type Category, type FieldMeta } from './core/types';
+import { CATEGORIES, isRecordValue, type Category, type FieldMeta } from './core/types';
 import type { ClassifySchedule } from './core/classifier';
 import { includesLiteral } from './core/literals';
 import { isClassifyFailure, isTestFailure, type ClassifyFailure, type TestFailure } from './core/classifier-failures';
@@ -100,8 +100,7 @@ export type AuditClearResponse = { ok: true } | { ok: false };
 
 export const isAiState = (v: unknown): v is AiState => typeof v === 'string' && AI_STATES.includes(v);
 
-const isRecord = (v: unknown): v is Record<string, unknown> =>
-  typeof v === 'object' && v !== null && !Array.isArray(v);
+const isRecord = isRecordValue;
 
 const text = (v: unknown) => (typeof v === 'string' ? v.slice(0, MAX_TEXT_LENGTH) : '');
 
