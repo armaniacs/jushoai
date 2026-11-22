@@ -32,12 +32,12 @@ Scenario: light 強制セッションは不変である
 ```
 
 ## 受け入れ基準
-- [ ] harness に dark セッション変数を追加 (Chrome: `--force-prefers-color-scheme=dark` を第一選択、CDP `Emulation.setEmulatedMedia` は flag が不十分な場合のフォールバック / Firefox: `layout.css.prefers-color-scheme.content-override` の pref — 値の対応は実装時に実測確認)。既存 light セッション (chrome-flags.ts:26) は無変更
-- [ ] scenarios.ts に dark シナリオを追加: バナー・プレビュー パネルの computed 背景と文字色が dark token と一致し、floating button バナーも追従 (closed-shadow seam 経由で要素取得 → executeScript で getComputedStyle を読む)
-- [ ] 相対輝度からコントラスト比 ≥ 4.5 を計算する assert を含める (PBI-209 記載の計算値と突合)
-- [ ] 既存 light pin (scenarios.ts:396) が無変更で緑
-- [ ] PBI-209 の残 2 チェックボックスを e2e 結果で閉じる (archived ファイルに実施記録)
-- [ ] `make check` 緑 + focused e2e (e2e-chrome / e2e-firefox) 緑
+- [x] harness に dark セッション変数を追加 (**Chrome: `--force-prefers-color-scheme=dark` flag は実ブラウザで無効と実証されたため、PBI 受け入れ基準が明示認可したフォールバック — BiDi media override (`emulation.setMediaFeaturesOverride`) を dark セッションのみに適用**。Firefox: `layout.css.prefers-color-scheme.content-override` pref、light=1 は既存コードで実証済み / dark=0 を実描画で確認)。既存 light セッション (chrome-flags.ts:26) は無変更 — flag が無効な既存の潜在穴 (dark OS 機材で light pin 保護なし) は後続候補として実装記録に残す
+- [x] scenarios.ts に dark シナリオを追加: バナー・プレビュー パネルの computed 背景と文字色が dark token と一致し、floating button バナーも追従 (closed-shadow seam 経由で要素取得 → executeScript で getComputedStyle を読む)。バナーの読み取りは既存 light シナリオと同じ `getCssValue` (computed 値を返すため PBI-209 の回帰クラスは検出可能 — レビューが同値性を確認)
+- [x] 相対輝度からコントラスト比 ≥ 4.5 を計算する assert を含める (実測: パネル 12.7:1 / バナー 9.7:1。計算関数は tests/e2e/contrast.ts に抽出し単体テストが同一実装を pin — 計画の「scenarios.ts 内ローカル」を超える改善としてレビューが承認)
+- [x] 既存 light pin (scenarios.ts:397) が無変更で緑
+- [x] PBI-209 の残 2 チェックボックスを e2e 結果で閉じる (archived ファイルに実施記録)
+- [x] `make check` 緑 (191 ファイル 3202 passed + 1 expected fail) + focused e2e (HEADLESS=1 で chrome 26 passed / firefox 23 passed — light + dark 両方)
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -97,3 +97,14 @@ grep -n "\[ \]" pbi/archived/2026-10-31-209-feat-dark-mode.md
 - [x] リファクタリング完了（該当なし — テスト追加）
 - [x] ロールバック手段の検討（テスト追加のみ。e2e 不安定化時は dark シナリオを skip 扱いにして既存 light pin は維持、原因調査後に再開する手順を PR 説明に明記）
 - [x] ドキュメント更新済み（PBI-209 の残 2 チェックを閉じ、本 PBI に実装記録）
+
+## 実装記録（2026-11-22・SDD 2 タスク + 最終ゲート）
+
+- **Task 1 (3cba9b2)**: dark セッション基盤。chrome-flags.ts に scheme オプション (`chromeLaunchArgs(env, { scheme })`、既定 light・4 層で既定を機械保証)、firefox pref を light=1 / dark=0 で分岐 (1=light は既存 light-token assert が実証)、adapter は constructor opts (`new ChromeAdapter({ colorScheme: 'dark' })`)。既存エントリ・既存 pin 無変更。TDD RED→GREEN。
+- **Task 2 (6b29d8c)**: `runDarkColorScheme` シナリオ 2 件 (パネル + floating banner) — closed-shadow seam 経由で要素取得、executeScript / getCssValue で computed 色を厳密一致 assert、WCAG 相対輝度計算でコントラスト比 ≥ 4.5 (実測 パネル 12.7:1 / バナー 9.7:1)。コントラスト計算は tests/e2e/contrast.ts に抽出し tests/e2e/contrast.test.ts が同一実装を pin (単体は通常 config で make test に乗る)。エントリ tests/e2e/chrome.dark.e2e.ts / firefox.dark.e2e.ts — include pattern と package.json フィルタに自動一致するため Makefile・script は無変更。
+- **重要な発見 — Chrome flag の無効性**: `--force-prefers-color-scheme=dark` は実ブラウザ (Chrome 157) で効かなかった (flag 付きでも dark にならず、実証のため flag なし RED → override 後 GREEN の証跡)。PBI 受け入れ基準 1 が明示認可したフォールバック (CDP 相当の BiDi media override) を dark セッションのみに適用 (harness.ts:348 で gate、1 関数で分離可)。既存 light flag も同様に無効な可能性が高く、**dark OS 機材で light pin 保護が効かない潜在穴** — 失敗モードは目立つ (light pin が赤になる) ため静寂な回帰ではないが、BiDi mirror による機械的修正は後続候補 (PBI-265 実装記録 + 台帳に記録)。
+- **Firefox**: pref 0 = dark を実描画で確認 (panel computed rgb(33, 37, 48) 厳密一致)。
+- **deviation 2 件** (レビュー承認): (1) コントラスト計算を scenarios.ts 内ローカルでなく tests/e2e/contrast.ts に抽出 (e2e assert が単体 pin と同一実装を行使) / (2) harness BiDi フォールバック (上記)。
+- **受容・後続**: 既存 light シナリオ 1 件にタイミング flake を 1 回観測 (partial banner persistence・再実行で緑・本タスク対象外の未触経路)。バナー読み取りは getCssValue (PBI 原文の executeScript/getComputedStyle と機能的に同値 — レビューが同値性確認)。
+- **検証**: `make check` 緑 (191 ファイル 3202 passed + 1 expected fail)・`make eval` 3 passed・`npm run test:e2e:chrome` / `test:e2e:firefox` (HEADLESS=1) で既存 light + 新規 dark 全緑。
+- **訂正**: PBI/計画で参照した scenarios.ts:396 の light pin は現行 397 行 (レビュー指摘)。

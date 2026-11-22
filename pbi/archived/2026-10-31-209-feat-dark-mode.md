@@ -29,8 +29,8 @@ Scenario: light OS では見た目が変わらない
 ## 受け入れ基準
 - [x] shadow root 内の `<style>` に CSS 変数トークン（背景、文字、罫線、primary など）が定義され、content UI の全パネルがその変数を参照する
 - [x] shadow root 内の `<style>` に `@media (prefers-color-scheme: dark)` の dark パレットがある。手動切替の設定フィールドは作らない
-- [ ] floating button バナー（src/ui/button.ts）も dark パレットに追従する
-- [ ] dark 版の文字色コントラストが WCAG AA（4.5:1）以上であることを手動確認する
+- [x] floating button バナー（src/ui/button.ts）も dark パレットに追従する（2026-11-22 e2e dark セッションで computed `rgba(28, 45, 100, 0.9)` を厳密一致確認 — PBI-265）
+- [x] dark 版の文字色コントラストが WCAG AA（4.5:1）以上であることを実ブラウザで実測する（2026-11-22 e2e dark セッションで computed 色から相対輝度を計算: パネル 12.7:1、バナー 9.7:1 — PBI-265。OS 切替は emulate/pref 強制で代替）
 - [x] tests/ui/button.test.ts の色 assert が新しいトークン構造に更新されパスする
 - [x] tests/e2e/scenarios.ts:396 の rgba assert への影響を確認し、必要なら更新する
 - [x] light モードの見た目が変更前と同一であることを samples で目視確認する（light 既定値の pin と light ルール不変をテストとレビューで確認済み。OS での目視再確認は下記手動確認 2 に残す）
@@ -173,5 +173,7 @@ AA 計算値 (実装記録の再掲、実測は未確定):
 台帳注記（2026-10-31、なぜなぜ分析の合意実行）: 受け入れ基準のうちテストとレビューで検証済みのものを [x] 化した（token 定義・dark パレット定義・button.test.ts の色 assert・scenarios.ts:396 の影響確認・light モード不変・make check）。floating button バナーの dark 描画と dark 版コントラストの AA 実測は dark OS での目視確認のため [ ] のまま残す（手動確認 1 と 3、ユーザー作業）。light モードの samples 目視（基準 7）は light 既定値の pin とレビュー確認で [x] 化し、OS での目視再確認は手動確認 2 に残す。
 
 後続（2026-11-22 起票）: 手動確認 1 と 3 の自動化を `pbi/2026-11-22-265-chore-e2e-dark-colorscheme.md` で進行（OS 切替なしの e2e dark セッション — Chrome は force-prefers-color-scheme=dark バリアント、Firefox は pref 強制。closed-shadow read seam 経由の computed color assert + WCAG AA コントラスト計算）。完了時に上記 2 つの [ ] を閉じる。
+
+完了（2026-11-22、PBI-265 実装）: 上記 2 つの [ ] を e2e で閉じた。dark セッション (Firefox pref 0 / Chrome は flag が実ブラウザで無効のため BiDi media override) で computed 色を厳密一致 + コントラスト比を実測 (パネル 12.7:1 / バナー 9.7:1)。`pbi/archived/2026-11-22-265-chore-e2e-dark-colorscheme.md` に実装記録。
 
 検証記録（2026-11-11）: バナー実装は 20e1235/06846e6 で main 済みであることを確認した（DoD反映漏れの検証）。button.test.ts 37/37 緑、tsc exit 0、make check exit 0（全量 2304 緑＋期待失敗1）。独立レビューで追従方式・テスト整合・light不変・仕様逸脱なしを確認し、レビュー箱と文書箱を [x] にした。受入32・33 と DoD-BDD は dark OS 目視待ちのため [ ] のまま残す。
