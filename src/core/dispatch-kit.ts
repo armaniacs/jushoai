@@ -28,6 +28,8 @@ export const matchAs = (category: Category, confidence: number): Classification 
 // extra gates both sides (e.g. decade options); legendExtra overrides the
 // legend side when its evidence lives elsewhere (e.g. FOREIGN_MARK may sit
 // in the field or its heading, so the legend side reads overseasCtx).
+// Contract: legendGate defaults to extra — the own-side gate applies to the
+// legend side unless legendExtra overrides it.
 export function ownLegend(
   re: RegExp,
   category: Category,

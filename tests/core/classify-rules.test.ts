@@ -452,6 +452,40 @@ describe('classifyField: single birthday on name/id/placeholder views (why-why 2
   });
 });
 
+// 足立の実ページは bare (label 空・見出しが生年月日のみ) の 3 select で、
+// option 文言 (年/月/日) だけが手掛かり。fixture 先行: 先に失敗させてから直す。
+describe('classifyField: bare birth tri-select by option wording', () => {
+  const bare = (name: string, options: string[]) =>
+    ({ tag: 'select', name, htmlId: name, label: '', nearby: '生年月日',
+      options: options.map((text) => ({ value: text, text })) }) as Parameters<typeof makeMeta>[0];
+  it.each([
+    [bare('form:j_idt253', ['年', '2014年']), 'birthYear'],
+    [bare('form:j_idt257', ['月', '5月', '11月']), 'birthMonth'],
+    [bare('form:j_idt261', ['日', '7日', '11日']), 'birthDay'],
+  ])('classifies %j as %s', (p, expected) => {
+    expect(cat(p)).toBe(expected);
+  });
+  it('is confident (rule, >= 0.6) for the bare triple', () => {
+    for (const p of [
+      bare('form:j_idt253', ['年', '2014年']),
+      bare('form:j_idt257', ['月', '5月']),
+      bare('form:j_idt261', ['日', '7日']),
+    ]) {
+      const c = classifyField(makeMeta(p));
+      expect(c).toMatchObject({ source: 'rule' });
+      expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+    }
+  });
+  it('keeps the single birthday out of the split categories', () => {
+    expect(cat({ label: '生年月日' })).toBe('birthday');
+  });
+  it('keeps non-birth option selects away from birth parts', () => {
+    const nonBirth = { tag: 'select', name: 'season_year', htmlId: 'season_year', label: '', nearby: '学年',
+      options: [{ value: '2024', text: '2024年' }] } as Parameters<typeof makeMeta>[0];
+    expect(cat(nonBirth)).toBeNull();
+  });
+});
+
 // レビュー指摘の再現 fixture: legend 専用ケースの到達不能と交差ケースの誤分類。
 describe('classifyField: company legend and 応募文脈 (review)', () => {
   it('reaches the legend-only company case without an own office word', () => {
@@ -1271,6 +1305,40 @@ describe('classifyField: English form vocabulary (PBI-212)', () => {
     // website 語を持たない学校名欄は school のまま（読み順は変えない）。
     expect(cat({ label: 'Current or Most Recent School' })).toBe('school');
     expect(cat({ label: '学校名' })).toBe('school');
+  });
+});
+
+describe('classifyField: juku vocabulary', () => {
+  it.each([
+    { label: '塾' },
+    { label: '塾名' },
+    { label: 'その他の塾' },
+    { label: '塾を検索', placeholder: '塾を検索（入力検索可）' },
+    { name: 'form:jukuShikuchosonCd', label: '塾の市区町村' },
+    { name: 'form:jukuCd', label: '塾名' },
+    { name: 'jukuStateCd', htmlId: 'combobox' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps %j off the school reading (unknown, never filled)', (p) => {
+    expect(cat(p)).toBe('unknown');
+  });
+
+  it.each([
+    { label: '塾' },
+    { name: 'form:jukuCd', label: '塾名' },
+  ] as Parameters<typeof makeMeta>[0][])('is confident for %j so the LLM fallback never sees it', (p) => {
+    const c = classifyField(makeMeta(p));
+    expect(c).toMatchObject({ category: 'unknown', source: 'rule' });
+    expect(c!.confidence).toBeGreaterThanOrEqual(ACCEPT_THRESHOLD);
+    expect(isConfident(c)).toBe(true);
+  });
+
+  it('keeps the legend-only juku shape off the school reading', () => {
+    expect(classifyField(makeMeta({ name: 'q', nearby: '塾' })))
+      .toMatchObject({ category: 'unknown' });
+  });
+
+  it('keeps genuine school fields on the school reading next to the juku guard', () => {
+    expect(cat({ label: '学校名' })).toBe('school');
+    expect(cat({ label: '出身学校' })).toBe('school');
   });
 });
 

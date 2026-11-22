@@ -509,6 +509,7 @@ describe('sample forms end to end', () => {
     'newotani-banquet-contact.html',
     'palacehotel-contact.html',
     'ritz-tokyo-rfp-contact.html',
+    'adachi-gakuen-apply.html',
   ];
   it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
     expect(await planFor(file)).toEqual(expectedFor(file));

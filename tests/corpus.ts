@@ -106,6 +106,43 @@ const LEDGER = {
       '(no name/id) x2 (button): unaddressable (exclude)',
     ],
   },
+  'adachi-gakuen-apply.html': {
+    expected: {
+      'form:SSeiKanji': '山田',
+      'form:SMeiKanji': '太郎',
+      // The child kana pair splits cleanly like the parent pair below: the
+      // セイ field reads lastNameKana through the ssei name signal,
+      // the メイ field reads firstNameKana through its label.
+      'form:SSeiKana': 'ヤマダ',
+      'form:j_idt138': 'タロウ',
+      'form:j_idt257': '5',
+      'form:j_idt261': '7',
+      'form:zipCodeJukensha': '1000001',
+      'form:tfknJukensha': '東京都',
+      'form:j_idt335': '千代田区',
+      'form:j_idt353': '千代田1-1',
+      'form:j_idt371': '千代田ビル101',
+      'form:j_idt503': '090',
+      'form:j_idt507': '1234',
+      'form:j_idt511': '5678',
+      'form:j_idt589': 'yamada@example.com',
+      'form:j_idt1718': '山田',
+      'form:j_idt1726': '太郎',
+      'form:j_idt1748': 'ヤマダ',
+      'form:j_idt1756': 'タロウ',
+    },
+    excluded: [
+      'form:j_idt253 (select): 生年月日の年 with a single 2014 option, never a plan row (selects fill only prefecture/birthMonth/birthDay/birthEra; exclude)',
+      'form:j_idt1622:0:j_idt1650 (select): 学年 with a single real option, stays unclassified (LLM fallback)',
+      'form:j_idt2150/2154/2158 (text): 保護者側の緊急連絡先 3-split with no tel word (緊急連絡先 carries no 電話 signal, rule probe reads unknown), stays unclassified (LLM fallback; tel-split-by-heading candidate)',
+      'combobox (select, hidden): 塾コンボの裏側。塾語彙で confident unknown のため計画に出ない (hidden 直書きなし)',
+      'textCombo (text): 塾を検索（入力検索可）の表示側。塾語彙で confident unknown のため置く (school に寄せない)',
+      'form:jukuTodofukenCd (text, hidden): 塾コンボの裏側。塾語彙で confident unknown のため計画に出ない (hidden 直書きなし)',
+      'form:jukuShikuchosonCd/form:jukuCd (select): 塾の市区町村・塾名。塾語彙で confident unknown のため置く (school に寄せない)',
+      'form:j_idt1374 (text): その他の塾。塾語彙で confident unknown のため置く (school に寄せない)',
+      '出身3連動select・その他の学校・児童側の緊急連絡先3分割: trimmed from the minimal fixture (exclude;人物分離と別軸の難しさのため要調査)',
+    ],
+  },
   'age-decade-select-form.html': {
     expected: {
       age: '1', fullname: '山田　太郎',
@@ -2453,6 +2490,12 @@ const LEDGER = {
       // 生徒氏名も同一プロファイル値で fill (yotsuya parent と同形、honest pin)。
       'student_last_name': '山田',
       'student_first_name': '太郎',
+      // 生徒・保護者のカナ対は役割内で fullNameKana 2-split が効き、
+      // 空 label 同士でも混ざらず分割される (honest pin。人物別の値引きは将来PBIで)。
+      'student_last_kana': 'ヤマダ',
+      'student_first_kana': 'タロウ',
+      'guardian_last_kana': 'ヤマダ',
+      'guardian_first_kana': 'タロウ',
       'zip1': '100',
       'zip2': '0001',
       'city': '千代田区',
@@ -2461,9 +2504,7 @@ const LEDGER = {
       'email': 'yamada@example.com',
     },
     excluded: [
-      'student_last_kana/student_first_kana/guardian_last_kana/guardian_first_kana (text): bare カナ欄。placeholder セイ/メイのみでは未分類 (LLM fallback; eikoh と同型)',
-      'tel x2 (tel/text): 同名2欄の重複 + bare。未分類のまま (LLM fallback; duplicate-name tel candidate)',
-      'tel1/tel2/tel3 (text): bare 3-split (placeholder 000/0000) で未分類 (tel-split-by-name candidate, same as No.1)',
+      'tel x2 (tel/text) + tel1/tel2/tel3 (text): bare 5 欄は本人役割のまま同束ねになり oversized-group で落ちる (duplicate-name tel candidate; tel-split-by-name candidate)',
       'gakunen/pref/selapplicant/selClass/taiken_time/kyouka/selexam (select): only a `--` option, correctly warn-no-option',
       'taiken_date (text): bare 体験希望日 with no signal, stays unclassified (LLM fallback)',
       'toggle (checkbox): out of scope (skip fixed)',
@@ -2626,16 +2667,18 @@ const LEDGER = {
       // 臨海セミナー資料請求 (WordPress CF7)。form_group_grade のみ実選択肢
       // (学年 13件) を実ページどおり復元。course/prefecture/classroom は
       // 実ページでも空 (JS 連動) のため '--' のまま。
-      'form_name_student': '山田',
-      'form_name_student_kana': 'ヤマダ',
+      // 生徒氏名は児童役割、兄弟姉妹氏名は本人役割のため cross しない。
+      // 空 label 同士の fullName 2-split は役割内でだけ働き、ここでは不発で
+      // 両者とも結合値が入る (honest pin。人物別の値引きは将来PBIで)。
+      'form_name_student': '山田 太郎',
+      'form_name_student_kana': 'ヤマダ タロウ',
       'form_post_code': '100-0001',
       'form_address1': '千代田区千代田1-1',
       'form_address2': '千代田ビル101',
       'form_cf7rs_tel': '090-1234-5678',
       'form_cf7rs_mail': 'yamada@example.com',
-      // 兄弟姉妹氏名もプロファイル値で fill (honest pin。兄弟と本人の区別は将来PBIで)。
-      'form_name_brother': '太郎',
-      'form_name_brother_kana': 'タロウ',
+      'form_name_brother': '山田 太郎',
+      'form_name_brother_kana': 'ヤマダ タロウ',
     },
     excluded: [
       's (text): site-search field, stays unclassified (same as forum.html s)',
@@ -2797,8 +2840,11 @@ const LEDGER = {
       // 文字化けを正規の日本語に復元済み (No.14 京進と同形)。
       'student_sei': '山田',
       'student_mei': '太郎',
-      // student/guardian のカナ欄 (seiKana/meiKana) は未分類のまま
-      // (LLM fallback; keishin の fam_name2 解決と対照的。suffix 読分け候補)。
+      // student/guardian のカナ欄 (seiKana/meiKana) は sei/mei+`kana` 接尾辞で
+      // lastNameKana/firstNameKana に載る (PBI-267。placeholder えいしん起点の
+      // hiragana 帰属で やまだ/たろう が入る)。
+      'student_seiKana': 'やまだ',
+      'student_meiKana': 'たろう',
       'school': '都立日比谷高校',
       // gender radio (男性/女性) は実値つきで復元。gender 群に載り値 2。
       'gender': '2',
@@ -2816,6 +2862,8 @@ const LEDGER = {
       // 保護者欄も同一プロファイル値で fill (honest pin)。
       'guardian_sei': '山田',
       'guardian_mei': '太郎',
+      'guardian_seiKana': 'やまだ',
+      'guardian_meiKana': 'たろう',
     },
     excluded: [
       'school_year/entrance_exam/placeArea/placeName/birthday_y/m/d/pref/relationship/reason (select): only a `--` option, correctly warn-no-option',

@@ -1,4 +1,5 @@
 import { CATEGORIES, type Category, type FieldMeta } from '../core/types';
+import { FALLBACK_CLASSIFY_FAILURE } from '../core/classifier-failures';
 import { buildPrompt, buildSchema, parseLlmOutput, SYSTEM_PROMPT } from '../llm/prompt';
 import { clipAuditResponse } from './audit-log';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from './audited-classifier';
@@ -132,7 +133,7 @@ export const isRejectedStatus = (status: number | null): boolean =>
 const failureReasonOf = (error: unknown): 'auth' | 'rejected' | 'network' | 'bad-response' => {
   if (error instanceof HttpAuthError) return 'auth';
   if (error instanceof HttpRequestError) return isRejectedStatus(error.status) ? 'rejected' : 'network';
-  return 'bad-response';
+  return FALLBACK_CLASSIFY_FAILURE;
 };
 
 // Bounded response read: the Content-Length check rejects an oversized body

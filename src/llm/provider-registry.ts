@@ -9,7 +9,7 @@ import { computeCloudStatus } from '../ai/status';
 import { GEMINI_BASE_URL, type AiStatusInfo, type ProviderKind, type PublicAiSettings } from '../ai/types';
 import type { ClassifySchedule } from '../core/classifier';
 import type { FieldMeta } from '../core/types';
-import { asClassifyFailure, type TestFailure } from '../core/classifier-failures';
+import { asClassifyFailure, FALLBACK_CLASSIFY_FAILURE, type TestFailure } from '../core/classifier-failures';
 import { checkAiStatus, startDownload, type LanguageModelStatic } from './availability';
 import { createAuthBlock, type AuthBlock } from './auth-block';
 import { PromptApiClassifier } from './classifier';
@@ -69,7 +69,7 @@ type FailureRoute = 'classify' | 'test';
 // callers read 'network' as "the endpoint did not answer". 401/403 ('auth')
 // and rejected shapes ('rejected') share one mapping regardless of route.
 const UNKNOWN_FAILURE_BY_ROUTE: Record<FailureRoute, TestFailure> = {
-  classify: 'bad-response',
+  classify: FALLBACK_CLASSIFY_FAILURE,
   test: 'network',
 };
 
@@ -251,7 +251,7 @@ export class ProviderRegistry {
       if (outcome.error !== undefined) {
         const auth = this.authFailure(outcome.error, s.provider);
         if (auth) return auth;
-        return { ok: false, reason: asClassifyFailure(outcome.failureReason) ?? 'bad-response' };
+        return { ok: false, reason: asClassifyFailure(outcome.failureReason) ?? FALLBACK_CLASSIFY_FAILURE };
       }
       return { ok: true, entries: [...outcome.map] };
     } catch (e) {
@@ -266,7 +266,7 @@ export class ProviderRegistry {
     if (!sel.ok) return sel;
     try {
       const category = (await sel.classifier.classify([TEST_FIELD])).get('t');
-      if (!category) return { ok: false, reason: 'bad-response' };
+      if (!category) return { ok: false, reason: FALLBACK_CLASSIFY_FAILURE };
       this.authBlock.clear(s.provider);
       return { ok: true, category };
     } catch (e) {

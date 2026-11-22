@@ -29,6 +29,6 @@ const ENGLISH_PAGE_CATEGORY: Partial<Record<Category, Category>> = {
 export function applyEnglishPage(items: Item[]): Item[] {
   return items.map((it) => {
     const category = ENGLISH_PAGE_CATEGORY[it.cls.category];
-    return category ? { meta: it.meta, cls: { ...it.cls, category } } : it;
+    return category ? { ...it, cls: { ...it.cls, category } } : it;
   });
 }

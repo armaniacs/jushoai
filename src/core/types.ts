@@ -61,9 +61,16 @@ export interface Classification {
 // Lives here (not in classify-rules) so kana.ts never imports classify-rules:
 // value flows classify-rules → kana, type flows types → both, and no future
 // value import on the kana side can turn this into a runtime cycle.
+export type PersonRole = 'child' | 'guardian' | 'self';
+
 export interface Item {
   meta: FieldMeta;
   cls: Classification;
+  // 人物役割。語と区画の併用判定で決まり、同一役割内でのみ分割と絞り込みが
+  // 働く。任意なのは旧来の直組み立てとの互換のためで、正規パイプラインは
+  // 必ず載せる。未設定は本人扱い。
+  role?: PersonRole;
+  roleReason?: string;
 }
 
 // One classify pass over a meta list, possibly null (unruly meta). The staged artifact

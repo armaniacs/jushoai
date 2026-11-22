@@ -14,6 +14,11 @@ const CLASSIFY_FAILURES = [...TEST_FAILURES, 'truncated'] as const;
 
 export type ClassifyFailure = (typeof CLASSIFY_FAILURES)[number];
 
+// WHY: 語彙外の文字列を折り畳む既定の fold 先。分類・転送・レジストリの
+// 失敗経路は未知の理由をこの 1 点に集約する ('bad-response' の値不変)。
+// 語彙の 1 員ではなく「既定の選択」を表すため FALLBACK_ 接頭辞を持つ。
+export const FALLBACK_CLASSIFY_FAILURE = 'bad-response' as const;
+
 // The literal arrays stay module-internal: vocabulary membership is exposed
 // only through these predicates, so consumers cannot grow dependencies on the
 // raw lists.
@@ -31,7 +36,7 @@ export const isClassifyFailure = (v: unknown): v is ClassifyFailure => includesL
 // pass through.
 export function asClassifyFailure(reason: string | null): ClassifyFailure | null {
   if (reason === null) return null;
-  return includesLiteral(CLASSIFY_FAILURES, reason) ? reason : 'bad-response';
+  return includesLiteral(CLASSIFY_FAILURES, reason) ? reason : FALLBACK_CLASSIFY_FAILURE;
 }
 
 // Maps a request decode failure onto the classify failure vocabulary:
@@ -44,5 +49,5 @@ export function asClassifyFailure(reason: string | null): ClassifyFailure | null
 // depend on the wire file; the ternary stays behavior-identical for that
 // union (only 'oversize' is special-cased).
 export function decodeErrorToClassifyFailure(reason: string): ClassifyFailure {
-  return reason === 'oversize' ? 'truncated' : 'bad-response';
+  return reason === 'oversize' ? 'truncated' : FALLBACK_CLASSIFY_FAILURE;
 }
