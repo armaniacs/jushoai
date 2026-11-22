@@ -137,7 +137,7 @@ export const PROFILE_DATA = {
   profiles: [{
     id: 'p1', label: 'メイン', lastName: '山田', firstName: '太郎',
     lastNameKana: 'ヤマダ', firstNameKana: 'タロウ', lastNameRomaji: '', firstNameRomaji: '',
-    gender: '', birthday: '', school: '', department: '', email: 'taro@example.com', tel: '09012345678',
+    gender: '', birthday: '', school: '', department: '', schoolGrade: '', juku: '', email: 'taro@example.com', tel: '09012345678',
   }],
   addresses: [{
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',

@@ -46,6 +46,8 @@ export const PROFILE_FIELD_CATALOG: readonly ProfileFieldEntry[] = [
   { key: 'birthday', label: '生年月日', placeholder: '1990-05-07', guest: false },
   { key: 'school', label: '学校名', placeholder: '都立日比谷高校', guest: false },
   { key: 'department', label: '学部・学科', placeholder: '普通科', guest: false },
+  { key: 'schoolGrade', label: '学校の学年', placeholder: '小学3年', guest: false },
+  { key: 'juku', label: '塾名', placeholder: 'サンプル塾', guest: false },
   { key: 'companyName', label: '会社名（任意）', placeholder: '株式会社サンプル', guest: false },
   { key: 'companyNameKana', label: '会社名（フリガナ・任意）', placeholder: 'カブシキガイシャサンプル', guest: false },
   { key: 'companyDepartment', label: '会社の部署（任意）', placeholder: '開発部', guest: false },

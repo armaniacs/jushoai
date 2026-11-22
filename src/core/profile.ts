@@ -36,6 +36,8 @@ export function normalizeProfile(p: Profile): Profile {
     birthday: birthday(p.birthday),
     school: p.school.trim(),
     department: p.department.trim(),
+    schoolGrade: p.schoolGrade.trim(),
+    juku: p.juku.trim(),
     // PBI-119: 会社名・会社の部署は trim のみ（検証なし・空許容）。
     companyName: p.companyName.trim(),
     companyDepartment: p.companyDepartment.trim(),

@@ -10,7 +10,7 @@ const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
-  gender: '女性', birthday: '1990-05-07', school: '', department: '',
+  gender: '女性', birthday: '1990-05-07', school: '', department: '', schoolGrade: '', juku: '',
   companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: 'yamada@example.com', tel: '09012345678',
 };

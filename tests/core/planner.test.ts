@@ -8,7 +8,7 @@ const profile: Profile = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
-  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
+  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科', schoolGrade: '', juku: '',
   companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',

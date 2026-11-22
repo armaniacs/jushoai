@@ -6,7 +6,7 @@ const profile = (id: string, label: string): Profile => ({
   id, label,
   lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
   lastNameRomaji: '', firstNameRomaji: '', gender: '', birthday: '',
-  school: '', department: '', companyName: '', companyDepartment: '', jobTitle: '',
+  school: '', department: '', schoolGrade: '', juku: '', companyName: '', companyDepartment: '', jobTitle: '',
   email: '', tel: '',
 } as unknown as Profile);
 

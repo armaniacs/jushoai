@@ -20,7 +20,7 @@ function makeProfile(id: string, label: string) {
     id, label,
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
-    birthday: '', school: '', department: '',
+    birthday: '', school: '', department: '', schoolGrade: '', juku: '',
     companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '',
   };
@@ -68,7 +68,7 @@ const PROFILE_LABELS = [
   '姓', '名',
   'セイ（フリガナ・ふりがな入力可）', 'メイ（フリガナ・ふりがな入力可）',
   '姓（ローマ字・半角英字・任意）', '名（ローマ字・半角英字・任意）',
-  '生年月日', '学校名', '学部・学科',
+  '生年月日', '学校名', '学部・学科', '学校の学年', '塾名',
   // PBI-119: 会社名・会社の部署（学部・学科とメールアドレスの間）。
   // PBI-160: 会社名フリガナは会社名と会社の部署の間。
   // T3: 役職は会社の部署の直後。

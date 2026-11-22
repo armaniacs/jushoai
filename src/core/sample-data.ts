@@ -69,6 +69,8 @@ export function makeSampleProfile(rand: Rand = defaultRand): Omit<Profile, 'id'>
     birthday: `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`,
     school: '',
     department: '',
+    schoolGrade: '',
+    juku: '',
     companyName: '',
     companyDepartment: '',
     jobTitle: '',

@@ -24,6 +24,7 @@ export const SYSTEM_PROMPT = `あなたは日本のWebフォームの入力欄�
 - birthYear: 生まれ年（西暦4桁）/ birthMonth: 生まれ月 / birthDay: 生まれ日 / birthEra: 和暦の元号
 - birthday: 生年月日を1欄に入力
 - school: 学校名 / department: 学部・学科
+- schoolGrade: 学校の学年 / juku: 塾名
 - company: 会社名・法人名 / companyDepartment: 会社の部署
 - lastNameRomaji: 姓(ローマ字・半角英字) / firstNameRomaji: 名(ローマ字) / fullNameRomaji: 姓名のローマ字を1欄に入力(半角英数指定)
 - gender: 性別
