@@ -515,6 +515,24 @@ describe('sample forms end to end', () => {
     expect(await planFor(file)).toEqual(expectedFor(file));
   });
 
+  // 足立学園(実ページ行構造): for無し control-label の兄弟見出しと fieldset 前の h3 が
+  // label/nearby に載ることが人物役割の復活条件。児童側欄は label の児童語だけが根拠
+  // (h3 参加者情報入力に役割語は無い)なので word 信頼度、保護者側欄は label と h3 の
+  // 両方が保護者語を持つので word+area の一致になる。
+  it('adachi-gakuen-apply restores the person roles from the row headings', async () => {
+    const { html } = corpusEntry('adachi-gakuen-apply.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    const judge = new Map(items.map((it) => [it.meta.htmlId, `${it.role}(${it.roleReason})`]));
+    const childIds = ['form:SSeiKanji', 'form:SMeiKanji', 'form:SSeiKana', 'form:j_idt138'];
+    const guardianIds = ['form:j_idt1718', 'form:j_idt1726', 'form:j_idt1748', 'form:j_idt1756'];
+    for (const id of childIds) expect(judge.get(id)).toBe('child(word:child)');
+    for (const id of guardianIds) expect(judge.get(id)).toBe('guardian(word+area:guardian)');
+  });
+
   // PBI-211: the corpus fixtures carry their real-page radio groups again
   // (formmailer-anketo-gender.html shape). One field per name; each group
   // pins its option count and its rule category. Non-gender groups stay
