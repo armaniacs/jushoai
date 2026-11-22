@@ -1364,3 +1364,26 @@ describe('radio group classification', () => {
     }))).toBeNull();
   });
 });
+
+// 緊急連絡先は電話語（電話・携帯・tel）を含まないため tel 行では拾われず、
+// 欄が unknown のまま分割も計画も働かなかった。fixture 先行（AGENTS.md）:
+// 先に失敗させてから語彙を足す。判定は名前段より後に置くため、緊急連絡先氏名
+// のような複合語は氏名のまま保たれるはず（この優先も同じ describe で pin する）。
+describe('classifyField: emergency contact vocabulary', () => {
+  it.each([
+    { label: '緊急連絡先' },
+    { label: '緊急連絡先 必須', nearby: '保護者等情報入力' },
+  ] as Parameters<typeof makeMeta>[0][])('classifies %j as tel', (p) => {
+    expect(cat(p)).toBe('tel');
+  });
+
+  it('keeps 緊急連絡先氏名 on the person-name route', () => {
+    expect(cat({ label: '緊急連絡先氏名' })).toBe('fullName');
+  });
+
+  it('splits three same-label emergency contact fields into tel1/tel2/tel3', () => {
+    const items = classifyRulePipeline(['a', 'b', 'c'].map((id) =>
+      makeMeta({ id, label: '緊急連絡先 必須', nearby: '保護者等情報入力' })));
+    expect(items.map((i) => i.cls.category)).toEqual(['tel1', 'tel2', 'tel3']);
+  });
+});
