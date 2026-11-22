@@ -1,5 +1,9 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-23・あらき連絡で起票。足立ラウンドの後続）
+
+- `2026-11-23-272-feat-emergency-contact-tel.md`（単発。RICE 192。緊急連絡先を電話番号として扱う。あらきのスクリーンショット付き連絡が原紙。計画は `docs/superpowers/plans/2026-11-23-emergency-contact-tel.md`）
+
 ## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
 
 - `2026-11-22-00-backlog-adachi-person-round.md`（ラウンド台帳。足立対応と児童と保護者の人物分離の6件を個別PBI化。依存は採点より優先し266を先頭にした）
@@ -30,24 +34,24 @@
 
 - `2026-11-21-01-backlog-drykiss-round.md`（ラウンド台帳。コード全体の DRY/KISS 調査 (2026-11-21) の発見 6 件を個別 PBI 化。K3 (mountButton) は既存候補棚継続、K4 (classifyField) は受容判断、K5 (buildPlan) は条件未到来として台帳に記録）
 - `2026-11-21-261-chore-settings-store-typed-error.md`（順位 3。RICE 14。settings-store の型付きエラーモード (導入 or 判断記録)）
-- `2026-11-21-262-refactor-dismiss-dialog-decompose.md`（順位 4。RICE 14・着手条件発火型。showDismissDialog の 4 責務分解 — 253 発火時に同時着手）
+- `2026-11-21-262-refactor-dismiss-dialog-decompose.md`（順位 4。RICE 14・着手条件発火型。showDismissDialog の 4 責務分解 ― 253 発火時に同時着手）
 - `2026-11-21-263-refactor-show-preview-decompose.md`（順位 5。RICE 14。showPreview の配線分解）
 - `2026-11-21-264-backlog-bad-response-named-constant.md`（順位 6。RICE 9。'bad-response' の fold 先既定を名前付き定数化）
 
 ## 進行中からアーカイブ済み（2026-11-22・PBI-265 dark確認のe2e自動化を実装・アーカイブ）
 
-- `archived/2026-11-22-265-chore-e2e-dark-colorscheme.md`（PBI-209 の手動 1-3 を OS 切替なしの e2e dark セッションで自動化 — Firefox pref 0 = dark を実描画確認、Chrome は flag が実ブラウザで無効のため BiDi media override にフォールバック (PBI 認可)。closed-shadow seam 経由の computed color assert + WCAG AA コントラスト計算 (パネル 12.7:1 / バナー 9.7:1)。SDD 2 タスク、両レビュー Approved + Ready to merge: Yes。make check 3202 passed + make eval 3 passed。後続候補: Chrome の light flag も無効な既存潜在穴の BiDi mirror。GitHub PR での approve はユーザー作業）
+- `archived/2026-11-22-265-chore-e2e-dark-colorscheme.md`（PBI-209 の手動 1-3 を OS 切替なしの e2e dark セッションで自動化 ― Firefox pref 0 = dark を実描画確認、Chrome は flag が実ブラウザで無効のため BiDi media override にフォールバック (PBI 認可)。closed-shadow seam 経由の computed color assert + WCAG AA コントラスト計算 (パネル 12.7:1 / バナー 9.7:1)。SDD 2 タスク、両レビュー Approved + Ready to merge: Yes。make check 3202 passed + make eval 3 passed。後続候補: Chrome の light flag も無効な既存潜在穴の BiDi mirror。GitHub PR での approve はユーザー作業）
 
 ## 進行中からアーカイブ済み（2026-11-22・DRY/KISS ラウンドの先頭 PBI-259 を実装・アーカイブ）
 
-- `archived/2026-11-21-259-refactor-is-record-shared-guard.md`（順位 1。RICE 95。単一タスクラウンド (5741b97) で実装 — isRecord 5 重定義を core/types.ts の isRecordValue に統合、ローカル定義 0 件 (明示許容の別名 2 行)。タスクレビューを最終ゲートとして兼用 (Approved + Ready to merge: Yes)。make check 3190 passed + make eval 3 passed。GitHub PR での approve はユーザー作業）
-- `archived/2026-11-21-260-refactor-save-side-persist-helper.md`（順位 2。RICE 38。単一タスクラウンド (415e285) で実装 — save-side.ts の同形保存失敗処理 2 箇所を persistWithUiError に統合、完了判定 grep = 1。タスクレビューを最終ゲートとして兼用 (Approved + Ready to merge: Yes)。make check 3186 passed + make eval 3 passed。受容: save-side.ts:195 の 112 文字行 (次回触る際に折返し)。GitHub PR での approve はユーザー作業）
+- `archived/2026-11-21-259-refactor-is-record-shared-guard.md`（順位 1。RICE 95。単一タスクラウンド (5741b97) で実装 ― isRecord 5 重定義を core/types.ts の isRecordValue に統合、ローカル定義 0 件 (明示許容の別名 2 行)。タスクレビューを最終ゲートとして兼用 (Approved + Ready to merge: Yes)。make check 3190 passed + make eval 3 passed。GitHub PR での approve はユーザー作業）
+- `archived/2026-11-21-260-refactor-save-side-persist-helper.md`（順位 2。RICE 38。単一タスクラウンド (415e285) で実装 ― save-side.ts の同形保存失敗処理 2 箇所を persistWithUiError に統合、完了判定 grep = 1。タスクレビューを最終ゲートとして兼用 (Approved + Ready to merge: Yes)。make check 3186 passed + make eval 3 passed。受容: save-side.ts:195 の 112 文字行 (次回触る際に折返し)。GitHub PR での approve はユーザー作業）
 
 ## 進行中からアーカイブ済み（2026-11-21・pbi-cleanup。209をアーカイブしINDEX未載のラウンド台帳7件を記載（ドリフト修正））
 
 - `archived/2026-11-21-246-refactor-messages-vocab-split.md`（順位 1。RICE 85。SDD 3 タスクで実装 (ed7ddd0 / e3de4de / 2f634d5)・タスクレビュー 3 件 Approved・全ブランチ最終レビュー With fixes → 修正波再レビュー後残余 1 トークンを解消 (d9208ec / f2627dc)。messages.ts を wire codec に戻す (失敗語彙 → core/classifier-failures 新設・META_CLIP_LENGTH → llm/prompt・export 実測 31)。make check 緑 + make eval 3 passed。GitHub PR での approve はユーザー作業）
 
-- `archived/2026-10-31-209-feat-dark-mode.md`（実装済み（7637081・レビュー承認・CHANGELOG に dark モード自動追従を記載）。src 無変更をコード確認済み。手動 1-3（OS ダーク切替の実機確認）は 2026-11-22 に e2e で自動化され（PBI-265）、残 2 チェック閉鎖 — 実装・レビュー・確認完了のため台帳からアーカイブ）
+- `archived/2026-10-31-209-feat-dark-mode.md`（実装済み（7637081・レビュー承認・CHANGELOG に dark モード自動追従を記載）。src 無変更をコード確認済み。手動 1-3（OS ダーク切替の実機確認）は 2026-11-22 に e2e で自動化され（PBI-265）、残 2 チェック閉鎖 ― 実装・レビュー・確認完了のため台帳からアーカイブ）
 - 台帳整理（ドリフト修正）: INDEX 未載だったラウンド台帳 7 件を記載（子 PBI は全件アーカイブ済み・ラウンド完結。台帳ファイル自体は pbi/ 直下に保持）:
   - `2026-10-20-00-backlog-holistic-round2.md`（大局レビューラウンド2台帳。子 PBI 111-114 アーカイブ済み・0.1.21 収録）
   - `2026-10-21-00-backlog-todo-not-todo.md`（todo-not-todo TODO 化ラウンド台帳。子 PBI 115-123 アーカイブ済み。NOT-TODO 12 項目の政策として各 PBI・コードコメントに反映済み）
