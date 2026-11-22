@@ -3,10 +3,10 @@ import { buildPartialIssueUrl, FEEDBACK_REPO } from '../feedback/issue-url';
 import { hintForButton } from '../ai/failure-text';
 import { changedRows } from '../core/site-approval';
 import type { ApprovalRecord } from '../core/site-approval';
-import type { Address, Profile } from '../core/types';
+import type { Address, PersonRole, Profile } from '../core/types';
 import type { ClassifyFailure } from '../core/classifier-failures';
 import type { ButtonHandle } from '../ui/button';
-import { showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
+import { hasRoleSelect, showPreview, type PreviewHandle, type PreviewRow } from '../ui/preview';
 
 export type FillSession = ReturnType<typeof createFillSession>;
 
@@ -42,14 +42,37 @@ export interface PreviewBindInput {
 // this is a move, verified by the existing E2E suite.
 export function bindPreview(input: PreviewBindInput): PreviewHandle {
   const { session, button } = input;
+  // 役割別選択の既定割当て(児童と本人=1件目、保護者=2件目)。選択欄を出す条件
+  // (hasRoleSelect)を満たす行になったときだけ採用し、それ以外のフォームは
+  // 載せた分だけ null で戻して単一選択の経路を1文字も変えない。既に選択の
+  // 載っている役割(シード)は上書きしない。
+  const rowsWithRoleDefaults = (): PreviewRow[] => {
+    if (input.profiles.length < 2) return input.rows;
+    const seeded = session.selectedRoleProfileIds;
+    const assigned: PersonRole[] = [];
+    let rows = input.rows;
+    const assign = (role: PersonRole, id: string): void => {
+      if (seeded[role] !== undefined) return;
+      assigned.push(role);
+      rows = session.selectRoleProfile(role, id);
+    };
+    assign('self', input.profiles[0]!.id);
+    assign('child', input.profiles[0]!.id);
+    assign('guardian', input.profiles[1]!.id);
+    if (assigned.length === 0) return input.rows;
+    if (hasRoleSelect(rows, input.profiles)) return rows;
+    for (const role of assigned) session.selectRoleProfile(role, null);
+    return input.rows;
+  };
+  const rows = rowsWithRoleDefaults();
   // PBI-128: a matching approval collapses the unchanged rows into one muted
   // line. The plan itself is untouched — the apply still injects the full
   // plan; only the view shortens.
   const shortRows = (): PreviewRow[] => {
-    if (!input.approval) return input.rows;
-    const changed = changedRows(input.rows, input.approval);
-    const hidden = input.rows.length - changed.length;
-    if (hidden === 0 || changed.length === 0) return input.rows;
+    if (!input.approval) return rows;
+    const changed = changedRows(rows, input.approval);
+    const hidden = rows.length - changed.length;
+    if (hidden === 0 || changed.length === 0) return rows;
     return [
       ...changed,
       {
@@ -85,10 +108,17 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     } : undefined,
     profiles: input.profiles,
     selectedProfileId: session.selectedProfileId,
+    // 役割別の選択。表示条件は preview 側の hasRoleSelect が担うので、ここでは
+    // 常に渡す。切替えでその役割だけ再計画した行を再構築する。
+    roleSelection: {
+      onChange: (role, id) => {
+        preview.setRows(session.selectRoleProfile(role, id));
+      },
+    },
     onProfileChange: (id) => {
-      const rows = session.selectProfile(id);
+      const replanned = session.selectProfile(id);
       preview.setAddressId(session.selectedAddressId);
-      preview.setRows(rows);
+      preview.setRows(replanned);
     },
     onAddressChange: (id) => {
       preview.setRows(session.selectAddress(id));
@@ -96,7 +126,7 @@ export function bindPreview(input: PreviewBindInput): PreviewHandle {
     onFix: input.onFix
       ? (fieldId, label) => { void input.onFix!(fieldId, label, preview); }
       : undefined,
-    onExpandAll: input.approval ? () => preview.setRows(input.rows) : undefined,
+    onExpandAll: input.approval ? () => preview.setRows(rows) : undefined,
     onApply: (sendFeedback, approvedAbbrevs) => {
       // Dumb view (PBI-178): the FillFlow transaction owns the whole apply
       // order (consent→…→banner＋承認/割当/guest後処理). This side only

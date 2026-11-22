@@ -196,6 +196,8 @@ describe('FillFlow role selection', () => {
     expect(rows[0]).toMatchObject({ role: 'child', profileId: 'p-child' });
     // 未載の役割は既定プロファイルに倒れる(出どころも既定の id)。
     expect(rows[1]).toMatchObject({ role: 'guardian', profileId: 'p1' });
+    // 役割の選択は共通住所に触らない(住所は全役割で同一の方針)。
+    expect(flow.selectedAddressId).toBe('a1');
     expect(injected).toEqual([]);
   });
 
