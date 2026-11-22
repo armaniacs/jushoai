@@ -172,4 +172,6 @@ AA 計算値 (実装記録の再掲、実測は未確定):
 
 台帳注記（2026-10-31、なぜなぜ分析の合意実行）: 受け入れ基準のうちテストとレビューで検証済みのものを [x] 化した（token 定義・dark パレット定義・button.test.ts の色 assert・scenarios.ts:396 の影響確認・light モード不変・make check）。floating button バナーの dark 描画と dark 版コントラストの AA 実測は dark OS での目視確認のため [ ] のまま残す（手動確認 1 と 3、ユーザー作業）。light モードの samples 目視（基準 7）は light 既定値の pin とレビュー確認で [x] 化し、OS での目視再確認は手動確認 2 に残す。
 
+後続（2026-11-22 起票）: 手動確認 1 と 3 の自動化を `pbi/2026-11-22-265-chore-e2e-dark-colorscheme.md` で進行（OS 切替なしの e2e dark セッション — Chrome は force-prefers-color-scheme=dark バリアント、Firefox は pref 強制。closed-shadow read seam 経由の computed color assert + WCAG AA コントラスト計算）。完了時に上記 2 つの [ ] を閉じる。
+
 検証記録（2026-11-11）: バナー実装は 20e1235/06846e6 で main 済みであることを確認した（DoD反映漏れの検証）。button.test.ts 37/37 緑、tsc exit 0、make check exit 0（全量 2304 緑＋期待失敗1）。独立レビューで追従方式・テスト整合・light不変・仕様逸脱なしを確認し、レビュー箱と文書箱を [x] にした。受入32・33 と DoD-BDD は dark OS 目視待ちのため [ ] のまま残す。

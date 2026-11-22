@@ -16,6 +16,10 @@
 - `2026-11-21-257-chore-ownlegend-gate-explicit.md`（順位 12。RICE 18。ownLegend の legend 側ゲート既定値の明示化）
 - `2026-11-21-258-refactor-refine-dropped-measure.md`（順位 13。RICE 15。refineDropped 計測源を dropped 数に寄せる）
 
+## 進行中（2026-11-22・PBI-209 dark確認の自動化）
+
+- `2026-11-22-265-chore-e2e-dark-colorscheme.md`（PBI-209 の手動 1-3 (OS 切替の dark 確認・light 不変・WCAG AA 実測) を OS 切替なしの e2e dark セッションで自動化。Chrome は force-prefers-color-scheme=dark バリアント、Firefox は pref 強制。PBI-209 の残 2 チェックを閉じる）
+
 ## 進行中（2026-11-21・DRY/KISS 調査ラウンド。ラウンド台帳にインベントリ・受容判断を記録）
 
 - `2026-11-21-01-backlog-drykiss-round.md`（ラウンド台帳。コード全体の DRY/KISS 調査 (2026-11-21) の発見 6 件を個別 PBI 化。K3 (mountButton) は既存候補棚継続、K4 (classifyField) は受容判断、K5 (buildPlan) は条件未到来として台帳に記録）
