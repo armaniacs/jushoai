@@ -15,8 +15,9 @@
   div.form-control-static; the 生年月日 row gives each select its own wrapper.
   The two sections are h3 headings + fieldset (参加者情報入力 / 保護者等情報入力)
   with no legend, and the page has no <label for> association, autocomplete, or
-  placeholder anywhere. Values are stripped. 学年・塾コンボ and the
-  出身/小学校 selects are trimmed: they pin no plan rows here (tests/corpus.ts).
+   placeholder anywhere. Values are stripped. The 塾 combo selects and the
+   出身/小学校 cascade selects stay trimmed (hidden combo out): only その他の学校,
+   その他の塾, and 学年 ride the real div.form-group rows here.
 -->
 <html lang="ja"><meta charset="utf-8"><title>足立学園中学校 イベント申込 (school)</title>
 <form id="form" name="form" class="form-horizontal">
@@ -128,6 +129,27 @@
         <div class="col-sm-5">
           <input id="form:j_idt589" name="form:j_idt589" type="text" class="form-control input-sm" maxlength="256">
         </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">その他の学校</label>
+        <div class="col-sm-3"><input name="form:j_idt661" type="text" class="form-control input-sm" maxlength="70">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">その他の塾</label>
+        <div class="col-sm-3"><input name="form:j_idt1374" type="text" class="form-control input-sm">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">学年&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3"><select name="form:j_idt1622:0:j_idt1650" class="form-control input-sm"><option value="">選んでください</option><option value="小学６年生">小学６年生</option><option value="小学５年生">小学５年生</option><option value="小学４年生">小学４年生</option><option value="小学３年生以下">小学３年生以下</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
     </div>
   </fieldset>
   <h3>保護者等情報入力</h3>
