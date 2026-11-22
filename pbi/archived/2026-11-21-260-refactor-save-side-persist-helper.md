@@ -30,10 +30,10 @@ Scenario: 失敗してもフォームの状態は壊れない
 ```
 
 ## 受け入れ基準
-- [ ] save-side.ts 内に保存 + 失敗処理のローカルヘルパーが追加されている
-- [ ] 2 箇所の catch がヘルパー呼び出しに置換されている (console.warn・文言・render の重複が消えている)
-- [ ] 挙動不変 (既存の保存系 pin が無変更で緑)
-- [ ] `make check` 緑
+- [x] save-side.ts 内に保存 + 失敗処理のローカルヘルパーが追加されている (`persistWithUiError`・save-side.ts:98-111。パラメータは `Pick<SaveSideDeps,'saveData'> & { ui: Pick<SaveSideUi,'showError'|'render'> }` の最小構造形で、両 deps 型を構造的に満たす)
+- [x] 2 箇所の catch がヘルパー呼び出しに置換されている (save-side.ts:137 と :195。console.warn・容量不足文言・render の重複が消え、完了判定 `grep -c "保存に失敗しました"` = 1)
+- [x] 挙動不変 (既存の保存系 pin 28/28 が無変更で緑。失敗時の warn 文言・showError 配列・render 順・return 意味論、成功時の setState → toast 順はすべてレビューがバイト単位で同一と検証)
+- [x] `make check` 緑 (189 ファイル 3186 passed + 1 expected fail・web-ext errors 0)
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -83,3 +83,12 @@ grep -n -B 4 "保存に失敗しました" src/entrypoints/options/save-side.ts
 - [x] リファクタリング完了（グリーン後・重複 catch の除去まで）
 - [x] ロールバック手段の検討（挙動不変。revert で完結）
 - [x] ドキュメント更新済み（本 PBI の実装記録）
+
+## 実装記録（2026-11-22・単一タスクラウンド）
+
+- **実装** (415e285): save-side.ts:98-111 に `persistWithUiError` を抽出 (module 外 export なし)。パラメータは最小 Pick 構造 (`saveData` + `ui.showError` + `ui.render`) で、saveOne 系 deps と SaveBothDeps の両方を構造的に満たす (showError は少数引数関数が多数引数型に割当可能なため)。戻り値 boolean: 失敗時は warn + 容量不足文言 + render を実施して false、成功時は true。
+- **置換**: 2 箇所 (save-side.ts:137 / :195) の try/catch を `if (!(await persistWithUiError(payload, deps))) return;` に。ペイロード構築 (`spec.buildSave(decision.own, other)` / 直接オブジェクト) は呼び出し側に残す。loadData の fallback try/catch は対象外 (意図が違うため触らない)。
+- **測定**: `grep -c "保存に失敗しました" src/entrypoints/options/save-side.ts` = 1 (ヘルパー定義点のみ)。
+- **レビュー**: 単一タスクラウンドのためタスクレビューを最終ゲートとして兼用 (Approved + Ready to merge: Yes)。挙動同一性 (warn 文言・showError 配列・render 順・return 意味論・成功パスの位置) をバイト単位で検証、Pick パラメータの割当可能性 (showError の引数数差) も確認済み。
+- **受容**: save-side.ts:195 が 112 文字 (max-len ルールなし・lint clean の化粧的指摘) — 次にこのファイルを触る機会があれば payload を折返す。
+- **検証**: `make check` 緑 (189 ファイル 3186 passed + 1 expected fail)・`make eval` 3 passed・`make check` を controller が再実行して確認。
