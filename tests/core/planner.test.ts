@@ -474,6 +474,73 @@ describe('school', () => {
   });
 });
 
+describe('school grade and juku', () => {
+  const graded = { ...profile, school: '都立日比谷高校', schoolGrade: '小学3年', juku: 'サンプル塾' };
+
+  it('fills juku text and warns when blank', () => {
+    expect(buildPlan([item('juku')], { profile: graded, address }).map((p) => p.value)).toEqual(['サンプル塾']);
+    expect(buildPlan([item('juku')], { profile, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('fills schoolGrade text and warns when blank', () => {
+    expect(buildPlan([item('schoolGrade')], { profile: graded, address }).map((p) => p.value)).toEqual(['小学3年']);
+    expect(buildPlan([item('schoolGrade')], { profile, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('resolves school, schoolGrade, and juku selects to the matching option', () => {
+    const schoolOpts = [{ value: '', text: '選択してください' }, { value: 'hibiya', text: '都立日比谷高校' }];
+    const gradeOpts = [{ value: '', text: '選択してください' }, { value: '小3', text: '小学3年' }];
+    const jukuOpts = [{ value: '', text: '選択してください' }, { value: 'sample', text: 'サンプル塾' }];
+    const plan = buildPlan(
+      [
+        item('school', { tag: 'select', options: schoolOpts }),
+        item('schoolGrade', { tag: 'select', options: gradeOpts }),
+        item('juku', { tag: 'select', options: jukuOpts }),
+      ],
+      { profile: graded, address },
+    );
+    expect(plan.map((p) => [p.value, p.display, p.status])).toEqual([
+      ['hibiya', '都立日比谷高校', 'ok'],
+      ['小3', '小学3年', 'ok'],
+      ['sample', 'サンプル塾', 'ok'],
+    ]);
+  });
+
+  it('warns warn-no-option on select mismatch and keeps filled selects', () => {
+    const noMatch = buildPlan(
+      [item('schoolGrade', { tag: 'select', options: [{ value: '', text: '--' }, { value: 'x', text: '中学1年' }] })],
+      { profile: graded, address },
+    );
+    expect(noMatch.map((p) => p.status)).toEqual(['warn-no-option']);
+    const filled = buildPlan(
+      [item('juku', {
+        tag: 'select', value: 'sample',
+        options: [{ value: '', text: '選択してください' }, { value: 'sample', text: 'サンプル塾' }],
+      })],
+      { profile: graded, address },
+    );
+    expect(filled.map((p) => p.status)).toEqual(['filled']);
+  });
+
+  it('leaves a schoolGrade radio without a row', () => {
+    const plan = buildPlan(
+      [{
+        meta: makeMeta({
+          tag: 'radio', type: 'radio', name: 'grade', label: '学年',
+          options: [{ value: '小3', text: '小学3年' }],
+        }),
+        cls: { category: 'schoolGrade', confidence: 0.7, source: 'rule' },
+      }],
+      { profile: graded, address },
+    );
+    expect(plan).toEqual([]);
+  });
+});
+
 describe('company (PBI-119)', () => {
   it('fills company name and department, marks warn-no-value when blank', () => {
     const vals = buildPlan([item('company'), item('companyDepartment')], { profile, address }).map((p) => p.value);
@@ -766,6 +833,8 @@ describe('value row table (PBI-218)', () => {
       birthday: '1990-05-07',
       school: '都立日比谷高校',
       department: '普通科',
+      schoolGrade: '',
+      juku: '',
       company: '株式会社サンプル',
       companyDepartment: '開発部',
       jobTitle: '課長',
@@ -798,7 +867,7 @@ describe('value row table (PBI-218)', () => {
         'email', 'tel', 'tel1', 'tel2', 'tel3', 'fax', 'zip', 'zip1', 'zip2',
         'prefecture', 'city', 'street', 'building', 'addressFull', 'addressNoPref',
         'birthYear', 'birthMonth', 'birthDay', 'birthEra', 'birthday',
-        'school', 'department', 'company', 'companyDepartment', 'jobTitle', 'companyNameKana'].sort(),
+        'school', 'department', 'schoolGrade', 'juku', 'company', 'companyDepartment', 'jobTitle', 'companyNameKana'].sort(),
     );
     const byCat = new Map(VALUE_ROWS.map((r) => [r.category, r] as const));
     // The old ABBREVIATABLE set, now the abbreviatable column.

@@ -367,6 +367,8 @@ export const VALUE_ROWS: readonly ValueRow[] = [
     assist: null, abbreviatable: false,
   },
   { category: 'school', read: ({ profile }) => profile.school, assist: null, abbreviatable: false },
+  { category: 'schoolGrade', read: ({ profile }) => profile.schoolGrade, assist: null, abbreviatable: false },
+  { category: 'juku', read: ({ profile }) => profile.juku, assist: null, abbreviatable: false },
   { category: 'department', read: ({ profile }) => profile.department, assist: null, abbreviatable: false },
   // PBI-119: 会社名・会社の部署。空は従来どおりスキップ（warn-no-value）。
   { category: 'company', read: ({ profile }) => profile.companyName, assist: null, abbreviatable: false },
@@ -566,9 +568,14 @@ export function buildPlan(items: Item[], ctx: PlanContext): PlanItem[] {
       // 「変わる理由」が異なる（radio 側は入力様式の方針変更、select 側は
       // 選択肢を持つ欄の追加）。同じ理由で変わる場合だけ一本化する。
       // 再訪条件: radio 許可集合と select 可否が同一の要求で同時に変わるとき。
+      // The school/juku/grade extras ride selects only: a radio of those
+      // categories stays unhandled (no row), the radio permission untouched.
+      const isSchoolSelect = meta.tag === 'select'
+        && (cls.category === 'school' || cls.category === 'schoolGrade' || cls.category === 'juku');
       if (
         cls.category === 'prefecture' || cls.category === 'birthMonth' ||
         cls.category === 'birthDay' || cls.category === 'birthEra' ||
+        isSchoolSelect ||
         isAllowedRadioCategory(cls.category)
       ) {
         if (!isUntouchedOption) {
