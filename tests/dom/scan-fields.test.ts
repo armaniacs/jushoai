@@ -253,6 +253,62 @@ describe('scanFields: for-less control-label sibling rows', () => {
         <div><div class="form-control-static">メイ：</div><input name="may"></div></div>`;
     expect(classifyField(metas()[0]!)?.category).toBe('firstName');
   });
+
+  // 実ページ(足立学園)の行は各入力欄が独自のラッパーを持ち、欄名マーカー
+  // (desktop hidden-xs と mobile visible-xs の重複)はラッパーの外の兄弟に置かれる。
+  // 2欄目の見出しは兄弟欄のラッパーとそのマーカーを越えた先にある。
+  it('reads the heading past sibling field wrappers when each input has its own wrapper', () => {
+    document.body.innerHTML = `
+      <div class="col-sm-12"><label class="control-label">児童氏名(漢字)</label>
+        <div class="col-sm-3"><input name="sei"></div>
+        <div class="col-sm-3"><input name="mei"></div></div>`;
+    expect(metas().map((m) => m.label)).toEqual(['児童氏名(漢字)', '児童氏名(漢字)']);
+  });
+
+  it('joins one copy of the desktop and mobile marker duplicates after the heading', () => {
+    document.body.innerHTML = `
+      <div class="col-sm-12"><label class="control-label">児童氏名(漢字)</label>
+        <div class="form-control-static hidden-xs">\u3000姓：</div>
+        <div class="form-control-static visible-xs">姓：</div>
+        <div class="col-sm-3"><input name="sei"></div>
+        <div class="form-control-static hidden-xs">\u3000名：</div>
+        <div class="form-control-static visible-xs">名：</div>
+        <div class="col-sm-3"><input name="mei"></div></div>`;
+    // 全角スペース付きの desktop 側は clean で mobile 側と同じ文言になり、1回だけ足す。
+    expect(metas().map((m) => m.label)).toEqual(['児童氏名(漢字) 姓：', '児童氏名(漢字) 名：']);
+  });
+
+  it('keeps the tel row one label across per-input wrappers and separator divs', () => {
+    document.body.innerHTML = `
+      <div class="col-sm-12"><label class="control-label">電話番号</label>
+        <div class="col-xs-2"><input name="t1"></div>
+        <div class="form-control-static"><span>－</span></div>
+        <div class="col-xs-2"><input name="t2"></div>
+        <div class="form-control-static"><span>－</span></div>
+        <div class="col-xs-2"><input name="t3"></div></div>`;
+    // 区切りを欄名に足さないので3欄のラベルが揃い、同ラベルtel群の前提が崩れない。
+    expect(metas().map((m) => m.label)).toEqual(['電話番号', '電話番号', '電話番号']);
+  });
+
+  it('reads the row heading for later selects when each select has its own wrapper', () => {
+    document.body.innerHTML = `
+      <div class="col-sm-12"><label class="control-label">生年月日</label>
+        <div class="col-sm-2"><select name="y"><option value="">年</option></select></div>
+        <div class="col-sm-2"><select name="m"><option value="">月</option></select></div>
+        <div class="col-sm-2"><select name="d"><option value="">日</option></select></div></div>`;
+    expect(metas().map((m) => m.label)).toEqual(['生年月日', '生年月日', '生年月日']);
+  });
+
+  it('does not steal the previous field markers that sit before a sibling wrapper', () => {
+    document.body.innerHTML = `
+      <div class="col-sm-12"><label class="control-label">児童氏名(カナ)</label>
+        <div class="form-control-static hidden-xs">セイ：</div>
+        <div class="col-sm-3"><input name="sei"></div>
+        <div class="form-control-static hidden-xs">メイ：</div>
+        <div class="col-sm-3"><input name="mei"></div></div>`;
+    // メイ欄の直前マーカーはメイだけ: セイ欄のマーカーは兄弟ラッパーの手前で止まる。
+    expect(metas().map((m) => m.label)).toEqual(['児童氏名(カナ) セイ：', '児童氏名(カナ) メイ：']);
+  });
 });
 
 describe('scanFields: h3 section headings before a legend-less fieldset', () => {

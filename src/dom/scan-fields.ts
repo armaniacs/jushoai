@@ -65,17 +65,24 @@ function labelOf(el: Control): string {
   return clean(parts.join(' '));
 }
 
-// 兄弟見出しの登昇は欄自身とその親の前兄弟まで: 実ページでは入力欄包みdivの前兄弟に
-// label.control-label が置かれる。それより深い前兄弟は別行の見出しになり得るため辿らない。
+// 兄弟見出しの登昇は欄自身とその親(入力欄ラッパー)まで: 実ページでは
+// label.control-label がラッパーの前兄弟に置かれる。それより上は別行になり得るため辿らない。
 const SIBLING_LABEL_CLIMB = 2;
+// 1レベルあたりの前兄弟の遡り上限。実ページの行は欄ごとに desktop/mobile の
+// マーカーdivと兄弟欄のラッパーを挟み、2欄目の氏名欄では見出し label が6兄弟
+// 先にある(markers2 + 兄弟ラッパー1 + そのmarkers2 + label)。行内のどこにも
+// 見出しが無ければ上限で打ち切る: 行をまたぐ登昇はしない。
+const SIBLING_WALK_LIMIT = 8;
 const isHeadingLabel = (el: Element | null | undefined): el is HTMLLabelElement =>
   el !== null && el !== undefined && el.tagName === 'LABEL' && el.classList.contains('control-label');
 
 function siblingHeadingOf(el: Control): Element | null {
   let node: Element | null = el;
   for (let n = 0; node && n < SIBLING_LABEL_CLIMB; n++) {
-    const sib = node.previousElementSibling;
-    if (isHeadingLabel(sib)) return sib;
+    let sib = node.previousElementSibling;
+    for (let w = 0; sib && w < SIBLING_WALK_LIMIT; w++, sib = sib.previousElementSibling) {
+      if (isHeadingLabel(sib)) return sib;
+    }
     node = node.parentElement;
   }
   return null;
@@ -87,21 +94,32 @@ function siblingHeadingOf(el: Control): Element | null {
 // (同ラベルtel群など)の前提が崩れる。
 const MARKER_CLASS = 'form-control-static';
 const MARKER_HAS_NAME = /[\p{L}\p{N}]/u;
-// マーカー遡及は2兄弟まで(実ページは欄の直前兄弟に1個)。前の欄で打ち止め: それより
-// 手前のマーカーは別欄のもの(姓：は前欄、名：は次欄に置かれる)。
+// マーカー遡及は2兄弟まで(実ページは欄の直前に desktop/mobile の2個)。前の欄で
+// 打ち止め: それより手前のマーカーは別欄のもの(姓：は前欄、名：は次欄に置かれる)。
 const MAX_MARKER_SIBLINGS = 2;
-const isFormControl = (el: Element): boolean =>
-  el.tagName === 'INPUT' || el.tagName === 'SELECT' || el.tagName === 'TEXTAREA';
 
+// 欄の直前のマーカーdivを連続で拾う。欄自身の前兄弟を使い切ったときだけ親
+// (入力欄ラッパー)の前兄弟へ続く: 実ページは入力欄ごとのラッパーの直前に
+// マーカー群(desktop/mobile 重複)が置かれる。マーカー以外の要素で打ち止める
+// のは欄ごとの帰属を保つため: 兄弟ラッパーの手前で止まり、前の欄のマーカーを
+// 取らない。同一文言の重複(desktop/mobile)は1回だけ足す。
 function staticMarkersBefore(el: Control): string[] {
   const out: string[] = [];
-  let sib = el.previousElementSibling;
-  for (let n = 0; sib && n < MAX_MARKER_SIBLINGS; n++, sib = sib.previousElementSibling) {
-    if (isFormControl(sib)) break;
-    if (sib.classList.contains(MARKER_CLASS)) {
+  const seen = new Set<string>();
+  let node: Element | null = el;
+  for (let level = 0; node && level < SIBLING_LABEL_CLIMB; level++) {
+    let sib = node.previousElementSibling;
+    for (let n = 0; sib && n < MAX_MARKER_SIBLINGS; n++, sib = sib.previousElementSibling) {
+      if (!sib.classList.contains(MARKER_CLASS)) return out;
       const text = clean(sib.textContent);
-      if (text && MARKER_HAS_NAME.test(text)) out.unshift(text);
+      if (text && MARKER_HAS_NAME.test(text) && !seen.has(text)) {
+        seen.add(text);
+        out.unshift(text);
+      }
     }
+    // このレベルをマーカー以外に当たらず使い切ったときだけ親へ(欄がラッパーの最初の子)。
+    if (sib) break;
+    node = node.parentElement;
   }
   return out;
 }
