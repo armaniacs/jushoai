@@ -99,9 +99,10 @@ export interface FillApplyState {
   roleProfileIds: Partial<Record<PersonRole, string>>;
   lastFailureReason: ClassifyFailure | null;
   lastUndo: UndoEntry[];
-  // The rows the preview was built from (frozen at start): recordApproval
-  // records the applied shape, i.e. what the user approved, not a later
-  // re-plan. Matches the old bindPreview input.rows behavior.
+  // The rows of the latest re-plan, kept current by replan(): the shape the
+  // user approves can change after start() (role defaults, profile/role
+  // switches, recategorize, reanalyze), so recordApproval must record these
+  // rows — the applied shape — not the start() snapshot.
   approvalRows: PreviewRow[];
   metas: FieldMeta[];
   metasById: Map<string, FieldMeta>;
@@ -218,6 +219,9 @@ export function createFillFlow(bundle: FillBundle) {
   const replan = (): PreviewRow[] => {
     const out = replanItems(state.items, currentProfile(), currentAddress(), input.metasById, currentRoleProfiles());
     state.plan = out.plan;
+    // 承認行も計画と同じ再計画に追従させる: apply が記録するのは start 時の
+    // 形ではなく、この再計画が作った(ユーザーが承認する)形。
+    state.approvalRows = out.rows;
     return out.rows;
   };
 

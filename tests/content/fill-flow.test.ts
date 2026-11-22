@@ -4,6 +4,7 @@ import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
 import type { PlanItem } from '../../src/core/planner';
 import type { SessionClassifyResult, SessionPanel } from '../../src/content-session';
 import type { FillReport, FillSummary, UndoEntry } from '../../src/dom/fill-plan';
+import type { PreviewRow } from '../../src/ui/preview';
 import type { FillBundle, FillFlowEnv } from '../../src/content/fill-flow';
 import { createFillFlow } from '../../src/content/fill-flow';
 import { makeMeta } from '../helpers';
@@ -154,6 +155,7 @@ describe('FillFlow role selection', () => {
 
   function roleSetup(opts: { initialRoleProfileIds?: { child?: string; guardian?: string; self?: string } } = {}) {
     const injected: PlanItem[][] = [];
+    const recorded: PreviewRow[][] = [];
     const ms: FieldMeta[] = roleItems().map((i) => i.meta);
     const env: FillFlowEnv = {
       classify: async (): Promise<SessionClassifyResult> => ({ items: roleItems(), failureReason: null }),
@@ -166,6 +168,7 @@ describe('FillFlow role selection', () => {
       openUrl: () => {},
       feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
       isExcluded: () => false,
+      recordApproval: (rows) => { recorded.push(rows); },
     };
     const bundle: FillBundle = {
       input: {
@@ -176,7 +179,7 @@ describe('FillFlow role selection', () => {
       },
       env,
     };
-    return { flow: createFillFlow(bundle), injected };
+    return { flow: createFillFlow(bundle), injected, recorded };
   }
 
   it('starts on the default profile with no provenance, then a role select re-plans that role only', async () => {
@@ -226,5 +229,20 @@ describe('FillFlow role selection', () => {
     const started = await flow.start();
     if (started.excluded) throw new Error('unexpected exclusion');
     expect(started.rows.map((r) => r.display)).toEqual(['山田', '山田']);
+  });
+
+  it('records the post-replan rows so the approval matches the applied shape', async () => {
+    const { flow, recorded } = roleSetup();
+    const started = await flow.start();
+    if (started.excluded) throw new Error('unexpected exclusion');
+    // preview-bind の既定割当てプローブ相当: start の後に selectRoleProfile で
+    // 再計画してから適用する。記録されるのは start 時の行ではなく、適用時に
+    // 承認した再計画後の行(出どころ付き)。
+    const replanned = flow.selectRoleProfile('child', 'p-child');
+    flow.apply({ sendFeedback: false, panel });
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toEqual(replanned);
+    expect(recorded[0]!.map((r) => r.display)).toEqual(['鈴木', '山田']);
+    expect(recorded[0]![0]).toMatchObject({ role: 'child', profileId: 'p-child' });
   });
 });
