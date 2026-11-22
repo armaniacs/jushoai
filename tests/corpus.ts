@@ -133,14 +133,10 @@ const LEDGER = {
     },
     excluded: [
       'form:j_idt253 (select): 生年月日の年 with a single 2014 option, never a plan row (selects fill only prefecture/birthMonth/birthDay/birthEra; exclude)',
-      'form:j_idt1622:0:j_idt1650 (select): 学年 with a single real option, stays unclassified (LLM fallback)',
-      'form:j_idt2150/2154/2158 (text): 保護者側の緊急連絡先 3-split with no tel word (緊急連絡先 carries no 電話 signal, rule probe reads unknown), stays unclassified (LLM fallback; tel-split-by-heading candidate)',
-      'combobox (select, hidden): 塾コンボの裏側。塾語彙で confident unknown のため計画に出ない (hidden 直書きなし)',
-      'textCombo (text): 塾を検索（入力検索可）の表示側。塾語彙で confident unknown のため置く (school に寄せない)',
-      'form:jukuTodofukenCd (text, hidden): 塾コンボの裏側。塾語彙で confident unknown のため計画に出ない (hidden 直書きなし)',
-      'form:jukuShikuchosonCd/form:jukuCd (select): 塾の市区町村・塾名。塾語彙で confident unknown のため置く (school に寄せない)',
-      'form:j_idt1374 (text): その他の塾。塾語彙で confident unknown のため置く (school に寄せない)',
-      '出身3連動select・その他の学校・児童側の緊急連絡先3分割: trimmed from the minimal fixture (exclude;人物分離と別軸の難しさのため要調査)',
+      // 実ページ行構造の再現に不要な欄は最小 fixture から削る。緊急連絡先は電話語を
+      // 含まず tel-split-by-heading の要調査候補、塾は塾語彙で confident unknown の
+      // ため school に寄せない、という従来の付箋は欄が戻ってきたときのために残す。
+      '学年select・緊急連絡先3分割(児童/保護者)・塾コンボ一式(combobox/textCombo/form:juku*/form:j_idt1374)・出身3連動select・その他の学校: trimmed from the minimal fixture (exclude; 緊急連絡先は tel-split-by-heading の要調査候補、塾は塾語彙で confident unknown のため school に寄せない)',
     ],
   },
   'age-decade-select-form.html': {
