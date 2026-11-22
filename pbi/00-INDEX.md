@@ -1,5 +1,15 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
+
+- `2026-11-22-00-backlog-adachi-person-round.md`（ラウンド台帳。足立対応と児童と保護者の人物分離の6件を個別PBI化。依存は採点より優先し266を先頭にした）
+- `2026-11-22-266-chore-adachi-min-fixture.md`（順位 1。RICE 600。足立の最小fixture）
+- `2026-11-22-267-fix-sei-mei-boundary.md`（順位 2。RICE 320。氏名id境界）
+- `2026-11-22-268-feat-birth-tri-select.md`（順位 3。RICE 280。生年月日3欄）
+- `2026-11-22-269-feat-person-child-guardian.md`（順位 4。RICE 40。人物分離）
+- `2026-11-22-270-feat-cascade-select-fill.md`（順位 5。RICE 30。親子select）
+- `2026-11-22-271-feat-juku-field.md`（順位 6。RICE 20。塾対応）
+
 ## 進行中（2026-11-21・checking-team + アーキテクチャ発見の PBI 化。ラウンド台帳にインベントリ・RICE・受容判断を記録）
 
 - `2026-11-21-00-backlog-checking-arch-round.md`（ラウンド台帳。checking-team 2026-11-21 (95/100・Medium 5 件は同ラウンドで修正済み) とアーキテクチャレビュー 2026-11-20 の発見 13 件を個別 PBI 化 (246-258)。受容判断 2 件は台帳のみに記録）
@@ -15,10 +25,6 @@
 - `2026-11-21-256-refactor-address-category-parse.md`（順位 11。RICE 20。address カテゴリ構築の型保護）
 - `2026-11-21-257-chore-ownlegend-gate-explicit.md`（順位 12。RICE 18。ownLegend の legend 側ゲート既定値の明示化）
 - `2026-11-21-258-refactor-refine-dropped-measure.md`（順位 13。RICE 15。refineDropped 計測源を dropped 数に寄せる）
-
-## 進行中（2026-11-22・PBI-209 dark確認の自動化）
-
-- `2026-11-22-265-chore-e2e-dark-colorscheme.md`（PBI-209 の手動 1-3 (OS 切替の dark 確認・light 不変・WCAG AA 実測) を OS 切替なしの e2e dark セッションで自動化。Chrome は force-prefers-color-scheme=dark バリアント、Firefox は pref 強制。PBI-209 の残 2 チェックを閉じる）
 
 ## 進行中（2026-11-21・DRY/KISS 調査ラウンド。ラウンド台帳にインベントリ・受容判断を記録）
 

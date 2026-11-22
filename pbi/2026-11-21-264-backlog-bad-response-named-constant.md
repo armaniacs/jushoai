@@ -30,10 +30,10 @@ Scenario: 語彙の値集合は不変である
 ```
 
 ## 受け入れ基準
-- [ ] classifier-failures.ts に fold 先既定の名前付き定数 (例: `FALLBACK_CLASSIFY_FAILURE = 'bad-response'`) が追加されている (WHY コメント: 語彙外の文字列を折り畳む既定)
-- [ ] **fold 定義点のみ**置換する (asClassifyFailure / decodeErrorToClassifyFailure / provider-registry の throw 経路 / classify-transport の failureReason)。表示・テスト側のリテラルは型保護があるため置換不要 — 全 19 箇所を機械置換しない
-- [ ] 挙動不変 (tests/llm/failure-priority.test.ts 緑 + `make eval` 3 passed)
-- [ ] `make check` 緑
+- [x] classifier-failures.ts に fold 先既定の名前付き定数 (例: `FALLBACK_CLASSIFY_FAILURE = 'bad-response'`) が追加されている (WHY コメント: 語彙外の文字列を折り畳む既定)
+- [x] **fold 定義点のみ**置換する (asClassifyFailure / decodeErrorToClassifyFailure / provider-registry の throw 経路 / classify-transport の failureReason)。表示・テスト側のリテラルは型保護があるため置換不要 — 全 19 箇所を機械置換しない
+- [x] 挙動不変 (tests/llm/failure-priority.test.ts 緑 + `make eval` 3 passed)
+- [x] `make check` 緑
 
 ## テスト戦略（t_wadaスタイル）
 

@@ -30,10 +30,10 @@ Scenario: 理由の内容が失われない
 ```
 
 ## 受け入れ基準
-- [ ] 緩和境界の WHY の全文が src/core/classify-vocab-office.ts (officeEligible / officeKanaEligible の属する位置) に集約されている
-- [ ] src/core/classify-rules.ts の該当箇所 (137-142) が委譲を示す 1〜2 行に縮約されている
-- [ ] コメントのみの変更 (コード・正規表現・確度は 1 文字も変えない)
-- [ ] `make check` 緑
+- [x] 緩和境界の WHY の全文が src/core/classify-vocab-office.ts (officeEligible / officeKanaEligible の属する位置) に集約されている
+- [x] src/core/classify-rules.ts の該当箇所 (137-142) が委譲を示す 1〜2 行に縮約されている
+- [x] コメントのみの変更 (コード・正規表現・確度は 1 文字も変えない)
+- [x] `make check` 緑
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -79,9 +79,9 @@ grep -n "officeEligible\|officeKanaEligible" src/core/classify-vocab-office.ts |
 - 縮約側 (classify-rules.ts) に officeField ゲートの挙動説明が別途必要なら 1 行追加してよい (ゲート自体の説明と緩和理由は別物)
 
 ## Definition of Done
-- [ ] BDD シナリオの検証手順 (目視 + grep) がパスする
-- [ ] テストカバレッジが基準を満たす (既存網・無変更)
+- [x] BDD シナリオの検証手順 (目視 + grep) がパスする
+- [x] テストカバレッジが基準を満たす (既存網・無変更)
 - [ ] コードレビュー完了（GitHub PR での approve を必須とする）
-- [ ] リファクタリング完了（該当なし — コメントのみ）
-- [ ] ロールバック手段の検討（該当なし — revert で完結）
-- [ ] ドキュメント更新済み（本 PBI の更新がそのまま該当）
+- [x] リファクタリング完了（該当なし — コメントのみ）
+- [x] ロールバック手段の検討（該当なし — revert で完結）
+- [x] ドキュメント更新済み（本 PBI の更新がそのまま該当）
