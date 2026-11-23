@@ -1,5 +1,9 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-23・足立ラウンドの残置2点のなぜなぜ分析から着手。272 の後続）
+
+- `2026-11-23-273-feat-combo-search-parking.md`（単発。RICE 48。検索補助窓の停泊と残置欄の pin 固定。なぜなぜ分析 3立場 x 30連鎖 (`.superpowers/sdd/why-why-school-remnants-2026-11-23.md`) が原紙。計画は `docs/superpowers/plans/2026-11-23-combo-search-parking.md`。実装済み (e12b661 / 9adc3fe / fbc007d / 19c6093)。絞り込みfillとajax待ちは 270 に引継ぎ。ブランチ `work/emergency-contact-tel`。アーカイブはマージ後）
+
 ## 進行中（2026-11-23・あらき連絡で起票。足立ラウンドの後続）
 
 - `2026-11-23-272-feat-emergency-contact-tel.md`（単発。RICE 192。緊急連絡先を電話番号として扱う。あらきのスクリーンショット付き連絡が原紙。計画は `docs/superpowers/plans/2026-11-23-emergency-contact-tel.md`。実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。ブランチ `work/emergency-contact-tel` 4 コミット・未push。PR 順序は adachi → role → 本ブランチ。アーカイブはマージ後）
