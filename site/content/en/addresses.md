@@ -1,41 +1,53 @@
 ---
 title: Addresses
-description: How to register addresses, use several of them, tie them to profiles, and register an English address.
+description: How to register addresses, tie them to profiles, register an English address, and use postal-code assist and building abbreviations.
 order: 3
 ---
 
 # Addresses
 
-Addresses are registered separately from profiles, up to 10, for example home, work and family. Once you reach 10, you cannot add more.
+Addresses are stored separately from profiles, up to 10 entries—such as home, work, or a parent's home. Once you reach 10 addresses, you cannot add more.
+
+If you want to try JushoAI without entering a real address, click `架空の住所を作って試す` (create a fictional address to try)—or `架空の名前と住所を作って試す` when neither side is saved yet—from the guide at the top of the settings page.
 
 ## Register an address
 
-Open the settings page and choose `住所` (addresses) in the left menu.
+Open the settings page and choose `住所` (Addresses) in the left menu. Click `保存` (save) to save addresses independently of profiles (if no valid profile is saved yet, a toast prompts `プロファイルを入力する`).
 
 | Item | Notes |
 |---|---|
-| Name | A label such as home or work. |
-| Postal code | 7 digits. |
-| Prefecture | Choose from the list. |
-| City | |
-| Street number | |
-| Building and room | Optional. |
-| English address | Country, state or region, city, street, building and postal code. For forms with English fields. Optional. |
+| `使うプロファイル` (Profile that uses it) | Choose `共通（どのプロファイルでも使う）` (shared across any profile) or a specific profile. |
+| `名前（自宅・勤務先など）` (Label) | A label such as home or work (required). |
+| `郵便番号` (Postal code) | 7 digits (required for domestic addresses; hyphens are stripped on save). |
+| `都道府県` (Prefecture) | Choose from the list (required for domestic addresses). |
+| `市区町村` (City) | Required for domestic addresses. |
+| `番地` (Street number) | Required for domestic addresses. |
+| `建物名・部屋番号（任意）` (Building and room) | Optional. When a form has no dedicated building field, it is appended after the street number with a half-width space. |
+| `英語住所（任意）` (English address) | Half-width alphanumeric country, building (`建物名`), street (`番地`), city (`市`), state/region (`州・地域`), and postal code (`英語の郵便番号`) for English-language forms (optional; country is required when used, and filling country makes the domestic fields optional). |
+
+Click `この住所を削除` (delete this address) to remove an entry or `住所を追加` (add address) to add one. You can also click `フォームから取り込む` (import from form) to draft an address from an already-filled form on the active tab ([Single-field fill, import, export and management](./shortcuts-and-tools.md)).
 
 ## Tie an address to a profile
 
-For each address you can choose which profile uses it.
+For each address, `使うプロファイル` controls how it pairs with profiles:
 
-- A specific profile: the address is offered only when that profile is in use.
-- Shared (`共通`): the address is offered with any profile.
+- **A specific profile**: Selected automatically as the preferred match whenever you switch to that profile.
+- **Shared (`共通（どのプロファイルでも使う）`)**: Available as a matching candidate regardless of which profile is active.
 
-When you switch profiles on a form, the tied address is selected automatically. If several people use the same address, make it shared.
+When you switch profiles in the preview, JushoAI automatically selects an address linked to that profile (or a shared one). Set a family home address to `共通（どのプロファイルでも使う）` so anyone in the household can share it.
 
-## Choose an address on a form
+## Choose an address on a form and assist candidates
 
-If you registered several addresses, you can choose one at the top of the preview. The list updates when you choose another one.
+If you have multiple addresses registered, you can switch between them using the `住所` dropdown at the top of the preview, and the rows update immediately.
+
+Two opt-in assist features can also help in the preview (both are unchecked by default and only apply when you explicitly check them):
+
+- **Postal-prefix assist when prefecture or city is blank (`補助候補を入れる`)**: If `都道府県` or `市区町村` is blank in your address while `郵便番号` (postal code) is entered, JushoAI checks an on-device postal prefix dictionary (major urban areas seed; no network, no AI) and may offer a candidate ([Everyday scenarios](./scenarios.md)).
+- **Building-name abbreviation when too long (`略記して入れる`)**: When a building name exceeds a form's `maxlength` limit, JushoAI never silently truncates it. Instead, it displays a warning and proposes a deterministic shortened form (for example, `マンション` → `邸` or `ビルディング` → `ビル`) that only applies if you check the box ([Everyday scenarios](./scenarios.md)).
 
 ## What to read next
 
-- [Profiles](/en/guides/profiles/)
-- [Toolbar and filling a form](/en/guides/popup-and-fill/)
+- [Profiles](./profiles.md)
+- [Filling forms and the toolbar](./popup-and-fill.md)
+- [Everyday scenarios (family, multi-page, revisits)](./scenarios.md)
+- [Single-field fill, import, export and management](./shortcuts-and-tools.md)
