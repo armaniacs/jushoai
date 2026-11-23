@@ -1436,10 +1436,8 @@ describe('classifyField: school grade, juku fill targets, and cascade filters', 
 
   it.each([
     { name: 'form:j_idt1374', label: 'その他の塾' },
-    { htmlId: 'textCombo', placeholder: '塾を検索（入力検索可）' },
     { label: '塾' },
     { label: '塾名' },
-    { label: '塾を検索', placeholder: '塾を検索（入力検索可）' },
   ] as Parameters<typeof makeMeta>[0][])('classifies %j as juku', (p) => {
     expect(cat(p)).toBe('juku');
   });
@@ -1478,5 +1476,37 @@ describe('classifyField: school grade, juku fill targets, and cascade filters', 
     [{ label: '会社名' }, 'company'],
   ] as [Parameters<typeof makeMeta>[0], string][])('keeps %j as %s', (p, expected) => {
     expect(cat(p)).toBe(expected);
+  });
+});
+
+describe('classifyField: juku combo search window parking', () => {
+  it('parks the combo search window (textCombo) as a confident unknown', () => {
+    expect(classifyField(makeMeta({ htmlId: 'textCombo', placeholder: '塾を検索（入力検索可）', nearby: '塾' })))
+      .toMatchObject({ category: 'unknown', confidence: 0.7, source: 'rule' });
+  });
+
+  it.each([
+    { htmlId: 'textCombo', placeholder: '塾を検索（入力検索可）' },
+    { label: '塾を検索', placeholder: '塾を検索（入力検索可）' },
+  ] as Parameters<typeof makeMeta>[0][])('parks %j as a confident unknown', (p) => {
+    expect(classifyField(makeMeta(p))).toMatchObject({ category: 'unknown', confidence: 0.7, source: 'rule' });
+  });
+
+  it.each([
+    { placeholder: '東京都', label: '都道府県' },
+  ] as Parameters<typeof makeMeta>[0][])('keeps %j on its own reading', (p) => {
+    expect(cat(p)).toBe('prefecture');
+  });
+
+  it.each([
+    { tag: 'select', label: '学年', placeholder: '塾を検索' },
+  ] as Parameters<typeof makeMeta>[0][])('never opens the gate for %j (select)', (p) => {
+    expect(cat(p)).toBe('schoolGrade');
+  });
+
+  it.each([
+    { tag: 'radio', name: 'sex', label: '性別', placeholder: '検索' },
+  ] as Parameters<typeof makeMeta>[0][])('never opens the gate for %j (radio)', (p) => {
+    expect(cat(p)).toBe('gender');
   });
 });

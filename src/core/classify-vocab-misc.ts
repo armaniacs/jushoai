@@ -27,6 +27,20 @@ export const isSearchBox = (m: FieldMeta): boolean =>
   && m.label.trim() === '' && m.nearby.trim() === ''
   && SEARCH_BOX_NAME.has(norm(m.name.trim()));
 
+// A combobox search-assist window (the visible filter box of a juku combo)
+// only narrows the displayed options and never holds the submitted value,
+// so the juku reading must not take a fill here. The page declares the
+// window through its own placeholder carrying both the juku word and 検索
+// (塾を検索（入力検索可）); the juku word keeps fields with a mere
+// search-flavored placeholder (会社名 + 住所 …で検索) on their own reading.
+// label/nearby take no empty condition, unlike isSearchBox: the window
+// carries its row heading in nearby.
+const JUKU_SEARCH_PLACEHOLDER = /塾.*検索|検索.*塾/;
+export const isJukuSearchWindow = (m: FieldMeta): boolean =>
+  m.tag === 'input'
+  && (m.type === 'text' || m.type === 'search')
+  && JUKU_SEARCH_PLACEHOLDER.test(norm(m.placeholder.trim()));
+
 // Entry order inside each array is match priority; the DISPATCH composition in
 // classify-rules.ts owns the overall order. gender and age are separate arrays
 // because their entries are not contiguous in that order.

@@ -13,7 +13,7 @@ import {
 } from './classify-vocab-office';
 import { FIRST, FULL_NAME, isEmailByName, LAST, NAME_EXCLUDE, nameEntries } from './classify-vocab-name';
 import { addressEntries } from './classify-vocab-address';
-import { ageEntries, genderEntries, isSearchBox, WEBSITE } from './classify-vocab-misc';
+import { ageEntries, genderEntries, isJukuSearchWindow, isSearchBox, WEBSITE } from './classify-vocab-misc';
 import { roleOf, withPersonRole } from './person-role';
 
 export const ACCEPT_THRESHOLD = 0.6;
@@ -203,6 +203,9 @@ export function classifyField(m: FieldMeta): Classification | null {
   // 先に返す。autocomplete・email 型のページ自身の宣言はこの語彙除外より先
   // に返る（WEBSITE の除外と同一の約束事）。
   if (isSearchBox(m)) return make('unknown', 0.7);
+
+  // combobox の検索補助窓は表示を絞るだけで送信値を保持しないため、juku 語彙より先に confident unknown に停める。
+  if (isJukuSearchWindow(m)) return make('unknown', 0.7);
 
   // PBI-225: label空 × name完全一致の会社名欄。ownText は EXCLUDE語彙
   // （company|corp|...）に触れるため、officeField ゲートより先に返す。
