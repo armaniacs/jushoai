@@ -1,7 +1,7 @@
 ---
 title: Troubleshooting
-description: What to do for each badge state, what to check when AI or filling does not work, and common questions.
-order: 11
+description: What to do for each badge state, what to check when AI or filling does not work, and frequently asked questions.
+order: 12
 ---
 
 # Troubleshooting
@@ -20,28 +20,28 @@ Click the badge to open guidance for its state. When setup is needed, the guidan
 | `AI 有効` (AI enabled) | The built-in browser AI is available. | Nothing. |
 | `AI 未準備` (AI not ready) | The built-in AI model is not downloaded yet. | Click `JushoAI で入力` (fill with JushoAI) and the extension tries to download it. |
 | `AI 準備中` (AI preparing) | The built-in AI model is downloading. | Wait for it to finish. |
-| `AI 無効` (AI disabled) | The built-in AI cannot be used (flag, device requirements, unsupported browser and so on). A temporary key-storage failure also shows this. | Click the badge to see the guidance. Check the flag. For a temporary failure, trying again later usually fixes it. |
+| `AI 無効` (AI disabled) | The built-in AI cannot be used (flag, device requirements, or an unsupported browser such as Firefox). A temporary key-storage failure also shows this. | Click the badge to see the guidance. Check the flag. For a temporary failure, trying again later usually fixes it. |
 
 ## When the AI does not work
 
-First run `接続テスト（保存済みの設定で実行）` (connection test, run with the saved settings) on the settings page. Save before you run it.
+First run `接続テスト（保存済みの設定で実行）` (connection test, run with the saved settings) on the settings page. Save before you run it (the button is disabled for about 3 seconds right after running to prevent accidental double clicks).
 
-- Authentication fails: check the API key.
-- Ollama returns 403: allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS` on the Ollama side (in Firefox, the `moz-extension://<UUID>` shown on the settings page; the UUID changes with each install).
-- The server refuses the request: check the model name, and check that the model supports JSON output.
-- The connection fails: check the URL, the model name and the network.
-- Network access is not allowed: save the settings again and allow access.
-- The built-in AI is disabled: turn on the flag and restart the browser. For the flags, see [Setting up an AI provider](/en/guides/ai-providers/).
+- **Authentication fails**: check the API key.
+- **Ollama returns 403**: allow `chrome-extension://<extension ID>` in `OLLAMA_ORIGINS` on the Ollama side (in Firefox, the `moz-extension://<UUID>` shown on the settings page; the UUID changes with each install).
+- **The server refuses the request**: check the model name, and check that the model supports JSON output.
+- **The connection fails**: check the URL, the model name and the network.
+- **Network access is not allowed**: save the settings again and allow access.
+- **The built-in AI is disabled**: turn on the flag and restart Chrome or Edge (not supported on Firefox). For setup details, see [Setting up an AI provider](./ai-providers.md).
 
 ## When nothing is filled or the result is wrong
 
-- The `JushoAI で入力` button does not appear: it appears only on a form with at least 3 text, email, tel or search inputs, select lists and radio button groups combined, where at least 2 can be identified. Hidden fields are not counted.
-- The settings page opens: you have not registered a profile and at least one address.
-- A field is not filled: only fields without a note are filled. The preview adds a note to fields that are already filled, too long, or have no matching option. `readonly` and `disabled` fields are skipped.
-- Some fields are not supported: checkboxes and date fields are out of scope. Only gender and decade radio button groups are supported; other radio buttons are out of scope. Fields that cannot be identified are not filled.
-- The postal code is filled last: this avoids conflicts with forms that complete the address automatically.
+- **The `JushoAI で入力` button does not appear**: it appears only on a form with at least 3 `text`, `email`, `tel`, `search` or `date` inputs, `select` lists and radio button groups combined, where at least 2 can be identified. Hidden fields are not counted.
+- **The settings page opens**: you have not registered a profile and at least one address.
+- **A field is not filled**: only fields without a note are filled. The preview adds a note to fields that are already filled, too long, fail the `pattern` check, have no matching option, or have no registered value. `readonly` and `disabled` fields are skipped. Cram-school search assist inputs (kept empty on purpose so only the visual box isn't filled) and chained dropdowns whose options load after a prior selection are also left untouched or unapplied.
+- **Some fields are not supported**: `type=date` birthday fields are supported. Checkboxes, file inputs, multi-line text areas (`textarea`) and radio buttons other than gender and decade are out of scope. Fields that cannot be identified are not filled.
+- **The postal code is filled last**: this avoids conflicts with forms that complete the address automatically.
 
-For details on how fields are identified, see [Supported forms and how it works](/en/guides/how-it-works/).
+For details on how fields are identified, see [Supported forms and how it works](./how-it-works.md).
 
 ## FAQ
 
@@ -51,15 +51,19 @@ Yes. The rules identify the fields. AI is used only to classify fields the rules
 
 ### What is sent?
 
-Only when you configure an AI provider other than the built-in browser AI, the extension sends metadata for fields the rules cannot identify: the internal field ID, `name`, `htmlId`, the label, the placeholder, the nearby heading, `type` and `maxLength`. It never sends your profile values. Labels and headings are text from the page, so they can contain personal information that the page shows. Data is sent only when you click `JushoAI で入力`. For details, see [Privacy and what is sent](/en/guides/privacy/).
+Only when you configure an AI provider other than the built-in browser AI, the extension sends metadata for fields the rules cannot identify: the internal field ID, `name`, `htmlId`, `label`, `placeholder`, the nearby heading, `type` and `maxLength`. It never sends your profile values. Labels and headings are text from the page, so they can contain personal information that the page shows. You can review the exact payload in `AI判定で送る内容` (what AI detection sends) before sending. For details, see [Privacy and what is sent](./privacy.md).
+
+### Why are some fields marked "needs check" before sending to AI?
+
+Because the field's label, heading, or placeholder contains text that looks like a name, address, phone number, postal code or email address shown on the page. To prevent accidental sending, `送らない` (do not send) is checked by default for those rows. Uncheck it only after confirming it is safe to send.
 
 ### I am worried about wrong input.
 
-The preview lets you check fields and values before anything is filled. Only fields without a note are filled. Fields that already have a value are not overwritten, and a value longer than the maximum length is not filled.
+The preview lets you check fields and values before anything is filled. Only fields without a note are filled. Fields that already have a value are not overwritten, and values that exceed `maxlength` or fail `pattern` are not filled. Right after filling, `元に戻す` (undo) lets you restore the filled fields.
 
 ### Which forms does it work on?
 
-It handles text, email, tel and search inputs, and select lists. The form needs at least 3 of them, and at least 2 must be identifiable. See [Supported fields](/en/guides/supported-fields/) for the fields it can fill.
+It handles `text`, `email`, `tel`, `search` and `date` inputs, `select` lists, and gender and decade radio button groups. The form needs at least 3 of them, and at least 2 must be identifiable. See [Supported fields](./supported-fields.md) for the fields it can fill.
 
 ### Ollama returns 403.
 
@@ -67,7 +71,15 @@ Ollama can reject requests from an extension origin with a 403 unless `OLLAMA_OR
 
 ### What do I check in the preview?
 
-The list of fields and values. At the top you can choose the profile and address to use. Fields classified by AI are marked `AI判定` (decided by AI). Fields with a note are not filled. Close the preview with the Esc key or `キャンセル` (cancel).
+The list of fields and values. At the top you can choose the profile and address to use. Fields classified by AI are marked `AI判定` (decided by AI). You can correct misclassified fields with `直す` (fix). Fields with a note are not filled. Close the preview with the Esc key or `キャンセル` (cancel).
+
+### How do I see all rows collapsed as "same as last time"?
+
+When revisiting the same site and form shape, rows whose values match what you previously approved collapse into a `前回と同じ` (same as last time) summary row. To inspect every field, click `前回と同じ欄を表示` (show fields unchanged from last time) at the bottom of the preview.
+
+### Why do the child and guardian selectors not appear?
+
+The `児童用` (child) and `保護者用` (guardian) profile selectors appear only when the form has both child and guardian fields AND you have at least 2 profiles registered. With only 1 profile or a single-role form, the regular single selector is shown.
 
 ### Filling does not start / the consent check blocks it
 
@@ -75,13 +87,21 @@ Pressing `入力する` (fill in) in the preview may fill nothing while the butt
 
 The panel stays open, so bring it fully on screen, uncover it from other elements, and press `入力する` again. Scrolling or zooming, or moving aside an overlapping window or another extension's UI, often fixes it.
 
+### Why did "Undo" skip some fields?
+
+`元に戻す` (undo) restores only the fields that still hold the exact value JushoAI entered. If you edited or added text to a field after filling, JushoAI leaves it untouched to avoid erasing your changes.
+
 ### What does `AI で分析` do?
 
 It has the AI you configured classify every field again. It rescues fields the rules could not identify. After the analysis you still need to approve with `入力する` (fill in).
 
 ### What do I see when I click the toolbar icon?
 
-The list of registered profiles and addresses, and which ones are in use. `AI で分析` (analyze with AI) starts classification through preview for the form in the open tab. The gear at the top right opens the settings page.
+The list of registered profiles and addresses, and which ones are in use. `AI で分析` (analyze with AI) starts classification through preview for the form in the open tab, and `ゲストで入力` (fill as guest) opens the throwaway one-shot entry panel. The gear at the top right opens the settings page.
+
+### Why is what I typed in guest mode gone next time?
+
+`ゲストで入力` (fill as guest) is a one-shot feature that never writes to extension storage or the audit log. The values live strictly in tab memory and disappear once that single fill completes or when you close the tab. For values you want to reuse, register them under Profiles and Addresses on the settings page.
 
 ### What does the connection test do?
 
@@ -101,7 +121,7 @@ Choose the profile and address at the top of the preview. When an address is tie
 
 ### What if I register no profile or address?
 
-Clicking `JushoAI で入力` (fill with JushoAI) opens the settings page instead. Register at least one profile and one address first.
+Clicking `JushoAI で入力` (fill with JushoAI) opens the settings page instead. Register at least one profile and one address first (for a one-off fill without saving, you can also use `ゲストで入力` from the toolbar icon).
 
 ### Are hiragana or half-width katakana fields filled?
 
@@ -141,11 +161,11 @@ They are not overwritten. The preview adds the note `入力済みのため上書
 
 ### Are overlong values truncated?
 
-No. A value longer than the maximum length gets a warning note and is not filled.
+No. A value longer than the maximum length gets a warning note and is not filled. When a building name overflows, you can choose to enter an abbreviated form by ticking `略記して入れる` (enter abbreviated) in the preview.
 
 ### What about checkboxes or date fields?
 
-They are out of scope. Checkbox, date, file inputs and similar are never filled.
+Checkboxes, file inputs and multi-line text areas (`textarea`) are out of scope. Birthday `type=date` fields are supported and filled in `YYYY-MM-DD` format.
 
 ### What about radio buttons other than gender?
 
@@ -153,7 +173,7 @@ They are out of scope. Only gender and decade radio button groups are supported.
 
 ### Are multi-line fields filled?
 
-No. Multi-line fields are out of scope.
+No. Multi-line fields (`textarea`) are out of scope.
 
 ### Where is my registered data stored?
 
@@ -169,7 +189,7 @@ In `通信の監査ログ` (communication audit log) on the settings page, you c
 
 ### Does it communicate just by opening a page?
 
-No. Communication happens only when you click `JushoAI で入力` (fill with JushoAI). Checking the badge state only reads the saved settings and permissions, and makes no requests.
+No. Communication happens only when you click `JushoAI で入力` (fill with JushoAI), `AI で分析` (analyze with AI), or `接続テスト` (connection test). Checking the badge state only reads the saved settings and permissions, and makes no requests.
 
 ### A field stays empty even after re-analysis.
 
@@ -189,7 +209,7 @@ Entering a new one on the settings page replaces it. Checking `保存済みの A
 
 ### Saving says the address resolves to an internal network address.
 
-The host name of the OpenAI-compatible base URL resolves into an internal network address. With names such as nip.io or sslip.io, the name itself looks public but the resolved address is internal, and such a URL cannot be saved. Use a public endpoint. When the page shows `接続先のアドレスを解決できなかったため、指定できません` (the address could not be resolved, so it cannot be used), the resolver (dns.google) could not be reached or the name could not be resolved, so the settings are not saved. In a network that blocks dns.google, the destination cannot be verified, so neither the save nor the call happens.
+The host name of the OpenAI-compatible base URL resolves into an internal network address (including NAT64 or 6to4 IPv6 translation prefixes). With names such as nip.io or sslip.io, the name itself looks public but the resolved address is internal, and such a URL cannot be saved. Use a public endpoint. When the page shows `接続先のアドレスを解決できなかったため、指定できません` (the address could not be resolved, so it cannot be used), the resolver (`dns.google`) could not be reached or the name could not be resolved, so the settings are not saved. In a network that blocks `dns.google`, the destination cannot be verified, so neither the save nor the call happens.
 
 ### I want to make a similar profile efficiently.
 
@@ -197,11 +217,11 @@ The host name of the OpenAI-compatible base URL resolves into an internal networ
 
 ### My family shares one address.
 
-Setting `使うプロファイル` (profile that uses it) to `共通` (shared) offers the address with any profile.
+Setting `使うプロファイル` (profile that uses it) to `共通（どのプロファイルでも使う）` (shared) offers the address with any profile.
 
 ### How do I register an English address?
 
-Fill `英語住所（任意）` (English address, optional) with the country, state or region, city, street, building and postal code in half-width alphanumeric characters. It is for forms with English fields.
+Fill `英語住所（任意）` (English address, optional) with the country, building, street, city, state or region and postal code in half-width alphanumeric characters. It is for forms with English fields.
 
 ### Preparing the built-in AI takes a while.
 
@@ -213,7 +233,7 @@ The model download is attempted when you click `JushoAI で入力` (fill with Ju
 
 ### Which browsers are supported?
 
-Desktop Chromium browsers. Operation is confirmed on Edge.
+Chrome, Edge and Firefox (version 128 or later). JushoAI is published on the Chrome Web Store, Edge Add-ons and Firefox Add-ons (AMO). The built-in browser AI is not available in Firefox.
 
 ### I want to change the audit log period.
 
@@ -225,4 +245,4 @@ Without AI configured, there is no external communication and it runs on rules a
 
 ### Must I write my address or name in a report?
 
-No. Issues are public, so do not include personal information. Preview reports send only field metadata, never your profile values or the values already in fields.
+No. Issues are public, so do not include personal information. Preview reports send only field metadata (or result count breakdowns), never your profile values or the values already in fields.

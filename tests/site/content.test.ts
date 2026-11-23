@@ -33,7 +33,9 @@ describe('real guide content', () => {
         const m = /^\/guides\/([a-z-]+)\/(?:#.*)?$/.exec(normalizeGuideLink(href));
         if (!m) continue;
         expect(GUIDE_SLUGS as readonly string[], href).toContain(m[1]);
-        expect(href.startsWith('/en/'), href).toBe(g.lang === 'en');
+        if (href.startsWith('/')) {
+          expect(href.startsWith('/en/'), href).toBe(g.lang === 'en');
+        }
       }
     }
   });

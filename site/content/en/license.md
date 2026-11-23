@@ -1,7 +1,7 @@
 ---
 title: License
 description: A summary of JushoAI's license terms (GPL-3.0-only): what you may do, the conditions when you distribute it, the disclaimer, and how dependencies are treated.
-order: 12
+order: 14
 ---
 
 # License
@@ -43,7 +43,7 @@ Review the preview before filling. You are responsible for checking that the ent
 
 ## Using AI providers
 
-If you use an AI provider such as OpenAI, Google Gemini, Groq or Mistral, that provider's terms of service and privacy policy apply separately. JushoAI's license does not change them. API usage fees are your own responsibility. See [Privacy and what is sent](/en/guides/privacy/) for what is sent.
+If you use an AI provider such as OpenAI, Google Gemini, Groq or Mistral, that provider's terms of service and privacy policy apply separately. JushoAI's license does not change them. API usage fees are your own responsibility. See [Privacy and what is sent](./privacy.md) for what is sent.
 
 ## Questions about the license
 
