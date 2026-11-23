@@ -1,7 +1,7 @@
 {
   "meta": {
     "title": "JushoAI - Fill Japanese forms into the right fields",
-    "description": "A Chromium browser extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
+    "description": "A Chrome, Edge and Firefox 128+ extension that fills Japanese web forms (split names, furigana, split addresses) in one click. Rules first, AI as a helper, and a preview before anything is entered."
   },
   "chrome": {
     "nav": { "home": "Home", "guides": "Guides", "install": "Install", "feedback": "Send feedback", "langName": "日本語", "skip": "Skip to content", "label": "Site navigation" },
@@ -19,12 +19,12 @@
   "features": {
     "title": "Built for what makes Japanese forms hard",
     "items": [
-      { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number and prefecture-to-building address fields in the shape each field expects." },
-      { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only the ambiguous ones are classified by the AI you configure. The values themselves are produced by fixed logic." },
-      { "title": "Review in a preview before filling", "body": "See the list of fields and values before anything is entered. Fields that already have a value are never overwritten." },
-      { "title": "Multiple profiles and addresses", "body": "Keep up to 10 profiles and up to 10 addresses. Each address can be tied to the profile that uses it. The toolbar icon shows what is registered and which profile is in use." },
-      { "title": "Designed to keep your profile values local", "body": "Your profile values are never sent anywhere. When you configure an AI provider, only field metadata (name, label and the like) is sent." },
-      { "title": "The button stays out of the way", "body": "The `JushoAI で入力` button appears where it does not overlap any fields. If it still gets in the way, drag it somewhere clear. Its translucent background keeps the field underneath readable." }
+      { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number, prefecture-to-building address fields, birthdays, and school or workplace fields in the shape each field expects." },
+      { "title": "Child and guardian profiles in one pass", "body": "On school and cram-school forms, JushoAI infers child and guardian roles automatically so you can fill both from separate profiles at once. It also suggests per-site profiles and shortens previews on revisits." },
+      { "title": "Review in a preview before filling", "body": "Review every field and value first; filled fields are never overwritten, and overflow or pattern mismatches trigger warnings. You can undo right after filling, use one-shot guest mode without saving, or fill a single field." },
+      { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only ambiguous ones go to your configured AI. You can review what is sent before every AI call, and the values themselves are produced by fixed logic." },
+      { "title": "Designed to keep your values local", "body": "Your profile and address values never leave your browser. AI calls send only field metadata, and temporary data such as multi-page carryover or guest input stays strictly in tab memory." },
+      { "title": "Unobtrusive button and dark mode", "body": "The \"JushoAI で入力\" button avoids fields with a translucent background, can be dragged aside, and hides or registers excluded URLs in one click from its \"×\" button. All screens follow your OS dark mode." }
     ]
   },
   "mock": {
@@ -47,21 +47,21 @@
   "steps": {
     "title": "Four steps",
     "items": [
-      { "title": "Register", "body": "In the settings page, register your name, furigana, email, phone number and addresses. You can register several addresses." },
-      { "title": "Press the button", "body": "Press \"JushoAI で入力\" that appears near the form." },
-      { "title": "Review the preview", "body": "Check the list of fields and values. If you registered several addresses, pick one here." },
-      { "title": "Fill", "body": "Press 入力する (fill) and only the fields you reviewed are filled." }
+      { "title": "Register", "body": "In the settings page, save your profile (name, furigana, email, phone) and addresses independently. To try without real details first, click \"架空の名前と住所を作って試す\" (create a fictional name and address to try)." },
+      { "title": "Press the button", "body": "Press \"JushoAI で入力\" (fill with JushoAI) that appears near the form." },
+      { "title": "Review the preview", "body": "Check the fields and values and choose the profile and address (or separate child and guardian profiles on school forms). Check any opt-in assist candidates you want applied." },
+      { "title": "Fill", "body": "Press 入力する (fill in) and only the reviewed fields are filled. Right afterward, you can restore them with 元に戻す (undo)." }
     ]
   },
   "fields": {
     "title": "Supported fields",
     "items": [
-      { "title": "Names", "body": "Works with separate family and given name fields or a single field. For a single field it reads the field's example text to decide whether to put a space between them." },
-      { "title": "Furigana", "body": "Supports full-width katakana, hiragana and half-width katakana, converting to match the field's example text or description." },
-      { "title": "Addresses", "body": "Supports addresses split across fields such as prefecture, city, street and building. Prefecture dropdowns are matched even when the notation differs, such as 東京 versus 東京都." },
-      { "title": "Phone and postal code", "body": "Handles hyphenated and plain numbers, in a single field or split fields, judged from the field's example text and maximum length." },
-      { "title": "Birthday, gender, age group and school", "body": "The birthday is entered as year, month, day or era. Gender and age group go into dropdowns and radio buttons, and the school and department into matching fields." },
-      { "title": "Safe filling", "body": "Fields that already have a value are not overwritten, and values longer than the maximum length are not entered but flagged." }
+      { "title": "Names", "body": "Works with separate family and given name fields or a single field (including romaji). Single fields read example text for spacing, and school forms separate child and guardian sections." },
+      { "title": "Furigana", "body": "Supports full-width katakana, hiragana and half-width katakana, matching each field's example or description. If blank in your profile, an on-device reading dictionary can propose candidates." },
+      { "title": "Addresses", "body": "Handles split prefecture, city, street and building fields as well as English addresses, with prefecture variant matching, postal-code lookup assists and opt-in building abbreviations." },
+      { "title": "Phone, postal code, fax and emergency contact", "body": "Decides hyphenation and single vs. split layout from example text and max length. Also fills fax fields and 3-part emergency contact inputs without the word \"phone\"." },
+      { "title": "Birthday, gender, age group, school and workplace", "body": "Fills birthdays into split year/month/day, Japanese era or single type=date fields. Also supports gender/age-group selectors and radios, school/department/grade/cram school, and company/department/job title." },
+      { "title": "Safe filling", "body": "Already-filled fields are never overwritten, and values exceeding maxlength or failing a field's pattern are skipped with a warning. Site search inputs are intentionally skipped." }
     ]
   },
   "providers": {
@@ -78,9 +78,9 @@
     "lead": "JushoAI handles personal information, so it is built on three rules: never fill without asking, never send without being asked, and layer the defenses.",
     "items": [
       { "title": "Nothing is filled until you approve", "body": "Pressing the button does not fill anything. Only the fields you confirm in the preview and approve with the fill button are filled. There is no auto-fill on page load." },
-      { "title": "No overwriting, no truncating", "body": "Fields that already have a value are never overwritten. A value longer than the field's maximum length is not truncated; it is skipped with a warning. Read-only and disabled fields are skipped too." },
-      { "title": "Undo after filling", "body": "Right after filling, the undo button restores only the fields JushoAI filled to their previous state. Fields you typed into afterwards are left alone. The history lives only in memory on your device and is never saved or sent." },
-      { "title": "Rules make the values, AI only classifies", "body": "AI only classifies what kind of field it is; it never produces the values. Your profile values are not given to AI or to anyone else. AI is off by default." },
+      { "title": "No overwriting, no truncating", "body": "Fields that already have a value are never overwritten. Values longer than maxlength or failing a field's pattern are skipped with a warning rather than truncated or forced in. Read-only and disabled fields are skipped too." },
+      { "title": "Undo after filling", "body": "Right after filling, the undo button restores only the fields JushoAI filled to their previous state; fields you edited afterwards are left alone. This history—like guest entries and multi-page carryover—lives strictly in tab memory and is never saved or sent." },
+      { "title": "Rules make the values, AI only classifies", "body": "AI only classifies ambiguous fields; rules produce every value, and AI is off by default. Before anything leaves the browser, the \"AI判定で送る内容\" panel lets you review metadata, with rows marked \"（要確認）\" excluded by default (and learned mappings never sent)." },
       { "title": "Strict checks on the destination", "body": "https only (http only for localhost and similar). Internal network addresses are rejected, and DNS results are checked when you save and again just before each call. Redirects are not followed. A new destination receives nothing until you have reviewed its IP addresses and approved it." },
       { "title": "Minimal keys and permissions", "body": "API keys are stored encrypted with AES-GCM and are never shown on the settings page. Network permission is not requested at install; only the saved provider's host is requested, when you save." },
       { "title": "UI the page cannot touch", "body": "The extension's UI sits inside a closed Shadow DOM that page scripts cannot reach. Strings that come from the page are shown as text, never interpreted as HTML." },
@@ -118,11 +118,13 @@
     "title": "FAQ",
     "items": [
       { "q": "Does it work without AI?", "a": "Yes. Fields are classified by rules, and AI only helps with ambiguous ones. AI is off by default." },
-      { "q": "What gets sent outside?", "a": "Nothing, unless you configure AI. If you do, only field metadata is sent; your profile values and the values already in fields are not." },
+      { "q": "What gets sent outside?", "a": "Nothing, unless you configure AI. Even then, only metadata of unclassifiable fields is sent—never profile values or existing field values—and you can review and exclude rows in \"AI判定で送る内容\" before sending." },
       { "q": "I'm worried about wrong entries.", "a": "You review everything in a preview before filling, and fields that already have a value are not overwritten. Right after filling, you can undo." },
-      { "q": "What do you do for safety?", "a": "Preview approval, no overwriting, undo, never giving profile values to AI, destination checks with first-use approval, encrypted API keys and an audit log of every call. See How we keep it safe on the home page and the Safety guide." },
-      { "q": "Does it work on every form?", "a": "It handles common inputs (text, email, tel, and prefecture dropdowns). Fields it cannot classify are left alone." },
-      { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." }
+      { "q": "What do you do for safety?", "a": "Preview approval, no overwriting, undo, never giving profile values to AI, pre-send review with sensitive rows excluded by default, destination checks with first-use approval, encrypted API keys and an audit log of every call. See How we keep it safe on the home page and the Safety guide." },
+      { "q": "Does it work on every form?", "a": "It handles common controls (text, email, tel, search, date including type=date, dropdowns, and gender/age-group radios), covering names, addresses, school/grade/cram school and workplace/department/job title. Unclassifiable fields, checkboxes and cross-origin iframes are left alone." },
+      { "q": "Ollama returns 403.", "a": "Allow the extension's origin (chrome-extension:// followed by the extension ID) in Ollama's OLLAMA_ORIGINS setting." },
+      { "q": "What if a form has fields for both a child and a guardian?", "a": "When you have 2 or more profiles registered and the form includes both child and guardian sections, the preview shows separate \"児童用\" (child) and \"保護者用\" (guardian) selectors so you can fill both in one pass." },
+      { "q": "Can I fill someone else's info once without saving it?", "a": "Yes. Open \"ゲストで入力\" (fill as guest) from the toolbar icon to enter values for a single fill without saving them to settings or using your 10-profile limit. Everything stays in tab memory and disappears afterward." }
     ],
     "more": "More questions and fixes are here"
   },
@@ -143,6 +145,6 @@
   },
   "guides": {
     "title": "Guides",
-    "lead": "From installation and setup to usage, AI providers, privacy and the license."
+    "lead": "Organized into four parts: setup and registration, everyday scenarios and tools, AI setup with safety and privacy, and reference and troubleshooting."
   }
 }

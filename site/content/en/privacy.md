@@ -94,7 +94,7 @@ The extension does not ask for network access at install time. When you save the
 
 ## Reports to developers (GitHub Issues)
 
-Reporting features open a pre-filled GitHub Issue draft only when you explicitly press a report button. None of them ever include your profile values or values already in fields.
+Reporting features open a pre-filled GitHub Issue draft only when you explicitly opt in or press a report button. None of them ever include your profile values or values already in fields.
 
 - **Partial-apply report (`内訳をissueで報告`)**: includes only counts per result (applied, already filled, too long, etc.), a minimized page URL (origin + first path segment), provider name, and extension version. No field metadata or category names are included.
 - **Re-analysis report (`開発に報告する`)**: includes the minimized page URL, provider name, extension version, before/after classifications, and field metadata (`name`, `htmlId`, `label`, `placeholder`, nearby heading, clipped to 80 characters each). If page text contains personal information, remove it before submitting the Issue.
