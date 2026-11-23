@@ -45,7 +45,7 @@ Scenario: 残置欄は pin で固定される
 ## Definition of Done
 
 - [x] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
+- [x] コードレビュー完了
 - [x] ドキュメント更新済み
 
 ## 出どころ
@@ -69,5 +69,6 @@ Scenario: 残置欄は pin で固定される
 - 足立 fixture に可視部 6 欄を戻した (textCombo・jukuShikuchosonCd・jukuCd・shussinTodofukenCd・shussinShikuchosonCd・shusshinSchoolCd)。停泊 5 欄は confident unknown、shusshinSchoolCd は school 分類のまま空 option で warn-no-option
 - pin は adachi のみ `p(29,0,20,9,0)` → `p(30,0,20,9,0)` (+1 ruleHits は shusshinSchoolCd の school 判定)。他 fixture は不動
 - 検証: make check exit 0 (194 files・3336 passed + 期待失敗1・build 24・web-ext 誤り 0)、make eval 3 passed
+- 最終レビュー: Ready to merge: Yes。Critical なし。Minor 2 件は受容 (website 語と塾検索placeholderの共欄は unknown 停泊が先になり LLM 送付のみ外れる theoretical 差、塾値欄に 塾名を検索 形の placeholder が来た場合の停泊は誤注入より安全側の文書化済み判断)
 - 分析の全文は `.superpowers/sdd/why-why-school-remnants-2026-11-23.md` (3立場 x 30連鎖・着手時点の実測 6 件付き。.superpowers は gitignore のためリポジトリ外)
 - 残置: 絞り込み2欄への値注入と ajax 待ちは PBI-270 の射程。隠し部 (#combobox・jukuTodofukenCd) は isHidden と hidden 型除外の既存防御で担保し、注入も fixture 収録もしない
