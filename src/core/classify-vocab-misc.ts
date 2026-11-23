@@ -1,6 +1,6 @@
 import { ownLegend } from './dispatch-kit';
 import type { MatcherEntry } from './dispatch-kit';
-import { norm } from './literals';
+import { buildFieldNormViews, norm } from './literals';
 import type { FieldMeta, SelectOption } from './types';
 
 const GENDER = /性別|せいべつ|ジェンダー|gender|(^|[^a-z])sex([^a-z]|$)/;
@@ -39,7 +39,7 @@ const JUKU_SEARCH_PLACEHOLDER = /塾.*検索|検索.*塾/;
 export const isJukuSearchWindow = (m: FieldMeta): boolean =>
   m.tag === 'input'
   && (m.type === 'text' || m.type === 'search')
-  && JUKU_SEARCH_PLACEHOLDER.test(norm(m.placeholder.trim()));
+  && JUKU_SEARCH_PLACEHOLDER.test(buildFieldNormViews(m).placeholder);
 
 // Entry order inside each array is match priority; the DISPATCH composition in
 // classify-rules.ts owns the overall order. gender and age are separate arrays
