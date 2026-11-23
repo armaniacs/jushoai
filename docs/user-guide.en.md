@@ -10,7 +10,7 @@ JushoAI is a browser extension for Chrome, Edge, and Firefox 128+ that fills Jap
 
 - **Rules first, AI optional**: Fields are classified locally by deterministic rules, and AI is off by default. Even with AI enabled, only metadata for fields the rules cannot decide is sent, and values are always produced by fixed code.
 - **Preview before filling**: Clicking `JushoAI で入力` never fills right away. You check every field and value in the preview and approve with `入力する`. Already-filled fields are never overwritten, `maxlength` overflows and `pattern` mismatches are skipped with a warning, and `元に戻す` restores JushoAI-filled fields right afterward.
-- **Local data by design**: Profiles and addresses (up to 10 each) stay inside your browser and are never sent externally. Before any AI call, `AI判定で送る内容` lets you inspect and exclude metadata rows; undo history, `ゲストで入力`, and multi-page carryover stay strictly in tab memory.
+- **Local data by design**: Profiles and addresses (up to 10 each) stay inside your browser and are never sent externally. Before any AI call, `AI判定で送る内容` lets you inspect the metadata (`（要確認）` rows stay excluded by default and can be toggled individually, or `ルールのみで入力する` skips AI entirely); undo history, `ゲストで入力`, and multi-page carryover stay strictly in tab memory.
 - **What it intentionally skips**: Sensitive data (credit cards, bank accounts), auth/SMS/2FA codes, auto-fill on page load, cross-origin iframes, PDFs, checkboxes, and radio buttons other than gender and age group.
 
 ## Find what you want to do

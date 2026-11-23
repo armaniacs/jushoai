@@ -78,7 +78,7 @@ AI is optional. It is off by default and only classifies fields that the rules c
 2. Enter the required details (such as base URL, model name, and API key for an OpenAI-compatible API) and click `保存` (save). The browser asks for network permission when you save (and data collection consent in Firefox).
 3. Before anything is sent to a saved OpenAI-compatible endpoint for the first time, check the DNS-resolved IP addresses shown below it on the settings page and click `この接続先を承認する` (approve this endpoint). Nothing is sent until you approve it.
 4. Run `接続テスト（保存済みの設定で実行）` (connection test) to verify it works.
-5. Whenever a form triggers AI classification, the `AI判定で送る内容` (what AI detection sends) panel opens first so you can inspect field metadata before sending, exclude individual rows (entries marked `（要確認）` have `送らない` checked by default), or choose `ルールのみで入力する` (fill with rules only) to send nothing.
+5. Whenever a form triggers AI classification, the `AI判定で送る内容` (what AI detection sends) panel opens first so you can inspect the field metadata before sending. Rows marked `（要確認）` (needs check) keep `送らない` (do not send) checked by default and can be toggled individually, or you can choose `ルールのみで入力する` (fill with rules only) to skip AI entirely and send nothing.
 
 See [Setting up an AI provider](./ai-providers.md) for details.
 

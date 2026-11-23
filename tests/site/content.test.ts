@@ -87,14 +87,16 @@ describe('markdown entrypoints', () => {
   });
 
   it.each([
-    ['ja', 'docs/user-guide.md'],
-    ['en', 'docs/user-guide.en.md'],
-  ] as const)('links all 14 %s guides from %s', async (lang, relPath) => {
+    ['ja', 'en', 'docs/user-guide.md'],
+    ['en', 'ja', 'docs/user-guide.en.md'],
+  ] as const)('links all 14 %s guides (and no %s guides) from %s', async (lang, otherLang, relPath) => {
     const absPath = resolve(ROOT, relPath);
     const links = extractLinks(await readFile(absPath, 'utf8'));
     const prefix = `../site/content/${lang}/`;
+    const forbiddenPrefix = `../site/content/${otherLang}/`;
     const linkedSlugs = new Set<string>();
     for (const href of links) {
+      expect(href.startsWith(forbiddenPrefix), `${relPath}: cross-language link not allowed: ${href}`).toBe(false);
       const pathOnly = href.split('#')[0] ?? '';
       if (!pathOnly.startsWith(prefix) || !pathOnly.endsWith('.md')) continue;
       const slug = pathOnly.slice(prefix.length, -'.md'.length);
