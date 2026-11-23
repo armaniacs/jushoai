@@ -154,11 +154,7 @@ describe('renderGuidesIndex', () => {
   });
 
   it('renders the 4 localized group headings in order for ja and en', async () => {
-    const allSlugs: (typeof GUIDE_SLUGS)[number][] = [
-      'glossary', 'privacy', 'addresses', 'supported-fields', 'getting-started',
-      'how-it-works', 'ai-providers', 'popup-and-fill', 'profiles', 'safety',
-      'shortcuts-and-tools', 'troubleshooting', 'license',
-    ];
+    const allSlugs = [...GUIDE_SLUGS];
     for (const [lang, expected] of [
       ['ja', ['まずはここから', '毎日の入力と使いこなし', 'AI と安全・プライバシー', '仕組み・困ったとき・その他']],
       ['en', ['Start here', 'Everyday use', 'AI, safety and privacy', 'Reference and help']],
