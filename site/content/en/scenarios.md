@@ -26,8 +26,8 @@ When you are helping a family member or friend fill out a form once, or want to 
 1. Click the JushoAI icon in the browser toolbar.
 2. Click `ゲストで入力` (fill as guest).
 3. In the `ゲストで入力（保存しません）` (fill as guest — not saved) panel, enter only the items you need: `姓` / `名` (family/given name), `セイ` / `メイ` (furigana), `メールアドレス` (email), `電話番号` (phone), `郵便番号` (postal code), `都道府県` (prefecture), `市区町村` (city), `番地` (street), and `建物名・部屋番号` (building).
-4. Click `この内容で使う` (use these values) once at least one field is entered (or `使わない` to cancel).
-5. Run `JushoAI で入力` (fill with JushoAI) on the form as usual (or `AI で分析` from the toolbar).
+4. Click `この内容で使う` (use these values) once at least one field is entered (or `使わない` to cancel). Clicking it automatically opens the preview for the first detected form on the page.
+5. Review the values and click `入力する` (fill in). If there are multiple forms on the page or you closed the preview before applying, you can also open it via `JushoAI で入力` (fill with JushoAI) on the target form.
 
 - **Works before registering anything**: guest mode works even when you have no regular profile or address saved yet (it stays disabled on excluded URLs in `起動しないURL`).
 - **Never mixes with saved data**: for that single fill, your guest entries replace stored profiles and addresses. Fields you leave blank in guest mode stay empty instead of falling back to your saved data.

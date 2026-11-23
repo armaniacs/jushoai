@@ -40,7 +40,7 @@ At the bottom of the left sidebar is a `不具合報告` (report a bug) link (`�
 
 Clicking `フォームから取り込む` (import from form) on the Profile or Address screen builds a draft of your registration from values already filled in the form on the open tab—including values autofilled by your browser.
 
-- Switch to the tab with the form open before pressing it (runs rules only with no external sending, and ignores pages registered in `起動しないURL`).
+- It reads the form on the active tab in the current window—make sure the tab with the form open is the active target when you press it (runs rules only with no external sending, and ignores pages registered in `起動しないURL`).
 - Furigana fields are also picked up and placed into the kana draft fields (`セイ` / `メイ`).
 - Only values that match the expected format and pass validation become part of the draft.
 - If the first card is empty, the draft goes into it. A card that already has values is never overwritten; a new card (`新規`) is created instead.
