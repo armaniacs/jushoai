@@ -143,7 +143,11 @@ const LEDGER = {
     excluded: [
       'form:j_idt253 (select): 生年月日の年 with a single 2014 option, never a plan row (selects fill only prefecture/birthMonth/birthDay/birthEra; exclude)',
       'form:j_idt1374 (その他の塾)/form:j_idt1622:0:j_idt1650 (学年select): profile に値が無いため warn-no-value で載らない',
-      '塾コンボ一式(combobox/textCombo/form:juku*)/出身3連動select(form:shussin*/form:shusshin*): 実ページの複雑な部分は最小 fixture から削る (exclude; hidden は入れない)',
+      'textCombo (input): 塾コンボの検索補助窓、placeholder の塾+検索で confident unknown に停泊 (送信値は隣の隠し select が持つ)',
+      'form:shussinTodofukenCd / form:shussinShikuchosonCd (select): 学校文脈の絞り込み欄、cascade-filter-own で confident unknown',
+      'form:jukuShikuchosonCd / form:jukuCd (select): 塾コンボの2段目以降、juku-hidden-own で confident unknown',
+      'form:shusshinSchoolCd (select): school 分類だが option が空で warn-no-option',
+      '#combobox / form:jukuTodofukenCd (hidden): 塾コンボの隠し部は isHidden でスキャン対象外 (fixture に入れない)',
     ],
   },
   'age-decade-select-form.html': {

@@ -14,10 +14,16 @@
   div.col-xs-2 col-sm-2 and puts the － separators between wrappers as
   div.form-control-static; the 生年月日 row gives each select its own wrapper.
   The two sections are h3 headings + fieldset (参加者情報入力 / 保護者等情報入力)
-  with no legend, and the page has no <label for> association, autocomplete, or
-   placeholder anywhere. Values are stripped. The 塾 combo selects and the
-   出身/小学校 cascade selects stay trimmed (hidden combo out): only その他の学校,
-   その他の塾, and 学年 ride the real div.form-group rows here.
+  with no legend, and the page has no <label for> association anywhere; the
+  #textCombo combo window (placeholder 塾を検索（入力検索可）, autocomplete off)
+  carries the page's only placeholder. Values are stripped, and the restored
+  rows carry no value attributes: the 塾 combo visible part (textCombo + the
+  empty-label form:jukuShikuchosonCd / form:jukuCd rows) and the 出身/小学校
+  cascade (the label 小学校 row's form:shussinTodofukenCd with its prefecture
+  options, then the empty-label form:shussinShikuchosonCd /
+  form:shusshinSchoolCd rows) ride the real div.form-group rows here. The
+  hidden combo parts (#combobox select, form:jukuTodofukenCd input) stay
+  trimmed (isHidden territory).
 -->
 <html lang="ja"><meta charset="utf-8"><title>足立学園中学校 イベント申込 (school)</title>
 <form id="form" name="form" class="form-horizontal">
@@ -131,8 +137,50 @@
         </div></div></span></div>
     </div>
     <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">小学校&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3"><select id="form:shussinTodofukenCd" name="form:shussinTodofukenCd" class="form-control input-sm"><option>選んでください</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>海外（日本人学校・在外教育施設）</option><option>その他（２段目も選択してください）</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:shussinShikuchosonCd" name="form:shussinShikuchosonCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:shusshinSchoolCd" name="form:shusshinSchoolCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
       <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">その他の学校</label>
         <div class="col-sm-3"><input name="form:j_idt661" type="text" class="form-control input-sm" maxlength="70">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">塾</label>
+        <div class="col-sm-3"><input id="textCombo" type="text" class="form-control input-sm" placeholder="塾を検索（入力検索可）" autocomplete="off">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:jukuShikuchosonCd" name="form:jukuShikuchosonCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:jukuCd" name="form:jukuCd" class="form-control input-sm"><option>選んでください</option></select>
           <div class="small form-control-static mp0"><span class="small"></span></div>
         </div>
       </div></span></div>
