@@ -74,7 +74,7 @@ Right after filling, `元に戻す` (undo) on the result screen restores only th
 
 ## What to read next
 
-- [Toolbar and filling a form](./popup-and-fill.md)
+- [Filling forms and the toolbar](./popup-and-fill.md)
 - [Everyday scenarios (family, multi-page, revisits)](./scenarios.md)
 - [How JushoAI keeps your data safe](./safety.md)
 - [Troubleshooting](./troubleshooting.md)

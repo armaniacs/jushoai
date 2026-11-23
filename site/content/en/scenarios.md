@@ -46,23 +46,23 @@ When you come back to a site you use often—such as a reservation portal or sch
 
 On multi-step (wizard) forms inside the same tab, values you approved and entered on an earlier page are carried over as candidates for matching fields on later pages.
 
-- **How it helps**: if a later page asks again for a value that is empty in your profile or address, JushoAI offers what you entered on the earlier page for fields with the same `name` or `id`. Any registered value in your profile or address still takes priority.
+- **How it helps**: values JushoAI entered on an earlier step (for example via `ゲストで入力` in guest mode, or when blank in the active profile or address) carry over to matching text-like `input` fields with the same `name` or `id` on later pages. Any registered value in the active profile or address still takes priority.
 - **Scope**: applies to text-like `input` fields only (`select` dropdowns and radio buttons must match each page's own options). Single-field fill (`Alt+J` or right-click) also uses carried-over values; see [Single-field fill, import, export and management](./shortcuts-and-tools.md).
 - **Tab-only lifetime**: carried values live strictly in tab memory. Closing the tab discards them at once, and they are never saved to storage, written to audit logs, exported, or sent externally.
 
 ## Opt-in candidates for overflow and missing values
 
-When a building name is slightly longer than `maxlength`, or when furigana, prefecture, or city is missing from your saved data, JushoAI can propose an on-device assist candidate in the preview.
+When a building name is slightly longer than `maxlength`, or when furigana, prefecture, or city is missing (such as when left blank in guest mode), JushoAI can propose an on-device assist candidate in the preview.
 
 All three appear as **opt-in checkboxes that are unchecked by default**. JushoAI never truncates, rewrites, or guesses values unless you explicitly check the box before pressing `入力する` (fill in).
 
 - **Building-name abbreviation (`略記して入れる` — enter abbreviated)**: when a building name (or a street/address field containing it) exceeds `maxlength`, JushoAI proposes a deterministic shortened form (`raw → abbreviated`). It removes full-width spaces (keeping half-width spaces in English building names) and shortens a trailing residence suffix (`ビルディング` → `ビル`, and `マンション`, `レジデンス`, `ハイツ`, `コーポ`, `アパート`, or `コーポラス` → `邸`). If the shortened form still exceeds `maxlength`, no candidate is offered and the row keeps its standard warning.
-- **Local reading lookup when furigana is blank (`補助候補を入れる` — enter assist candidate)**: when `セイ` or `メイ` is not registered in the profile, JushoAI checks an **on-device reading dictionary** (no network, no AI) for common surnames and given names and offers `候補: ...` converted to the field's kana format. Names outside the dictionary keep the regular missing-value warning.
-- **Local postal-prefix lookup when prefecture or city is blank (`補助候補を入れる`)**: when prefecture or city is blank in the address while `郵便番号` (postal code) is filled, JushoAI checks an **on-device postal prefix dictionary** (major urban areas seed; no network, no AI) and offers `候補: ...`. Unknown prefixes keep the regular missing-value warning.
+- **Local reading lookup when furigana is blank (`補助候補を入れる` — enter assist candidate)**: when `セイ` or `メイ` is not registered in the profile (such as when left blank in guest mode), JushoAI checks an **on-device reading dictionary** (no network, no AI) for common surnames and given names and offers `候補: ...` converted to the field's kana format. Names outside the dictionary keep the regular missing-value warning.
+- **Local postal-prefix lookup when prefecture or city is blank (`補助候補を入れる`)**: when prefecture or city is blank in the address (such as when left blank in guest mode) while `郵便番号` (postal code) is filled, JushoAI checks an **on-device postal prefix dictionary** (major urban areas seed; no network, no AI) and offers `候補: ...`. Unknown prefixes keep the regular missing-value warning.
 
 ## What to read next
 
-- [Toolbar and filling a form](./popup-and-fill.md)
+- [Filling forms and the toolbar](./popup-and-fill.md)
 - [Single-field fill, import, export and management](./shortcuts-and-tools.md)
 - [Profiles](./profiles.md)
 - [How JushoAI keeps your data safe](./safety.md)

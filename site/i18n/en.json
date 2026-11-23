@@ -22,7 +22,7 @@
       { "title": "Handles split fields as they are", "body": "Fills split family/given names, furigana, postal code, phone number, prefecture-to-building address fields, birthdays, and school or workplace fields in the shape each field expects." },
       { "title": "Child and guardian profiles in one pass", "body": "On school and cram-school forms, JushoAI infers child and guardian roles automatically so you can fill both from separate profiles at once. It also suggests per-site profiles and shortens previews on revisits." },
       { "title": "Review in a preview before filling", "body": "Review every field and value first; filled fields are never overwritten, and overflow or pattern mismatches trigger warnings. You can undo right after filling, use one-shot guest mode without saving, or fill a single field." },
-      { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only ambiguous ones go to your configured AI. You can review what is sent before every AI call, and the values themselves are produced by fixed logic." },
+      { "title": "Rules first, AI as a helper", "body": "Fields are classified by rules first; only ambiguous ones go to your configured AI. You can review what is sent before sending ambiguous fields to AI, and the values themselves are produced by fixed logic." },
       { "title": "Designed to keep your values local", "body": "Your profile and address values never leave your browser. AI calls send only field metadata, and temporary data such as multi-page carryover or guest input stays strictly in tab memory." },
       { "title": "Unobtrusive button and dark mode", "body": "The \"JushoAI で入力\" button avoids fields with a translucent background, can be dragged aside, and can be hidden or registered as an excluded URL right from its \"X\" button. All screens follow your OS dark mode." }
     ]
@@ -91,7 +91,7 @@
   "privacy": {
     "title": "Privacy",
     "items": [
-      { "title": "Only field metadata is sent", "body": "If you configure an AI provider, the name, label, placeholder, nearby heading, type and maxlength of fields are sent to it. Your profile values and values already in fields are not. Labels and headings are text shown on the page, so personal information visible on the page can be part of what is sent." },
+      { "title": "Only field metadata is sent", "body": "If you configure an AI provider, the name, id, label, placeholder, nearby heading, type and maxlength of fields are sent to it. Your profile values and values already in fields are not. Labels and headings are text shown on the page, so personal information visible on the page can be part of what is sent." },
       { "title": "Network only on click", "body": "Merely opening a page never contacts an AI provider." },
       { "title": "API keys are stored encrypted", "body": "Leaked storage alone cannot decrypt them. The extension's own code can still read them." }
     ],

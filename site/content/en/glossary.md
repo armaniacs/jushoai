@@ -34,7 +34,7 @@ A one-shot, unsaved entry mode opened from `ゲストで入力` (fill as guest) 
 
 ## Learned mappings
 
-Per-domain field mappings (`field signature -> category`) that you teach using `直す` (fix) in the preview. Future classifications apply your correction first, and you can inspect or remove entries under `覚えた対応付け` (learned mappings) on the settings page. See [Tips and tools](./shortcuts-and-tools.md).
+Per-domain field mappings (`field signature -> category`) that you teach using `直す` (fix) in the preview. Future classifications apply your correction first, and you can inspect or remove entries under `覚えた対応付け` (learned mappings) on the settings page. See [Single-field fill, import, export and management](./shortcuts-and-tools.md).
 
 ## AI detection
 

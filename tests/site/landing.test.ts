@@ -168,6 +168,7 @@ describe('renderGuidesIndex', () => {
       expect(html.indexOf(expected[0])).toBeLessThan(html.indexOf(expected[1]));
       expect(html.indexOf(expected[1])).toBeLessThan(html.indexOf(expected[2]));
       expect(html.indexOf(expected[2])).toBeLessThan(html.indexOf(expected[3]));
+      expect((html.match(/<ul class="guide-list">/g) ?? []).length).toBe(4);
     }
   });
 

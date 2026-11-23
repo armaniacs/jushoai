@@ -81,7 +81,7 @@ Removing an entry from the list and saving brings JushoAI back on that page.
 
 ## Analyze with AI
 
-When rules cannot identify some fields, click `AI で分析` (analyze with AI) in the preview to reclassify them using your configured AI provider. See [Setting up an AI provider](./ai-providers.md) for setup details.
+When rules cannot identify some fields, click `AI で分析` (analyze with AI) in the preview to reclassify them using your configured AI provider. Running `AI で分析` from inside the preview re-sends non-excluded fields without reopening `AI判定で送る内容`. See [Setting up an AI provider](./ai-providers.md) for setup details.
 
 After reanalysis completes, a `開発に報告する` (report to developers) checkbox appears next to `入力する`. If you check it before clicking `入力する`, a public GitHub issue draft opens with the minimized URL, classification results, and field metadata—never your profile values.
 

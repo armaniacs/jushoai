@@ -32,7 +32,7 @@ Pick a preset (OpenAI, Groq, Mistral, Ollama or LM Studio) and the base URL is f
 
 The base URL has these rules.
 
-- Only `https` is allowed. `http` is allowed only for `localhost` and `127.x.x.x`.
+- Only `https` is allowed. `http` is allowed only for `localhost` and `127.0.0.1`.
 - A URL that contains credentials, a query or a fragment is rejected.
 - Internal network addresses and IPv6 addresses are rejected. When you save the URL, the host name is resolved with DNS, and the URL is rejected if it resolves into an internal address (private, loopback, link-local, including IPv6 translation prefixes such as NAT64 and 6to4) or when the resolution cannot be confirmed. Names that resolve into internal addresses, such as nip.io or sslip.io, cannot be saved either.
 - The resolved address is re-checked right before each classify and connection-test call. If it resolves into an internal address or the resolution cannot be confirmed, that call is not made and the rest of the run continues with the rules only; the lexical checks on the host name still apply. The host is resolved again on every call (per-call); a previous result is never carried into the next call.
