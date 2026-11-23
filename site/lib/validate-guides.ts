@@ -57,9 +57,12 @@ export function validateStrings(ja: unknown, en: unknown): string[] {
 }
 
 // Normalizes the language-dependent parts of a guide link so ja and en
-// sources compare equal: the /en prefix on site-absolute links, the hl
-// query on store links, and the locale segment on AMO links.
+// sources compare equal: relative `./<slug>.md` guide links, the /en prefix
+// on site-absolute links, the hl query on store links, and the locale
+// segment on AMO links.
 export function normalizeGuideLink(href: string): string {
+  const rel = /^\.\/([a-z-]+)\.md(#.*)?$/.exec(href);
+  if (rel) return `/guides/${rel[1]}/${rel[2] ?? ''}`;
   let out = href;
   if (out === '/en' || out.startsWith('/en/')) out = out.slice(3) || '/';
   out = out.replace(/([?&])hl=(ja|en)(?=&|$)/, '').replace(/[?&]$/, '').replace(/\?&/, '?');

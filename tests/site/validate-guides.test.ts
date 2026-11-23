@@ -67,6 +67,22 @@ describe('validateGuidePair', () => {
   it('reports a missing side', () => {
     expect(validateGuidePair(undefined, guide('en'))).toEqual(['privacy: missing in ja']);
   });
+
+  it('passes pairs using relative markdown links and mixed relative/absolute links', () => {
+    const ja = guide('ja', { links: ['./safety.md', './profiles.md#登録'] });
+    const en = guide('en', { links: ['./safety.md', './profiles.md#register'] });
+    expect(validateGuidePair(ja, en)).toEqual([
+      'privacy: links differ (ja-only: /guides/profiles/#登録; en-only: /guides/profiles/#register)',
+    ]);
+
+    const sameFragJa = guide('ja', { links: ['./safety.md', './profiles.md#frag'] });
+    const sameFragEn = guide('en', { links: ['./safety.md', './profiles.md#frag'] });
+    expect(validateGuidePair(sameFragJa, sameFragEn)).toEqual([]);
+
+    const mixedJa = guide('ja', { links: ['./safety.md', './privacy.md#sec'] });
+    const mixedEn = guide('en', { links: ['/en/guides/safety/', '/en/guides/privacy/#sec'] });
+    expect(validateGuidePair(mixedJa, mixedEn)).toEqual([]);
+  });
 });
 
 describe('normalizeGuideLink', () => {
@@ -82,6 +98,8 @@ describe('normalizeGuideLink', () => {
       'https://addons.mozilla.org/firefox/addon/jushoai/',
     );
     expect(normalizeGuideLink('/guides/safety/#frag')).toBe('/guides/safety/#frag');
+    expect(normalizeGuideLink('./safety.md')).toBe('/guides/safety/');
+    expect(normalizeGuideLink('./safety.md#frag')).toBe('/guides/safety/#frag');
   });
 });
 
