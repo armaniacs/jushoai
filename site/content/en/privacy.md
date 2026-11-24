@@ -66,21 +66,31 @@ The list is newest first, and each row shows the target page URL. Opening a reco
 
 The prompt carries field metadata only, so your profile values, the values already in fields, API keys and request headers can never be recorded.
 
+However, field metadata includes page-derived text (`label`, nearby headings and the like), so personal information shown on the page can end up in the records. Handle the records at your own responsibility.
+
+What a record looks like (fictitious values, not real personal information):
+
+- `request` example: the full prompt sent. It contains only field metadata, like `[{"id":"jai-3","name":"sei","htmlId":"","label":"お名前（セイ）","placeholder":"例：ヤマダ","nearby":"会員登録","type":"text","maxLength":20}]`
+- `response` example: `{"jai-3": "lastNameKana"}`. Over 2,000 characters are cut to the head with a trailing `…`
+- `page_url` example: `https://example.com`. Origin (scheme, host and port) only; no path, query or fragment
+
 Records are kept for 7 days and then deleted automatically. The period cannot be changed. If there are more than 1,000 records, or the records grow too large in total, the oldest are deleted first. The total size is measured in UTF-8 bytes, the unit the browser's storage quota actually charges. You can delete everything at any time with `ログを削除` (delete the log). Nothing is recorded while AI is off.
 
 `TSV でダウンロード` (download as TSV) saves a TSV file named `jushoai-audit-log-YYYY-MM-DD.tsv`, newest first. It includes the field contents sent and the answers. Values starting with `=`, `+`, `-` or `@` get a leading `'` so spreadsheets do not run them as formulas. The file contains page addresses and field contents, so handling it is your own responsibility.
 
 ## Data stored or kept strictly on your device
 
-Apart from AI settings and the audit log, the following data stays strictly on your device and is never sent externally.
+Apart from AI settings and the audit log, the following data stays strictly on your device and is never sent externally. Profile and address values are not encrypted (they are stored in plain text).
 
-| Data | Storage location and contents | Sent externally |
-|---|---|---|
-| Profiles and addresses | Browser storage. Your registered personal data (written to plain JSON only when you explicitly export) | Never |
-| Learned mappings | Browser storage. Domain + field signature (`name` / `id`) to category only (up to 500 entries). No profile values | Never |
-| Approval memory for shortened preview | Browser storage. Digests (hashes) of approved rows and selected IDs only (up to 100 sites). No raw values or labels | Never |
-| Per-site profile hints | Browser storage. Host name to profile ID only (up to 100 sites). No profile values | Never |
-| Temporary memory (`元に戻す`, `ゲストで入力`, multi-page carryover) | Tab memory only. Not saved to storage or audit logs; disappears when the tab closes | Never |
+| Data | Storage location and contents | Encrypted | Kept for | How to delete | Sent externally |
+|---|---|---|---|---|---|
+| Profiles and addresses | Browser storage (`chrome.storage.local`, key `jushoai:data`). Your registered personal data (written to plain JSON only when you explicitly export) | No (plain text) | Until you delete it | Delete from the settings page (`このプロファイルを削除` / `この住所を削除`) | Never |
+| Learned mappings | Browser storage (key `jushoai:field-mappings`). Domain + field signature (`name` / `id`) to category only (up to 500 entries). No profile values | No (plain text) | Oldest are deleted past the cap | Delete from the list on the settings page | Never |
+| Approval memory for shortened preview | Browser storage (key `jushoai:site-approvals`). Digests (hashes) of approved rows and selected IDs only (up to 100 sites). No raw values or labels | No (plain text) | Oldest are deleted past the cap | Automatic deletion past the cap only | Never |
+| Per-site profile hints | Browser storage (key `jushoai:site-profile-assignments`). Host name to profile ID only (up to 100 sites). No profile values | No (plain text) | Oldest are deleted past the cap | Automatic deletion past the cap only | Never |
+| Temporary memory (`元に戻す`, `ゲストで入力`, multi-page carryover) | Tab memory only. Not saved to storage or audit logs; disappears when the tab closes | Not applicable (never stored) | Disappears when the tab closes | Close the tab | Never |
+
+The audit log and API keys are described in detail in `Audit log` and `How API keys are stored` above. In short: the audit log stays in `chrome.storage.local` (key `jushoai:audit-log`) in plain text and is deleted automatically after 7 days (oldest first when past the cap). You can delete it at any time with `ログを削除` (delete the log) on the settings page. Page-derived text can contain personal information, so handle the records at your own responsibility. API keys are saved in `chrome.storage.local` (key `jushoai:ai-settings`) encrypted with AES-GCM and are kept until replaced or deleted. Checking `保存済みの API キーを削除する` (delete the saved API key) and saving on the settings page removes them.
 
 ## How API keys are stored
 
