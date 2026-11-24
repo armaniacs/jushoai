@@ -10,6 +10,9 @@ export { resolveAddressId, resolveLastId } from './core/selection';
 
 const KEY = 'jushoai:data';
 const LAST_KEY = 'jushoai:last';
+// Backup reminder state (PBI-284): timestamps only, never profile values. One
+// key holds both so a single read settles the transfer section.
+const BACKUP_KEY = 'jushoai:backup';
 
 // Format version of the persisted envelope (WHY one place): the store written
 // before any version existed reads as 0 and is accepted as-is; a version
@@ -21,6 +24,14 @@ export const FORMAT_VERSION = 1;
 export interface LastUsed {
   profileId?: string;
   addressId?: string;
+}
+
+// Timestamps behind the backup nudge (PBI-284): the last successful export
+// and the last nudge dismissal, as epoch milliseconds. Profile values never
+// enter this key.
+export interface BackupMeta {
+  lastExportAt?: number;
+  dismissedAt?: number;
 }
 
 // Typed save failure (PBI-23): storage errors used to surface as raw rejections
@@ -81,6 +92,35 @@ export async function saveLastUsed(v: LastUsed): Promise<void> {
   }
 }
 
+// The backup meta parse, extracted as pure so the spec below and
+// loadBackupMeta share one copy (same pattern as parseLastUsed). Anything
+// that is not a non-negative integer timestamp is dropped, so a hand edit
+// cannot resurface the nudge logic with a junk value.
+export function parseBackupMeta(raw: unknown): BackupMeta {
+  const v = raw as Partial<BackupMeta> | undefined;
+  const out: BackupMeta = {};
+  if (typeof v?.lastExportAt === 'number' && Number.isInteger(v.lastExportAt) && v.lastExportAt >= 0) {
+    out.lastExportAt = v.lastExportAt;
+  }
+  if (typeof v?.dismissedAt === 'number' && Number.isInteger(v.dismissedAt) && v.dismissedAt >= 0) {
+    out.dismissedAt = v.dismissedAt;
+  }
+  return out;
+}
+
+export async function loadBackupMeta(): Promise<BackupMeta> {
+  const result = await chrome.storage.local.get(BACKUP_KEY);
+  return parseBackupMeta(result[BACKUP_KEY]);
+}
+
+export async function saveBackupMeta(v: BackupMeta): Promise<void> {
+  try {
+    await chrome.storage.local.set({ [BACKUP_KEY]: v });
+  } catch (err) {
+    throw new StorageSaveError('バックアップ状態の保存に失敗しました', err);
+  }
+}
+
 // The profile store's load specs (PBI-159): the flow-unit loader
 // (src/content/flow-state.ts) batches these with the learning stores' specs so
 // a flow reads all its keys in one get([keys...]) call. loadData/loadLastUsed
@@ -93,6 +133,11 @@ export const DATA_STORE: KvSpec<StoredData> = {
 export const LAST_USED_STORE: KvSpec<LastUsed> = {
   key: LAST_KEY,
   parse: parseLastUsed,
+};
+
+export const BACKUP_STORE: KvSpec<BackupMeta> = {
+  key: BACKUP_KEY,
+  parse: parseBackupMeta,
 };
 
 interface LegacyStoredData {

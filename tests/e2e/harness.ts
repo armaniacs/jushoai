@@ -413,6 +413,11 @@ export const OPTIONS_SELECTORS = {
   saveProfileButton: `//*[@id='profiles']//button[text()='保存']`,
   saveAddressButton: `//*[@id='addresses']//button[text()='保存']`,
   deleteProfileButton: `//*[@id='profiles']//button[text()='このプロファイルを削除']`,
+  // #transfer-app: backup reminder (PBI-284) and the export button it pairs with.
+  backupNudge: '#transfer-app .backup-nudge',
+  backupLastExport: '#transfer-app .backup-last-export',
+  backupExportButton: `//*[@id='transfer-app']//button[text()='JSON でエクスポート']`,
+  backupNudgeCloseButton: `//*[@id='transfer-app']//*[contains(@class,'backup-nudge')]//button[text()='閉じる']`,
   // #float-root: guide buttons and notices.
   trialBothButton: `//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']`,
   trialProfileButton: `//*[@id='float-root']//button[text()='架空の名前を作って試す']`,

@@ -51,6 +51,7 @@ Clicking `フォームから取り込む` (import from form) on the Profile or A
 
 You can write your profiles and addresses to a single JSON file and import it elsewhere. This helps when you switch browsers or re-register after closing a temporary add-on in Firefox.
 
+- Uninstalling the extension deletes your profiles and addresses. Export them to JSON before that.
 - `JSON でエクスポート` (export as JSON) prompts for confirmation because the file contains your profiles and addresses as plain text. Handle the file with care.
 - `JSON をインポート` (import JSON) merges by ID: a profile or address with the same ID is overwritten and a new ID is added, up to 10 each. Invalid records are rejected.
 - A confirmation dialog appears before importing, and unsaved edits on the page are discarded.

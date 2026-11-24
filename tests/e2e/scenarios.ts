@@ -646,6 +646,39 @@ export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): 
   });
 }
 
+// Backup nudge (PBI-284): the settings page pairs a modest in-section notice
+// with the existing export button, and a dismissal survives a reload (30-day
+// snooze persisted in storage).
+export function runBackupNudge(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: backup nudge (PBI-284)`, () => {
+    it('shows a modest backup notice with the export button and stays closed', async () => {
+      const second = { ...PROFILE_DATA.profiles[0]!, id: 'p2', label: '家族' };
+      await adapter.seed({ profiles: [...PROFILE_DATA.profiles, second], addresses: PROFILE_DATA.addresses });
+      await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
+        await dismissGuideIfPresent(driver);
+        const nudge = await driver.wait(until.elementLocated(By.css(OPTIONS_SELECTORS.backupNudge)), 10_000);
+        expect(await nudge.getText()).toContain('バックアップ');
+        // The export button the BDD pairs with the notice sits in the same section.
+        expect(await driver.findElement(By.xpath(OPTIONS_SELECTORS.backupExportButton)).isDisplayed()).toBe(true);
+        await driver.findElement(By.xpath(OPTIONS_SELECTORS.backupNudgeCloseButton)).click();
+        await driver.wait(async () =>
+          (await driver.findElements(By.css(OPTIONS_SELECTORS.backupNudge))).length === 0,
+        10_000, 'backup nudge did not close');
+        await driver.navigate().refresh();
+        await driver.wait(until.elementLocated(By.css(OPTIONS_SELECTORS.profilesSection)), 10_000);
+        // The last-export line renders after the backup state loads: once it
+        // is there, an absent nudge proves the dismissal persisted.
+        await driver.wait(async () => {
+          const lines = await driver.findElements(By.css(OPTIONS_SELECTORS.backupLastExport));
+          return lines.length > 0 && ((await lines[0]!.getText()) ?? '').length > 0;
+        }, 10_000, 'last-export line did not render');
+        expect(await driver.findElements(By.css(OPTIONS_SELECTORS.backupNudge))).toHaveLength(0);
+      });
+    });
+  });
+}
+
 // The full suite in the original file order. Chrome passes
 // includePartialNotice + includeTouchPointer + expectBuiltInProvider;
 // Firefox passes none of them.
@@ -666,4 +699,5 @@ export function runBrowserScenarios(adapter: BrowserAdapter, opts: BrowserScenar
   runFloatNotice(adapter, label);
   runOptionsZeroCountTrial(adapter, label);
   runOptionsPerSideGuide(adapter, label);
+  runBackupNudge(adapter, label);
 }

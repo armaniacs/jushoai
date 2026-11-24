@@ -7,8 +7,9 @@ import {
   exportTransferFile, importTransferFile, TRANSFER_FILE_NAME, TRANSFER_MAX_FILE_BYTES,
   type TransferImportResult,
 } from '../../transfer';
-import type { FormatInfo } from '../../storage';
-import { loadFormatInfo } from '../../storage';
+import type { BackupMeta, FormatInfo } from '../../storage';
+import { loadBackupMeta, loadData, loadFormatInfo, saveBackupMeta } from '../../storage';
+import { formatLastExportLine, shouldShowBackupNudge } from '../../core/backup-nudge';
 import { saveTextFile } from './audit-section';
 import { actionButton, el, notice } from './dom';
 
@@ -25,6 +26,18 @@ export interface TransferSectionDeps {
   // Reports the persisted format version (WHY injected): tests pin the skew
   // notice without touching chrome.storage.
   formatInfo(): Promise<FormatInfo>;
+  // Backup reminder state (WHY injected): the section shows the last-export
+  // line and a modest nudge from stored timestamps only, so tests pin the
+  // policy without touching chrome.storage.
+  backupMeta(): Promise<BackupMeta>;
+  // Records a successful export or a nudge dismissal (WHY separate writes):
+  // each merges into the stored meta so the untouched timestamp survives.
+  recordExportAt(at: number): Promise<void>;
+  recordNudgeDismissedAt(at: number): Promise<void>;
+  // Saved profile count (WHY a reader, not a number): the section mounts once
+  // and stays alive across re-renders, so the count is read when the nudge is
+  // evaluated instead of frozen at mount.
+  profileCount(): Promise<number>;
 }
 
 const EXPORT_WARNING =
@@ -88,6 +101,22 @@ export function defaultTransferDeps(): TransferSectionDeps {
     readFile,
     onImported: async () => {},
     formatInfo: loadFormatInfo,
+    backupMeta: loadBackupMeta,
+    // Storage is the source of truth (WHY a fresh read): only saved
+    // registrations count toward the nudge, never unsaved card edits, and the
+    // section needs no boot-order coupling with the profile/address state.
+    recordExportAt: async (at) => {
+      const meta = await loadBackupMeta().catch(() => ({}));
+      await saveBackupMeta({ ...meta, lastExportAt: at });
+    },
+    recordNudgeDismissedAt: async (at) => {
+      const meta = await loadBackupMeta().catch(() => ({}));
+      await saveBackupMeta({ ...meta, dismissedAt: at });
+    },
+    profileCount: async () => {
+      const data = await loadData().catch(() => null);
+      return data?.profiles.length ?? 0;
+    },
   };
 }
 
@@ -96,9 +125,18 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
   fieldset.append(el('legend', 'プロファイルのエクスポート/インポート'));
   for (const line of [
     'プロファイルと住所を 1 つの JSON ファイルに書き出し/読み込みします。Firefox の一時的なアドオンは終了とともにデータが消えるため、使い終わる前に書き出してください。',
+    '拡張機能をアンインストールすると、登録したプロファイルと住所は消えます。消える前に JSON で書き出してください。',
     '書き出したファイルには平文の個人情報が含まれます。取り扱いには注意してください。',
     `取り込みは ID 単位でマージします。同じ ID は上書きされ、新しい ID は追加されます。上限はプロファイル・住所それぞれ ${MAX_ITEMS} 件です。検証に通らないデータは保存されません。`,
   ]) fieldset.append(el('p', line));
+
+  // Last-export line and nudge live in the section (WHY here, not a banner):
+  // the BDD pairs the notice with the export button, and the button already
+  // sits here, so no new notice slot or badge is needed.
+  const lastExportLine = el('p', '');
+  lastExportLine.className = 'backup-last-export';
+  fieldset.append(lastExportLine);
+  let nudge: HTMLElement | null = null;
 
   const feedback = el('div');
   // A store written by a newer build keeps working here, but the user should
@@ -128,12 +166,55 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
     feedback.replaceChildren(notice('errors', lines));
   };
 
+  // Re-reads the backup state and redraws the line and the nudge (WHY a
+  // re-read, not cached meta): the profile count and the meta change behind
+  // this section (saves, imports, other tabs). A state that cannot be read
+  // leaves the section as-is, like the format-info path above.
+  const refreshBackup = async (): Promise<void> => {
+    let meta: BackupMeta;
+    try {
+      meta = await deps.backupMeta();
+    } catch {
+      return;
+    }
+    lastExportLine.textContent = formatLastExportLine(meta.lastExportAt ?? null);
+    const count = await deps.profileCount().catch(() => 0);
+    const show = shouldShowBackupNudge({
+      profileCount: count,
+      lastExportAt: meta.lastExportAt ?? null,
+      dismissedAt: meta.dismissedAt ?? null,
+    });
+    if (show && nudge === null) {
+      const box = el('div');
+      box.className = 'backup-nudge';
+      box.append(el('p', 'プロファイルを 2 件以上登録しています。削除や再インストールに備えて、JSON ファイルでバックアップをお勧めします。書き出しは下のボタンからできます。'));
+      // Dismissal hides at once (WHY no await): the write is best-effort and
+      // must not block the click feedback; a failed write simply re-shows the
+      // nudge on the next visit.
+      const close = actionButton('閉じる', false, () => {
+        nudge = null;
+        box.remove();
+        void deps.recordNudgeDismissedAt(Date.now()).catch(() => {});
+      });
+      box.append(close);
+      fieldset.insertBefore(box, feedback);
+      nudge = box;
+    } else if (!show && nudge !== null) {
+      nudge.remove();
+      nudge = null;
+    }
+  };
+  void refreshBackup();
+
   const onExport = (): void => {
     if (!deps.confirm(EXPORT_WARNING)) return;
     void deps.exportFile().then(
       (content) => {
         deps.save(TRANSFER_FILE_NAME, content);
         showSaved(`${TRANSFER_FILE_NAME} を書き出しました。`);
+        // An export ends the never-exported state, so the nudge must go even
+        // if the timestamp write fails (the re-read then hides it or not).
+        void deps.recordExportAt(Date.now()).catch(() => {}).then(() => refreshBackup());
       },
       () => showErrors(['データを読み込めませんでした。']),
     );
@@ -173,6 +254,8 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
       } catch {
         showErrors(['取り込みは完了しましたが、画面の更新に失敗しました。ページを再読み込みしてください。']);
       }
+      // An import can push the saved profile count over the nudge threshold.
+      void refreshBackup();
     } finally {
       importButton.disabled = false;
     }

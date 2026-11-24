@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StorageReadError, StorageSaveError, isQuotaExceededError, isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveImported, saveLastUsed } from '../src/storage';
+import { StorageReadError, StorageSaveError, isQuotaExceededError, isReady, loadBackupMeta, loadData, loadLastUsed, migrateData, parseBackupMeta, resolveAddressId, resolveLastId, saveBackupMeta, saveData, saveImported, saveLastUsed } from '../src/storage';
 import { exportTransferFile, importTransferFile } from '../src/transfer';
 import { EMPTY_ADDRESS, EMPTY_PROFILE, type StoredData } from '../src/core/types';
 
@@ -238,6 +238,23 @@ describe('lastUsed', () => {
   it('drops non-string ids', async () => {
     store['jushoai:last'] = { profileId: 42, addressId: '' };
     expect(await loadLastUsed()).toEqual({});
+  });
+});
+
+describe('backupMeta', () => {
+  it('round-trips the export and dismissal timestamps', async () => {
+    await saveBackupMeta({ lastExportAt: 1700000000000, dismissedAt: 1700100000000 });
+    expect(await loadBackupMeta()).toEqual({ lastExportAt: 1700000000000, dismissedAt: 1700100000000 });
+  });
+
+  it('returns empty when nothing is stored', async () => {
+    expect(await loadBackupMeta()).toEqual({});
+  });
+
+  it('drops non-timestamp values', () => {
+    expect(parseBackupMeta({ lastExportAt: 'yesterday', dismissedAt: -1 })).toEqual({});
+    expect(parseBackupMeta({ lastExportAt: 1.5 })).toEqual({});
+    expect(parseBackupMeta(null)).toEqual({});
   });
 });
 
