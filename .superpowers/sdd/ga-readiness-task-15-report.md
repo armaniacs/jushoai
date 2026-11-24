@@ -24,7 +24,7 @@
 ## 検証
 
 - `node -p "require('./package.json').version"` → `0.2.0`。
-- `make test-build typecheck lint` の結果は下の完了時報告を参照。
+- `make test-build typecheck lint` → すべて exit 0（統括側で再実行、2026-11-24。test-build は 6 ファイル 54 件通過）。
 - 残存確認の grep（対象 5 ファイル）では、残すと決めた上記以外の `1.0.0` は無い。
 - 変更した文書は SHIFT-JIS（CP932）で表せる文字だけであることを検査済み。
 - 日付の注意: 0.2.0 節の日付は版付け日（2026-11-24）であり、タグが後日になる場合は PBI-282 の引継ぎどおり節の日付を直す。
