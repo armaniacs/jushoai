@@ -28,6 +28,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
 | 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
 | 285 | キーボードと読み上げの通し監査 | 70616e8 + f68dbb2 | Approved（Critical 1 件は Chrome 実機 E2E で解消・再レビュー承認） |
+| 286 | 郵便番号補助の全国化（仕組みまで。実データ生成は残） | 75a1b1e + 2fc6b50 | Approved（Important 2 件は修正済み・再レビュー承認） |
 
 - 275 の GitHub 側設定（private vulnerability reporting の有効化）はユーザーが実施済み。応答目安（受付 7 日、方針連絡 30 日）はユーザーが確定済み
 - 275 で未確認が 1 点: ログアウト状態で `https://github.com/armaniacs/jushoai/security/advisories/new` が開くこと（ユーザーに確認を依頼済み。開けば 275 を閉じられる）
@@ -46,7 +47,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
 | 9 | 284 | バックアップの導線（完了: ffc6706 + b572f2a、レビュー Approved） | `2026-11-24-284-feat-data-loss-guard.md` |
 | 11 | 285 | キーボードと読み上げの通し監査（完了: 70616e8 + f68dbb2、レビュー承認） | `2026-11-24-285-chore-a11y-keyboard-audit.md` |
-| 12 | 286 | 郵便番号補助の全国化 | `2026-11-24-286-feat-zip-dict-nationwide.md` |
+| 12 | 286 | 郵便番号補助の全国化（完了: 75a1b1e + 2fc6b50、レビュー承認。実データ生成は残） | `2026-11-24-286-feat-zip-dict-nationwide.md` |
 
 - 将来構想（着手しない）: 287 / 288 / 289 / 290、および 279（ストアのアカウント保護。ユーザー判断で相当先）
 - 1.0 必須は 275 / 277 / 274 / 281 / 282 / 276 / 283。1.0 推奨は 280 / 284 / 278 / 285。順位表の全体は `pbi/2026-11-24-00-backlog-ga-readiness-round.md`
@@ -60,7 +61,8 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 5. PBI-280 は完了した（85de59b、レビュー Approved）。手動削除 UI の要否は製品判断として新規 PBI に委ねる（レビュー評価済み）
 6. PBI-284 は完了した（ffc6706 + b572f2a、レビュー Approved）。Minor 2 件はその場で修正し、該当テスト 40/40 緑を確認。Firefox 実機の E2E は残作業として PBI 引継ぎに記録
 7. PBI-285 は完了した（70616e8 + f68dbb2、レビュー承認）。初回レビューで Critical 1 件（E2E 未実行の誤前提）が出たが、Chrome 実機で `keyboard-only flow` 通過を確認して解消。Firefox 実機と読み上げ実機は残作業として PBI 引継ぎに記録。新規 PBI-291（結果件数の読み上げ）は未採点・未着手
-8. 次は PBI-286（郵便番号補助の全国化。brief は `.superpowers/sdd/ga-readiness-task-10-brief.md` に用意済み）。276 は 282 の統合に依存するため後回し
+8. PBI-286 は仕組みまで完了した（75a1b1e + 2fc6b50、レビュー承認。Important 2 件は修正済み・再レビュー承認）。実データ生成は環境の WAF 遮断で不可のため、PBI-286 の引継ぎに残す。BDD シナリオ 1 の planner 連携テストは生成時に追加する
+9. 残り: 276（282 の統合に依存）、282 の残り（統合実行と版付け。ユーザー判断待ち）、新規 PBI-291（未採点・未着手）。次はブランチ全体のレビュー（`git merge-base main HEAD` から HEAD の範囲で 1 回。281 の Minor 2 点と各 report の Minor を拾う）
 3. 全体の最後に、ブランチ全体のレビューを `git merge-base main HEAD` から HEAD の範囲で 1 回行う（まだ実行していない）。そのとき、281 の Minor 2 点と各 report の Minor を拾う
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
