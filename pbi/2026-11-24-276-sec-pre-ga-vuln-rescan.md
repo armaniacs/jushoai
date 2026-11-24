@@ -48,3 +48,6 @@ Scenario: 前回の指摘が退行していない
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`JushoAI_VULNHUNT_RESULTS_2026-10-10-051858/`、`JushoAI_VULNHUNT_RESULTS_2026-10-23-222746/`
 - 依存: 282 の統合完了
+
+## 引継ぎ
+- 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

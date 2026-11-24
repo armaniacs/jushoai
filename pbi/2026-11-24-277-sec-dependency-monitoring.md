@@ -52,3 +52,6 @@ Scenario: ミラー固定の lockfile でも監査できる
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`.github/dependabot.yml` 不在、`check.yml` に audit なし
+
+## 引継ぎ
+- 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

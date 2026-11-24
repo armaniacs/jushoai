@@ -46,3 +46,6 @@ Scenario: 読み上げで件数と警告が分かる
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`pbi/2026-10-31-00-backlog-next-cycle.md` のやらないこと宣言
+
+## 引継ぎ
+- 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

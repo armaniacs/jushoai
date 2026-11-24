@@ -47,3 +47,6 @@ Scenario: 保守者が守る範囲と守らない範囲を確認できる
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`src/storage.ts`、`src/ai/secret-store.ts`、`src/ai/audit-log.ts`、README「送信されるデータ」
+
+## 引継ぎ
+- 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

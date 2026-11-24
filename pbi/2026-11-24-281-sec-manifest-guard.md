@@ -58,3 +58,7 @@ Scenario: バンドルに動的コード実行が混ざると落ちる
 - 誤検知の許可リスト: なし（`eval(` / `new Function(` は両 dist で 0 件）
 - 赤確認: dist の manifest に `tabs` を一時追加し、許可リスト検査が失敗することを確認して戻した
 - 外部 URL の `import(` の検査は未実装
+- タスクレビュー: spec 適合、Approved（Critical/Important なし）。Minor は `.superpowers/sdd/ga-readiness-task-2-review.md`
+
+## 引継ぎ
+- 残り 2 点（小）: JS 走査の対象ファイル数が 0 でないことの assert、外部 URL の `import(` 検査。詳細は `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md`

@@ -47,3 +47,6 @@ Scenario: CI で作られたことを検証できる
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`.github/workflows/release.yml:82-92`
 - 依存: 274 と同時実施を推奨
+
+## 引継ぎ
+- 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）
