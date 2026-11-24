@@ -28,7 +28,7 @@ Scenario: 読み上げで件数と警告が分かる
 ## 受け入れ基準
 - [x] 主要 4 画面（浮遊ボタン、プレビュー、結果、AI 送信前パネル）と設定ページ・ポップアップで監査し、結果を表で記録（下の「監査表」）
 - [x] 見つかった不具合は個別 PBI に分けるか、小さければ本 PBI で直す（F1・F2 を本 PBI で修正、F3 を PBI-291 に分離）
-- [x] キーボードだけの通し操作を E2E に 1 本追加（`runKeyboardOnlyFlow`。実行は環境が無く未実施のため引継ぎに記載）
+- [x] キーボードだけの通し操作を E2E に 1 本追加（`runKeyboardOnlyFlow`。Chrome 実機で通過を確認、Firefox は実機が無く未実施のため引継ぎに記載）
 - [x] 台帳の「キーボード操作」宣言を監査結果で更新（外す。理由は「実装記録」）
 
 ## テスト戦略
@@ -40,7 +40,7 @@ Scenario: 読み上げで件数と警告が分かる
 0.6人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストまたは記録付きの手動確認として実施済み（シナリオ 1 は E2E 追加済みだが実機未実行、シナリオ 2 は手動未実施。引継ぎに記載）
+- [ ] 全BDDシナリオが自動テストまたは記録付きの手動確認として実施済み（シナリオ 1 は E2E を Chrome 実機で通過、Firefox は未実施。シナリオ 2 は手動未実施。引継ぎに記載）
 - [ ] コードレビュー完了
 - [ ] ドキュメント更新済み
 
@@ -70,14 +70,14 @@ Scenario: 読み上げで件数と警告が分かる
 - F1 の修正: `src/ui/button.ts` の CSS に `button:focus-visible, .dismiss:focus-visible` の輪郭指示を追加（白の 2px。両テーマのバナー背景に対して読める）。テストは `tests/ui/button.test.ts` に CSS 断言を 1 件追加。
 - F2 の修正: `src/ui/preview.ts` の `showUndoResult` で閉じるボタンへ `focus()` を移動（PBI-56 の報告ボタンへの移動と対称）。テストは `tests/ui/preview.test.ts` に 1 件追加。
 - F3 の分離: `pbi/2026-11-24-291-chore-a11y-result-announcement.md` を新規起票し、実装はしていない。
-- E2E: `tests/e2e/scenarios.ts` に `runKeyboardOnlyFlow` を追加し、`runBrowserScenarios` から両ブラウザで実行されるよう配線した。Tab でバナー→Enter→プレビューで Tab と Shift+Tab→Enter→結果で Tab を 2 回→元に戻す→Enter→Esc で閉じる、の通し。実行は実ブラウザが環境に無く未実施。
+- E2E: `tests/e2e/scenarios.ts` に `runKeyboardOnlyFlow` を追加し、`runBrowserScenarios` から両ブラウザで実行されるよう配線した。Tab でバナー→Enter→プレビューで Tab と Shift+Tab→Enter→結果で Tab を 2 回→元に戻す→Enter→Esc で閉じる、の通し。Chrome 実機で通過を確認（対象シナリオ 1 件通過、`HEADLESS=1 make e2e-chrome` 全体は 27/28 通過で失敗は Task 8 と同じ translucent banner の既知件のみ）。Firefox は実機が環境に無く未実施。
 - 台帳 `pbi/2026-10-31-00-backlog-next-cycle.md` の「キーボード操作」宣言は外した。通し利用できることが監査で確認でき、小さな不具合は本 PBI で直し、残る発話対応は PBI-291 で追跡するため、需要観測待ちの宣言は役割を終えたと判断した。
-- 検証: `npx vitest run tests/` は 196 件のファイル、3393 件通過（想定失敗 1 件は従来どおり）。`make typecheck` と `make lint` は緑。E2E は未実施。
+- 検証: `npx vitest run tests/` は 196 件のファイル、3393 件通過（想定失敗 1 件は従来どおり）。`make typecheck` と `make lint` は緑。E2E は Chrome 実機で通過（対象シナリオ 1 件、`make e2e-chrome` 全体 27/28。Firefox は未実施）。
 
 ## 引継ぎ
-- E2E `runKeyboardOnlyFlow` が実機未実行。Chrome と Firefox のある環境で `make e2e-chrome` と `make e2e-firefox` を流すこと（追加分だけでなく全件で回帰を見る）。
+- E2E `runKeyboardOnlyFlow` は Chrome 実機で通過済み（対象シナリオと `make e2e-chrome` 全体 27/28、失敗は translucent banner の既知件のみ）。Firefox 実機での確認が未実施のため、Firefox がある環境で `make e2e-firefox` を流すこと（追加分だけでなく全件で回帰を見る）。
 - BDD シナリオ 2（読み上げで件数と警告が分かる）が記録付きの手動確認として未実施。VoiceOver / NVDA のある環境で PBI-291 の受け入れと合わせて確認すること。
-- `vitest list -c vitest.e2e.config.ts` は既存ファイルでも `No test suite found` になるため、E2E の静的確認は `make typecheck` で行った（緑）。
+- Task 9 時点では `vitest list -c vitest.e2e.config.ts` が既存ファイルでも `No test suite found` になることを確認していたが、その後の実機実行で Chrome の E2E は動作した（上記の通過結果）。
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`pbi/2026-10-31-00-backlog-next-cycle.md` のやらないこと宣言
