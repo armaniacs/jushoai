@@ -102,3 +102,40 @@ describe('check workflow triggers', () => {
     ).toBe(true);
   });
 });
+
+describe('check workflow dependency audit', () => {
+  // Audit step blocks are scanned from their `- name:` line because step
+  // options such as continue-on-error sit above the `run:` line.
+  const auditBlock = (marker: string): string => {
+    const nameIndex = lines.findIndex((line) => line.includes(marker));
+    expect(nameIndex, `a step named like "${marker}" is expected`).toBeGreaterThanOrEqual(0);
+    return stepBlock(nameIndex);
+  };
+
+  it('fails on high-or-worse production advisories via the official registry', () => {
+    const block = auditBlock('Audit production dependencies');
+    expect(block).toMatch(/npm audit --omit=dev/);
+    expect(block).toMatch(/--audit-level=high/);
+    expect(block).toMatch(/--registry=https:\/\/registry\.npmjs\.org\//);
+    expect(block, 'the production audit must fail the job').not.toMatch(/continue-on-error:\s*true/);
+  });
+
+  it('warns only on development advisories', () => {
+    const block = auditBlock('Audit development dependencies');
+    expect(block).toMatch(/npm audit --omit=prod/);
+    expect(block).toMatch(/--audit-level=high/);
+    expect(block).toMatch(/--registry=https:\/\/registry\.npmjs\.org\//);
+    expect(block, 'the dev audit must not fail the job').toMatch(/continue-on-error:\s*true/);
+  });
+
+  it('never rewrites the lockfile from the audit steps', () => {
+    const auditIndexes = lines
+      .map((line, i) => ({ line, i }))
+      .filter(({ line }) => line.includes('npm audit'))
+      .map(({ i }) => i);
+    expect(auditIndexes.length, 'audit steps are expected').toBeGreaterThanOrEqual(2);
+    for (const i of auditIndexes) {
+      expect(stepBlock(i), 'audit must not reinstall dependencies').not.toMatch(/npm install/);
+    }
+  });
+});

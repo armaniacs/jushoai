@@ -43,6 +43,18 @@ jobs:
       - name: Typecheck, lint, test and build
         run: make check
 
+      - name: Audit production dependencies
+        # The committed .npmrc points at an unofficial mirror whose audit
+        # endpoint support is unknown, so advisories are queried against the
+        # official registry. npm audit never rewrites the lockfile.
+        run: npm audit --omit=dev --audit-level=high --registry=https://registry.npmjs.org/
+
+      - name: Audit development dependencies (advisory only)
+        # Same registry reason as above. Advisory only so a dev-only
+        # advisory never blocks the check job.
+        continue-on-error: true
+        run: npm audit --omit=prod --audit-level=high --registry=https://registry.npmjs.org/
+
   e2e:
     permissions:
       contents: read

@@ -1,0 +1,15 @@
+# Keeps pinned Actions and vulnerable dependencies up to date.
+# npm version updates stay off (open-pull-requests-limit: 0 still allows
+# security updates) so automation never rewrites the mirror-pinned lockfile;
+# the committed .npmrc remains the registry source Dependabot resolves against.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    open-pull-requests-limit: 0
