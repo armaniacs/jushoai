@@ -23,7 +23,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 281 | `tests/build/manifest-guard.build.ts`（権限・CSP・動的コード実行の後退検査） | 597fd68 | Approved、Critical/Important なし |
 | 277 | Dependabot（Actions 週次 + npm は security のみ）と check job の npm audit 監査 | 5589516 | Approved、Critical/Important なし |
 | 274 + 278 | release の build/submit 分離 + SHA256SUMS と来歴証明（同時実施） | 4a62198 | Approved、Critical/Important なし |
-| 282（台帳整理まで完了） | ゲート一覧・版方針・統合PRの作成とマージ・272/273・3ラウンドのアーカイブ | ee116b3 + 28850a9、PR #36（7893c9d）、b036287 + a68188b、6f31097 | Approved（Task 11・13・14 レビュー。14 は Minor のみ） |
+| 282（版付け準備まで完了） | ゲート一覧・版方針・統合PRの作成とマージ・台帳整理・0.2.0 表記と CHANGELOG 起草 | ee116b3 + 28850a9、PR #36（7893c9d）、b036287 + a68188b、6f31097、04d212b + fac1221 | Approved（Task 11・13・14・15 レビュー。15 は再レビュー承認） |
 | 283 | 保存形式の版番号と互換性の約束 | 0cc6c2e + bee3d1a | Approved、Critical/Important なし |
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
 | 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
@@ -42,7 +42,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282（残: 版付けのみ） | 台帳整理は完了（272/273・3ラウンドのアーカイブ済み。未実施群と291は1.0後）。版付け（0.2.0）が残る | `2026-11-24-282-chore-ga-release-gate.md` |
+| 5 | 282（残: タグ打ちと Release のみ） | 版付け準備は完了（0.2.0 表記・CHANGELOG 0.2.0 節・package.json 0.2.0。タグなし）。残りはタグ打ち・push・承認・Release | `2026-11-24-282-chore-ga-release-gate.md` |
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（完了: 5957a02、レビュー Approved。新規 0 件） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
@@ -63,8 +63,10 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 6. PBI-284 は完了した（ffc6706 + b572f2a、レビュー Approved）。Minor 2 件はその場で修正し、該当テスト 40/40 緑を確認。Firefox 実機の E2E は残作業として PBI 引継ぎに記録
 7. PBI-285 は完了した（70616e8 + f68dbb2、レビュー承認）。初回レビューで Critical 1 件（E2E 未実行の誤前提）が出たが、Chrome 実機で `keyboard-only flow` 通過を確認して解消。Firefox 実機と読み上げ実機は残作業として PBI 引継ぎに記録。新規 PBI-291（結果件数の読み上げ）は未採点・未着手
 8. PBI-286 は仕組みまで完了した（75a1b1e + 2fc6b50、レビュー承認。Important 2 件は修正済み・再レビュー承認）。実データ生成は環境の WAF 遮断で不可のため、PBI-286 の引継ぎに残す。BDD シナリオ 1 の planner 連携テストは生成時に追加する
-9. PBI-282 の統合は完了した（PR #36 をマージ、ブランチは `origin/main` に fast-forward で追随。基準 1 件目 `[x]`）。残りは台帳整理と版付け（CHANGELOG 起草は版付け時）
-10. PBI-276 は完了した（5957a02、レビュー Approved。新規指摘 0 件、前回 4 件は修正済み 3・受容 1。残余リスクの再検討条件は PBI 引継ぎに記録）。1.0 必須の残りは 282 の台帳整理と版付けのみ
+9. PBI-282 の統合と台帳整理は完了した（PR #36 をマージ、基準 1 件目 `[x]`。272/273 と 3 ラウンドのアーカイブ、未実施群と 291 の 1.0 後明記で基準 2 件目 `[x]`）。残りは版付けのみ
+10. PBI-276 は完了した（5957a02、レビュー Approved。新規指摘 0 件、前回 4 件は修正済み 3・受容 1。残余リスクの再検討条件は PBI 引継ぎに記録）
+11. 版付け準備は完了した（04d212b + fac1221、レビュー承認。0.2.0 表記、CHANGELOG 0.2.0 節、package.json 0.2.0。タグなし）。残りはタグ打ち・push・environment 承認・Release（手順は PBI-282 引継ぎ。タグ push はストア提出を起動するため最終確認が必要）
+12. 残作業: PBI-291（未採点・未着手、1.0 後）、286 実データ生成（環境の WAF 遮断。生成環境で再実行）、各種実機確認
 3. ブランチ全体のレビューは `d184fa1..HEAD` の範囲で 1 回実施した（`.superpowers/sdd/ga-readiness-final-review.md`。判定は条件付き Approve で、条件の 1 行修正を反映したらマージ可）。残る各タスクの Minor はレビューで受容可と評価済み
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
