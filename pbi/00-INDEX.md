@@ -24,8 +24,8 @@
 
 ## 進行中からアーカイブ済み（2026-11-24・272/273 を PR #36 でマージ済み。台帳の「アーカイブはマージ後」条件が満たされた）
 
-- `archived/2026-11-23-272-feat-emergency-contact-tel.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット 3f9225a / ba1bdc8 / c245c18 / 056fecc。`make check` と `make eval` が緑）
-- `archived/2026-11-23-273-feat-combo-search-parking.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット e12b661 / 9adc3fe / fbc007d / 19c6093。`make check` と `make eval` が緑）
+- `archived/2026-11-23-272-feat-emergency-contact-tel.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット 3f9225a / ba1bdc8 / c245c18 / 056fecc。PR #36 の CI（check）が緑。`make eval` は PR の CI 対象外のため未確認）
+- `archived/2026-11-23-273-feat-combo-search-parking.md`（実装済み。PR #36 で main にマージ。実装コミット e12b661 / 9adc3fe / fbc007d / 19c6093。PR #36 の CI（check）が緑。`make eval` は PR の CI 対象外のため未確認）
 
 ## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
 

@@ -90,7 +90,7 @@ Scenario: 未完了の必須項目があると版付けしない
 
 - `pbi/2026-11-23-272-feat-emergency-contact-tel.md` と `pbi/2026-11-23-273-feat-combo-search-parking.md` を `pbi/archived/` に移した（git mv）。
 - `pbi/00-INDEX.md` の 2026-11-23 の進行中 2 節を、1 節の「進行中からアーカイブ済み（2026-11-24・272/273 を PR #36 でマージ済み）」に置き換えた。記載の実装コミットは 272 が 3f9225a / ba1bdc8 / c245c18 / 056fecc、273 が e12b661 / 9adc3fe / fbc007d / 19c6093。
-- 検証: 8 件すべて `git merge-base --is-ancestor <commit> origin/main` が Yes（fetch 済み）。INDEX の新節が指す 2 ファイルは `pbi/archived/` に実在する。計画書（`docs/superpowers/plans/2026-11-23-*.md`）は起票時の記録のため変更なし。`make typecheck` と `make lint` が緑。
+- 検証: 8 件すべて `git merge-base --is-ancestor <commit> origin/main` が Yes（fetch 済み）。INDEX の新節が指す 2 ファイルは `pbi/archived/` に実在する。計画書（`docs/superpowers/plans/2026-11-23-*.md`）は起票時の記録のため変更なし。`make typecheck` と `make lint` は統括側で再実行し exit 0 を確認（2026-11-24）。272 の「レビュー済み」は台帳記載の転記のまま、273 は「実装済み」のみ（台帳の元の書き分けどおり）。`make eval` は PR の CI 対象外のため両件とも未確認と明記した。
 
 「コードレビューのみ残」系 3 件の提案資料（レビュー実施かアーカイブかの判断はユーザーと統括の範囲）:
 
