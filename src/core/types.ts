@@ -19,6 +19,7 @@ export const CATEGORIES = [
   'company', 'companyDepartment', 'jobTitle',
   // PBI-160: 会社名フリガナ（terminal カテゴリ。resolveKana の帰属変換を通さない）。
   'companyNameKana',
+  'schoolGrade', 'juku',
   'unknown',
 ] as const;
 export type Category = (typeof CATEGORIES)[number];
@@ -61,9 +62,16 @@ export interface Classification {
 // Lives here (not in classify-rules) so kana.ts never imports classify-rules:
 // value flows classify-rules → kana, type flows types → both, and no future
 // value import on the kana side can turn this into a runtime cycle.
+export type PersonRole = 'child' | 'guardian' | 'self';
+
 export interface Item {
   meta: FieldMeta;
   cls: Classification;
+  // 人物役割。語と区画の併用判定で決まり、同一役割内でのみ分割と絞り込みが
+  // 働く。任意なのは旧来の直組み立てとの互換のためで、正規パイプラインは
+  // 必ず載せる。未設定は本人扱い。
+  role?: PersonRole;
+  roleReason?: string;
 }
 
 // One classify pass over a meta list, possibly null (unruly meta). The staged artifact
@@ -107,6 +115,8 @@ export interface Profile {
   birthday: string;
   school: string;
   department: string;
+  schoolGrade: string;
+  juku: string;
   // PBI-119: 会社名・会社の部署（いずれも任意・空可・検証なし）。既存 department は学部・学科用。
   companyName: string;
   companyDepartment: string;
@@ -151,7 +161,7 @@ export const EMPTY_PROFILE: Profile = {
   lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '',
-  birthday: '', school: '', department: '',
+  birthday: '', school: '', department: '', schoolGrade: '', juku: '',
   companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: '', tel: '',
 };

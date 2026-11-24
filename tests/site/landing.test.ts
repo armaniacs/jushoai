@@ -152,4 +152,49 @@ describe('renderGuidesIndex', () => {
     expect(html).toContain('<h1>ガイド</h1>');
     expect(html).not.toContain('/en/guides/');
   });
+
+  it('renders the 4 localized group headings in order for ja and en', async () => {
+    const allSlugs = [...GUIDE_SLUGS];
+    for (const [lang, expected] of [
+      ['ja', ['まずはここから', '毎日の入力と使いこなし', 'AI と安全・プライバシー', '仕組み・困ったとき・その他']],
+      ['en', ['Start here', 'Everyday use', 'AI, safety and privacy', 'Reference and help']],
+    ] as const) {
+      const s = await load(lang);
+      const guides = allSlugs.map((slug, i) => guide(slug, i + 1, lang));
+      const html = renderGuidesIndex({ lang, base: '/', s, guides });
+      for (const heading of expected) {
+        expect(html).toContain(`<h2 class="guide-group">${heading}</h2>`);
+      }
+      expect(html.indexOf(expected[0])).toBeLessThan(html.indexOf(expected[1]));
+      expect(html.indexOf(expected[1])).toBeLessThan(html.indexOf(expected[2]));
+      expect(html.indexOf(expected[2])).toBeLessThan(html.indexOf(expected[3]));
+      expect((html.match(/<ul class="guide-list">/g) ?? []).length).toBe(4);
+    }
+  });
+
+  it('omits empty groups and sorts guides within each group by order', async () => {
+    const s = await load('en');
+    const guides = [
+      guide('addresses', 3, 'en'),
+      guide('getting-started', 1, 'en'),
+      guide('profiles', 2, 'en'),
+      guide('glossary', 10, 'en'),
+    ];
+    const html = renderGuidesIndex({ lang: 'en', base: '/', s, guides });
+    expect(html).toContain('<h2 class="guide-group">Start here</h2>');
+    expect(html).toContain('<h2 class="guide-group">Reference and help</h2>');
+    expect(html).not.toContain('Everyday use');
+    expect(html).not.toContain('AI, safety and privacy');
+    expect(html.indexOf('T-getting-started')).toBeLessThan(html.indexOf('T-profiles'));
+    expect(html.indexOf('T-profiles')).toBeLessThan(html.indexOf('T-addresses'));
+  });
+
+  it('renders ungrouped guides in a trailing list as fallback', async () => {
+    const s = await load('ja');
+    const unknown = { ...guide('privacy', 20, 'ja'), slug: 'unknown-guide' as (typeof GUIDE_SLUGS)[number], title: 'T-unknown' };
+    const guides = [unknown, guide('getting-started', 1, 'ja')];
+    const html = renderGuidesIndex({ lang: 'ja', base: '/', s, guides });
+    expect(html).toContain('T-unknown');
+    expect(html.indexOf('T-getting-started')).toBeLessThan(html.indexOf('T-unknown'));
+  });
 });

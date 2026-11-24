@@ -3,6 +3,7 @@ import {
   classifyField, classifyRulePipeline, isConfident, refineClassifications,
 } from '../core/classify-rules';
 import { resolveKana } from '../core/kana';
+import { withPersonRole } from '../core/person-role';
 import { applyEnglishPage } from '../core/page-language';
 import { isAllowedRadioCategory } from '../core/radio-policy';
 import { sendSet } from '../core/pending-split';
@@ -93,7 +94,7 @@ export function mergeClassified(
     items.push({ meta, cls: cls ?? { category: 'unknown', confidence: 0, source: 'rule' } });
   }
   const resolved = resolveKana(items);
-  const refined = refineClassifications(resolved);
+  const refined = refineClassifications(resolved.map(withPersonRole));
   return opts.englishPage ? applyEnglishPage(refined) : refined;
 }
 

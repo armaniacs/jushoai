@@ -1,4 +1,5 @@
 import type { Category, FieldMeta } from '../core/types';
+import { FALLBACK_CLASSIFY_FAILURE } from '../core/classifier-failures';
 import type { AttemptTrace, ClassifyAttempt, TracedClassifier } from '../ai/audited-classifier';
 import { clipAuditResponse } from '../ai/audit-log';
 import { LM_OPTIONS, type LanguageModelStatic } from './availability';
@@ -36,7 +37,7 @@ export class PromptApiClassifier implements TracedClassifier {
         session.destroy();
       }
     } catch (error) {
-      return { map: new Map(), failureReason: 'bad-response', trace, error };
+      return { map: new Map(), failureReason: FALLBACK_CLASSIFY_FAILURE, trace, error };
     }
   }
 

@@ -7,7 +7,7 @@ import type { AddressInfo } from 'node:net';
 import { Builder, By, until, type WebDriver, type WebElement } from 'selenium-webdriver';
 import firefox from 'selenium-webdriver/firefox.js';
 import chrome from 'selenium-webdriver/chrome.js';
-import { chromeLaunchArgs } from './chrome-flags';
+import { chromeLaunchArgs, type PrefersColorScheme } from './chrome-flags';
 import {
   driverVersionFailureMessage, driverVersionStatus, parseMajorVersion,
   type DriverVersionCheck,
@@ -55,14 +55,20 @@ const SESSION_RETRIES = 3;
 const SESSION_RETRY_DELAY_MS = 2_000;
 const sleep = (ms: number) => new Promise<void>((ok) => setTimeout(ok, ms));
 
-async function buildSession(): Promise<WebDriver> {
+async function buildSession(scheme: PrefersColorScheme = 'light'): Promise<WebDriver> {
   const options = new firefox.Options();
   const bin = firefoxBinary();
   if (bin) options.setBinary(bin);
   if (process.env.HEADLESS === '1') options.addArguments('-headless');
   options.setPreference('extensions.webextensions.uuids', JSON.stringify({ [GECKO_ID]: EXT_UUID }));
-  // PBI-162 banner asserts the light token; without this the run follows the OS appearance (PBI-209 dark override).
-  options.setPreference('layout.css.prefers-color-scheme.content-override', 1);
+  // Banner scenarios assert color-scheme tokens, so the run must not follow
+  // the OS appearance: content-override pins what prefers-color-scheme
+  // reports (1 = light — proven by the light-token assertions passing under
+  // this pref; 0 = dark).
+  options.setPreference(
+    'layout.css.prefers-color-scheme.content-override',
+    scheme === 'dark' ? 0 : 1,
+  );
   // Chrome-context scripting (used to open moz-extension:// tabs) needs geckodriver's system-access flag.
   const service = new firefox.ServiceBuilder().addArguments('--allow-system-access');
   const driver = await new Builder().forBrowser('firefox').setFirefoxOptions(options)
@@ -72,7 +78,7 @@ async function buildSession(): Promise<WebDriver> {
   return driver;
 }
 
-export async function startDriver(): Promise<WebDriver> {
+export async function startDriver(scheme: PrefersColorScheme = 'light'): Promise<WebDriver> {
   if (!existsSync(ADDON_DIR)) throw new Error('dist/firefox-mv3 is missing: run `make build-firefox` first');
   // Firefox occasionally exits with status 0 right after geckodriver launches it
   // (seen in make e2e-firefox as "unexpectedly closed with status 0"), then a
@@ -81,7 +87,7 @@ export async function startDriver(): Promise<WebDriver> {
   let lastError: unknown;
   for (let attempt = 1; attempt <= SESSION_RETRIES; attempt++) {
     try {
-      return await buildSession();
+      return await buildSession(scheme);
     } catch (err) {
       lastError = err;
       if (attempt === SESSION_RETRIES || !`${err}`.includes('unexpectedly closed')) throw err;
@@ -131,7 +137,7 @@ export const PROFILE_DATA = {
   profiles: [{
     id: 'p1', label: 'メイン', lastName: '山田', firstName: '太郎',
     lastNameKana: 'ヤマダ', firstNameKana: 'タロウ', lastNameRomaji: '', firstNameRomaji: '',
-    gender: '', birthday: '', school: '', department: '', email: 'taro@example.com', tel: '09012345678',
+    gender: '', birthday: '', school: '', department: '', schoolGrade: '', juku: '', email: 'taro@example.com', tel: '09012345678',
   }],
   addresses: [{
     id: 'a1', label: '自宅', profileId: '', zip: '1000001', prefecture: '東京都',
@@ -291,10 +297,29 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
   };
 }
 
+// Chrome ignores --force-prefers-color-scheme (verified on Chrome 157: the
+// CSS media query keeps evaluating light under the flag, so a flag-only dark
+// session renders light tokens). The dark session realizes the scheme through
+// the WebDriver BiDi media-features override instead — the emulation fallback
+// for when the flag is insufficient. The session already rides BiDi for the
+// extension install; the override is session-global and survives navigations.
+// Light sessions stay flag-only: their pins hold on the light-OS machines
+// this suite runs on (the flag is equally inert there — a pre-existing gap
+// outside this change's scope).
+async function forceChromeDarkScheme(driver: WebDriver): Promise<void> {
+  const bidi = await (driver as WebDriver & {
+    getBidi(): Promise<{ send(command: { method: string; params: unknown }): Promise<unknown> }>;
+  }).getBidi();
+  await bidi.send({
+    method: 'emulation.setMediaFeaturesOverride',
+    params: { features: { 'prefers-color-scheme': 'dark' } },
+  });
+}
+
 // Chrome: the extension id is assigned at install time, so it is resolved via
 // BiDi webextension.install (no id is written down) and the options page is
 // addressed with the returned id.
-export async function startChromeDriver(): Promise<{ driver: WebDriver; extensionId: string }> {
+export async function startChromeDriver(scheme: PrefersColorScheme = 'light'): Promise<{ driver: WebDriver; extensionId: string }> {
   if (!existsSync(CHROME_ADDON_DIR)) throw new Error('dist/chrome-mv3 is missing: run `make build` first');
   // Fail fast on a version mismatch or an unresolved driver (PBI-204): the
   // message carries both majors and the repair paths instead of letting the
@@ -309,7 +334,7 @@ export async function startChromeDriver(): Promise<{ driver: WebDriver; extensio
   // local runs keep the browser sandbox enabled.
   const bin = chromeBinary();
   if (bin) options.setBinaryPath(bin);
-  options.addArguments(...chromeLaunchArgs(process.env));
+  options.addArguments(...chromeLaunchArgs(process.env, { scheme }));
   options.enableBidi();
   const builder = new Builder().forBrowser('chrome').setChromeOptions(options);
   // The verified binary is the used one: an explicit service path skips the
@@ -320,6 +345,7 @@ export async function startChromeDriver(): Promise<{ driver: WebDriver; extensio
   const driver = await builder.build();
   const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
     .installWebExtension(CHROME_ADDON_DIR);
+  if (scheme === 'dark') await forceChromeDarkScheme(driver);
   return { driver, extensionId: ext.id };
 }
 
@@ -387,6 +413,11 @@ export const OPTIONS_SELECTORS = {
   saveProfileButton: `//*[@id='profiles']//button[text()='保存']`,
   saveAddressButton: `//*[@id='addresses']//button[text()='保存']`,
   deleteProfileButton: `//*[@id='profiles']//button[text()='このプロファイルを削除']`,
+  // #transfer-app: backup reminder and the export button it pairs with.
+  backupNudge: '#transfer-app .backup-nudge',
+  backupLastExport: '#transfer-app .backup-last-export',
+  backupExportButton: `//*[@id='transfer-app']//button[text()='JSON でエクスポート']`,
+  backupNudgeCloseButton: `//*[@id='transfer-app']//*[contains(@class,'backup-nudge')]//button[text()='閉じる']`,
   // #float-root: guide buttons and notices.
   trialBothButton: `//*[@id='float-root']//button[text()='架空の名前と住所を作って試す']`,
   trialProfileButton: `//*[@id='float-root']//button[text()='架空の名前を作って試す']`,
@@ -597,6 +628,13 @@ export async function panelChildTags(driver: WebDriver): Promise<string[]> {
 // wraps it in driver.wait when the banner may still be mounting.
 export async function bannerWrap(driver: WebDriver): Promise<WebElement | null> {
   return firstFromShadow(driver, (root) => firstIn(root, SHADOW_SELECTORS.bannerWrap));
+}
+
+// Preview panel element (.panel): carries the theme tokens the dark-session
+// scenarios read as computed colors. No-wait policy: a single seam read; the
+// caller wraps it in driver.wait when the panel may still be mounting.
+export async function panelElement(driver: WebDriver): Promise<WebElement | null> {
+  return firstFromShadow(driver, (root) => firstIn(root, SHADOW_SELECTORS.panel));
 }
 
 export { By, until };

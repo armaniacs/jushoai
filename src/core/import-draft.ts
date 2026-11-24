@@ -27,6 +27,8 @@ const PROFILE_KEYS: Partial<Record<Item['cls']['category'], keyof Profile>> = {
   tel: 'tel',
   birthday: 'birthday',
   school: 'school',
+  schoolGrade: 'schoolGrade',
+  juku: 'juku',
   company: 'companyName',
   companyNameKana: 'companyNameKana',
   department: 'companyDepartment',

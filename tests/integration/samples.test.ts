@@ -4,9 +4,12 @@ import type { FieldClassifier } from '../../src/core/classifier';
 import type { Category } from '../../src/core/types';
 import { buildPlan } from '../../src/core/planner';
 import type { Address, FieldMeta, Profile } from '../../src/core/types';
+import { buildPreviewRows } from '../../src/content-run';
 import { detectForms } from '../../src/dom/detect-forms';
 import { scanFields } from '../../src/dom/scan-fields';
+import { showPreview } from '../../src/ui/preview';
 import { corpusEntry, expectedFor, type CorpusName } from '../corpus';
+import { attachOpenShadow } from '../helpers';
 import { isEnglishPageText } from '../../src/core/page-language';
 
 const profile: Profile = {
@@ -14,7 +17,7 @@ const profile: Profile = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
-  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
+  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科', schoolGrade: '', juku: '',
   companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
@@ -509,9 +512,137 @@ describe('sample forms end to end', () => {
     'newotani-banquet-contact.html',
     'palacehotel-contact.html',
     'ritz-tokyo-rfp-contact.html',
+    'adachi-gakuen-apply.html',
   ];
   it.each(inScopeFixtures)('%s fills the in-scope fields', async (file) => {
     expect(await planFor(file)).toEqual(expectedFor(file));
+  });
+
+  // 足立学園(実ページ行構造): for無し control-label の兄弟見出しと fieldset 前の h3 が
+  // label/nearby に載ることが人物役割の復活条件。児童側欄は label の児童語だけが根拠
+  // (h3 参加者情報入力に役割語は無い)なので word 信頼度、保護者側欄は label と h3 の
+  // 両方が保護者語を持つので word+area の一致になる。
+  it('adachi-gakuen-apply restores the person roles from the row headings', async () => {
+    const { html } = corpusEntry('adachi-gakuen-apply.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    const judge = new Map(items.map((it) => [it.meta.htmlId, `${it.role}(${it.roleReason})`]));
+    const childIds = ['form:SSeiKanji', 'form:SMeiKanji', 'form:SSeiKana', 'form:j_idt138'];
+    const guardianIds = ['form:j_idt1718', 'form:j_idt1726', 'form:j_idt1748', 'form:j_idt1756'];
+    for (const id of childIds) expect(judge.get(id)).toBe('child(word:child)');
+    for (const id of guardianIds) expect(judge.get(id)).toBe('guardian(word+area:guardian)');
+  });
+
+  // 役割別プロファイルの統合確認。実パイプライン(scanFields→classifyAll→buildPlan、
+  // 分類器は null でルールのみ)で、児童行は児童プロファイル、保護者行は保護者
+  // プロファイルの値になり、本人欄(生年月日・住所・連絡先)は既定のプロファイル
+  // のまま残る。行には役割と使ったプロファイルの出どころが載る。
+  it('adachi-gakuen-apply fills child rows from the child profile and guardian rows from the guardian profile', async () => {
+    const { html } = corpusEntry('adachi-gakuen-apply.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    // 既定割当て(児童と本人=1件目、保護者=2件目)と同じ形: 本人欄は1件目の値。
+    const child: Profile = {
+      ...profile, id: 'p-child', label: '児童',
+      lastName: '鈴木', firstName: '一郎', lastNameKana: 'スズキ', firstNameKana: 'イチロウ',
+    };
+    const guardian: Profile = {
+      ...profile, id: 'p-guardian', label: '保護者',
+      lastName: '田中', firstName: '花子', lastNameKana: 'タナカ', firstNameKana: 'ハナコ',
+    };
+    const plan = buildPlan(items, {
+      profile: child, address,
+      roleProfiles: { self: child, child, guardian },
+    });
+    const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
+    const byHtmlId = new Map(
+      plan.map((p) => [metasById.get(p.fieldId)?.htmlId ?? p.fieldId, p]),
+    );
+    expect(byHtmlId.get('form:SSeiKanji')).toMatchObject({ value: '鈴木', role: 'child', profileId: 'p-child' });
+    expect(byHtmlId.get('form:SMeiKanji')).toMatchObject({ value: '一郎', role: 'child', profileId: 'p-child' });
+    expect(byHtmlId.get('form:SSeiKana')).toMatchObject({ value: 'スズキ', role: 'child', profileId: 'p-child' });
+    expect(byHtmlId.get('form:j_idt138')).toMatchObject({ value: 'イチロウ', role: 'child', profileId: 'p-child' });
+    expect(byHtmlId.get('form:j_idt1718')).toMatchObject({ value: '田中', role: 'guardian', profileId: 'p-guardian' });
+    expect(byHtmlId.get('form:j_idt1726')).toMatchObject({ value: '花子', role: 'guardian', profileId: 'p-guardian' });
+    expect(byHtmlId.get('form:j_idt1748')).toMatchObject({ value: 'タナカ', role: 'guardian', profileId: 'p-guardian' });
+    expect(byHtmlId.get('form:j_idt1756')).toMatchObject({ value: 'ハナコ', role: 'guardian', profileId: 'p-guardian' });
+    // 本人欄(氏名以外)は1件目のプロファイルのまま。既定経路と同じ値。
+    expect(byHtmlId.get('form:j_idt257')).toMatchObject({ value: '5', role: 'self', profileId: 'p-child' });
+    expect(byHtmlId.get('form:j_idt261')).toMatchObject({ value: '7', role: 'self', profileId: 'p-child' });
+    expect(byHtmlId.get('form:zipCodeJukensha')).toMatchObject({ value: '1000001', role: 'self', profileId: 'p-child' });
+    expect(byHtmlId.get('form:j_idt503')).toMatchObject({ value: '090', role: 'self', profileId: 'p-child' });
+    expect(byHtmlId.get('form:j_idt589')).toMatchObject({ value: 'yamada@example.com', role: 'self', profileId: 'p-child' });
+  });
+
+  // 選択欄の表示条件。実パイプラインで作った行を使い、児童と保護者の行が揃い
+  // プロファイルが2件以上のときだけ児童用・保護者用の2択と用途表示になり、
+  // 単一プロファイルや役割マップ無し(既定経路)では従来どおりの1つの選択欄に
+  // 戻ることを pin する。
+  it('adachi-gakuen-apply opens the two role selects with two profiles and keeps one select otherwise', async () => {
+    const { html } = corpusEntry('adachi-gakuen-apply.html');
+    document.body.innerHTML = new DOMParser().parseFromString(html, 'text/html').body.innerHTML;
+    const fields = scanFields(document.body);
+    const items = await classifyAll(fields.map((f) => f.meta), null, {
+      englishPage: isEnglishPageText(document.body.textContent ?? ''),
+    });
+    const child: Profile = {
+      ...profile, id: 'p-child', label: '児童',
+      lastName: '鈴木', firstName: '一郎', lastNameKana: 'スズキ', firstNameKana: 'イチロウ',
+    };
+    const guardian: Profile = {
+      ...profile, id: 'p-guardian', label: '保護者',
+      lastName: '田中', firstName: '花子', lastNameKana: 'タナカ', firstNameKana: 'ハナコ',
+    };
+    const metasById = new Map(fields.map((f) => [f.meta.id, f.meta]));
+    const optsFor = (profiles: Profile[], rows: ReturnType<typeof buildPreviewRows>) => ({
+      rows,
+      addresses: [] as Address[],
+      selectedAddressId: '',
+      onAddressChange: () => {},
+      profiles,
+      selectedProfileId: profiles[0]!.id,
+      onProfileChange: () => {},
+      roleSelection: { onChange: () => {} },
+      onApply: () => {},
+      onCancel: () => {},
+    });
+    const sh = attachOpenShadow();
+    const handles: ReturnType<typeof showPreview>[] = [];
+    try {
+      // 2プロファイル+役割行: 児童用と保護者用の2択 + 用途表示。
+      const plan = buildPlan(items, {
+        profile: child, address,
+        roleProfiles: { self: child, child, guardian },
+      });
+      handles.push(showPreview(optsFor([child, guardian], buildPreviewRows(plan, metasById))));
+      const selects = [...sh.root.querySelectorAll('select')];
+      expect(selects).toHaveLength(2);
+      expect(selects.map((s) => s.closest('label')?.querySelector('span')?.textContent)).toEqual(['児童用', '保護者用']);
+      // 選択欄の現在値は行の出どころ(児童=1件目、保護者=2件目)。
+      expect(selects.map((s) => s.value)).toEqual(['p-child', 'p-guardian']);
+      expect(sh.root.querySelector('.usage')?.textContent).toBe('児童を児童用に、保護者を保護者用につかいます');
+
+      // 単一プロファイル: 従来どおり選択欄なし。
+      handles.push(showPreview(optsFor([child], buildPreviewRows(plan, metasById))));
+      expect(sh.root.querySelectorAll('select')).toHaveLength(0);
+
+      // 役割マップ無し(既定経路の行)+2プロファイル: 1つの選択欄のまま。
+      const defaultPlan = buildPlan(items, { profile: child, address });
+      handles.push(showPreview(optsFor([child, guardian], buildPreviewRows(defaultPlan, metasById))));
+      const single = [...sh.root.querySelectorAll('select')];
+      expect(single).toHaveLength(1);
+      expect(single[0]!.closest('label')?.querySelector('span')?.textContent).toBe('プロファイル');
+    } finally {
+      for (const h of handles) h.close();
+      sh.restore();
+      document.body.innerHTML = '';
+    }
   });
 
   // PBI-211: the corpus fixtures carry their real-page radio groups again

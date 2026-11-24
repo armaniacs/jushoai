@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { StorageReadError, StorageSaveError, isQuotaExceededError, isReady, loadData, loadLastUsed, migrateData, resolveAddressId, resolveLastId, saveData, saveImported, saveLastUsed } from '../src/storage';
+import { StorageReadError, StorageSaveError, isQuotaExceededError, isReady, loadBackupMeta, loadData, loadLastUsed, migrateData, parseBackupMeta, resolveAddressId, resolveLastId, saveBackupMeta, saveData, saveImported, saveLastUsed } from '../src/storage';
 import { exportTransferFile, importTransferFile } from '../src/transfer';
 import { EMPTY_ADDRESS, EMPTY_PROFILE, type StoredData } from '../src/core/types';
 
@@ -241,6 +241,23 @@ describe('lastUsed', () => {
   });
 });
 
+describe('backupMeta', () => {
+  it('round-trips the export and dismissal timestamps', async () => {
+    await saveBackupMeta({ lastExportAt: 1700000000000, dismissedAt: 1700100000000 });
+    expect(await loadBackupMeta()).toEqual({ lastExportAt: 1700000000000, dismissedAt: 1700100000000 });
+  });
+
+  it('returns empty when nothing is stored', async () => {
+    expect(await loadBackupMeta()).toEqual({});
+  });
+
+  it('drops non-timestamp values', () => {
+    expect(parseBackupMeta({ lastExportAt: 'yesterday', dismissedAt: -1 })).toEqual({});
+    expect(parseBackupMeta({ lastExportAt: 1.5 })).toEqual({});
+    expect(parseBackupMeta(null)).toEqual({});
+  });
+});
+
 describe('resolveLastId', () => {
   it('prefers the stored id when it still exists', () => {
     expect(resolveLastId('p2', ['p1', 'p2'])).toBe('p2');
@@ -328,7 +345,8 @@ describe('saveData guard (PBI-23)', () => {
       },
     });
     await saveData(ready);
-    expect(store['jushoai:data']).toEqual(ready);
+    // The envelope stamps the current version even on the degraded path.
+    expect(store['jushoai:data']).toEqual({ version: 1, profiles: ready.profiles, addresses: ready.addresses });
   });
 });
 
@@ -395,11 +413,12 @@ describe('transfer (PBI-117)', () => {
     expect(await loadData()).toEqual(ready);
   });
 
-  it('exports profiles and addresses only, without the last-used state', async () => {
+  it('exports the versioned envelope without the last-used state', async () => {
     await saveData(ready);
     await saveLastUsed({ profileId: 'p1', addressId: '1' });
     const parsed = JSON.parse(await exportTransferFile()) as Record<string, unknown>;
-    expect(Object.keys(parsed).sort()).toEqual(['addresses', 'profiles']);
+    expect(Object.keys(parsed).sort()).toEqual(['addresses', 'profiles', 'version']);
+    expect(parsed.version).toBe(1);
   });
 
   it('rejects broken JSON without touching storage', async () => {
@@ -715,16 +734,20 @@ describe('transfer (PBI-117)', () => {
     });
   });
 
-  it('drops unknown keys from exported entries', async () => {
+  it('keeps unknown keys in exported entries for a newer reader', async () => {
     store['jushoai:data'] = {
-      profiles: [{ ...ready.profiles[0], junk: 'hand-edit' }],
-      addresses: [{ ...ready.addresses[0], exportedAt: '2026-10-21' }],
+      profiles: [{ ...ready.profiles[0], nickname: 'たろちゃん' }],
+      addresses: [{ ...ready.addresses[0], memo: '裏口' }],
     };
     const parsed = JSON.parse(await exportTransferFile()) as {
       profiles: Record<string, unknown>[]; addresses: Record<string, unknown>[];
     };
-    expect(Object.keys(parsed.profiles[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_PROFILE).sort());
-    expect(Object.keys(parsed.addresses[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_ADDRESS).sort());
+    // Known keys stay in template order first; unknown keys ride along so a
+    // newer build can still read what this build does not understand.
+    expect(Object.keys(parsed.profiles[0] ?? {}).slice(0, Object.keys(EMPTY_PROFILE).length).sort())
+      .toEqual(Object.keys(EMPTY_PROFILE).sort());
+    expect(parsed.profiles[0]).toMatchObject({ nickname: 'たろちゃん' });
+    expect(parsed.addresses[0]).toMatchObject({ memo: '裏口' });
   });
 });
 

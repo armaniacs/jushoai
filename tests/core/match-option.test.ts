@@ -13,6 +13,9 @@ describe('matchOption', () => {
     ['ageDecade', '20代', ['10代', '20代'], '20代'],
     ['birthMonth', '5', ['1', '5'], '5'],
     ['birthDay', '7', ['3', '7'], '7'],
+    ['school', '都立日比谷高校', ['都立日比谷高校'], '都立日比谷高校'],
+    ['schoolGrade', '小学3年', ['小学3年'], '小学3年'],
+    ['juku', 'サンプル塾', ['サンプル塾'], 'サンプル塾'],
   ] as [Category, string, string[], string][])('resolves %s %s to %s', (category, raw, texts, expected) => {
     expect(matchOption(category, opts(texts), raw)?.text).toBe(expected);
   });
@@ -22,6 +25,8 @@ describe('matchOption', () => {
     ['gender', '不明', ['男性', '女性']],
     ['ageDecade', '5歳', ['10代', '20代']],
     ['birthMonth', 'なし', ['1', '5']],
+    ['schoolGrade', '小学6年生', ['小6']],
+    ['juku', 'サンプル', ['サンプル塾']],
     ['email', 'a@b.c', ['a@b.c']],
   ] as [Category, string, string[]][])('returns null for %s %s', (category, raw, texts) => {
     expect(matchOption(category, opts(texts), raw)).toBeNull();

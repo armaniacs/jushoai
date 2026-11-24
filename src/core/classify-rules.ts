@@ -13,7 +13,8 @@ import {
 } from './classify-vocab-office';
 import { FIRST, FULL_NAME, isEmailByName, LAST, NAME_EXCLUDE, nameEntries } from './classify-vocab-name';
 import { addressEntries } from './classify-vocab-address';
-import { ageEntries, genderEntries, isSearchBox, WEBSITE } from './classify-vocab-misc';
+import { ageEntries, genderEntries, isJukuSearchWindow, isSearchBox, WEBSITE } from './classify-vocab-misc';
+import { roleOf, withPersonRole } from './person-role';
 
 export const ACCEPT_THRESHOLD = 0.6;
 
@@ -112,6 +113,12 @@ function classifyText(
   if (first && !last) return 'firstName';
   if (last || first || FULL_NAME.test(t) || ((bareKana || kanaTest(t)) && wantsKanaField())) return 'fullName';
   if (/address|住所|addr/.test(t)) return 'addressFull';
+  // 緊急連絡先は電話語（電話・携帯・tel）を含まないため tel 行では拾われず、
+  // 欄が unknown のまま分割も計画も働かなかった。名前段より後に置く: 緊急連絡先氏名
+  // のような複合語は上の氏名判定に優先させ、fullName のまま保つ。
+  // 住所段よりも後にも置く: 緊急連絡先住所のような複合語は住所判定に優先させ、
+  // addressFull のまま保つ（先に置くと tel に取られてしまう）。
+  if (/緊急連絡先/.test(t)) return 'tel';
   return null;
 }
 
@@ -134,12 +141,8 @@ export function classifyField(m: FieldMeta): Classification | null {
   const views = buildFieldNormViews(m);
   const ownText = views.ownText;
   const legendText = views.legendText;
-  // PBI-119: 会社語の欄は company/companyDepartment だけ EXCLUDE から通す。
-  // 緩和境界（カナ文脈・誕生文脈・部署名を除外）は officeEligible が一箇所で持つ。
-  // T3: 単独の役職語は jobTitle だけ EXCLUDE から通す（緩和境界は
-  // jobOfficeEligible が一箇所で持つ）。
-  // PBI-160: 会社名フリガナ（会社・法人系語彙 AND カナ注記の連言）は
-  // officeKanaEligible が own/legend の両側で一箇所に持つ（誕生文脈は除外）。
+  // Relaxation boundary WHY lives in classify-vocab-office.ts;
+  // the gates below only delegate to the eligibility predicates.
   const officeField =
     EXCLUDE.test(ownText) && !officeEligible(ownText) && !officeKanaEligible(ownText, legendText)
     && !jobOfficeEligible(ownText);
@@ -200,6 +203,9 @@ export function classifyField(m: FieldMeta): Classification | null {
   // 先に返す。autocomplete・email 型のページ自身の宣言はこの語彙除外より先
   // に返る（WEBSITE の除外と同一の約束事）。
   if (isSearchBox(m)) return make('unknown', 0.7);
+
+  // combobox の検索補助窓は表示を絞るだけで送信値を保持しないため、juku 語彙より先に confident unknown に停める。
+  if (isJukuSearchWindow(m)) return make('unknown', 0.7);
 
   // PBI-225: label空 × name完全一致の会社名欄。ownText は EXCLUDE語彙
   // （company|corp|...）に触れるため、officeField ゲートより先に返す。
@@ -307,7 +313,13 @@ const SPLIT_POLICIES: SplitPolicy[] = [
 
 // PBI-219: 同ラベル系の grouping キー。splitBy の label 分岐と dropLeftovers
 // で共有する単一の定義で、書式の drift を防ぐ（空キーの畳み込みを含む）。
-const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby}`;
+// 人物役割を先頭に含める：役割の違う欄同士（児童と保護者など）は混ざらず、
+// 同一役割内でのみ分割と絞り込みが働く。
+const sameLabel = (item: Item): string => `${roleOf(item)}\u0000${item.meta.label}\u0000${item.meta.nearby}`;
+
+// Nearby scope grouping key: same owner as sameLabel, without the label part,
+// so address narrowing and part-order splits share one definition.
+const scopeKey = (item: Item): string => `${roleOf(item)}\u0000${item.meta.nearby}`;
 
 // PBI-09: exact不一致で残った同ラベル系tel/zip群は、plannerが欄ごとに
 // 完全値を複製しないようunknown化する。単独欄・正常分割済みは対象外。
@@ -318,7 +330,7 @@ const sameLabel = (meta: FieldMeta): string => `${meta.label}\u0000${meta.nearby
 // 入力は変えず、新しい配列を返す。dropped 済み欄は合成側で先に取り除くため、
 // 旧所在の droppedIds ガードは引数ではなく合成順序で引き継ぐ。
 function dropLeftovers(items: Item[]): Item[] {
-  const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  const out = items.map((i) => ({ ...i, cls: { ...i.cls } }));
   // Reachability note: a same-label zip pair never reaches this unknown-ization —
   // the zip split policy's exact-size-2 retag consumes it earlier in the composition.
   // The branch remains as insurance in case the split policy is ever loosened.
@@ -326,7 +338,7 @@ function dropLeftovers(items: Item[]): Item[] {
     const groups = new Map<string, number[]>();
     out.forEach((it, i) => {
       if (it.cls.category !== leftover) return;
-      const k = sameLabel(it.meta);
+      const k = sameLabel(it);
       groups.set(k, [...(groups.get(k) ?? []), i]);
     });
     for (const idx of groups.values()) {
@@ -348,17 +360,17 @@ function dropLeftovers(items: Item[]): Item[] {
 // PBI-219: refineWithDrops の (d) 住所絞り込みを切り出した純粋関数。
 // 入力は変えず、新しい配列を返す。
 function narrowAddress(items: Item[]): Item[] {
-  const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  const out = items.map((i) => ({ ...i, cls: { ...i.cls } }));
   const scopeOf = new Map<string, { hasCity: boolean; hasPref: boolean }>();
   for (const it of out) {
-    const g = scopeOf.get(it.meta.nearby) ?? { hasCity: false, hasPref: false };
+    const g = scopeOf.get(scopeKey(it)) ?? { hasCity: false, hasPref: false };
     if (it.cls.category === 'city') g.hasCity = true;
     if (it.cls.category === 'prefecture') g.hasPref = true;
-    scopeOf.set(it.meta.nearby, g);
+    scopeOf.set(scopeKey(it), g);
   }
   for (const it of out) {
     if (it.cls.category !== 'addressFull') continue;
-    const g = scopeOf.get(it.meta.nearby);
+    const g = scopeOf.get(scopeKey(it));
     if (g?.hasCity) it.cls.category = 'street';
     else if (g?.hasPref) it.cls.category = 'addressNoPref';
   }
@@ -366,7 +378,7 @@ function narrowAddress(items: Item[]): Item[] {
 }
 
 function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] } {
-  const out = items.map((i) => ({ meta: i.meta, cls: { ...i.cls } }));
+  const out = items.map((i) => ({ ...i, cls: { ...i.cls } }));
   // outはmapで作ったdenseな実体配列であり、indices()産の添字は常に有効。
   // 個別の!ではなくこのat()に集約してundefinedを一箇所で narrowing する。
   const at = (i: number): Item => {
@@ -391,13 +403,13 @@ function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] }
   const splitBy = (
     cat: Category,
     cats: Category[],
-    key: (meta: FieldMeta) => string,
+    key: (item: Item) => string,
     accept: (idx: number[], size: number) => boolean,
     dropOversize: boolean,
   ) => {
     const groups = new Map<string, number[]>();
     for (const i of indices(cat)) {
-      const k = key(at(i).meta);
+      const k = key(at(i));
       groups.set(k, [...(groups.get(k) ?? []), i]);
     }
     for (const idx of groups.values()) {
@@ -430,7 +442,7 @@ function refineWithDrops(items: Item[]): { items: Item[]; dropped: SplitDrop[] }
     if (policy.grouping === 'label') {
       splitBy(policy.from, policy.to, sameLabel, exactSize, true);
     } else {
-      splitBy(policy.from, policy.to, (meta) => meta.nearby, inPartOrder(policy.parts ?? []), false);
+      splitBy(policy.from, policy.to, scopeKey, inPartOrder(policy.parts ?? []), false);
     }
   }
 
@@ -510,7 +522,8 @@ export function classifyRulePipelineWithTrace(
   }));
   const initialUnconfident = started.filter((r) => !isConfident(r.cls)).map((r) => r.meta);
   const resolved = resolveKana(started);
-  const refined = refineClassifications(resolved);
+  const withRoles = resolved.map(withPersonRole);
+  const refined = refineClassifications(withRoles);
   const before = new Map(resolved.map((i) => [i.meta.id, i.cls.category]));
   const afterIds = new Set(refined.map((i) => i.meta.id));
   const items = opts.englishPage === true ? applyEnglishPage(refined) : refined;

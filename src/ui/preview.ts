@@ -1,5 +1,5 @@
 import type { PlanStatus } from '../core/planner';
-import type { Address, Profile } from '../core/types';
+import type { Address, PersonRole, Profile } from '../core/types';
 import { fillResultLabel, type FillSummary } from '../dom/fill-plan';
 import { isMeasurable } from '../dom/geometry';
 import { OVERLAY_CSS } from './overlay';
@@ -34,6 +34,11 @@ export interface PreviewRow {
   // counts toward the apply button's state on purpose: those rows will fill,
   // so the shortened preview stays usable when the visible rows are warnings.
   synthetic?: true;
+  // 行の出どころ(役割別計画のときだけ載る): the row's person role and the id of
+  // the profile actually used for the value. The preview labels the per-role
+  // usage; unset roles ride the default profile's id.
+  role?: PersonRole;
+  profileId?: string;
 }
 
 export interface PreviewOptions {
@@ -44,6 +49,12 @@ export interface PreviewOptions {
   profiles: Profile[];
   selectedProfileId: string;
   onProfileChange(id: string): void;
+  // 役割別の選択(任意)。児童と保護者の両方の行がありプロファイルが2件以上の
+  // ときだけ(hasRoleSelect の gate)、児童用・保護者用の2つの選択欄と用途表示を
+  // 出す。切替えで行が変わるので、onChange の先で setRows すること。
+  roleSelection?: {
+    onChange(role: PersonRole, id: string): void;
+  };
   // PBI-122: the second argument carries the abbreviation approvals — the
   // field ids whose candidate the user explicitly checked in the preview.
   onApply(sendFeedback: boolean, approvedAbbrevs: ReadonlySet<string>): void;
@@ -111,6 +122,7 @@ const CSS = `
   .feedback { display: inline-flex; align-items: center; gap: 4px; font-size: 12px;
     color: var(--jushoai-muted); cursor: pointer; }
   .feedback input { margin: 0; }
+  .usage { margin: 0 0 8px; font-size: 11px; color: var(--jushoai-muted); }
   button:disabled { opacity: .5; cursor: default; }
 `;
 
@@ -144,6 +156,24 @@ const CANDIDATE_TEXT: Record<PreviewRowCandidate['kind'], string> = {
   abbrev: '略記して入れる',
   assist: '補助候補を入れる',
 };
+
+// 役割別選択欄の文言。選択欄の見出しと用途表示の両方がこれを使う。
+const ROLE_CAPTIONS: Record<PersonRole, string> = {
+  child: '児童用',
+  guardian: '保護者用',
+  self: '本人用',
+};
+// 役割別選択欄に出す役割(並び順どおり)。
+const ROLE_SELECT_ROLES: readonly PersonRole[] = ['child', 'guardian'];
+
+// 役割別の選択欄を出す条件(単一の編集点)。児童と保護者の両方の行があり、
+// プロファイルが2件以上のときだけ2択 UI にする。単一プロファイルや役割が
+// 1種のフォームでは従来どおりの1つの選択欄のまま。役割を増やすときはこの
+// 関数と ROLE_SELECT_ROLES・ROLE_CAPTIONS だけ直す。束ねキーは行の role で、
+// 見出し文言には寄らない。
+export const hasRoleSelect = (rows: readonly PreviewRow[], profiles: readonly Profile[]): boolean =>
+  profiles.length >= 2
+  && ROLE_SELECT_ROLES.every((role) => rows.some((r) => r.role === role));
 
 // PBI-157: the caller side of the row seam. Approval bookkeeping (the apply
 // callback reads the checked boxes back) and the fix entry live with setRows;
@@ -229,7 +259,35 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   title.textContent = '入力内容の確認';
   panel.append(title);
 
-  if (opts.profiles.length > 1) {
+  // 役割別の選択欄と用途表示。選択欄の現在値は行に載っている実際に使われた
+  // プロファイル id(解決済み)から取り、役割マップに解決できない id が残って
+  // いても表示は行に合わせる。用途表示は選択のたびに選択欄の値から作り直す。
+  const roleSelection = opts.roleSelection;
+  const roleSelects: { role: PersonRole; select: HTMLSelectElement }[] = [];
+  let usage: HTMLParagraphElement | null = null;
+  const syncUsage = (): void => {
+    if (!usage) return;
+    const labelOf = (role: PersonRole): string => {
+      const id = roleSelects.find((s) => s.role === role)!.select.value;
+      return opts.profiles.find((p) => p.id === id)?.label || '選択中のプロファイル';
+    };
+    usage.textContent = `${ROLE_SELECT_ROLES.map((role) => `${labelOf(role)}を${ROLE_CAPTIONS[role]}に`).join('、')}つかいます`;
+  };
+  if (roleSelection && hasRoleSelect(opts.rows, opts.profiles)) {
+    for (const role of ROLE_SELECT_ROLES) {
+      const current = opts.rows.find((r) => r.role === role)?.profileId ?? opts.profiles[0]!.id;
+      const rendered = renderSelect(ROLE_CAPTIONS[role], opts.profiles, current, (id) => {
+        roleSelection.onChange(role, id);
+        syncUsage();
+      });
+      roleSelects.push({ role, select: rendered.select });
+      panel.append(rendered.label);
+    }
+    usage = document.createElement('p');
+    usage.className = 'usage';
+    syncUsage();
+    panel.append(usage);
+  } else if (opts.profiles.length > 1) {
     panel.append(renderSelect('プロファイル', opts.profiles, opts.selectedProfileId, opts.onProfileChange).label);
   }
 
@@ -489,13 +547,18 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const showUndoResult = (restored: number, skipped: number): void => {
     const actions = document.createElement('div');
     actions.className = 'actions';
-    actions.append(doneButton());
+    const done = doneButton();
+    actions.append(done);
     swapToResult(
       skipped > 0
         ? `元に戻しました（${restored}件）。追記後の${skipped}件はそのままです`
         : `元に戻しました（${restored}件）`,
       actions,
     );
+    // The pressed undo button is gone with the result view, so keyboard focus
+    // would strand on the page behind without this move (same rationale as
+    // the report focus in showResult).
+    done.focus();
   };
 
   return { setRows, setAddressId, showResult, showUndoResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };

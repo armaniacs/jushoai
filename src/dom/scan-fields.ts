@@ -53,7 +53,75 @@ function labelOf(el: Control): string {
     const node = el.ownerDocument.getElementById(id);
     if (node) parts.push(clip(textWithoutControls(node)));
   }
+  if (parts.length === 0) {
+    // for無し label.control-label の兄弟見出し(Bootstrap form-horizontal の行構造)。
+    // 既存経路が1つでも届いていれば開かない: 欄自身の宣言が兄弟見出しに勝る。
+    const heading = siblingHeadingOf(el);
+    if (heading) {
+      parts.push(clip(textWithoutControls(heading)));
+      parts.push(...staticMarkersBefore(el).map(clip));
+    }
+  }
   return clean(parts.join(' '));
+}
+
+// 兄弟見出しの登昇は欄自身とその親(入力欄ラッパー)まで: 実ページでは
+// label.control-label がラッパーの前兄弟に置かれる。それより上は別行になり得るため辿らない。
+const SIBLING_LABEL_CLIMB = 2;
+// 1レベルあたりの前兄弟の遡り上限。実ページの行は欄ごとに desktop/mobile の
+// マーカーdivと兄弟欄のラッパーを挟み、2欄目の氏名欄では見出し label が6兄弟
+// 先にある(markers2 + 兄弟ラッパー1 + そのmarkers2 + label)。行内のどこにも
+// 見出しが無ければ上限で打ち切る: 行をまたぐ登昇はしない。
+const SIBLING_WALK_LIMIT = 8;
+const isHeadingLabel = (el: Element | null | undefined): el is HTMLLabelElement =>
+  el !== null && el !== undefined && el.tagName === 'LABEL' && el.classList.contains('control-label');
+
+function siblingHeadingOf(el: Control): Element | null {
+  let node: Element | null = el;
+  for (let n = 0; node && n < SIBLING_LABEL_CLIMB; n++) {
+    let sib = node.previousElementSibling;
+    for (let w = 0; sib && w < SIBLING_WALK_LIMIT; w++, sib = sib.previousElementSibling) {
+      if (isHeadingLabel(sib)) return sib;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
+// 行内の div.form-control-static は欄名マーカー(実ページの姓：/名：/セイ：/メイ：)と
+// 区切り(電話行の「－」)の両方に使われる。文字を1つも持たないテキストは区切りなので
+// 欄名に加えない: 加えると欄ごとのラベルが行内で揃わなくなり、兄弟欄の分割
+// (同ラベルtel群など)の前提が崩れる。
+const MARKER_CLASS = 'form-control-static';
+const MARKER_HAS_NAME = /[\p{L}\p{N}]/u;
+// マーカー遡及は2兄弟まで(実ページは欄の直前に desktop/mobile の2個)。前の欄で
+// 打ち止め: それより手前のマーカーは別欄のもの(姓：は前欄、名：は次欄に置かれる)。
+const MAX_MARKER_SIBLINGS = 2;
+
+// 欄の直前のマーカーdivを連続で拾う。欄自身の前兄弟を使い切ったときだけ親
+// (入力欄ラッパー)の前兄弟へ続く: 実ページは入力欄ごとのラッパーの直前に
+// マーカー群(desktop/mobile 重複)が置かれる。マーカー以外の要素で打ち止める
+// のは欄ごとの帰属を保つため: 兄弟ラッパーの手前で止まり、前の欄のマーカーを
+// 取らない。同一文言の重複(desktop/mobile)は1回だけ足す。
+function staticMarkersBefore(el: Control): string[] {
+  const out: string[] = [];
+  const seen = new Set<string>();
+  let node: Element | null = el;
+  for (let level = 0; node && level < SIBLING_LABEL_CLIMB; level++) {
+    let sib = node.previousElementSibling;
+    for (let n = 0; sib && n < MAX_MARKER_SIBLINGS; n++, sib = sib.previousElementSibling) {
+      if (!sib.classList.contains(MARKER_CLASS)) return out;
+      const text = clean(sib.textContent);
+      if (text && MARKER_HAS_NAME.test(text) && !seen.has(text)) {
+        seen.add(text);
+        out.unshift(text);
+      }
+    }
+    // このレベルをマーカー以外に当たらず使い切ったときだけ親へ(欄がラッパーの最初の子)。
+    if (sib) break;
+    node = node.parentElement;
+  }
+  return out;
 }
 
 function nearbyOf(el: Control): string {
@@ -62,8 +130,17 @@ function nearbyOf(el: Control): string {
   let sib = el.closest('dd')?.previousElementSibling ?? null;
   while (sib && sib.tagName !== 'DT') sib = sib.previousElementSibling;
   if (sib) return textWithoutControls(sib).slice(0, 60);
-  const legend = el.closest('fieldset')?.querySelector('legend');
-  return legend ? textWithoutControls(legend).slice(0, 60) : '';
+  const fieldset = el.closest('fieldset');
+  const legend = fieldset?.querySelector('legend');
+  if (legend) return textWithoutControls(legend).slice(0, 60);
+  // legend 無しの fieldset は前兄弟の見出し(h1-h6)で区画を読む(実ページ: h3+fieldset)。
+  // fieldset が無い欄には開かない: 見出しと欄の区画関係が保証されないため。
+  const HEADING = /^H[1-6]$/;
+  let head = fieldset?.previousElementSibling ?? null;
+  for (let n = 0; head && n < SIBLING_LABEL_CLIMB; n++, head = head.previousElementSibling) {
+    if (HEADING.test(head.tagName)) return textWithoutControls(head).slice(0, 60);
+  }
+  return '';
 }
 
 export const containerOf = (el: Control, doc: Document): Element =>

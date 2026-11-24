@@ -120,4 +120,21 @@ describe('loadGuides', () => {
     await writeAll({ ...distinct, 'ja/privacy': guide('p', ['A', 'B'], 'abc') });
     await expect(loadGuides(dir, '/')).rejects.toThrow(/ja\/privacy\.md.*order must be a number/);
   });
+
+  it('rewrites relative guide markdown links per language while preserving parity', async () => {
+    const privacyOrder = GUIDE_SLUGS.indexOf('privacy') + 1;
+    const withLink = (lang: string) =>
+      `---\ntitle: privacy ${lang}\ndescription: d\norder: ${privacyOrder}\n---\n# privacy ${lang}\n## A\n[s](./safety.md#a)\n## B\ntext\n`;
+    await writeAll({
+      'ja/privacy': withLink('ja'),
+      'en/privacy': withLink('en'),
+    });
+    const guides = await loadGuides(dir, '/JushoAI/');
+    const ja = guides.find((g) => g.lang === 'ja' && g.slug === 'privacy')!;
+    const en = guides.find((g) => g.lang === 'en' && g.slug === 'privacy')!;
+    expect(ja.html).toContain('href="/JushoAI/guides/safety/#a"');
+    expect(en.html).toContain('href="/JushoAI/en/guides/safety/#a"');
+    expect(ja.links).toEqual(['./safety.md#a']);
+    expect(en.links).toEqual(['./safety.md#a']);
+  });
 });

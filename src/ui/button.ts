@@ -79,6 +79,10 @@ const CSS = `
        keep the gesture from scrolling the page or reading as a dead zone. */
     touch-action: none; cursor: grab; }
   .wrap:hover, .wrap:focus-within, .wrap:active { background: var(--jushoai-banner-bg-active); }
+  /* The button reset above (all: initial) also clears the UA focus outline,
+     so keyboard focus would be invisible without an explicit indicator.
+     White keeps the indicator readable against the banner in both themes. */
+  button:focus-visible, .dismiss:focus-visible { outline: 2px solid var(--jushoai-banner-fg); outline-offset: 2px; }
   .wrap:active { cursor: grabbing; }
   button { all: initial; cursor: inherit; font: inherit; color: inherit; }
   .badge { font-weight: 400; font-size: 11px; padding: 2px 6px; border-radius: 4px;

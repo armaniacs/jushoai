@@ -106,6 +106,50 @@ const LEDGER = {
       '(no name/id) x2 (button): unaddressable (exclude)',
     ],
   },
+  'adachi-gakuen-apply.html': {
+    expected: {
+      'form:SSeiKanji': '山田',
+      'form:SMeiKanji': '太郎',
+      // The child kana pair splits cleanly like the parent pair below: the
+      // セイ field reads lastNameKana through the ssei name signal,
+      // the メイ field reads firstNameKana through its label.
+      'form:SSeiKana': 'ヤマダ',
+      'form:j_idt138': 'タロウ',
+      'form:j_idt257': '5',
+      'form:j_idt261': '7',
+      'form:zipCodeJukensha': '1000001',
+      'form:tfknJukensha': '東京都',
+      'form:j_idt335': '千代田区',
+      'form:j_idt353': '千代田1-1',
+      'form:j_idt371': '千代田ビル101',
+      'form:j_idt503': '090',
+      'form:j_idt507': '1234',
+      'form:j_idt511': '5678',
+      // 緊急連絡先2行(児童/保護者)は電話語が無くても tel 語彙で判定され、
+      // 電話番号行と同じく同一labelの3欄が tel1/tel2/tel3 に分割されて載る。
+      'form:j_idt553': '090',
+      'form:j_idt557': '1234',
+      'form:j_idt561': '5678',
+      'form:j_idt589': 'yamada@example.com',
+      'form:j_idt661': '都立日比谷高校',
+      'form:j_idt1718': '山田',
+      'form:j_idt1726': '太郎',
+      'form:j_idt1748': 'ヤマダ',
+      'form:j_idt1756': 'タロウ',
+      'form:j_idt2150': '090',
+      'form:j_idt2154': '1234',
+      'form:j_idt2158': '5678',
+    },
+    excluded: [
+      'form:j_idt253 (select): 生年月日の年 with a single 2014 option, never a plan row (selects fill only prefecture/birthMonth/birthDay/birthEra; exclude)',
+      'form:j_idt1374 (その他の塾)/form:j_idt1622:0:j_idt1650 (学年select): profile に値が無いため warn-no-value で載らない',
+      'textCombo (input): 塾コンボの検索補助窓、placeholder の塾+検索で confident unknown に停泊 (送信値は隣の隠し select が持つ)',
+      'form:shussinTodofukenCd / form:shussinShikuchosonCd (select): 学校文脈の絞り込み欄、cascade-filter-own で confident unknown',
+      'form:jukuShikuchosonCd / form:jukuCd (select): 塾コンボの2段目以降、juku-hidden-own で confident unknown',
+      'form:shusshinSchoolCd (select): school 分類だが option が空で warn-no-option',
+      '#combobox / form:jukuTodofukenCd (hidden): 塾コンボの隠し部は isHidden でスキャン対象外 (fixture に入れない)',
+    ],
+  },
   'age-decade-select-form.html': {
     expected: {
       age: '1', fullname: '山田　太郎',
@@ -193,7 +237,8 @@ const LEDGER = {
     excluded: [
       'parent-name/student-name (text): 氏名 labels resolve to fullName',
       'name-institution (text): Institution reads as the school vocabulary (PBI-212), so the label stops misreading as a person name',
-      'student-nationality/current-grade (text): stay unclassified (LLM fallback)',
+      'student-nationality (text): stays unclassified (LLM fallback)',
+      'current-grade (text): reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'student-birth (date): out of scan in this fixture family',
       'desired-enrollment/desired-grade/dormitory-accommodation/japanese-proficiency/jlpt-level/studied-japanese (radio): bundled per name; stay unclassified (radio policy)',
       'your-message (textarea): out of scan; acceptance-sample (checkbox): out of scope (skip fixed)',
@@ -257,7 +302,8 @@ const LEDGER = {
       'field_976 (text): School Website is a URL field; PBI-212 removes website fields from classification (no fill, the school name never rides a URL box)',
       'field_944 (text): Prefecture / State reads as the overseas state field (address4)',
       "field_963 (text): Date of Birth has pattern MM/DD/YYYY and the ISO birthday does not match it; PBI-210 turns the row into warn-pattern (value empty, not injected even on approval), so the former intentional pin '1990-05-07' (PBI-210 rationale) no longer fills",
-      'field_923/927/956 (select): grade/year/enrollment selects, stay unclassified (LLM fallback)',
+      'field_923/927 (select): grade selects read as schoolGrade; profile に値が無いため warn-no-value で載らない',
+      'field_956 (select): enrollment select stays unclassified (LLM fallback)',
       'field_926 (select): School Year reads as school; a school select has no matching option (warn-no-option)',
       'field_928 (checkbox): out of scope (skip fixed); field_955 (textarea): out of scan',
       'submission_uuid (hidden): empty-submit shim or server state, never a fill target (exclude)',
@@ -402,7 +448,8 @@ const LEDGER = {
       'student[parent][0][field_attributes][84]/[85] (select): 1st/2nd Nationality, stay unclassified (LLM fallback)',
       'student[field_attributes][234537] (radio): passport Yes/No, bundled per name; stays unclassified (radio policy)',
       'student[field_attributes][231630] (select): Current Place of Residence country list, stays unclassified (LLM fallback)',
-      'student[enrollment_year]/[grade]/[221734]/[campus_id]/[221735] (select): entry year/group/term/campus/reason, stay unclassified (LLM fallback)',
+      'student[grade] (select): Preferred Year Group reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
+      'student[enrollment_year]/[221734]/[campus_id]/[221735] (select): entry year/group/term/campus/reason, stay unclassified (LLM fallback)',
       'student[field_attributes][231629]/[124830] (text): Please specify/Current Year Group, stay unclassified (LLM fallback)',
       'student[field_attributes][374968]/[374969] (select): referral source selects, stay unclassified (LLM fallback)',
       'student[parent][1][*] second guardian block: duplicate of the parent block above, trimmed (exclude)',
@@ -496,9 +543,9 @@ const LEDGER = {
       'field_5970949 (select): ご来場者数, stays unclassified (LLM fallback)',
       'field_5969383_sei/mei (text): お子さまのフリガナ, plan blocked by the real katakana pattern (warn-pattern, see expected comment)',
       'field_5969385_m/_d (select): only a `--` option, correctly warn-no-option',
-      'field_5969386 (select): お子さまの学年, stays unclassified (LLM fallback)',
+      'field_5969386 (select): お子さまの学年 reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'field_5969388 (radio): 兄弟姉妹 有り/無し, bundled per name; stays unclassified (radio policy)',
-      'field_5969389 (select): 兄弟姉妹学年, stays unclassified (LLM fallback)',
+      'field_5969389 (select): 兄弟姉妹学年 reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'field_5969394 (select): 最寄りの教室, stays unclassified (LLM fallback)',
       'field_5969395 (select): きっかけ, stays unclassified (LLM fallback)',
       'field_5969396/5969397/5969398 (text): conditional detail fields, stay unclassified (LLM fallback)',
@@ -1485,7 +1532,7 @@ const LEDGER = {
       'school_1 (select): 高校所在地県名 with real prefecture options, stays unclassified (LLM fallback)',
       'school_2 (select): kana index for the 高校検索 helper, stays unclassified (LLM fallback)',
       'koukou (select): genuinely empty on the real page (JS-populated), correctly warn-no-option',
-      'grade (select): 学年 with real options, stays unclassified (LLM fallback)',
+      'grade (select): 学年 with real options reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'yobikou/yobikou_k (text): 予備校・塾名/校舎, no profile value, correctly unfilled',
       'jyouken14_2 (text): conditional その他 detail field, stays unclassified (LLM fallback)',
       'school_btn (button): action element, never a fill target (exclude)',
@@ -2286,7 +2333,8 @@ const LEDGER = {
       'addr': '千代田区千代田1-1 千代田ビル101',
     },
     excluded: [
-      'prof/pref (select): only a `--` option, correctly warn-no-option',
+      'prof (select): お子様の学年 reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
+      'pref (select): only a `--` option, correctly warn-no-option',
       'kinds[1]/kinds[2]/kinds[6]/kinds[9]/kinds[8] (checkbox): out of scope (skip fixed)',
       '(no name/id) x3 (button): unaddressable (exclude)',
       'school (hidden): empty-submit shim or server state, never a fill target (exclude)',
@@ -2453,6 +2501,12 @@ const LEDGER = {
       // 生徒氏名も同一プロファイル値で fill (yotsuya parent と同形、honest pin)。
       'student_last_name': '山田',
       'student_first_name': '太郎',
+      // 生徒・保護者のカナ対は役割内で fullNameKana 2-split が効き、
+      // 空 label 同士でも混ざらず分割される (honest pin。人物別の値引きは将来PBIで)。
+      'student_last_kana': 'ヤマダ',
+      'student_first_kana': 'タロウ',
+      'guardian_last_kana': 'ヤマダ',
+      'guardian_first_kana': 'タロウ',
       'zip1': '100',
       'zip2': '0001',
       'city': '千代田区',
@@ -2461,9 +2515,7 @@ const LEDGER = {
       'email': 'yamada@example.com',
     },
     excluded: [
-      'student_last_kana/student_first_kana/guardian_last_kana/guardian_first_kana (text): bare カナ欄。placeholder セイ/メイのみでは未分類 (LLM fallback; eikoh と同型)',
-      'tel x2 (tel/text): 同名2欄の重複 + bare。未分類のまま (LLM fallback; duplicate-name tel candidate)',
-      'tel1/tel2/tel3 (text): bare 3-split (placeholder 000/0000) で未分類 (tel-split-by-name candidate, same as No.1)',
+      'tel x2 (tel/text) + tel1/tel2/tel3 (text): bare 5 欄は本人役割のまま同束ねになり oversized-group で落ちる (duplicate-name tel candidate; tel-split-by-name candidate)',
       'gakunen/pref/selapplicant/selClass/taiken_time/kyouka/selexam (select): only a `--` option, correctly warn-no-option',
       'taiken_date (text): bare 体験希望日 with no signal, stays unclassified (LLM fallback)',
       'toggle (checkbox): out of scope (skip fixed)',
@@ -2524,7 +2576,8 @@ const LEDGER = {
       'friend_name': '山田太郎',
     },
     excluded: [
-      'grade/relationship/school_type/opportunity_select (select): 実選択肢つきだが stay unclassified (LLM fallback)',
+      'grade (select): 学年語彙で schoolGrade に載るが profile に値が無いため warn-no-value で載らない',
+      'relationship/school_type/opportunity_select (select): 実選択肢つきだが stay unclassified (LLM fallback)',
       'keyword_input (text): 教室検索欄。placeholder 教室名、駅名など、stays unclassified (same as forum.html s)',
       'zip_address_search/zip_school_search/keyword_search (button): action element, never a fill target (exclude)',
       'selected_school (hidden): empty-submit shim or server state, never a fill target (exclude)',
@@ -2607,8 +2660,10 @@ const LEDGER = {
       'inq_tri_grp': '1990',
     },
     excluded: [
-      'class_region1/class_name1/grade3/birthday:y/m/d/relationship (select): only a `--` option, correctly warn-no-option',
-      'grade3_other/relationship_o/inq_tri_other (text): bare conditional detail fields, stay unclassified (LLM fallback)',
+      'grade3 (select): 学年語彙で schoolGrade に載るが profile に値が無いため warn-no-value で載らない',
+      'class_region1/class_name1/birthday:y/m/d/relationship (select): only a `--` option, correctly warn-no-option',
+      'grade3_other (text): 学年語彙で schoolGrade に載るが profile に値が無いため warn-no-value で載らない',
+      'relationship_o/inq_tri_other (text): bare conditional detail fields, stay unclassified (LLM fallback)',
       'reg0/nam0/class_ID1 (hidden): empty-submit shim or server state, never a fill target (exclude)',
       'sex2 x3 (radio): grouped as one field by name; only gender/decade groups fill (matrix etc. stay skipped)',
       '(no name/id) (button): unaddressable (exclude)',
@@ -2626,20 +2681,22 @@ const LEDGER = {
       // 臨海セミナー資料請求 (WordPress CF7)。form_group_grade のみ実選択肢
       // (学年 13件) を実ページどおり復元。course/prefecture/classroom は
       // 実ページでも空 (JS 連動) のため '--' のまま。
-      'form_name_student': '山田',
-      'form_name_student_kana': 'ヤマダ',
+      // 生徒氏名は児童役割、兄弟姉妹氏名は本人役割のため cross しない。
+      // 空 label 同士の fullName 2-split は役割内でだけ働き、ここでは不発で
+      // 両者とも結合値が入る (honest pin。人物別の値引きは将来PBIで)。
+      'form_name_student': '山田 太郎',
+      'form_name_student_kana': 'ヤマダ タロウ',
       'form_post_code': '100-0001',
       'form_address1': '千代田区千代田1-1',
       'form_address2': '千代田ビル101',
       'form_cf7rs_tel': '090-1234-5678',
       'form_cf7rs_mail': 'yamada@example.com',
-      // 兄弟姉妹氏名もプロファイル値で fill (honest pin。兄弟と本人の区別は将来PBIで)。
-      'form_name_brother': '太郎',
-      'form_name_brother_kana': 'タロウ',
+      'form_name_brother': '山田 太郎',
+      'form_name_brother_kana': 'ヤマダ タロウ',
     },
     excluded: [
       's (text): site-search field, stays unclassified (same as forum.html s)',
-      'form_group_grade (select): 実選択肢つき (学年) だが stay unclassified (LLM fallback)',
+      'form_group_grade (select): 実選択肢つき (学年) reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'form_group_course/form_group_prefecture/form_group_classroom (select): 実ページでも空 (JS 連動のため)、correctly warn-no-option',
       'form_cf7rs_ad_set_text (text): bare 広告セット欄 with no signal, stays unclassified (LLM fallback)',
       '(no name/id) x3 (button): unaddressable (exclude)',
@@ -2772,7 +2829,7 @@ const LEDGER = {
       'birthday': '1990-05-07',
     },
     excluded: [
-      'grade (select): 実選択肢つき (学年 17件) だが stay unclassified (LLM fallback)',
+      'grade (select): 実選択肢つき (学年 17件) reads as schoolGrade; profile に値が無いため warn-no-value で載らない',
       'gakubu (select): 実ページでも空、correctly warn-no-option',
       'kousha_area/kousha (select): 連動のみの placeholder 選択肢、correctly warn-no-option',
       'tel1/tel2/tel3 (text): bare 3-split with no signal, stay unclassified (tel-split-by-name candidate)',
@@ -2797,8 +2854,11 @@ const LEDGER = {
       // 文字化けを正規の日本語に復元済み (No.14 京進と同形)。
       'student_sei': '山田',
       'student_mei': '太郎',
-      // student/guardian のカナ欄 (seiKana/meiKana) は未分類のまま
-      // (LLM fallback; keishin の fam_name2 解決と対照的。suffix 読分け候補)。
+      // student/guardian のカナ欄 (seiKana/meiKana) は sei/mei+`kana` 接尾辞で
+      // lastNameKana/firstNameKana に載る (PBI-267。placeholder えいしん起点の
+      // hiragana 帰属で やまだ/たろう が入る)。
+      'student_seiKana': 'やまだ',
+      'student_meiKana': 'たろう',
       'school': '都立日比谷高校',
       // gender radio (男性/女性) は実値つきで復元。gender 群に載り値 2。
       'gender': '2',
@@ -2816,6 +2876,8 @@ const LEDGER = {
       // 保護者欄も同一プロファイル値で fill (honest pin)。
       'guardian_sei': '山田',
       'guardian_mei': '太郎',
+      'guardian_seiKana': 'やまだ',
+      'guardian_meiKana': 'たろう',
     },
     excluded: [
       'school_year/entrance_exam/placeArea/placeName/birthday_y/m/d/pref/relationship/reason (select): only a `--` option, correctly warn-no-option',
@@ -2853,7 +2915,8 @@ const LEDGER = {
       'schoolSelectionOther': '都立日比谷高校',
     },
     excluded: [
-      'axisPrefectureCode/axisSchoolId/grade/addressPrefectureCode (select): Vue カスタムで実ページでも空、correctly warn-no-option',
+      'grade (select): 学年語彙で schoolGrade に載るが profile に値が無いため warn-no-value で載らない (Vue カスタムで実ページでも空)',
+      'axisPrefectureCode/axisSchoolId/addressPrefectureCode (select): Vue カスタムで実ページでも空、correctly warn-no-option',
       'dobMonth/dobDate (text): pattern (leading-zero 不可) に profile 05/07 が合わず warn-pattern で未注入 (honest pin)',
       'studyIssuesOther/learningGoalsOther (text): bare その他欄。schoolSelectionOther のみ解決する非対称 (LLM fallback)',
       'v-0-0-1/v-0-0-3/v-0-0-11:男性/v-0-0-11:女性/v-0-0-15/v-0-0-20/v-0-0-28:学校の定期テストで点が取れない/v-0-0-28:家庭学習が出来ていない/v-0-0-28:模試で偏差値が低迷している/v-0-0-28:部活動ばかりで勉強していない/v-0-0-28:塾があわない・成績が上がらない/v-0-0-36:受験・志望校合格対策/v-0-0-36:学校の定期テスト対策/v-0-0-36:模試・成績アップ対策/v-0-0-36:他塾内容の理解度アップ/v-0-0-36:学校の授業内容の理解度アップ/v-0-0-36:学習習慣づくり/v-0-0-45:個別指導形態・学習スタイル/v-0-0-45:授業料と諸費用/v-0-0-45:学習内容やテキスト/v-0-0-45:先生の質/v-0-0-45:通塾学校例 (button): action element, never a fill target (exclude)',

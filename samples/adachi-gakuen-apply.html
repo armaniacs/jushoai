@@ -1,0 +1,250 @@
+<!doctype html>
+<!--
+  Minimal reproduction of the 足立学園中学校 event application form (mirai-compass
+  JSF + Bootstrap). The live page renders client-side, so `make addurl` cannot
+  fetch it — no target-url.md entry by design.
+  Rows mirror the real page: div.form-group > div.row > span > div.col-sm-12
+  whose children are the for-less label.control-label heading (with a nested
+  label.label-danger 必須 badge where the page shows one), the per-field
+  div.form-control-static name markers OUTSIDE the input wrappers (desktop
+  hidden-xs and mobile visible-xs duplicates of the same 姓：/名：/セイ：/メイ：
+  text; the 漢字 rows prefix the desktop copy with U+3000), and one wrapper div
+  per input (div.col-sm-3 holding the input plus an empty div.small
+  form-control-static mp0 helper). The tel row wraps each part in its own
+  div.col-xs-2 col-sm-2 and puts the － separators between wrappers as
+  div.form-control-static; the 生年月日 row gives each select its own wrapper.
+  The two sections are h3 headings + fieldset (参加者情報入力 / 保護者等情報入力)
+  with no legend, and the page has no <label for> association anywhere; the
+  #textCombo combo window (placeholder 塾を検索（入力検索可）, autocomplete off)
+  carries the page's only placeholder. Values are stripped, and the restored
+  rows carry no value attributes: the 塾 combo visible part (textCombo + the
+  empty-label form:jukuShikuchosonCd / form:jukuCd rows) and the 出身/小学校
+  cascade (the label 小学校 row's form:shussinTodofukenCd with its prefecture
+  options, then the empty-label form:shussinShikuchosonCd /
+  form:shusshinSchoolCd rows) ride the real div.form-group rows here. The
+  hidden combo parts (#combobox select, form:jukuTodofukenCd input) stay
+  trimmed (isHidden territory).
+-->
+<html lang="ja"><meta charset="utf-8"><title>足立学園中学校 イベント申込 (school)</title>
+<form id="form" name="form" class="form-horizontal">
+  <h3>参加者情報入力</h3>
+  <fieldset>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">児童氏名(漢字)&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-1 form-control-static hidden-xs">　姓：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">姓：</div>
+        <div class="col-sm-3"><input id="form:SSeiKanji" name="form:SSeiKanji" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-sm-3 form-control-static hidden-xs">　名：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">名：</div>
+        <div class="col-sm-3"><input id="form:SMeiKanji" name="form:SMeiKanji" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">児童氏名(カナ)&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3 form-control-static hidden-xs">セイ：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">セイ：</div>
+        <div class="col-sm-3"><input id="form:SSeiKana" name="form:SSeiKana" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-sm-3 form-control-static hidden-xs">メイ：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">メイ：</div>
+        <div class="col-sm-3"><input id="form:j_idt138" name="form:j_idt138" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">生年月日&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-4 col-sm-2 col-md-2">
+          <select id="form:j_idt253" name="form:j_idt253" class="form-control input-sm"><option value="">年</option><option value="2014">2014年</option></select>
+        </div>
+        <div class="col-xs-3 col-sm-2 col-md-2">
+          <select id="form:j_idt257" name="form:j_idt257" class="form-control input-sm"><option value="">月</option><option value="5">5月</option><option value="11">11月</option></select>
+        </div>
+        <div class="col-xs-3 col-sm-2 col-md-2">
+          <select id="form:j_idt261" name="form:j_idt261" class="form-control input-sm"><option value="">日</option><option value="7">7日</option><option value="11">11日</option></select>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">郵便番号&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-5">
+          <input id="form:zipCodeJukensha" name="form:zipCodeJukensha" type="text" class="form-control input-sm" maxlength="7">
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">都道府県&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-5">
+          <select id="form:tfknJukensha" name="form:tfknJukensha" class="form-control input-sm"><option value="">選んでください</option><option value="東京都">東京都</option><option value="大阪府">大阪府</option></select>
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">市区町村&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-5">
+          <input id="form:j_idt335" name="form:j_idt335" type="text" class="form-control input-sm" maxlength="60">
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">町名・番地&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-5">
+          <input id="form:j_idt353" name="form:j_idt353" type="text" class="form-control input-sm" maxlength="60">
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">建物名・部屋番号</label>
+        <div class="col-sm-5">
+          <input id="form:j_idt371" name="form:j_idt371" type="text" class="form-control input-sm" maxlength="60">
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">電話番号&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-2 col-sm-2"><input id="form:j_idt503" name="form:j_idt503" type="text" class="form-control input-sm" maxlength="5">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input id="form:j_idt507" name="form:j_idt507" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input id="form:j_idt511" name="form:j_idt511" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <span id="form:areaTelKinkyuJukensha"><div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">緊急連絡先&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt553" type="text" class="form-control input-sm" maxlength="5">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt557" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt561" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div></span>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">メールアドレス&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-5">
+          <input id="form:j_idt589" name="form:j_idt589" type="text" class="form-control input-sm" maxlength="256">
+        </div></div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">小学校&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3"><select id="form:shussinTodofukenCd" name="form:shussinTodofukenCd" class="form-control input-sm"><option>選んでください</option><option>茨城県</option><option>栃木県</option><option>群馬県</option><option>埼玉県</option><option>千葉県</option><option>東京都</option><option>神奈川県</option><option>海外（日本人学校・在外教育施設）</option><option>その他（２段目も選択してください）</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:shussinShikuchosonCd" name="form:shussinShikuchosonCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:shusshinSchoolCd" name="form:shusshinSchoolCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">その他の学校</label>
+        <div class="col-sm-3"><input name="form:j_idt661" type="text" class="form-control input-sm" maxlength="70">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">塾</label>
+        <div class="col-sm-3"><input id="textCombo" type="text" class="form-control input-sm" placeholder="塾を検索（入力検索可）" autocomplete="off">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:jukuShikuchosonCd" name="form:jukuShikuchosonCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label"></label>
+        <div class="col-sm-3"><select id="form:jukuCd" name="form:jukuCd" class="form-control input-sm"><option>選んでください</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">その他の塾</label>
+        <div class="col-sm-3"><input name="form:j_idt1374" type="text" class="form-control input-sm">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">学年&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3"><select name="form:j_idt1622:0:j_idt1650" class="form-control input-sm"><option value="">選んでください</option><option value="小学６年生">小学６年生</option><option value="小学５年生">小学５年生</option><option value="小学４年生">小学４年生</option><option value="小学３年生以下">小学３年生以下</option></select>
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+  </fieldset>
+  <h3>保護者等情報入力</h3>
+  <fieldset>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">保護者氏名(漢字)&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-1 form-control-static hidden-xs">　姓：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">姓：</div>
+        <div class="col-sm-3"><input id="form:j_idt1718" name="form:j_idt1718" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-sm-3 form-control-static hidden-xs">　名：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">名：</div>
+        <div class="col-sm-3"><input id="form:j_idt1726" name="form:j_idt1726" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">保護者氏名(カナ)&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-sm-3 form-control-static hidden-xs">セイ：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">セイ：</div>
+        <div class="col-sm-3"><input id="form:j_idt1748" name="form:j_idt1748" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-sm-3 form-control-static hidden-xs">メイ：</div>
+        <div class="col-xs-12 col-sm-3 form-control-static visible-xs">メイ：</div>
+        <div class="col-sm-3"><input id="form:j_idt1756" name="form:j_idt1756" type="text" class="form-control input-sm" maxlength="50">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div>
+    <span id="form:areaTelKinkyuHogosha"><div class="form-group">
+      <div class="row"><span class=""><div class="col-sm-12"><label class="col-xs-12 col-sm-3 col-md-3 control-label">緊急連絡先&nbsp;<label class="label label-danger">必須</label></label>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2150" type="text" class="form-control input-sm" maxlength="5">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2154" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+        <div class="col-xs-1 col-xs-1 form-control-static"><span>－</span></div>
+        <div class="col-xs-2 col-sm-2"><input name="form:j_idt2158" type="text" class="form-control input-sm" maxlength="4">
+          <div class="small form-control-static mp0"><span class="small"></span></div>
+        </div>
+      </div></span></div>
+    </div></span>
+  </fieldset>
+</form>
+</html>

@@ -14,9 +14,10 @@
 
 <!-- README-I18N:END -->
 
-- ドキュメント: https://armaniacs.github.io/jushoai/
+- ユーザーガイド（Markdown で読む）: [docs/user-guide.md](./docs/user-guide.md)
+- ドキュメント（Web / GitHub Pages）: https://armaniacs.github.io/jushoai/
 - 要望・不具合: [Issue を作成する](https://github.com/armaniacs/jushoai/issues/new/choose)（機能の要望、入力できなかったフォーム、不具合のフォームが開く）
-- ライセンス: GPL-3.0-only（[LICENSE](LICENSE)、条件の要旨は[ドキュメント](https://armaniacs.github.io/jushoai/guides/license/)）
+- ライセンス: GPL-3.0-only（[LICENSE](./LICENSE)、条件の要旨は[ライセンス](./site/content/ja/license.md) / [Web 版](https://armaniacs.github.io/jushoai/guides/license/)）
 
 ## インストール
 
@@ -29,23 +30,37 @@ Chrome は [Chrome ウェブストア](https://chromewebstore.google.com/detail/
 
 ## 使い方
 
-1. 拡張機能の設定ページでプロファイル（10 件まで）と住所を登録する。住所は使うプロファイルに紐付けられる
+1. 拡張機能の設定ページでプロファイル（最大 10 件）と住所（最大 10 件）を登録する（別々に保存でき、住所は使うプロファイルに紐付けられる）。実データを入れる前に試したいときは、設定ページ上部の「架空の名前と住所を作って試す」から架空のサンプルデータですぐ始められる
 2. フォームの付近に出る「JushoAI で入力」を押す
-3. プレビューで内容を確認し、「入力する」を押す
+3. プレビュー（「入力内容の確認」）で先頭の件数（`x / y 欄に入力できます（承認後に注入します）`）と欄・値の一覧を確認し、「入力する」を押す
+4. 入力後は結果画面（「入力結果」）が表示され、直後であれば「元に戻す」で JushoAI が入れた欄だけを元の空状態に戻せる
 
-ボタンは入力欄と重ならない位置に出る。それでも重なって邪魔なときは、ボタンをドラッグ（またはフォーカスして矢印キー）でどかせる。ボタンの背景は半透明のため、重なっても下の入力が見える。
+ボタンは入力欄と重ならない位置に出る。それでも重なって邪魔なときは、ボタンをドラッグ（またはフォーカスして矢印キー）でどかせる。ボタンの背景は半透明のため、重なっても下の入力が見える。ボタン・プレビュー・ダイアログは OS のダークモードに自動で追従する。
 
-ツールバーのアイコンから、登録内容と使用中のプロファイルを確認できる。入力済みの欄は上書きせず、最大文字数を超える値は入力せずに警告する。
+ツールバーのアイコンから、登録内容と使用中のプロファイルを確認できる。入力済みの欄は上書きせず、最大文字数を超える値や欄の `pattern` に合わない値は入力せずに警告する。
+
+### 主な便利機能
+
+- **児童用・保護者用の役割別プロファイル選択**: 学校や塾の申込フォームなど児童向けと保護者向けの欄が両方ある画面で役割を自動判定し、別々のプロファイルから 1 回で入力できる
+- **保存せず 1 回だけ使える「ゲストで入力」**: ツールバーから設定に保存しない 1 回限りの入力ができ、タブ内のメモリだけで完結する
+- **再訪時の短縮プレビューと URL ごとの候補提示**: 同じフォーム再訪時は前回と同じ行を `前回と同じ` に折りたたみ、ホストごとに前回使ったプロファイルを優先候補に出す
+- **複数ページ申込での入力値引き継ぎ**: 同じタブ内の後続ページへ、前のページで入力した値を候補として引き継ぐ（タブ内メモリ限定）
+- **補助候補の提案（チェック承認制）**: 文字数超過時の建物名略記候補（`略記して入れる`）、カナ未登録時の端末内読み辞書候補、郵便番号からの都道府県・市区町村候補（`補助候補を入れる`）を提示する
+- **1 欄だけの入力と「直す」での学習**: `Alt+J` または右クリック「JushoAI: この欄に入力」で 1 欄だけ入力できるほか、プレビューの「直す」で教えた対応付けは次回から優先され、AI にも送らない
+- **フォームから取り込む・JSON 移行**: 開いているフォームの値から下書きを取り込めるほか、JSON エクスポート／インポートで別環境へ移行できる
+- **幅広い欄のサポート**: 会社名・部署・役職、学校名・学部学科・学校の学年・塾名、生年月日 1 欄型（`type=date`）、FAX 番号、3 分割の緊急連絡先欄にも対応する
+
+詳しくは [docs/user-guide.md](./docs/user-guide.md) と [シーン別の使いこなし](./site/content/ja/scenarios.md) を参照。
 
 ### 起動しないURL
 
-設定ページの「起動しないURL」で URL を登録すると、その URL で始まるページでは「JushoAI で入力」を出さない。表計算やメールなど、入力の補完が無関係なページでボタンが出なくなる。
+表計算やメールなど入力補完が不要なページでは、設定ページの「起動しないURL」またはフォーム上のボタンから登録して動かさないようにできる。
 
-- 例: `https://docs.google.com/spreadsheets/` を登録すると、その配下のスプレッドシートでは起動しない。同じホストの `https://docs.google.com/document/` は対象外
-- 一致は登録した文字列で始まるかどうかで判定する（大文字小文字は区別しない）
-- 登録した URL を開いたままでも、保存すると反映される（ボタンが消える）
+- **ページ上のボタンから登録**: 「JushoAI で入力」の右上にある「X」（`このボタンを隠す`）を押すとボタンが隠れ、登録ダイアログが開く。「このページだけ」または「この配下全体」（ルート URL では「このサイト全体」）を選んで登録でき、15 秒で自動的に閉じる（ポインターを重ねている間やフォーカス中は閉じない）。隠した直後は「元に戻す」、登録直後は「登録を取り消す」で取り消せる
+- **一致の仕組み**: オリジンとパス単位で判定する（大文字小文字は区別しない）。たとえば `https://example.com/pay` は `https://example.com/payment` には一致しない。`https://docs.google.com/spreadsheets/` を登録すると配下のスプレッドシートで起動しなくなり、同じホストの `https://docs.google.com/document/` には影響しない
+- **反映と上限**: 保存すると開いているタブにもすぐ反映される（ボタンが消える）。`http://` / `https://` の URL を最大 100 件まで登録できる
 
-手順と画面の説明は[ツールバーとフォームへの入力](https://armaniacs.github.io/jushoai/guides/popup-and-fill/)にある。
+手順と画面の説明は [フォームへの入力とツールバー](./site/content/ja/popup-and-fill.md)（[Web 版](https://armaniacs.github.io/jushoai/guides/popup-and-fill/)）にある。
 
 ## 対応しないもの
 
@@ -54,7 +69,7 @@ Chrome は [Chrome ウェブストア](https://chromewebstore.google.com/detail/
 - ページ読み込み時の自動入力（プレビュー確認なしに注入しないため。「JushoAI で入力」のボタンから実行する）
 - クロスオリジン iframe 内のフォーム（埋め込みウィジェットなど。調査の結果、対象外としている）
 - PDF・印刷帳票
-- チェックボックス、性別・年代以外のラジオボタン（欄の一覧は[対応する入力欄](https://armaniacs.github.io/jushoai/guides/supported-fields/)）
+- チェックボックス、性別・年代以外のラジオボタン（サイト内検索窓なども誤入力防止のため意図的に飛ばす。欄の一覧は [対応する入力欄](./site/content/ja/supported-fields.md) / [Web 版](https://armaniacs.github.io/jushoai/guides/supported-fields/)）
 
 ## 要望・不具合の連絡
 
@@ -62,7 +77,7 @@ GitHub の Issue で受け付けている。[Issue を作成する](https://gith
 
 ## ライセンス
 
-GNU General Public License v3.0 のみ（GPL-3.0-only）。Copyright (C) 2026 armaniacs。使用・複製・改変・再配布ができ、配布するときは同じ GPLv3 の条件でソースコードを提供する。全文は [LICENSE](LICENSE)。
+GNU General Public License v3.0 のみ（GPL-3.0-only）。Copyright (C) 2026 armaniacs。使用・複製・改変・再配布ができ、配布するときは同じ GPLv3 の条件でソースコードを提供する。全文は [LICENSE](./LICENSE)。
 
 ## AI 判定を使うには
 
@@ -70,11 +85,11 @@ GNU General Public License v3.0 のみ（GPL-3.0-only）。Copyright (C) 2026 ar
 
 - OpenAI 互換 API: ベース URL・モデル名・API キーを入力する。OpenAI / Groq / Mistral / Ollama / LM Studio はプリセットからベース URL を埋められる
 - Google Gemini: モデル名・API キーを入力する
-- ブラウザ内蔵 AI: Chrome（Gemini Nano）または Edge（Phi-mini）。フラグの有効化と再起動が必要
+- ブラウザ内蔵 AI: Chrome（Gemini Nano）または Edge（Phi-mini）。フラグの有効化と再起動が必要（Firefox では利用できない）
   - Chrome: `chrome://flags/#prompt-api-for-gemini-nano`
   - Edge: `edge://flags/#edge-llm-prompt-api-for-phi-mini`
 
-保存すると、選んだプロバイダへの通信の許可をブラウザが確認する。許可しないと AI は使われない。接続テストで設定を確認できる。
+保存すると、選んだプロバイダへの通信の許可をブラウザが確認する。許可しないと AI は使われない。OpenAI 互換 API で新しい接続先を保存したときは、初回送信前に設定ページで DNS 解決された IP アドレスを確認し、「この接続先を承認する」を押すまで何も送らない。設定後に接続テストで動作を確認できる。
 
 OpenAI のリーズニング系モデルや json_schema に対応しないサーバーには、自動で互換リクエストに切り替えて 1 回だけ再試行する。
 
@@ -82,17 +97,19 @@ OpenAI のリーズニング系モデルや json_schema に対応しないサー
 
 ### 送信されるデータ
 
-通信が発生するのは「JushoAI で入力」を押したときだけで、ページを開いただけでは何も送らない。AI を使う設定にした場合、ルールで判定できない入力欄のメタデータが、選んだプロバイダに送られる。内訳は name・label・placeholder・見出し・type・maxlength である。メタデータにはページに表示されている文字（ラベルや見出し）が含まれるため、ページ上に表示されている個人情報が送信内容に含まれることがある。プロファイルの値や、欄にすでに入っている値は送らない。ブラウザ内蔵 AI は端末内で動作し、外部には何も送らない。API キーは暗号化して保存する（ストレージだけが流出しても復号できないが、この拡張機能自身のコードからは読み出せる）。
+通信が発生するのは「JushoAI で入力」「AI で分析」を押したときと接続テストのときだけで、ページを開いただけでは何も送らない。AI を使う設定にした場合、ルールで判定できない入力欄のメタデータ（name・id・label・placeholder・見出し・type・maxlength）だけが送られ、プロファイルの値や欄に入っている値は送らない。さらにルールで判定できない欄を AI に送る前には「AI判定で送る内容」パネルが開き、送る予定のメタデータを確認できる。個人情報らしい文言を含む欄は「（要確認）」付きで既定で「送らない」になっており行ごとに切り替えられ、「ルールのみで入力する」を選べば何も送らず続行できる。プレビューの「直す」で教えた欄（覚えた対応付け）も AI に送らない。
+
+なお、ラベルや見出しにはページ上の文言が含まれるため、ページに表示されている個人情報が含まれることがある。ブラウザ内蔵 AI は端末内で動作し、外部には何も送らない。API キーは暗号化して保存する（ストレージだけが流出しても復号できないが、この拡張機能自身のコードからは読み出せる）。
 
 Firefox では、プロバイダの保存時にホストの許可と合わせて、ウェブサイトのコンテンツ（欄のメタデータ）を送ることへの同意（データ収集の権限）を求める。
 
 Ollama を使う場合は、Ollama 側の `OLLAMA_ORIGINS` に `chrome-extension://<拡張機能の ID>` を許可する。Firefox では `moz-extension://<UUID>` を許可する。UUID は設定ページに表示され、インストールごとに変わる。
 
-状態は「JushoAI で入力」の横のバッジに表示され、押すと原因と対処のガイドが開く。
+状態は「JushoAI で入力」の横のバッジに表示され、押すと原因と対処のガイドが開く。設定の詳細は [AI プロバイダの設定](./site/content/ja/ai-providers.md) にある。
 
 ### 通信の監査ログ
 
-AI を呼び出すたびに、モデルに送った内容と応答がこの端末に記録される。設定ページの左メニュー「通信の監査ログ」で、一覧の確認、TSV ダウンロード、削除ができる。記録は 7 日間だけ保存される。詳しくは[プライバシーと送信データ](https://armaniacs.github.io/jushoai/guides/privacy/)を参照。
+AI を呼び出すたびに、モデルに送った内容と応答がこの端末に記録される。設定ページの左メニュー「通信の監査ログ」で、一覧の確認、TSV ダウンロード、削除ができる。記録は 7 日間だけ保存される。詳しくは [プライバシーと送信データ](./site/content/ja/privacy.md)（[Web 版](https://armaniacs.github.io/jushoai/guides/privacy/)）を参照。
 
 ## 開発者向け
 
@@ -130,6 +147,10 @@ Firefox 向けの検査は `make test` に含まれない。manifest の検査�
     npm ci
     make zip-firefox   # dist/jushoai-<バージョン>-firefox.zip と -sources.zip
 
+    # Release の zip と SHA256SUMS を同じ場所に置き、照合する
+    sha256sum jushoai-<バージョン>-firefox.zip
+    sha256sum -c SHA256SUMS
+
 ### 手動確認（Firefox）
 
 実 Firefox での自動テスト（`make e2e-firefox`）が通っても、次の項目は自動化していないため手で確認する。
@@ -161,4 +182,4 @@ Firefox 向けの検査は `make test` に含まれない。manifest の検査�
 
 ### ドキュメントサイト
 
-`site/` に日本語と英語のサイトのソースがある。ガイドは `site/content/{ja,en}/*.md`、ランディングの文言は `site/i18n/{ja,en}.json`。日英で見出しの数や文言のキーが違うとビルドが失敗する。`make site` で `site-dist/` に生成して検査し、`make site-serve` で確認する。公開は `.github/workflows/pages.yml`（main への push で GitHub Pages にデプロイ）。リポジトリ側で Pages の Source を GitHub Actions にする必要がある。
+`site/` に日本語と英語のサイトのソースがある。ガイドは `site/content/{ja,en}/*.md`、ランディングの文言は `site/i18n/{ja,en}.json`。ガイド内のリンクには相対パス `./<slug>.md` を使うため、同じファイルを GitHub の Markdown 表示でも GitHub Pages でもそのまま辿れる（Markdown 版の入口は `docs/user-guide.md` と `docs/user-guide.en.md`）。日英で見出しの数や文言のキーが違うとビルドが失敗する。`make site` で `site-dist/` に生成して検査し、`make site-serve` で確認する。公開は `.github/workflows/pages.yml`（main への push で GitHub Pages にデプロイ）。リポジトリ側で Pages の Source を GitHub Actions にする必要がある。

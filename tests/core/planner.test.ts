@@ -8,7 +8,7 @@ const profile: Profile = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
   gender: '女性',
-  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科',
+  birthday: '1990-05-07', school: '都立日比谷高校', department: '普通科', schoolGrade: '', juku: '',
   companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '課長',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'yamada@example.com', tel: '09012345678',
@@ -474,6 +474,73 @@ describe('school', () => {
   });
 });
 
+describe('school grade and juku', () => {
+  const graded = { ...profile, school: '都立日比谷高校', schoolGrade: '小学3年', juku: 'サンプル塾' };
+
+  it('fills juku text and warns when blank', () => {
+    expect(buildPlan([item('juku')], { profile: graded, address }).map((p) => p.value)).toEqual(['サンプル塾']);
+    expect(buildPlan([item('juku')], { profile, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('fills schoolGrade text and warns when blank', () => {
+    expect(buildPlan([item('schoolGrade')], { profile: graded, address }).map((p) => p.value)).toEqual(['小学3年']);
+    expect(buildPlan([item('schoolGrade')], { profile, address })).toEqual([
+      expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
+    ]);
+  });
+
+  it('resolves school, schoolGrade, and juku selects to the matching option', () => {
+    const schoolOpts = [{ value: '', text: '選択してください' }, { value: 'hibiya', text: '都立日比谷高校' }];
+    const gradeOpts = [{ value: '', text: '選択してください' }, { value: '小3', text: '小学3年' }];
+    const jukuOpts = [{ value: '', text: '選択してください' }, { value: 'sample', text: 'サンプル塾' }];
+    const plan = buildPlan(
+      [
+        item('school', { tag: 'select', options: schoolOpts }),
+        item('schoolGrade', { tag: 'select', options: gradeOpts }),
+        item('juku', { tag: 'select', options: jukuOpts }),
+      ],
+      { profile: graded, address },
+    );
+    expect(plan.map((p) => [p.value, p.display, p.status])).toEqual([
+      ['hibiya', '都立日比谷高校', 'ok'],
+      ['小3', '小学3年', 'ok'],
+      ['sample', 'サンプル塾', 'ok'],
+    ]);
+  });
+
+  it('warns warn-no-option on select mismatch and keeps filled selects', () => {
+    const noMatch = buildPlan(
+      [item('schoolGrade', { tag: 'select', options: [{ value: '', text: '--' }, { value: 'x', text: '中学1年' }] })],
+      { profile: graded, address },
+    );
+    expect(noMatch.map((p) => p.status)).toEqual(['warn-no-option']);
+    const filled = buildPlan(
+      [item('juku', {
+        tag: 'select', value: 'sample',
+        options: [{ value: '', text: '選択してください' }, { value: 'sample', text: 'サンプル塾' }],
+      })],
+      { profile: graded, address },
+    );
+    expect(filled.map((p) => p.status)).toEqual(['filled']);
+  });
+
+  it('leaves a schoolGrade radio without a row', () => {
+    const plan = buildPlan(
+      [{
+        meta: makeMeta({
+          tag: 'radio', type: 'radio', name: 'grade', label: '学年',
+          options: [{ value: '小3', text: '小学3年' }],
+        }),
+        cls: { category: 'schoolGrade', confidence: 0.7, source: 'rule' },
+      }],
+      { profile: graded, address },
+    );
+    expect(plan).toEqual([]);
+  });
+});
+
 describe('company (PBI-119)', () => {
   it('fills company name and department, marks warn-no-value when blank', () => {
     const vals = buildPlan([item('company'), item('companyDepartment')], { profile, address }).map((p) => p.value);
@@ -766,6 +833,8 @@ describe('value row table (PBI-218)', () => {
       birthday: '1990-05-07',
       school: '都立日比谷高校',
       department: '普通科',
+      schoolGrade: '',
+      juku: '',
       company: '株式会社サンプル',
       companyDepartment: '開発部',
       jobTitle: '課長',
@@ -798,7 +867,7 @@ describe('value row table (PBI-218)', () => {
         'email', 'tel', 'tel1', 'tel2', 'tel3', 'fax', 'zip', 'zip1', 'zip2',
         'prefecture', 'city', 'street', 'building', 'addressFull', 'addressNoPref',
         'birthYear', 'birthMonth', 'birthDay', 'birthEra', 'birthday',
-        'school', 'department', 'company', 'companyDepartment', 'jobTitle', 'companyNameKana'].sort(),
+        'school', 'department', 'schoolGrade', 'juku', 'company', 'companyDepartment', 'jobTitle', 'companyNameKana'].sort(),
     );
     const byCat = new Map(VALUE_ROWS.map((r) => [r.category, r] as const));
     // The old ABBREVIATABLE set, now the abbreviatable column.
@@ -815,5 +884,88 @@ describe('value row table (PBI-218)', () => {
     // A new row is one table entry: read resolves through buildPlan with no
     // switch fallback even for a category the old code never assisted.
     expect(byCat.get('companyNameKana')!.assist).toBe(null);
+  });
+});
+
+describe('role profiles', () => {
+  // 児童・保護者で姓を違えて値の出どころを曖昧にしない(同一姓だと区別できない)。
+  const childProfile: Profile = {
+    ...profile, id: 'p-child', label: '児童',
+    lastName: '鈴木', firstName: '一郎', lastNameKana: 'スズキ', firstNameKana: 'イチロウ',
+  };
+  const guardianProfile: Profile = {
+    ...profile, id: 'p-guardian', label: '保護者',
+    lastName: '田中', firstName: '花子', lastNameKana: 'タナカ', firstNameKana: 'ハナコ',
+  };
+  const roleItem = (category: Category, role: Item['role'], kanaKind?: KanaKind): Item => ({
+    ...item(category, {}, kanaKind),
+    ...(role !== undefined ? { role } : {}),
+  });
+
+  it('fills child rows with the child profile, guardian rows with the guardian profile, self rows with the default', () => {
+    const plan = buildPlan(
+      [
+        roleItem('lastName', 'child'),
+        roleItem('firstName', 'child'),
+        roleItem('lastName', 'guardian'),
+        roleItem('firstName', 'guardian'),
+        roleItem('lastName', 'self'),
+        roleItem('fullName', 'self'),
+      ],
+      { profile, address, roleProfiles: { child: childProfile, guardian: guardianProfile } },
+    );
+    expect(plan.map((p) => p.value)).toEqual(['鈴木', '一郎', '田中', '花子', '山田', '山田 太郎']);
+  });
+
+  it('formats role kana through the role profile kana kind', () => {
+    const plan = buildPlan([roleItem('lastNameKana', 'child', 'hiragana')], {
+      profile, address, roleProfiles: { child: childProfile },
+    });
+    expect(plan[0]!.value).toBe('すずき');
+  });
+
+  it('falls back to the default profile for roles the map does not carry', () => {
+    const plan = buildPlan(
+      [roleItem('lastName', 'child'), roleItem('lastName', 'guardian'), roleItem('lastName', undefined), roleItem('lastName', 'self')],
+      { profile, address, roleProfiles: { child: childProfile } },
+    );
+    expect(plan.map((p) => p.value)).toEqual(['鈴木', '山田', '山田', '山田']);
+  });
+
+  it('lets an explicit self entry take over self rows (uniform role resolution)', () => {
+    const plan = buildPlan([roleItem('lastName', 'self')], {
+      profile, address, roleProfiles: { self: childProfile },
+    });
+    expect(plan.map((p) => p.value)).toEqual(['鈴木']);
+  });
+
+  it('stamps role and profileId on rows only when a role map is given', () => {
+    const items = [roleItem('lastName', 'child'), roleItem('lastName', 'guardian'), roleItem('lastName', undefined)];
+    const mapped = buildPlan(items, { profile, address, roleProfiles: { child: childProfile } });
+    expect(mapped[0]).toMatchObject({ role: 'child', profileId: 'p-child' });
+    // 未載の役割は既定プロファイルに倒れるので、出どころも既定の id を示す。
+    expect(mapped[1]).toMatchObject({ role: 'guardian', profileId: 'p1' });
+    expect(mapped[2]).toMatchObject({ role: 'self', profileId: 'p1' });
+    const plain = buildPlan(items, { profile, address });
+    for (const p of plain) {
+      expect('role' in p).toBe(false);
+      expect('profileId' in p).toBe(false);
+    }
+  });
+
+  it('keeps the address common across roles', () => {
+    const expected = buildPlan([item('addressFull')], { profile, address })[0]!.value;
+    const plan = buildPlan([roleItem('addressFull', 'child')], {
+      profile, address, roleProfiles: { child: childProfile, guardian: guardianProfile },
+    });
+    expect(plan[0]!.value).toBe(expected);
+    expect(plan[0]!.value).toBe('東京都千代田区千代田1-1 千代田ビル101');
+  });
+
+  it('warns with warn-no-value when the role profile lacks the value', () => {
+    const plan = buildPlan([roleItem('lastName', 'child')], {
+      profile, address, roleProfiles: { child: { ...childProfile, lastName: '' } },
+    });
+    expect(plan[0]).toMatchObject({ value: '', status: 'warn-no-value', role: 'child', profileId: 'p-child' });
   });
 });

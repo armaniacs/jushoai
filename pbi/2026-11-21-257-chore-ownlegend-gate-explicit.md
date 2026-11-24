@@ -30,10 +30,10 @@ Scenario: 既存の語彙ペアは挙動不変である
 ```
 
 ## 受け入れ基準
-- [ ] ownLegend の legend 側ゲート既定値 (`legendExtra ?? extra`) が契約コメントまたは型で明示されている (例: "legendGate defaults to extra — the own-side gate applies to the legend side unless overridden")
-- [ ] 既定の暗黙適用が望ましくない語彙ペアが存在する場合、legendExtra を明示する変更は挙動が変わるため本 PBI では行わない (発見したら記録のみ)
-- [ ] 意味論不変 (全 ownLegend 呼び出し・`make eval` 3 passed)
-- [ ] `make check` 緑
+- [x] ownLegend の legend 側ゲート既定値 (`legendExtra ?? extra`) が契約コメントまたは型で明示されている (例: "legendGate defaults to extra — the own-side gate applies to the legend side unless overridden")
+- [x] 既定の暗黙適用が望ましくない語彙ペアが存在する場合、legendExtra を明示する変更は挙動が変わるため本 PBI では行わない (発見したら記録のみ)
+- [x] 意味論不変 (全 ownLegend 呼び出し・`make eval` 3 passed)
+- [x] `make check` 緑
 
 ## テスト戦略（t_wadaスタイル）
 
@@ -79,9 +79,9 @@ grep -rn "ownLegend(" src/core/classify-vocab-*.ts | wc -l
 - 「暗黙適用が望ましくないペア」を発見したら、legendExtra を足す変更は挙動変更 (eval pin が red になりうる) — 本 PBI 内でやらず、eval pin 更新の意図を記録した別 PBI にする
 
 ## Definition of Done
-- [ ] 全 BDD シナリオが自動テストとして実装されパスする (契約 pin 2-3 件)
-- [ ] テストカバレッジが基準を満たす (ownLegend 契約 + 既存 own/legend pin)
+- [x] 全 BDD シナリオが自動テストとして実装されパスする (契約 pin 2-3 件)
+- [x] テストカバレッジが基準を満たす (ownLegend 契約 + 既存 own/legend pin)
 - [ ] コードレビュー完了（GitHub PR での approve を必須とする）
-- [ ] リファクタリング完了（該当なし — 第一案はコメント + pin）
-- [ ] ロールバック手段の検討（該当なし — pin 追加とコメント。revert で完結）
-- [ ] ドキュメント更新済み（CONTEXT.md の dispatch キット項に ownLegend の gate 既定を 1 文追記）
+- [x] リファクタリング完了（該当なし — 第一案はコメント + pin）
+- [x] ロールバック手段の検討（該当なし — pin 追加とコメント。revert で完結）
+- [x] ドキュメント更新済み（CONTEXT.md の dispatch キット項に ownLegend の gate 既定を 1 文追記）

@@ -25,6 +25,9 @@ vi.mock('../../src/storage', () => ({
   newId: () => 'test-id',
   loadData: async () => ({ profiles: [], addresses: [] }),
   saveData: async () => {},
+  loadFormatInfo: async () => ({ version: 1, needsUpdate: false }),
+  loadBackupMeta: async () => ({ lastExportAt: 1 }),
+  saveBackupMeta: async () => {},
 }));
 
 vi.mock('../../src/entrypoints/options/ai-section', () => ({
@@ -102,7 +105,7 @@ function blankProfile(id: string): Profile {
     id, label: '',
     lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
-    birthday: '', school: '', department: '',
+    birthday: '', school: '', department: '', schoolGrade: '', juku: '',
     companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '',
   };
@@ -119,7 +122,7 @@ function filledProfile(id: string): Profile {
     id, label: '家',
     lastName: '鈴木', firstName: '', lastNameKana: '', firstNameKana: 'スズキ',
     lastNameRomaji: '', firstNameRomaji: '', gender: '',
-    birthday: '', school: '', department: '経済学部',
+    birthday: '', school: '', department: '経済学部', schoolGrade: '', juku: '',
     companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
     email: '', tel: '0312345678',
   };
@@ -156,7 +159,7 @@ const SAMPLE_P: Omit<Profile, 'id'> = {
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: '', firstNameRomaji: '',
   gender: '男性',
-  birthday: '', school: 'サンプル高校', department: '',
+  birthday: '', school: 'サンプル高校', department: '', schoolGrade: '', juku: '',
   companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: 'yamada.taro@example.com', tel: '',
 };
@@ -166,7 +169,7 @@ const SAMPLE_P_FULL: Omit<Profile, 'id'> = {
   lastName: '佐藤', firstName: '花子', lastNameKana: 'サトウ', firstNameKana: 'ハナコ',
   lastNameRomaji: 'Sato', firstNameRomaji: 'Hanako',
   gender: '女性',
-  birthday: '1990-05-07', school: 'サンプル大学', department: '文学部',
+  birthday: '1990-05-07', school: 'サンプル大学', department: '文学部', schoolGrade: '', juku: '',
   companyName: '株式会社サンプル', companyDepartment: '開発部', jobTitle: '',
   companyNameKana: 'カブシキガイシャサンプル',
   email: 'sato@example.com', tel: '09012345678',
@@ -293,6 +296,8 @@ describe('in-place repair of a non-blank first card', () => {
       birthday: '', // sample is empty: untouched
       school: 'サンプル高校', // filled
       department: '経済学部', // kept
+      schoolGrade: '', // sample is empty: untouched
+      juku: '', // sample is empty: untouched
       companyName: '',
       companyDepartment: '',
       jobTitle: '',

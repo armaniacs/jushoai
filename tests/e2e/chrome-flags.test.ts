@@ -49,4 +49,28 @@ describe('chromeLaunchArgs', () => {
     expect(ciArgs).toEqual(expect.arrayContaining(ciOnly));
     expect(ciArgs).toHaveLength(ciOnly.length);
   });
+
+  it('forces dark when a dark scheme is requested (empty env)', () => {
+    expect(chromeLaunchArgs({}, { scheme: 'dark' })).toEqual([
+      '--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=dark',
+    ]);
+  });
+
+  it('combines dark with --headless=new when HEADLESS is 1', () => {
+    expect(chromeLaunchArgs({ HEADLESS: '1' }, { scheme: 'dark' })).toEqual([
+      '--headless=new', '--disable-dev-shm-usage', '--disable-gpu', '--force-prefers-color-scheme=dark',
+    ]);
+  });
+
+  it('combines dark with --no-sandbox when CI is set', () => {
+    const args = chromeLaunchArgs({ CI: '1' }, { scheme: 'dark' });
+    expect(args).toContain('--no-sandbox');
+    expect(args).toContain('--force-prefers-color-scheme=dark');
+    expect(args).not.toContain('--force-prefers-color-scheme=light');
+  });
+
+  it('keeps an explicit light scheme identical to the default', () => {
+    expect(chromeLaunchArgs({}, { scheme: 'light' })).toEqual(chromeLaunchArgs({}));
+    expect(chromeLaunchArgs({ HEADLESS: '1' }, { scheme: 'light' })).toEqual(chromeLaunchArgs({ HEADLESS: '1' }));
+  });
 });

@@ -8,7 +8,7 @@ const profile: Profile = {
   id: 'p1', label: 'メイン',
   lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
   lastNameRomaji: '', firstNameRomaji: '',
-  gender: '', birthday: '', school: '', department: '',
+  gender: '', birthday: '', school: '', department: '', schoolGrade: '', juku: '',
   companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
   email: 'yamada@example.com', tel: '',
 };

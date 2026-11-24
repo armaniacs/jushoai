@@ -9,12 +9,16 @@ import type { FieldMeta } from './types';
 // for the two new categories: officeEligible passes
 // 会社名/法人・団体名/部署 alone through company/companyDepartment.
 export const EXCLUDE = /company|corp|organi[sz]ation|会社|法人|部署|役職|企業|店舗/;
-// Fields with company words pass EXCLUDE only via
-// company/companyDepartment (the relaxation boundary). Kana context
-// (会社名（フリガナ）) and birth context (会社の生年月日) risk wrong fills, so
-// they stay outside the relaxation and keep the plain EXCLUDE behavior. Other
-// office words (役職/店舗/法人種別) are not relaxed either. The officeField gate
-// and the DISPATCH extra gates share this one condition. 応募/申込 団体名
+// Relaxation boundary (single owner of the WHY): company words pass
+// EXCLUDE only via company/companyDepartment.
+// カナ文脈・誕生文脈は緩和対象外: kana context (会社名（フリガナ）) and
+// birth context (会社の生年月日) risk wrong fills, so they stay outside
+// and keep the plain EXCLUDE behavior. Other office words (役職/店舗/
+// 法人種別) are not relaxed either.
+// 複合ラベルは分解しない (誤注入より不注入): a 会社名・部署名 joint reads
+// as either, so the joint stays out instead of decomposing. The
+// officeField gate and the DISPATCH extra gates share this one
+// condition. 応募/申込団体名
 // (応募団体名・申込団体名) is the applicant-side organization, not a company
 // profile fill target, so it is excluded via the negative lookbehinds
 // (COMPANY_OFFICE itself carries the same shape of exclusion as officeEligible).
@@ -83,9 +87,7 @@ export const jobOfficeEligible = (own: string): boolean =>
 // DispatchCtx definition order, and !COMPANY_OFFICE/!DEPT_OFFICE blocks the
 // crossover case where a department field + a shared 会社名 heading would be
 // adopted as company-legend 0.65).
-// WHY compound labels (会社名・部署名) are not decomposed: a field like
-// 会社名・部署名 is interpretable as either, and not filling is safer than a
-// wrong fill, so the officeField EXCLUDE drop keeps the previous behavior.
+// Compound joints stay out here as well; see the relaxation boundary above.
 const officeLegendEligible = (own: string): boolean =>
   !officeContextExcluded(own)
   && !COMPANY_OFFICE.test(own) && !DEPT_OFFICE.test(own);
@@ -98,12 +100,12 @@ const officeLegendEligible = (own: string): boolean =>
 // co-occurrence (both 会社名（フリガナ） and 会社名(フリガナ) match).
 const COMPANY_KANA =
   /(?=.*(?:(?:会社|法人)名|(?:(?<!応募)(?<!申込)団体名)|社名))(?=.*(?:フリガナ|カナ|かな|kana))/;
-// The 会社名フリガナ relaxation boundary. The own side opens on the
-// field itself, the legend side when the shared heading carries the conjunction
+// The 会社名フリガナ conjunction gate. The own side opens on the field
+// itself, the legend side when the shared heading carries the conjunction
 // (a company_kana field under a 会社名（フリガナ） th heading has no Japanese
-// words of its own and arrives via the legend). Birth context is excluded on
-// both sides. A name-only field (company_kana, no label) carries neither
-// conjunction, so it stays unknown (not filling beats a wrong fill).
+// words of its own and arrives via the legend). Exclusions follow the
+// relaxation boundary above. A name-only field carries neither side, so it
+// stays unknown.
 export const officeKanaEligible = (own: string, legend: string): boolean =>
   !BIRTH_CTX.test(`${own} ${legend}`) && (COMPANY_KANA.test(own) || COMPANY_KANA.test(legend));
 // Allow list for exact name matches (compared on a key folding
@@ -129,7 +131,7 @@ export const officeEntries: readonly MatcherEntry[] = [
   // side opens on the field's own conjunction, the legend side on the shared
   // heading's conjunction. The legend side never takes fields carrying own
   // company words (kanji company-name fields; the same crossover block as
-  // officeLegendEligible). Birth context is excluded on both sides.
+  // officeLegendEligible). Exclusions follow the relaxation boundary above.
   ...ownLegend(
     COMPANY_KANA,
     'companyNameKana',

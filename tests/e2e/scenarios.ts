@@ -3,8 +3,9 @@ import { Key, type WebDriver } from 'selenium-webdriver';
 import {
   By, HOST_SELECTOR, OPTIONS_SELECTORS, PROFILE_DATA, badgeNotice, bannerHost, bannerWrap,
   clickApplyButton, clickFillButton, dismissGuideIfPresent, mountedHosts, panelChildTags,
-  reportButton, resultPanelText, until, valueOf,
+  panelElement, reportButton, resultPanelText, until, valueOf,
 } from './harness';
+import { WHITE, blendOver, contrastRatio, parseCssColor } from './contrast';
 import type { BrowserAdapter } from './adapter';
 
 // Browser-independent e2e scenarios. Each run* function registers the same
@@ -107,6 +108,72 @@ export function runFillFlow(adapter: BrowserAdapter, label: string): void {
       expect(await valueOf(driver, 'ln')).toBe('佐藤');
       expect(await valueOf(driver, 'fn')).toBe('');
       expect(await valueOf(driver, 'em')).toBe('taro@example.com');
+    });
+  });
+}
+
+// Keyboard-only end to end (PBI-285): the whole flow without a single click.
+// Tab reaches the banner from the page, Enter opens the preview, Tab moves
+// inside the trapped panel and back, Enter applies, Tab wraps through the
+// result actions to 元に戻す, and Escape closes the confirmation.
+export function runKeyboardOnlyFlow(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: keyboard-only flow (PBI-285)`, () => {
+    it('tabs to the banner, applies through the preview, and undoes from the result', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      const tab = async (): Promise<void> => {
+        await driver.actions().sendKeys(Key.TAB).perform();
+      };
+      const shiftTab = async (): Promise<void> => {
+        await driver.actions().keyDown(Key.SHIFT).sendKeys(Key.TAB).keyUp(Key.SHIFT).perform();
+      };
+      const press = async (key: string): Promise<void> => {
+        await driver.actions().sendKeys(key).perform();
+      };
+      const activeId = async (): Promise<string | null> =>
+        driver.executeScript('return document.activeElement?.id ?? null;');
+      const focusInBanner = async (): Promise<boolean> =>
+        driver.executeScript(
+          'return document.activeElement?.hasAttribute?.("data-jushoai") ?? false;',
+        );
+      // Anchor on the first field with the keyboard alone: a fresh page starts
+      // on the body, so Tab walks the page in order.
+      await driver.wait(async () => {
+        await tab();
+        return (await activeId()) === 'ln';
+      }, 10_000, 'Tab never reached the first field');
+      // Walk the rest of the form to the banner. The host sits last in the
+      // flat tree, so the first host focus is the banner's first button.
+      await driver.wait(async () => {
+        await tab();
+        return focusInBanner();
+      }, 10_000, 'Tab never reached the banner');
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('入力内容の確認'),
+      15_000, 'Enter on the banner did not open the preview');
+      // The preview opens on its primary action; one Tab and back proves the
+      // trap moves inside the panel instead of escaping to the page.
+      await tab();
+      await shiftTab();
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('適用済み'),
+      15_000, 'Enter on the preview did not apply');
+      expect(await valueOf(driver, 'ln')).toBe('山田');
+      // Result actions run [undo, report, close] from the report focus the
+      // result view takes: two Tabs wrap around to 元に戻す.
+      await tab();
+      await tab();
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('元に戻しました'),
+      15_000, 'Enter on the undo action did not undo');
+      expect(await valueOf(driver, 'ln')).toBe('');
+      await press(Key.ESCAPE);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)) === '',
+      10_000, 'Escape did not close the confirmation');
     });
   });
 }
@@ -398,6 +465,69 @@ export function runTranslucentBanner(adapter: BrowserAdapter, label: string): vo
   });
 }
 
+// Dark-session scenarios: run only from the *.dark.e2e.ts entries, whose
+// adapters force prefers-color-scheme: dark for the whole session (Chrome:
+// BiDi media override, the launch flag being inert; Firefox:
+// content-override pref). The reads are computed styles
+// inside the closed shadow UI: a dark media block losing the cascade to a
+// later light rule (the regression class this guards) leaves the stylesheet
+// text intact but shifts these values.
+// Dark tokens read from the CSS: overlay.ts dark block sets --jushoai-panel-bg
+// #212530 / --jushoai-panel-fg #e8eaf0 (documented 12.7:1); button.ts dark
+// block sets --jushoai-banner-bg rgba(28, 45, 100, 0.9) with the
+// theme-invariant white text (--jushoai-banner-fg #fff).
+export function runDarkColorScheme(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: dark color scheme (PBI-209)`, () => {
+    it('renders the preview panel with the dark tokens and AA contrast', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      await clickFillButton(driver);
+      const panel = (await driver.wait(async () => {
+        const el = await panelElement(driver);
+        return el ?? null;
+      }, 15_000, 'no preview panel appeared'))!;
+      const colors = (await driver.executeScript(
+        `const s = getComputedStyle(arguments[0]);
+         return { background: s.backgroundColor, color: s.color };`,
+        panel,
+      )) as { background: string; color: string };
+      expect(colors.background).toBe('rgb(33, 37, 48)');
+      expect(colors.color).toBe('rgb(232, 234, 240)');
+      const bg = parseCssColor(colors.background);
+      const fg = parseCssColor(colors.color);
+      expect(bg).not.toBeNull();
+      expect(fg).not.toBeNull();
+      expect(contrastRatio(bg!, fg!)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it('renders the floating banner with the dark tokens and AA contrast', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      // Park the pointer on a form input before reading: the preceding panel
+      // scenario's click leaves the virtual pointer parked where the banner
+      // remounts, and :hover would flip the wrap to its active background
+      // (observed on Firefox: #1e3a8a instead of the resting token). The
+      // placement never covers inputs, so this anchor is always hover-free.
+      const anchor = await driver.findElement(By.id('ln'));
+      await driver.actions().move({ origin: anchor, x: 0, y: 0 }).perform();
+      const wrap = (await driver.wait(async () => {
+        const el = await bannerWrap(driver);
+        return el ?? null;
+      }, 10_000, 'no .wrap in the banner shadow root'))!;
+      const bg = await wrap.getCssValue('background-color');
+      const fg = await wrap.getCssValue('color');
+      expect(bg).toBe('rgba(28, 45, 100, 0.9)');
+      // The banner background is translucent, so the contrast a reader sees is
+      // the alpha blend over the page behind it. The fixture canvas is the
+      // browser default white — the same worst-case backdrop the dark token
+      // was chosen against (documented blend: rgb(51, 66, 116), 9.7:1).
+      const blended = blendOver(parseCssColor(bg)!, WHITE);
+      expect(blended).toEqual({ r: 51, g: 66, b: 116 });
+      expect(contrastRatio(blended, parseCssColor(fg)!)).toBeGreaterThanOrEqual(4.5);
+    });
+  });
+}
+
 // Options save split and trial (PBI-161/162/163): the settings page is light
 // DOM, so buttons and notices are reachable with plain selectors through the
 // harness dictionary. Save buttons exist on both pages with the same label, so
@@ -582,6 +712,39 @@ export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): 
   });
 }
 
+// Backup nudge: the settings page pairs a modest in-section notice
+// with the existing export button, and a dismissal survives a reload (30-day
+// snooze persisted in storage).
+export function runBackupNudge(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: backup nudge`, () => {
+    it('shows a modest backup notice with the export button and stays closed', async () => {
+      const second = { ...PROFILE_DATA.profiles[0]!, id: 'p2', label: '家族' };
+      await adapter.seed({ profiles: [...PROFILE_DATA.profiles, second], addresses: PROFILE_DATA.addresses });
+      await adapter.withOptionsPage('#profiles', async () => {
+        const { driver } = adapter;
+        await dismissGuideIfPresent(driver);
+        const nudge = await driver.wait(until.elementLocated(By.css(OPTIONS_SELECTORS.backupNudge)), 10_000);
+        expect(await nudge.getText()).toContain('バックアップ');
+        // The export button the BDD pairs with the notice sits in the same section.
+        expect(await driver.findElement(By.xpath(OPTIONS_SELECTORS.backupExportButton)).isDisplayed()).toBe(true);
+        await driver.findElement(By.xpath(OPTIONS_SELECTORS.backupNudgeCloseButton)).click();
+        await driver.wait(async () =>
+          (await driver.findElements(By.css(OPTIONS_SELECTORS.backupNudge))).length === 0,
+        10_000, 'backup nudge did not close');
+        await driver.navigate().refresh();
+        await driver.wait(until.elementLocated(By.css(OPTIONS_SELECTORS.profilesSection)), 10_000);
+        // The last-export line renders after the backup state loads: once it
+        // is there, an absent nudge proves the dismissal persisted.
+        await driver.wait(async () => {
+          const lines = await driver.findElements(By.css(OPTIONS_SELECTORS.backupLastExport));
+          return lines.length > 0 && ((await lines[0]!.getText()) ?? '').length > 0;
+        }, 10_000, 'last-export line did not render');
+        expect(await driver.findElements(By.css(OPTIONS_SELECTORS.backupNudge))).toHaveLength(0);
+      });
+    });
+  });
+}
+
 // The full suite in the original file order. Chrome passes
 // includePartialNotice + includeTouchPointer + expectBuiltInProvider;
 // Firefox passes none of them.
@@ -589,6 +752,7 @@ export function runBrowserScenarios(adapter: BrowserAdapter, opts: BrowserScenar
   // opts.labelは残すが表示名はadapter.labelに一本化（段階移行中・動作不変）。
   const label = adapter.label;
   runFillFlow(adapter, label);
+  runKeyboardOnlyFlow(adapter, label);
   if (opts.includePartialNotice) runPartialNoticeFlow(adapter, label);
   runFillOneKana(adapter, label);
   runPartialBannerPersistence(adapter, label);
@@ -602,4 +766,5 @@ export function runBrowserScenarios(adapter: BrowserAdapter, opts: BrowserScenar
   runFloatNotice(adapter, label);
   runOptionsZeroCountTrial(adapter, label);
   runOptionsPerSideGuide(adapter, label);
+  runBackupNudge(adapter, label);
 }

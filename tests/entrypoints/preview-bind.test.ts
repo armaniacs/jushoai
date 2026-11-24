@@ -4,9 +4,13 @@ import type { FillSession } from '../../src/content/preview-bind';
 import type { SessionPanel } from '../../src/content-session';
 import type { ButtonHandle } from '../../src/ui/button';
 import type { FillResult, FillSummary } from '../../src/dom/fill-plan';
+import type { Profile } from '../../src/core/types';
+import { EMPTY_PROFILE } from '../../src/core/types';
+import type { PersonRole } from '../../src/core/types';
 import { hintForButton } from '../../src/ai/failure-text';
 import { FEEDBACK_REPO } from '../../src/feedback/issue-url';
 import { attachOpenShadow, buttonIn, makeRow } from '../helpers';
+import type { PreviewRow } from '../../src/ui/preview';
 
 // Wiring test for the preview binding extracted from run() (PBI-64): the real
 // preview mounts in jsdom (same pattern as tests/ui/preview.test.ts) and a
@@ -27,11 +31,13 @@ const summary = (filled: number, total: number): FillSummary => ({
 const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
   selectedProfileId: 'p1',
   selectedAddressId: 'a1',
+  selectedRoleProfileIds: {},
   categoryFor: () => 'unknown',
   start: async () => ({ excluded: false, rows: [], failureReason: null }),
   reanalyze: async () => null,
   selectProfile: () => [],
   selectAddress: () => [],
+  selectRoleProfile: () => [],
   recategorize: () => [],
   apply: () => ({ applied: false, reason: 'unused' }),
   undoCount: 0,
@@ -39,7 +45,7 @@ const fakeSession = (overrides: Partial<FillSession> = {}): FillSession => ({
   ...overrides,
 });
 
-function bind(session: FillSession, reanalyzable = true) {
+function bind(session: FillSession, reanalyzable = true, profiles: Profile[] = []) {
   const sh = attachOpenShadow();
   const buttonHandle: ButtonHandle = {
     setStatus: vi.fn(), showError: vi.fn(), reposition: vi.fn(), destroy: vi.fn(),
@@ -49,7 +55,7 @@ function bind(session: FillSession, reanalyzable = true) {
     button: buttonHandle,
     rows: [makeRow('ok', '初期値')],
     addresses: [],
-    profiles: [],
+    profiles,
     reanalyzable,
     feedbackContext: () => ({ pageHref: 'https://example.com/form', provider: 'none', version: '0.1.20' }),
     openFeedbackUrl: vi.fn(),
@@ -165,5 +171,66 @@ describe('bindPreview (PBI-64 wiring)', () => {
     // once"; the stable observable is the detached host below.
     expect(input.onClosed).toHaveBeenCalled();
     expect(root.host.isConnected).toBe(false);
+  });
+});
+
+describe('bindPreview role selection', () => {
+  const prof = (id: string, label: string): Profile => ({ ...EMPTY_PROFILE, id, label });
+  const twoProfiles = [prof('p1', 'メイン'), prof('p2', '子ども')];
+
+  const roleRows = (childId: string, guardianId: string): PreviewRow[] => [
+    { ...makeRow('ok', '鈴木'), role: 'child', profileId: childId },
+    { ...makeRow('ok', '田中'), role: 'guardian', profileId: guardianId },
+  ];
+
+  it('applies the role defaults and wires role changes when the two-select gate passes', () => {
+    const selectRoleProfile = vi.fn(() => roleRows('p1', 'p2'));
+    const session = fakeSession({ selectRoleProfile });
+    const { root } = bind(session, false, twoProfiles);
+    // 既定割当て: 児童と本人=1件目、保護者=2件目。
+    expect(selectRoleProfile.mock.calls).toEqual([
+      ['self', 'p1'], ['child', 'p1'], ['guardian', 'p2'],
+    ]);
+    const selects = [...root.querySelectorAll('select')];
+    expect(selects).toHaveLength(2);
+    expect(selects.map((s) => s.closest('label')?.querySelector('span')?.textContent)).toEqual(['児童用', '保護者用']);
+    expect(selects.map((s) => s.value)).toEqual(['p1', 'p2']);
+    // 切替えでその役割だけ再計画した行を再構築する。
+    selects[0]!.value = 'p2';
+    selects[0]!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(selectRoleProfile).toHaveBeenLastCalledWith('child', 'p2');
+  });
+
+  it('reverts the role defaults and keeps the single select when no role rows appear', () => {
+    const selectRoleProfile = vi.fn((_role: PersonRole, _id: string | null): PreviewRow[] => [makeRow('ok', '山田')]);
+    const session = fakeSession({ selectRoleProfile });
+    const { root } = bind(session, false, twoProfiles);
+    // 2択にならないフォームでは載せた分だけ null で戻す。
+    expect(selectRoleProfile.mock.calls.filter((c) => c[1] !== null)).toEqual([
+      ['self', 'p1'], ['child', 'p1'], ['guardian', 'p2'],
+    ]);
+    expect(selectRoleProfile.mock.calls.filter((c) => c[1] === null)).toEqual([
+      ['self', null], ['child', null], ['guardian', null],
+    ]);
+    const selects = [...root.querySelectorAll('select')];
+    expect(selects).toHaveLength(1);
+    expect(selects[0]!.closest('label')?.querySelector('span')?.textContent).toBe('プロファイル');
+  });
+
+  it('does not touch the role selection with a single profile', () => {
+    const selectRoleProfile = vi.fn((_role: PersonRole, _id: string | null): PreviewRow[] => []);
+    const session = fakeSession({ selectRoleProfile });
+    bind(session, false, [prof('p1', 'メイン')]);
+    expect(selectRoleProfile).not.toHaveBeenCalled();
+  });
+
+  it('keeps a seeded role selection and defaults only the unset roles', () => {
+    const selectRoleProfile = vi.fn(() => roleRows('p2', 'p2'));
+    const session = fakeSession({ selectedRoleProfileIds: { child: 'p2' }, selectRoleProfile });
+    const { root } = bind(session, false, twoProfiles);
+    // シードの載っている役割は触らず、未載の本人と保護者だけ既定を載せる。
+    expect(selectRoleProfile.mock.calls).toEqual([['self', 'p1'], ['guardian', 'p2']]);
+    const selects = [...root.querySelectorAll('select')];
+    expect(selects.map((s) => s.value)).toEqual(['p2', 'p2']);
   });
 });

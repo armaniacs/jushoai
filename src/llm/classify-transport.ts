@@ -1,6 +1,7 @@
 import type { Category, FieldMeta } from '../core/types';
 import type { ClassifySchedule } from '../core/classifier';
 import type { ClassifyFailure } from '../core/classifier-failures';
+import { FALLBACK_CLASSIFY_FAILURE } from '../core/classifier-failures';
 import {
   aiClassifyRequest,
   encodeFieldMeta,
@@ -100,7 +101,7 @@ export async function send(fields: FieldMeta[], opts: ClassifySendOptions = {}):
   const parsed = parseClassifyResult(raw);
   if (!parsed) {
     // A legacy reply carries no reason; record unknown instead of crying wolf.
-    return { map: out, failureReason: isLegacyClassifyFailure(raw) ? null : 'bad-response', truncatedCount };
+    return { map: out, failureReason: isLegacyClassifyFailure(raw) ? null : FALLBACK_CLASSIFY_FAILURE, truncatedCount };
   }
   if (parsed.ok === false) {
     return { map: out, failureReason: parsed.reason, truncatedCount };

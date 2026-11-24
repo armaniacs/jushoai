@@ -8,13 +8,13 @@
 // unchanged for normal saves).
 import { MAX_ITEMS } from './core/collection';
 import {
-  normalizeAddress, normalizeProfile, validateAddress, validateProfile,
+  normalizeAddress, normalizeProfile, unknownEntries, validateAddress, validateProfile,
 } from './core/profile';
 import {
   EMPTY_ADDRESS, EMPTY_PROFILE, type Address, type Profile, type StoredData,
 } from './core/types';
 import {
-  isQuotaExceededError, loadData, migrateData, pickKnown, saveImported, StorageReadError,
+  FORMAT_VERSION, isQuotaExceededError, loadData, migrateData, pickKnown, storedFormatVersion, saveImported, StorageReadError,
 } from './storage';
 
 export const TRANSFER_FILE_NAME = 'jushoai-profiles.json';
@@ -34,17 +34,17 @@ export type TransferImportResult =
   }
   | { ok: false; errors: string[] };
 
-// The file carries profiles and addresses only: the last-used state is left
-// out (a migrated context starts from profiles[0] per the existing
-// initializer). Unknown keys are dropped here on purpose (WHY): a hand-edited
-// entry's junk must not survive the export/import round trip. The load
-// boundary keeps tolerating unknown keys — migrateData still preserves them —
-// because startup must not break on version skew; the leniency is load-side
-// only, and the export is the round-trip boundary.
+// The file carries the format version plus profiles and addresses: the
+// last-used state is left out (a migrated context starts from profiles[0]
+// per the existing initializer). Unknown entry keys ride along (WHY): an
+// export must not be the round-trip boundary that drops a newer version's
+// fields: the load boundary already tolerates them, and the writer stamps
+// only the version it understands (FORMAT_VERSION), so a file this build
+// exports is always a file this build can re-import.
 export function toTransferJson(data: StoredData): string {
-  const profiles = data.profiles.map((p) => pickKnown(EMPTY_PROFILE, p));
-  const addresses = data.addresses.map((a) => pickKnown(EMPTY_ADDRESS, a));
-  return JSON.stringify({ profiles, addresses }, null, 2);
+  const profiles = data.profiles.map((p) => ({ ...pickKnown(EMPTY_PROFILE, p), ...unknownEntries(EMPTY_PROFILE, p) }));
+  const addresses = data.addresses.map((a) => ({ ...pickKnown(EMPTY_ADDRESS, a), ...unknownEntries(EMPTY_ADDRESS, a) }));
+  return JSON.stringify({ version: FORMAT_VERSION, profiles, addresses }, null, 2);
 }
 
 export async function exportTransferFile(): Promise<string> {
@@ -87,6 +87,15 @@ export async function importTransferFile(json: string): Promise<TransferImportRe
     parsed = JSON.parse(json);
   } catch {
     return { ok: false, errors: ['JSON を解析できませんでした。エクスポートしたファイルを選んでください'] };
+  }
+  // A file stamped by a newer build is refused with a reason (WHY reject
+  // instead of best-effort): its entries may rely on fields and rules this
+  // build does not have, so a partial import could silently corrupt data the
+  // user then edits. A version-less file is a pre-1.0 export and stays
+  // acceptable; only an integer above FORMAT_VERSION refuses.
+  const fileVersion = storedFormatVersion(parsed);
+  if (fileVersion > FORMAT_VERSION) {
+    return { ok: false, errors: [`このファイルの形式の版（${fileVersion}）は今の拡張より新しいため、取り込めません。拡張を更新してから取り込んでください`] };
   }
   const raw = parsed as { profiles?: unknown; addresses?: unknown };
   if (!Array.isArray(raw.profiles) || !Array.isArray(raw.addresses)) {

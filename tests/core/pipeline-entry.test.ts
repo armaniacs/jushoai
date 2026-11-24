@@ -81,11 +81,25 @@ describe('PBI-44 pipeline entry seam', () => {
       return orig.call(this, form);
     };
     try {
-      kanaNormFromViews(buildFieldNormViews(meta));
+      // 新規オブジェクトではbuildの6源泉のみ。派生は0回。
+      kanaNormFromViews(buildFieldNormViews({ ...meta }));
     } finally {
       String.prototype.normalize = orig;
     }
     // buildの6源泉のみ。派生は0回。
     expect(calls).toBe(6);
+    // 同一メタの再構築は棚の使い回しでnormを再実行しない。
+    const orig2 = String.prototype.normalize;
+    let cachedCalls = 0;
+    String.prototype.normalize = function (this: string, form?: string): string {
+      if (form === 'NFKC') cachedCalls += 1;
+      return orig2.call(this, form);
+    };
+    try {
+      kanaNormFromViews(buildFieldNormViews(meta));
+    } finally {
+      String.prototype.normalize = orig2;
+    }
+    expect(cachedCalls).toBe(0);
   });
 });

@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
 import { showPreview } from '../../src/ui/preview';
-import type { PreviewOptions } from '../../src/ui/preview';
+import type { PreviewOptions, PreviewRow } from '../../src/ui/preview';
 import { EMPTY_PROFILE, EMPTY_ADDRESS, type Address, type Profile } from '../../src/core/types';
 import { attachOpenShadow, buttonIn, makeRow } from '../helpers';
 
@@ -217,6 +217,69 @@ describe('showPreview select labels', () => {
   });
 });
 
+describe('showPreview role selects', () => {
+  const roleRow = (role: 'child' | 'guardian', profileId: string): PreviewRow => ({
+    ...makeRow('ok'), role, profileId,
+  });
+
+  it('renders the 児童用/保護者用 selects and the usage note when both roles and two profiles exist', () => {
+    const onChange = vi.fn();
+    const { root } = open({
+      rows: [roleRow('child', 'p1'), roleRow('guardian', 'p2')],
+      ...twoProfiles,
+      roleSelection: { onChange },
+    });
+    const selects = [...root.querySelectorAll('select')];
+    expect(selects).toHaveLength(2);
+    const captions = selects.map((s) => s.closest('label')?.querySelector('span')?.textContent);
+    expect(captions).toEqual(['児童用', '保護者用']);
+    expect(root.querySelector('.usage')?.textContent).toBe('メインを児童用に、仕事用を保護者用につかいます');
+  });
+
+  it('takes the initial role selections from the rows provenance, never from an unresolved id', () => {
+    const { root } = open({
+      rows: [roleRow('child', 'p2'), roleRow('guardian', 'p1')],
+      ...twoProfiles,
+      roleSelection: { onChange: () => {} },
+    });
+    const [child, guardian] = [...root.querySelectorAll('select')];
+    expect(child!.value).toBe('p2');
+    expect(guardian!.value).toBe('p1');
+  });
+
+  it('keeps the single profile select when the two-role gate does not pass', () => {
+    const onChange = vi.fn();
+    const oneProfile = open({
+      rows: [roleRow('child', 'p1'), roleRow('guardian', 'p1')],
+      profiles: [prof('p1', 'メイン')], selectedProfileId: 'p1', onProfileChange: () => {},
+      roleSelection: { onChange },
+    });
+    expect(oneProfile.root.querySelectorAll('select')).toHaveLength(0);
+
+    const oneRole = open({ rows: [roleRow('child', 'p1')], ...twoProfiles, roleSelection: { onChange } });
+    const oneRoleSelects = [...oneRole.root.querySelectorAll('select')];
+    expect(oneRoleSelects).toHaveLength(1);
+    expect(oneRoleSelects[0]!.closest('label')?.querySelector('span')?.textContent).toBe('プロファイル');
+
+    const roleless = open({ rows: [makeRow('ok')], ...twoProfiles, roleSelection: { onChange } });
+    expect(roleless.root.querySelectorAll('select')).toHaveLength(1);
+  });
+
+  it('notifies role changes with the role and re-derives the usage note', () => {
+    const onChange = vi.fn();
+    const { root } = open({
+      rows: [roleRow('child', 'p1'), roleRow('guardian', 'p2')],
+      ...twoProfiles,
+      roleSelection: { onChange },
+    });
+    const [child] = [...root.querySelectorAll('select')];
+    child!.value = 'p2';
+    child!.dispatchEvent(new Event('change', { bubbles: true }));
+    expect(onChange).toHaveBeenCalledWith('child', 'p2');
+    expect(root.querySelector('.usage')?.textContent).toBe('仕事用を児童用に、仕事用を保護者用につかいます');
+  });
+});
+
 describe('showResult (PBI-55)', () => {
   const summary = {
     filled: 1,
@@ -311,6 +374,14 @@ describe('showResult: undo (PBI-132)', () => {
     handle.showResult(summary, () => {}, { count: 2, onUndo: () => handle.showUndoResult(2, 0) });
     buttonIn(root, '元に戻す')!.click();
     expect(root.querySelector('.empty')?.textContent).toBe('元に戻しました（2件）');
+  });
+
+  it('moves focus to the close button after undo', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, { count: 2, onUndo: () => handle.showUndoResult(2, 0) });
+    buttonIn(root, '元に戻す')!.click();
+    // Focus inside a shadow root surfaces as the shadow root's activeElement.
+    expect(root.activeElement?.textContent).toBe('閉じる');
   });
 });
 

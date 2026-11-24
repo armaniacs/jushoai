@@ -12,7 +12,7 @@ vi.mock('../../src/storage', () => ({
         id: 'p1', label: '個人用',
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
-        birthday: '', school: '', department: '',
+        birthday: '', school: '', department: '', schoolGrade: '', juku: '',
         companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
@@ -20,7 +20,7 @@ vi.mock('../../src/storage', () => ({
         id: 'p2', label: '',
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
-        birthday: '', school: '', department: '',
+        birthday: '', school: '', department: '', schoolGrade: '', juku: '',
         companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
@@ -28,7 +28,7 @@ vi.mock('../../src/storage', () => ({
         id: '', label: '空ID',
         lastName: '', firstName: '', lastNameKana: '', firstNameKana: '',
         lastNameRomaji: '', firstNameRomaji: '', gender: '',
-        birthday: '', school: '', department: '',
+        birthday: '', school: '', department: '', schoolGrade: '', juku: '',
         companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
         email: '', tel: '',
       },
@@ -43,6 +43,9 @@ vi.mock('../../src/storage', () => ({
     ],
   }),
   saveData: async () => {},
+  loadFormatInfo: async () => ({ version: 1, needsUpdate: false }),
+  loadBackupMeta: async () => ({ lastExportAt: 1 }),
+  saveBackupMeta: async () => {},
 }));
 
 vi.mock('../../src/entrypoints/options/ai-section', () => ({

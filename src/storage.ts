@@ -10,10 +10,28 @@ export { resolveAddressId, resolveLastId } from './core/selection';
 
 const KEY = 'jushoai:data';
 const LAST_KEY = 'jushoai:last';
+// Backup reminder state: timestamps only, never profile values. One
+// key holds both so a single read settles the transfer section.
+const BACKUP_KEY = 'jushoai:backup';
+
+// Format version of the persisted envelope (WHY one place): the store written
+// before any version existed reads as 0 and is accepted as-is; a version
+// newer than this constant means a newer build wrote the data. The load
+// boundary tolerates the newer shape (known entries keep working), keeps the
+// version and the unknown keys on save, and surfaces an update prompt.
+export const FORMAT_VERSION = 1;
 
 export interface LastUsed {
   profileId?: string;
   addressId?: string;
+}
+
+// Timestamps behind the backup nudge: the last successful export
+// and the last nudge dismissal, as epoch milliseconds. Profile values never
+// enter this key.
+export interface BackupMeta {
+  lastExportAt?: number;
+  dismissedAt?: number;
 }
 
 // Typed save failure (PBI-23): storage errors used to surface as raw rejections
@@ -74,6 +92,35 @@ export async function saveLastUsed(v: LastUsed): Promise<void> {
   }
 }
 
+// The backup meta parse, extracted as pure so the spec below and
+// loadBackupMeta share one copy (same pattern as parseLastUsed). Anything
+// that is not a non-negative integer timestamp is dropped, so a hand edit
+// cannot resurface the nudge logic with a junk value.
+export function parseBackupMeta(raw: unknown): BackupMeta {
+  const v = raw as Partial<BackupMeta> | undefined;
+  const out: BackupMeta = {};
+  if (typeof v?.lastExportAt === 'number' && Number.isInteger(v.lastExportAt) && v.lastExportAt >= 0) {
+    out.lastExportAt = v.lastExportAt;
+  }
+  if (typeof v?.dismissedAt === 'number' && Number.isInteger(v.dismissedAt) && v.dismissedAt >= 0) {
+    out.dismissedAt = v.dismissedAt;
+  }
+  return out;
+}
+
+export async function loadBackupMeta(): Promise<BackupMeta> {
+  const result = await chrome.storage.local.get(BACKUP_KEY);
+  return parseBackupMeta(result[BACKUP_KEY]);
+}
+
+export async function saveBackupMeta(v: BackupMeta): Promise<void> {
+  try {
+    await chrome.storage.local.set({ [BACKUP_KEY]: v });
+  } catch (err) {
+    throw new StorageSaveError('バックアップ状態の保存に失敗しました', err);
+  }
+}
+
 // The profile store's load specs (PBI-159): the flow-unit loader
 // (src/content/flow-state.ts) batches these with the learning stores' specs so
 // a flow reads all its keys in one get([keys...]) call. loadData/loadLastUsed
@@ -88,10 +135,36 @@ export const LAST_USED_STORE: KvSpec<LastUsed> = {
   parse: parseLastUsed,
 };
 
+export const BACKUP_STORE: KvSpec<BackupMeta> = {
+  key: BACKUP_KEY,
+  parse: parseBackupMeta,
+};
+
 interface LegacyStoredData {
+  version?: unknown;
   profile?: Partial<Profile>;
   profiles?: Partial<Profile>[];
   addresses?: Partial<Address>[];
+}
+
+// Reads the envelope version (WHY lenient): anything that is not a
+// non-negative integer (absent, mistyped, or hand-edited counts as 0, the
+// pre-version shape, so a corrupt version stamp degrades to the legacy path
+// instead of breaking startup. Only an integer above FORMAT_VERSION is newer.
+export function storedFormatVersion(raw: unknown): number {
+  const v = isObject(raw) ? (raw as { version?: unknown }).version : undefined;
+  return typeof v === 'number' && Number.isInteger(v) && v >= 0 ? v : 0;
+}
+
+export interface FormatInfo {
+  version: number;
+  needsUpdate: boolean;
+}
+
+export async function loadFormatInfo(): Promise<FormatInfo> {
+  const result = await chrome.storage.local.get(KEY);
+  const version = storedFormatVersion(result[KEY]);
+  return { version, needsUpdate: version > FORMAT_VERSION };
 }
 
 let fallbackCounter = 0;
@@ -247,6 +320,26 @@ export async function loadData(): Promise<StoredData> {
   return migrateData(result[KEY] as LegacyStoredData | undefined);
 }
 
+// Serializes the in-memory lists back into the versioned envelope (WHY): an
+// older build editing one field must not downgrade the store, so a newer
+// version stamp is kept and any top-level keys this build does not know ride
+// along. The legacy single-profile key has already been folded into profiles
+// by migrateData, so it is dropped instead of carried forward.
+function envelopePayload(data: StoredData, raw: unknown): Record<string, unknown> {
+  const extra: Record<string, unknown> = isObject(raw) ? { ...(raw as Record<string, unknown>) } : {};
+  delete extra.version;
+  delete extra.profile;
+  delete extra.profiles;
+  delete extra.addresses;
+  const stored = storedFormatVersion(raw);
+  return {
+    ...extra,
+    version: stored > FORMAT_VERSION ? stored : FORMAT_VERSION,
+    profiles: data.profiles,
+    addresses: data.addresses,
+  };
+}
+
 // Minimal lost-update guard (PBI-23): re-read just before writing and merge by
 // id (incoming wins per id, unknown latest entries are kept), so two contexts
 // adding profiles at once do not wipe each other out with a full overwrite.
@@ -271,14 +364,16 @@ export function mergeStoredData(latest: StoredData, incoming: StoredData): Store
 
 export async function saveData(data: StoredData): Promise<void> {
   let latest: StoredData | undefined;
+  let raw: unknown;
   try {
-    latest = await loadData();
+    raw = (await chrome.storage.local.get(KEY))[KEY];
+    latest = migrateData(raw as LegacyStoredData | undefined);
   } catch {
     latest = undefined;
   }
   const payload = latest ? mergeStoredData(latest, data) : data;
   try {
-    await chrome.storage.local.set({ [KEY]: payload });
+    await chrome.storage.local.set({ [KEY]: envelopePayload(payload, raw) });
   } catch (err) {
     throw new StorageSaveError('プロファイルの保存に失敗しました', err);
   }
@@ -297,15 +392,17 @@ export async function saveImported(
   capCheck: (payload: StoredData) => void,
 ): Promise<void> {
   let latest: StoredData;
+  let raw: unknown;
   try {
-    latest = await loadData();
+    raw = (await chrome.storage.local.get(KEY))[KEY];
+    latest = migrateData(raw as LegacyStoredData | undefined);
   } catch (err) {
     throw new StorageReadError('プロファイルの読み取りに失敗しました', err);
   }
   const payload = mergeStoredData(latest, data);
   capCheck(payload);
   try {
-    await chrome.storage.local.set({ [KEY]: payload });
+    await chrome.storage.local.set({ [KEY]: envelopePayload(payload, raw) });
   } catch (err) {
     throw new StorageSaveError('プロファイルの保存に失敗しました', err);
   }

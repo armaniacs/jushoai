@@ -24,6 +24,11 @@ const mount = (over: Partial<TransferSectionDeps> = {}) => {
     pickFile: vi.fn(async () => new File(['{}'], 'jushoai-profiles.json', { type: 'application/json' })),
     readFile: vi.fn(async () => '{"profiles":[],"addresses":[]}'),
     onImported: vi.fn(async () => {}),
+    formatInfo: vi.fn(async () => ({ version: 1, needsUpdate: false })),
+    backupMeta: vi.fn(async () => ({})),
+    recordExportAt: vi.fn(async () => {}),
+    recordNudgeDismissedAt: vi.fn(async () => {}),
+    profileCount: vi.fn(async () => 0),
     ...over,
   };
   mountTransferSection(root, deps);
@@ -188,6 +193,114 @@ describe('mountTransferSection', () => {
     expect(root.textContent).toContain('平文');
     expect(root.textContent).toContain('ID 単位');
     expect(root.textContent).toContain('10 件');
+  });
+
+  it('shows an update prompt when the stored format is newer', async () => {
+    mount({ formatInfo: vi.fn(async () => ({ version: 2, needsUpdate: true })) });
+    await flush();
+    expect(root.textContent).toContain('新しい版（2）');
+    expect(root.textContent).toContain('拡張を更新してください');
+  });
+
+  it('shows no update prompt for the current version or a failed version read', async () => {
+    mount();
+    await flush();
+    expect(root.textContent).not.toContain('拡張を更新してください');
+    mount({ formatInfo: vi.fn(async () => { throw new Error('read failed'); }) });
+    await flush();
+    expect(root.textContent).not.toContain('拡張を更新してください');
+  });
+
+  it('states that uninstalling deletes the registrations', () => {
+    mount();
+    expect(root.textContent).toContain('アンインストールすると');
+  });
+});
+
+describe('backup nudge', () => {
+  const nudgeMount = (over: Partial<TransferSectionDeps> = {}) => mount({
+    profileCount: vi.fn(async () => 2),
+    ...over,
+  });
+
+  const nudge = (): HTMLElement | null => root.querySelector('.backup-nudge');
+  const lastExport = (): string => root.querySelector('.backup-last-export')?.textContent ?? '';
+  const clickNudgeClose = () => {
+    const button = [...root.querySelectorAll('.backup-nudge button')]
+      .find((b) => b.textContent === '閉じる');
+    if (!button) throw new Error('nudge close button not found');
+    (button as HTMLButtonElement).dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  };
+
+  it('shows the never-exported line when no export was recorded', async () => {
+    nudgeMount();
+    await flush();
+    expect(lastExport()).toContain('まだエクスポートしていません');
+  });
+
+  it('shows the stored last-export date instead of the missing line', async () => {
+    nudgeMount({ backupMeta: vi.fn(async () => ({ lastExportAt: Date.UTC(2026, 10, 1) })) });
+    await flush();
+    expect(lastExport()).toContain('最終エクスポート: 2026-11-01');
+  });
+
+  it('shows the nudge with two profiles and no export or dismissal', async () => {
+    nudgeMount();
+    await flush();
+    expect(nudge()?.textContent).toContain('バックアップ');
+    expect(root.querySelector('.backup-nudge button')?.textContent).toBe('閉じる');
+  });
+
+  it('hides the nudge with one profile', async () => {
+    nudgeMount({ profileCount: vi.fn(async () => 1) });
+    await flush();
+    expect(nudge()).toBeNull();
+  });
+
+  it('hides the nudge once an export was recorded', async () => {
+    nudgeMount({ backupMeta: vi.fn(async () => ({ lastExportAt: Date.UTC(2026, 9, 1) })) });
+    await flush();
+    expect(nudge()).toBeNull();
+  });
+
+  it('hides the nudge while the dismissal is fresh', async () => {
+    nudgeMount({ backupMeta: vi.fn(async () => ({ dismissedAt: Date.now() - 24 * 60 * 60 * 1000 })) });
+    await flush();
+    expect(nudge()).toBeNull();
+  });
+
+  it('dismisses the nudge and records the dismissal', async () => {
+    const deps = nudgeMount();
+    await flush();
+    expect(nudge()).not.toBeNull();
+    clickNudgeClose();
+    await flush();
+    expect(deps.recordNudgeDismissedAt).toHaveBeenCalledOnce();
+    expect(nudge()).toBeNull();
+    expect(lastExport()).toContain('まだエクスポートしていません');
+  });
+
+  it('records the export and hides the nudge', async () => {
+    let meta: { lastExportAt?: number } = {};
+    const deps = nudgeMount({
+      backupMeta: vi.fn(async () => meta),
+      recordExportAt: vi.fn(async (at: number) => { meta = { lastExportAt: at }; }),
+    });
+    await flush();
+    expect(nudge()).not.toBeNull();
+    click(buttonByText('JSON でエクスポート'));
+    await flush();
+    expect(deps.recordExportAt).toHaveBeenCalledOnce();
+    expect(lastExport()).toContain('最終エクスポート:');
+    expect(nudge()).toBeNull();
+  });
+
+  it('keeps the section usable when the backup state cannot be read', async () => {
+    nudgeMount({ backupMeta: vi.fn(async () => { throw new Error('read failed'); }) });
+    await flush();
+    click(buttonByText('JSON でエクスポート'));
+    await flush();
+    expect(root.querySelector('.saved')?.textContent).toContain('書き出しました');
   });
 });
 

@@ -108,6 +108,41 @@ describe('buildPreviewRows / replanItems parity', () => {
   });
 });
 
+describe('role provenance rows', () => {
+  const childProfile: Profile = {
+    ...profile, id: 'p-child', label: '児童', lastName: '鈴木', firstName: '一郎',
+  };
+
+  function roleItems(): Item[] {
+    return [
+      { meta: makeMeta({ id: 'c-last', label: '児童氏名（姓）' }), cls: { category: 'lastName', confidence: 0.9, source: 'rule' }, role: 'child' },
+      { meta: makeMeta({ id: 'g-last', label: '保護者氏名（姓）' }), cls: { category: 'lastName', confidence: 0.9, source: 'rule' }, role: 'guardian' },
+    ];
+  }
+
+  it('carries role and profileId on rows built from a role-mapped plan', () => {
+    const list = roleItems();
+    const { plan, rows } = replanItems(list, profile, address, metasById(list), { child: childProfile });
+    expect(plan[0]!.value).toBe('鈴木');
+    expect(rows[0]).toMatchObject({ role: 'child', profileId: 'p-child' });
+    // 未載の役割は既定プロファイルに倒れ、出どころも既定の id を示す。
+    expect(rows[1]).toMatchObject({ role: 'guardian', profileId: 'p1' });
+  });
+
+  it('adds no provenance keys on the default path', () => {
+    const list = items();
+    const { plan, rows } = replanItems(list, profile, address, metasById(list));
+    for (const p of plan) {
+      expect('role' in p).toBe(false);
+      expect('profileId' in p).toBe(false);
+    }
+    for (const r of rows) {
+      expect('role' in r).toBe(false);
+      expect('profileId' in r).toBe(false);
+    }
+  });
+});
+
 describe('buildFeedbackInput parity', () => {
   const base = () => {
     const list = items();

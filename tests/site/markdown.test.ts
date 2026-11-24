@@ -114,6 +114,38 @@ describe('renderMarkdown: links', () => {
     expect(r.html).toContain('href="/guides/x/"');
     expect(r.html).toContain('href="https://example.com/p" target="_blank" rel="noopener noreferrer"');
   });
+
+  it('rewrites relative guide markdown links when guideBase is given and keeps raw links', () => {
+    const r = renderMarkdown('[p](./profiles.md) [s](./safety.md#元に戻す)', { ...opts, guideBase: '/guides/' });
+    expect(r.html).toContain('href="/guides/profiles/"');
+    expect(r.html).toContain('href="/guides/safety/#%E5%85%83%E3%81%AB%E6%88%BB%E3%81%99"');
+    expect(r.links).toEqual(['./profiles.md', './safety.md#%E5%85%83%E3%81%AB%E6%88%BB%E3%81%99']);
+
+    const en = renderMarkdown('[p](./profiles.md) [s](./safety.md#undo)', {
+      ...enOpts,
+      base: '/JushoAI/',
+      guideBase: '/JushoAI/en/guides/',
+    });
+    expect(en.html).toContain('href="/JushoAI/en/guides/profiles/"');
+    expect(en.html).toContain('href="/JushoAI/en/guides/safety/#undo"');
+    expect(en.links).toEqual(['./profiles.md', './safety.md#undo']);
+  });
+
+  it('normalizes guideBase trailing slash and leaves non-guide or unconfigured relative links untouched', () => {
+    const noSlash = renderMarkdown('[p](./profiles.md)', { ...opts, guideBase: '/guides' });
+    expect(noSlash.html).toContain('href="/guides/profiles/"');
+
+    const dblSlash = renderMarkdown('[p](./profiles.md)', { ...opts, guideBase: '/guides//' });
+    expect(dblSlash.html).toContain('href="/guides/profiles/"');
+
+    const noGuideBase = renderMarkdown('[p](./profiles.md)', opts);
+    expect(noGuideBase.html).toContain('href="./profiles.md"');
+
+    const nonGuide = renderMarkdown('[a](./other.txt) [b](../profiles.md) [c](profiles.md)', { ...opts, guideBase: '/guides/' });
+    expect(nonGuide.html).toContain('href="./other.txt"');
+    expect(nonGuide.html).toContain('href="../profiles.md"');
+    expect(nonGuide.html).toContain('href="profiles.md"');
+  });
 });
 
 describe('renderMarkdown: tables', () => {

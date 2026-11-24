@@ -21,6 +21,9 @@ vi.mock('../../src/storage', () => ({
     addresses: [],
   }),
   saveData: async () => {},
+  loadFormatInfo: async () => ({ version: 1, needsUpdate: false }),
+  loadBackupMeta: async () => ({ lastExportAt: 1 }),
+  saveBackupMeta: async () => {},
 }));
 
 vi.mock('../../src/entrypoints/options/ai-section', () => ({

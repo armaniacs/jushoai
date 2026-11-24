@@ -1,8 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import type { Address, FieldMeta, Item, Profile } from '../../src/core/types';
 import { EMPTY_ADDRESS, EMPTY_PROFILE } from '../../src/core/types';
+import type { PlanItem } from '../../src/core/planner';
 import type { SessionClassifyResult, SessionPanel } from '../../src/content-session';
 import type { FillReport, FillSummary, UndoEntry } from '../../src/dom/fill-plan';
+import type { PreviewRow } from '../../src/ui/preview';
 import type { FillBundle, FillFlowEnv } from '../../src/content/fill-flow';
 import { createFillFlow } from '../../src/content/fill-flow';
 import { makeMeta } from '../helpers';
@@ -133,5 +135,114 @@ describe('FillFlow transaction (PBI-178 fake-env table)', () => {
     expect(restore).toHaveBeenCalledOnce();
     expect(flow.undoCount).toBe(0);
     expect(flow.undoLast()).toBeNull();
+  });
+});
+
+describe('FillFlow role selection', () => {
+  const childProfile: Profile = {
+    ...EMPTY_PROFILE, id: 'p-child', label: '児童', lastName: '鈴木', firstName: '一郎',
+  };
+  const guardianProfile: Profile = {
+    ...EMPTY_PROFILE, id: 'p-guardian', label: '保護者', lastName: '田中', firstName: '花子',
+  };
+
+  function roleItems(): Item[] {
+    return [
+      { meta: makeMeta({ id: 'c-last', label: '児童氏名（姓）' }), cls: { category: 'lastName', confidence: 0.9, source: 'rule' }, role: 'child' },
+      { meta: makeMeta({ id: 'g-last', label: '保護者氏名（姓）' }), cls: { category: 'lastName', confidence: 0.9, source: 'rule' }, role: 'guardian' },
+    ];
+  }
+
+  function roleSetup(opts: { initialRoleProfileIds?: { child?: string; guardian?: string; self?: string } } = {}) {
+    const injected: PlanItem[][] = [];
+    const recorded: PreviewRow[][] = [];
+    const ms: FieldMeta[] = roleItems().map((i) => i.meta);
+    const env: FillFlowEnv = {
+      classify: async (): Promise<SessionClassifyResult> => ({ items: roleItems(), failureReason: null }),
+      checkConsent: () => ({ ok: true as const }),
+      injectPlan: (plan) => {
+        injected.push([...plan]);
+        return reportOf(fullSummary(plan.length, 0));
+      },
+      persistSelection: () => {},
+      openUrl: () => {},
+      feedbackContext: () => ({ pageHref: 'https://example.jp/form', provider: 'none', version: '0.0.0-test' }),
+      isExcluded: () => false,
+      recordApproval: (rows) => { recorded.push(rows); },
+    };
+    const bundle: FillBundle = {
+      input: {
+        profiles: [profile1, childProfile, guardianProfile], addresses: [address1],
+        roleProfileIds: opts.initialRoleProfileIds,
+        metas: ms, metasById: new Map(ms.map((m) => [m.id, m])),
+        englishPage: false, canReanalyze: true,
+      },
+      env,
+    };
+    return { flow: createFillFlow(bundle), injected, recorded };
+  }
+
+  it('starts on the default profile with no provenance, then a role select re-plans that role only', async () => {
+    const { flow, injected } = roleSetup();
+    const started = await flow.start();
+    if (started.excluded) throw new Error('unexpected exclusion');
+    expect(flow.selectedRoleProfileIds).toEqual({});
+    for (const r of started.rows) {
+      expect('role' in r).toBe(false);
+      expect('profileId' in r).toBe(false);
+    }
+    expect(started.rows.map((r) => r.display)).toEqual(['山田', '山田']);
+
+    const rows = flow.selectRoleProfile('child', 'p-child');
+    expect(flow.selectedRoleProfileIds).toEqual({ child: 'p-child' });
+    expect(rows.map((r) => r.display)).toEqual(['鈴木', '山田']);
+    expect(rows[0]).toMatchObject({ role: 'child', profileId: 'p-child' });
+    // 未載の役割は既定プロファイルに倒れる(出どころも既定の id)。
+    expect(rows[1]).toMatchObject({ role: 'guardian', profileId: 'p1' });
+    // 役割の選択は共通住所に触らない(住所は全役割で同一の方針)。
+    expect(flow.selectedAddressId).toBe('a1');
+    expect(injected).toEqual([]);
+  });
+
+  it('seeds the initial role map from input and applies the merged plan', async () => {
+    const { flow, injected } = roleSetup({ initialRoleProfileIds: { child: 'p-child' } });
+    await flow.start();
+    expect(flow.selectedRoleProfileIds).toEqual({ child: 'p-child' });
+    flow.apply({ sendFeedback: false, panel });
+    expect(injected).toHaveLength(1);
+    const byId = new Map(injected[0]!.map((p) => [p.fieldId, p]));
+    expect(byId.get('c-last')).toMatchObject({ value: '鈴木', profileId: 'p-child' });
+    expect(byId.get('g-last')).toMatchObject({ value: '山田' });
+  });
+
+  it('clears a role selection back to the default profile with null', async () => {
+    const { flow } = roleSetup({ initialRoleProfileIds: { child: 'p-child' } });
+    await flow.start();
+    const cleared = flow.selectRoleProfile('child', null);
+    expect(flow.selectedRoleProfileIds).toEqual({});
+    expect(cleared.map((r) => r.display)).toEqual(['山田', '山田']);
+    expect('role' in cleared[0]!).toBe(false);
+  });
+
+  it('drops a stale role id and falls back to the default profile', async () => {
+    const { flow } = roleSetup({ initialRoleProfileIds: { child: 'gone' } });
+    const started = await flow.start();
+    if (started.excluded) throw new Error('unexpected exclusion');
+    expect(started.rows.map((r) => r.display)).toEqual(['山田', '山田']);
+  });
+
+  it('records the post-replan rows so the approval matches the applied shape', async () => {
+    const { flow, recorded } = roleSetup();
+    const started = await flow.start();
+    if (started.excluded) throw new Error('unexpected exclusion');
+    // preview-bind の既定割当てプローブ相当: start の後に selectRoleProfile で
+    // 再計画してから適用する。記録されるのは start 時の行ではなく、適用時に
+    // 承認した再計画後の行(出どころ付き)。
+    const replanned = flow.selectRoleProfile('child', 'p-child');
+    flow.apply({ sendFeedback: false, panel });
+    expect(recorded).toHaveLength(1);
+    expect(recorded[0]).toEqual(replanned);
+    expect(recorded[0]!.map((r) => r.display)).toEqual(['鈴木', '山田']);
+    expect(recorded[0]![0]).toMatchObject({ role: 'child', profileId: 'p-child' });
   });
 });

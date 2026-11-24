@@ -9,8 +9,10 @@
 
 ## GitHub Release
 
-タグを push しても Release はすぐには作られない。`.github/workflows/release.yml` の
-release job は environment `release` に束ねられており、Release の生成には人の承認が必要である。
+タグを push しても Release はすぐには作られない。`.github/workflows/release.yml` は
+build と submit の 2 job に分かれている。build job は資格情報を持たないため承認なしで
+そのまま実行され、submit job は environment `release` に束ねられているため、ストア資格情報の
+使用には人の承認が必要である（承認前に資格情報が使われることはない）。
 
 1. `package.json` の `version` と CHANGELOG の `## [X.Y.Z]` 節を整えて、main にコミットする
 2. 注釈付きタグを作って push する（タグ名は `vX.Y.Z`。署名は必須ではない）
@@ -18,25 +20,31 @@ release job は environment `release` に束ねられており、Release の生�
    git tag -a vX.Y.Z -m "vX.Y.Z"
    git push origin main vX.Y.Z
    ```
-3. ワークフローの実行が environment `release` の承認待ちで止まる。GitHub の Actions
+3. build job がすぐ実行される。タグと `package.json` の version の一致を確かめ、`make check`、
+   `make zip`、`make zip-firefox` を実行する。続いて zip の SHA256SUMS を作り、zip 群・
+   SHA256SUMS・リリースノートを upload し、zip の来歴証明を付ける（`gh attestation verify` で
+   このリポジトリの Release ワークフローで作られたことを確かめられる）
+4. submit job は environment `release` の承認待ちで止まる。GitHub の Actions
    実行画面で内容を確認し、承認する（却下した場合は Release を作らずに終了する）
-4. 承認後、ワークフローがタグと `package.json` の version の一致を確かめ、`make check`、
-   `make zip`、`make zip-firefox` を実行する。続いて `npx wxt submit` で Chrome・Edge・
+5. 承認後、submit job が成果物を受け取り、`sha256sum -c` で照合してから
+   `publish-browser-extension` で Chrome・Edge・
    Firefox の 3 ストアへ審査提出する（詳細は下の「ストア自動提出」）。提出が成功したら
    CHANGELOG の該当節を本文にして、
-   `dist/jushoai-X.Y.Z-chrome.zip`、`-firefox.zip`、`-sources.zip`（AMO 提出用）を添付した
+   `jushoai-X.Y.Z-chrome.zip`、`-firefox.zip`、`-sources.zip`、`SHA256SUMS` を添付した
    Release を作る。提出に失敗したときは Release を作らずに失敗する（半端な Release を残さない順序）
-5. main への push で、GitHub Pages のワークフローがサイトをデプロイする。`https://armaniacs.github.io/jushoai/` を開き、日英のトップとライセンスのページ、Issue ボタンのリンク先を確認する
+6. main への push で、GitHub Pages のワークフローがサイトをデプロイする。`https://armaniacs.github.io/jushoai/` を開き、日英のトップとライセンスのページ、Issue ボタンのリンク先を確認する
 
 CHANGELOG に該当節がない、またはタグと version が違うときは、Release を作らずに失敗する。ローカルで本文を確認するには `node scripts/release-notes.mjs X.Y.Z`。
 
-## ストア自動提出（wxt submit）
+## ストア自動提出（publish-browser-extension）
 
 運用手順の全体は [store-submit.md](store-submit.md) にある（初回セットアップ・通常リリース・
 ストアごとの違い・失敗時の対処）。ここは仕組みの要点だけを残す。
 
-`release.yml` の Submit to stores が `npx wxt submit`（publish-extension 6.2.0 の別名）で
-3 ストアへ並行提出する。3 ストアは `Promise.allSettled` で提出されるため、1 件の失敗が
+`release.yml` の submit job は、固定版の `publish-browser-extension` 6.2.0 だけを
+別の作業ディレクトリに入れて直接呼ぶ。`npx wxt submit` が委譲する先と同じバイナリのため、
+同じ env 変数で等価であり、プロジェクトの依存は入れない（依存コードが資格情報に触れない）。
+3 ストアは `Promise.allSettled` で並行提出されるため、1 件の失敗が
 他の提出を止めない。失敗したストアはログで判別できる。いずれも審査通過後は自動公開する
 （下書き止めの `skip-submit-review` 系は付けていない）。
 
@@ -69,6 +77,17 @@ Chrome は API v2＋サービスアカウントを使う（`CHROME_API_VERSION=v
 cp .env.submit.example .env.submit  # 値を埋める。ZIP の版数も合わせる
 make zip && make zip-firefox
 npx wxt submit --dry-run  # 認証のみ確認し、zip は送らない
+```
+
+### CI での確認（dry-run）
+
+本番タグ `v*` の push は実提出になるため、CI の検証はタグを打たずに
+`workflow_dispatch` で行う。`dry_run` 入力（初期値 true）のまま実行すると、
+submit job は `--dry-run`（認証確認のみ）で走り、Release は作られない。
+承認ゲート自体は残るため、submit job の承認は必要である。
+
+```bash
+gh workflow run release.yml --ref <ブランチ名> -f dry_run=true
 ```
 
 ### 再実行手順
@@ -107,3 +126,40 @@ npx wxt submit --dry-run  # 認証のみ確認し、zip は送らない
 - 必要な画像: スクリーンショット（1280x800 または 640x400）、小プロモタイル（440x280）
 - プライバシーポリシー: ドキュメントサイトの `guides/privacy/`（日英）
 - 掲載状況: Chrome ウェブストア（2026-10-10）、Edge アドオン（2026-10-12）、Firefox アドオン（AMO、2026-10-12）。どの URL も `docs/store-listing.md` にある。Edge は Chromium 系のため、Chrome 向けの zip をそのまま提出する。Firefox アドオンへの提出は `make zip-firefox` の zip と sources.zip を使う
+
+## 郵便番号辞書の更新（年 1 回程度）
+
+郵便番号の補助候補の表（`src/core/zip-dict-data.ts`）は、日本郵便の公開データ（KEN_ALL）から作る。日本郵便は月 1 回程度データを更新するが、3 桁 prefix の対応が変わることはまれなため、JushoAI では年 1 回程度の更新で足りる。新設の住宅地などで候補が出ない報告があれば、その都度更新する。
+
+手順は次のとおり。
+
+1. `npm run zip-dict -- --input <KEN_ALL.ZIP の保存先>`（直接取得できる環境では引数なしの `npm run zip-dict` で日本郵便から取得する）。同じ入力からは同じ表が出る（バイト同一）。
+2. 生成物の統計（行数・範囲数・除外数）を確認し、`git diff --stat` で表の差分を見る。除外された prefix（複数の都道府県にまたがる 3 桁）は候補が出ず警告のままになるため、件数と内容を PBI-286 の実装記録に残す。
+3. `make check`（`tests/build/zip-dict-size.build.ts` が表 200KB 以下と content script 350KB 以下を検査する）を通す。
+4. 表の更新はコードの変更と分けてコミットする（例: `feat(zip): 郵便番号辞書を KEN_ALL で更新する`）。
+
+いまの表は東京 23 区と主な都市のシードのままである。取得できない環境では seed を残し、PBI-286 の引継ぎに記録する（やっていないことをやったと書かない）。
+
+## 1.0 リリースゲート (PBI-282)
+
+`1.0.0` を版付けする前に、下の項目をすべて満たすこと。未完了の項目がある間は版付けを見送り、どの項目が残っているかをこの一覧で確かめる。
+
+- [ ] `make check-all` が緑（両ブラウザの E2E を含む）
+- [ ] `make eval` の pin が緑
+- [ ] PBI-276（統合後の再スキャン）の結果が出て、指摘の扱いが決まっている
+- [ ] 1.0 必須の PBI が完了している（274 release 分離、275 報告方針、277 依存監視、281 manifest 検査、283 保存形式の互換性）
+- [ ] ストア掲載文とプライバシー文書の整合を確認している（`docs/store-listing.md` とサイトの privacy 日英）
+- [ ] CHANGELOG に `1.0.0` 節がある
+- [ ] 未マージの作業ブランチが無い（統合の記録は PBI-282 の「実装記録」を参照）
+
+状態（2026-11-24 時点。版付け時に再確認）: 274 / 275 / 277 / 281 / 283 / 280 / 284 / 285 は実装済み・レビュー残（コードレビューの DoD と最終確認は版付け時に行う）。276 は 282 の統合待ちで未着手。282 はゲート一覧・版方針まで完了、統合実行と版付けが残。286 は仕組みまで完了、実データ生成が残。この一覧自体は PBI-282 の Task 5 で置いた。各項目の完了確認は版付け時に行う。
+
+## 版方針
+
+バージョンは semver（major.minor.patch）に従う（CHANGELOG の冒頭の宣言どおり）。
+
+- 正式版 `1.0.0` の後は、拡張の major が同じ間は保存形式の読み書き互換を保つ。minor と patch では保存形式を壊さない。
+- 保存データと JSON エクスポートは形式の版番号（`src/storage.ts` の `FORMAT_VERSION`、初期値は 1）を持つ。版番号の無い既存データは版 0 として読み込む。
+- 版番号が `FORMAT_VERSION` より新しい保存データも読み込める。既知の項目は通常どおり動作し、未知の項目と版番号は編集・保存の往復で保持され、設定ページの転送の節に更新を促す表示が出る。
+- JSON ファイルの取り込みは、形式の版が新しすぎる場合は理由を添えて拒否する。版番号の無い 1.0 以前のエクスポートは受け入れる。
+- 版上げの手順と形式の来歴は PBI-283 の「実装記録」に残す。転送の設計書（`docs/superpowers/specs/2026-10-21-profile-transfer-design.md`）の版管理の節も参照する。

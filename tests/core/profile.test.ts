@@ -44,6 +44,14 @@ describe('normalizeProfile', () => {
     expect(p.department).toBe('普通科');
   });
 
+  it('starts schoolGrade and juku empty and trims them', () => {
+    expect(EMPTY_PROFILE.schoolGrade).toBe('');
+    expect(EMPTY_PROFILE.juku).toBe('');
+    const p = normalizeProfile({ ...base, schoolGrade: ' 小学3年 ', juku: ' サンプル塾 ' });
+    expect(p.schoolGrade).toBe('小学3年');
+    expect(p.juku).toBe('サンプル塾');
+  });
+
   it('trims the company fields including the kana name (PBI-160)', () => {
     const p = normalizeProfile({
       ...base, companyName: ' 株式会社サンプル ', companyDepartment: ' 開発部 ', jobTitle: ' 課長 ', companyNameKana: ' カブシキガイシャサンプル ',

@@ -99,7 +99,7 @@ chrome.storage.local のキー `jushoai:data`、`loadData`/`saveData`/`mergeById
 
 ## 要検討（スコープ外として記録）
 
-- **形式の版管理（version 項目）**: 現在は `profiles`/`addresses` のみ。将来の形式変更で version 項目の追加を検討する
+- **形式の版管理（version 項目）**: 1.0 で導入済み。保存データとエクスポートは `{ version, profiles, addresses }` の形で、`src/storage.ts` の `FORMAT_VERSION`（初期値 1）が唯一の置き場所。約束の本文は `docs/release.md` の「版方針」にあり、来歴は PBI-283 の「実装記録」に残す
 - **削除の扱い（tombstone）**: マージは additive のため、ファイルに無い既存データは消えない。全置換・削除込みの移行は別 PBI
 - **上限の競合**: 上限検査と保存の間に他コンテキストが書き込むと一時的に 10 件を超え得る（saveData のマージが保証する範囲と同じ）
 - **クラウド同期・サーバー・chrome.storage.sync**: NOT-TODO 3 のまま。API キー・暗号化キーの移行もしない

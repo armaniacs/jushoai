@@ -1,0 +1,92 @@
+# PBI: 正式版 1.0.0 のリリースゲートを定義して通す
+
+## ユーザーストーリー
+利用者として、「正式版」と書かれた版は未レビューの変更を含まず、約束された品質の確認を経ていてほしい、なぜなら 0.x の試用版と違い、正式版は安心して実データを預ける判断材料になるから
+
+## 区分
+改善 / 1.0 必須
+
+## 優先度
+- 順位: 5 / 17（統合部分は最初に着手してよい。版付けは全 1.0 必須 PBI の完了後）
+- RICEスコア: 400 (Reach=100 / Impact=2 / Confidence=100% / Effort=0.5人週)
+- 根拠: 台帳には「実装済み・コードレビューのみ残」や「アーカイブはマージ後」の PBI が多数あり、未マージのブランチが PR 順序（adachi → role → emergency-contact-tel → 本ブランチ）待ちになっている。276（再スキャン）はこの統合が終わった main に対して行う必要がある
+
+## BDD受け入れシナリオ
+
+```gherkin
+Scenario: ゲートを満たした main だけが 1.0.0 になる
+  Given 1.0 必須の PBI がすべて完了し、未マージの作業ブランチが無い
+  When  保守者が package.json を 1.0.0 にしてタグを打つ
+  Then  Release ワークフローが make check-all 相当の確認を通ったコミットから成果物を作る
+
+Scenario: 未完了の必須項目があると版付けしない
+  Given ゲート一覧に未チェックの必須項目が残っている
+  When  保守者がゲート一覧を確認する
+  Then  どの項目が残っているかが一覧で分かり、版付けを見送る
+```
+
+## 受け入れ基準
+- [ ] 未マージブランチを PR 順序どおり main に統合（`work/user-docs-reorg` を含む）
+- [ ] 台帳の「コードレビューのみ残」系 PBI を、レビュー実施かアーカイブ判断で閉じる（残置するものは 1.0 後と明記）
+- [x] `docs/release.md` に 1.0 ゲート一覧（make check-all 緑、eval pin 緑、276 の結果、274/275/277/281/283 完了、ストア掲載文とプライバシー文書の整合、CHANGELOG の 1.0.0 節）を置く
+- [x] バージョン方針（semver。保存形式の非互換は major でのみ行う、等）を `docs/release.md` に書く
+- [x] ストア掲載文・README・サイトから「試用」相当の表現を見直す
+- [ ] 1.0.0 の CHANGELOG 節と GitHub Release を作成
+
+## テスト戦略
+- E2E: `make check-all`（両ブラウザ E2E）
+- 統合: `make check` と `make eval`
+- 単体: なし
+
+## 見積もり
+0.5人週（統合の衝突解消は別途。要チームでの見積もり）
+
+## Definition of Done
+- [ ] ゲート一覧の全項目にチェック
+- [ ] コードレビュー完了
+- [ ] ドキュメント更新済み
+
+## 出どころ
+- 2026-11-24 正式版準備の棚卸し。`pbi/00-INDEX.md` の進行中節、タグ `pre01-0.1.40`
+
+## 引継ぎ
+
+### Task 5 の実装記録（2026-11-24。統合の実行・版付けはしない。調査と文書だけ）
+
+統合の事前調査（読み取りのみ。マージ・push・ブランチ作成なし）:
+
+- 4 本の未マージブランチは一直線に積まれている（`git merge-base --is-ancestor` で確認。すべて Yes）。
+  `work/adachi-label-extraction` → `work/role-profile-select` → `work/emergency-contact-tel` → `work/user-docs-reorg` → `work/ga-readiness`。
+- 各先端と `main` の差分規模（`git log --oneline main..<branch> | wc -l`）: adachi 3、role 8、emergency-contact-tel 26、user-docs-reorg 34、ga-readiness 44。
+- `main` への衝突見込みは `git merge-tree` で試算した（merge-base `d184fa17`、worktree 非破壊）。衝突記号は 0 件で、自動合流できる見込み。衝突解消の実施はしていない。
+- 推奨 PR 順序は台帳 `pbi/00-INDEX.md` の 272 の記述（adachi → role → 本ブランチ）と引継ぎメモの 282 節（最上位 1 本にまとめるかはユーザー判断）どおりでよい。`work/user-docs-reorg` が adachi 以降の全部を含み、当ブランチがその先端に積まれているため、最上位ブランチの PR 1 本で全体を運べる。
+- 版情報: `package.json` の `version` は `0.1.39`。ローカルタグ `pre01-0.1.40` は `74e3d89` にあり、当ブランチの履歴に含まれる（push していない）。
+
+台帳の「コードレビューのみ残」系の現状整理（レビュー実施・アーカイブ判断はしない。判断はユーザーと統括の範囲）:
+
+- 実装済み・コードレビューのみ残: `2026-10-19-00-backlog-holistic-round.md`（大局レビュー 61-64、実装済み）、`2026-10-19-00-backlog-pbi55-round.md`（PBI-55 レビュー指摘 56-60）、`2026-10-24-00-backlog-arch-round2.md`（アーキレビュー 150-159）。
+- アーカイブはマージ後: `2026-11-23-272`（レビュー済み Ready to merge、ブランチ `work/emergency-contact-tel`）、`2026-11-23-273`（実装済み、同ブランチ）。
+- 未実施のまま残るもの: 足立ラウンド 266-271（未マージブランチ上の実装）、checking-arch ラウンド 247-258、drykiss ラウンド 261-264、残置の 129 / 202。1.0 に含めるか 1.0 後に回すかの線引きが要る。
+
+ゲート一覧と版方針: `docs/release.md` の末尾に「1.0 リリースゲート」と「版方針」を置いた（受け入れ基準 3 / 4 件目）。保存形式の詳細は PBI-283 の範囲とし、境界を文面で明示した。
+
+「試用」相当の表現の見直し結果（受け入れ基準 5 件目。変更なし）:
+
+- `docs/store-listing.md`: 該当なし。
+- README: 該当なし（「実データを入れる前に試したいときは」等の 1 行は、版の位置づけではなく架空データでの操作案内のため残す）。
+- サイト日英: 版の位置づけを示す表現はなし。`v1beta` は Gemini の API 版名で無関係。`お試し`（getting-started の節名等）は架空データでの操作案内のため残す。
+
+### Task 11 の実装記録（2026-11-24。統合の実行。マージはしない）
+
+- `work/ga-readiness` を `origin` に push した（新規ブランチ。force push なし。push 前に local main と origin/main の一致を確認）。
+- `main` への PR を 1 本作成した。PR #36（通常 PR。draft ではない）。base `main`、head `work/ga-readiness`。URL は https://github.com/armaniacs/jushoai/pull/36。
+- PR 本文に 4 層の概要、Task 5 への参照、1.0 ゲートの状態、残作業を記載した。作成者本人のため review request は付けられず、本文末尾で @armaniacs を指名した。
+- CI は PR 作成で起動した（check、e2e chrome、e2e firefox。いずれも確認時点では pending。合否待ちは Task 11 の範囲外）。
+- 受け入れ基準 1 件目はマージまで `[ ]` のまま残す。
+
+### 残作業
+
+- 未マージブランチの統合: PR #36 を作成済み。残りはユーザーの承認とマージ。マージ後に受け入れ基準 1 件目の印を閉じる。
+- 台帳の「コードレビューのみ残」系のレビュー実施かアーカイブ判断（残置するものは 1.0 後と明記）。
+- 版付け: 1.0 必須 PBI（274 / 275 / 277 / 281 / 283）と 276 の完了後に `docs/release.md` のゲート一覧をすべて確認し、`package.json` を `1.0.0` にしてタグを打ち、GitHub Release を作る。
+- 元の引継ぎ: 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

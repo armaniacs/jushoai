@@ -8,6 +8,8 @@ export interface Heading {
 
 export interface RenderOptions {
   base: string;
+  /** Base URL path for rewriting relative `./<slug>.md` guide links (e.g. "/guides/"). */
+  guideBase?: string;
   copyLabel: string;
   copiedLabel: string;
   /** Failure message shown in the adjacent role="status" tip (Task 3). */
@@ -96,8 +98,9 @@ export function videoFacade(id: string, title: string): string {
   );
 }
 
-export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copyFailLabel, tableLabel, codeLabel, source }: RenderOptions): Rendered {
+export function renderMarkdown(src: string, { base, guideBase, copyLabel, copiedLabel, copyFailLabel, tableLabel, codeLabel, source }: RenderOptions): Rendered {
   const md = new MarkdownIt({ html: false, linkify: false, typographer: false });
+  const normalizedGuideBase = guideBase ? `${guideBase.replace(/\/+$/, '')}/` : '';
   // One page per call, so a per-call counter disambiguates repeats in it.
   const codeCounts = new Map<string, number>();
   md.renderer.rules.fence = (tokens, idx) => {
@@ -165,9 +168,12 @@ export function renderMarkdown(src: string, { base, copyLabel, copiedLabel, copy
         if (child.type !== 'link_open') continue;
         const href = String(child.attrGet('href') ?? '');
         if (href !== '') links.push(href);
+        const relGuide = normalizedGuideBase ? /^\.\/([a-z-]+)\.md(#.*)?$/.exec(href) : null;
         if (/^(?:https?:)?\/\//.test(href)) {
           child.attrSet('target', '_blank');
           child.attrSet('rel', 'noopener noreferrer');
+        } else if (relGuide) {
+          child.attrSet('href', `${normalizedGuideBase}${relGuide[1]}/${relGuide[2] ?? ''}`);
         } else if (href.startsWith('/')) {
           child.attrSet('href', base + href.slice(1));
         }

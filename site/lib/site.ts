@@ -17,8 +17,8 @@ export const edgeStoreUrl = (lang: Lang) => `${EDGE_STORE_URL}?hl=${lang}`;
 export const AMO_STORE_URL = 'https://addons.mozilla.org/firefox/addon/jushoai/';
 export const amoStoreUrl = (lang: Lang) => `https://addons.mozilla.org/${lang === 'en' ? 'en-US' : 'ja'}/firefox/addon/jushoai/`;
 export const GUIDE_SLUGS = [
-  'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'shortcuts-and-tools', 'supported-fields',
-  'ai-providers', 'safety', 'privacy', 'how-it-works', 'troubleshooting', 'license', 'glossary',
+  'getting-started', 'profiles', 'addresses', 'popup-and-fill', 'scenarios', 'shortcuts-and-tools', 'supported-fields',
+  'ai-providers', 'safety', 'privacy', 'how-it-works', 'troubleshooting', 'glossary', 'license',
 ] as const;
 export type GuideSlug = (typeof GUIDE_SLUGS)[number];
 
@@ -84,7 +84,16 @@ export async function loadGuides(contentDir: string, base: string): Promise<Guid
       }
       const order = Number(data.order);
       if (data.order && !Number.isFinite(order)) problems.push(`${lang}/${slug}.md: order must be a number`);
-      const r = renderMarkdown(body, { base, copyLabel: COPY_LABEL[lang].copy, copiedLabel: COPY_LABEL[lang].done, copyFailLabel: COPY_LABEL[lang].fail, tableLabel: REGION_LABEL[lang].table, codeLabel: REGION_LABEL[lang].code, source: `${lang}/${slug}.md` });
+      const r = renderMarkdown(body, {
+        base,
+        guideBase: pageUrl(base, lang, 'guides/'),
+        copyLabel: COPY_LABEL[lang].copy,
+        copiedLabel: COPY_LABEL[lang].done,
+        copyFailLabel: COPY_LABEL[lang].fail,
+        tableLabel: REGION_LABEL[lang].table,
+        codeLabel: REGION_LABEL[lang].code,
+        source: `${lang}/${slug}.md`,
+      });
       guides.push({
         lang, slug, title: data.title ?? '', description: data.description ?? '',
         order: Number.isFinite(order) ? order : 0, html: r.html, headings: r.headings, links: r.links,

@@ -6,8 +6,12 @@ import type { FieldMeta } from './types';
 // Applied only to the person-name step so e.g. a user_email field stays an email.
 export const NAME_EXCLUDE =
   /件名|題名|商品|品名|店名|国名|ユーザー|ログイン|届け先名|担当者|名義|user|subject|title|holder|card|if different|different (from|than)|(^|[^a-z])cc([^a-z]|$)/;
-export const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])sei([^a-z]|$)|姓|苗字|名字|セイ|せい/;
-export const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])mei([^a-z]|$)|(^|[\s（(［[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
+// sei/mei の前境界は任意の `s` 1 文字を許す (SSeiKanji の `ssei` 救済)。
+// `s?` は境界の直後にしか付かないため `sensei` (前が `n`) は従来どおり弾かれる。
+// 後境界は非英字・末尾のほか `kanji`/`kana` 接尾辞だけを開ける: 後を無条件に開けると
+// `meishi`・`meiko`・`seiko`・`seito`・`meibo` まで拾うため。
+export const LAST = /last.?name|family.?name|surname|(^|[^a-z])l_?name|(^|[^a-z])s?sei(?=[^a-z]|$|kanji|kana)|姓|苗字|名字|セイ|せい/;
+export const FIRST = /first.?name|given.?name|(^|[^a-z])f_?name|(^|[^a-z])s?mei(?=[^a-z]|$|kanji|kana)|(^|[\s（(［[「【])名($|[\s）)］\]」】*＊:：（(])|メイ|めい/;
 // 参加者名 is the WPForms participant-name label and does not fit the
 // 氏名/名前 vocabulary. (02)参加者名フリガナ also contains the word, but kana
 // attribution is resolveKana's job, so it stays fullNameKana.

@@ -52,6 +52,11 @@ export interface FieldNormViews {
   readonly overseasCtx: string;
 }
 
+// 同一メタのビューを使い回すための棚。classifyField が作ったビューを
+// 役割判定がそのまま触るため、欄ごとの norm 回数は1回分に保たれる。
+// 同一性の担保はオブジェクト同一性で、値は作り直さないため判定結果は不変。
+const normViewCache = new WeakMap<object, FieldNormViews>();
+
 /** 欄メタのraw文字列から正規化ビューを一段で組み立てる（各rawちょうど1回）。 */
 export function buildFieldNormViews(m: {
   name: string;
@@ -60,9 +65,11 @@ export function buildFieldNormViews(m: {
   placeholder: string;
   nearby: string;
 }): FieldNormViews {
+  const cached = normViewCache.get(m);
+  if (cached !== undefined) return cached;
   const ownText = norm([m.name, m.htmlId, m.label, m.placeholder].join(' '));
   const legendText = norm(m.nearby);
-  return {
+  const views: FieldNormViews = {
     ownText,
     legendText,
     nameId: norm(`${m.name} ${m.htmlId}`),
@@ -71,4 +78,6 @@ export function buildFieldNormViews(m: {
     nameIdLabel: norm([m.name, m.htmlId, m.label].join(' ')),
     overseasCtx: `${ownText} ${legendText}`,
   };
+  normViewCache.set(m, views);
+  return views;
 }

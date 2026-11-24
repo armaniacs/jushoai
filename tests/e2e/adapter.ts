@@ -1,4 +1,5 @@
 import type { WebDriver } from 'selenium-webdriver';
+import type { PrefersColorScheme } from './chrome-flags';
 import {
   By, OPTIONS_URL, PROFILE_DATA, closeExtensionPage, openExtensionPage,
   seedChromeProfile, seedProfile, startChromeDriver, startDriver, startPageServer,
@@ -44,6 +45,13 @@ const STORAGE_SET_CHROME = `const done = arguments[arguments.length - 1];
 const STORAGE_SET_FIREFOX = `const done = arguments[arguments.length - 1];
   browser.storage.local.set({ 'jushoai:data': arguments[0] }).then(() => done());`;
 
+// Launch configuration set before start(). colorScheme defaults to light so
+// existing constructions stay behavior-identical; dark feeds the dark-token
+// color-scheme scenarios, which need a session that does not follow the OS.
+export interface BrowserAdapterOptions {
+  colorScheme?: PrefersColorScheme;
+}
+
 export class ChromeAdapter implements BrowserAdapter {
   readonly label = 'chrome';
   driver!: WebDriver;
@@ -51,10 +59,15 @@ export class ChromeAdapter implements BrowserAdapter {
   optionsBase = '';
   private extensionId = '';
   private freshSeq = 0;
+  private readonly colorScheme: PrefersColorScheme;
+
+  constructor(opts: BrowserAdapterOptions = {}) {
+    this.colorScheme = opts.colorScheme ?? 'light';
+  }
 
   async start(): Promise<void> {
     this.pages = await startPageServer();
-    const started = await startChromeDriver();
+    const started = await startChromeDriver(this.colorScheme);
     this.driver = started.driver;
     this.extensionId = started.extensionId;
     this.optionsBase = `chrome-extension://${this.extensionId}/options.html`;
@@ -100,10 +113,15 @@ export class FirefoxAdapter implements BrowserAdapter {
   driver!: WebDriver;
   pages!: PageServer;
   readonly optionsBase = OPTIONS_URL;
+  private readonly colorScheme: PrefersColorScheme;
+
+  constructor(opts: BrowserAdapterOptions = {}) {
+    this.colorScheme = opts.colorScheme ?? 'light';
+  }
 
   async start(): Promise<void> {
     this.pages = await startPageServer();
-    this.driver = await startDriver();
+    this.driver = await startDriver(this.colorScheme);
   }
 
   async seed(data: unknown = PROFILE_DATA): Promise<void> {
