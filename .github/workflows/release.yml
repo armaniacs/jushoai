@@ -150,12 +150,17 @@ jobs:
       - name: Create the GitHub Release
         # Tags only: manual runs stop at the dry-run submit above.
         # Stays after the submit so a failed submission leaves no half release.
+        # --repo is required: this job has no checkout (by design, so that
+        # dependency code never runs where store credentials live), and gh
+        # resolves the repository through git without it (v0.2.0 release
+        # failed with "fatal: not a git repository" for exactly this reason).
         if: github.event_name == 'push' && inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           version="${{ needs.build.outputs.version }}"
           gh release create "${GITHUB_REF_NAME}" \
+            --repo "${{ github.repository }}" \
             "submit-in/jushoai-${version}-chrome.zip" \
             "submit-in/jushoai-${version}-firefox.zip" \
             "submit-in/jushoai-${version}-sources.zip" \
