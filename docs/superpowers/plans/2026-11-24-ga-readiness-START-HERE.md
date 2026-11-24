@@ -42,7 +42,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282（残: タグ打ちと Release のみ） | ゲート確認は完了（Task 16。7 項目の合否を記録。[ ] は付けず）。残りはタグ打ち・push・承認・Release | `2026-11-24-282-chore-ga-release-gate.md` |
+| 5 | 282（残: タグ打ちと Release のみ） | ゲート確認は完了。PR #42 をマージ済み（後半 15 commits）。残りはタグ打ち・push・承認・Release | `2026-11-24-282-chore-ga-release-gate.md` |
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（完了: 5957a02、レビュー Approved。新規 0 件） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
