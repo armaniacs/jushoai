@@ -23,7 +23,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 281 | `tests/build/manifest-guard.build.ts`（権限・CSP・動的コード実行の後退検査） | 597fd68 | Approved、Critical/Important なし |
 | 277 | Dependabot（Actions 週次 + npm は security のみ）と check job の npm audit 監査 | 5589516 | Approved、Critical/Important なし |
 | 274 + 278 | release の build/submit 分離 + SHA256SUMS と来歴証明（同時実施） | 4a62198 | Approved、Critical/Important なし |
-| 282（台帳整理まで完了） | ゲート一覧・版方針・統合PRの作成とマージ・272/273 アーカイブ | ee116b3 + 28850a9、PR #36（7893c9d）、b036287 + a68188b | Approved（Task 11・13 レビュー。13 は再レビュー承認） |
+| 282（台帳整理まで完了） | ゲート一覧・版方針・統合PRの作成とマージ・272/273・3ラウンドのアーカイブ | ee116b3 + 28850a9、PR #36（7893c9d）、b036287 + a68188b、6f31097 | Approved（Task 11・13・14 レビュー。14 は Minor のみ） |
 | 283 | 保存形式の版番号と互換性の約束 | 0cc6c2e + bee3d1a | Approved、Critical/Important なし |
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
 | 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
@@ -42,7 +42,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282（残: 版付けのみ） | 台帳整理は完了（272/273 アーカイブ済み。残りの判断は Ask 中）。版付けが残る | `2026-11-24-282-chore-ga-release-gate.md` |
+| 5 | 282（残: 版付けのみ） | 台帳整理は完了（272/273・3ラウンドのアーカイブ済み。未実施群と291は1.0後）。版付け（0.2.0）が残る | `2026-11-24-282-chore-ga-release-gate.md` |
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（完了: 5957a02、レビュー Approved。新規 0 件） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
