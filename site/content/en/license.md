@@ -41,6 +41,12 @@ Review the preview before filling. You are responsible for checking that the ent
 - The extension source code does not depend on any third-party runtime library.
 - The tools used to build the documentation site, run tests and build the extension are used for development only and are not part of the extension. They follow their own licenses.
 
+## Postal code data
+
+The dictionary behind the postal-code assist is built from Japan Post's public postal code data (KEN_ALL). Japan Post does not claim copyright on this data and allows free redistribution. The primary source is the [postal code data download page](https://www.post.japanpost.jp/zipcode/download.html).
+
+The bundled dictionary is currently a seed covering Tokyo's 23 wards and major cities; the update procedure for the nationwide table is in the [release procedure](https://github.com/armaniacs/jushoai/blob/main/docs/release.md). The generator script is `scripts/generate-zip-dict.mjs`, which swaps the table without changing its shape.
+
 ## Using AI providers
 
 If you use an AI provider such as OpenAI, Google Gemini, Groq or Mistral, that provider's terms of service and privacy policy apply separately. JushoAI's license does not change them. API usage fees are your own responsibility. See [Privacy and what is sent](./privacy.md) for what is sent.

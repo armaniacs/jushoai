@@ -127,6 +127,19 @@ gh workflow run release.yml --ref <ブランチ名> -f dry_run=true
 - プライバシーポリシー: ドキュメントサイトの `guides/privacy/`（日英）
 - 掲載状況: Chrome ウェブストア（2026-10-10）、Edge アドオン（2026-10-12）、Firefox アドオン（AMO、2026-10-12）。どの URL も `docs/store-listing.md` にある。Edge は Chromium 系のため、Chrome 向けの zip をそのまま提出する。Firefox アドオンへの提出は `make zip-firefox` の zip と sources.zip を使う
 
+## 郵便番号辞書の更新（年 1 回程度）
+
+郵便番号の補助候補の表（`src/core/zip-dict-data.ts`）は、日本郵便の公開データ（KEN_ALL）から作る。日本郵便は月 1 回程度データを更新するが、3 桁 prefix の対応が変わることはまれなため、JushoAI では年 1 回程度の更新で足りる。新設の住宅地などで候補が出ない報告があれば、その都度更新する。
+
+手順は次のとおり。
+
+1. `npm run zip-dict -- --input <KEN_ALL.ZIP の保存先>`（直接取得できる環境では引数なしの `npm run zip-dict` で日本郵便から取得する）。同じ入力からは同じ表が出る（バイト同一）。
+2. 生成物の統計（行数・範囲数・除外数）を確認し、`git diff --stat` で表の差分を見る。除外された prefix（複数の都道府県にまたがる 3 桁）は候補が出ず警告のままになるため、件数と内容を PBI-286 の実装記録に残す。
+3. `make check`（`tests/build/zip-dict-size.build.ts` が表 200KB 以下と content script 350KB 以下を検査する）を通す。
+4. 表の更新はコードの変更と分けてコミットする（例: `feat(zip): 郵便番号辞書を KEN_ALL で更新する`）。
+
+いまの表は東京 23 区と主な都市のシードのままである。取得できない環境では seed を残し、PBI-286 の引継ぎに記録する（やっていないことをやったと書かない）。
+
 ## 1.0 リリースゲート (PBI-282)
 
 `1.0.0` を版付けする前に、下の項目をすべて満たすこと。未完了の項目がある間は版付けを見送り、どの項目が残っているかをこの一覧で確かめる。

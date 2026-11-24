@@ -30,7 +30,8 @@
     "typecheck": "tsc --noEmit",
     "site": "node site/build.ts && node site/check.ts",
     "test": "vitest run",
-    "postinstall": "wxt prepare"
+    "postinstall": "wxt prepare",
+    "zip-dict": "node scripts/generate-zip-dict.mjs"
   },
   "devDependencies": {
     "@types/chrome": "^0.3.7",

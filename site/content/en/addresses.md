@@ -42,7 +42,7 @@ If you have multiple addresses registered, you can switch between them using the
 
 Two opt-in assist features can also help in the preview (both are unchecked by default and only apply when you explicitly check them):
 
-- **Postal-prefix assist when prefecture or city is blank (`補助候補を入れる`)**: If `都道府県` or `市区町村` is blank in your address (such as when left blank in guest mode) while `郵便番号` (postal code) is entered, JushoAI checks an on-device postal prefix dictionary (major urban areas seed; no network, no AI) and may offer a candidate ([Everyday scenarios](./scenarios.md)).
+- **Postal-prefix assist when prefecture or city is blank (`補助候補を入れる`)**: If `都道府県` or `市区町村` is blank in your address (such as when left blank in guest mode) while `郵便番号` (postal code) is entered, JushoAI checks an on-device postal prefix dictionary (no network, no AI) and may offer a candidate. The dictionary works in 3-digit prefix units: for a prefix shared by several municipalities it offers only the prefecture and leaves the city as a warning. The current dictionary is a seed covering Tokyo's 23 wards and major cities; the update procedure for the nationwide table is in the [release procedure](https://github.com/armaniacs/jushoai/blob/main/docs/release.md). See [License](./license.md) for the data source ([Everyday scenarios](./scenarios.md)).
 - **Building-name abbreviation when too long (`略記して入れる`)**: When a building name exceeds a form's `maxlength` limit, JushoAI never silently truncates it. Instead, it displays a warning and proposes a deterministic shortened form (for example, `マンション` → `邸` or `ビルディング` → `ビル`) that only applies if you check the box ([Everyday scenarios](./scenarios.md)).
 
 ## What to read next
