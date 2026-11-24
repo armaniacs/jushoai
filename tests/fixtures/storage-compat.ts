@@ -1,5 +1,5 @@
-// Past-version storage fixtures (PBI-283): raw persisted shapes with
-// fictitious values, matching the Profile key set of each released version.
+// Past-version storage fixtures: raw persisted shapes with fictitious values,
+// matching the Profile key set of each released version.
 // The envelope never had a version before 1.0, so these carry none.
 // Key sets verified with `git show <tag>:src/core/types.ts`:
 // - 0.1.20 era (commit 40b643a): base fields only, no company fields.
