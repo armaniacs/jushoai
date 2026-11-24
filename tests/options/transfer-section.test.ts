@@ -24,6 +24,7 @@ const mount = (over: Partial<TransferSectionDeps> = {}) => {
     pickFile: vi.fn(async () => new File(['{}'], 'jushoai-profiles.json', { type: 'application/json' })),
     readFile: vi.fn(async () => '{"profiles":[],"addresses":[]}'),
     onImported: vi.fn(async () => {}),
+    formatInfo: vi.fn(async () => ({ version: 1, needsUpdate: false })),
     ...over,
   };
   mountTransferSection(root, deps);
@@ -188,6 +189,22 @@ describe('mountTransferSection', () => {
     expect(root.textContent).toContain('平文');
     expect(root.textContent).toContain('ID 単位');
     expect(root.textContent).toContain('10 件');
+  });
+
+  it('shows an update prompt when the stored format is newer', async () => {
+    mount({ formatInfo: vi.fn(async () => ({ version: 2, needsUpdate: true })) });
+    await flush();
+    expect(root.textContent).toContain('新しい版（2）');
+    expect(root.textContent).toContain('拡張を更新してください');
+  });
+
+  it('shows no update prompt for the current version or a failed version read', async () => {
+    mount();
+    await flush();
+    expect(root.textContent).not.toContain('拡張を更新してください');
+    mount({ formatInfo: vi.fn(async () => { throw new Error('read failed'); }) });
+    await flush();
+    expect(root.textContent).not.toContain('拡張を更新してください');
   });
 });
 

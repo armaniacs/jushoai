@@ -328,7 +328,8 @@ describe('saveData guard (PBI-23)', () => {
       },
     });
     await saveData(ready);
-    expect(store['jushoai:data']).toEqual(ready);
+    // The envelope stamps the current version even on the degraded path.
+    expect(store['jushoai:data']).toEqual({ version: 1, profiles: ready.profiles, addresses: ready.addresses });
   });
 });
 
@@ -395,11 +396,12 @@ describe('transfer (PBI-117)', () => {
     expect(await loadData()).toEqual(ready);
   });
 
-  it('exports profiles and addresses only, without the last-used state', async () => {
+  it('exports the versioned envelope without the last-used state', async () => {
     await saveData(ready);
     await saveLastUsed({ profileId: 'p1', addressId: '1' });
     const parsed = JSON.parse(await exportTransferFile()) as Record<string, unknown>;
-    expect(Object.keys(parsed).sort()).toEqual(['addresses', 'profiles']);
+    expect(Object.keys(parsed).sort()).toEqual(['addresses', 'profiles', 'version']);
+    expect(parsed.version).toBe(1);
   });
 
   it('rejects broken JSON without touching storage', async () => {
@@ -715,16 +717,20 @@ describe('transfer (PBI-117)', () => {
     });
   });
 
-  it('drops unknown keys from exported entries', async () => {
+  it('keeps unknown keys in exported entries for a newer reader', async () => {
     store['jushoai:data'] = {
-      profiles: [{ ...ready.profiles[0], junk: 'hand-edit' }],
-      addresses: [{ ...ready.addresses[0], exportedAt: '2026-10-21' }],
+      profiles: [{ ...ready.profiles[0], nickname: 'たろちゃん' }],
+      addresses: [{ ...ready.addresses[0], memo: '裏口' }],
     };
     const parsed = JSON.parse(await exportTransferFile()) as {
       profiles: Record<string, unknown>[]; addresses: Record<string, unknown>[];
     };
-    expect(Object.keys(parsed.profiles[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_PROFILE).sort());
-    expect(Object.keys(parsed.addresses[0] ?? {}).sort()).toEqual(Object.keys(EMPTY_ADDRESS).sort());
+    // Known keys stay in template order first; unknown keys ride along so a
+    // newer build can still read what this build does not understand.
+    expect(Object.keys(parsed.profiles[0] ?? {}).slice(0, Object.keys(EMPTY_PROFILE).length).sort())
+      .toEqual(Object.keys(EMPTY_PROFILE).sort());
+    expect(parsed.profiles[0]).toMatchObject({ nickname: 'たろちゃん' });
+    expect(parsed.addresses[0]).toMatchObject({ memo: '裏口' });
   });
 });
 

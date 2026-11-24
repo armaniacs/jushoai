@@ -7,6 +7,8 @@ import {
   exportTransferFile, importTransferFile, TRANSFER_FILE_NAME, TRANSFER_MAX_FILE_BYTES,
   type TransferImportResult,
 } from '../../transfer';
+import type { FormatInfo } from '../../storage';
+import { loadFormatInfo } from '../../storage';
 import { saveTextFile } from './audit-section';
 import { actionButton, el, notice } from './dom';
 
@@ -20,6 +22,9 @@ export interface TransferSectionDeps {
   // Returns a promise so a failed re-render can be awaited and shown instead
   // of leaving a stale 取り込みました on screen (PBI-117 review).
   onImported(): Promise<void>;
+  // Reports the persisted format version (WHY injected): tests pin the skew
+  // notice without touching chrome.storage.
+  formatInfo(): Promise<FormatInfo>;
 }
 
 const EXPORT_WARNING =
@@ -82,6 +87,7 @@ export function defaultTransferDeps(): TransferSectionDeps {
     pickFile,
     readFile,
     onImported: async () => {},
+    formatInfo: loadFormatInfo,
   };
 }
 
@@ -95,6 +101,22 @@ export function mountTransferSection(root: HTMLElement, deps: TransferSectionDep
   ]) fieldset.append(el('p', line));
 
   const feedback = el('div');
+  // A store written by a newer build keeps working here, but the user should
+  // know an update exists (WHY a plain paragraph in this section): the
+  // transfer section is where stored data is managed, so the skew notice
+  // lives with it instead of adding a new banner or badge. A version that
+  // cannot be read shows nothing.
+  void deps.formatInfo().then(
+    (info) => {
+      if (info.needsUpdate) {
+        fieldset.insertBefore(
+          el('p', `保存データの形式が新しい版（${info.version}）で保存されています。拡張を更新してください。`),
+          feedback,
+        );
+      }
+    },
+    () => { /* A version that cannot be read shows no notice. */ },
+  );
   // Live region moved into the shared notice: notice() itself marks its elements aria-live="polite".
   // Saved/errors rendering goes through the shared notice module (PBI-151):
   // the truncate rule (5 shown lines plus a rest count) lives in dom.ts, so a

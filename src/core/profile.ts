@@ -2,7 +2,21 @@ import { toKatakana } from './formatters';
 import { GENDERS } from './genders';
 import { clean, includesLiteral } from './literals';
 import { PREFECTURES } from './prefectures';
+import { EMPTY_ADDRESS, EMPTY_PROFILE } from './types';
 import type { Address, Profile } from './types';
+
+// Splits the keys a newer version may have written from the template's known
+// keys (WHY): normalization and export reshape only the known keys, while the
+// unknown ones must travel with the entry untouched through edit, save, and
+// transfer round trips instead of being silently dropped.
+export function unknownEntries<T extends object>(template: T, value: T): Record<string, unknown> {
+  const known = new Set(Object.keys(template));
+  const out: Record<string, unknown> = {};
+  for (const [k, v] of Object.entries(value as Record<string, unknown>)) {
+    if (!known.has(k)) out[k] = v;
+  }
+  return out;
+}
 
 // digits stays outside clean (WHY): it projects digit runs rather than
 // canonicalizing a value; trim would be a no-op because \D already drops every
@@ -24,6 +38,11 @@ const birthday = (s: string) => {
 
 export function normalizeProfile(p: Profile): Profile {
   return {
+    // Unknown keys ride along untouched (WHY): entries written by a newer
+    // version carry fields this version does not know, and dropping them
+    // here would make an edit-and-save round trip silently lose future
+    // data. Validation and fill only read the known keys below.
+    ...unknownEntries(EMPTY_PROFILE, p),
     id: p.id,
     label: p.label.trim(),
     lastName: p.lastName.trim(),
@@ -52,6 +71,9 @@ export function normalizeProfile(p: Profile): Profile {
 
 export function normalizeAddress(a: Address): Address {
   return {
+    // Same forward-compatibility ride-along as normalizeProfile: unknown
+    // keys survive normalization so a newer writer's fields are not lost.
+    ...unknownEntries(EMPTY_ADDRESS, a),
     id: a.id,
     label: a.label.trim(),
     profileId: a.profileId,
