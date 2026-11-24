@@ -31,7 +31,7 @@ Scenario: 未完了の必須項目があると版付けしない
 - [x] `docs/release.md` に 1.0 ゲート一覧（make check-all 緑、eval pin 緑、276 の結果、274/275/277/281/283 完了、ストア掲載文とプライバシー文書の整合、CHANGELOG の 1.0.0 節）を置く
 - [x] バージョン方針（semver。保存形式の非互換は major でのみ行う、等）を `docs/release.md` に書く
 - [x] ストア掲載文・README・サイトから「試用」相当の表現を見直す
-- [x] 0.2.0 の CHANGELOG 節と GitHub Release を作成（2026-11-25。Release 作成済み、zip 3 種 + SHA256SUMS 添付。ストアの審査結果は追跡中）
+- [x] 0.2.0 の CHANGELOG 節と GitHub Release を作成（2026-11-25。Release 作成済み、zip 3 種 + SHA256SUMS 添付、来歴検証済み。CI の Release 作成失敗は手で作成し、ワークフロー修正を PR #43 でマージ済み。ストアの審査結果は追跡中）
 
 ## テスト戦略
 - E2E: `make check-all`（両ブラウザ E2E）
