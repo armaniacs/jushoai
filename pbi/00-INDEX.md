@@ -1,5 +1,26 @@
 # PBI 台帳インデックス
 
+## 進行中（2026-11-24・正式版 (1.0) 準備ラウンド。機能充足の評価・改善・将来機能・セキュリティ必須対応の17件。ラウンド台帳に順位とRICEと依存を記録）
+
+- `2026-11-24-00-backlog-ga-readiness-round.md`（ラウンド台帳。機能充足の評価表、1.0 までの段取り、確認済みの良い点、やらないことの継続を記録）
+- `2026-11-24-275-sec-security-policy.md`（順位 1。RICE 1000。1.0 必須。SECURITY.md と非公開の脆弱性報告窓口）
+- `2026-11-24-277-sec-dependency-monitoring.md`（順位 2。RICE 533。1.0 必須。Dependabot と npm audit）
+- `2026-11-24-274-sec-release-job-split.md`（順位 3。RICE 480。1.0 必須。release の build と submit の分離）
+- `2026-11-24-281-sec-manifest-guard.md`（順位 4。RICE 400。1.0 必須。権限と CSP の機械検査）
+- `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート）
+- `2026-11-24-276-sec-pre-ga-vuln-rescan.md`（順位 6。RICE 160。1.0 必須。統合後の再スキャン。282 に依存）
+- `2026-11-24-283-feat-storage-compat-contract.md`（順位 7。RICE 320。1.0 必須。保存形式の版番号と互換性）
+- `2026-11-24-280-sec-threat-model-doc.md`（順位 8。RICE 120。1.0 推奨。脅威モデルと端末保存データの明示）
+- `2026-11-24-284-feat-data-loss-guard.md`（順位 9。RICE 100。1.0 推奨。バックアップの導線）
+- `2026-11-24-278-sec-release-provenance.md`（順位 10。RICE 80。1.0 推奨。SHA256SUMS と来歴証明）
+- `2026-11-24-285-chore-a11y-keyboard-audit.md`（順位 11。RICE 17。1.0 推奨。キーボードと読み上げの通し監査）
+- `2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化）
+- `2026-11-24-287-backlog-profile-at-rest-encryption.md`（順位 13。RICE 4。将来。着手条件付き）
+- `2026-11-24-288-backlog-cross-device-sync.md`（順位 14。RICE 3。将来。287 に依存）
+- `2026-11-24-289-backlog-firefox-android.md`（順位 15。RICE 3。将来。着手条件付き）
+- `2026-11-24-290-backlog-safari.md`（順位 16。RICE 2。将来の調査。289 に依存）
+- `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
+
 ## 進行中（2026-11-23・足立ラウンドの残置2点のなぜなぜ分析から着手。272 の後続）
 
 - `2026-11-23-273-feat-combo-search-parking.md`（単発。RICE 48。検索補助窓の停泊と残置欄の pin 固定。なぜなぜ分析 3立場 x 30連鎖 (`.superpowers/sdd/why-why-school-remnants-2026-11-23.md`) が原紙。計画は `docs/superpowers/plans/2026-11-23-combo-search-parking.md`。実装済み (e12b661 / 9adc3fe / fbc007d / 19c6093)。絞り込みfillとajax待ちは 270 に引継ぎ。ブランチ `work/emergency-contact-tel`。アーカイブはマージ後）
