@@ -547,13 +547,18 @@ export function showPreview(opts: PreviewOptions): PreviewHandle {
   const showUndoResult = (restored: number, skipped: number): void => {
     const actions = document.createElement('div');
     actions.className = 'actions';
-    actions.append(doneButton());
+    const done = doneButton();
+    actions.append(done);
     swapToResult(
       skipped > 0
         ? `元に戻しました（${restored}件）。追記後の${skipped}件はそのままです`
         : `元に戻しました（${restored}件）`,
       actions,
     );
+    // The pressed undo button is gone with the result view, so keyboard focus
+    // would strand on the page behind without this move (same rationale as
+    // the report focus in showResult).
+    done.focus();
   };
 
   return { setRows, setAddressId, showResult, showUndoResult, close: () => mounted.close(), getApplyPoint, getHost: () => mounted.host };

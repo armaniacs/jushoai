@@ -375,6 +375,14 @@ describe('showResult: undo (PBI-132)', () => {
     buttonIn(root, '元に戻す')!.click();
     expect(root.querySelector('.empty')?.textContent).toBe('元に戻しました（2件）');
   });
+
+  it('moves focus to the close button after undo', () => {
+    const { handle, root } = open({ rows: [makeRow('ok')] });
+    handle.showResult(summary, () => {}, { count: 2, onUndo: () => handle.showUndoResult(2, 0) });
+    buttonIn(root, '元に戻す')!.click();
+    // Focus inside a shadow root surfaces as the shadow root's activeElement.
+    expect(root.activeElement?.textContent).toBe('閉じる');
+  });
 });
 
 describe('zip assist checkbox (PBI-125)', () => {

@@ -306,6 +306,11 @@ describe('mountButton', () => {
       expect(css()).toMatch(/\.wrap:hover, \.wrap:focus-within, \.wrap:active \{ background: var\(--jushoai-banner-bg-active\); \}/);
       expect(css()).toMatch(/--jushoai-banner-bg-active: #1c46b3;/);
     });
+
+    it('keeps a visible focus indicator on the banner buttons', () => {
+      const { css } = mount();
+      expect(css()).toMatch(/:focus-visible \{[^}]*outline/);
+    });
   });
 
   describe('dark banner tokens (PBI-209)', () => {

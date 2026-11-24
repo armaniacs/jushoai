@@ -112,6 +112,72 @@ export function runFillFlow(adapter: BrowserAdapter, label: string): void {
   });
 }
 
+// Keyboard-only end to end (PBI-285): the whole flow without a single click.
+// Tab reaches the banner from the page, Enter opens the preview, Tab moves
+// inside the trapped panel and back, Enter applies, Tab wraps through the
+// result actions to 元に戻す, and Escape closes the confirmation.
+export function runKeyboardOnlyFlow(adapter: BrowserAdapter, label: string): void {
+  describe(`${label}: keyboard-only flow (PBI-285)`, () => {
+    it('tabs to the banner, applies through the preview, and undoes from the result', async () => {
+      const { driver, pages } = adapter;
+      await driver.get(`${pages.origin}/split-form.html`);
+      const tab = async (): Promise<void> => {
+        await driver.actions().sendKeys(Key.TAB).perform();
+      };
+      const shiftTab = async (): Promise<void> => {
+        await driver.actions().keyDown(Key.SHIFT).sendKeys(Key.TAB).keyUp(Key.SHIFT).perform();
+      };
+      const press = async (key: string): Promise<void> => {
+        await driver.actions().sendKeys(key).perform();
+      };
+      const activeId = async (): Promise<string | null> =>
+        driver.executeScript('return document.activeElement?.id ?? null;');
+      const focusInBanner = async (): Promise<boolean> =>
+        driver.executeScript(
+          'return document.activeElement?.hasAttribute?.("data-jushoai") ?? false;',
+        );
+      // Anchor on the first field with the keyboard alone: a fresh page starts
+      // on the body, so Tab walks the page in order.
+      await driver.wait(async () => {
+        await tab();
+        return (await activeId()) === 'ln';
+      }, 10_000, 'Tab never reached the first field');
+      // Walk the rest of the form to the banner. The host sits last in the
+      // flat tree, so the first host focus is the banner's first button.
+      await driver.wait(async () => {
+        await tab();
+        return focusInBanner();
+      }, 10_000, 'Tab never reached the banner');
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('入力内容の確認'),
+      15_000, 'Enter on the banner did not open the preview');
+      // The preview opens on its primary action; one Tab and back proves the
+      // trap moves inside the panel instead of escaping to the page.
+      await tab();
+      await shiftTab();
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('適用済み'),
+      15_000, 'Enter on the preview did not apply');
+      expect(await valueOf(driver, 'ln')).toBe('山田');
+      // Result actions run [undo, report, close] from the report focus the
+      // result view takes: two Tabs wrap around to 元に戻す.
+      await tab();
+      await tab();
+      await press(Key.ENTER);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)).includes('元に戻しました'),
+      15_000, 'Enter on the undo action did not undo');
+      expect(await valueOf(driver, 'ln')).toBe('');
+      await press(Key.ESCAPE);
+      await driver.wait(async () =>
+        (await resultPanelText(driver)) === '',
+      10_000, 'Escape did not close the confirmation');
+    });
+  });
+}
+
 export function runPartialNoticeFlow(adapter: BrowserAdapter, label: string): void {
   describe(`${label}: partial fill notice (PBI-82, PBI-55)`, () => {
     it('guards unfillable fields and keeps the result with a report button', async () => {
@@ -686,6 +752,7 @@ export function runBrowserScenarios(adapter: BrowserAdapter, opts: BrowserScenar
   // opts.labelは残すが表示名はadapter.labelに一本化（段階移行中・動作不変）。
   const label = adapter.label;
   runFillFlow(adapter, label);
+  runKeyboardOnlyFlow(adapter, label);
   if (opts.includePartialNotice) runPartialNoticeFlow(adapter, label);
   runFillOneKana(adapter, label);
   runPartialBannerPersistence(adapter, label);
