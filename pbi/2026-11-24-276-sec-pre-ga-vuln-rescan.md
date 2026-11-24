@@ -65,7 +65,7 @@ Scenario: 前回の指摘が退行していない
 - High 以上の修正: 該当なし（新規 0 件、残余 1 件は Medium の受容）。TDD の赤緑は発生しない。
 - 成果物: `JushoAI_VULNHUNT_RESULTS_2026-11-24-192538/`（README + exploit_tests 6 件。git 管理外、コミット対象外）。
 - sources zip 除外の確認: `wxt.config.ts:13` と `.gitignore:20,33` が今回の成果物に一致。`make zip-firefox` 再作成後の sources zip（166 件）に vulnhunt 成果物が含まれないことを一覧で確認。
-- CHANGELOG 判断: 1.0.0 節の起草時に1段落の要約（実施日、新規 0 件、前回 4 件のうち修正 3・受容 1）を載せる。以降の `make check` などに影響しない文書のみの変更。
+- CHANGELOG 判断: 1.0.0 節の起草時に1段落の要約（実施日、新規 0 件、前回 4 件のうち修正 3・受容 1）を載せる。今回は CHANGELOG 本文を変更しない。
 
 ## 引継ぎ（Task 12 完了後）
 
