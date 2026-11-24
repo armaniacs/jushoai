@@ -28,3 +28,7 @@
 バッチ1（並列可・ファイル重なりなし）: 150（fill-one/import-draft/content.ts:532）→ 151（options 4+dom.ts）→ 152（button/content-session）→ 155（ui 4パネル）→ 157（preview.ts）→ 154（egress-plan/analyze.ts）
 バッチ2（直列後続）: 156（content.ts:489-566・150の後）→ 158（options/main.ts・151の後）→ 153（store群+content.ts:404・156の後）
 バッチ3: 159（153の後）
+
+## 閉鎖記録（2026-11-24・PBI-282 Task 14。ユーザー決定）
+
+- レビュー実施なしで閉じる。内部構造の整理のみ（150 の kana 帰属の分岐解消を除き利用者向け挙動変更は無い）で、子 PBI 150-159 は実装・アーカイブ済みである。

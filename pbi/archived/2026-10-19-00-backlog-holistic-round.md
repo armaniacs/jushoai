@@ -21,3 +21,7 @@
 - `2026-10-19-62-refactor-status-text-table.md`（2位）
 - `2026-10-19-63-refactor-public-url-brand.md`（3位）
 - `2026-10-19-64-refactor-preview-binding.md`（4位）
+
+## 閉鎖記録（2026-11-24・PBI-282 Task 14。ユーザー決定）
+
+- レビュー実施なしで閉じる。内部整理のみで利用者向け挙動変更は無く、子 PBI 61-64 は実装・アーカイブ済み（統合 8ee8c19）である。

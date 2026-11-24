@@ -23,12 +23,13 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 281 | `tests/build/manifest-guard.build.ts`（権限・CSP・動的コード実行の後退検査） | 597fd68 | Approved、Critical/Important なし |
 | 277 | Dependabot（Actions 週次 + npm は security のみ）と check job の npm audit 監査 | 5589516 | Approved、Critical/Important なし |
 | 274 + 278 | release の build/submit 分離 + SHA256SUMS と来歴証明（同時実施） | 4a62198 | Approved、Critical/Important なし |
-| 282（部分+PR） | ゲート一覧・版方針・統合PRの作成（統合実行と版付けは残） | ee116b3 + 28850a9、PR #36 | Approved（Task 11 レビュー。CI は PR 上で全緑を確認） |
+| 282（ゲート確認まで完了） | ゲート一覧・版方針・統合PRの作成とマージ・台帳整理・0.2.0 表記と CHANGELOG 起草・ゲート 7 項目の確認 | ee116b3 + 28850a9、PR #36（7893c9d）、b036287 + a68188b、6f31097、04d212b + fac1221 + db1b6c3、e0477c4 | Approved（Task 11・13・14・15・16 レビュー） |
 | 283 | 保存形式の版番号と互換性の約束 | 0cc6c2e + bee3d1a | Approved、Critical/Important なし |
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
 | 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
 | 285 | キーボードと読み上げの通し監査 | 70616e8 + f68dbb2 | Approved（Critical 1 件は Chrome 実機 E2E で解消・再レビュー承認） |
 | 286 | 郵便番号補助の全国化（仕組みまで。実データ生成は残） | 75a1b1e + 2fc6b50 | Approved（Important 2 件は修正済み・再レビュー承認） |
+| 276 | 統合後の脆弱性再スキャン | 5957a02 | Approved、Critical/Important なし（Minor 2 件はその場で修正） |
 
 - 275 の GitHub 側設定（private vulnerability reporting の有効化）はユーザーが実施済み。応答目安（受付 7 日、方針連絡 30 日）はユーザーが確定済み
 - 275 で未確認が 1 点: ログアウト状態で `https://github.com/armaniacs/jushoai/security/advisories/new` が開くこと（ユーザーに確認を依頼済み。開けば 275 を閉じられる）
@@ -41,8 +42,8 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282（残: PR 承認待ち） | 未マージブランチの統合実行（PR #36 作成済み。マージはユーザーの承認後。版付けはその後） | `2026-11-24-282-chore-ga-release-gate.md` |
-| 6 | 276 | 統合後の main で脆弱性の再スキャン（282 の統合に依存） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
+| 5 | 282（残: タグ打ちと Release のみ） | ゲート確認は完了（Task 16。7 項目の合否を記録。[ ] は付けず）。残りはタグ打ち・push・承認・Release | `2026-11-24-282-chore-ga-release-gate.md` |
+| 6 | 276 | 統合後の main で脆弱性の再スキャン（完了: 5957a02、レビュー Approved。新規 0 件） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
 | 9 | 284 | バックアップの導線（完了: ffc6706 + b572f2a、レビュー Approved） | `2026-11-24-284-feat-data-loss-guard.md` |
@@ -62,7 +63,10 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 6. PBI-284 は完了した（ffc6706 + b572f2a、レビュー Approved）。Minor 2 件はその場で修正し、該当テスト 40/40 緑を確認。Firefox 実機の E2E は残作業として PBI 引継ぎに記録
 7. PBI-285 は完了した（70616e8 + f68dbb2、レビュー承認）。初回レビューで Critical 1 件（E2E 未実行の誤前提）が出たが、Chrome 実機で `keyboard-only flow` 通過を確認して解消。Firefox 実機と読み上げ実機は残作業として PBI 引継ぎに記録。新規 PBI-291（結果件数の読み上げ）は未採点・未着手
 8. PBI-286 は仕組みまで完了した（75a1b1e + 2fc6b50、レビュー承認。Important 2 件は修正済み・再レビュー承認）。実データ生成は環境の WAF 遮断で不可のため、PBI-286 の引継ぎに残す。BDD シナリオ 1 の planner 連携テストは生成時に追加する
-9. PBI-282 の統合は PR #36（`work/ga-readiness` → `main`、最上位 1 本）を作成済み。CI は PR 上で全緑（check、e2e chrome、e2e firefox）。残りはユーザーの PR 承認とマージ。マージ後に PBI-282 基準 1 件目の `[x]` 化、PBI-276、版付け時の CHANGELOG 起草へ進む
+9. PBI-282 の統合と台帳整理は完了した（PR #36 をマージ、基準 1 件目 `[x]`。272/273 と 3 ラウンドのアーカイブ、未実施群と 291 の 1.0 後明記で基準 2 件目 `[x]`）。残りは版付けのみ
+10. PBI-276 は完了した（5957a02、レビュー Approved。新規指摘 0 件、前回 4 件は修正済み 3・受容 1。残余リスクの再検討条件は PBI 引継ぎに記録）
+11. 版付け準備は完了した（04d212b + fac1221 + db1b6c3、レビュー承認。0.2.0 表記、CHANGELOG 0.2.0 節、package.json 0.2.0。タグなし）。ゲート確認も完了した（e0477c4、レビュー承認。check・site・eval pin 緑、firefox 25/25 緑、chrome 27/28 既知 1 件、DoD 未記入と dry-run 残を記録）。残りはタグ打ち・push・environment 承認・Release（手順は PBI-282 引継ぎ。タグ push はストア提出を起動するため最終確認が必要）
+12. 残作業: PBI-291（未採点・未着手、1.0 後）、286 実データ生成（環境の WAF 遮断。生成環境で再実行）、各種実機確認の残り（274 dry-run は版付け手順内）
 3. ブランチ全体のレビューは `d184fa1..HEAD` の範囲で 1 回実施した（`.superpowers/sdd/ga-readiness-final-review.md`。判定は条件付き Approve で、条件の 1 行修正を反映したらマージ可）。残る各タスクの Minor はレビューで受容可と評価済み
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
