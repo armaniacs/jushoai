@@ -80,3 +80,5 @@ JushoAI's UI sits inside a closed Shadow DOM, so page scripts cannot operate it.
 - Forms inside cross-origin iframes are not filled.
 - Checkboxes, hidden fields, submit buttons, multi-line text areas, and radio buttons other than gender and age group are not targeted.
 - Pages registered as excluded URLs are left alone. See [Filling forms and the toolbar](./popup-and-fill.md).
+
+If you find a vulnerability, report it privately through GitHub rather than in a public issue. The steps and response targets are in the [security policy](https://github.com/armaniacs/jushoai/security/policy).

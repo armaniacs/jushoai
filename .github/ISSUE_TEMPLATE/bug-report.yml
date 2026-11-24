@@ -8,6 +8,8 @@ body:
       value: |
         公開の Issue になります。プロファイルの値や住所など、個人情報は書かないでください。
         This issue is public. Do not include personal information.
+        セキュリティ上の問題は公開 Issue に書かず、https://github.com/armaniacs/jushoai/security/advisories/new から非公開で報告してください。
+        For security problems, do not file a public issue; report privately at https://github.com/armaniacs/jushoai/security/advisories/new
   - type: textarea
     id: steps
     attributes:

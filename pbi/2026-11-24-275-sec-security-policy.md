@@ -27,11 +27,11 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 ```
 
 ## 受け入れ基準
-- [ ] ルートに `SECURITY.md` がある（対象バージョン、報告方法、応答目安、公開までの流れ、対象外の例）
+- [x] ルートに `SECURITY.md` がある（対象バージョン、報告方法、応答目安、公開までの流れ、対象外の例）
 - [ ] リポジトリ設定で private vulnerability reporting が有効（ユーザー作業）
-- [ ] `.github/ISSUE_TEMPLATE/config.yml` と bug-report フォームに非公開報告への案内がある
-- [ ] サイトの安全ガイド (ja/en) から SECURITY.md へのリンクがあり、`make site` が緑
-- [ ] 対象外の例に「ページ自身が悪意ある label を出す場合の AI 送信内容」など、既知の設計上の限界を明記する
+- [x] `.github/ISSUE_TEMPLATE/config.yml` と bug-report フォームに非公開報告への案内がある
+- [x] サイトの安全ガイド (ja/en) から SECURITY.md へのリンクがあり、`make site` が緑
+- [x] 対象外の例に「ページ自身が悪意ある label を出す場合の AI 送信内容」など、既知の設計上の限界を明記する
 
 ## テスト戦略
 - E2E: なし
@@ -48,3 +48,8 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`SECURITY.md` 不在を `ls` で確認
+
+## 実装記録
+
+- SECURITY.md、Issue テンプレートの案内、サイト安全ガイド (ja/en) の報告方法の段落を追加。`make site` と `tests/site` は緑。
+- 残るユーザー作業: リポジトリ設定で private vulnerability reporting を有効化する。応答目安の日数（受付 7 日、方針 30 日）は仮置きのため確認する。

@@ -80,3 +80,5 @@ JushoAI の画面は、閉じた Shadow DOM の中に置きます。ページ側
 - 別のオリジンの iframe の中にあるフォームには入力しません。
 - チェックボックス、hidden、送信ボタン、複数行テキスト（`textarea`）、性別と年代以外のラジオボタンは対象にしません。
 - 起動しない URL を登録したページでは、動きません。登録は [フォームへの入力とツールバー](./popup-and-fill.md) を参照してください。
+
+脆弱性を見つけたときは、公開の Issue ではなく GitHub の非公開報告から送ってください。手順と対応の目安は [セキュリティポリシー](https://github.com/armaniacs/jushoai/security/policy) にあります。

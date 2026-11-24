@@ -3,3 +3,6 @@ contact_links:
   - name: ドキュメント / Documentation
     url: https://armaniacs.github.io/jushoai/
     about: 使い方とトラブルシューティングを先に確認できます。
+  - name: 脆弱性の報告 / Security vulnerability
+    url: https://github.com/armaniacs/jushoai/security/advisories/new
+    about: セキュリティ上の問題は公開 Issue ではなく、こちらから非公開で報告してください。
