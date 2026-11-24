@@ -25,3 +25,11 @@
 - `2026-10-19-58-refactor-result-labels.md`（3位）
 - `2026-10-19-59-chore-setrows-guard.md`（4位）
 - `2026-10-19-60-test-report-clickthrough.md`（5位）
+
+## レビュー記録（2026-11-24・PBI-282 Task 14）
+
+- 対象は子 PBI 56-60 の実装済み差分（統合 0c1d9c4。17 ファイル・640 行追加）である。
+- 56（結果ビューのフォーカス移動）の a11y 保証を確認した。`src/ui/preview.ts` の `showResult` は報告ボタンへ `report.focus()` し、テスト `tests/ui/preview.test.ts` が shadow root の activeElement で固定している。現行コードにも残存する。
+- Task 9（PBI-285 監査）の F2 は `showUndoResult` に `done.focus()` を足した対称の対応であり、56 と矛盾しない。発話の不足は PBI-291 に分離済みで、このラウンドの範囲外である。
+- 57（byResult の Readonly 化）、58（FILL_RESULT_LABELS の一本化）、59（resultMode の setRows ガード）、60（E2E の reportButton と resultPanelText）は現行コードに残存し、利用者向け挙動の変更は無い。
+- 判定は問題なし。このラウンドを閉じる。

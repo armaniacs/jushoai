@@ -20,14 +20,14 @@
 - `2026-11-24-289-backlog-firefox-android.md`（順位 15。RICE 3。将来。着手条件付き）
 - `2026-11-24-290-backlog-safari.md`（順位 16。RICE 2。将来の調査。289 に依存）
 - `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
-- `2026-11-24-291-chore-a11y-result-announcement.md`（未採点。1.0 後でも可。PBI-285 の監査で分離。結果画面の件数の読み上げ）
+- `2026-11-24-291-chore-a11y-result-announcement.md`（未採点。1.0 後でも可。PBI-285 の監査で分離。結果画面の件数の読み上げ。1.0 後。2026-11-24 ユーザー決定）
 
 ## 進行中からアーカイブ済み（2026-11-24・272/273 を PR #36 でマージ済み。台帳の「アーカイブはマージ後」条件が満たされた）
 
 - `archived/2026-11-23-272-feat-emergency-contact-tel.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット 3f9225a / ba1bdc8 / c245c18 / 056fecc。PR #36 の CI（check）が緑。`make eval` は PR の CI 対象外のため未確認）
 - `archived/2026-11-23-273-feat-combo-search-parking.md`（実装済み。PR #36 で main にマージ。実装コミット e12b661 / 9adc3fe / fbc007d / 19c6093。PR #36 の CI（check）が緑。`make eval` は PR の CI 対象外のため未確認）
 
-## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
+## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録。1.0 後。2026-11-24 ユーザー決定）
 
 - `2026-11-22-00-backlog-adachi-person-round.md`（ラウンド台帳。足立対応と児童と保護者の人物分離の6件を個別PBI化。依存は採点より優先し266を先頭にした）
 - `2026-11-22-266-chore-adachi-min-fixture.md`（順位 1。RICE 600。足立の最小fixture）
@@ -37,7 +37,7 @@
 - `2026-11-22-270-feat-cascade-select-fill.md`（順位 5。RICE 30。親子select）
 - `2026-11-22-271-feat-juku-field.md`（順位 6。RICE 20。塾対応）
 
-## 進行中（2026-11-21・checking-team + アーキテクチャ発見の PBI 化。ラウンド台帳にインベントリ・RICE・受容判断を記録）
+## 進行中（2026-11-21・checking-team + アーキテクチャ発見の PBI 化。ラウンド台帳にインベントリ・RICE・受容判断を記録。1.0 後。2026-11-24 ユーザー決定）
 
 - `2026-11-21-00-backlog-checking-arch-round.md`（ラウンド台帳。checking-team 2026-11-21 (95/100・Medium 5 件は同ラウンドで修正済み) とアーキテクチャレビュー 2026-11-20 の発見 13 件を個別 PBI 化 (246-258)。受容判断 2 件は台帳のみに記録）
 - `2026-11-21-247-refactor-drop-fill-session-facade.md`（順位 2。RICE 80。content-session facade 剥がし。アーキ候補 5）
@@ -53,7 +53,7 @@
 - `2026-11-21-257-chore-ownlegend-gate-explicit.md`（順位 12。RICE 18。ownLegend の legend 側ゲート既定値の明示化）
 - `2026-11-21-258-refactor-refine-dropped-measure.md`（順位 13。RICE 15。refineDropped 計測源を dropped 数に寄せる）
 
-## 進行中（2026-11-21・DRY/KISS 調査ラウンド。ラウンド台帳にインベントリ・受容判断を記録）
+## 進行中（2026-11-21・DRY/KISS 調査ラウンド。ラウンド台帳にインベントリ・受容判断を記録。1.0 後。2026-11-24 ユーザー決定）
 
 - `2026-11-21-01-backlog-drykiss-round.md`（ラウンド台帳。コード全体の DRY/KISS 調査 (2026-11-21) の発見 6 件を個別 PBI 化。K3 (mountButton) は既存候補棚継続、K4 (classifyField) は受容判断、K5 (buildPlan) は条件未到来として台帳に記録）
 - `2026-11-21-261-chore-settings-store-typed-error.md`（順位 3。RICE 14。settings-store の型付きエラーモード (導入 or 判断記録)）
@@ -291,7 +291,7 @@
 - `archived/2026-10-30-201-refactor-tab-scope-memory.md`（順位 12。タブスコープメモリをtab-scope 1所有者に集約。be4bf73）
 
 ラウンド5進行中（残置）:
-- `2026-10-30-202-backlog-tab-send-seam.md`（順位 13。Speculative・残置。次のタブ宛てアクション追加時に着手段階を確認）
+- `2026-10-30-202-backlog-tab-send-seam.md`（順位 13。Speculative・残置。次のタブ宛てアクション追加時に着手段階を確認。1.0 後。2026-11-24 ユーザー決定）
 - `2026-10-30-00-backlog-arch-round5.md`（ラウンド台帳。202の残置判断が確定したらアーカイブ）
 
 ラウンド5実施前の残務（autonomous-task-closerで実装・検証済み）:
@@ -352,21 +352,13 @@
 
 （115〜117・119〜128・130 はレビュー確認を経てアーカイブ済み。129 は着手条件未到来で backlog 残置）
 
-- `2026-10-22-129-feat-dynamic-form-support.md`（実装なし。後描画追従は既存実装で担保、残る差分は残置判断を記録）
+- `2026-10-22-129-feat-dynamic-form-support.md`（実装なし。後描画追従は既存実装で担保、残る差分は残置判断を記録。1.0 後。2026-11-24 ユーザー決定）
 
-## 進行中（archラウンド2・実装済み）
+## 進行中からアーカイブ済み（2026-11-24・PBI-282 Task 14。レビュー系ラウンド3件を閉鎖。pbi55 のみレビュー実施はユーザー決定どおり）
 
-- `2026-10-24-00-backlog-arch-round2.md`（アーキテクチャレビュー10候補のPBI化・RICE順位確定、実装済み・コードレビューのみ残）
-
-最終検証: `make check` exit 0（152 files / 1890 passed + 1 expected fail）
-
-## 進行中（大局レビューラウンド・実装済み・コードレビューのみ残）
-
-- `2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定、4件とも子PBI 61-64 として実装済み）
-
-## 進行中（PBI-55レビューラウンド・実装済み・コードレビューのみ残）
-
-- `2026-10-19-00-backlog-pbi55-round.md`（PBI-55レビュー指摘5件のPBI化・RICE順位確定・5件実装、`make check` green・E2E Chrome 7/7 green、0c1d9c4で統合済み）
+- `archived/2026-10-19-00-backlog-pbi55-round.md`（PBI-55レビュー指摘5件のPBI化・RICE順位確定・5件実装。Task 14 で実装済み差分をレビューし問題なしと判定。子 PBI 56-60 はアーカイブ済み、統合 0c1d9c4）
+- `archived/2026-10-19-00-backlog-holistic-round.md`（大局レビュー4テーマのPBI化・RICE順位確定。レビュー実施なしで閉鎖（ユーザー決定）。内部整理のみで利用者向け挙動変更なし。子 PBI 61-64 は実装・アーカイブ済み、統合 8ee8c19）
+- `archived/2026-10-24-00-backlog-arch-round2.md`（アーキテクチャレビュー10候補のPBI化・RICE順位確定。レビュー実施なしで閉鎖（ユーザー決定）。子 PBI 150-159 は実装・アーカイブ済み）
 
 ## 進行中（1018cレビューラウンド・実装済み・コードレビュー完了）
 
