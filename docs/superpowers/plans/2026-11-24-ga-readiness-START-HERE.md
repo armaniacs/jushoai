@@ -26,6 +26,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 282（部分） | ゲート一覧・版方針・試用表現の見直し（統合実行と版付けは残） | ee116b3 + 28850a9 | Approved（Important 1 件は修正済み・再レビュー承認） |
 | 283 | 保存形式の版番号と互換性の約束 | 0cc6c2e + bee3d1a | Approved、Critical/Important なし |
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
+| 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
 
 - 275 の GitHub 側設定（private vulnerability reporting の有効化）はユーザーが実施済み。応答目安（受付 7 日、方針連絡 30 日）はユーザーが確定済み
 - 275 で未確認が 1 点: ログアウト状態で `https://github.com/armaniacs/jushoai/security/advisories/new` が開くこと（ユーザーに確認を依頼済み。開けば 275 を閉じられる）
@@ -42,7 +43,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（282 の統合に依存） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
-| 9 | 284 | バックアップの導線 | `2026-11-24-284-feat-data-loss-guard.md` |
+| 9 | 284 | バックアップの導線（完了: ffc6706 + b572f2a、レビュー Approved） | `2026-11-24-284-feat-data-loss-guard.md` |
 | 11 | 285 | キーボードと読み上げの通し監査 | `2026-11-24-285-chore-a11y-keyboard-audit.md` |
 | 12 | 286 | 郵便番号補助の全国化 | `2026-11-24-286-feat-zip-dict-nationwide.md` |
 
@@ -56,7 +57,8 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 3. PBI-282 は部分完了（ゲート一覧・版方針・試用表現は ee116b3、注記の言い換えは 28850a9、レビュー承認済み）。統合実行と版付けは全 1.0 必須 PBI の完了後に回し、PBI-282 の引継ぎに残す
 4. PBI-283 は完了した（0cc6c2e + bee3d1a、レビュー Approved）。`make check` 全体は統括側で緑を確認済み。不正な版の扱いは別 PBI 判断として PBI-283 の引継ぎに残す
 5. PBI-280 は完了した（85de59b、レビュー Approved）。手動削除 UI の要否は製品判断として新規 PBI に委ねる（レビュー評価済み）
-6. 次は PBI-284（バックアップの導線。brief は `.superpowers/sdd/ga-readiness-task-8-brief.md` に用意済み）。276 は 282 の統合に依存するため後回し
+6. PBI-284 は完了した（ffc6706 + b572f2a、レビュー Approved）。Minor 2 件はその場で修正し、該当テスト 40/40 緑を確認。Firefox 実機の E2E は残作業として PBI 引継ぎに記録
+7. 次は PBI-285（キーボードと読み上げの通し監査。brief は `.superpowers/sdd/ga-readiness-task-9-brief.md` に用意済み）。276 は 282 の統合に依存するため後回し。286 は 285 の後に回す
 3. 全体の最後に、ブランチ全体のレビューを `git merge-base main HEAD` から HEAD の範囲で 1 回行う（まだ実行していない）。そのとき、281 の Minor 2 点と各 report の Minor を拾う
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
