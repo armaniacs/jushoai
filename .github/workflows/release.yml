@@ -3,13 +3,23 @@ name: Release
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "Check only: submit with --dry-run and skip the Release"
+        type: boolean
+        default: true
 
 jobs:
-  release:
+  build:
     permissions:
-      contents: write
-    environment: release
+      contents: read
+      id-token: write
+      attestations: write
     runs-on: ubuntu-latest
+    timeout-minutes: 20
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v4
@@ -20,7 +30,6 @@ jobs:
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: "24"
-          cache: "npm"
 
       - name: Install dependencies
         run: npm ci --ignore-scripts
@@ -31,12 +40,21 @@ jobs:
         run: npx wxt prepare
 
       - name: Check the tag matches package.json
+        # Tag pushes submit to the stores, so a mismatched tag must fail here.
+        # Manual runs carry no tag, so this check runs on push only.
+        if: github.event_name == 'push'
         run: |
           version="$(node -p "require('./package.json').version")"
           if [ "v${version}" != "${GITHUB_REF_NAME}" ]; then
             echo "tag ${GITHUB_REF_NAME} does not match package.json version v${version}" >&2
             exit 1
           fi
+
+      - name: Record the version
+        id: version
+        run: |
+          version="$(node -p "require('./package.json').version")"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Typecheck, test and build
         run: make check
@@ -46,22 +64,71 @@ jobs:
           make zip
           make zip-firefox
 
-      - name: Submit to stores
-        # wxt submit は publish-extension の別名で、CHROME_*/EDGE_*/FIREFOX_*
-        # の env が揃ったストアに提出する。ZIP 系の env が無いストアは対象外になる。
-        # 3ストアは Promise.allSettled で並行提出されるため、1件の失敗が他を止めない。
-        # Release 作成より前に置く: 提出失敗時に半端な Release を残さないため。
-        # Chrome は API v2＋サービスアカウントを使う。組織ポリシー
-        # （iam.disableServiceAccountKeyCreation）はプロジェクト jushoai-store
-        # に限ってオーバーライドで無効化済みのため鍵作成が可能。
-        # API v1.1＋OAuth は 2026-10-15 で Google が停止するため使用しない。
+      - name: Hash the zips and collect the release files
+        # The explicit file list fails the job when a zip is missing, so the
+        # submit job can never receive a partial set. SHA256SUMS holds bare
+        # file names, so `sha256sum -c` runs in whatever directory holds them.
         run: |
-          version="$(node -p "require('./package.json').version")"
-          CHROME_ZIP="dist/jushoai-${version}-chrome.zip" \
-          EDGE_ZIP="dist/jushoai-${version}-chrome.zip" \
-          FIREFOX_ZIP="dist/jushoai-${version}-firefox.zip" \
-          FIREFOX_SOURCES_ZIP="dist/jushoai-${version}-sources.zip" \
-          npx wxt submit
+          version="${{ steps.version.outputs.version }}"
+          (cd dist && sha256sum "jushoai-${version}-chrome.zip" "jushoai-${version}-firefox.zip" "jushoai-${version}-sources.zip" > SHA256SUMS)
+          node scripts/release-notes.mjs "${version}" > release-notes.md
+          mkdir -p release-out
+          cp "dist/jushoai-${version}-chrome.zip" "dist/jushoai-${version}-firefox.zip" "dist/jushoai-${version}-sources.zip" dist/SHA256SUMS release-notes.md release-out/
+
+      - name: Upload the release files
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-files
+          path: release-out/*
+          if-no-files-found: error
+
+      - name: Attest the build provenance
+        uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4
+        with:
+          subject-path: "dist/*.zip"
+
+  submit:
+    needs: build
+    permissions:
+      contents: write
+    environment: release
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Download the release files
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-files
+          path: submit-in
+
+      - name: Verify the hashes
+        # The zips must be byte-identical to what the build job produced.
+        # A mismatch fails the job before any credential is used.
+        run: |
+          (cd submit-in && sha256sum -c SHA256SUMS)
+
+      - name: Install the submit tool only
+        # No project install here: dependency code must never run in a job
+        # that holds store credentials, so only the pinned submit tool is
+        # installed, in its own directory, without running scripts.
+        run: |
+          mkdir -p submit-tools
+          (cd submit-tools && npm init -y >/dev/null && npm install publish-browser-extension@6.2.0 --ignore-scripts --no-audit --no-fund)
+
+      - name: Submit to stores
+        # publish-extension is what `wxt submit` delegates to, so calling it
+        # directly with the same env is equivalent without project dependencies.
+        # 3 stores are submitted in parallel; one failure does not stop the rest.
+        # Manual runs never submit for real: without a tag push there is no
+        # release to attach, so any dispatch forces --dry-run (auth check only).
+        run: |
+          dry_run="${{ inputs.dry_run }}"
+          if [ "${{ github.event_name }}" != "push" ]; then dry_run="true"; fi
+          if [ "${dry_run}" = "true" ]; then
+            ./submit-tools/node_modules/.bin/publish-extension --dry-run
+          else
+            ./submit-tools/node_modules/.bin/publish-extension
+          fi
         env:
           CHROME_API_VERSION: "v2"
           CHROME_EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
@@ -75,18 +142,23 @@ jobs:
           FIREFOX_EXTENSION_ID: ${{ secrets.FIREFOX_EXTENSION_ID }}
           FIREFOX_JWT_ISSUER: ${{ secrets.FIREFOX_JWT_ISSUER }}
           FIREFOX_JWT_SECRET: ${{ secrets.FIREFOX_JWT_SECRET }}
-
-      - name: Extract release notes
-        run: node scripts/release-notes.mjs "${GITHUB_REF_NAME}" > release-notes.md
+          CHROME_ZIP: submit-in/jushoai-${{ needs.build.outputs.version }}-chrome.zip
+          EDGE_ZIP: submit-in/jushoai-${{ needs.build.outputs.version }}-chrome.zip
+          FIREFOX_ZIP: submit-in/jushoai-${{ needs.build.outputs.version }}-firefox.zip
+          FIREFOX_SOURCES_ZIP: submit-in/jushoai-${{ needs.build.outputs.version }}-sources.zip
 
       - name: Create the GitHub Release
+        # Tags only: manual runs stop at the dry-run submit above.
+        # Stays after the submit so a failed submission leaves no half release.
+        if: github.event_name == 'push' && inputs.dry_run != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          version="$(node -p "require('./package.json').version")"
+          version="${{ needs.build.outputs.version }}"
           gh release create "${GITHUB_REF_NAME}" \
-            "dist/jushoai-${version}-chrome.zip" \
-            "dist/jushoai-${version}-firefox.zip" \
-            "dist/jushoai-${version}-sources.zip" \
+            "submit-in/jushoai-${version}-chrome.zip" \
+            "submit-in/jushoai-${version}-firefox.zip" \
+            "submit-in/jushoai-${version}-sources.zip" \
+            "submit-in/SHA256SUMS" \
             --title "${GITHUB_REF_NAME}" \
-            --notes-file release-notes.md
+            --notes-file submit-in/release-notes.md

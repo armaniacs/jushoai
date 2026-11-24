@@ -147,6 +147,10 @@ Firefox 向けの検査は `make test` に含まれない。manifest の検査�
     npm ci
     make zip-firefox   # dist/jushoai-<バージョン>-firefox.zip と -sources.zip
 
+    # Release の zip と SHA256SUMS を同じ場所に置き、照合する
+    sha256sum jushoai-<バージョン>-firefox.zip
+    sha256sum -c SHA256SUMS
+
 ### 手動確認（Firefox）
 
 実 Firefox での自動テスト（`make e2e-firefox`）が通っても、次の項目は自動化していないため手で確認する。
