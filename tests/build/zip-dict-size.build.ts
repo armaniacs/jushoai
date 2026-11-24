@@ -5,7 +5,7 @@ import { ZIP_PREFIX_RANGES } from '../../src/core/zip-dict-data';
 
 // Budget: the prefix table ships inside the content script, so its growth
 // lands on every page. The table itself must stay under 200KB, and the
-// built content script under 350KB (seed baseline about 134KB measured
+// built content script under 350KB (seed baseline 135.0KB measured
 // 2026-11-24, plus the 200KB allowance rounded up).
 const TABLE_BUDGET = 200 * 1024;
 const CONTENT_BUDGET = 350 * 1024;

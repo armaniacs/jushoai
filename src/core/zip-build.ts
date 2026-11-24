@@ -90,6 +90,9 @@ export interface PrefixRanges {
 export function buildPrefixRanges(rows: KenAllRow[]): PrefixRanges {
   const groups = new Map<string, Map<string, Set<string>>>();
   for (const row of rows) {
+    // Strips non-digits while parseKenAllCsv demands plain 7 digits: KEN_ALL
+    // ships plain zips, so the producer never reaches this branch with
+    // anything to strip; the tolerance only serves direct callers.
     const digits = row.zip.replace(/[^0-9]/g, '');
     if (digits.length < 3) continue;
     const prefix = digits.slice(0, 3);

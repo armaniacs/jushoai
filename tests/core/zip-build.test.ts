@@ -1,5 +1,17 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { parseKenAllCsv, buildPrefixRanges } from '../../src/core/zip-build';
+import { buildPlan } from '../../src/core/planner';
+import type { Address, Item, Profile } from '../../src/core/types';
+import { makeMeta } from '../helpers';
+
+const cityBlankAssist = vi.hoisted(() => ({ prefecture: '', city: '' }));
+
+// The planner reads the checked-in seed table, so a prefecture-only entry is
+// stood in here: the test proves the grouping yields the blank city first,
+// then rides that exact value through the plan.
+vi.mock('../../src/core/zip-dict', () => ({
+  zipAssistFor: () => ({ ...cityBlankAssist }),
+}));
 
 const row = (zip: string, prefecture: string, city: string) => ({ zip, prefecture, city });
 
@@ -88,5 +100,42 @@ describe('buildPrefixRanges', () => {
 
   it('returns empty ranges for empty input', () => {
     expect(buildPrefixRanges([])).toEqual({ ranges: [], dropped: [] });
+  });
+});
+
+describe('prefecture-only range through the planner', () => {
+  it('offers the prefecture while the city stays a warning', () => {
+    const { ranges } = buildPrefixRanges([
+      { zip: '9990001', prefecture: 'A県', city: 'A市' },
+      { zip: '9990002', prefecture: 'A県', city: 'B町' },
+    ]);
+    expect(ranges).toEqual([{ lo: '999', hi: '999', prefecture: 'A県', city: '' }]);
+    cityBlankAssist.prefecture = ranges[0]!.prefecture;
+    cityBlankAssist.city = ranges[0]!.city;
+
+    const profile: Profile = {
+      id: 'p1', label: 'メイン',
+      lastName: '山田', firstName: '太郎', lastNameKana: 'ヤマダ', firstNameKana: 'タロウ',
+      lastNameRomaji: 'Yamada', firstNameRomaji: 'Taro',
+      gender: '女性', birthday: '', school: '', department: '', schoolGrade: '', juku: '',
+      companyName: '', companyDepartment: '', jobTitle: '', companyNameKana: '',
+      email: '', tel: '',
+    };
+    const address: Address = {
+      id: 'a1', label: '郵便番号のみ', profileId: '', zip: '9990001',
+      prefecture: '', city: '', street: '', building: '',
+      country: '', address1: '', address2: '', address3: '', address4: '', postalCode: '',
+    };
+    const items: Item[] = [
+      { meta: makeMeta({ id: 'zip-pref' }), cls: { category: 'prefecture', confidence: 1, source: 'rule' } },
+      { meta: makeMeta({ id: 'zip-city' }), cls: { category: 'city', confidence: 1, source: 'rule' } },
+    ];
+    const plan = buildPlan(items, { profile, address });
+    expect(plan.map((p) => [p.status, p.display])).toEqual([
+      ['warn-no-value', '候補: A県'],
+      ['warn-no-value', ''],
+    ]);
+    expect(plan[0]).toMatchObject({ assist: 'A県' });
+    expect('assist' in plan[1]!).toBe(false);
   });
 });

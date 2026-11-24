@@ -55,8 +55,9 @@ Scenario: 1 つの郵便番号に複数の町域がある
   - 除外 prefix（複数都道府県にまたがる 3 桁）の件数と内容を実装記録に追記する
 
 ## 実装記録
-- 生成スクリプト: `scripts/generate-zip-dict.mjs`（`npm run zip-dict`）。日本郵便の KEN_ALL（zip 直取り込み、Shift_JIS 復号、依存なしの zip 読み）を `src/core/zip-build.ts` の純粋関数（`parseKenAllCsv`、`buildPrefixRanges`）で表にし、`src/core/zip-dict-data.ts` に書き出す。同じ入力からは同じ表が出る（バイト同一を確認済み）。表の形は lookup と同じ `ZipPrefixRange[]` で、lookup（`zipAssistFor`）と planner は振る舞い無変更。seed の 50 範囲は値と順序を保ったまま `zip-dict-data.ts` に移した
+- 生成スクリプト: `scripts/generate-zip-dict.mjs`（`npm run zip-dict`）。日本郵便の KEN_ALL（zip 直取り込み、Shift_JIS 復号、依存なしの zip 読み）を `src/core/zip-build.ts` の純粋関数（`parseKenAllCsv`、`buildPrefixRanges`）で表にし、`src/core/zip-dict-data.ts` に書き出す。同じ入力からは同じ表が出る（バイト同一を確認済み。ただし生成ヘッダに Source:取得 URL または --input 指定文字列:を埋め込むため、バイト同一の再実行は同一引数でのみ成り立つ）。表の形は lookup と同じ `ZipPrefixRange[]` で、lookup（`zipAssistFor`）と planner は振る舞い無変更。seed の 48 範囲は値と順序を保ったまま `zip-dict-data.ts` に移した
 - 複数市区町村の表現と根拠: 同一都道府県で市が複数ある prefix は city 空のエントリ（都道府県のみ確定）にする。呼び出し側は従来どおりで、city 空は assist なしの警告のまま止まる（`hasAbbrev('')` が偽のため）。誤った市区町村の入力より警告停止の方が安全という保守側の判断。複数都道府県にまたがる prefix は表から外し、lookup は null を返して警告のままにする（誤った都道府県の提示を避ける）
+- zip の扱いの差(parseKenAllCsv は 7 桁厳格、buildPrefixRanges は非数字除去)は KEN_ALL が plain 7 桁のみのため実経路では到達不能で、揃えず src/core/zip-build.ts の注記のみとした
 - 予算の決め方と測定結果: 表自体 200KB 以下、content script 350KB 以下（seed 時の実測 135.0KB が両ブラウザで一致したため、200KB の増分枠を足して切り上げ）。`tests/build/zip-dict-size.build.ts` で検査し、両ブラウザの content script と表の形（3 桁・lo 小 hi・都道府県必須）を通す。全国化しても 3 桁 prefix は最大 1000 件のため、予算内に収まる見込み（粒度を保つ判断は不要だった）
 - ライセンスと出典: 日本郵便は郵便番号データに著作権を主張せず自由な配布を認めている（一次情報は郵便番号データダウンロードの説明文）。`site/content/ja|en/license.md` に「郵便番号データ」節を追加し、日英の H2 数を一致させた。ガイド（`addresses.md` 日英）は辞書の現状（東京 23 区と主な都市のシード）と 3 桁単位の振る舞い、更新手順と出典への案内に直した
 - 更新手順の置き場所: `docs/release.md` に「郵便番号辞書の更新（年 1 回程度）」節を追加。Task 5 のゲート一覧・版方針とは重ねず運用手順だけにした

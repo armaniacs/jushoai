@@ -57,7 +57,9 @@ function unzip(buffer) {
   for (let n = 0; n < count; n++) {
     if (buffer.readUInt32LE(dir) !== 0x02014b50) fail('central directory entry expected');
     const method = buffer.readUInt16LE(dir + 10);
-    const size = buffer.readUInt32LE(dir + 24);
+    // Compressed size: offset 24 holds the uncompressed size, which would
+    // overshoot the deflated slice into trailing bytes.
+    const size = buffer.readUInt32LE(dir + 20);
     const nameLen = buffer.readUInt16LE(dir + 28);
     const extraLen = buffer.readUInt16LE(dir + 30);
     const commentLen = buffer.readUInt16LE(dir + 32);
