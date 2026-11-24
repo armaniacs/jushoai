@@ -26,7 +26,7 @@ Scenario: 未完了の必須項目があると版付けしない
 ```
 
 ## 受け入れ基準
-- [ ] 未マージブランチを PR 順序どおり main に統合（`work/user-docs-reorg` を含む）
+- [x] 未マージブランチを PR 順序どおり main に統合（`work/user-docs-reorg` を含む）
 - [ ] 台帳の「コードレビューのみ残」系 PBI を、レビュー実施かアーカイブ判断で閉じる（残置するものは 1.0 後と明記）
 - [x] `docs/release.md` に 1.0 ゲート一覧（make check-all 緑、eval pin 緑、276 の結果、274/275/277/281/283 完了、ストア掲載文とプライバシー文書の整合、CHANGELOG の 1.0.0 節）を置く
 - [x] バージョン方針（semver。保存形式の非互換は major でのみ行う、等）を `docs/release.md` に書く
@@ -78,15 +78,15 @@ Scenario: 未完了の必須項目があると版付けしない
 
 ### Task 11 の実装記録（2026-11-24。統合の実行。マージはしない）
 
-- `work/ga-readiness` を `origin` に push した（新規ブランチ。force push なし。push 前に local main と origin/main の一致を確認）。
+- `work/ga-readiness` を `origin` に push した（新規ブランチ。force push なし。注: local main は origin/main より 7 commits 先行していた。結果への影響なし）。
 - `main` への PR を 1 本作成した。PR #36（通常 PR。draft ではない）。base `main`、head `work/ga-readiness`。URL は https://github.com/armaniacs/jushoai/pull/36。
 - PR 本文に 4 層の概要、Task 5 への参照、1.0 ゲートの状態、残作業を記載した。作成者本人のため review request は付けられず、本文末尾で @armaniacs を指名した。
-- CI は PR 作成で起動した（check、e2e chrome、e2e firefox。いずれも確認時点では pending。合否待ちは Task 11 の範囲外）。
-- 受け入れ基準 1 件目はマージまで `[ ]` のまま残す。
+- CI は PR 上で全緑を確認した（check、e2e chrome、e2e firefox）。
+- PR #36 は 2026-11-24 にマージされた（merge commit 7893c9d）。`work/ga-readiness` は `origin/main` に fast-forward で追随済み。受け入れ基準 1 件目を `[x]` にする。
 
 ### 残作業
 
-- 未マージブランチの統合: PR #36 を作成済み。残りはユーザーの承認とマージ。マージ後に受け入れ基準 1 件目の印を閉じる。
+- 未マージブランチの統合: PR #36 をマージ済み。受け入れ基準 1 件目は `[x]` にした。
 - 台帳の「コードレビューのみ残」系のレビュー実施かアーカイブ判断（残置するものは 1.0 後と明記）。
 - 版付け: 1.0 必須 PBI（274 / 275 / 277 / 281 / 283）と 276 の完了後に `docs/release.md` のゲート一覧をすべて確認し、`package.json` を `1.0.0` にしてタグを打ち、GitHub Release を作る。
 - 元の引継ぎ: 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）

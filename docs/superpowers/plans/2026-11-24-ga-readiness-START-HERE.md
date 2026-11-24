@@ -23,7 +23,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 281 | `tests/build/manifest-guard.build.ts`（権限・CSP・動的コード実行の後退検査） | 597fd68 | Approved、Critical/Important なし |
 | 277 | Dependabot（Actions 週次 + npm は security のみ）と check job の npm audit 監査 | 5589516 | Approved、Critical/Important なし |
 | 274 + 278 | release の build/submit 分離 + SHA256SUMS と来歴証明（同時実施） | 4a62198 | Approved、Critical/Important なし |
-| 282（部分+PR） | ゲート一覧・版方針・統合PRの作成（統合実行と版付けは残） | ee116b3 + 28850a9、PR #36 | Approved（Task 11 レビュー。CI は PR 上で全緑を確認） |
+| 282（部分+PR統合済み） | ゲート一覧・版方針・統合PRの作成とマージ（台帳整理と版付けは残） | ee116b3 + 28850a9、PR #36（7893c9d） | Approved（Task 11 レビュー。CI は PR 上で全緑を確認） |
 | 283 | 保存形式の版番号と互換性の約束 | 0cc6c2e + bee3d1a | Approved、Critical/Important なし |
 | 280 | 脅威モデルと端末保存データの明示 | 85de59b | Approved、Critical/Important なし |
 | 284 | バックアップの導線 | ffc6706 + b572f2a | Approved（Minor はその場で修正、40/40 緑を確認） |
@@ -41,7 +41,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282（残: PR 承認待ち） | 未マージブランチの統合実行（PR #36 作成済み。マージはユーザーの承認後。版付けはその後） | `2026-11-24-282-chore-ga-release-gate.md` |
+| 5 | 282（残: 台帳整理と版付け） | 版付け（CHANGELOG 起草は版付け時。統合は PR #36 で完了） | `2026-11-24-282-chore-ga-release-gate.md` |
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（282 の統合に依存） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束（完了: 0cc6c2e + bee3d1a、レビュー Approved） | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示（完了: 85de59b、レビュー Approved） | `2026-11-24-280-sec-threat-model-doc.md` |
@@ -62,7 +62,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 6. PBI-284 は完了した（ffc6706 + b572f2a、レビュー Approved）。Minor 2 件はその場で修正し、該当テスト 40/40 緑を確認。Firefox 実機の E2E は残作業として PBI 引継ぎに記録
 7. PBI-285 は完了した（70616e8 + f68dbb2、レビュー承認）。初回レビューで Critical 1 件（E2E 未実行の誤前提）が出たが、Chrome 実機で `keyboard-only flow` 通過を確認して解消。Firefox 実機と読み上げ実機は残作業として PBI 引継ぎに記録。新規 PBI-291（結果件数の読み上げ）は未採点・未着手
 8. PBI-286 は仕組みまで完了した（75a1b1e + 2fc6b50、レビュー承認。Important 2 件は修正済み・再レビュー承認）。実データ生成は環境の WAF 遮断で不可のため、PBI-286 の引継ぎに残す。BDD シナリオ 1 の planner 連携テストは生成時に追加する
-9. PBI-282 の統合は PR #36（`work/ga-readiness` → `main`、最上位 1 本）を作成済み。CI は PR 上で全緑（check、e2e chrome、e2e firefox）。残りはユーザーの PR 承認とマージ。マージ後に PBI-282 基準 1 件目の `[x]` 化、PBI-276、版付け時の CHANGELOG 起草へ進む
+9. PBI-282 の統合は完了した（PR #36 をマージ、ブランチは `origin/main` に fast-forward で追随。基準 1 件目 `[x]`）。残りは台帳整理、版付け（CHANGELOG 起草は版付け時）、276（これから着手）
 3. ブランチ全体のレビューは `d184fa1..HEAD` の範囲で 1 回実施した（`.superpowers/sdd/ga-readiness-final-review.md`。判定は条件付き Approve で、条件の 1 行修正を反映したらマージ可）。残る各タスクの Minor はレビューで受容可と評価済み
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
