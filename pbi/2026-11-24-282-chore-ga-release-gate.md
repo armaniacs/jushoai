@@ -165,3 +165,17 @@ CHANGELOG と版番号:
 3. main とタグを push する: `git push origin main v0.2.0`。注意: タグ push はストア提出を起動する（release ワークフローの build job が走り、submit job が environment `release` の承認待ちで止まる）。
 4. Actions の画面で build job の内容を確認し、environment `release` を承認する（承認前に資格情報が使われることはない。却下した場合は Release を作らずに終了する）。
 5. 承認後、成果物の照合と 3 ストアへの審査提出が成功したら CHANGELOG の 0.2.0 節を本文にした Release が作られる。`gh attestation verify` でこのリポジトリの Release ワークフローで作られたことを確かめられる。
+
+### Task 16 の実装記録（2026-11-24。ゲート 7 項目の確認。合否の記録まで。直しなし）
+
+- 実行: `make check`（exit 0。web-ext lint 警告 2 件は想定内）、`make site`（exit 0。32 ページ）、`make eval`（exit 0。3 件）と `npm run eval-pin`（exit 0。pin 緑）。`make e2e-chrome` は 27/28 で、1 件の失敗は Task 8/9 と同じ translucent banner の色トークン（本ラウンドの差分外）。`make e2e-firefox` は Developer Edition（HEADLESS）で 25/25 緑。`make check-all` の一括実行はしていない。
+- ゲート合否: pin 緑・276 完了・ストアと privacy 日英と権限の一致・CHANGELOG の 0.2.0 節は合格。check-all 緑は未達（chrome の既知失敗 1 件と一括未実行）。1.0 必須 5 件は受け入れ基準を満たすも DoD の確認欄は未記入（274 は CI dry-run が残作業）。未マージブランチは旧 4 本が origin/main の祖先で統合済み、ga-readiness のみ未マージ（版付け PR の対象）。ゲートの `[ ]` は付けていない。
+- `docs/release.md` の状態注記を今回の確認結果に更新した。詳細は `.superpowers/sdd/ga-readiness-task-16-report.md` を見る。
+
+### 引継ぎ（Task 16 から版付けへ）
+
+- 版付け時は check-all の一括緑を取り直し、chrome の既知失敗が再発かを確認する。
+- 274 の CI dry-run（`gh workflow run release.yml --ref <ブランチ名> -f dry_run=true`）は push 後に行う。
+- 5 件の PBI の DoD 確認欄の扱いを決める（タスクレビュー Approved は各 review にある）。
+- CHANGELOG の 0.2.0 節の日付とタグ日の一致を確かめる（タグが後日の場合は節の日付を直す）。
+- 版付け PR のマージ後、ブランチの整理（削除は版付け後に判断する）。
