@@ -22,13 +22,10 @@
 - `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
 - `2026-11-24-291-chore-a11y-result-announcement.md`（未採点。1.0 後でも可。PBI-285 の監査で分離。結果画面の件数の読み上げ）
 
-## 進行中（2026-11-23・足立ラウンドの残置2点のなぜなぜ分析から着手。272 の後続）
+## 進行中からアーカイブ済み（2026-11-24・272/273 を PR #36 でマージ済み。台帳の「アーカイブはマージ後」条件が満たされた）
 
-- `2026-11-23-273-feat-combo-search-parking.md`（単発。RICE 48。検索補助窓の停泊と残置欄の pin 固定。なぜなぜ分析 3立場 x 30連鎖 (`.superpowers/sdd/why-why-school-remnants-2026-11-23.md`) が原紙。計画は `docs/superpowers/plans/2026-11-23-combo-search-parking.md`。実装済み (e12b661 / 9adc3fe / fbc007d / 19c6093)。絞り込みfillとajax待ちは 270 に引継ぎ。ブランチ `work/emergency-contact-tel`。アーカイブはマージ後）
-
-## 進行中（2026-11-23・あらき連絡で起票。足立ラウンドの後続）
-
-- `2026-11-23-272-feat-emergency-contact-tel.md`（単発。RICE 192。緊急連絡先を電話番号として扱う。あらきのスクリーンショット付き連絡が原紙。計画は `docs/superpowers/plans/2026-11-23-emergency-contact-tel.md`。実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。ブランチ `work/emergency-contact-tel` 4 コミット・未push。PR 順序は adachi → role → 本ブランチ。アーカイブはマージ後）
+- `archived/2026-11-23-272-feat-emergency-contact-tel.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット 3f9225a / ba1bdc8 / c245c18 / 056fecc。`make check` と `make eval` が緑）
+- `archived/2026-11-23-273-feat-combo-search-parking.md`（実装済み・レビュー済み（最終レビュー Ready to merge: Yes）。PR #36 で main にマージ。実装コミット e12b661 / 9adc3fe / fbc007d / 19c6093。`make check` と `make eval` が緑）
 
 ## 進行中（2026-11-22・足立と人物分離の6件。ラウンド台帳に順位とRICEと依存を記録）
 
