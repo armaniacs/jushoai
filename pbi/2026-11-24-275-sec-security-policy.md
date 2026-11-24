@@ -28,7 +28,7 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 
 ## 受け入れ基準
 - [x] ルートに `SECURITY.md` がある（対象バージョン、報告方法、応答目安、公開までの流れ、対象外の例）
-- [ ] リポジトリ設定で private vulnerability reporting が有効（ユーザー作業）
+- [x] リポジトリ設定で private vulnerability reporting が有効（ユーザー作業。2026-11-24 に有効化済みとユーザーが報告）
 - [x] `.github/ISSUE_TEMPLATE/config.yml` と bug-report フォームに非公開報告への案内がある
 - [x] サイトの安全ガイド (ja/en) から SECURITY.md へのリンクがあり、`make site` が緑
 - [x] 対象外の例に「ページ自身が悪意ある label を出す場合の AI 送信内容」など、既知の設計上の限界を明記する
@@ -52,4 +52,5 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 ## 実装記録
 
 - SECURITY.md、Issue テンプレートの案内、サイト安全ガイド (ja/en) の報告方法の段落を追加。`make site` と `tests/site` は緑。
-- 残るユーザー作業: リポジトリ設定で private vulnerability reporting を有効化する。応答目安の日数（受付 7 日、方針 30 日）は仮置きのため確認する。
+- ユーザー作業は完了（2026-11-24）: private vulnerability reporting を有効化。応答目安の日数（受付 7 日、方針 30 日）は現行どおりで確定。
+- 未確認: 報告フォーム（`/security/advisories/new`）がログアウト状態で開くことの確認は、記録していない。
