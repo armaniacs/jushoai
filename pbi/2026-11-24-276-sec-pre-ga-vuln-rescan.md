@@ -26,11 +26,11 @@ Scenario: 前回の指摘が退行していない
 ```
 
 ## 受け入れ基準
-- [ ] 重点対象を明記してスキャン: ページ由来文字列の Shadow DOM 描画（`textContent` 徹底）、runtime メッセージの sender 検証と型ガード、`IMPORT_DRAFT` の値取り込み、ゲスト・引継ぎのタブ内メモリ、監査ログの TSV 書き出し（CSV/TSV インジェクション）、`validateBaseUrl` と DNS rebinding、API キーの復号境界、pattern 属性の ReDoS
-- [ ] 前回結果の各指摘に判定を付ける（vulnhunt-fix-verify 相当）
-- [ ] High 以上は修正し、修正ごとに失敗するテストを先に置く
-- [ ] スキャン成果物は従来どおり sources zip から除外されていることを確認（テスト鍵を含むため）
-- [ ] 結果の要約（指摘数と処置）を CHANGELOG の 1.0.0 節に載せるか判断を記録
+- [x] 重点対象を明記してスキャン: ページ由来文字列の Shadow DOM 描画（`textContent` 徹底）、runtime メッセージの sender 検証と型ガード、`IMPORT_DRAFT` の値取り込み、ゲスト・引継ぎのタブ内メモリ、監査ログの TSV 書き出し（CSV/TSV インジェクション）、`validateBaseUrl` と DNS rebinding、API キーの復号境界、pattern 属性の ReDoS
+- [x] 前回結果の各指摘に判定を付ける（vulnhunt-fix-verify 相当）
+- [x] High 以上は修正し、修正ごとに失敗するテストを先に置く
+- [x] スキャン成果物は従来どおり sources zip から除外されていることを確認（テスト鍵を含むため）
+- [x] 結果の要約（指摘数と処置）を CHANGELOG の 1.0.0 節に載せるか判断を記録
 
 ## テスト戦略
 - E2E: 必要な PoC のみ
@@ -51,3 +51,23 @@ Scenario: 前回の指摘が退行していない
 
 ## 引継ぎ
 - 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）
+
+## 実装記録
+
+- 実施日: 2026-11-24。対象: `work/ga-readiness` HEAD f2562f4（PR #36 統合後の main 内容）。
+- 手法: vulnhunt 全体スキャン + vulnhunt-fix-verify 相当の前回指摘検証を、サブエージェント不在のため単独エージェントでインライン実行（phase ファイルは全て存在。Bash 可のため exploit を実実行）。
+- 新規指摘: 0 件（High+ 0、High 0、Medium 0、Low 0）。VULN-NNN の新規発行なし。
+- 前回指摘の判定:
+  - 10-10 VULN-001（字句のみの egress ゲート）: 修正済み。保存時とダイヤル時の解決済みアドレスゲートで nip.io を拒否（check_1010_fix.mjs が PASS）。
+  - 10-23 VULN-001（DoH 検査と fetch の TOCTOU）: 受容（残余リスク）。試行内の検査利用間隔は MV3 の fetch では塞げない。緩和済み: 毎回の再解決（結果の持ち越しなし）、fetch 直前の検査、保存時の解決ゲート、初回ダイヤルの利用者承認（DoH 確定アドレスを表示）。修正 PBI は起票しない（実行基盤の機能が必要）。
+  - 10-23 VULN-002（無制限の取り込み配列）: 修正済み。形状検査直後の件数上限で取り込み前に拒否（旧 exploit は遮断）。
+  - 10-23 VULN-003（NAT64 の判定漏れ）: 修正済み。64:ff9b と 2002:: を内部扱い（旧 exploit は遮断）。
+- High 以上の修正: 該当なし（新規 0 件、残余 1 件は Medium の受容）。TDD の赤緑は発生しない。
+- 成果物: `JushoAI_VULNHUNT_RESULTS_2026-11-24-192538/`（README + exploit_tests 6 件。git 管理外、コミット対象外）。
+- sources zip 除外の確認: `wxt.config.ts:13` と `.gitignore:20,33` が今回の成果物に一致。`make zip-firefox` 再作成後の sources zip（166 件）に vulnhunt 成果物が含まれないことを一覧で確認。
+- CHANGELOG 判断: 1.0.0 節の起草時に1段落の要約（実施日、新規 0 件、前回 4 件のうち修正 3・受容 1）を載せる。以降の `make check` などに影響しない文書のみの変更。
+
+## 引継ぎ（Task 12 完了後）
+
+- 残作業なし。将来の候補（1.0 の必須ではない）: DoH 応答のバイト上限（防御の多層化）、transfer.ts の VULN-002 言及の整理、IP 固定の実行基盤が来たら TOCTOU 残余の再検討。
+- 詳細は `.superpowers/sdd/ga-readiness-task-12-report.md` と成果物 README を見る。
