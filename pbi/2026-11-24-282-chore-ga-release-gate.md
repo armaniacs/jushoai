@@ -31,7 +31,7 @@ Scenario: 未完了の必須項目があると版付けしない
 - [x] `docs/release.md` に 1.0 ゲート一覧（make check-all 緑、eval pin 緑、276 の結果、274/275/277/281/283 完了、ストア掲載文とプライバシー文書の整合、CHANGELOG の 1.0.0 節）を置く
 - [x] バージョン方針（semver。保存形式の非互換は major でのみ行う、等）を `docs/release.md` に書く
 - [x] ストア掲載文・README・サイトから「試用」相当の表現を見直す
-- [ ] 1.0.0 の CHANGELOG 節と GitHub Release を作成
+- [ ] 0.2.0 の CHANGELOG 節と GitHub Release を作成
 
 ## テスト戦略
 - E2E: `make check-all`（両ブラウザ E2E）
@@ -136,5 +136,32 @@ holistic-round と arch-round2 の閉鎖（レビュー実施なし。ユーザ�
 
 - 未マージブランチの統合: PR #36 をマージ済み。受け入れ基準 1 件目は `[x]` にした。
 - 台帳の「コードレビューのみ残」系のレビュー実施かアーカイブ判断（残置するものは 1.0 後と明記）。Task 14 で完結（pbi55 はレビュー実施、holistic と arch-round2 はレビューなしで閉鎖、未実施群と 291 は 1.0 後を明記）。受け入れ基準 2 件目は `[x]` にした。
-- 版付け: 1.0 必須 PBI（274 / 275 / 277 / 281 / 283）と 276 の完了後に `docs/release.md` のゲート一覧をすべて確認し、`package.json` を `1.0.0` にしてタグを打ち、GitHub Release を作る。
+- 版付け: 1.0 必須 PBI（274 / 275 / 277 / 281 / 283）と 276 の完了後に `docs/release.md` のゲート一覧をすべて確認し、`package.json` を `0.2.0` にしてタグを打ち、GitHub Release を作る。
 - 元の引継ぎ: 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）
+
+### Task 15 の実装記録（2026-11-24。版付け準備。タグ打ち・push なし）
+
+ユーザー決定（2026-11-24）を転記する:
+
+- 版付けは version 0.2.0 として進む（1.0.0 ではない）。タグ push 前に最終確認を挟む。タグ push はストア提出を起動するため、このタスクでは行わない。
+
+版表記の付け替え（2026-11-24 ユーザー決定の反映）:
+
+- `docs/release.md`: 節名「1.0 リリースゲート」を「0.2.0 リリースゲート」に、ゲート一覧の「`1.0.0` を版付けする前に」を「`0.2.0` を」に、「CHANGELOG に `1.0.0` 節がある」を「`0.2.0` 節」に、版方針の「正式版 `1.0.0` の後は」を「正式版 `0.2.0` の後は」に変えた。
+- 受け入れ基準 6 件目を「0.2.0 の CHANGELOG 節と GitHub Release を作成」に変えた。
+- PBI-276 の受け入れ基準 5 件目と CHANGELOG 判断を「0.2.0 節」に変えた。
+- 残さなかった理由は `.superpowers/sdd/ga-readiness-task-15-report.md` にある。
+
+CHANGELOG と版番号:
+
+- `## [Unreleased]` 節を `## [0.2.0] - 2026-11-24` に改題し、末尾のリンク一覧に `[0.2.0]`（v0.1.39 との compare）を足した。日付は版付け日であり、タグが後日になる場合は節の日付を直す。
+- PBI-276 の要約を 0.2.0 節の `### Security` に 1 段落で載せた。
+- `package.json` と `package-lock.json` の `version` 欄を `0.2.0` にした（lockfile は version 欄だけを手で合わせ、`.npmrc` と resolved は触っていない）。
+
+版付け手順の最終確認リスト（タグは打たない、push しない）:
+
+1. `docs/release.md` のゲート一覧をすべて確認する（未チェックが残っていれば版付けを見送る）。
+2. 注釈付きタグを作る（タグ名は `v0.2.0`。署名は必須ではない）: `git tag -a v0.2.0 -m "v0.2.0"`。
+3. main とタグを push する: `git push origin main v0.2.0`。注意: タグ push はストア提出を起動する（release ワークフローの build job が走り、submit job が environment `release` の承認待ちで止まる）。
+4. Actions の画面で build job の内容を確認し、environment `release` を承認する（承認前に資格情報が使われることはない。却下した場合は Release を作らずに終了する）。
+5. 承認後、成果物の照合と 3 ストアへの審査提出が成功したら CHANGELOG の 0.2.0 節を本文にした Release が作られる。`gh attestation verify` でこのリポジトリの Release ワークフローで作られたことを確かめられる。

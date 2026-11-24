@@ -4,7 +4,7 @@
 
 形式は [Keep a Changelog](https://keepachangelog.com/ja/1.1.0/) に従い、バージョンは [Semantic Versioning](https://semver.org/lang/ja/) に従う。
 
-## [Unreleased]
+## [0.2.0] - 2026-11-24
 
 ### Added
 
@@ -39,6 +39,10 @@
 
 - 対象外（iframe・自動入力など）の明文化をREADMEとサイトガイドに追加する
 - サイトガイドの対応欄の一覧に学年と塾の欄を加える
+
+### Security
+
+- 正式版前の脆弱性再スキャンを 2026-11-24 に実施し、新規指摘は 0 件だった。前回 4 件のうち 3 件は修正済み（保存時と呼び出し時の解決済みアドレス検査、取り込み件数の上限、NAT64 判定の追加）。残る 1 件（DNS 検査と送信の時間差）は実行基盤の制約で受容し、毎回の再解決と利用者承認で緩和している。
 
 ## [0.1.39] - 2026-11-20
 
@@ -664,6 +668,7 @@
 - LLM に渡すのは欄のメタデータのみで、プロファイルの値と欄の現在値は送信しない
 - 値注入はネイティブ setter 経由で、React/Vue の値トラッカーを迂回
 
+[0.2.0]: https://github.com/armaniacs/jushoai/compare/v0.1.39...v0.2.0
 [0.1.35]: https://github.com/armaniacs/jushoai/compare/v0.1.34...v0.1.35
 [0.1.34]: https://github.com/armaniacs/jushoai/compare/v0.1.33...v0.1.34
 [0.1.33]: https://github.com/armaniacs/jushoai/compare/v0.1.32...v0.1.33

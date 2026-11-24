@@ -30,7 +30,7 @@ Scenario: 前回の指摘が退行していない
 - [x] 前回結果の各指摘に判定を付ける（vulnhunt-fix-verify 相当）
 - [x] High 以上は修正し、修正ごとに失敗するテストを先に置く
 - [x] スキャン成果物は従来どおり sources zip から除外されていることを確認（テスト鍵を含むため）
-- [x] 結果の要約（指摘数と処置）を CHANGELOG の 1.0.0 節に載せるか判断を記録
+- [x] 結果の要約（指摘数と処置）を CHANGELOG の 0.2.0 節に載せるか判断を記録
 
 ## テスト戦略
 - E2E: 必要な PoC のみ
@@ -65,9 +65,14 @@ Scenario: 前回の指摘が退行していない
 - High 以上の修正: 該当なし（新規 0 件、残余 1 件は Medium の受容）。TDD の赤緑は発生しない。
 - 成果物: `JushoAI_VULNHUNT_RESULTS_2026-11-24-192538/`（README + exploit_tests 6 件。git 管理外、コミット対象外）。
 - sources zip 除外の確認: `wxt.config.ts:13` と `.gitignore:20,33` が今回の成果物に一致。`make zip-firefox` 再作成後の sources zip（166 件）に vulnhunt 成果物が含まれないことを一覧で確認。
-- CHANGELOG 判断: 1.0.0 節の起草時に1段落の要約（実施日、新規 0 件、前回 4 件のうち修正 3・受容 1）を載せる。今回は CHANGELOG 本文を変更しない。
+- CHANGELOG 判断: 0.2.0 節の起草時に1段落の要約（実施日、新規 0 件、前回 4 件のうち修正 3・受容 1）を載せる。今回は CHANGELOG 本文を変更しない。
 
 ## 引継ぎ（Task 12 完了後）
 
 - 残作業なし。将来の候補（1.0 の必須ではない）: DoH 応答のバイト上限（防御の多層化）、transfer.ts の VULN-002 言及の整理、IP 固定の実行基盤が来たら TOCTOU 残余の再検討。
 - 詳細は `.superpowers/sdd/ga-readiness-task-12-report.md` と成果物 README を見る。
+
+## Task 15 の実装記録（2026-11-24。0.2.0 節への要約掲載。版番号の判断のみ）
+
+- 受け入れ基準 5 件目の判断を実行し、CHANGELOG の `0.2.0` 節に `### Security` で 1 段落の要約を載せた（実施日 2026-11-24、新規 0 件、前回 4 件のうち修正 3・受容 1、TOCTOU 残余の緩和）。
+- 置き場所の根拠: Keep a Changelog の `Security` 節は安全面の修正と注意の置き場所であり、再スキャン結果の要約は利用者向け機能の追加（Added）でも不具合修正（Fixed）でもないため `Security` に置く。前回指摘の個別修正は 0.1.24 節の `Security` に既載のため、ここでは要約だけに留める。
