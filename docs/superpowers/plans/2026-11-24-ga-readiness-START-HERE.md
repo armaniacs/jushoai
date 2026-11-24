@@ -23,6 +23,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 281 | `tests/build/manifest-guard.build.ts`（権限・CSP・動的コード実行の後退検査） | 597fd68 | Approved、Critical/Important なし |
 | 277 | Dependabot（Actions 週次 + npm は security のみ）と check job の npm audit 監査 | 5589516 | Approved、Critical/Important なし |
 | 274 + 278 | release の build/submit 分離 + SHA256SUMS と来歴証明（同時実施） | 4a62198 | Approved、Critical/Important なし |
+| 282（部分） | ゲート一覧・版方針・試用表現の見直し（統合実行と版付けは残） | ee116b3 + 28850a9 | Approved（Important 1 件は修正済み・再レビュー承認） |
 
 - 275 の GitHub 側設定（private vulnerability reporting の有効化）はユーザーが実施済み。応答目安（受付 7 日、方針連絡 30 日）はユーザーが確定済み
 - 275 で未確認が 1 点: ログアウト状態で `https://github.com/armaniacs/jushoai/security/advisories/new` が開くこと（ユーザーに確認を依頼済み。開けば 275 を閉じられる）
@@ -35,7 +36,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 |---|---|---|---|
 | 2 | 277 | Dependabot と npm audit を導入（完了: 5589516、レビュー Approved） | `2026-11-24-277-sec-dependency-monitoring.md` |
 | 3 | 274 + 278 | release の build と submit を別 job に分離 + SHA256SUMS と来歴証明（完了: 4a62198、レビュー Approved） | `2026-11-24-274-sec-release-job-split.md`、`2026-11-24-278-sec-release-provenance.md` |
-| 5 | 282 | 未マージブランチの統合とリリースゲート一覧（統合部分は先に着手可。版付けは必須 PBI の完了後） | `2026-11-24-282-chore-ga-release-gate.md` |
+| 5 | 282（残） | 未マージブランチの統合実行と版付け（ゲート一覧・版方針は完了: ee116b3 + 28850a9） | `2026-11-24-282-chore-ga-release-gate.md` |
 | 6 | 276 | 統合後の main で脆弱性の再スキャン（282 の統合に依存） | `2026-11-24-276-sec-pre-ga-vuln-rescan.md` |
 | 7 | 283 | 保存形式の版番号と互換性の約束 | `2026-11-24-283-feat-storage-compat-contract.md` |
 | 8 | 280 | 脅威モデルと端末保存データの明示 | `2026-11-24-280-sec-threat-model-doc.md` |
@@ -50,7 +51,8 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 
 1. PBI-277 は完了した（5589516、レビュー Approved）。残る確認は Dependabot 初回実行時の PR 動作で、PBI-277 の「引継ぎ」に記録済み
 2. PBI-274 + 278 は完了した（4a62198、レビュー Approved）。残る確認は CI dry-run（`gh workflow run`）と初回 1.0 後の `gh attestation verify` で、両 PBI の「引継ぎ」に記録済み（ユーザー作業）
-3. 次は PBI-282（未マージブランチの統合とリリースゲート一覧。統合部分から着手可）
+3. PBI-282 は部分完了（ゲート一覧・版方針・試用表現は ee116b3、注記の言い換えは 28850a9、レビュー承認済み）。統合実行と版付けは全 1.0 必須 PBI の完了後に回し、PBI-282 の引継ぎに残す
+4. 次は PBI-283（保存形式の版番号と互換性の約束）。276 は 282 の統合に依存するため後回し
 3. 全体の最後に、ブランチ全体のレビューを `git merge-base main HEAD` から HEAD の範囲で 1 回行う（まだ実行していない）。そのとき、281 の Minor 2 点と各 report の Minor を拾う
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
