@@ -1,4 +1,4 @@
-// Backup nudge policy (PBI-284): when to suggest a JSON export on the
+// Backup nudge policy: when to suggest a JSON export on the
 // options page. Pure: the options section injects the stored timestamps and
 // the current profile count, so the boundary stays pinned by unit tests. Only
 // timestamps are stored, never profile values.

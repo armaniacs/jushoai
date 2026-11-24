@@ -413,7 +413,7 @@ export const OPTIONS_SELECTORS = {
   saveProfileButton: `//*[@id='profiles']//button[text()='保存']`,
   saveAddressButton: `//*[@id='addresses']//button[text()='保存']`,
   deleteProfileButton: `//*[@id='profiles']//button[text()='このプロファイルを削除']`,
-  // #transfer-app: backup reminder (PBI-284) and the export button it pairs with.
+  // #transfer-app: backup reminder and the export button it pairs with.
   backupNudge: '#transfer-app .backup-nudge',
   backupLastExport: '#transfer-app .backup-last-export',
   backupExportButton: `//*[@id='transfer-app']//button[text()='JSON でエクスポート']`,

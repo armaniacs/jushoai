@@ -61,4 +61,4 @@ Scenario: 最後のエクスポートからの経過が分かる
 - E2E の扱い: `tests/e2e/scenarios.ts` に `runBackupNudge` を足し、両ブラウザのスイートに組み込んだ。Chrome 実機（HEADLESS=1）で対象シナリオのみ実行して通過を確認した。全体の e2e-chrome は 26/27 で、残り 1 件（translucent banner の色トークン）は本変更と無関係の箇所の失敗。Firefox 実機が無いため e2e-firefox は未実施。
 
 ## 引継ぎ（残るユーザー作業）
-- なし。Firefox 実機がある環境で `make e2e-firefox` を流すこと（PBI-284 のシナリオが Firefox 側でも通ることの確認）。
+- Firefox 実機がある環境で `make e2e-firefox` を流すこと（PBI-284 のシナリオが Firefox 側でも通ることの確認）。

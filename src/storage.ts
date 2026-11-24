@@ -10,7 +10,7 @@ export { resolveAddressId, resolveLastId } from './core/selection';
 
 const KEY = 'jushoai:data';
 const LAST_KEY = 'jushoai:last';
-// Backup reminder state (PBI-284): timestamps only, never profile values. One
+// Backup reminder state: timestamps only, never profile values. One
 // key holds both so a single read settles the transfer section.
 const BACKUP_KEY = 'jushoai:backup';
 
@@ -26,7 +26,7 @@ export interface LastUsed {
   addressId?: string;
 }
 
-// Timestamps behind the backup nudge (PBI-284): the last successful export
+// Timestamps behind the backup nudge: the last successful export
 // and the last nudge dismissal, as epoch milliseconds. Profile values never
 // enter this key.
 export interface BackupMeta {

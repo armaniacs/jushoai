@@ -217,7 +217,7 @@ describe('mountTransferSection', () => {
   });
 });
 
-describe('backup nudge (PBI-284)', () => {
+describe('backup nudge', () => {
   const nudgeMount = (over: Partial<TransferSectionDeps> = {}) => mount({
     profileCount: vi.fn(async () => 2),
     ...over,

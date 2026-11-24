@@ -646,11 +646,11 @@ export function runOptionsPerSideGuide(adapter: BrowserAdapter, label: string): 
   });
 }
 
-// Backup nudge (PBI-284): the settings page pairs a modest in-section notice
+// Backup nudge: the settings page pairs a modest in-section notice
 // with the existing export button, and a dismissal survives a reload (30-day
 // snooze persisted in storage).
 export function runBackupNudge(adapter: BrowserAdapter, label: string): void {
-  describe(`${label}: backup nudge (PBI-284)`, () => {
+  describe(`${label}: backup nudge`, () => {
     it('shows a modest backup notice with the export button and stays closed', async () => {
       const second = { ...PROFILE_DATA.profiles[0]!, id: 'p2', label: '家族' };
       await adapter.seed({ profiles: [...PROFILE_DATA.profiles, second], addresses: PROFILE_DATA.addresses });
