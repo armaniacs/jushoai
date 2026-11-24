@@ -63,7 +63,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 7. PBI-285 は完了した（70616e8 + f68dbb2、レビュー承認）。初回レビューで Critical 1 件（E2E 未実行の誤前提）が出たが、Chrome 実機で `keyboard-only flow` 通過を確認して解消。Firefox 実機と読み上げ実機は残作業として PBI 引継ぎに記録。新規 PBI-291（結果件数の読み上げ）は未採点・未着手
 8. PBI-286 は仕組みまで完了した（75a1b1e + 2fc6b50、レビュー承認。Important 2 件は修正済み・再レビュー承認）。実データ生成は環境の WAF 遮断で不可のため、PBI-286 の引継ぎに残す。BDD シナリオ 1 の planner 連携テストは生成時に追加する
 9. 残り: 276（282 の統合に依存）、282 の残り（統合実行と版付け。ユーザー判断待ち）、新規 PBI-291（未採点・未着手）。次はブランチ全体のレビュー（`git merge-base main HEAD` から HEAD の範囲で 1 回。281 の Minor 2 点と各 report の Minor を拾う）
-3. 全体の最後に、ブランチ全体のレビューを `git merge-base main HEAD` から HEAD の範囲で 1 回行う（まだ実行していない）。そのとき、281 の Minor 2 点と各 report の Minor を拾う
+3. ブランチ全体のレビューは `d184fa1..HEAD` の範囲で 1 回実施した（`.superpowers/sdd/ga-readiness-final-review.md`。判定は条件付き Approve で、条件の 1 行修正を反映したらマージ可）。残る各タスクの Minor はレビューで受容可と評価済み
 
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
 
@@ -84,7 +84,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 - `make -C /Users/yaar/Playground/JushoAI test-build`: manifest・ワークフローの検査（`tests/build/*.build.ts`）。release.yml / check.yml を変えたら `tests/build/release-workflow.build.ts` と `check-workflow.build.ts` も直す
 - `make -C /Users/yaar/Playground/JushoAI site`: ドキュメントサイトの生成と検査（日英の H2 数・キー・リンクが一致しないと失敗）
 - `make -C /Users/yaar/Playground/JushoAI check-all`: check + site + 両ブラウザの E2E（リリース前）
-- 281 の実績: `make test-build`（36 件）、typecheck、lint は通過。275 の実績: `make site` と `tests/site`（133 件）は通過。`make check` 全体はこのラウンドではまだ一度も流していない
+- 281 の実績: `make test-build`（36 件）、typecheck、lint は通過。275 の実績: `make site` と `tests/site`（133 件）は通過。`make check` 全体は Task 6 と Task 8 で緑を確認済み（Task 6 は統括側で実行、Task 8 は実装者が実行）
 
 ## 5. 注意点
 
