@@ -76,9 +76,17 @@ Scenario: 未完了の必須項目があると版付けしない
 - README: 該当なし（「実データを入れる前に試したいときは」等の 1 行は、版の位置づけではなく架空データでの操作案内のため残す）。
 - サイト日英: 版の位置づけを示す表現はなし。`v1beta` は Gemini の API 版名で無関係。`お試し`（getting-started の節名等）は架空データでの操作案内のため残す。
 
+### Task 11 の実装記録（2026-11-24。統合の実行。マージはしない）
+
+- `work/ga-readiness` を `origin` に push した（新規ブランチ。force push なし。push 前に local main と origin/main の一致を確認）。
+- `main` への PR を 1 本作成した。PR #36（通常 PR。draft ではない）。base `main`、head `work/ga-readiness`。URL は https://github.com/armaniacs/jushoai/pull/36。
+- PR 本文に 4 層の概要、Task 5 への参照、1.0 ゲートの状態、残作業を記載した。作成者本人のため review request は付けられず、本文末尾で @armaniacs を指名した。
+- CI は PR 作成で起動した（check、e2e chrome、e2e firefox。いずれも確認時点では pending。合否待ちは Task 11 の範囲外）。
+- 受け入れ基準 1 件目はマージまで `[ ]` のまま残す。
+
 ### 残作業
 
-- 未マージブランチの統合実行（PR 作成・マージ。順序は上の記録どおり。最上位 1 本にまとめるかはユーザー判断）。`main` への push はユーザー指示があるまで行わない。
+- 未マージブランチの統合: PR #36 を作成済み。残りはユーザーの承認とマージ。マージ後に受け入れ基準 1 件目の印を閉じる。
 - 台帳の「コードレビューのみ残」系のレビュー実施かアーカイブ判断（残置するものは 1.0 後と明記）。
 - 版付け: 1.0 必須 PBI（274 / 275 / 277 / 281 / 283）と 276 の完了後に `docs/release.md` のゲート一覧をすべて確認し、`package.json` を `1.0.0` にしてタグを打ち、GitHub Release を作る。
 - 元の引継ぎ: 未着手（2026-11-24）。着手前に `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md` の該当節を読む（調査済みの事実・落とし穴・検証手順）
