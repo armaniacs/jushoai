@@ -68,6 +68,11 @@ Scenario: 成果物が途中で変わると提出しない
 - 新規 action は全て SHA 固定 + `# vN` コメント。版は実績に留める保守判断で v4 系を選んだ（upload-artifact v4.6.2、download-artifact v4.3.0、attest-build-provenance v4）。公式リポジトリのタグから SHA を解決して記録した。
 - submit に checkout を置かない。成果物の受け取り・照合・提出・Release 作成は checkout なしで動く。将来 `run:` 手順を足す際の事故を防ぐ。
 
+### v0.2.0 リリース時の障害と修正（2026-11-25）
+- 事象: run 45472009549 で 3 ストアの提出は成功したが、最後の GitHub Release 作成が `failed to run git: fatal: not a git repository` で失敗した。submit job には checkout が無い（資格情報隔離の設計）ため、`--repo` 無しの `gh release create` が git 経由のリポジトリ特定に失敗した。
+- 対処: 再実行すると 3 ストアへ二重提出になるため、再実行はせず Release だけを手で作った（CI 成果物を `gh run download` で取得し、ハッシュ照合後に `gh release create v0.2.0 --repo armaniacs/jushoai ...` で作成。zip 3 種 + SHA256SUMS の 4 ファイル添付を確認）。ワークフロー自体は `--repo "${{ github.repository }}"` を付ける修正を PR #43 で出した（隔離設計は不変）。
+- 教訓: checkout の無い job で `gh` を使う場合は `--repo` を必ず付ける。将来 `run:` 手順を足す際も同じ事故に注意する。
+
 ### 検証結果
 - `tests/build/release-workflow.build.ts` を新構成に先に書き換えて赤を確認し、yml 更新後に緑（22 件）。
 - `make check` が緑（unit 194 ファイル 3349 件、build 5 ファイル 50 件、web-ext lint は想定内の警告 2 件のみ）。

@@ -62,8 +62,9 @@ Scenario: CI で作られたことを検証できる
 - `jushoai-0.1.39-sources.zip` を別ディレクトリに展開し、`npm ci --ignore-scripts` → `make zip-firefox` を実行した。作られた `-firefox.zip` と `-sources.zip` はリポジトリで作った同版 zip とバイト一致した（firefox: `458f5e01…400f52`、sources: `560728c3…711b1b`）。差分なしのため受容判断は不要。再現確認済み。
 
 ## 引継ぎ（ユーザー作業）
-- 初回 1.0 リリースの後に次が通ることを確認する（来歴証明の BDD シナリオの確認手順）。
+- ~~初回 1.0 リリースの後に次が通ることを確認する（来歴証明の BDD シナリオの確認手順）。
   ```bash
   gh attestation verify <zip の場所> --owner armaniacs
-  ```
+  ```~~
+- 完了（2026-11-25）: v0.2.0 の chrome zip を Release から取得し、`gh attestation verify --owner armaniacs` が exit 0（証明書は release.yml @ refs/tags/v0.2.0、run 45472009549 を指す）を確認した。
 - CI のドライランは PBI-274 の「引継ぎ（ユーザー作業）」の手順で行う。
