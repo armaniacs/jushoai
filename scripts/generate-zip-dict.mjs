@@ -1,31 +1,47 @@
-// Builds src/core/zip-dict-data.ts from the Japan Post KEN_ALL data.
+// Builds src/core/zip-dict-data.ts from the Japan Post KEN_ALL-format data.
 // The table keeps the 3-digit prefix granularity the terminal lookup reads,
 // so the lookup and the planner keep working unchanged.
 //
 // Usage:
-//   node scripts/generate-zip-dict.mjs [--input <ken_all.zip|KEN_ALL.CSV>]
-//                                       [--out <path>] [--url <url>]
+//   node scripts/generate-zip-dict.mjs [--input <dir|zip file> ...] [--out <path>]
 //
-// Defaults fetch the nationwide bulk file from Japan Post at generation
-// time (network). Pass --input to reuse a previously downloaded file,
-// which also makes the run reproducible offline. The output only depends
-// on the input rows: same input rows always produce the same table.
-import { readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join, resolve } from 'node:path';
+// Japan Post ended the nationwide ken_all.zip download and now distributes
+// per-prefecture zips (plus monthly add_/del_ diffs), so with no --input the
+// script fetches the 47 prefecture files (network) and merges them; every
+// file must fetch and parse or nothing is written. --input reuses previously
+// downloaded zips, which also makes the run reproducible offline. Zips merge
+// in basename order whatever way the inputs were spelled out, so the same
+// input set always produces byte-identical output.
+import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { inflateRawSync } from 'node:zlib';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const DEFAULT_URL = 'https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/ken_all.zip';
+const PREFECTURE_URL_BASE = 'https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/';
+// The 47 prefecture files linked from the distribution page
+// (https://www.post.japanpost.jp/zipcode/dl/oogaki-zip.html), excluding the
+// monthly add_/del_ diffs. ken_all.zip still appears on that page but 404s.
+const PREFECTURE_ZIPS = [
+  '01hokkai.zip', '02aomori.zip', '03iwate.zip', '04miyagi.zip', '05akita.zip',
+  '06yamaga.zip', '07fukush.zip', '08ibarak.zip', '09tochig.zip', '10gumma.zip',
+  '11saitam.zip', '12chiba.zip', '13tokyo.zip', '14kanaga.zip', '15niigat.zip',
+  '16toyama.zip', '17ishika.zip', '18fukui.zip', '19yamana.zip', '20nagano.zip',
+  '21gifu.zip', '22shizuo.zip', '23aichi.zip', '24mie.zip', '25shiga.zip',
+  '26kyouto.zip', '27osaka.zip', '28hyogo.zip', '29nara.zip', '30wakaya.zip',
+  '31tottor.zip', '32shiman.zip', '33okayam.zip', '34hirosh.zip', '35yamagu.zip',
+  '36tokush.zip', '37kagawa.zip', '38ehime.zip', '39kochi.zip', '40fukuok.zip',
+  '41saga.zip', '42nagasa.zip', '43kumamo.zip', '44oita.zip', '45miyaza.zip',
+  '46kagosh.zip', '47okinaw.zip',
+];
+const PREFECTURE_SOURCE = `Japan Post prefecture files (47) from ${PREFECTURE_URL_BASE}`;
 
 const args = process.argv.slice(2);
 const flag = (name) => {
   const i = args.indexOf(name);
   return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
 };
-const INPUT = flag('--input');
 const OUT = resolve(ROOT, flag('--out') ?? 'src/core/zip-dict-data.ts');
-const URL = flag('--url') ?? DEFAULT_URL;
 
 const fail = (message) => {
   process.stderr.write(`generate-zip-dict: ${message}\n`);
@@ -34,8 +50,12 @@ const fail = (message) => {
 
 if (args.includes('--help') || args.includes('-h')) {
   process.stdout.write(
-    'Usage: node scripts/generate-zip-dict.mjs [--input <ken_all.zip|KEN_ALL.CSV>] [--out <path>] [--url <url>]\n' +
-      `Defaults fetch ${DEFAULT_URL} and write src/core/zip-dict-data.ts.\n`,
+    'Usage: node scripts/generate-zip-dict.mjs [--input <dir|zip file> ...] [--out <path>]\n' +
+      `With no --input, fetches the 47 per-prefecture zips from ${PREFECTURE_URL_BASE}\n` +
+      'and merges them; every file must fetch and parse or nothing is written.\n' +
+      '--input reads every *.zip in a directory, or one zip file (repeatable).\n' +
+      'Zips always merge in basename order regardless of argument order, and\n' +
+      'duplicate basenames fail. Writes src/core/zip-dict-data.ts by default.\n',
   );
   process.exit(0);
 }
@@ -83,32 +103,6 @@ function decodeEntry(entry) {
   fail(`unsupported compression method ${entry.method} for ${entry.name}`);
 }
 
-async function loadCsvText() {
-  if (INPUT) {
-    let raw;
-    try {
-      raw = readFileSync(INPUT);
-    } catch {
-      fail(`cannot read input file ${INPUT}`);
-    }
-    if (INPUT.toLowerCase().endsWith('.zip')) {
-      const csv = unzip(raw).find((e) => e.name.toLowerCase().endsWith('.csv'));
-      if (!csv) fail(`no CSV entry in ${INPUT}`);
-      return { text: new TextDecoder('shift_jis').decode(decodeEntry(csv)), source: INPUT };
-    }
-    return { text: new TextDecoder('shift_jis').decode(raw), source: INPUT };
-  }
-  const res = await fetch(URL);
-  if (!res.ok) fail(`download failed: ${res.status} ${res.statusText} (${URL})`);
-  const csv = unzip(Buffer.from(await res.arrayBuffer())).find((e) =>
-    e.name.toLowerCase().endsWith('.csv'),
-  );
-  if (!csv) fail(`no CSV entry in ${URL}`);
-  return { text: new TextDecoder('shift_jis').decode(decodeEntry(csv)), source: URL };
-}
-
-const quote = (value) => `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
-
 let zipBuild;
 try {
   zipBuild = await import('../src/core/zip-build.ts');
@@ -119,29 +113,127 @@ try {
   );
 }
 
-const { text, source } = await loadCsvText();
-const parsed = zipBuild.parseKenAllCsv(text);
-if (parsed.length === 0) fail(`no usable rows parsed from ${source}`);
+const quote = (value) => `'${value.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+
+async function fetchZip(url) {
+  let res;
+  try {
+    res = await fetch(url);
+    if (!res.ok) fail(`download failed: ${res.status} ${res.statusText} (${url})`);
+    return Buffer.from(await res.arrayBuffer());
+  } catch (error) {
+    fail(`download failed: ${url} (${String(error?.cause?.message ?? error?.message ?? error)})`);
+  }
+}
+
+function readInput(path) {
+  try {
+    return readFileSync(path);
+  } catch {
+    return fail(`cannot read input file ${path}`);
+  }
+}
+
+// Decodes the zip's single CSV entry and requires it to parse to at least
+// one usable row: a file that contributes nothing would silently shrink the
+// nationwide table, so any gap fails the whole run with the source named.
+function csvTextOf(label, raw) {
+  const entries = unzip(raw).filter((e) => e.name.toLowerCase().endsWith('.csv'));
+  if (entries.length === 0) fail(`no CSV entry in ${label}`);
+  if (entries.length > 1) {
+    fail(`multiple CSV entries in ${label}: ${entries.map((e) => e.name).join(', ')}`);
+  }
+  const text = new TextDecoder('shift_jis').decode(decodeEntry(entries[0]));
+  if (zipBuild.parseKenAllCsv(text).length === 0) fail(`no usable rows parsed from ${label}`);
+  return text;
+}
+
+// --input is repeatable: a directory contributes its *.zip children in file
+// name order, a file path must be a zip. The merge order below is basename
+// dictionary order regardless of how the inputs arrived on the command line.
+const INPUT_PATHS = [];
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--input') {
+    if (i + 1 >= args.length) fail('--input requires a path');
+    INPUT_PATHS.push(args[++i]);
+  }
+}
+
+const inputs = [];
+if (INPUT_PATHS.length > 0) {
+  for (const path of INPUT_PATHS) {
+    let st;
+    try {
+      st = statSync(path);
+    } catch {
+      fail(`cannot read input ${path}`);
+    }
+    if (st.isDirectory()) {
+      const names = readdirSync(path, { withFileTypes: true })
+        .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.zip'))
+        .map((e) => e.name)
+        .sort();
+      if (names.length === 0) fail(`no zip files in ${path}`);
+      for (const name of names) inputs.push({ path: join(path, name), basename: name });
+    } else if (path.toLowerCase().endsWith('.zip')) {
+      inputs.push({ path, basename: basename(path) });
+    } else {
+      fail(`not a zip file: ${path}`);
+    }
+  }
+  const seen = new Map();
+  for (const input of inputs) {
+    if (seen.has(input.basename)) {
+      fail(
+        `duplicate input basename ${input.basename}: ` +
+          `${seen.get(input.basename)} and ${input.path}`,
+      );
+    }
+    seen.set(input.basename, input.path);
+  }
+  inputs.sort((a, b) => (a.basename < b.basename ? -1 : a.basename > b.basename ? 1 : 0));
+} else {
+  for (const name of PREFECTURE_ZIPS) {
+    inputs.push({ path: PREFECTURE_URL_BASE + name, basename: name, remote: true });
+  }
+}
+
+const texts = [];
+for (const input of inputs) {
+  const raw = input.remote ? await fetchZip(input.path) : readInput(input.path);
+  texts.push(csvTextOf(input.path, raw));
+}
+
+// KEN_ALL has no multi-line fields, so joining the texts with exactly one
+// newline (and ending the last with exactly one) is lossless for the row
+// stream the parser reads; only redundant trailing newlines are normalized.
+const merged = texts.map((text) => text.replace(/[\r\n]+$/, '')).join('\n') + '\n';
+const source = INPUT_PATHS.length > 0
+  ? inputs.map((input) => input.basename).join(', ')
+  : PREFECTURE_SOURCE;
+
+const parsed = zipBuild.parseKenAllCsv(merged);
+if (parsed.length === 0) fail('no usable rows parsed from the merged input');
 const { ranges, dropped } = zipBuild.buildPrefixRanges(parsed);
-if (ranges.length === 0) fail(`no prefix ranges built from ${source}`);
+if (ranges.length === 0) fail('no prefix ranges built from the merged input');
 
 const lines = ranges.map(
   (r) =>
     `  { lo: ${quote(r.lo)}, hi: ${quote(r.hi)}, prefecture: ${quote(r.prefecture)}, city: ${quote(r.city)} },`,
 );
 const header = `// Zip prefix table read by the terminal lookup in zip-dict.ts.
-// Generated by scripts/generate-zip-dict.mjs from the Japan Post KEN_ALL
-// data (https://www.post.japanpost.jp/zipcode/download.html).
+// Generated by scripts/generate-zip-dict.mjs from the Japan Post postal
+// code data (https://www.post.japanpost.jp/zipcode/download.html).
 // Source: ${source}
-// Input: ${parsed.length} KEN_ALL rows
+// Input: ${parsed.length} KEN_ALL rows from ${inputs.length} files
 // (${ranges.length} prefix ranges, ${dropped.length} multi-prefecture prefixes omitted:
 // ${dropped.length > 0 ? dropped.join(', ') : 'none'}).
 // The output depends only on the input rows: rerunning the script against
-// the same file produces byte-identical output.
+// the same input files produces byte-identical output.
 // Japan Post does not claim copyright on the postal code data itself and
-// allows free redistribution. Rerunning the script against a fresh KEN_ALL
-// replaces this table in the same shape; the lookup reads whatever rows
-// are here without code changes.
+// allows free redistribution. Rerunning the script against fresh prefecture
+// files replaces this table in the same shape; the lookup reads whatever
+// rows are here without code changes.
 import type { ZipPrefixRange } from './zip-build';
 
 export const ZIP_PREFIX_RANGES: ZipPrefixRange[] = [
@@ -151,6 +243,6 @@ ${lines.join('\n')}
 writeFileSync(OUT, header);
 
 process.stdout.write(
-  `generate-zip-dict: ${parsed.length} rows -> ${ranges.length} ranges ` +
+  `generate-zip-dict: ${inputs.length} files, ${parsed.length} rows -> ${ranges.length} ranges ` +
     `(${dropped.length} dropped) written to ${OUT}\n`,
 );
