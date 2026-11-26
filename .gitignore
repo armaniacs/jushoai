@@ -10,6 +10,8 @@ site-dist/
 .superpowers/
 .claude/
 .agents
+# skill runtime artifacts (audit reports from coverage runs etc.)
+.hex-skills/
 .env
 .env.submit
 tmp/
