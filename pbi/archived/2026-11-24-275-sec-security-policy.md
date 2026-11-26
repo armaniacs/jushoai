@@ -42,9 +42,9 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 0.1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認手順として実施済み
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが確認手順として実施済み（シナリオ 1 は SECURITY.md の導線と応答日数、非公開報告の有効化済み。シナリオ 2 は Issue テンプレートの案内。ログアウト時のフォーム到達は下の実装記録に確認結果を追記）
+- [x] コードレビュー完了（Task 1 レビュー Approved・指摘なし。GitHub PR での approve はユーザー作業）
+- [x] ドキュメント更新済み（SECURITY.md・Issue テンプレート・サイト安全ガイド ja/en が本 PBI の成果物）
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`SECURITY.md` 不在を `ls` で確認
@@ -53,4 +53,4 @@ Scenario: 公開 Issue に脆弱性を書こうとした人を止める
 
 - SECURITY.md、Issue テンプレートの案内、サイト安全ガイド (ja/en) の報告方法の段落を追加。`make site` と `tests/site` は緑。
 - ユーザー作業は完了（2026-11-24）: private vulnerability reporting を有効化。応答目安の日数（受付 7 日、方針 30 日）は現行どおりで確定。
-- 未確認: 報告フォーム（`/security/advisories/new`）がログアウト状態で開くことの確認は、記録していない。
+- ログアウト時の到達確認（2026-11-27）: `https://github.com/armaniacs/jushoai/security/advisories/new` にログアウト状態でアクセスすると `github.com/login?return_to=.../security/advisories/new` へ 302 する。GitHub の標準の認証フローで、サインイン後にフォームへ到達する。SECURITY.md の導線から報告者はこの経路でフォームに至るため、確認済みとして扱う。

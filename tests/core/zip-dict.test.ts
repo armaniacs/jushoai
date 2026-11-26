@@ -3,9 +3,10 @@ import { zipAssistFor } from '../../src/core/zip-dict';
 
 describe('zipAssistFor', () => {
   it('resolves a seed prefix with and without the hyphen', () => {
-    expect(zipAssistFor('100-0001')).toEqual({ prefecture: '東京都', city: '千代田区' });
+    // The nationwide table resolves 100 and 650 to prefecture-only (each spans municipalities).
+    expect(zipAssistFor('100-0001')).toEqual({ prefecture: '東京都', city: '' });
     expect(zipAssistFor('1600022')).toEqual({ prefecture: '東京都', city: '新宿区' });
-    expect(zipAssistFor('650-0001')).toEqual({ prefecture: '兵庫県', city: '神戸市中央区' });
+    expect(zipAssistFor('650-0001')).toEqual({ prefecture: '兵庫県', city: '' });
   });
 
   it('resolves range boundaries inclusively', () => {
@@ -16,8 +17,8 @@ describe('zipAssistFor', () => {
   });
 
   it('returns null for unknown prefixes and short input', () => {
-    expect(zipAssistFor('999-0000')).toBeNull();
-    expect(zipAssistFor('601-8001')).toBeNull();
+    // The nationwide table resolves 999 and 601, so unknown coverage uses 000 (never assigned).
+    expect(zipAssistFor('000-0000')).toBeNull();
     expect(zipAssistFor('1-0')).toBeNull();
     expect(zipAssistFor('')).toBeNull();
   });

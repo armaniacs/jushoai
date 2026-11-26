@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { buildPlan, applyAbbrevApprovals, VALUE_ROWS } from '../../src/core/planner';
+import { zipAssistFor } from '../../src/core/zip-dict';
+import { ZIP_PREFIX_RANGES } from '../../src/core/zip-dict-data';
 import type { Address, Category, FieldMeta, Item, KanaKind, Profile } from '../../src/core/types';
 import { makeMeta } from '../helpers';
 
@@ -579,9 +581,10 @@ describe('zip dictionary assist (PBI-125)', () => {
 
   it('rides the dictionary candidate onto an empty prefecture/city row', () => {
     const plan = buildPlan([item('prefecture'), item('city')], { profile, address: emptyAddress });
+    // The real table resolves 100 (spanning several municipalities) to the prefecture only.
     expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
       ['warn-no-value', '東京都', '候補: 東京都'],
-      ['warn-no-value', '千代田区', '候補: 千代田区'],
+      ['warn-no-value', undefined, ''],
     ]);
   });
 
@@ -595,7 +598,8 @@ describe('zip dictionary assist (PBI-125)', () => {
   });
 
   it('keeps the plain warn-no-value when the zip is unknown or missing', () => {
-    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '601-8001' };
+    // 601 resolves in the nationwide table, so the unknown case uses 000, which is never assigned.
+    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '000-8001' };
     expect(buildPlan([item('prefecture')], { profile, address: unknownZip })).toEqual([
       expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
     ]);
@@ -607,6 +611,52 @@ describe('zip dictionary assist (PBI-125)', () => {
   it('never assists categories outside the assistable set', () => {
     expect(buildPlan([item('street')], { profile, address: { ...emptyAddress, id: 'a5', street: '' } })).toEqual([
       expect.objectContaining({ value: '', status: 'warn-no-value' }),
+    ]);
+  });
+});
+
+describe('zip dictionary nationwide (PBI-286)', () => {
+  // The checked-in seed holds 48 hand-picked ranges; a real KEN_ALL run
+  // produces hundreds of 3-digit prefixes. The count separates the two
+  // states: below the threshold the nationwide data is not checked in yet,
+  // so the scenarios skip with a pointer to the generation script instead
+  // of failing on the seed.
+  const NATIONWIDE_MIN_RANGES = 100;
+  const nationwide = ZIP_PREFIX_RANGES.length > NATIONWIDE_MIN_RANGES;
+  const multiCity = ZIP_PREFIX_RANGES.find((r) => r.city === '');
+  // 930 spans multiple municipalities (city comes back empty), so the fixture uses single-city 931.
+  const toyama: Address = {
+    ...address, id: 'a9', label: '富山のみ',
+    zip: '9310001', prefecture: '', city: '', street: '', building: '',
+  };
+
+  it('resolves a regional zip to its prefecture and city', (ctx) => {
+    ctx.skip(!nationwide, 'nationwide zip table not checked in yet; run node scripts/generate-zip-dict.mjs');
+    expect(zipAssistFor('931-0001')).toEqual({ prefecture: '富山県', city: '富山市' });
+    const plan = buildPlan([item('prefecture'), item('city')], { profile, address: toyama });
+    expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
+      ['warn-no-value', '富山県', '候補: 富山県'],
+      ['warn-no-value', '富山市', '候補: 富山市'],
+    ]);
+  });
+
+  it('promotes both approved candidates through the single approval seam', (ctx) => {
+    ctx.skip(!nationwide, 'nationwide zip table not checked in yet; run node scripts/generate-zip-dict.mjs');
+    const plan = buildPlan([item('prefecture'), item('city')], { profile, address: toyama });
+    const approved = applyAbbrevApprovals(plan, new Set([plan[0]!.fieldId, plan[1]!.fieldId]));
+    expect(approved.map((p) => [p.value, p.status])).toEqual([['富山県', 'ok'], ['富山市', 'ok']]);
+    // Unapproved rows keep the plain warn-no-value with no value.
+    const none = applyAbbrevApprovals(plan, new Set());
+    expect(none.map((p) => [p.value, p.status])).toEqual([['', 'warn-no-value'], ['', 'warn-no-value']]);
+  });
+
+  it('stops at the prefecture when a prefix spans municipalities', (ctx) => {
+    ctx.skip(!multiCity, 'no municipality-spanning prefix in the seed; run node scripts/generate-zip-dict.mjs');
+    const span: Address = { ...toyama, zip: `${multiCity!.lo}0001` };
+    const plan = buildPlan([item('prefecture'), item('city')], { profile, address: span });
+    expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
+      ['warn-no-value', multiCity!.prefecture, `候補: ${multiCity!.prefecture}`],
+      ['warn-no-value', undefined, ''],
     ]);
   });
 });

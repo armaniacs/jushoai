@@ -1,26 +1,32 @@
 # PBI 台帳インデックス
 
-## 進行中（2026-11-24・正式版 (1.0) 準備ラウンド。機能充足の評価・改善・将来機能・セキュリティ必須対応の17件。ラウンド台帳に順位とRICEと依存を記録）
+## 進行中（2026-11-24・正式版 (1.0) 準備ラウンド。ラウンド台帳に順位とRICEと依存を記録。2026-11-27 に実装済み 8 件を DoD 確認でアーカイブ（下の節））
 
 - `2026-11-24-00-backlog-ga-readiness-round.md`（ラウンド台帳。機能充足の評価表、1.0 までの段取り、確認済みの良い点、やらないことの継続を記録）
-- `2026-11-24-275-sec-security-policy.md`（順位 1。RICE 1000。1.0 必須。SECURITY.md と非公開の脆弱性報告窓口）
-- `2026-11-24-277-sec-dependency-monitoring.md`（順位 2。RICE 533。1.0 必須。Dependabot と npm audit）
-- `2026-11-24-274-sec-release-job-split.md`（順位 3。RICE 480。1.0 必須。release の build と submit の分離）
-- `2026-11-24-281-sec-manifest-guard.md`（順位 4。RICE 400。1.0 必須。権限と CSP の機械検査）
-- `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート）
-- `2026-11-24-276-sec-pre-ga-vuln-rescan.md`（順位 6。RICE 160。1.0 必須。統合後の再スキャン。282 に依存）
-- `2026-11-24-283-feat-storage-compat-contract.md`（順位 7。RICE 320。1.0 必須。保存形式の版番号と互換性）
-- `2026-11-24-280-sec-threat-model-doc.md`（順位 8。RICE 120。1.0 推奨。脅威モデルと端末保存データの明示）
-- `2026-11-24-284-feat-data-loss-guard.md`（順位 9。RICE 100。1.0 推奨。バックアップの導線）
-- `2026-11-24-278-sec-release-provenance.md`（順位 10。RICE 80。1.0 推奨。SHA256SUMS と来歴証明）
-- `2026-11-24-285-chore-a11y-keyboard-audit.md`（順位 11。RICE 17。1.0 推奨。キーボードと読み上げの通し監査）
-- `2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化）
+- `2026-11-24-274-sec-release-job-split.md`（順位 3。RICE 480。1.0 必須。release の build と submit の分離。v0.2.0 の実リリースで build 無 secrets・submit ハッシュ照合・3 ストア提出を実証、Release 作成の修正は PR #43。残作業は CI dry-run の実行と environment 承認（ユーザー作業））
+- `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート。版付け（0.2.0）とゲートの check-all 緑は完了（2026-11-27）。残りは 274 の dry-run とストア 3 社の審査追跡（ユーザー作業））
+- `2026-11-24-285-chore-a11y-keyboard-audit.md`（順位 11。RICE 17。1.0 推奨。キーボードと読み上げの通し監査。E2E は Chrome・Firefox 実機で通過済み。残りは VoiceOver / NVDA での読み上げ確認（ユーザー作業。PBI-291 の受け入れと合わせる））
+- `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
 - `2026-11-24-287-backlog-profile-at-rest-encryption.md`（順位 13。RICE 4。将来。着手条件付き）
 - `2026-11-24-288-backlog-cross-device-sync.md`（順位 14。RICE 3。将来。287 に依存）
 - `2026-11-24-289-backlog-firefox-android.md`（順位 15。RICE 3。将来。着手条件付き）
 - `2026-11-24-290-backlog-safari.md`（順位 16。RICE 2。将来の調査。289 に依存）
-- `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
 - `2026-11-24-291-chore-a11y-result-announcement.md`（未採点。1.0 後でも可。PBI-285 の監査で分離。結果画面の件数の読み上げ。1.0 後。2026-11-24 ユーザー決定）
+
+## 進行中からアーカイブ済み（2026-11-27・郵便番号補助の全国化。日本郵便のサイト再構築で旧配布パス（`/zipcode/dl/`）が恒久 404 になったため生成経路を新パスの都道府県別 47 ファイルに切り替え、実データ取込まで完了（各タスクレビュー Approved・`make check-all` 緑。GitHub PR での approve はユーザー作業）
+
+- `archived/2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化。日本郵便の都道府県別 47 ファイルから全国表を生成（124841 行 → 678 範囲。複数都道府県またがりの 22 prefix は除外し該当欄は警告のまま）し BDD 2 シナリオを自動テストで合格。実装コミット 0494e39 / 8d3eb3e / 8d2ac40 / 74e4a6b / 72f63fc / 446b42c。旧 URL の誤記訂正記録（遮断→配布終了→移動）と 5 Whys は PBI 本文と `.superpowers/sdd/whywhy-ken-all-retirement.md`）
+
+## 進行中からアーカイブ済み（2026-11-27・GAラウンドの実装済み 8 件を DoD 確認で閉鎖。実装は PR #36 / #42 / #44 で main 取込済み。各 PBI のタスクレビュー Approved を最終ゲートとして兼用し、GitHub PR での approve はユーザー作業）
+
+- `archived/2026-11-24-275-sec-security-policy.md`（順位 1。RICE 1000。SECURITY.md と非公開の報告窓口。private vulnerability reporting は有効化済み、ログアウト時のフォーム到達も 2026-11-27 に確認）
+- `archived/2026-11-24-277-sec-dependency-monitoring.md`（順位 2。RICE 533。Dependabot と npm audit。Dependabot の Actions 更新 PR #37〜#41 が本番で作成・マージされ、初回実行の確認も完了）
+- `archived/2026-11-24-281-sec-manifest-guard.md`（順位 4。RICE 400。権限と CSP の機械検査。残っていた外部 URL の `import(` 検査と空走査 assert を 2026-11-27 に実装（赤確認込み））
+- `archived/2026-11-24-276-sec-pre-ga-vuln-rescan.md`（順位 6。RICE 160。統合後の再スキャン。新規指摘 0 件、要約は CHANGELOG 0.2.0 節の Security）
+- `archived/2026-11-24-283-feat-storage-compat-contract.md`（順位 7。RICE 320。保存形式の版番号と互換性。版ずれ表示と未知項目保持を含む）
+- `archived/2026-11-24-280-sec-threat-model-doc.md`（順位 8。RICE 120。脅威モデル（docs/superpowers/specs/2026-11-24-threat-model.md）と端末保存データの明示）
+- `archived/2026-11-24-284-feat-data-loss-guard.md`（順位 9。RICE 100。バックアップの導線。Firefox 実機 E2E は Task 16 の 25/25 で確認済み）
+- `archived/2026-11-24-278-sec-release-provenance.md`（順位 10。RICE 80。SHA256SUMS と来歴証明。v0.2.0 の attestation 検証は exit 0）
 
 ## 進行中からアーカイブ済み（2026-11-24・272/273 を PR #36 でマージ済み。台帳の「アーカイブはマージ後」条件が満たされた）
 

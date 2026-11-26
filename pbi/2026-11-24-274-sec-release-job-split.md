@@ -43,8 +43,8 @@ Scenario: 成果物が途中で変わると提出しない
 0.5人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認手順として実施済み
-- [ ] コードレビュー完了
+- [ ] 全BDDシナリオが確認手順として実施済み（シナリオ 1 は v0.2.0 の実リリースでほぼ実証: build は secrets なしで走り、submit は environment 承認のうえ SHA256SUMS 照合を通して 3 ストアへ提出した。Release 作成のみ `gh release create` の repo 特定で失敗し、修正は PR #43 でマージ済みだが次回実行まで未実証。シナリオ 2 は改変 zip で `sha256sum -c` が FAILED・終了 1 になることをローカルで確認済み。残る確認は下のドライラン）
+- [x] コードレビュー完了（Task 4 レビュー Approved。GitHub PR での approve はユーザー作業）
 - [x] ドキュメント更新済み（docs/release.md）
 
 ## 出どころ

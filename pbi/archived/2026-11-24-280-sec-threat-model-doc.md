@@ -42,7 +42,7 @@ Scenario: 保守者が守る範囲と守らない範囲を確認できる
 
 ## Definition of Done
 - [x] 全BDDシナリオが確認手順として実施済み
-- [ ] コードレビュー完了
+- [x] コードレビュー完了（Task 7 レビュー Approved。GitHub PR での approve はユーザー作業）
 - [x] ドキュメント更新済み
 
 ## 出どころ

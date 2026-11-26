@@ -50,8 +50,12 @@ describe.each(DIRS)('manifest guard (%s)', (dir) => {
   });
 
   it('ships no dynamic code execution in bundled JS', () => {
+    const files = walk(`dist/${dir}`).filter((f) => f.endsWith('.js'));
+    // An empty scan would pass vacuously, so a dist layout change that drops
+    // every JS file must fail here instead of silently skipping the checks.
+    expect(files.length).toBeGreaterThan(0);
     const hits: string[] = [];
-    for (const file of walk(`dist/${dir}`).filter((f) => f.endsWith('.js'))) {
+    for (const file of files) {
       const rel = file.slice(`dist/${dir}/`.length);
       const src = readFileSync(file, 'utf8');
       for (const re of [/\beval\s*\(/g, /new\s+Function\s*\(/g]) {
@@ -62,6 +66,21 @@ describe.each(DIRS)('manifest guard (%s)', (dir) => {
           );
           if (!allowed) hits.push(`${rel}: ...${ctx.replace(/\s+/g, ' ')}...`);
         }
+      }
+    }
+    expect(hits).toEqual([]);
+  });
+
+  // Only literal URLs are caught: an import whose specifier is built at
+  // runtime cannot be resolved statically, which stays out of scope here.
+  it('ships no dynamic import of a remote URL in bundled JS', () => {
+    const hits: string[] = [];
+    for (const file of walk(`dist/${dir}`).filter((f) => f.endsWith('.js'))) {
+      const rel = file.slice(`dist/${dir}/`.length);
+      const src = readFileSync(file, 'utf8');
+      for (const match of src.matchAll(/\bimport\s*\(\s*(['"`])\s*(https?:)?\/\//g)) {
+        const ctx = src.slice(Math.max(0, match.index - 40), match.index + 60);
+        hits.push(`${rel}: ...${ctx.replace(/\s+/g, ' ')}...`);
       }
     }
     expect(hits).toEqual([]);

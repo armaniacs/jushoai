@@ -299,20 +299,25 @@ async function checkChromeDriver(): Promise<DriverVersionCheck> {
 
 // Chrome ignores --force-prefers-color-scheme (verified on Chrome 157: the
 // CSS media query keeps evaluating light under the flag, so a flag-only dark
-// session renders light tokens). The dark session realizes the scheme through
-// the WebDriver BiDi media-features override instead — the emulation fallback
-// for when the flag is insufficient. The session already rides BiDi for the
-// extension install; the override is session-global and survives navigations.
-// Light sessions stay flag-only: their pins hold on the light-OS machines
-// this suite runs on (the flag is equally inert there — a pre-existing gap
-// outside this change's scope).
-async function forceChromeDarkScheme(driver: WebDriver): Promise<void> {
+// session renders light tokens). The scheme is therefore realized through
+// the WebDriver BiDi media-features override for BOTH sessions — the
+// emulation fallback for when the flag is insufficient. The flag stays as a
+// belt-and-braces argument for builds that still honor it. The session
+// already rides BiDi for the extension install; the override is
+// session-global and survives navigations. Without the override the light
+// session follows the OS appearance (e.g. a dark-mode Mac renders the dark
+// banner token and the light pins fail), which is how the light suite broke
+// on this machine before the override was extended to it.
+async function forceChromeColorScheme(
+  driver: WebDriver,
+  scheme: PrefersColorScheme,
+): Promise<void> {
   const bidi = await (driver as WebDriver & {
     getBidi(): Promise<{ send(command: { method: string; params: unknown }): Promise<unknown> }>;
   }).getBidi();
   await bidi.send({
     method: 'emulation.setMediaFeaturesOverride',
-    params: { features: { 'prefers-color-scheme': 'dark' } },
+    params: { features: { 'prefers-color-scheme': scheme } },
   });
 }
 
@@ -345,7 +350,7 @@ export async function startChromeDriver(scheme: PrefersColorScheme = 'light'): P
   const driver = await builder.build();
   const ext = await (driver as WebDriver & { installWebExtension(p: string): Promise<{ id: string }> })
     .installWebExtension(CHROME_ADDON_DIR);
-  if (scheme === 'dark') await forceChromeDarkScheme(driver);
+  await forceChromeColorScheme(driver, scheme);
   return { driver, extensionId: ext.id };
 }
 

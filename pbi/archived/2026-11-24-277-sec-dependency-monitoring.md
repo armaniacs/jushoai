@@ -46,9 +46,9 @@ Scenario: ミラー固定の lockfile でも監査できる
 0.3人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認手順として実施済み
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み（AGENTS.md 依存解決の節）
+- [x] 全BDDシナリオが確認手順として実施済み（シナリオ 1 は Task 3 で lodash 4.17.20 の隔離環境による赤確認。シナリオ 2 は本番実績：Dependabot の Actions 更新 PR #37〜#41 が 2026-11-24 に作成・マージ済み。シナリオ 3 は `npm audit signatures` がミラー経由で成功し、監査ステップは公式 registry 明示）
+- [x] コードレビュー完了（Task 3 レビュー Approved。GitHub PR での approve はユーザー作業）
+- [x] ドキュメント更新済み（`npm audit signatures` がミラー経由で使えたため AGENTS.md の依存解決の節への限界記載は不要と判断し、触らない。判断は実装記録）
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`.github/dependabot.yml` 不在、`check.yml` に audit なし
@@ -68,5 +68,5 @@ Scenario: ミラー固定の lockfile でも監査できる
 
 ## 引継ぎ（2026-11-24、Task 3 から）
 
-- Dependabot の初回実行で `github-actions` の更新 PR と `npm` の security 更新 PR が想定どおりに来るかを確認する。npm の PR が来たら lockfile の resolved がミラー（`https://npm.flatt.tech/`）のままかを点検し、公式に書き換わっていたら取り込まず方針を再検討する。
-- BDD シナリオのうち「Actions の新しい版が出ると更新 PR が来る」は Dependabot の実稼働でしか確認できないため、初回実行時に確認して DoD を更新する。
+- ~~Dependabot の初回実行で `github-actions` の更新 PR と `npm` の security 更新 PR が想定どおりに来るかを確認する。~~ 完了（2026-11-27 確認）: `github-actions` の更新 PR が #37〜#41 の 5 件作成・マージ済み（本番実績）。npm は security 更新の対象 advisory が無いため PR なし（`open-pull-requests-limit: 0` の設計どおり）。
+- 継続運用: npm の更新 PR が来たら lockfile の resolved がミラー（`https://npm.flatt.tech/`）のままかを点検し、公式に書き換わっていたら取り込まず方針を再検討する。
