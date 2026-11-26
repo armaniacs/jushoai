@@ -142,7 +142,7 @@ holistic-round と arch-round2 の閉鎖（レビュー実施なし。ユーザ�
 ### 完了確認（2026-11-27）
 
 - 版付けは完了（v0.2.0。Release に zip 3 種 + SHA256SUMS を添付、`gh attestation verify` は exit 0。上の「版付け」項目はここで閉じた）。
-- ゲートで未確定のまま残るもの: 274 の CI dry-run（ユーザー作業。submit job の environment 承認が必要）、3 ストアの審査結果の追跡（外部）、`make check-all` 緑の取り直し（自動側で確認する。結果は docs/release.md の状態注記に反映）。
+- ゲートで未確定のまま残るもの: 274 の CI dry-run（ユーザー作業。submit job の environment 承認が必要）と 3 ストアの審査結果の追跡（外部）。`make check-all` 緑の取り直しは完了（2026-11-27 実行で緑。版付け時に既知の失敗だった chrome の translucent banner 1 件は、ライトセッションが dark モードの OS 外観に従うことが原因で、ライト側にも BiDi メディアオーバーライドでカラースキームを pin する修正（tests/e2e/harness.ts）で解消）。
 - 上の 3 点が揃い 274 が閉じた時点で、ゲート一覧にチェックして本 PBI を閉じられる。
 
 ### Task 15 の実装記録（2026-11-24。版付け準備。タグ打ち・push なし）

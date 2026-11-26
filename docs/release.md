@@ -144,15 +144,15 @@ gh workflow run release.yml --ref <ブランチ名> -f dry_run=true
 
 `0.2.0` を版付けする前に、下の項目をすべて満たすこと。未完了の項目がある間は版付けを見送り、どの項目が残っているかをこの一覧で確かめる。
 
-- [ ] `make check-all` が緑（両ブラウザの E2E を含む）
-- [ ] `make eval` の pin が緑
-- [ ] PBI-276（統合後の再スキャン）の結果が出て、指摘の扱いが決まっている
-- [ ] 1.0 必須の PBI が完了している（274 release 分離、275 報告方針、277 依存監視、281 manifest 検査、283 保存形式の互換性）
-- [ ] ストア掲載文とプライバシー文書の整合を確認している（`docs/store-listing.md` とサイトの privacy 日英）
-- [ ] CHANGELOG に `0.2.0` 節がある
-- [ ] 未マージの作業ブランチが無い（統合の記録は PBI-282 の「実装記録」を参照）
+- [x] `make check-all` が緑（両ブラウザの E2E を含む）
+- [x] `make eval` の pin が緑
+- [x] PBI-276（統合後の再スキャン）の結果が出て、指摘の扱いが決まっている
+- [ ] 1.0 必須の PBI が完了している（274 release 分離、275 報告方針、277 依存監視、281 manifest 検査、283 保存形式の互換性）（275 / 277 / 281 / 283 は完了。274 の CI dry-run の実行と environment 承認が残る）
+- [x] ストア掲載文とプライバシー文書の整合を確認している（`docs/store-listing.md` とサイトの privacy 日英）
+- [x] CHANGELOG に `0.2.0` 節がある
+- [x] 未マージの作業ブランチが無い（統合の記録は PBI-282 の「実装記録」を参照）
 
-状態（2026-11-24 Task 16 確認。版付け時に再確認）: make check 緑、make site 緑、make eval の pin 緑。e2e-chrome は 27/28 で、落ちた 1 件は Task 8/9 と同じ色トークンの既知の失敗。e2e-firefox は 25/25 緑（Developer Edition、HEADLESS）。check-all の一括実行はしていないため、ゲートの make check-all 緑は未達。276 は完了（新規 0 件、前回 4 件は修正 3・受容 1、要約は CHANGELOG の 0.2.0 節に掲載）。274/275/277/281/283 は受け入れ基準を満たすも（274 は CI dry-run が残作業）、DoD の確認欄は未記入。ストア掲載文と privacy 日英・権限は一致。CHANGELOG に 0.2.0 節あり。旧作業ブランチ 4 本は origin/main に統合済み、work/ga-readiness のみ未マージ（版付け PR の対象）。この一覧自体は PBI-282 の Task 5 で置いた。各項目の完了確認は版付け時に行う。
+状態（2026-11-27 再確認）: `make check-all` が緑（2026-11-27 実行。check は 197 ファイル / 3403 passed + 期待失敗 1、site は 32 ページ、e2e-firefox 25/25、e2e-chrome 28/28）。版付け時（Task 16）に既知の失敗として残っていた chrome の translucent banner 1 件は、ライトセッションが OS の外観（dark モードの Mac）に従うことが原因で、ライト側にも BiDi メディアオーバーライドでカラースキームを pin する修正（tests/e2e/harness.ts）で解消した。`make eval` は pin 緑。276 は完了（新規 0 件、前回 4 件は修正 3・受容 1、要約は CHANGELOG の 0.2.0 節）。275 / 277 / 281 / 283 は完了（2026-11-27 にアーカイブ）。残る未達は 274 の CI dry-run（`gh workflow run release.yml --ref <ブランチ> -f dry_run=true` の実行と submit の environment 承認。ユーザー作業）のみで、これが済めば 7 項目すべてにチェックが付く。ストア掲載文と privacy 日英・権限は一致。CHANGELOG に 0.2.0 節あり。旧作業ブランチ 4 本は origin/main に統合済み。
 
 ## 版方針
 

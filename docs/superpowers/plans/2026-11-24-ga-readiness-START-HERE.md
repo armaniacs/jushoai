@@ -77,7 +77,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 - 284 の Firefox 実機 E2E は Task 16 の e2e-firefox 25/25 が兼ねている（`runBackupNudge` は両ブラウザ共通配線）
 - 進行中に残った 4 件と残作業:
   - 274: CI dry-run（`gh workflow run release.yml --ref <ブランチ> -f dry_run=true`）と submit の environment 承認（ユーザー作業）
-  - 282: 274 の dry-run、ストア 3 社の審査結果の追跡（外部）、`make check-all` 緑の取り直し
+  - 282: 274 の dry-run とストア 3 社の審査結果の追跡（外部）。`make check-all` 緑の取り直しは完了（2026-11-27。chrome の既知失敗 1 件はライトセッションのカラースキーム pin 修正で解消）
   - 285: VoiceOver / NVDA での読み上げ確認（ユーザー作業。PBI-291 の受け入れと合わせる）
   - 286: 日本郵便 KEN_ALL の実データ生成（WAF 遮断のため生成できる環境で。URL は現行のままでよいことを 2026-11-27 に再確認）
 

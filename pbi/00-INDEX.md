@@ -4,7 +4,7 @@
 
 - `2026-11-24-00-backlog-ga-readiness-round.md`（ラウンド台帳。機能充足の評価表、1.0 までの段取り、確認済みの良い点、やらないことの継続を記録）
 - `2026-11-24-274-sec-release-job-split.md`（順位 3。RICE 480。1.0 必須。release の build と submit の分離。v0.2.0 の実リリースで build 無 secrets・submit ハッシュ照合・3 ストア提出を実証、Release 作成の修正は PR #43。残作業は CI dry-run の実行と environment 承認（ユーザー作業））
-- `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート。版付け（0.2.0）は完了。残りは 274 の dry-run とストア 3 社の審査追跡（ユーザー作業）と check-all 緑の取り直し）
+- `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート。版付け（0.2.0）とゲートの check-all 緑は完了（2026-11-27）。残りは 274 の dry-run とストア 3 社の審査追跡（ユーザー作業））
 - `2026-11-24-285-chore-a11y-keyboard-audit.md`（順位 11。RICE 17。1.0 推奨。キーボードと読み上げの通し監査。E2E は Chrome・Firefox 実機で通過済み。残りは VoiceOver / NVDA での読み上げ確認（ユーザー作業。PBI-291 の受け入れと合わせる））
 - `2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化。仕組みとテストは完成、実データ生成は WAF 遮断により生成できる環境で実行（URL 現行のまま確定。2026-11-27 も再試行））
 - `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）

@@ -41,7 +41,7 @@ Scenario: 読み上げで件数と警告が分かる
 
 ## Definition of Done
 - [ ] 全BDDシナリオが自動テストまたは記録付きの手動確認として実施済み（シナリオ 1 は E2E `runKeyboardOnlyFlow` を Chrome 実機（Task 9）と Firefox 実機（Task 16 の e2e-firefox 25/25。両ブラウザ共通配線）で通過。シナリオ 2（VoiceOver / NVDA の読み上げ）は手動未実施。PBI-291 の受け入れと合わせて実機のある環境で確認すること）
-- [ ] コードレビュー完了（Task 9 レビュー Approved、初回 Critical 1 件は Chrome 実機 E2E で解消・再レビュー承認。GitHub PR での approve はユーザー作業）
+- [x] コードレビュー完了（Task 9 レビューは初回条件付きののち再レビュー承認可（`.superpowers/sdd/ga-readiness-task-9-rereview.md`）。条件の Chrome 実機 E2E は完了済み。GitHub PR での approve はユーザー作業）
 - [x] ドキュメント更新済み（台帳の「キーボード操作」宣言を監査結果で更新済み）
 
 ## 監査表（2026-11-24、コード読解と単体テストで確認。読み上げ実機は未実施）
