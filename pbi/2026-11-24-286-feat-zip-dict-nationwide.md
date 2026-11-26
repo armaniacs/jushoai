@@ -40,8 +40,8 @@ Scenario: 1 つの郵便番号に複数の町域がある
 1人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする（仕組みのテストは緑。9300001 の planner 連携は全国表の生成待ち）
-- [ ] コードレビュー完了
+- [ ] 全BDDシナリオが自動テストとして実装されパスする（仕組みのテストは緑。planner 連携 3 件は 2026-11-27 に実装済みで seed では skip、全国表のチェックインで自動有効化・初実行される。下の実装記録）
+- [ ] コードレビュー完了（テスト先行実装はタスクレビュー Approved（2026-11-27）。実データ取込コミットのレビューが残る）
 - [x] ドキュメント更新済み
 
 ## 出どころ
@@ -55,6 +55,17 @@ Scenario: 1 つの郵便番号に複数の町域がある
   - 除外 prefix（複数都道府県にまたがる 3 桁）の件数と内容を実装記録に追記する
 - 再試行記録（2026-11-26）: 作業環境から公式 URL を再取得したが同じく 404（HTML 応答 73KB。遮断は継続）。取得できる環境での実行待ちに変わりはない。
 - 再試行記録（2026-11-27）: ダウンロードページ（`https://www.post.japanpost.jp/zipcode/download.html`）は取得でき、`ken_all.zip` の正規 URL は変更なし（`/zipcode/dl/oogaki/zip/ken_all.zip`、表記サイズ 1,694,162 バイト）。都道府県別 zip（例: `16toyama.zip`）も同一パス形式。ただし実データの取得は通常の fetch・ブラウザ UA 付き curl のいずれも 404（HTML 応答 73KB）で、遮断は継続。URL 自体は現行のままでよいことが確定した。
+- 再試行記録（2026-11-27、2 回目）: Referer 付き curl・UTF-8 版（`/zipcode/dl/utf-zip.html` の一覧・`utf/zip/` 配下）・事業所版（`l_13101.zip`）もすべて 404。HTML ページは取得できるのに zip 資産のみ一括遮断の状態。http スキームは https への 302 で、スキーム起因でもない。この環境からの取得は断念し、ダウンロードできる環境での実行待ち。
+- 実装記録（2026-11-27、テストの先行実装）: planner 連携テストを `tests/core/planner.test.ts` に追加（`zip dictionary nationwide (PBI-286)`、3 件。seed の 48 範囲では skip し、skip 理由に次に走らせるコマンドを表示。全国表のチェックインで自動有効化・初実行される）。シナリオ 1 は 9300001（ハイフン無し）→ 富山県・富山市の候補が plan 行に乗ること + 単一承認シームで承認すると入ること + ハイフン有り 930-0001 の lookup。シナリオ 2 は city 空エントリの実 prefix を実行時に探して、都道府県のみ候補・市区町村行は assist 無しの warn-no-value を pin する。タスクレビュー Approved（`.superpowers/sdd/zip-dict-task-1-review.md`。Minor 3 件は対応不要。期待値の富山県/富山市と複数市 prefix は全国表チェックイン時に初めて実検証される）。検証: planner.test.ts 88 passed | 3 skipped、typecheck・lint 緑。
+
+### 取得・生成の手順（ダウンロードできる環境で実行する）
+
+1. ブラウザで `https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/ken_all.zip`（約 1.6MB）を保存する。404 になる場合はダウンロードページ（`https://www.post.japanpost.jp/zipcode/download.html`）から正規 URL を取り直す
+2. `npm run zip-dict -- --input <保存先パス>` を実行する。stdout に KEN_ALL の行数・範囲数・除外（複数都道府県またがり）prefix の一覧が出る。**件数と内容をこの PBI の実装記録に貼る**
+3. `npx vitest run tests/core/planner.test.ts` → 3 件の skip が有効化されて通ることを確認する。`tests/core/zip-dict.test.ts` の seed pin（100-0001 千代田区など）が落ちた場合は、実データが正なので pin の側を実データに合わせて直す（3 桁 prefix が実は複数市またがりのとき、生成表では city 空になるため）
+4. `make check` → サイズ予算（表 200KB・content script 350KB）、build、全テストを通す
+5. 表の更新はコード変更と分けてコミットする（例: `feat(zip): 郵便番号辞書を KEN_ALL で更新する`）
+6. BDD シナリオ 1・2 が自動テストで通ったことを確認して DoD の 1 件目を閉じ、実データ取込コミットのレビュー後に 2 件目を閉じてアーカイブする
 
 ## 実装記録
 - 生成スクリプト: `scripts/generate-zip-dict.mjs`（`npm run zip-dict`）。日本郵便の KEN_ALL（zip 直取り込み、Shift_JIS 復号、依存なしの zip 読み）を `src/core/zip-build.ts` の純粋関数（`parseKenAllCsv`、`buildPrefixRanges`）で表にし、`src/core/zip-dict-data.ts` に書き出す。同じ入力からは同じ表が出る（バイト同一を確認済み。ただし生成ヘッダに Source:取得 URL または --input 指定文字列:を埋め込むため、バイト同一の再実行は同一引数でのみ成り立つ）。表の形は lookup と同じ `ZipPrefixRange[]` で、lookup（`zipAssistFor`）と planner は振る舞い無変更。seed の 48 範囲は値と順序を保ったまま `zip-dict-data.ts` に移した
