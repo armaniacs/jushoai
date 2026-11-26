@@ -5,10 +5,10 @@
 // Usage:
 //   node scripts/generate-zip-dict.mjs [--input <dir|zip file> ...] [--out <path>]
 //
-// Japan Post ended the nationwide ken_all.zip download and now distributes
-// per-prefecture zips (plus monthly add_/del_ diffs), so with no --input the
-// script fetches the 47 prefecture files (network) and merges them; every
-// file must fetch and parse or nothing is written. --input reuses previously
+// ken_all.zip is still distributed on the new base, but this script goes
+// through the 47 prefecture files to avoid depending on a single URL: with
+// no --input it fetches them (network) and merges them; every file must
+// fetch and parse or nothing is written. --input reuses previously
 // downloaded zips, which also makes the run reproducible offline. Zips merge
 // in basename order whatever way the inputs were spelled out, so the same
 // input set always produces byte-identical output.
