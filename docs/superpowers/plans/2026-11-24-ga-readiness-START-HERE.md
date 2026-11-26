@@ -32,8 +32,8 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 | 276 | 統合後の脆弱性再スキャン | 5957a02 | Approved、Critical/Important なし（Minor 2 件はその場で修正） |
 
 - 275 の GitHub 側設定（private vulnerability reporting の有効化）はユーザーが実施済み。応答目安（受付 7 日、方針連絡 30 日）はユーザーが確定済み
-- 275 で未確認が 1 点: ログアウト状態で `https://github.com/armaniacs/jushoai/security/advisories/new` が開くこと（ユーザーに確認を依頼済み。開けば 275 を閉じられる）
-- 281 の残り 2 点（小）: (a) JS 走査で対象ファイル数が 0 でないことを assert する、(b) 外部 URL の `import(` の検査を足す（実装指示書から漏れていた）。場所は `tests/build/manifest-guard.build.ts`
+- 275 で未確認だったログアウト時の `/security/advisories/new` 到達は 2026-11-27 に確認済み（login への 302 の後にフォームへ到達。GitHub の標準フロー）。275 は閉じた
+- 281 の残り 2 点（小）は 2026-11-27 に実装済み（JS 走査の空走査 assert と外部 URL の `import(` 検査。赤確認込み）。281 は閉じた
 - 281 の CSP 判断: `content_security_policy` は未指定のままブラウザ既定に任せ、指定された場合の後退だけを止める（Firefox MV3 の既定 CSP を上書きすると挙動が変わるため）。PBI に記録済み
 
 ### 未着手（着手順）
@@ -69,6 +69,18 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 12. 残作業: PBI-291（未採点・未着手、1.0 後）、286 実データ生成（環境の WAF 遮断。生成環境で再実行）、各種実機確認の残り（274 dry-run は版付け手順内）
 3. ブランチ全体のレビューは `d184fa1..HEAD` の範囲で 1 回実施した（`.superpowers/sdd/ga-readiness-final-review.md`。判定は条件付き Approve で、条件の 1 行修正を反映したらマージ可）。残る各タスクの Minor はレビューで受容可と評価済み
 
+### 2026-11-27 の棚卸し（autonomous-task-closer）
+
+- 閉じた（`pbi/archived/` へ移動・INDEX 反映済み）: 275 / 276 / 277 / 278 / 280 / 281 / 283 / 284 の 8 件。実装は PR #36 / #42 / #44 で main 取込済み。各 PBI のタスクレビュー Approved を最終ゲートとして兼用し、GitHub PR での approve はユーザー作業として INDEX に明記
+- 277 の Dependabot 初回実行は本番実績で確認済み（Actions 更新 PR #37〜#41 が作成・マージ）
+- 278 の来歴検証は v0.2.0 の `gh attestation verify` が exit 0（2026-11-25 実施済みの記録）
+- 284 の Firefox 実機 E2E は Task 16 の e2e-firefox 25/25 が兼ねている（`runBackupNudge` は両ブラウザ共通配線）
+- 進行中に残った 4 件と残作業:
+  - 274: CI dry-run（`gh workflow run release.yml --ref <ブランチ> -f dry_run=true`）と submit の environment 承認（ユーザー作業）
+  - 282: 274 の dry-run、ストア 3 社の審査結果の追跡（外部）、`make check-all` 緑の取り直し
+  - 285: VoiceOver / NVDA での読み上げ確認（ユーザー作業。PBI-291 の受け入れと合わせる）
+  - 286: 日本郵便 KEN_ALL の実データ生成（WAF 遮断のため生成できる環境で。URL は現行のままでよいことを 2026-11-27 に再確認）
+
 ## 3. 守るルール（ユーザー指示と AGENTS.md の要点）
 
 - 応答・説明・コミットメッセージは日本語。コード・識別子・コード内コメントは英語。絵文字は使わない
@@ -93,7 +105,7 @@ JushoAI（日本式フォームの住所・氏名・フリガナを補完する 
 ## 5. 注意点
 
 - 本番タグ `v*` を push すると `release.yml` がストアへ提出する。ドライラン以外でタグを push しない。バージョンは `package.json` と一致が必須
-- 未追跡の `.hex-skills/` はこのラウンドと無関係。コミットしない
+- 未追跡の `.hex-skills/` はこのラウンドと無関係。2026-11-27 に `.gitignore` へ追加済み（コミット対象にならない）
 - 「先に確認が要る判断」はこれまで次のとおり決まっている: 279 は将来構想に移す（ユーザー判断）、281 の CSP は未指定のまま、275 の応答日数は 7 / 30 日で確定。これらを蒸し返さない
 
 ## 6. 参照先
