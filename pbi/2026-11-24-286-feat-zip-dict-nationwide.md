@@ -54,6 +54,7 @@ Scenario: 1 つの郵便番号に複数の町域がある
   - 生成後に 9300001 の planner 連携テスト（富山県・富山市の候補と承認時の入力）を追加し、BDD シナリオ 1 を自動テストでふさぐ。BDD シナリオ 2（複数市区町村）は city 空エントリの扱いが lookup・planner 無変更で動くこと（都道府県のみ候補、市区町村は警告のまま）を生成表の実 prefix で確認する
   - 除外 prefix（複数都道府県にまたがる 3 桁）の件数と内容を実装記録に追記する
 - 再試行記録（2026-11-26）: 作業環境から公式 URL を再取得したが同じく 404（HTML 応答 73KB。遮断は継続）。取得できる環境での実行待ちに変わりはない。
+- 再試行記録（2026-11-27）: ダウンロードページ（`https://www.post.japanpost.jp/zipcode/download.html`）は取得でき、`ken_all.zip` の正規 URL は変更なし（`/zipcode/dl/oogaki/zip/ken_all.zip`、表記サイズ 1,694,162 バイト）。都道府県別 zip（例: `16toyama.zip`）も同一パス形式。ただし実データの取得は通常の fetch・ブラウザ UA 付き curl のいずれも 404（HTML 応答 73KB）で、遮断は継続。URL 自体は現行のままでよいことが確定した。
 
 ## 実装記録
 - 生成スクリプト: `scripts/generate-zip-dict.mjs`（`npm run zip-dict`）。日本郵便の KEN_ALL（zip 直取り込み、Shift_JIS 復号、依存なしの zip 読み）を `src/core/zip-build.ts` の純粋関数（`parseKenAllCsv`、`buildPrefixRanges`）で表にし、`src/core/zip-dict-data.ts` に書き出す。同じ入力からは同じ表が出る（バイト同一を確認済み。ただし生成ヘッダに Source:取得 URL または --input 指定文字列:を埋め込むため、バイト同一の再実行は同一引数でのみ成り立つ）。表の形は lookup と同じ `ZipPrefixRange[]` で、lookup（`zipAssistFor`）と planner は振る舞い無変更。seed の 48 範囲は値と順序を保ったまま `zip-dict-data.ts` に移した

@@ -41,9 +41,9 @@ Scenario: 最後のエクスポートからの経過が分かる
 0.4人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが自動テストとして実装されパスする
-- [ ] コードレビュー完了
-- [ ] ドキュメント更新済み
+- [x] 全BDDシナリオが自動テストとして実装されパスする（単体で境界を固定、統合テスト、E2E `runBackupNudge` は両ブラウザ共通配線。Chrome 実機は Task 8、Firefox 実機は Task 16 の e2e-firefox 25/25 で通過）
+- [x] コードレビュー完了（Task 8 レビュー Approved、Minor 2 件はその場で修正。GitHub PR での approve はユーザー作業）
+- [x] ドキュメント更新済み（ガイド ja/en に「アンインストールすると登録は消える」の1行を追加、サイト対応検査は緑）
 
 ## 出どころ
 - 2026-11-24 正式版準備の棚卸し。README「使い方」と Firefox 一時アドオンの注意
@@ -61,4 +61,4 @@ Scenario: 最後のエクスポートからの経過が分かる
 - E2E の扱い: `tests/e2e/scenarios.ts` に `runBackupNudge` を足し、両ブラウザのスイートに組み込んだ。Chrome 実機（HEADLESS=1）で対象シナリオのみ実行して通過を確認した。全体の e2e-chrome は 26/27 で、残り 1 件（translucent banner の色トークン）は本変更と無関係の箇所の失敗。Firefox 実機が無いため e2e-firefox は未実施。
 
 ## 引継ぎ（残るユーザー作業）
-- Firefox 実機がある環境で `make e2e-firefox` を流すこと（PBI-284 のシナリオが Firefox 側でも通ることの確認）。
+- ~~Firefox 実機がある環境で `make e2e-firefox` を流すこと（PBI-284 のシナリオが Firefox 側でも通ることの確認）。~~ 完了（2026-11-24 Task 16）: `make e2e-firefox` が Developer Edition（HEADLESS）で 25/25 緑。`runBackupNudge` は両ブラウザ共通配線に含まれる。残るユーザー作業はない。

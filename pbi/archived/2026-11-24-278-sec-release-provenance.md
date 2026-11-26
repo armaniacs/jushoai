@@ -40,8 +40,8 @@ Scenario: CI で作られたことを検証できる
 0.3人週（要チームでの見積もり）
 
 ## Definition of Done
-- [ ] 全BDDシナリオが確認手順として実施済み
-- [ ] コードレビュー完了
+- [x] 全BDDシナリオが確認手順として実施済み（シナリオ 1 は v0.2.0 Release に zip 3 種 + SHA256SUMS を確認、リリース作成時のハッシュ照合を実施。シナリオ 2 は `gh attestation verify --owner armaniacs` が exit 0（2026-11-25、下の引継ぎ））
+- [x] コードレビュー完了（Task 4 レビュー Approved、274 と同時実施。GitHub PR での approve はユーザー作業）
 - [x] ドキュメント更新済み
 
 ## 出どころ
