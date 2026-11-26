@@ -6,13 +6,16 @@
 - `2026-11-24-274-sec-release-job-split.md`（順位 3。RICE 480。1.0 必須。release の build と submit の分離。v0.2.0 の実リリースで build 無 secrets・submit ハッシュ照合・3 ストア提出を実証、Release 作成の修正は PR #43。残作業は CI dry-run の実行と environment 承認（ユーザー作業））
 - `2026-11-24-282-chore-ga-release-gate.md`（順位 5。RICE 400。1.0 必須。未マージ統合とリリースゲート。版付け（0.2.0）とゲートの check-all 緑は完了（2026-11-27）。残りは 274 の dry-run とストア 3 社の審査追跡（ユーザー作業））
 - `2026-11-24-285-chore-a11y-keyboard-audit.md`（順位 11。RICE 17。1.0 推奨。キーボードと読み上げの通し監査。E2E は Chrome・Firefox 実機で通過済み。残りは VoiceOver / NVDA での読み上げ確認（ユーザー作業。PBI-291 の受け入れと合わせる））
-- `2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化。仕組み・テスト・スクリプトの 47 ファイル対応は完成、実データ生成は取得できる環境で実行。日本郵便のサイト再構築で旧配布パスは恒久 404（2026-11-27 確認）のため生成経路を新パスの都道府県別 47 ファイルに切り替え済み。残りは実データの取込）
 - `2026-11-24-279-sec-store-account-hardening.md`（順位 17。将来構想・相当先（2026-11-24 ユーザー判断）。ストア資格情報の保護とインシデント runbook）
 - `2026-11-24-287-backlog-profile-at-rest-encryption.md`（順位 13。RICE 4。将来。着手条件付き）
 - `2026-11-24-288-backlog-cross-device-sync.md`（順位 14。RICE 3。将来。287 に依存）
 - `2026-11-24-289-backlog-firefox-android.md`（順位 15。RICE 3。将来。着手条件付き）
 - `2026-11-24-290-backlog-safari.md`（順位 16。RICE 2。将来の調査。289 に依存）
 - `2026-11-24-291-chore-a11y-result-announcement.md`（未採点。1.0 後でも可。PBI-285 の監査で分離。結果画面の件数の読み上げ。1.0 後。2026-11-24 ユーザー決定）
+
+## 進行中からアーカイブ済み（2026-11-27・郵便番号補助の全国化。日本郵便のサイト再構築で旧配布パス（`/zipcode/dl/`）が恒久 404 になったため生成経路を新パスの都道府県別 47 ファイルに切り替え、実データ取込まで完了（各タスクレビュー Approved・`make check-all` 緑。GitHub PR での approve はユーザー作業）
+
+- `archived/2026-11-24-286-feat-zip-dict-nationwide.md`（順位 12。RICE 16。郵便番号補助の全国化。日本郵便の都道府県別 47 ファイルから全国表を生成（124841 行 → 678 範囲。複数都道府県またがりの 22 prefix は除外し該当欄は警告のまま）し BDD 2 シナリオを自動テストで合格。実装コミット 0494e39 / 8d3eb3e / 8d2ac40 / 74e4a6b / 72f63fc / 446b42c。旧 URL の誤記訂正記録（遮断→配布終了→移動）と 5 Whys は PBI 本文と `.superpowers/sdd/whywhy-ken-all-retirement.md`）
 
 ## 進行中からアーカイブ済み（2026-11-27・GAラウンドの実装済み 8 件を DoD 確認で閉鎖。実装は PR #36 / #42 / #44 で main 取込済み。各 PBI のタスクレビュー Approved を最終ゲートとして兼用し、GitHub PR での approve はユーザー作業）
 
