@@ -18,10 +18,13 @@ import { fileURLToPath } from 'node:url';
 import { inflateRawSync } from 'node:zlib';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const PREFECTURE_URL_BASE = 'https://www.post.japanpost.jp/zipcode/dl/oogaki/zip/';
+// The old /zipcode/dl/ base is permanently 404 after a site rebuild; the
+// distribution page itself also moved under /service/search/zipcode/download/.
+const PREFECTURE_URL_BASE =
+  'https://www.post.japanpost.jp/service/search/zipcode/download/oogaki/zip/';
 // The 47 prefecture files linked from the distribution page
-// (https://www.post.japanpost.jp/zipcode/dl/oogaki-zip.html), excluding the
-// monthly add_/del_ diffs. ken_all.zip still appears on that page but 404s.
+// (https://www.post.japanpost.jp/service/search/zipcode/download/oogaki-zip.html),
+// excluding the monthly add_/del_ diffs (ken_all.zip is linked there again too).
 const PREFECTURE_ZIPS = [
   '01hokkai.zip', '02aomori.zip', '03iwate.zip', '04miyagi.zip', '05akita.zip',
   '06yamaga.zip', '07fukush.zip', '08ibarak.zip', '09tochig.zip', '10gumma.zip',
@@ -37,16 +40,22 @@ const PREFECTURE_ZIPS = [
 const PREFECTURE_SOURCE = `Japan Post prefecture files (47) from ${PREFECTURE_URL_BASE}`;
 
 const args = process.argv.slice(2);
-const flag = (name) => {
-  const i = args.indexOf(name);
-  return i >= 0 && i + 1 < args.length ? args[i + 1] : null;
-};
-const OUT = resolve(ROOT, flag('--out') ?? 'src/core/zip-dict-data.ts');
 
 const fail = (message) => {
   process.stderr.write(`generate-zip-dict: ${message}\n`);
   process.exit(1);
 };
+
+// A bare trailing --out must fail instead of falling back to the default:
+// silently writing the seed table under src/ on a typo'd flag would be worse.
+let outArg = null;
+for (let i = 0; i < args.length; i++) {
+  if (args[i] === '--out') {
+    if (i + 1 >= args.length) fail('--out requires a path');
+    outArg = args[++i];
+  }
+}
+const OUT = resolve(ROOT, outArg ?? 'src/core/zip-dict-data.ts');
 
 if (args.includes('--help') || args.includes('-h')) {
   process.stdout.write(
@@ -169,8 +178,17 @@ if (INPUT_PATHS.length > 0) {
       fail(`cannot read input ${path}`);
     }
     if (st.isDirectory()) {
+      // Dirent.isFile() is false for symlinks, so stat each *.zip entry
+      // instead (following links); a broken symlink throws and is skipped.
       const names = readdirSync(path, { withFileTypes: true })
-        .filter((e) => e.isFile() && e.name.toLowerCase().endsWith('.zip'))
+        .filter((e) => {
+          if (!e.name.toLowerCase().endsWith('.zip')) return false;
+          try {
+            return statSync(join(path, e.name)).isFile();
+          } catch {
+            return false;
+          }
+        })
         .map((e) => e.name)
         .sort();
       if (names.length === 0) fail(`no zip files in ${path}`);
@@ -183,13 +201,17 @@ if (INPUT_PATHS.length > 0) {
   }
   const seen = new Map();
   for (const input of inputs) {
-    if (seen.has(input.basename)) {
+    // Duplicate check is case-insensitive (A.zip vs a.zip) so the same
+    // logical file cannot enter the merge twice; the message keeps the
+    // original spelling of the offender.
+    const key = input.basename.toLowerCase();
+    if (seen.has(key)) {
       fail(
         `duplicate input basename ${input.basename}: ` +
-          `${seen.get(input.basename)} and ${input.path}`,
+          `${seen.get(key)} and ${input.path}`,
       );
     }
-    seen.set(input.basename, input.path);
+    seen.set(key, input.path);
   }
   inputs.sort((a, b) => (a.basename < b.basename ? -1 : a.basename > b.basename ? 1 : 0));
 } else {
@@ -240,7 +262,11 @@ export const ZIP_PREFIX_RANGES: ZipPrefixRange[] = [
 ${lines.join('\n')}
 ];
 `;
-writeFileSync(OUT, header);
+try {
+  writeFileSync(OUT, header);
+} catch (error) {
+  fail(`cannot write ${OUT}: ${String(error?.message ?? error)}`);
+}
 
 process.stdout.write(
   `generate-zip-dict: ${inputs.length} files, ${parsed.length} rows -> ${ranges.length} ranges ` +
