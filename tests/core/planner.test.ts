@@ -581,9 +581,10 @@ describe('zip dictionary assist (PBI-125)', () => {
 
   it('rides the dictionary candidate onto an empty prefecture/city row', () => {
     const plan = buildPlan([item('prefecture'), item('city')], { profile, address: emptyAddress });
+    // The real table resolves 100 (spanning several municipalities) to the prefecture only.
     expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
       ['warn-no-value', '東京都', '候補: 東京都'],
-      ['warn-no-value', '千代田区', '候補: 千代田区'],
+      ['warn-no-value', undefined, ''],
     ]);
   });
 
@@ -597,7 +598,8 @@ describe('zip dictionary assist (PBI-125)', () => {
   });
 
   it('keeps the plain warn-no-value when the zip is unknown or missing', () => {
-    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '601-8001' };
+    // 601 resolves in the nationwide table, so the unknown case uses 000, which is never assigned.
+    const unknownZip: Address = { ...emptyAddress, id: 'a4', zip: '000-8001' };
     expect(buildPlan([item('prefecture')], { profile, address: unknownZip })).toEqual([
       expect.objectContaining({ value: '', display: '', status: 'warn-no-value' }),
     ]);
@@ -622,14 +624,15 @@ describe('zip dictionary nationwide (PBI-286)', () => {
   const NATIONWIDE_MIN_RANGES = 100;
   const nationwide = ZIP_PREFIX_RANGES.length > NATIONWIDE_MIN_RANGES;
   const multiCity = ZIP_PREFIX_RANGES.find((r) => r.city === '');
+  // 930 spans multiple municipalities (city comes back empty), so the fixture uses single-city 931.
   const toyama: Address = {
     ...address, id: 'a9', label: '富山のみ',
-    zip: '9300001', prefecture: '', city: '', street: '', building: '',
+    zip: '9310001', prefecture: '', city: '', street: '', building: '',
   };
 
   it('resolves a regional zip to its prefecture and city', (ctx) => {
     ctx.skip(!nationwide, 'nationwide zip table not checked in yet; run node scripts/generate-zip-dict.mjs');
-    expect(zipAssistFor('930-0001')).toEqual({ prefecture: '富山県', city: '富山市' });
+    expect(zipAssistFor('931-0001')).toEqual({ prefecture: '富山県', city: '富山市' });
     const plan = buildPlan([item('prefecture'), item('city')], { profile, address: toyama });
     expect(plan.map((p) => [p.status, p.assist, p.display])).toEqual([
       ['warn-no-value', '富山県', '候補: 富山県'],
